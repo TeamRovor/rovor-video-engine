@@ -1,0 +1,29 @@
+{
+  "status": "experimental, requires artist cleanup",
+  "source": "v3-assets/present.png",
+  "source_dimensions": [
+    408,
+    524
+  ],
+  "pivots": {
+    "head": [
+      224,
+      224
+    ],
+    "arm_left": [
+      62,
+      278
+    ],
+    "arm_right": [
+      294,
+      290
+    ]
+  },
+  "limitations": [
+    "Flattened source; narrow source overlaps, no hidden shoulder drawings",
+    "No independent elbow or wrist art",
+    "Jaw warp approximates volume; no head turn",
+    "Sunglasses conceal eyes; brows need redrawing",
+    "No native Moho project verified"
+  ]
+}
