@@ -42,10 +42,10 @@ class LayeredCharacterTests(unittest.TestCase):
         a=render_layers(body,head,-3,POSES["neutral"]["pivot"])
         b=render_layers(body,head,3,POSES["neutral"]["pivot"])
         # upper head changed, pants are still pixel-identical between angles
-        self.assertIsNotNone(ImageChops.difference(a.crop((150,0,350,180)),
-                                                    b.crop((150,0,350,180))).getbbox())
-        self.assertIsNone(ImageChops.difference(a.crop((50,400,360,780)),
-                                               b.crop((50,400,360,780))).getbbox())
+        self.assertIsNotNone(ImageChops.difference(a.convert("RGB").crop((150,0,350,180)),
+                                                    b.convert("RGB").crop((150,0,350,180))).getbbox())
+        self.assertIsNone(ImageChops.difference(a.convert("RGB").crop((50,400,360,780)),
+                                               b.convert("RGB").crop((50,400,360,780))).getbbox())
 
 
 if __name__=="__main__":
