@@ -62,10 +62,10 @@ async function renderReference(t,scene){
   const pose=activePose(t,scene), cfg=poses[pose];
   const shape=(scene.mouthCues||[]).find(c=>t>=c.start&&t<c.end)?.value || 'X';
   // Rhubarb phoneme categories are mapped to original mouth drawings.
-  const detailed={X:'rest',A:'MBP',B:'AE',C:'L',D:'open',E:'O',F:'O',G:'FV',H:'UW'};
+  const detailed={X:'rest',A:'MBP',B:'smile',C:'AE',D:'open',E:'O',F:'UW',G:'FV',H:'L'};
   // V4 defaults to restrained speech. The expressive 9-viseme option remains
   // available but can exaggerate the face until a native Moho rig exists.
-  const subtle={X:'rest',A:'rest',B:'AE',C:'rest',D:'open',E:'open',F:'open',G:'rest',H:'rest'};
+  const subtle={X:'rest',A:'rest',B:'smile',C:'AE',D:'open',E:'O',F:'UW',G:'FV',H:'L'};
   const mode=scene.mouthMode||'subtle';
   const names=mode==='detailed'?detailed:(mode==='still'?{X:'rest'}:subtle);
   const style=scene.characterStyle==='reference'?'reference':'calibrated';
