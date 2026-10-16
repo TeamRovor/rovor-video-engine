@@ -1,0 +1,42 @@
+{
+  "version": 4,
+  "poses": {
+    "neutral": {
+      "center": [
+        282,
+        179
+      ],
+      "cover": [
+        32,
+        14
+      ],
+      "width": 45,
+      "angle": -15
+    },
+    "point": {
+      "center": [
+        182,
+        144
+      ],
+      "cover": [
+        28,
+        13
+      ],
+      "width": 40,
+      "angle": -16
+    },
+    "present": {
+      "center": [
+        223,
+        158
+      ],
+      "cover": [
+        29,
+        16
+      ],
+      "width": 43,
+      "angle": -17
+    }
+  },
+  "description": "Original V3 face for rests and calibrated original visemes for speech"
+}

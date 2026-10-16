@@ -10,7 +10,7 @@ function browser(t, favicon=false) {
   <rect x="80" y="8" width="232" height="49" rx="11" fill="#fff"/>
   <g transform="translate(105 34)">
    <g opacity="${1-switchOn}"><circle r="9" stroke="#718297" stroke-width="2" fill="none"/><ellipse rx="3.7" ry="9" stroke="#718297" stroke-width="1.5" fill="none"/><path d="M-9 0H9" stroke="#718297" stroke-width="1.5"/></g>
-   <g opacity="${switchOn}"><rect x="-12" y="-12" width="24" height="24" rx="5" fill="#223d60"/><text x="0" y="7" text-anchor="middle" font-size="19" font-weight="900" fill="white">R</text></g>
+   <g opacity="${switchOn}"><rect x="-12" y="-12" width="24" height="24" rx="5" fill="#223d60"/></g>
    <circle r="${19+2*Math.sin(t*3)}" fill="none" stroke="#d8a35f" stroke-width="3" opacity=".82"/>
   </g>
   <text x="127" y="40" font-family="Arial,sans-serif" font-size="16" font-weight="600" fill="#405266">Your website</text>
@@ -31,14 +31,14 @@ function favicon(t){
   <rect x="26" y="54" width="269" height="148" rx="15" fill="#eef2f6"/>
   <rect x="325" y="54" width="273" height="148" rx="15" fill="#e5edf4"/>
   <g transform="translate(161 128)"><circle r="41" stroke="#84909b" stroke-width="6" fill="none"/><ellipse rx="19" ry="41" stroke="#84909b" stroke-width="4" fill="none"/><path d="M-39 0H39M-32 -21H32M-32 21H32" stroke="#84909b" stroke-width="3"/></g>
-  <g transform="translate(460 128) scale(${scale})"><rect x="-50" y="-50" width="100" height="100" rx="23" fill="#1e3c60"/><path d="M-22 -28V28M-23 -28H8Q33 -28 33 -9Q33 11 7 11H-23M8 11L32 30" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g transform="translate(460 128) scale(${scale})"><rect x="-50" y="-50" width="100" height="100" rx="23" fill="#1e3c60"/></g>
   <path d="M295 129H325" stroke="#cc9b5c" stroke-width="7"/><path d="M317 116L335 129 317 142" fill="none" stroke="#cc9b5c" stroke-width="6"/>
   <text x="312" y="230" text-anchor="middle" font-size="15" fill="#506278">Your identity, even in a tiny tab.</text>`;
 }
 function brand(t){
   return `<rect x="0" y="0" width="624" height="244" rx="22" fill="#fff" stroke="#c3cfd8" stroke-width="3"/>
   <rect x="31" y="26" width="270" height="185" rx="16" fill="#203a57"/>
-  <g transform="translate(165 105) rotate(${1.5*Math.sin(t*2)})"><rect x="-38" y="-40" width="76" height="76" rx="16" fill="#dbac72"/><text text-anchor="middle" y="20" font-size="59" font-weight="900" fill="#1d344c">R</text></g>
+  <g transform="translate(165 105) rotate(${1.5*Math.sin(t*2)})"><rect x="-38" y="-40" width="76" height="76" rx="16" fill="#dbac72"/></g>
   <text x="165" y="188" text-anchor="middle" font-size="22" font-weight="800" letter-spacing="2" fill="#fff">ROVOR</text>
   <text x="340" y="60" font-size="23" font-weight="800" fill="#263a56">BUILD A BRAND</text>
   <rect x="338" y="84" width="242" height="14" rx="7" fill="#b2c6d4"/>
@@ -97,7 +97,7 @@ function contact(t){
 function endcard(t){
   const s=1+.025*Math.sin(t*2);
   return `<rect width="624" height="244" rx="21" fill="#213b57"/>
-  <g transform="translate(312 105) scale(${s})"><circle r="65" fill="#2e4e6d"/><circle r="50" fill="none" stroke="#cd9d67" stroke-width="5"/><path d="M-15 -33V28M-15 -33H15Q40 -33 40 -8Q40 15 8 15H-15M9 15L33 35" fill="none" stroke="#fff" stroke-width="11" stroke-linejoin="round"/></g>
+  <g transform="translate(312 105) scale(${s})"><circle r="65" fill="#2e4e6d"/><circle r="50" fill="none" stroke="#cd9d67" stroke-width="5"/></g>
   <text x="312" y="208" font-size="28" letter-spacing="5" text-anchor="middle" fill="#fff" font-weight="900">ROVOR DIGITAL</text>`;
 }
 function topic(t,title){
@@ -112,7 +112,49 @@ function topic(t,title){
   <path d="M7 51L11 55 19 46" stroke="#fff" stroke-width="3" fill="none"/>
   <rect x="41" y="41" width="430" height="16" rx="7" fill="#d7e1e8"/></g>`;
 }
+
+// New V4 topics are emitted only when the transcript specifically mentions them.
+// Values are deliberately schematic: never fabricate traffic, sales or ratings.
+function mobile(t){
+  return `<rect width="624" height="244" rx="22" fill="#fff" stroke="#bfccd5" stroke-width="3"/>
+  <g transform="translate(31 26)"><rect width="294" height="190" rx="12" fill="#d8e5ec" stroke="#94aab9" stroke-width="4"/><rect x="16" y="19" width="262" height="28" rx="7" fill="#fff"/><circle cx="30" cy="33" r="6" fill="#d7a670"/><rect x="18" y="62" width="258" height="93" rx="9" fill="#9cbccc"/><rect x="54" y="165" width="191" height="12" rx="5" fill="#f9fafa"/></g>
+  <path d="M347 120H392M377 108L393 120 377 133" stroke="#c99b67" fill="none" stroke-width="7" stroke-linecap="round"/>
+  <g transform="translate(423 10) rotate(${1*Math.sin(t*2)})"><rect width="142" height="220" rx="23" fill="#243c56"/><rect x="9" y="15" width="124" height="190" rx="13" fill="#f5f7f8"/><rect x="20" y="29" width="101" height="21" rx="5" fill="#cadbe4"/><rect x="20" y="62" width="101" height="65" rx="8" fill="#97b8c6"/><rect x="20" y="141" width="90" height="10" rx="4" fill="#c4d5dd"/><rect x="20" y="161" width="70" height="10" rx="4" fill="#c4d5dd"/></g>
+  <text x="308" y="230" text-anchor="middle" fill="#466278" font-size="14">One website. Different screens.</text>`;
+}
+function speed(t){
+ const angle=(Math.sin(t*2)+1)*8;
+ return `<rect width="624" height="244" rx="22" fill="#fff" stroke="#bfccd5" stroke-width="3"/>
+  <text x="30" y="43" fill="#2b4059" font-size="22" font-weight="800">CHECK YOUR LOAD TIME</text>
+  <path d="M67 176A118 118 0 0 1 303 176" stroke="#e1e9ee" stroke-width="19" fill="none" stroke-linecap="round"/>
+  <path d="M67 176A118 118 0 0 1 248 87" stroke="#d1a16b" stroke-width="17" fill="none" stroke-linecap="round"/>
+  <path d="M184 176L${242+angle} ${100-angle}" stroke="#2b4059" stroke-width="8" stroke-linecap="round"/><circle cx="184" cy="176" r="13" fill="#2b4059"/>
+  <rect x="360" y="89" width="195" height="15" rx="7" fill="#d1dee6"/><rect x="360" y="125" width="143" height="15" rx="7" fill="#d1dee6"/><rect x="360" y="163" width="110" height="15" rx="7" fill="#d1a16b"/>
+  <text x="365" y="51" font-size="16" fill="#637b8a">Less waiting, smoother browsing</text>`;
+}
+function security(t){
+ return `<rect width="624" height="244" rx="22" fill="#fff" stroke="#bfccd5" stroke-width="3"/>
+  <g transform="translate(58 27)"><path d="M94 4L180 33V101Q175 159 94 191Q13 159 8 101V33Z" fill="#dbe7eb" stroke="#6c99a8" stroke-width="6"/><rect x="63" y="84" width="62" height="59" rx="11" fill="#243f5e"/><path d="M77 84V67A17 17 0 0 1 111 67V84" stroke="#243f5e" stroke-width="10" fill="none"/><circle cx="94" cy="107" r="6" fill="#fff"/></g>
+  <text x="297" y="73" font-size="30" font-weight="800" fill="#2c4961">HTTPS</text>
+  <text x="297" y="108" font-size="17" fill="#516e81">Secure connections</text><rect x="297" y="132" width="263" height="12" rx="6" fill="#dce7ec"/>
+  <rect x="297" y="161" width="200" height="14" rx="7" fill="#c8d9e2"/><rect x="297" y="194" width="245" height="14" rx="7" fill="#e1e9ed"/>`;
+}
+function analytics(t){
+ return `<rect width="624" height="244" rx="22" fill="#fff" stroke="#bfccd5" stroke-width="3"/>
+  <text x="29" y="35" fill="#344f69" font-size="20" font-weight="800">UNDERSTAND YOUR AUDIENCE</text>
+  <rect x="27" y="54" width="371" height="160" rx="12" fill="#f1f5f7"/>
+  <path d="M45 184H381M45 145H381M45 105H381M45 75H381" stroke="#d3e1e7" stroke-width="2"/>
+  <path d="M48 177L110 146 172 158 232 111 294 127 377 77" stroke="#2b6684" stroke-width="5" stroke-linejoin="round" fill="none"/>
+  <rect x="418" y="61" width="178" height="56" rx="11" fill="#e1edf1"/><text x="432" y="88" fill="#324c62" font-size="15">Website visits</text>
+  <rect x="418" y="131" width="178" height="55" rx="11" fill="#e7edf1"/><text x="432" y="163" fill="#324c62" font-size="15">Engagement</text>
+  <text x="30" y="233" fill="#6f8290" font-size="13">Illustrative chart — no actual customer data</text>`;
+}
+
 function graphic(kind,t,title) {
+  if (kind==='mobile') return mobile(t);
+  if (kind==='speed') return speed(t);
+  if (kind==='security') return security(t);
+  if (kind==='analytics') return analytics(t);
   if (kind==='browser') return browser(t);
   if (kind==='favicon') return favicon(t);
   if (kind==='brand') return brand(t);
@@ -123,7 +165,7 @@ function graphic(kind,t,title) {
   if (kind==='endcard') return endcard(t);
   return topic(t,title);
 }
-const HEADLINES={browser:'YOUR WEBSITE',favicon:'A TINY ICON. A REAL DIFFERENCE.',brand:'MAKE YOUR BRAND RECOGNIZABLE',social:'CONTENT PEOPLE WANT TO WATCH',store:'MAKE CHECKOUT SIMPLE',search:'HELP PEOPLE FIND YOU',contact:'TURN INTEREST INTO INQUIRIES',endcard:'GO BEYOND YOUR CURRENT REACH.',topic:'A MINUTE WITH EVAN'};
+const HEADLINES={browser:'YOUR WEBSITE',favicon:'A TINY ICON. A REAL DIFFERENCE.',brand:'MAKE YOUR BRAND RECOGNIZABLE',social:'CONTENT PEOPLE WANT TO WATCH',store:'MAKE CHECKOUT SIMPLE',search:'HELP PEOPLE FIND YOU',contact:'TURN INTEREST INTO INQUIRIES',endcard:'GO BEYOND YOUR CURRENT REACH.',topic:'A MINUTE WITH EVAN',mobile:'MAKE YOUR WEBSITE MOBILE-FRIENDLY',speed:'SPEED MATTERS',security:'PROTECT YOUR VISITORS',analytics:'MEASURE WHAT MATTERS'};
 function renderScene(t,data){
   const scenes=Array.isArray(data.scenePlan)&&data.scenePlan.length?data.scenePlan:[{start:0,end:data.duration,kind:'topic',title:'A minute with Evan'}];
   return scenes.filter(s=>t>=s.start-.24&&t<=s.end+.24).map((s,i)=>{

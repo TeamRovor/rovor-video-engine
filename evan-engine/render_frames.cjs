@@ -13,7 +13,7 @@ fs.mkdirSync(directory,{recursive:true});
   for(;i<end && Date.now()<deadline;i++){
     let target=path.join(directory,String(i).padStart(6,'0')+'.jpg');
     let staging=path.join(directory,String(i).padStart(6,'0')+'.writing.jpg');
-    if(data.characterStyle==='reference'){
+    if(data.characterStyle==='reference'||data.characterStyle==='calibrated'){
       fs.writeFileSync(staging,await renderReference(i/24,data));
     }else{
       await sharp(Buffer.from(render(i/24,data))).jpeg({quality:92}).toFile(staging);

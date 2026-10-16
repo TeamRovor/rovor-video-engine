@@ -5,10 +5,14 @@ All scene decisions may be overridden with a JSON plan.
 """
 import re
 
-KINDS = ('browser', 'favicon', 'brand', 'social', 'store', 'search', 'contact', 'endcard', 'topic')
+KINDS = ('browser', 'favicon', 'brand', 'social', 'store', 'search', 'contact', 'endcard', 'topic', 'mobile', 'speed', 'security', 'analytics')
 RULES = [
     ('endcard', (r'\brovor\b', r'\bcontact us\b', r'\bget in touch\b')),
     ('favicon', (r'\bfavicons?\b', r'\btab icons?\b')),
+    ('mobile', (r'\bmobile\b',r'\bresponsive\b',r'\bsmartphone\b',r'\bphones?\b',r'\btablet\b')),
+    ('speed', (r'\bpage speed\b',r'\bload times?\b',r'\bloading speed\b',r'\bfast(er)? website\b',r'\bperformance\b')),
+    ('security', (r'\bhttps\b',r'\bssl\b',r'\bcertificate\b',r'\bwebsite secur\w*\b',r'\bencrypt\w*\b')),
+    ('analytics', (r'\banalytics\b',r'\btraffic\b',r'\bvisitors?\b',r'\bconversion rates?\b',r'\bengagement metrics?\b')),
     ('social', (r'\bsocial media\b', r'\binstagram\b', r'\btiktok\b', r'\bfacebook\b', r'\bposts?\b', r'\breels?\b')),
     ('store', (r'\bonline stor\w*\b', r'\bcheckout\b', r'\bshopping\b', r'\borders?\b', r'\becommerce\b', r'\bproducts?\b')),
     ('search', (r'\bsearch results?\b', r'\bgoogle\b', r'\bseo\b', r'\brankings?\b', r'\bkeywords?\b')),
@@ -68,6 +72,8 @@ def generate_plan(segments, duration):
     for index, seg in enumerate(segments[1:], 1):
         when = float(seg['start'])
         kind = classify(seg['text'])
+        if kind == 'endcard' and when < duration * 0.6:
+            continue
         if not kind or kind == last_kind:
             continue
         # Avoid frantic slides. An explicit Rovor closing can arrive in the final seconds.
@@ -78,9 +84,8 @@ def generate_plan(segments, duration):
             continue
         visuals.append({'start': when, 'kind': kind, 'title': clean_title(seg['text'])})
         last_start, last_kind = when, kind
-    if len(visuals) == 1 and duration >= 12 and first_topic == 'topic':
-        half = min(duration - 3, duration * .52)
-        visuals.append({'start': half, 'kind': 'brand', 'title': 'Make your message clear'})
+    # Do not invent branding or unrelated graphics when narration has no cue.
+    # The original V3 inserted an arbitrary branding slide at the midpoint.
     scenes = [{**v, 'end': visuals[i+1]['start'] if i+1 < len(visuals) else duration} for i,v in enumerate(visuals)]
     return scenes, _gestures(segments, duration)
 

@@ -5,7 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require(process.env.EVAN_SHARP || 'sharp');
 const {renderScene} = require('./scene_graphics.cjs');
-const root=path.join(__dirname,'..','evan-character','v3-assets');
+const {putLogos} = require('./evan_brand.cjs');
+const roots={reference:path.join(__dirname,'..','evan-character','v3-assets'), calibrated:path.join(__dirname,'..','evan-character','v4-assets')};
 const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
 const xml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 const cache = new Map();
@@ -26,7 +27,7 @@ function background(t,scene){
     <defs><linearGradient id="paper" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#f9f6ef"/><stop offset="1" stop-color="#e1e9ed"/></linearGradient></defs>
     <rect width="720" height="1280" fill="url(#paper)"/>
     <circle cx="670" cy="865" r="288" fill="#d7e3ea" opacity=".55"/>
-    <text x="46" y="55" font-size="18" font-weight="800" letter-spacing="3" fill="#334d67">ROVOR DIGITAL</text>
+    <text x="99" y="53" font-size="18" font-weight="800" letter-spacing="2" fill="#334d67">ROVOR DIGITAL</text>
     ${renderScene(t,scene)}
   </svg>`;
 }
@@ -46,11 +47,14 @@ function overlay(t,scene){
     <rect x="46" y="1251" width="${progress}" height="5" rx="2.5" fill="#cf9f67"/>
   </svg>`;
 }
-async function sprite(name,mouth){
-  const key=name+'_'+mouth;
+async function sprite(name,mouth,style='calibrated'){
+  const key=style+'_'+name+'_'+mouth;
   if(cache.has(key)) return cache.get(key);
   let config=poses[name]; if(!config) throw new Error('Unknown pose '+name);
-  let src=path.join(root, name+'_'+mouth+'.png'); if(!fs.existsSync(src)) throw new Error('Missing V3 asset '+src);
+  const root=roots[style];
+  if(!root) throw new Error('Unknown sprite style '+style);
+  let src=path.join(root, name+'_'+mouth+'.png');
+  if(!fs.existsSync(src)) throw new Error('Missing Evan character asset '+src);
   let bytes=await sharp(src).resize({width:config.width}).png().toBuffer();
   cache.set(key,bytes);return bytes;
 }
@@ -58,12 +62,19 @@ async function renderReference(t,scene){
   const pose=activePose(t,scene), cfg=poses[pose];
   const shape=(scene.mouthCues||[]).find(c=>t>=c.start&&t<c.end)?.value || 'X';
   // Rhubarb phoneme categories are mapped to original mouth drawings.
-  const mouths={X:'rest',A:'MBP',B:'AE',C:'L',D:'open',E:'O',F:'O',G:'FV',H:'UW'};
-  const image=await sprite(pose,mouths[shape]||'rest');
+  const detailed={X:'rest',A:'MBP',B:'AE',C:'L',D:'open',E:'O',F:'O',G:'FV',H:'UW'};
+  // V4 defaults to restrained speech. The expressive 9-viseme option remains
+  // available but can exaggerate the face until a native Moho rig exists.
+  const subtle={X:'rest',A:'rest',B:'AE',C:'rest',D:'open',E:'open',F:'open',G:'rest',H:'rest'};
+  const mode=scene.mouthMode||'subtle';
+  const names=mode==='detailed'?detailed:(mode==='still'?{X:'rest'}:subtle);
+  const style=scene.characterStyle==='reference'?'reference':'calibrated';
+  const image=await sprite(pose,names[shape]||'rest',style);
   const bounce=Math.round(3*Math.sin(2.3*t)+2*Math.sin(4*t));
   const drift=Math.round(3*Math.sin(1.2*t));
   const plate=await sharp(Buffer.from(background(t,scene))).png().toBuffer();
-  const combined=await sharp(plate).composite([{input:image,left:cfg.left+drift,top:cfg.top+bounce}]).png().toBuffer();
+  const branded=await putLogos(plate,t,scene);
+  const combined=await sharp(branded).composite([{input:image,left:cfg.left+drift,top:cfg.top+bounce}]).png().toBuffer();
   return sharp(combined).composite([{input:Buffer.from(overlay(t,scene)),left:0,top:0}]).jpeg({quality:92}).toBuffer();
 }
 module.exports={renderReference,activePose,background,overlay};

@@ -76,4 +76,42 @@ class ReferenceArtworkTests(unittest.TestCase):
         ref = Path(__file__).resolve().parent.parent / "evan-character" / "references" / "evan-personality.png"
         self.assertTrue(ref.is_file())
 
+
+class V4ImprovementTests(unittest.TestCase):
+    def test_topic_cues_are_grounded(self):
+        examples = {
+            'Our website must be responsive on a mobile phone': 'mobile',
+            'Your page speed affects visitors': 'speed',
+            'Enable the HTTPS certificate': 'security',
+            'Check your website analytics': 'analytics',
+        }
+        for speech, expected in examples.items():
+            with self.subTest(speech=speech):
+                self.assertEqual(classify(speech), expected)
+
+    def test_no_unearned_brand_slide(self):
+        segments=[{'start':0.0,'end':5.0,'text':'Here is the lesson'},
+                  {'start':5.0,'end':11.0,'text':'And here is the explanation'}]
+        scenes,_=generate_plan(segments,11.0)
+        self.assertEqual([s['kind'] for s in scenes], ['topic'])
+
+    def test_brand_asset_is_real_png(self):
+        root=Path(__file__).resolve().parent.parent / 'evan-character' / 'brand'
+        for tone in ('white','black'):
+            self.assertEqual((root/f'rovor-mark-{tone}.png').read_bytes()[:8],b'\x89PNG\r\n\x1a\n')
+        self.assertTrue((root/'source-original.png').exists())
+
+    def test_v4_calibrated_sprites(self):
+        root=Path(__file__).resolve().parent.parent / 'evan-character' / 'v4-assets'
+        for pose in ('neutral','point','present'):
+            for phoneme in ('rest','MBP','AE','O','open','UW','FV','L','smile'):
+                self.assertEqual((root/f'{pose}_{phoneme}.png').read_bytes()[:8],b'\x89PNG\r\n\x1a\n')
+        config=json.loads((root/'calibration.json').read_text())
+        self.assertEqual(config['version'],4)
+        self.assertEqual(set(config['poses']),{'neutral','point','present'})
+
+    def test_storyboard_supports_new_visual_types(self):
+        for kind in ('mobile','speed','security','analytics'):
+            self.assertEqual(validate_plan([{'kind':kind,'start':0,'end':4}],4)[0]['kind'],kind)
+
 if __name__=='__main__':unittest.main()

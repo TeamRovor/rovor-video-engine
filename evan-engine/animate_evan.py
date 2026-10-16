@@ -19,9 +19,9 @@ HERE = Path(__file__).resolve().parent
 def run(args, env=None):
     try:
         result = subprocess.run([str(a) for a in args], capture_output=True, text=True,
-                                timeout=28, env=env, check=False)
+                                timeout=1800, env=env, check=False)
     except subprocess.TimeoutExpired as exc:
-        raise RuntimeError('A local step exceeded 28 seconds. Re-run with --resume; '
+        raise RuntimeError('A local step timed out. Re-run with --resume; '
                            'if it repeats, the tool may need a faster model or shorter audio.') from exc
     if result.returncode:
         raise RuntimeError('Local tool failed: ' + ' '.join(str(a) for a in args[:2]) +
@@ -71,7 +71,8 @@ def main():
     parser.add_argument('--config', type=Path, default=HERE / 'local_tools.json')
     parser.add_argument('--plan', type=Path, help='Optional hand-written JSON array of scenes')
     parser.add_argument('--resume', action='store_true', help='Continue stages in an existing output directory')
-    parser.add_argument('--character', choices=('reference','vector'), default='reference', help='Character artwork mode (reference sprites or V2 vector rig)')
+    parser.add_argument('--character', choices=('calibrated','reference','vector'), default='calibrated', help='V4 calibrated sprites (default), V3 reference sprites, or V2 vector')
+    parser.add_argument('--mouth-mode', choices=('subtle','detailed','still'), default='subtle', help='Subtle lips (default), detailed phonemes or no lip swapping')
     args = parser.parse_args()
     if not args.mp3.is_file() or args.mp3.suffix.lower() != '.mp3':
         parser.error('Please provide an existing MP3 recording.')
@@ -80,7 +81,8 @@ def main():
     audio = args.mp3.resolve()
     fingerprint = {'mp3': str(audio), 'size': audio.stat().st_size,
                    'modified_ns': audio.stat().st_mtime_ns,
-                   'plan': str(args.plan.resolve()) if args.plan else None, 'character': args.character}
+                   'plan': str(args.plan.resolve()) if args.plan else None, 'character': args.character,
+                   'mouth_mode': args.mouth_mode}
     args.output.mkdir(parents=True, exist_ok=args.resume)
     out = args.output.resolve()
     state = out / 'render_request.json'
@@ -98,8 +100,10 @@ def main():
              '-c:a', 'pcm_s16le', wav])
     with wave.open(str(wav)) as voice:
         duration = voice.getnframes() / voice.getframerate()
+    if duration > 900:
+        raise ValueError('Recordings longer than 15 minutes must be split into chapters.')
     if duration > 60:
-        raise ValueError('This prototype supports recordings up to 60 seconds.')
+        print(f'Long-form rendering: {duration:.0f} seconds of narration. This may take considerable time and disk space.', flush=True)
     transcript_path = out / 'transcript.json'
     transcript = read_json(transcript_path)
     if not transcript or not transcript.get('transcription'):
@@ -125,9 +129,13 @@ def main():
         provided_plan = json.loads(args.plan.read_text()) if args.plan else None
         scene = make_scene(transcript, cues, duration, provided_plan)
         scene['characterStyle'] = args.character
+        scene['mouthMode'] = args.mouth_mode
         scene_path.write_text(json.dumps(scene, indent=2))
-    if read_json(scene_path).get('duration') != duration:
+    current_scene=read_json(scene_path)
+    if current_scene.get('duration') != duration:
         raise ValueError('Scene metadata does not match the audio duration.')
+    if current_scene.get('characterStyle') != args.character or current_scene.get('mouthMode','subtle') != args.mouth_mode:
+        raise ValueError('Saved scene character/mouth settings differ; create a new output directory.')
     total = math.ceil(duration * 24)
     frames = out / 'frames'
     frames.mkdir(exist_ok=True)

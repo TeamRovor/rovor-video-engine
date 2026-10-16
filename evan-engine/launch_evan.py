@@ -41,7 +41,8 @@ def main():
         destination = Path(sys.argv[2]).expanduser().resolve()
         state = json.loads((destination / 'render_request.json').read_text())
         recording = Path(state['mp3'])
-        options = ['--resume', '--character', state.get('character','reference')]
+        options = ['--resume', '--character', state.get('character','calibrated'),
+                   '--mouth-mode', state.get('mouth_mode','subtle')]
         if state.get('plan'):
             options.extend(['--plan', state['plan']])
     else:
