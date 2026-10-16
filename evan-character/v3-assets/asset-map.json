@@ -1,0 +1,135 @@
+{
+  "source": "../references/evan-personality.png",
+  "rig_sheet": "../references/evan-rig-reference.png",
+  "extraction": "background matte + largest connected character; no generative repainting",
+  "assets": {
+    "neutral": {
+      "source_region": [
+        22,
+        10,
+        460,
+        850
+      ],
+      "size": [
+        438,
+        840
+      ]
+    },
+    "point": {
+      "source_region": [
+        414,
+        731,
+        714,
+        1218
+      ],
+      "size": [
+        300,
+        487
+      ]
+    },
+    "present": {
+      "source_region": [
+        711,
+        728,
+        1119,
+        1252
+      ],
+      "size": [
+        408,
+        524
+      ]
+    },
+    "confident": {
+      "source_region": [
+        459,
+        277,
+        674,
+        634
+      ],
+      "size": [
+        215,
+        357
+      ]
+    },
+    "amused": {
+      "source_region": [
+        667,
+        278,
+        885,
+        634
+      ],
+      "size": [
+        218,
+        356
+      ]
+    },
+    "talking": {
+      "source_region": [
+        889,
+        283,
+        1109,
+        642
+      ],
+      "size": [
+        220,
+        359
+      ]
+    }
+  },
+  "mouth_rectangles": {
+    "rest": [
+      346,
+      593,
+      437,
+      634
+    ],
+    "AE": [
+      473,
+      584,
+      555,
+      644
+    ],
+    "O": [
+      598,
+      581,
+      667,
+      643
+    ],
+    "UW": [
+      716,
+      594,
+      792,
+      637
+    ],
+    "L": [
+      839,
+      594,
+      934,
+      641
+    ],
+    "FV": [
+      976,
+      595,
+      1061,
+      637
+    ],
+    "MBP": [
+      1090,
+      594,
+      1187,
+      636
+    ],
+    "smile": [
+      1242,
+      584,
+      1345,
+      640
+    ],
+    "open": [
+      1375,
+      581,
+      1466,
+      644
+    ]
+  }
+}

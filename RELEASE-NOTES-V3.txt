@@ -1,0 +1,23 @@
+EVAN V3 REFERENCE ART — OCTOBER 16 2026
+
+SUCCESSFULLY VERIFIED LOCALLY:
+- Original high-detail Evan reference artwork preserved and extracted to transparent PNGs.
+- 3 main body/gesture poses; 3 portrait expressions.
+- 9 reference-mouth shapes; 27 ready-to-composite pose/viseme combinations.
+- 13 Python unit tests passed.
+- Node/Sharp image compositing was verified on the released storyboard.
+- Full 530-frame 720x1280 V3 sample MP4 with 22.08s H.264 video and AAC audio created.
+- All processing in the V3 demo was local; no external AI API was used.
+
+NOT CLAIMED:
+- We have NOT installed V3 on the user's Mac or modified Moho remotely.
+- We have NOT fixed Moho MCP communication.
+- This is NOT a fully articulated native Moho rig.
+- Full MP3-to-V3-video transcription/lip-sync has not been retested on the user's Mac
+  since V3 was packaged; V2 was shown to work there with these same installed tools.
+
+IMPORTANT:
+- The V3 installer creates an independent Codex MCP registration (rovor-evan-v3).
+- The install script intentionally does not overwrite rovor-evan-v2 or moho-mcp.
+- Default V3 art mode: --character reference. Old vector option: --character vector.
+- See START-HERE-V3.md and MOHO-RIG-SPEC-V3.md for instructions.

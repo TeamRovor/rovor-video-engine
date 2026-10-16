@@ -1,0 +1,13 @@
+.DS_Store
+__pycache__/
+*.pyc
+.env
+.env.*
+*.pem
+*.key
+*.log
+*.mp3
+*.wav
+*.mp4
+evan-videos/
+evan-engine/local_tools.json
