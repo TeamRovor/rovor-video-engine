@@ -6,7 +6,7 @@ This branch is an **experimental rigging foundation**, not an improved released 
 
 1. `evan-engine/build_layered_character.py` extracts a separate head and body for six approved source poses (`neutral`, `point`, `present`, plus portrait expressions `talking`, `amused`, `confident`). It preserves the real hair, shading, face, glasses, clothes and proportions. Soft overlap with original neck texture prevents holes during restrained head rotations.
 2. Layer geometry is stored in `evan-character/rig-layers/manifest.json` when generated. It includes neck pivots and original mouth anchors. The script makes no changes to source images.
-3. `evan-engine/moho_exposure.py` converts original Rhubarb lip-sync timestamps to Moho `MohoSwitch1` data with named mouth layers, plus a companion gesture exposure sheet. It is deterministic and offline.
+3. Rhubarb itself supports native Moho `dat` export (recommended). `evan-engine/moho_exposure.py` can also convert already generated Rhubarb JSON to `MohoSwitch1` text and a companion gesture exposure sheet; this is a fallback, not a replacement for Rhubarb.
 
 ### Generate layered art (requires Pillow)
 
@@ -22,13 +22,13 @@ Creates `evan-character/rig-layers/neutral_{head,body}.png`, `point_{head,body}.
 python3 evan-engine/moho_exposure.py /path/to/mouth.json --scene /path/to/scene.json --output /path/to/evan-mouth.dat --fps 24
 ```
 
-Import the 1-indexed `MohoSwitch1` file using your **Mouth** Switch layer's *Source Data* control. The switch layer must already contain artist-made layers named:
+Prefer the Rhubarb CLI's built-in `-f dat --datUsePrestonBlair --datFrameRate 24` on the actual recording when available. Import either valid 1-indexed `MohoSwitch1` file using the **Mouth** Switch layer's *Source Data* control. The switch layer must already contain artist-made layers named:
 
-`rest`, `MBP`, `AE`, `L`, `open`, `O`, `FV`, and `UW`.
+`rest`, `MBP`, `etc`, `E`, `AI`, `O`, `U`, `FV`, and `L` (Rhubarb's official Preston Blair names).
 
 For Moho vector interpolation, the mouth shapes must be compatible vector shapes with identical point topology; PNG switch layers cannot become interpolated vector morphs simply by enabling the checkbox. The `.gestures.csv` file is an exposure sheet, not automatic Moho bone keyframes.
 
-Official Moho documentation: https://www.lostmarble.com/moho/manual/switch_layers.html
+Official Moho documentation: https://www.lostmarble.com/moho/manual/switch_layers.html\nOfficial Rhubarb phoneme definitions and built-in Moho exporter: https://github.com/DanielSWolf/rhubarb-lip-sync/blob/master/README.adoc\n\n**Important root-cause finding:** The older V4 `subtle` renderer was incorrectly mapping C, G and H to idle and mapping several rounded vowels to the same wide open mouth. The experimental branch corrects those phoneme semantics, but the existing flattened sprite artwork is still insufficient for production-quality jaw articulation.
 
 ## Hard quality gate before claiming a production rig
 
