@@ -12,10 +12,10 @@ class MohoExposureTests(unittest.TestCase):
     def test_simple(self):
         keys=exposure([{"start":0,"end":.25,"value":"B"},
                        {"start":.25,"end":.5,"value":"A"}],24,.5)
-        self.assertEqual(keys,[(1,"AE"),(7,"MBP"),(13,"rest")])
+        self.assertEqual(keys,[(1,"etc"),(7,"MBP"),(13,"rest")])
     def test_gap(self):
         self.assertEqual(exposure([{"start":.1,"end":.2,"value":"D"}],20,.35),
-                         [(1,"rest"),(3,"open"),(5,"rest")])
+                         [(1,"rest"),(3,"AI"),(5,"rest")])
     def test_merged_similar_shapes(self):
         x=[{"start":0,"end":.05,"value":"E"},{"start":.05,"end":.1,"value":"F"}]
         self.assertEqual(exposure(x,60,.1),[(1,"O"),(7,"rest")])
@@ -31,7 +31,7 @@ class MohoExposureTests(unittest.TestCase):
             exposure([{"start":.3,"end":.2,"value":"B"}])
     def test_frame_count_and_end_rest(self):
         self.assertEqual(exposure([{"start":0,"end":.07,"value":"B"}],24,.07),
-                         [(1,"AE"),(3,"rest")])
+                         [(1,"etc"),(3,"rest")])
     def test_format(self):
         self.assertEqual(moho_dat([(1,"rest"),(11,"open")]),
                          "MohoSwitch1\n1 rest\n11 open\n")
