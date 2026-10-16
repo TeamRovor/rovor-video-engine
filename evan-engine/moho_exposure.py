@@ -9,8 +9,10 @@ import math
 from pathlib import Path
 
 VALID = frozenset("ABCDEFGHX")
-DEFAULT_MAP = {"X":"rest", "A":"MBP", "B":"AE", "C":"L", "D":"open",
-               "E":"O", "F":"O", "G":"FV", "H":"UW"}
+# Matches Rhubarb's built-in --datUsePrestonBlair mapping.
+# Prefer Rhubarb's native -f dat exporter when the CLI is available.
+DEFAULT_MAP = {"X":"rest", "A":"MBP", "B":"etc", "C":"E", "D":"AI",
+               "E":"O", "F":"U", "G":"FV", "H":"L"}
 
 
 def exposure(cues, fps=24, duration=None, mapping=None):
