@@ -4,7 +4,7 @@ This branch is an **experimental rigging foundation**, not an improved released 
 
 ## What actually works now
 
-1. `evan-engine/build_layered_character.py` extracts a separate head and body for each original approved pose (`neutral`, `point`, `present`). It preserves the real hair, shading, face, glasses, clothes and proportions. Soft overlap with original neck texture prevents holes during restrained head rotations.
+1. `evan-engine/build_layered_character.py` extracts a separate head and body for six approved source poses (`neutral`, `point`, `present`, plus portrait expressions `talking`, `amused`, `confident`). It preserves the real hair, shading, face, glasses, clothes and proportions. Soft overlap with original neck texture prevents holes during restrained head rotations.
 2. Layer geometry is stored in `evan-character/rig-layers/manifest.json` when generated. It includes neck pivots and original mouth anchors. The script makes no changes to source images.
 3. `evan-engine/moho_exposure.py` converts original Rhubarb lip-sync timestamps to Moho `MohoSwitch1` data with named mouth layers, plus a companion gesture exposure sheet. It is deterministic and offline.
 
@@ -41,6 +41,6 @@ Official Moho documentation: https://www.lostmarble.com/moho/manual/switch_layer
 
 ## Honest status
 
-The experimental head split reproduces each source pose at 0 degrees with a mean RGB error below 0.02 (on a 0–255 scale) in local tests, and its 3-degree head rotations were visually inspected. A local 22-second Rhubarb example produced a 137-key Moho Switch1 file. **Moho itself has not imported these layers in this session, and facial/art quality has NOT been approved by the user.** The original scene/renderer remains unchanged on this branch.
+The experimental head split reproduces each of six source poses at 0 degrees with a mean RGB error below 0.02 (on a 0–255 scale) in local tests, and its 3-degree head rotations were visually inspected. A local 22-second Rhubarb example produced a 137-key Moho Switch1 file. **Moho itself has not imported these layers in this session, and facial/art quality has NOT been approved by the user.** The original scene/renderer remains unchanged on this branch.
 
 The next meaningful job is constructing artist-quality vector mouth shapes and a Moho project tying those layers to bone pivots, rather than claiming success from another PNG viseme swap.
