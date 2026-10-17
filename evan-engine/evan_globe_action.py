@@ -26,6 +26,37 @@ def ease(v):
     return x*x*(3-2*x)
 
 
+def acting_pulse(t, rise_start, rise_end, hold_end, fall_end):
+    """Continuous accent with anticipation, deliberate hold, and follow-through."""
+    if not (rise_start<rise_end<=hold_end<fall_end):
+        raise ValueError("Invalid acting curve")
+    return ease((t-rise_start)/(rise_end-rise_start)) * (1-ease((t-hold_end)/(fall_end-hold_end)))
+
+
+def globe_action_controls(t):
+    """Narration-attached, *anatomically bounded* reaction acting on original FK rig.
+
+    The head/mouth's original acoustic cues are kept; only body joint angles,
+    secondary head tilt and authored hand attitude are adjusted to what the
+    mascot actually does. No random motion or substituted character art.
+    """
+    c=narration_acting(t)
+    surprise=acting_pulse(t,2.86,3.07,3.37,3.56)
+    reach=acting_pulse(t,3.55,3.78,4.22,4.45)
+    missed=acting_pulse(t,4.43,4.56,4.80,5.02)
+    c['right']=[
+        c['right'][0]+2.5*surprise-4.0*reach+3.0*missed,
+        c['right'][1]+7.0*surprise-10.0*reach+7.0*missed,
+        c['right'][2]-3.0*surprise+5.0*reach-2.5*missed]
+    c['left']=[
+        c['left'][0]-3.0*surprise+1.5*reach+2.5*missed,
+        c['left'][1]+6.0*surprise-4.0*reach+5.0*missed,
+        c['left'][2]+1.0*surprise-1.5*reach+1.0*missed]
+    c['head']=c['head']+1.5*surprise-1.25*reach+1.4*missed
+    c['body_roll']=c['body_roll']-1.1*surprise+.75*reach+.9*missed
+    return c
+
+
 def hop(t):
     """Authored beats: hatch from browser tab, run, dodge, settle."""
     if not START<=t<=END:
@@ -215,7 +246,7 @@ class EvanGlobeAction:
         im=Image.new("RGBA",self.size)
         self.set.draw(im,t)
         if figure is None:
-            figure=self.body.render(t,self.plan,narration_acting(t))
+            figure=self.body.render(t,self.plan,globe_action_controls(t))
         if self.vertical:
             # Over-the-shoulder asymmetric staging: Evan stays LEFT of the
             # globe's movement lane, preventing facial overlap on portrait.
