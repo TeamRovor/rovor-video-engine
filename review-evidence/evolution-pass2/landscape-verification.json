@@ -1,0 +1,17 @@
+{
+  "video": "landscape-acting-review.mp4",
+  "videoSha256": "44e54a2c5efcdc33e053b6c9b2d0398805711cf206bff6d3e150d20e346cb6e8",
+  "dimensions": [
+    1920,
+    1080
+  ],
+  "fps": 60,
+  "decodedFrames": 1323,
+  "continuousTimestamps": true,
+  "referenceCorrelation": 0.999793152052941,
+  "offsetSamples": 0,
+  "comparisonSampleRate": 16000,
+  "decodedAudioSeconds": 22.047375,
+  "referenceAudioSeconds": 22.047375,
+  "phonemeTimingVerified": false
+}

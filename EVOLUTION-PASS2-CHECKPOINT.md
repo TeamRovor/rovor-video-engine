@@ -13,13 +13,17 @@
 7. **L tongue placement and occlusion.** The raised tongue is smaller and lifted toward the upper teeth, and composited behind the front teeth. Native comparisons show it stays within the mouth instead of reading as a protruding tongue. Bilabial closure remains pixel-identical to the original.
 8. **Shared mouth-warp maps.** Cavity and teeth reuse their identical inverse mapping. A five-pose local benchmark took 3.194 s with independent rebuilding versus 2.411 s shared, with identical output pixels (24.5% less time in this small benchmark). This is not a claimed 24.5% improvement for the complete video pipeline.
 
+9. **Decoded-video regression verification.** `verify_review_video.py` checks every decoded timestamp and frame, both native dimensions, 60 fps, audio-track start, and sample correlation against the original voice recording. Passthrough timestamps prevent FFmpeg from silently creating a regular cadence during verification. Shifted/mismatched audio and missing/repeated frames are covered by five additional tests. Each report identifies the tested video by SHA-256; this checks technical delivery, not acting or phoneme accuracy.
+
 The new scene selects these experimental body/mouth options through `REVIEW_BODY_OPTIONS` in `cartoon_body.py`. The source-based body-cache fingerprint includes that module and the artwork bytes, so a real rig or art change gets a new cache while composition-only changes can reuse it. Default legacy head/body comparison paths remain available.
 
 ## Verification so far
 
-40 focused tests pass after the final code/art changes, covering repaired registration, bounded pixel changes, wrist surface continuity, full-take geometry, mouth occlusion, exact shared-map output, bilabial closure, recording matching and 1080p60 timing. Native before/after stills were inspected. Some shoulder fold/edge and neck-join roughness remain; this is not studio approval.
+40 rig/render tests and five decoded-video-verifier tests pass after the final code/art changes, covering repaired registration, bounded pixel changes, wrist surface continuity, full-take geometry, mouth occlusion, exact shared-map output, bilabial closure, recording matching and 1080p60 timing. Native before/after stills were inspected. Some shoulder fold/edge and neck-join roughness remain; this is not studio approval.
 
-The complete original 22.047375-second recording is being rendered in landscape and vertical at 60 fps, using one body sample for both compositions and three bounded local workers. Expected output is 1,323 frames in each format. Current intermediate directory: parent `work/full-take-evolution-v3`; source body frames are fingerprinted under parent `work/body-cache`. Complete render/decode results must be recorded here before calling the videos validated.
+The complete original 22.047375-second recording has now rendered in both formats. Both files were fully decoded with timestamp passthrough: **1,323 frames each**, continuous timestamps, **1920×1080** / **1080×1920**, **60 fps**. Both audio tracks start at zero and decode to 22.047375 seconds, with **zero measured sample offset** and **0.999793** correlation against the original take at 16 kHz. Video duration is 22.05 seconds (the final partial audio frame is retained). Reports, including exact video SHA-256 identifiers, are in `review-evidence/evolution-pass2/`.
+
+Intermediate directory: parent `work/full-take-evolution-v3`; source body frames remain fingerprinted under parent `work/body-cache`. Landscape/portrait composition stills were inspected at opening, hand release, middle and closing positions. Technical delivery passes; this does not certify artistic finish or phoneme timing.
 
 ## Continue without repeating work
 
@@ -27,3 +31,7 @@ The complete original 22.047375-second recording is being rendered in landscape 
 - Do not retry the rejected generated F/V smile as if it were a new idea. The new F/V variant derives from the existing drawn contact.
 - Keep the new registered repairs, hand drawings and caches. Refine remaining sleeve/neck edges and hand-pose timing using full-length moving evidence.
 - Keep output at 1920×1080 / 1080×1920, 60 fps. Preserve voice assets locally; do not commit audio, video, body caches or private transfer data to GitHub.
+
+## Recheck a completed preview
+
+Run `evan-engine/verify_review_video.py VIDEO.mp4 ORIGINAL.wav --ffmpeg /absolute/path/to/ffmpeg --report report.json`, adding `--vertical` for portrait. The reference stays private and is not added to the repository. The verifier checks this full original take, rather than accepting a short clip as a completed delivery.

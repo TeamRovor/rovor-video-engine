@@ -1,0 +1,17 @@
+{
+  "video": "vertical-acting-review.mp4",
+  "videoSha256": "6b5f4a2324012db46215d1cd47a18584ebbf93f53d0a4803299f116dbc612f7d",
+  "dimensions": [
+    1080,
+    1920
+  ],
+  "fps": 60,
+  "decodedFrames": 1323,
+  "continuousTimestamps": true,
+  "referenceCorrelation": 0.999793152052941,
+  "offsetSamples": 0,
+  "comparisonSampleRate": 16000,
+  "decodedAudioSeconds": 22.047375,
+  "referenceAudioSeconds": 22.047375,
+  "phonemeTimingVerified": false
+}
