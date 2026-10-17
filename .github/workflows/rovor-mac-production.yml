@@ -16,6 +16,50 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  deliver-existing-review:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor deliver existing review'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check whether both 22-second development reviews have already passed verification
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          root=Path.home()/'Desktop/ROVOR_Evan_Full_Verified'
+          for label,orientation in (('Landscape','landscape'),('Portrait','portrait')):
+              p=root/('Evan_Verified_Development_1080p60_'+label+'.mp4')
+              report=root/('final-'+orientation+'.json')
+              if not p.is_file() or not report.is_file():
+                  raise SystemExit('NO_NEW_VERIFIED_OUTPUT_AVAILABLE='+label)
+              with p.open('rb') as f:
+                  h=hashlib.sha256()
+                  for part in iter(lambda:f.read(1048576),b''):h.update(part)
+              obj=json.loads(report.read_text())
+              assert obj.get('videoSha256')==h.hexdigest(), 'Hash mismatch '+label
+              assert obj.get('fps')==60 and obj.get('decodedFrames')==1323, 'Cadence '+label
+              assert obj.get('continuousTimestamps') is True, 'Timestamp gap '+label
+              assert obj.get('dimensions')==([1920,1080] if label=='Landscape' else [1080,1920]), 'Geometry '+label
+              assert obj.get('referenceCorrelation',0)>=.98 and abs(obj.get('offsetSamples',999))<=32, 'Audio mismatch '+label
+              print('EXISTING_VERIFIED_VIDEO_READY='+label)
+          PY
+      - name: Send finished existing review to private chat relay
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rovor-Evan-existing-verified-review-${{ github.run_id }}
+          path: |
+            /Users/amarhavic/Desktop/ROVOR_Evan_Full_Verified/Evan_Verified_Development_1080p60_Landscape.mp4
+            /Users/amarhavic/Desktop/ROVOR_Evan_Full_Verified/Evan_Verified_Development_1080p60_Portrait.mp4
+            /Users/amarhavic/Desktop/ROVOR_Evan_Full_Verified/final-landscape.json
+            /Users/amarhavic/Desktop/ROVOR_Evan_Full_Verified/final-portrait.json
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
   chat-delivery-smoke:
     # Private, short-lived GH Actions artifact; only manually approved Rovor commit.
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor chat delivery smoke'
