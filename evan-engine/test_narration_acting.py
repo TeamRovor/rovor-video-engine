@@ -14,7 +14,7 @@ class NarrationActingTests(unittest.TestCase):
         for t in np.arange(1323)/60:
             controls=narration_acting(float(t))
             arms=list(body.arms.items())
-            if controls['right_hand']=='point':arms.append(('right',body.point_forearm))
+            if controls['right_hand'] in ('point','relaxed'):arms.append(('right',body.point_forearm))
             for name,arm in arms:
                 v=skin_vertices(arm.vertices,arm.geometry,controls[name])
                 tri=v[np.asarray(arm.triangles)]
@@ -25,6 +25,9 @@ class NarrationActingTests(unittest.TestCase):
             attachment=plate.base @ plate.anchor
             expected=arm_transforms(plate.geometry,controls['right'])[2] @ attachment
             np.testing.assert_allclose(actual,expected,atol=.001)
+            wrist=np.asarray([plate.geometry['wrist']],dtype='float32')
+            skinned=skin_vertices(wrist,plate.geometry,controls['right'])[0]
+            np.testing.assert_allclose(skinned,actual[:2],atol=.001)
             corners=plate.corners @ plate.transform(controls['right']).T
             self.assertGreater(float(corners[:,0].min()+220),0)
             self.assertLess(float(corners[:,0].max()+220),1464)

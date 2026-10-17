@@ -12,6 +12,7 @@ from layered_cartoon_head import LayeredCartoonHead
 from cartoon_wrist import WristPlate, without_hand
 from cartoon_expression import upper_face
 ROOT=Path(__file__).resolve().parent.parent/'evan-character/cartoon-v1'
+REVIEW_BODY_OPTIONS={'body_cleanup':True,'mouth_anatomy':True}
 
 class CartoonArm(ArmMesh):
     def __init__(self,image,geometry):
@@ -63,7 +64,8 @@ def narration_acting(t):
                       track([(a,v*.5) for a,v in left],.11)],
                 right=[track(right),track([(a,v*2.5) for a,v in right],.06),
                        track([(a,v*.5) for a,v in right],.12)],
-                head=track(head), right_hand='point' if 2.35<=t<4.75 else 'open',
+                head=track(head), right_hand=('point' if 2.35<=t<4.75 else
+                    'relaxed' if 2.18<=t<2.35 or 4.75<=t<4.94 else 'open'),
                 brow_left=track([(0,0),(.7,0),(1.2,2.8),(4.4,2.8),(5.1,-1),
                                  (6.8,-1),(7.5,1.5),(8.8,1.5),(9.4,0),
                                  (14.5,0),(15.2,2),(18.8,2),(19.7,1),(22.047375,0)]),
@@ -76,29 +78,37 @@ def narration_acting(t):
                                  (21.4,.35),(22.047375,0)]))
 
 class CartoonBody:
-    def __init__(self,root=ROOT,contact_candidate=False):
+    def __init__(self,root=ROOT,contact_candidate=False,body_cleanup=False,mouth_anatomy=False):
         self.meta=json.loads((root/'body-rig/manifest.json').read_text())
         self.torso=Image.open(root/'body-rig/torso.png').convert('RGBA')
+        if body_cleanup:self.torso=Image.open(root/'body-rig/torso-cleanup-v2.png').convert('RGBA')
         self.arms={n:CartoonArm(Image.open(root/f'body-rig/arm-{n}.png').convert('RGBA'),g) for n,g in self.meta['arms'].items()}
-        self.head=LayeredCartoonHead(root,contact_candidate=contact_candidate)
+        self.head=LayeredCartoonHead(root,contact_candidate=contact_candidate,mouth_anatomy=mouth_anatomy)
         hand_meta=root/'hand-source/manifest.json'
         self.point_hand=None
+        self.hand_plates={}
         if hand_meta.exists():
-            plate=json.loads(hand_meta.read_text())['point-right']
-            geo=self.meta['arms']['right']
+            hand_metadata=json.loads(hand_meta.read_text())
+            plate=hand_metadata['point-right']
+            geo={**self.meta['arms']['right'],'wrist':plate.get('rigWrist',self.meta['arms']['right']['wrist'])}
             self.point_hand=WristPlate(Image.open(root/'hand-source'/plate['file']),plate,geo)
+            self.hand_plates['point']=self.point_hand
+            if 'relaxed-right' in hand_metadata:
+                relaxed=hand_metadata['relaxed-right']
+                self.hand_plates['relaxed']=WristPlate(Image.open(root/'hand-source'/relaxed['file']),relaxed,geo)
             original=Image.open(root/'body-rig/arm-right.png').convert('RGBA')
-            self.point_forearm=CartoonArm(without_hand(original,geo,plate.get('targetAttachment')),geo)
+            self.point_forearm=CartoonArm(without_hand(original,geo,plate.get('trimAttachment',plate.get('targetAttachment'))),geo)
     def layers(self,t,plan,controls=None):
         controls=acting(t) if controls is None else controls
         layers={'torso':Image.new('RGBA',(1464,1536))};layers['torso'].alpha_composite(self.torso,(220,0))
         for name,arm in self.arms.items():
-            pointing=name=='right' and controls.get('right_hand')=='point' and self.point_hand is not None
+            selected=self.hand_plates.get(controls.get('right_hand')) if name=='right' else None
+            pointing=selected is not None
             if pointing:arm=self.point_forearm
             im,(x,y)=arm.render(controls.get(name,(0,0,0)))
             layer=Image.new('RGBA',(1464,1536));layer.alpha_composite(im,(x+220,y));layers['arm-'+name]=layer
             if pointing:
-                im,(x,y)=self.point_hand.render(controls.get(name,(0,0,0)))
+                im,(x,y)=selected.render(controls.get(name,(0,0,0)))
                 layer.alpha_composite(im,(x+220,y))
         head=self.head.at(t,plan)
         head=upper_face(head,controls.get('brow_left',0),controls.get('brow_right',0))

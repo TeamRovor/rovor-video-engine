@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 from PIL import Image, ImageDraw
-from cartoon_body import CartoonBody, narration_acting
+from cartoon_body import CartoonBody, narration_acting,REVIEW_BODY_OPTIONS
 from render_cartoon_head_study import font, HERE
 from render_profile import DEFAULT_FPS, LANDSCAPE, VERTICAL, frame_count
 
@@ -22,7 +22,7 @@ def stage(t):
 
 class FaviconScene:
     def __init__(self,plan,vertical=False):
-        self.plan=plan;self.vertical=vertical;self.body=CartoonBody()
+        self.plan=plan;self.vertical=vertical;self.body=CartoonBody(**REVIEW_BODY_OPTIONS)
         self.size=VERTICAL if vertical else LANDSCAPE
         self.logo=Image.open(HERE.parent/'evan-character/brand/rovor-mark-black.png').convert('RGBA')
         self.icons={s:self.logo.resize((s,round(s*self.logo.height/self.logo.width)),Image.Resampling.LANCZOS) for s in (34,48,72)}

@@ -25,6 +25,8 @@ class WristPlate:
     def __init__(self, image, metadata, geometry):
         self.geometry = geometry
         self.image = np.asarray(image.convert('RGBA')).astype('float32')
+        self.image[self.image[:,:,3]<8]=0
+        self.image[:,:,:3]=np.clip(self.image[:,:,:3]*np.asarray(metadata.get('paletteScale',[1,1,1])),0,255)
         self.image[:,:,:3] *= self.image[:,:,3:4] / 255
         anchor = np.asarray(metadata['attachment'], float)
         axis = np.asarray(metadata['axisPoint'], float) - anchor
@@ -35,7 +37,7 @@ class WristPlate:
         self.base = np.array([[c,-s,0],[s,c,0],[0,0,1]], dtype='float32')
         self.base[:2,2] = attachment - self.base[:2,:2] @ anchor
         self.anchor = np.r_[anchor,1]
-        x0,y0,x1,y1=image.getbbox()
+        x0,y0,x1,y1=Image.fromarray(self.image[:,:,3].astype('uint8')).getbbox()
         self.corners = np.array([[x0,y0,1],[x1,y0,1],[x1,y1,1],[x0,y1,1]], dtype='float32')
 
     def transform(self, angles):

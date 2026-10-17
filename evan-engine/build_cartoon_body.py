@@ -17,8 +17,15 @@ def masked(image,points):
 
 def register_body(master,plate):
     raw=np.asarray(plate.resize(master.size,Image.Resampling.LANCZOS)).copy();base=np.asarray(master)
-    gray=lambda a:cv2.cvtColor(a[:,:,:3],cv2.COLOR_RGB2GRAY).astype('float32')/255
+    def gray(a):
+        # Hidden RGB in transparent pixels is not artwork. Compare both plates
+        # on a common matte so discarded head/leg-gap pixels cannot drive ECC.
+        alpha=a[:,:,3:4].astype('float32')/255
+        rgb=a[:,:,:3].astype('float32')*alpha+np.array([243,238,226],dtype='float32')*(1-alpha)
+        return cv2.cvtColor(rgb,cv2.COLOR_RGB2GRAY)/255
     mask=np.zeros(base.shape[:2],np.uint8);mask[420:670,410:620]=255;mask[700:1200,360:670]=255
+    mask[base[:,:,3]<240]=0
+    mask=cv2.erode(mask,np.ones((7,7),np.uint8))
     matrix=np.eye(2,3,dtype='float32')
     score,matrix=cv2.findTransformECC(gray(base),gray(raw),matrix,cv2.MOTION_AFFINE,(cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT,250,1e-6),mask,5)
     if score<.9 or np.max(abs(matrix[:,:2]-np.eye(2)))>.12:raise ValueError('Hidden body changed proportions; inspect before proceeding')

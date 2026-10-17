@@ -1,5 +1,7 @@
 # Evan acting development — 2026-10-17
 
+**Newer continuation:** read `EVOLUTION-PASS2-CHECKPOINT.md` first. It supersedes the registration-failure and repair status below; this file records the initial PR #5 milestone.
+
 Continue from this checkout without rebuilding earlier work. Branch: `development/evan-timing-review`, based on local/remote body-rig commit `79bd397`. First continuation commit `b62d839` preserved the separate art-reset safeguards from `09e0717` and added 1080p60 output. Main, V3/V4, approved updater/symlink and native Moho are untouched. No merge or deployment.
 
 ## New animation work

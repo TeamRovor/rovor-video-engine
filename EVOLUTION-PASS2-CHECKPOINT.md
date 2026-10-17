@@ -1,0 +1,29 @@
+# Evan evolution pass 2 — continue here
+
+2026-10-17. Continues Draft PR #5 and the existing local `development/evan-timing-review` checkout. Preserve all earlier projects, main, V3/V4, approved updater and native Moho. No merge, deployment or unattended Moho operation.
+
+## Implemented upgrades
+
+1. **Alpha-aware artwork registration.** `register_body()` previously treated invisible RGB as image evidence, so transparent leg gaps could falsely reject a correctly placed repair. Both images now use a common matte; only opaque source regions, eroded away from edges, drive ECC. Randomizing all fully transparent source RGB cannot alter registration. The existing shoulder candidate registers at 0.9931 with near-identity scale; the neck repair registers at 0.9935.
+2. **Bounded shoulder repair.** `build_body_cleanup.py` applies the registered shoulder drawing only in two small underarm regions. Original pixels outside the allowed patch regions remain identical. It does not replace the character with a newly generated full body.
+3. **Neck repair that preserves the collar.** A blanket neck-alpha trim was visually rejected because it produced a notch. The final repair replaces only selected neck colors with registered neck art and preserves the original alpha/collar. Original torso art remains independently available.
+4. **Actual wrist-joint attachment.** The independent hand and its forearm now share the anatomical wrist pivot, rather than rotating around the old palm pivot. Surface tests sample across the assembled join at several acting poses and reject transparent strips. Palette scales come from matching source-forearm and drawing-wrist sample patches.
+5. **A third genuine hand drawing.** A registered relaxed/half-point drawing now supplies a breakdown between open and pointing, and on release. No hand-image dissolve is used. Point and relaxed drawings are preserved separately with registration metadata; transitions still need animator review.
+6. **Less exaggerated F/V contact.** The new optional anatomy mode narrows and relaxes the original source-art contact, rather than using the rejected generated smile. The original F/V drawing remains intact. This reduces the frown-like aperture; it does not certify labiodental anatomy or phoneme timing.
+7. **L tongue placement and occlusion.** The raised tongue is smaller and lifted toward the upper teeth, and composited behind the front teeth. Native comparisons show it stays within the mouth instead of reading as a protruding tongue. Bilabial closure remains pixel-identical to the original.
+8. **Shared mouth-warp maps.** Cavity and teeth reuse their identical inverse mapping. A five-pose local benchmark took 3.194 s with independent rebuilding versus 2.411 s shared, with identical output pixels (24.5% less time in this small benchmark). This is not a claimed 24.5% improvement for the complete video pipeline.
+
+The new scene selects these experimental body/mouth options through `REVIEW_BODY_OPTIONS` in `cartoon_body.py`. The source-based body-cache fingerprint includes that module and the artwork bytes, so a real rig or art change gets a new cache while composition-only changes can reuse it. Default legacy head/body comparison paths remain available.
+
+## Verification so far
+
+40 focused tests pass after the final code/art changes, covering repaired registration, bounded pixel changes, wrist surface continuity, full-take geometry, mouth occlusion, exact shared-map output, bilabial closure, recording matching and 1080p60 timing. Native before/after stills were inspected. Some shoulder fold/edge and neck-join roughness remain; this is not studio approval.
+
+The complete original 22.047375-second recording is being rendered in landscape and vertical at 60 fps, using one body sample for both compositions and three bounded local workers. Expected output is 1,323 frames in each format. Current intermediate directory: parent `work/full-take-evolution-v3`; source body frames are fingerprinted under parent `work/body-cache`. Complete render/decode results must be recorded here before calling the videos validated.
+
+## Continue without repeating work
+
+- Do not rerun recognition/alignment, regenerate unchanged source sheets, or rebuild completed plates. The 18 earlier acoustic flags and evidence packets are preserved; no phone boundaries were changed in this pass.
+- Do not retry the rejected generated F/V smile as if it were a new idea. The new F/V variant derives from the existing drawn contact.
+- Keep the new registered repairs, hand drawings and caches. Refine remaining sleeve/neck edges and hand-pose timing using full-length moving evidence.
+- Keep output at 1920×1080 / 1080×1920, 60 fps. Preserve voice assets locally; do not commit audio, video, body caches or private transfer data to GitHub.
