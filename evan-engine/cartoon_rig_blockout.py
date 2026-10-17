@@ -15,6 +15,7 @@ import base64
 from dataclasses import dataclass
 from cartoon_hand_deform import isolated_pose, render_hand
 from cartoon_mouth_surfaces import mouth_svg
+from cartoon_secondary_motion import secondary_at
 import json
 import math
 from pathlib import Path
@@ -125,8 +126,8 @@ def capsule(length,radius,fill,stroke=INK):
 
 
 def hand_svg(style):
-    """Registered five-pose hand geometry retained for isolated source inspection."""
-    return isolated_pose(style, SKIN, INK)
+    """Shared registered source construction."""
+    return isolated_pose(style,SKIN,INK)
 
 
 def hand_exposures(side,t,direction=None):
@@ -157,7 +158,6 @@ def arm_svg(side,s,t,direction=None):
     hand=s.handL if side=='L' else s.handR
     # Local +y bones; the hierarchy rotates around physically independent joints.
     layers=hand_exposures(side,t,direction)
-    # Interpolate corresponding finger joints; never ghost two flattened hands.
     hand_markup=render_hand(layers,SKIN,INK,prefix=f'hand-{side}-')
     return (f'<g id="arm-{side}" data-layer="arm-{side}" transform="translate({108*sign},-4) rotate({shoulder})">'
             f'<g id="upper-arm-{side}" data-layer="upper-arm-{side}">{capsule(103,30,SHIRT)}</g>'
@@ -169,10 +169,12 @@ def arm_svg(side,s,t,direction=None):
             '</g></g></g>')
 
 
-def face_svg(s):
+def face_svg(s,secondary=None):
     """Independent jaw, oral cavity, lip boundaries, teeth, tongue and brows."""
     opening=clamp(s.jawOpen)*(1-clamp(s.lipSeal))
     jaw_dy=13*opening
+    hairTilt=secondary.hairTilt if secondary is not None else 0.
+    hairShift=secondary.hairShift if secondary is not None else 0.
     return (
         f'<g id="head" data-layer="head" transform="translate(0,{-118+s.headNod:.2f}) rotate({s.headTilt:.2f})">'
         # Hair understructure and stable upper face.
@@ -201,7 +203,8 @@ def face_svg(s):
         f'Q -40,-13 -79,-35 Z M 10,-59 Q 45,-76 85,-64 L 79,-35 Q 40,-13 6,-38 Z" '
         f'fill="#111A27" stroke="{INK}" stroke-width="6" />'
         f'<path d="M -10,-57 Q 0,-65 10,-57" stroke="{INK}" stroke-width="7" fill="none" /></g>'
-        f'<g id="hair-front" data-layer="hair-front"><path d="M -95,-93 '
+        f'<g id="hair-front" data-layer="hair-front" '
+        f'transform="translate(0,-118) rotate({hairTilt:.3f}) translate({hairShift:.3f},118)"><path d="M -95,-93 ' 
         f'Q -120,-131 -72,-155 Q -74,-175 -37,-162 Q -18,-189 8,-168 '
         f'Q 38,-193 54,-166 Q 87,-175 96,-137 Q 111,-125 95,-85 '
         f'Q 82,-111 67,-119 Q 48,-100 29,-119 Q -6,-100 -22,-120 '
@@ -227,6 +230,7 @@ def official_brand_markup(path):
 def frame_svg(t,plan=None,brand=None,direction=None):
     if t<0:raise ValueError('Negative scene time')
     s=state_at(t,plan,direction)
+    secondary=secondary_at(t,lambda at:state_at(at,plan,direction))
     if brand is None and BRAND_PATH.exists():brand=BRAND_PATH
     mark,verified=official_brand_markup(brand)
     return f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -247,11 +251,13 @@ def frame_svg(t,plan=None,brand=None,direction=None):
            Q 0,252 108,231 L 127,92 Q 145,5 103,-22 L 45,-41 Q 0,4 -45,-41 Z"
            fill="{SHIRT}" stroke="{INK}" stroke-width="7" />
            <path d="M -45,-41 L 0,3 L 45,-41 L 29,18 L 0,40 L -29,18 Z" fill="#E7EEF2" stroke="{INK}" stroke-width="5" />
+           <g id="tie-secondary" data-layer="tie-secondary"
+              transform="translate(0,16) rotate({secondary.tieTilt:.3f}) translate(0,{-16-secondary.tieLift:.3f})">
            <path d="M 0,7 L -16,28 L 0,45 L 17,28 Z M 0,45 L -17,160 L 0,187 L 17,160 Z"
-           fill="{TIE}" stroke="{INK}" stroke-width="4" />
+           fill="{TIE}" stroke="{INK}" stroke-width="4" /></g>
            <path d="M -99,72 Q -83,168 -97,225 M 99,72 Q 83,168 97,225" fill="none"
            stroke="{SHIRT_SHADOW}" stroke-width="5" opacity=".8"/></g>
-         {face_svg(s)}
+         {face_svg(s,secondary)}
       </g>
       <g id="review-watermark" opacity=".85"><text x="42" y="688" fill="#62727A" font-family="sans-serif" font-size="14">
       ENGINEERING BLOCKOUT — not approved source art, studio animation or lip-sync validation
