@@ -21,16 +21,22 @@ Read CARTOON-EVAN-ORAL-LAYERS.md. A new optional LayeredCartoonHead separates sk
 
 Next priority: stop static-head micro-polishing and build hidden-surface torso/arm/hand plates and the body rig, with meaningful cartoon acting. Refine FV/L anatomy with redrawn art/animator help where needed. Preserve old/new films for comparison. All 18 audio timing flags still require review.
 
+## Latest body-rig milestone
+
+Read CARTOON-EVAN-BODY-RIG.md. Opt-in cartoon_body.py connects LayeredCartoonHead to separate original torso and arm surfaces, with independent shoulder/elbow/wrist FK per side, continuous skinning, delayed follow-through and modest head/body acting. body-rig/manifest.json is explicitly animationReady=false. The generated armless torso changed proportions and failed registration; body-source preserves that rejected candidate and prompt, while runtime uses original source overlap. No hidden-surface success is claimed.
+
+Review outputs ../../outputs/evan-cartoon-body-rig include 4.8125-second normal/quarter-speed narration study, native pose comparison and reopened four-layer PSD. 72 checks pass. Native visual inspection caught/fixed clipped shoulder mattes and an old chin fragment; extra armpit folds, neck transition and edge roughness remain. Hands use one open drawing per side, fingers unrigged, legs static, upper-face expressions absent. More artist-authored/redrawn components and animator acting review are needed. No Moho probe or approved release changes.
+
 ## Speech system
 
 Read ACOUSTIC-SPEECH-ALIGNMENT.md. b585490 implements two-pass PocketSphinx acoustic word/phone alignment, a 39-phone General American English catalog, diphthong glides, held vowels, lip contacts and six continuous controls at scene fps. Reference recording: 66 words, 248 phones, 1059 control samples, 18 word-anchor disagreements needing review. Coverage does not establish timing accuracy. Waveform/spectrogram exports show a useful pause/breath suppression after favicon. The earlier speech-system suite had 59 tests. Pipeline fingerprint is 4. Actual planner source is authoritative over historical painted docs.
 
 ## Next concrete work
 
-1. Improve the experimental registered cartoon head: separate oral interior/teeth/tongue surfaces and match mouth contours. Inspect documented defects at 0.583, 0.708 and 0.3125 seconds. Upper-face invariance and non-inverting interpolation now work, but source anatomy and line blends are not yet accepted. Seek redrawn/animator cleanup if FV/L remains unclear. Keep existing normal/slow diagnostic films for comparison.
-2. Build genuinely separate head, neck, torso, arms and useful hands with hidden overlap surfaces. The setup PNG is flattened source, not an articulated rig. Export real editable layers and verify reassembly.
-3. Extend the acoustic-driven head component into a genuine cartoon body rig, then render a short narration acting shot, especially P in open at 0.60–0.65 s, F/V/L and a pause. Review normal speed, slow speed and full-resolution sequences against the concept. No studio claim from tests or sprite swaps.
-4. Review the 18 timing disagreements against audio/spectrogram evidence. Keep uncertainty and estimated fallbacks visible.
+1. Repair visible armpit/neck seams with genuinely registered hidden-surface art. Do not accept generated replacement artwork that changes proportions; preserve original drawing and explicit rejected candidates.
+2. Add distinct relaxed/pointing hand drawings and an expression/brow rig; current open-hand FK study is not polished acting. Review full-resolution source and normal/slow film before increasing motion range.
+3. Audit all 18 timing disagreements against waveform/spectrogram evidence. Keep uncertainty explicit. Speech-phone coverage and geometric tests do not prove lip-sync accuracy.
+4. Improve F/V and L anatomy with redrawn art/animator review, then render a stronger narration-driven scene with an actual pause and meaningful pointing gesture. Preserve the current baseline films for comparison.
 
 ## Environment
 
