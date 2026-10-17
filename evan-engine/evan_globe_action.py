@@ -217,11 +217,11 @@ class EvanGlobeAction:
         if figure is None:
             figure=self.body.render(t,self.plan,narration_acting(t))
         if self.vertical:
-            # Medium close-up shares the physical desk rather than splitting
-            # the frame into disconnected presentation-card halves.
-            width=1170
-            x=-40+int(st["evanRecoil"])
-            y=865
+            # Over-the-shoulder asymmetric staging: Evan stays LEFT of the
+            # globe's movement lane, preventing facial overlap on portrait.
+            width=1320
+            x=-420+int(st["evanRecoil"])
+            y=840
         else:
             # Foreground Evan is staged for genuine interaction with the
             # bouncing prop; his legs are occluded by the near desk.
