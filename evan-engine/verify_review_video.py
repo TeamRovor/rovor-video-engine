@@ -65,7 +65,7 @@ def main():
     with wave.open(str(a.reference)) as w:duration=w.getnframes()/w.getframerate()
     checksums=subprocess.run([a.ffmpeg,'-nostdin','-hide_banner','-loglevel','error','-xerror',
         '-copyts','-i',str(a.video),'-map','0:v:0','-fps_mode','passthrough','-f','framemd5','-'],check=True,capture_output=True,text=True).stdout
-    with a.video.open('rb') as f:video_sha=hashlib.file_digest(f,'sha256').hexdigest()
+    with a.video.open('rb') as f:video_sha=hashlib.sha256(f.read()).hexdigest()
     report={'video':a.video.name,'videoSha256':video_sha,**verify_frames(checksums,(1080,1920) if a.vertical else (1920,1080),60,math.ceil(duration*60)),
             **compare_audio(decode_audio(a.ffmpeg,a.video),decode_audio(a.ffmpeg,a.reference))}
     if a.report:a.report.write_text(json.dumps(report,indent=2)+'\n')
