@@ -75,6 +75,14 @@ def hop(t):
     return (1.91+.06*u,0.,86,0.,u,"settle")
 
 
+def contact_pulse(t):
+    """One authored catch-and-slip beat while Evan points at the mascot."""
+    if not 3.58 <= t <= 4.30:
+        return 0.
+    u=ease((t-3.58)/.72)
+    return math.sin(math.pi*u)
+
+
 def framespec(t,vertical=False):
     v,air,r,leg,progress,beat=hop(t)
     if vertical:
@@ -94,7 +102,21 @@ def framespec(t,vertical=False):
         else:
             x=699+(v-1)*410
             y=684-30*abs(math.sin((t-2.97)*10)) if beat=="run" else 678
+    contact=contact_pulse(t)
+    if vertical:
+        # Evan stands below the browser: the mascot dives toward his actual
+        # pointing hand, then rebounds without crossing his face.
+        x+=4*contact
+        y+=335*contact
+        baseline_y=930.
+    else:
+        # The mirrored landscape hand points frame-left. The mascot briefly
+        # springs toward its fingertip instead of continuing a disconnected run.
+        x-=32*contact
+        y-=118*contact
+        baseline_y=678.
     return dict(x=x,y=y,r=r,air=air,leg=leg,beat=beat,progress=progress,
+                contact=contact,ground=baseline_y+r+40,
                 # Reaction displaces Evan's body plate without distorting the source drawing.
                 evanRecoil=(45*math.sin(math.pi*ease((t-3.48)/.62))
                             if 3.48<t<4.1 else 0))
@@ -112,16 +134,18 @@ class GlobePuppet:
         radius=max(9,int(r*self.s))
         beat=state["beat"]
         stride=math.sin((t-2.97)*22) if beat=="run" else 0
-        jumping=14*abs(math.sin((t-2.97)*11)) if beat=="run" else 0
+        jumping=(14*abs(math.sin((t-2.97)*11))*(1-state['contact'])
+                 if beat=="run" else 0)
         stretch=1+.09*abs(stride) if beat=="run" else 1
         if beat=="dodge":stretch=.8
         cx=int(x);cy=int(y-jumping)
         half_w=int(radius*stretch)
         half_h=int(radius/stretch)
         # Independent ground shadow prevents the figure from floating.
-        ground=cy+half_h+int(42*self.s)+int(jumping)
-        d.ellipse((cx-radius*.88,ground-10*self.s,cx+radius*.88,ground+12*self.s),
-                  fill="#c8d7d2")
+        ground=int(state['ground'])
+        shadow_scale=1.-.45*state['contact']
+        d.ellipse((cx-radius*.88*shadow_scale,ground-10*self.s,
+                   cx+radius*.88*shadow_scale,ground+12*self.s),fill="#c8d7d2")
         sw=max(3,int(7*self.s))
         # Limbs behind the body and timed like a running cartoon.
         if beat!="hatch" or radius>30:
@@ -279,4 +303,14 @@ class EvanGlobeAction:
         self.set.foreground(im)
         # Prop in front of desk/Evan: their paths share the physical foreground.
         self.puppet.render(im,st,t)
+        if st['contact']>.72:
+            # Three finite collision strokes. The original actor/prop drawings
+            # remain separate layers so they are never replaced or repainted.
+            d=ImageDraw.Draw(im)
+            px=int(st['x']-st['r']-9)
+            py=int(st['y']-st['r']*.55)
+            strength=st['contact']
+            for dx,dy in ((-24,-24),(-39,0),(-21,22)):
+                d.line((px+dx*.4,py+dy*.4,px+dx*strength,py+dy*strength),
+                       fill=GOLD,width=5)
         return im.convert("RGB")
