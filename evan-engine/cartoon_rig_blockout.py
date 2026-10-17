@@ -14,6 +14,7 @@ import argparse
 import base64
 from dataclasses import dataclass
 from cartoon_hand_deform import isolated_pose, render_hand
+from cartoon_mouth_surfaces import mouth_svg
 import json
 import math
 from pathlib import Path
@@ -171,39 +172,7 @@ def arm_svg(side,s,t,direction=None):
 def face_svg(s):
     """Independent jaw, oral cavity, lip boundaries, teeth, tongue and brows."""
     opening=clamp(s.jawOpen)*(1-clamp(s.lipSeal))
-    width=(35+12*clamp(s.lipSpread)-14*clamp(s.lipRound))*(1-.50*clamp(s.lowerLipContact))
-    mouth_height=1.3+27*opening
-    mouth_y=54
-    # Jaw follows the opening, but the stable sunglasses and hair never deform.
     jaw_dy=13*opening
-    seal=clamp(s.lipSeal)
-    tongue=clamp(s.tongueVisible)*opening
-    fv=clamp(s.lowerLipContact)
-    left_corner=-width;right_corner=width
-    smile_raise=7*s.smile
-    cavity=(f'<g id="oral-interior" data-layer="oral-interior">'
-            f'<path d="M {left_corner:.2f},{mouth_y:.2f} C {-width*.65:.2f},{mouth_y-mouth_height:.2f} '
-            f'{width*.65:.2f},{mouth_y-mouth_height:.2f} {right_corner:.2f},{mouth_y:.2f} '
-            f'C {width*.65:.2f},{mouth_y+mouth_height:.2f} {-width*.65:.2f},{mouth_y+mouth_height:.2f} '
-            f'{left_corner:.2f},{mouth_y:.2f} Z" fill="#5A2435" stroke="{INK}" stroke-width="3.5"/>'
-            '</g>')
-    teeth=(f'<g id="upper-teeth" data-layer="upper-teeth" opacity="{clamp(opening*2.0 + fv*.8):.3f}">'
-           f'<path d="M {-width*.66:.2f},{mouth_y-4:.2f} Q 0,{mouth_y+mouth_height*.08:.2f} '
-           f'{width*.66:.2f},{mouth_y-4:.2f} L {width*.48:.2f},{mouth_y+mouth_height*.35:.2f} '
-           f'Q 0,{mouth_y+mouth_height*.45:.2f} {-width*.48:.2f},{mouth_y+mouth_height*.35:.2f} Z" '
-           'fill="#FFF4E3"/></g>')
-    tongue_svg=(f'<g id="tongue" data-layer="tongue" opacity="{tongue:.3f}">'
-                f'<path d="M -16,{mouth_y+mouth_height*.54:.2f} Q 0,{mouth_y-mouth_height*.30:.2f} '
-                f'16,{mouth_y+mouth_height*.54:.2f} L 8,{mouth_y+mouth_height*.8:.2f} '
-                f'L -8,{mouth_y+mouth_height*.8:.2f} Z" fill="#EE8991" /></g>')
-    lip=(f'<g id="upper-lip" data-layer="upper-lip">'
-         f'<path d="M {left_corner:.2f},{mouth_y-smile_raise:.2f} Q 0,{mouth_y-mouth_height-4:.2f} '
-         f'{right_corner:.2f},{mouth_y-smile_raise:.2f}" fill="none" stroke="{INK}" stroke-width="5" '
-         'stroke-linecap="round" /></g>'
-         '<g id="lower-lip" data-layer="lower-lip">'
-         f'<path d="M {left_corner:.2f},{mouth_y-smile_raise:.2f} Q 0,{mouth_y+mouth_height+5:.2f} '
-         f'{right_corner:.2f},{mouth_y-smile_raise:.2f}" fill="none" stroke="{INK}" stroke-width="4.8" '
-         f'stroke-linecap="round" opacity="{1-seal*.45:.3f}" /></g>')
     return (
         f'<g id="head" data-layer="head" transform="translate(0,{-118+s.headNod:.2f}) rotate({s.headTilt:.2f})">'
         # Hair understructure and stable upper face.
@@ -220,7 +189,7 @@ def face_svg(s):
         f'L 73,-3 Q 0,6 -73,-3 Z" fill="{SKIN}" stroke="none" />'
         f'<path d="M -84,19 Q -88,76 -46,99 Q 0,123 46,99 Q 88,76 84,19" '
         f'fill="none" stroke="{INK}" stroke-width="5" stroke-linecap="round" />'
-        f'{cavity}{teeth}{tongue_svg}{lip}'
+        f'{mouth_svg(s)}'
         '</g>'
         # Nose, stable sunglasses and independent eyebrow expression.
         f'<g id="nose" data-layer="nose"><path d="M -5,-7 Q -8,7 6,10" fill="none" stroke="{SKIN_SHADE}" stroke-width="4"/></g>'
