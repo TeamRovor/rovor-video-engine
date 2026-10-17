@@ -36,7 +36,7 @@ jobs:
           cd "$root/evan-engine"
           "$py" -m unittest -v test_evan_globe_action
           "$py" -m py_compile evan_globe_action.py render_acting_video.py
-          "$py" render_acting_video.py "$plan" "$wav" "$out" --ffmpeg "$ffmpeg" --start-time 2.35 --duration 3.3 --workers 2 --visual-mode globe-action
+          "$py" render_acting_video.py "$plan" "$wav" "$out" --ffmpeg "$ffmpeg" --start-time 2.35 --duration 3.3 --workers 1 --visual-mode globe-action
           "$py" - "$out" "$ffmpeg" "$wav" <<'PY'
           import hashlib,json,subprocess,sys
           from pathlib import Path
