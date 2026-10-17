@@ -1,2 +1,2 @@
-mode=deliver-existing-review
-sequence=9
+mode=visual-qa
+sequence=10
