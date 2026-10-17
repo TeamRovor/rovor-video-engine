@@ -278,4 +278,17 @@ jobs:
           test -s "$out/final-portrait.json"
           echo 'ROVOR_FULL_1080P60_RENDER=VERIFIED'
           echo 'OUTPUT_STAYS_ON_MAC=YES'
-          echo 'PRIVATE_MEDIA_UPLOADED_TO_GITHUB=NO'
+          echo 'PRIVATE_MEDIA_NOT_COMMITTED_TO_REPOSITORY=YES'
+
+      - name: Relay verified videos as short-lived private review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rovor-Evan-development-review-${{ github.run_id }}
+          path: |
+            /Users/amarhavic/Desktop/ROVOR_Evan_Full_Verified/Evan_Verified_Development_1080p60_Landscape.mp4
+            /Users/amarhavic/Desktop/ROVOR_Evan_Full_Verified/Evan_Verified_Development_1080p60_Portrait.mp4
+            /Users/amarhavic/Desktop/ROVOR_Evan_Full_Verified/final-landscape.json
+            /Users/amarhavic/Desktop/ROVOR_Evan_Full_Verified/final-portrait.json
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
