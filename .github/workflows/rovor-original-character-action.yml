@@ -1,0 +1,76 @@
+name: Rovor original character acting review
+on:
+  push:
+    branches:
+      - development/evan-1080p60-acting-77a9561
+    paths:
+      - .github/rovor-mac-request.txt
+permissions: {}
+concurrency:
+  group: rovor-mac-action-review
+  cancel-in-progress: false
+jobs:
+  acted-sample:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor original character action'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Evan original rig in isolated workspace
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_action_${{ github.run_id }}
+      - name: Test, render and verify original narrated action sample at 1080p60
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          root="$GITHUB_WORKSPACE/_rovor_action_$GITHUB_RUN_ID"
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          wav="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an/work/evan-narration.wav"
+          plan="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an-2/work/speech-alignment-v4/speech-plan.json"
+          ffmpeg="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an/work/media-tools/ffmpeg"
+          out="$HOME/Movies/RovorProduction/acted-globe-$GITHUB_SHA"
+          test -x "$py" && test -x "$ffmpeg" && test -s "$wav" && test -s "$plan"
+          cd "$root/evan-engine"
+          "$py" -m unittest -v test_evan_globe_action
+          "$py" -m py_compile evan_globe_action.py render_acting_video.py
+          "$py" render_acting_video.py "$plan" "$wav" "$out" --ffmpeg "$ffmpeg" --start-time 2.35 --duration 3.3 --workers 2 --visual-mode globe-action
+          "$py" - "$out" "$ffmpeg" "$wav" <<'PY'
+          import hashlib,json,subprocess,sys
+          from pathlib import Path
+          from verify_review_video import decode_audio,verify_frames,compare_audio
+          output=Path(sys.argv[1]);ffmpeg=sys.argv[2];wav=sys.argv[3]
+          reference=decode_audio(ffmpeg,Path(wav))
+          excerpt=reference[round(2.35*16000):round(5.65*16000)]
+          for label,dims in (('landscape',(1920,1080)),('vertical',(1080,1920))):
+              path=output/(label+'-acting-review.mp4')
+              assert path.is_file() and path.stat().st_size>100000, 'Missing MP4 '+label
+              md5=subprocess.run([ffmpeg,'-nostdin','-hide_banner','-loglevel','error','-xerror',
+                   '-copyts','-i',str(path),'-map','0:v:0','-fps_mode','passthrough',
+                   '-f','framemd5','-'],check=True,capture_output=True,text=True).stdout
+              frames=verify_frames(md5,dims,60,198)
+              audio=compare_audio(decode_audio(ffmpeg,path),excerpt)
+              sha=hashlib.sha256(path.read_bytes()).hexdigest()
+              result={"video":path.name,"videoSha256":sha,**frames,**audio,
+                      "sourceExcerptSec":[2.35,5.65],
+                      "visualArtisticApproval":False,"phonemeBoundariesCertified":False}
+              (output/(label+'-verification.json')).write_text(json.dumps(result,indent=2)+"\n")
+              print("ACTED_SAMPLE_"+label.upper()+"_VIDEO=VERIFIED",flush=True)
+          PY
+          "$py" "$root/rovor-production/visual_dynamics_audit.py" "$out/landscape-acting-review.mp4" --report "$out/visual-motion.json"
+          echo "ARTISTIC_APPROVAL=NOT_GIVEN"
+      - name: Deliver rendered review as short-lived private artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rovor-Evan-Acted-Sequence-${{ github.run_id }}
+          path: |
+            /Users/amarhavic/Movies/RovorProduction/acted-globe-${{ github.sha }}/landscape-acting-review.mp4
+            /Users/amarhavic/Movies/RovorProduction/acted-globe-${{ github.sha }}/vertical-acting-review.mp4
+            /Users/amarhavic/Movies/RovorProduction/acted-globe-${{ github.sha }}/landscape-verification.json
+            /Users/amarhavic/Movies/RovorProduction/acted-globe-${{ github.sha }}/vertical-verification.json
+            /Users/amarhavic/Movies/RovorProduction/acted-globe-${{ github.sha }}/visual-motion.json
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
