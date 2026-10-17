@@ -1,2 +1,5 @@
-mode=storyboard-preview
-sequence=12
+mode=original-character-action
+source=original-Evan-22.047s
+start=2.35
+end=5.65
+sequence=13
