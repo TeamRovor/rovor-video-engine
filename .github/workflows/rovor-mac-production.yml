@@ -16,6 +16,65 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  production-selftest:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor production selftest'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout non-media production utilities only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            rovor-production
+          sparse-checkout-cone-mode: false
+      - name: Validate audio catalog, private delivery and editorial guard
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m py_compile rovor-production/audio_intake.py rovor-production/private_delivery.py rovor-production/quality_gate.py
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0,'rovor-production')
+          from quality_gate import audit
+          assert not audit({"durationSec":60,"shots":[
+            {"start":0,"end":60,"kind":"talking-head","visualPurpose":"Evan simply speaks to the audience","animatedActions":["small hand gesture"],"originalAssetIds":["Evan"],"composition":"locked"}
+          ]})["valid"]
+          kinds=["environment","action","visual-explainer","object-demo","metaphor","reaction","visual-explainer","action","visual-explainer","environment"]
+          shots=[{"start":i*6,"end":(i+1)*6,"kind":kind,
+                  "visualPurpose":"Illustrate a different narrated idea with original art",
+                  "animatedActions":["object transformation","camera movement"],
+                  "originalAssetIds":["evan",f"custom-{i}"],
+                  "composition":"staged multi-plane shot"} for i,kind in enumerate(kinds)]
+          report=audit({"durationSec":60,"shots":shots})
+          assert report["valid"],report["problems"]
+          assert not report["publicationApproved"]
+          print("STORYBOARD_GATE_TEST=PASS")
+          PY
+
+  private-delivery:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor private delivery'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout only validated media-delivery utility
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            rovor-production/private_delivery.py
+          sparse-checkout-cone-mode: false
+      - name: Copy verified 1080p60 reference videos into private Drive Desktop folder
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 rovor-production/private_delivery.py --label "Evan-22-second-review-$GITHUB_RUN_ID"
+          echo 'GITHUB_MEDIA_ARTIFACT_UPLOADED=NO'
+
   audio-catalog:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor audio catalog'
     runs-on: [self-hosted, macOS, X64, rovor-video]
