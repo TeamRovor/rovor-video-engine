@@ -1,0 +1,87 @@
+name: Rovor Mac approved production
+
+# Only trusted, explicitly approved requests on this one development branch.
+# No pull_request trigger, no actions/checkout, no GitHub artifacts, no secrets.
+on:
+  push:
+    branches:
+      - development/evan-1080p60-acting-77a9561
+    paths:
+      - .github/rovor-mac-request.txt
+
+permissions: {}
+
+concurrency:
+  group: rovor-private-mac-video-production
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    if: github.event.head_commit.message == 'Approved Rovor preflight'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: Check approved Mac environment (no private media read)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(uname -s)" = Darwin
+          test "$(uname -m)" = x86_64
+          test -f "$HOME/Desktop/Rovor_Evan_Mac_Render_Kit/run_mac.sh"
+          test -f "$HOME/Documents/Codex/2026-10-17/new-chat/work/rovor-video-engine/EVOLUTION-PASS2-CHECKPOINT.md"
+          test -f "$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an/work/evan-narration.wav"
+          test -f "$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an-2/work/speech-alignment-v4/speech-plan.json"
+          test -x "$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an/work/media-tools/ffmpeg"
+          test -f "/System/Library/Fonts/Helvetica.ttc"
+          printf 'ROVOR_MAC_PREFLIGHT=PASS\n'
+          printf 'EXPECTED_FORMATS=1920x1080_60fps,1080x1920_60fps\n'
+
+  full-dual-format-render:
+    if: github.event.head_commit.message == 'Approved Rovor full render'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 240
+    steps:
+      - name: Validate existing trusted local kit
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(uname -s)" = Darwin
+          test "$(uname -m)" = x86_64
+          test -f "$HOME/Desktop/Rovor_Evan_Mac_Render_Kit/run_mac.sh"
+          test -f "$HOME/Desktop/Rovor_Evan_Mac_Render_Kit/development/EVOLUTION-PASS2-CHECKPOINT.md"
+
+      - name: Apply exact Python 3.9 verifier compatibility fix to kit copies only
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          home = Path.home()
+          old = "hashlib.file_digest(f,'sha256').hexdigest()"
+          new = "hashlib.sha256(f.read()).hexdigest()"
+          for path in (
+              home / "Desktop/Rovor_Evan_Mac_Render_Kit/development/evan-engine/verify_review_video.py",
+              home / "Desktop/ROVOR_Evan_Full_Verified/development/evan-engine/verify_review_video.py",
+          ):
+              if path.is_file():
+                  current = path.read_text()
+                  if old in current:
+                      path.write_text(current.replace(old, new))
+          print("PYTHON39_VERIFIER_COMPATIBILITY=CHECKED")
+          PY
+
+      - name: Render 22-second landscape and portrait with original layered rig
+        shell: bash
+        env:
+          ROVOR_WORKERS: "3"
+        run: |
+          set -Eeuo pipefail
+          bash "$HOME/Desktop/Rovor_Evan_Mac_Render_Kit/run_mac.sh"
+          out="$HOME/Desktop/ROVOR_Evan_Full_Verified"
+          test -s "$out/Evan_Verified_Development_1080p60_Landscape.mp4"
+          test -s "$out/Evan_Verified_Development_1080p60_Portrait.mp4"
+          test -s "$out/final-landscape.json"
+          test -s "$out/final-portrait.json"
+          echo 'ROVOR_FULL_1080P60_RENDER=VERIFIED'
+          echo 'OUTPUT_STAYS_ON_MAC=YES'
+          echo 'PRIVATE_MEDIA_UPLOADED_TO_GITHUB=NO'
