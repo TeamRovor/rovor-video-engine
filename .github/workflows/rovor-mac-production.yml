@@ -16,6 +16,55 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  audio-catalog:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor audio catalog'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout catalog script only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            rovor-production/audio_intake.py
+          sparse-checkout-cone-mode: false
+      - name: Inventory local Rovor audio without uploading audio
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m py_compile rovor-production/audio_intake.py
+          python3 rovor-production/audio_intake.py catalog
+          echo 'CATALOG_STAYS_ON_MAC=YES'
+
+  audio-analyze:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor audio analysis'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout fixed analysis runner and approved selection
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            rovor-production/audio_intake.py
+            .github/rovor-mac-request.txt
+          sparse-checkout-cone-mode: false
+      - name: Analyze only allowlisted recording ID
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          source_id="$(sed -n 's/^audio_id=//p' .github/rovor-mac-request.txt | head -1)"
+          [[ "$source_id" =~ ^[0-9a-f]{16}$ ]] || { echo 'Invalid audio ID'; exit 1; }
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          test -x "$py"
+          "$py" -m py_compile rovor-production/audio_intake.py
+          "$py" rovor-production/audio_intake.py analyze --id "$source_id"
+          echo 'NO_PRIVATE_MEDIA_UPLOADED=YES'
+
   capability-audit:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor capability audit'
     runs-on: [self-hosted, macOS, X64, rovor-video]
