@@ -16,6 +16,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  capability-audit:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor capability audit'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: Read-only installed-tool audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          for exe in rclone whisper-cli whisper rhubarb ffmpeg ffprobe brew; do
+            if command -v "$exe" >/dev/null 2>&1; then
+              echo "TOOL_${exe}=PRESENT"
+            else
+              echo "TOOL_${exe}=NOT_ON_PATH"
+            fi
+          done
+          base="$HOME/Documents/Codex"
+          n="$(find "$base" -name local_tools.json -type f -maxdepth 10 2>/dev/null | wc -l | tr -d ' ')"
+          echo "LOCAL_TOOL_CONFIG_COUNT=$n"
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          if test -x "$py"; then
+            for module in pocketsphinx cmudict matplotlib numpy; do
+              if "$py" -c "import $module" >/dev/null 2>&1; then
+                echo "PYMODULE_${module}=PRESENT"
+              else
+                echo "PYMODULE_${module}=MISSING"
+              fi
+            done
+          fi
+
   preflight:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor preflight'
     runs-on: [self-hosted, macOS, X64, rovor-video]
