@@ -239,6 +239,11 @@ class EvanGlobeAction:
         if not self.vertical and abs(angle)>.01:
             plate=plate.rotate(angle,Image.Resampling.BICUBIC,
                                center=(round(width*.5),round(h*.86)))
+        if not self.vertical:
+            # Mirror only the staged landscape performance: Evan's existing
+            # right pointing hand now tracks the escaping globe on frame-left.
+            # Source artwork and articulatory cues remain untouched.
+            plate=plate.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
         im.alpha_composite(plate,(x,y))
         self.set.foreground(im)
         # Prop in front of desk/Evan: their paths share the physical foreground.
