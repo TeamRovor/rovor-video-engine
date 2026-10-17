@@ -121,7 +121,12 @@ jobs:
           py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
           test -x "$py"
           "$py" -m py_compile rovor-production/audio_intake.py
-          "$py" rovor-production/audio_intake.py analyze --id "$source_id"
+          asr="$(sed -n 's/^asr=//p' .github/rovor-mac-request.txt | head -1)"
+          case "$asr" in
+            off) "$py" rovor-production/audio_intake.py analyze --id "$source_id" --no-asr ;;
+            on)  "$py" rovor-production/audio_intake.py analyze --id "$source_id" ;;
+            *) echo 'Invalid transcription mode'; exit 1 ;;
+          esac
           echo 'NO_PRIVATE_MEDIA_UPLOADED=YES'
 
   capability-audit:
