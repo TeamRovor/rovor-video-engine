@@ -101,7 +101,7 @@ def main():
     if args.fps != 24:
         fingerprint['fps'] = args.fps
     if args.character == 'painted':
-        fingerprint['painted_renderer_version'] = 3
+        fingerprint['painted_renderer_version'] = 4
     if args.script:
         fingerprint['script'] = args.script.read_text()
     args.output.mkdir(parents=True, exist_ok=args.resume)
@@ -159,7 +159,7 @@ def main():
             planning_env=dict(os.environ)
             if cfg.get('painted_packages'):
                 planning_env['PYTHONPATH']=str(cfg['painted_packages'])+os.pathsep+planning_env.get('PYTHONPATH','')
-            run([cfg.get('painted_python',sys.executable), HERE / 'speech_planner.py', dialog, word_path, wav, mouth_path, out / 'speech-plan.json'], planning_env)
+            run([cfg.get('painted_python',sys.executable), HERE / 'speech_planner.py', dialog, word_path, wav, mouth_path, out / 'speech-plan.json', '--fps', args.fps], planning_env)
             scene['speechPlan']=read_json(out / 'speech-plan.json')
             run([cfg.get('painted_python',sys.executable), HERE / 'speech_review.py', out / 'speech-plan.json', wav, out / 'speech-timeline.png'], planning_env)
         scene_path.write_text(json.dumps(scene, indent=2))

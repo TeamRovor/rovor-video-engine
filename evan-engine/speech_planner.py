@@ -1,5 +1,5 @@
-"""Script pronunciation priors anchored to experimental word timestamps and audio.
-Phone boundaries are estimates, NOT forced alignment. Acoustic cues remain fallback.
+"""Script-to-sound animation planning with audited acoustic forced alignment.
+Duration priors and Rhubarb remain explicit fallbacks when alignment is rejected.
 """
 import re, wave
 from difflib import SequenceMatcher
@@ -9,15 +9,8 @@ OVERRIDES={'rovor':'R OW1 V ER0','favicon':'F AE1 V IH0 K AA0 N'}
 VOWELS=set('AA AE AH AO AW AY EH ER EY IH IY OW OY UH UW'.split())
 def tokens(text):return re.findall(r"[a-z]+(?:'[a-z]+)?",text.lower())
 def shape(phone):
-    p=phone.rstrip('012')
-    if p in ('M','B','P'):return 'A'
-    if p in ('F','V'):return 'G'
-    if p=='L':return 'H'
-    if p in ('UW','UH','W'):return 'F'
-    if p in ('OW','AO','OY'):return 'E'
-    if p in ('AA','AE','AW'):return 'D'
-    if p in VOWELS:return 'C'
-    return 'B'
+    from english_articulation import PHONE_CATALOG
+    return PHONE_CATALOG.get(phone.rstrip('012'),{'targets':['B']})['targets'][0]
 
 def audio_envelope(path):
     with wave.open(str(path)) as f:
@@ -28,7 +21,9 @@ def audio_envelope(path):
     rms=np.array([np.sqrt(np.mean(a*a)) for a in frames]);reference=max(.005,float(np.percentile(rms,90)))
     # Fixed absolute floor prevents silent recordings normalizing into speech.
     energy=np.clip((rms-.002)/reference,0,1)
-    energy=np.convolve(energy,[.2,.6,.2],mode='same')[:len(rms)]
+    kernel=np.array([1,2,3,4,3,2,1],float);kernel/=kernel.sum()
+    # Smooth micro-dips without turning every glottal pulse into a jaw twitch.
+    energy=np.convolve(np.pad(energy,(3,3),mode='edge'),kernel,mode='valid')
     return {'step':hop/rate,'rms':rms.round(6).tolist(),'energy':energy.round(5).tolist(),'reference':reference}
 
 def build_plan(script,transcript,wav,cues,dictionary=None):
@@ -75,7 +70,9 @@ def build_plan(script,transcript,wav,cues,dictionary=None):
 
 def planned_weights(t,plan,fallback):
     from painted_timing import speech_weights,ease
-    nearby=[p for p in plan['phonemes'] if p['start']-.08<=t<=p['end']+.08]
+    if plan.get('alignment',{}).get('status')=='acoustic':
+        return acoustic_weights(t,plan,fallback)
+    nearby=[p for p in plan.get('gestures',plan['phonemes']) if p['start']-.08<=t<=p['end']+.08]
     # Blend acoustic recognizer and pronunciation priors; contacts dominate only
     # around their estimated midpoint. Unknown/mismatched words use audio cues.
     prior=speech_weights(t,nearby,preserve_short=True) if nearby else speech_weights(t,fallback);acoustic=speech_weights(t,fallback)
@@ -89,9 +86,59 @@ def planned_weights(t,plan,fallback):
     silence=float(np.clip(energy/.035,0,1));weights*=silence;weights[0]+=1-silence
     return weights/weights.sum()
 
+def acoustic_weights(t,plan,fallback):
+    from painted_timing import ease
+    out=np.zeros(9,float);out[0]=.06;contact=0.;fv=0.
+    for g in plan.get('gestures',plan['phonemes']):
+        a,b=g['start'],g['end'];center=(a+b)/2;symbol=g['value']
+        if abs(t-center)>.25+(b-a)/2:continue
+        base=g['phone'].rstrip('012')
+        radius=max(.055,min(.14,(b-a)/2+.045))
+        distance=abs((t+.018-center)/radius)
+        if base in VOWELS:
+            # Sustain a long vowel instead of pulsing only at its midpoint.
+            strength=float(ease((t-(a-.035))/.060))*(1-float(ease((t-(b-.020))/.065)))
+        else:
+            strength=(1-distance*distance)**2 if distance<1 else 0.
+        salience=1 if base in VOWELS or symbol in 'AGH' else .40
+        out['XABCDEFGH'.index(symbol)]+=salience*strength
+        envelope=float(ease((t-(a-.045))/.060))*(1-float(ease((t-(b-.010))/.065)))
+        if symbol=='A':contact=max(contact,envelope)
+        if symbol=='G':fv=max(fv,envelope)
+    out[0]=max(.06,1-out[1:].sum())
+    out/=out.sum()
+    env=plan['audio'];energy=float(np.interp(t,np.arange(len(env['energy']))*env['step'],env['energy']))
+    for symbol in 'CDEF':
+        i='XABCDEFGH'.index(symbol);removed=out[i]*(1-(.40+.60*np.sqrt(energy)));out[i]-=removed;out[0]+=removed
+    # Sustained silence settles to rest. Silent bilabial closures still retain
+    # their contact target; waveform amplitude never decides phone identity.
+    gate=1.
+    for silence in plan.get('silences',[]):
+        a,b=silence['start'],silence['end']
+        if b-a<.08:continue
+        rest=float(ease((t-a)/.070))*(1-float(ease((t-(b-.070))/.070)))
+        gate*=1-rest
+    out*=gate;out[0]+=1-gate
+    out*=1-fv*.85;out[7]+=fv*.85
+    out*=1-contact;out[1]+=contact
+    return out/out.sum()
+
+def finalize_plan(plan,wav,fps=48,required=False):
+    from acoustic_alignment import upgrade_plan
+    from english_articulation import phone_gestures,PHONE_CATALOG,cartoon_controls
+    plan=upgrade_plan(plan,wav,required)
+    plan['gestures']=phone_gestures(plan['phonemes'])
+    plan['phoneCatalog']=PHONE_CATALOG
+    plan['controlContract']='Normalized animation targets, not anatomical measurements; spelling maps to pronunciation, not one pose per letter'
+    n=int(np.ceil(len(plan['audio']['energy'])*plan['audio']['step']*fps))
+    plan['controlFps']=fps
+    plan['controls']=[dict(time=round(i/fps,6),**{k:round(v,6) for k,v in cartoon_controls(planned_weights(i/fps,plan,plan['fallbackCues'])).items()}) for i in range(n)]
+    return plan
+
 if __name__=='__main__':
     import argparse,json
     from pathlib import Path
-    p=argparse.ArgumentParser();p.add_argument('script',type=Path);p.add_argument('words',type=Path);p.add_argument('wav',type=Path);p.add_argument('cues',type=Path);p.add_argument('output',type=Path);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('script',type=Path);p.add_argument('words',type=Path);p.add_argument('wav',type=Path);p.add_argument('cues',type=Path);p.add_argument('output',type=Path);p.add_argument('--fps',type=int,choices=(24,30,48,60,120),default=48);p.add_argument('--require-alignment',action='store_true');a=p.parse_args()
     plan=build_plan(a.script.read_text(),json.loads(a.words.read_text()),a.wav,json.loads(a.cues.read_text())['mouthCues'])
+    plan=finalize_plan(plan,a.wav,a.fps,a.require_alignment)
     a.output.write_text(json.dumps(plan,indent=2))

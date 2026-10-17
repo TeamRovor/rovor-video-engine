@@ -1,3 +1,5 @@
+Latest implementation: see ACOUSTIC-SPEECH-ALIGNMENT.md. The following describes the earlier duration-prior milestone, preserved for comparison.
+
 # Script and recording driven speech planning
 
 The painted renderer now reads the actual narration script (optional `--script narration.txt`; otherwise the recognized transcript), extracts separate experimental Whisper word timestamps, aligns matching words to the script, and expands CMUdict pronunciations into mouth gestures. Explicit project pronunciations cover favicon and Rovor. P/B/M predict lip closure, F/V predict lower-lip contact, L predicts tongue placement, and vowels predict opening/rounding. Pronunciation priors blend with the existing acoustic Rhubarb cues rather than discarding recording evidence.

@@ -1,4 +1,4 @@
-"""Export recording waveform, planned mouth weights and word/phone evidence."""
+"""Export waveform, spectrogram, mouth controls and word/phone evidence."""
 import argparse,json,wave
 from pathlib import Path
 import numpy as np
@@ -11,25 +11,36 @@ def render_review(plan,wav,output,start=0,duration=2.5):
     with wave.open(str(wav)) as f:
         rate=f.getframerate();channels=f.getnchannels()
         x=np.frombuffer(f.readframes(f.getnframes()),'<i2').reshape(-1,channels).mean(axis=1)/32768
-    end=min(start+duration,len(x)/rate);p=plan
-    fig,axes=plt.subplots(4,1,figsize=(18,9),sharex=True,gridspec_kw={'height_ratios':[2,1,1,1]})
+    end=min(start+duration,len(x)/rate)
+    if start<0 or end<=start:raise ValueError('Choose a non-empty review interval inside the recording')
+    p=plan;acoustic=p.get('alignment',{}).get('status')=='acoustic'
+    fig,axes=plt.subplots(5,1,figsize=(18,11),sharex=True,gridspec_kw={'height_ratios':[2,2,1,1,1]})
+    waveform,spectrum,controls,words,phones=axes
     time=np.arange(len(x))/rate;keep=(time>=start)&(time<=end)
-    axes[0].plot(time[keep][::4],x[keep][::4],lw=.5,color='#315674');axes[0].set_ylabel('Actual waveform')
-    e=p['audio'];axes[1].plot(np.arange(len(e['energy']))*e['step'],e['energy'],label='Measured energy',alpha=.5)
+    waveform.plot(time[keep][::4],x[keep][::4],lw=.5,color='#315674');waveform.set_ylabel('Actual waveform')
+    signal=x[keep];size=max(32,round(rate*.025));hop=max(1,round(rate*.01))
+    signal=np.pad(signal,(0,max(0,size-len(signal))))
+    frames=np.lib.stride_tricks.sliding_window_view(signal,size)[::hop]
+    db=20*np.log10(np.maximum(abs(np.fft.rfft(frames*np.hanning(size),axis=1)),1e-7))
+    spectrum.imshow(db.T,origin='lower',aspect='auto',extent=(start,end,0,rate/2),vmin=db.max()-70,vmax=db.max(),cmap='magma')
+    spectrum.set_ylim(0,min(6000,rate/2));spectrum.set_ylabel('Spectrum (Hz)')
+    e=p['audio'];controls.plot(np.arange(len(e['energy']))*e['step'],e['energy'],label='Measured energy',alpha=.5)
     q=np.arange(start,end,1/240);weights=np.array([planned_weights(t,p,p['fallbackCues']) for t in q])
-    axes[1].plot(q,weights[:,3:7].sum(axis=1),label='Vowel opening weight')
-    axes[1].plot(q,weights[:,1],label='MBP contact',alpha=.6);axes[1].legend(loc='upper right');axes[1].set_ylabel('Planned weights')
+    controls.plot(q,weights[:,3:7].sum(axis=1),label='Vowel opening weight')
+    controls.plot(q,weights[:,1],label='MBP contact',alpha=.7);controls.legend(loc='upper right',fontsize=8);controls.set_ylabel('Planned weights')
     for i,w in enumerate(p['words']):
         if w['end']<start or w['start']>end:continue
-        axes[2].axvspan(w['start'],w['end'],alpha=.12 if i%2 else .24)
-        axes[2].text((w['start']+w['end'])/2,.3,w['word'],ha='center',fontsize=10,rotation=25,clip_on=True)
+        flagged=bool(w.get('reviewFlags'))
+        words.axvspan(w['start'],w['end'],color='#ce7862' if flagged else '#497fa5',alpha=.18 if i%2 else .30)
+        words.text((w['start']+w['end'])/2,.3,w['word']+('*' if flagged else ''),ha='center',fontsize=10,rotation=25,clip_on=True)
     for phone in p['phonemes']:
         if phone['end']<start or phone['start']>end:continue
-        axes[3].text((phone['start']+phone['end'])/2,.3,phone['phone']+'\n'+phone['value'],ha='center',fontsize=8,clip_on=True)
-        axes[3].axvline(phone['start'],lw=.5,alpha=.3)
-    axes[2].set_ylabel('Word estimates');axes[3].set_ylabel('Estimated phone\n/ mouth');axes[3].set_xlabel('Recording time (seconds)')
-    for ax in axes:ax.set_xlim(start,end);ax.grid(axis='x',alpha=.2)
-    fig.suptitle('Evan speech review: script + recording\nExperimental word anchors; phone boundaries are duration estimates, NOT forced alignment')
+        phones.text((phone['start']+phone['end'])/2,.3,phone['phone']+'\n'+phone['value'],ha='center',fontsize=8,clip_on=True)
+        phones.axvline(phone['start'],lw=.5,alpha=.3)
+    words.set_ylabel('Aligned words *' if acoustic else 'Word estimates');phones.set_ylabel('Aligned phone\n/ initial mouth' if acoustic else 'Estimated phone\n/ mouth');phones.set_xlabel('Recording time (seconds)')
+    for ax in axes:ax.set_xlim(start,end)
+    for ax in (waveform,controls,words,phones):ax.grid(axis='x',alpha=.2)
+    fig.suptitle('Evan speech review: script + recording\n'+(p['alignment']['method']+'; * = word-anchor disagreement requiring review' if acoustic else 'Estimated phone boundaries; acoustic alignment unavailable'))
     fig.tight_layout();fig.savefig(output,dpi=150);plt.close(fig)
 
 if __name__=='__main__':

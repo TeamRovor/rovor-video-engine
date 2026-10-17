@@ -5,3 +5,4 @@ opencv-python-headless>=4.12,<6
 psd-tools>=1.25,<2
 cmudict>=1.1,<2
 matplotlib>=3.9,<4
+pocketsphinx>=5.1,<6
