@@ -57,10 +57,15 @@ def body_cache_key(plan_path):
 
 def render_chunk(job):
     cv2.setNumThreads(1)
-    plan_path,root,ffmpeg,index,start,end,fps,cache=job
+    plan_path,root,ffmpeg,index,start,end,fps,cache,visual_mode=job
     root=Path(root);plan=json.loads(Path(plan_path).read_text())
     cache=Path(cache);hits=0
-    scenes=[FaviconScene(plan,False),FaviconScene(plan,True)]
+    if visual_mode=='storyboard':
+        from storyboard_favicon import StoryboardFaviconScene
+        factory=StoryboardFaviconScene
+    else:
+        factory=FaviconScene
+    scenes=[factory(plan,False),factory(plan,True)]
     names=('landscape','vertical');processes=[]
     try:
         for name,scene in zip(names,scenes):
@@ -101,6 +106,8 @@ def main():
     p.add_argument('plan',type=Path);p.add_argument('wav',type=Path);p.add_argument('output',type=Path)
     p.add_argument('--ffmpeg',required=True);p.add_argument('--start-time',type=float,default=0)
     p.add_argument('--duration',type=float);p.add_argument('--workers',type=int,choices=(1,2,3,4),default=2)
+    p.add_argument('--visual-mode',choices=('reference','storyboard'),default='reference',
+                   help='Opt-in illustrated six-shot direction; baseline remains unchanged')
     a=p.parse_args()
     audio_match=verify_audio_plan(json.loads(a.plan.read_text()),a.wav)
     with wave.open(str(a.wav)) as w:audio_duration=w.getnframes()/w.getframerate()
@@ -124,6 +131,8 @@ def main():
              'audioHash':hashlib.sha256(a.wav.read_bytes()).hexdigest(),
              'startFrame':start,'endFrame':end,'fps':DEFAULT_FPS,'visualApproved':False,
              'audioMatch':audio_match,'bodyCacheKey':cache_key}
+    if a.visual_mode!='reference':
+        profile['visualMode']=a.visual_mode
     manifest=a.output/'profile.json'
     if manifest.exists() and json.loads(manifest.read_text())!=profile:p.error('Output belongs to another source/profile')
     manifest.write_text(json.dumps(profile,indent=2)+'\n')
@@ -131,7 +140,7 @@ def main():
     for index,lo in enumerate(range(start,end,90)):
         hi=min(end,lo+90)
         if all((a.output/f'{name}-{index:03}.mp4').exists() for name in ('landscape','vertical')):continue
-        jobs.append((str(a.plan.resolve()),str(a.output.resolve()),a.ffmpeg,index,lo,hi,DEFAULT_FPS,str(cache.resolve())))
+        jobs.append((str(a.plan.resolve()),str(a.output.resolve()),a.ffmpeg,index,lo,hi,DEFAULT_FPS,str(cache.resolve()),a.visual_mode))
     with ProcessPoolExecutor(max_workers=a.workers) as pool:
         for index in pool.map(render_chunk,jobs):print(f'Completed chunk {index}',flush=True)
     chunks=math.ceil((end-start)/90)
