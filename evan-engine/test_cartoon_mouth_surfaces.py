@@ -13,6 +13,14 @@ class MouthSurfacesTests(unittest.TestCase):
         self.assertLess(mouth_geometry(jawOpen=.6,lipRound=1).width,
                         mouth_geometry(jawOpen=.6,lipRound=0).width)
         self.assertLess(mouth_geometry(jawOpen=.7,lipSeal=1).aperture,1)
+    def test_labiodental_contains_distinct_contact_surface(self):
+        root=ET.fromstring('<svg>'+mouth_svg(State(jawOpen=.5,lowerLipContact=1))+'</svg>')
+        contact=root.find(".//*[@id='labiodental-contact']")
+        self.assertIsNotNone(contact)
+        self.assertGreater(float(contact.attrib['opacity']),.9)
+        sealed=ET.fromstring('<svg>'+mouth_svg(State(jawOpen=.5,lowerLipContact=1,lipSeal=1))+'</svg>')
+        self.assertEqual(float(sealed.find(".//*[@id='labiodental-contact']").attrib['opacity']),0)
+
     def test_closed_mask_and_one_outline(self):
         for seal in (0,.4,1):
             raw=mouth_svg(State(jawOpen=.8,lipSeal=seal))
