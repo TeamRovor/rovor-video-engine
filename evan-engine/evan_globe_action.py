@@ -219,9 +219,9 @@ class EvanGlobeAction:
         if self.vertical:
             # Over-the-shoulder asymmetric staging: Evan stays LEFT of the
             # globe's movement lane, preventing facial overlap on portrait.
-            width=1320
-            x=-420+int(st["evanRecoil"])
-            y=840
+            width=1150
+            x=-330+int(st["evanRecoil"])
+            y=900
         else:
             # Foreground Evan is staged for genuine interaction with the
             # bouncing prop; his legs are occluded by the near desk.
@@ -236,7 +236,7 @@ class EvanGlobeAction:
         recoil=ease((t-3.48)/.22)*(1-ease((t-4.14)/.47))
         settle=ease((t-4.25)/.24)*(1-ease((t-4.78)/.28))
         angle=-4.2*recoil+1.25*settle
-        if abs(angle)>.01:
+        if not self.vertical and abs(angle)>.01:
             plate=plate.rotate(angle,Image.Resampling.BICUBIC,
                                center=(round(width*.5),round(h*.86)))
         im.alpha_composite(plate,(x,y))
