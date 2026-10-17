@@ -30,14 +30,18 @@ def wrap(text,width,size):
 def control_state(t,scene):
     tracks=scene.get('performanceTracks',{})
     if not tracks:
-        state={'head':0.,'left':[0.,0.,0.],'right':[0.,0.,0.]}
+        state={'head':0.,'left':np.zeros(3),'right':np.zeros(3)}
         for g in scene.get('gestures',[]):
             start,end=float(g['start']),float(g['end'])
-            pulse=sample_track(t,[(start-.25,0),(start+.18,1),(start+.45,.72),(max(start+.46,end-.12),.5),(max(start+.5,end+.24),0)])
+            keys=[(start-.25,0),(start+.18,1),(start+.45,.72),(max(start+.46,end-.12),.5),(max(start+.5,end+.24),0)]
             side='right' if g.get('kind') in ('point','pinch') else 'left'
             sign=-1 if side=='right' else 1
-            state[side]=[sign*pulse,sign*8*pulse,sign*2*pulse]
-            state['head']=-.7*pulse
+            state[side]+=np.array([sign*flowing_track(t,keys),sign*8*flowing_track(t-.035,keys),sign*2*flowing_track(t-.085,keys)])
+            state['head']+=-.7*flowing_track(t-.035,keys)
+        # A future zero-valued gesture must not erase the current gesture.
+        for side in ('left','right'):state[side]=tuple(np.clip(state[side],[-4,-18,-7],[4,18,7]))
+        state['head']=float(np.clip(state['head'],-2,2))
+        state['body_roll']=.16*np.sin(t*1.45)+.13*state['head']
         return state
     state={'head':flowing_track(t-.035,tracks.get('head',[(0,0)]))}
     for name in ('left','right'):
@@ -122,9 +126,9 @@ class PaintedScene:
         s=self.scene
         # Authored asymmetric acting and a subtle continuous camera push.
         controls=control_state(t,s);char=self.character.render(t,[] if s.get('mouthMode')=='still' else s.get('mouthCues',[]),controls)
-        scale=flowing_track(t,s.get('cameraScale',[(0,.89),(15,.91)]))
-        root_x=flowing_track(t,s.get('rootX',[(0,-100)]))
-        root_y=flowing_track(t,s.get('rootY',[(0,85)]))
+        scale=flowing_track(t,s.get('cameraScale',[(0,.86),(15,.88)]))
+        root_x=flowing_track(t,s.get('rootX',[(0,-80)]))
+        root_y=flowing_track(t,s.get('rootY',[(0,45)]))
         # Subpixel camera composition avoids integer resize/placement steps and
         # the fine hair/cloth shimmer those steps caused.
         raw=np.asarray(char).astype('float32');raw[:,:,:3]*=raw[:,:,3:4]/255

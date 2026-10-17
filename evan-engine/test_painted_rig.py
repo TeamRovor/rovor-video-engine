@@ -6,6 +6,7 @@ try:
     from painted_character import PaintedCharacter, skin_vertices, arm_transforms
     from painted_face_mesh import POINTS, triangle_areas, blend_drawings
     from painted_timing import speech_weights, flowing_track
+    from render_painted_scene import control_state
     from build_painted_rig import ARMS, key_plate
     from PIL import Image
 except ImportError:
@@ -110,6 +111,15 @@ class PaintedRigTests(unittest.TestCase):
         for weights in rng.dirichlet(np.ones(9),100):
             target=sum(p*w for p,w in zip(POINTS.values(),weights))
             self.assertTrue(np.all(np.sign(triangle_areas(target))==sign))
+
+    def test_future_gesture_does_not_erase_current_acting(self):
+        first={'start':1,'end':2,'kind':'present'}
+        future={'start':8,'end':9,'kind':'present'}
+        current=control_state(1.3,{'gestures':[first]})
+        combined=control_state(1.3,{'gestures':[first,future]})
+        np.testing.assert_allclose(combined['left'],current['left'],atol=1e-6)
+        self.assertGreater(combined['left'][1],1)
+        self.assertIn('body_roll',combined)
 
 
 if __name__ == '__main__':

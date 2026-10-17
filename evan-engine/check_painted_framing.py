@@ -24,8 +24,8 @@ def check(scene):
     for frame in range(count):
         t = frame / scene.get('fps',24)
         state = control_state(t, scene)
-        scale = flowing_track(t, scene.get('cameraScale', [(0, .89)]))
-        origin = np.array([flowing_track(t, scene.get('rootX', [(0, -100)])), flowing_track(t, scene.get('rootY', [(0, 85)]))])
+        scale = flowing_track(t, scene.get('cameraScale', [(0, .86), (15, .88)]))
+        origin = np.array([flowing_track(t, scene.get('rootX', [(0, -80)])), flowing_track(t, scene.get('rootY', [(0, 45)]))])
         for name, points in hands.items():
             xy = skin_vertices(points, character.arms[name].geometry, state[name])
             xy[:, 0] += 220

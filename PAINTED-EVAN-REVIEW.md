@@ -1,5 +1,7 @@
 # Painted Evan: first articulated narration shot
 
+Latest: see PAINTED-EVAN-MOTION.md for the continuous-speech/48-fps revision requested after motion review. This document describes the first 24-fps milestone.
+
 The user selected the **first painted visual-development board** derived only from the supplied real Evan photograph. This branch replaces the rejected geometric-mouth direction with new painted production plates and an opt-in source-art mesh renderer. The selected design is committed as `evan-character/painted-v1/source/approved-design.png`.
 
 ## What changed

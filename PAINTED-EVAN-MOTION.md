@@ -14,12 +14,14 @@ The acting curves now use monotone cubic Hermite interpolation: a joint moves th
 
 The revised review film is rendered directly at 48 fps from these continuous functions. Its intermediate frames are new rig renders, not duplicated frames or post-process optical-flow interpolation. The temporal sampler also improves the 24-fps path; 48 fps alone is not the fix.
 
-`animate_evan.py --character painted --fps 48` uses the same MP3 pipeline. The legacy renderer default stays calibrated/24 fps. Non-24 frame rates are rejected for legacy renderers rather than silently retiming audio. Resume fingerprints distinguish the painted renderer revision so old/new frames are not mixed accidentally. Existing legacy resume fingerprints remain unchanged.
+`animate_evan.py --character painted --fps 48` uses the same MP3 pipeline. The legacy renderer default stays calibrated/24 fps. Non-24 frame rates are rejected for legacy renderers rather than silently retiming audio. Resume fingerprints distinguish the painted renderer revision so old/new frames are not mixed accidentally. Existing legacy resume fingerprints remain unchanged. Generic narration acting also now accumulates active gestures: a later zero-valued gesture no longer erases a current gesture. Default painted framing uses the verified complete-hand composition.
 
 ## Validation and limits
 
-- All 45 tests pass in the full dependency environment. New checks cover speech-weight continuity across boundaries, a smooth closure reaching its target, continuous gesture velocity through directional keys, oral-cavity continuity across a former dominance threshold, conversational jaw range and valid multi-pose anatomy.
+- All 46 tests pass in the full dependency environment. New checks cover speech-weight continuity across boundaries, a smooth closure reaching its target, continuous gesture velocity through directional keys, oral-cavity continuity across a former dominance threshold, conversational jaw range and valid multi-pose anatomy.
+- The complete 14.8-second revision contains 711 directly rendered frames at 48 fps. Four frame ranges took approximately 267–270 seconds each concurrently on this local CPU workflow.
 - A separate input completed the full MP3 pipeline at 48 fps, including speech timing, rendering and encoding.
+- Final H.264/AAC encode is 1920×1080 at 48 fps, 14.8 seconds; full decode passed without errors. The previous 24-fps film is preserved separately.
 - A 3-second excerpt was rendered first. Successive native-resolution frame sequences were inspected before the full render. Normal/slow playback files are supplied for human judgement; no human perceptual approval is claimed.
 - A frame-by-frame projected hand-geometry sweep covers all 711 poses of the revised film; sampled hand bounds remain inside 1920×1080.
 - At the same 24-fps sample rate, maximum source lip-landmark step falls from about 25.0 to 19.1 pixels, and the 95th percentile from 14.0 to 9.8. At 48 fps those values are about 14.5 and 5.3 pixels per frame. These are geometric diagnostics, not a studio-quality score or a substitute for watching the result. Fast real closures can still move quickly.
