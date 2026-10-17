@@ -101,10 +101,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout original Evan rig with opt-in storyboard
+      - name: Checkout original Evan rig into isolated job folder
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+          path: _rovor_preview_${{ github.run_id }}
       - name: Generate twelve genuine original-layered-animation keyframes
         shell: bash
         run: |
@@ -112,7 +113,7 @@ jobs:
           py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
           plan="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an-2/work/speech-alignment-v4/speech-plan.json"
           test -f "$plan" && test -x "$py"
-          cd evan-engine
+          cd "$GITHUB_WORKSPACE/_rovor_preview_$GITHUB_RUN_ID/evan-engine"
           "$py" -m unittest -v test_storyboard_favicon
           mkdir -p "$RUNNER_TEMP/rovor-storyboard-preview"
           "$py" storyboard_favicon.py "$plan" "$RUNNER_TEMP/rovor-storyboard-preview"
