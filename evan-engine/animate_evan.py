@@ -9,6 +9,7 @@ import math
 import os
 from pathlib import Path
 import subprocess
+import sys
 import wave
 
 from scene_planner import generate_plan, validate_plan
@@ -64,6 +65,14 @@ def make_scene(transcript, cues, duration, manual_plan=None):
                 scenePlan=scenes, gestures=gestures)
 
 
+def frame_command(config, character, scene, frames, start, total):
+    """Choose an opt-in backend without importing painted build dependencies."""
+    if character == 'painted':
+        return [config.get('painted_python', sys.executable), HERE / 'render_painted_scene.py',
+                scene, frames, start, total]
+    return [config['node'], HERE / 'render_frames.cjs', scene, frames, start, total]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mp3', type=Path)
@@ -71,7 +80,7 @@ def main():
     parser.add_argument('--config', type=Path, default=HERE / 'local_tools.json')
     parser.add_argument('--plan', type=Path, help='Optional hand-written JSON array of scenes')
     parser.add_argument('--resume', action='store_true', help='Continue stages in an existing output directory')
-    parser.add_argument('--character', choices=('calibrated','reference','vector'), default='calibrated', help='V4 calibrated sprites (default), V3 reference sprites, or V2 vector')
+    parser.add_argument('--character', choices=('calibrated','reference','vector','painted'), default='calibrated', help='V4 calibrated sprites (default), V3 reference, V2 vector, or experimental painted mesh rig')
     parser.add_argument('--mouth-mode', choices=('subtle','detailed','still'), default='subtle', help='Subtle lips (default), detailed phonemes or no lip swapping')
     args = parser.parse_args()
     if not args.mp3.is_file() or args.mp3.suffix.lower() != '.mp3':
@@ -143,8 +152,10 @@ def main():
     start = next((i for i in range(total) if not valid_frame(frames / f'{i:06d}.jpg')), total)
     print(f'Animating Evan: {start}/{total} frames already present...', flush=True)
     env = dict(os.environ, EVAN_SHARP=cfg['sharp'])
+    if args.character == 'painted' and cfg.get('painted_packages'):
+        env['PYTHONPATH'] = str(cfg['painted_packages']) + os.pathsep + env.get('PYTHONPATH', '')
     while start < total:
-        raw = run([cfg['node'], HERE / 'render_frames.cjs', scene_path, frames, start, total], env)
+        raw = run(frame_command(cfg, args.character, scene_path, frames, start, total), env)
         result = json.loads(raw)
         next_frame = result['nextFrame']
         if next_frame <= start:
