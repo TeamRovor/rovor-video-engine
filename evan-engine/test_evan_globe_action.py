@@ -1,7 +1,7 @@
 """Kinematic quality checks for original Evan/globe animated action."""
 import math
 import unittest
-from evan_globe_action import START,END,hop,framespec,clamped,ease,globe_action_controls
+from evan_globe_action import START,END,hop,framespec,clamped,ease,globe_action_controls,contact_pulse
 from cartoon_body import narration_acting
 
 
@@ -67,6 +67,32 @@ class GlobeActionTests(unittest.TestCase):
                 self.assertLess(max(abs(a-b) for side in ('left','right')
                                     for a,b in zip(c[side],previous[side])),1.5)
             previous=c
+
+    def test_fingertip_contact_is_bounded_and_returns_to_normal_path(self):
+        self.assertEqual(contact_pulse(3.50),0.)
+        self.assertGreater(contact_pulse(3.94),.99)
+        self.assertEqual(contact_pulse(4.40),0.)
+        self.assertEqual(contact_pulse(5.2),0.)
+        # The globe approaches the original posed index finger without being
+        # used to replace the character or mouth rig.
+        landing=framespec(3.94,False)
+        self.assertGreater(landing['y'],520)
+        self.assertLess(landing['y'],590)
+        self.assertLess(landing['x'],1085)
+        portrait=framespec(3.94,True)
+        self.assertGreater(portrait['y'],1220)
+        self.assertLess(portrait['y'],1335)
+        self.assertEqual(framespec(3.50,True)['contact'],0.)
+
+    def test_contact_path_is_continuous_at_60fps(self):
+        for vertical in (False,True):
+            previous=framespec(3.5,vertical)
+            for frame in range(211,264):
+                current=framespec(frame/60,vertical)
+                distance=math.dist((previous['x'],previous['y']),
+                                   (current['x'],current['y']))
+                self.assertLess(distance,24)
+                previous=current
 
     def test_rejects_unrelated_narration(self):
         with self.assertRaises(ValueError):framespec(-1)
