@@ -92,7 +92,7 @@ def controls_at(t,plan):
     return {c:clamp(a[c]*(1-mix)+b[c]*mix) for c in CONTROLS}
 
 
-def state_at(t,plan=None):
+def state_at(t,plan=None,direction=None):
     c=controls_at(t,plan)
     s=State(**c)
     s.bodyLean=keyed(t,[(0,-2),(.5,-2),(.7,3),(1.25,6),(1.5,4),(2,0),(2.6,-2),(3.1,1),(3.7,-1),(4.1,-1)])
@@ -109,6 +109,10 @@ def state_at(t,plan=None):
     s.browL=keyed(t,[(0,0),(.55,0),(.69,-7),(1.13,-7),(1.42,1),(2.6,-10),(2.95,-10),(3.5,0)])
     s.browR=keyed(t,[(0,0),(.55,0),(.69,-2),(1.13,-2),(1.42,4),(2.6,-10),(2.95,-10),(3.5,0)])
     s.smile=keyed(t,[(0,.18),(.55,.18),(1.1,.7),(1.5,.5),(2,0),(2.6,-.18),(3,.4),(3.7,.2)])
+    if direction is not None:
+        from studio_performance import direction_pose
+        for channel,value in direction_pose(t,direction).items():
+            setattr(s,channel,value)
     return s
 
 
@@ -145,8 +149,11 @@ def hand_svg(style):
     return palm+fingers+thumb
 
 
-def hand_exposures(side,t):
+def hand_exposures(side,t,direction=None):
     """Cross-dissolve pose drawings in a shared wrist coordinate system."""
+    if direction is not None:
+        from studio_performance import directed_hand_exposures
+        return directed_hand_exposures(side,t,direction)
     timeline = ([(0,'relaxed'),(.58,'open'),(1.35,'relaxed'),(2.48,'point'),(3.38,'relaxed')]
                 if side == 'R' else
                 [(0,'relaxed'),(.93,'explain'),(1.88,'relaxed')])
@@ -162,14 +169,14 @@ def hand_exposures(side,t):
 
 
 
-def arm_svg(side,s,t):
+def arm_svg(side,s,t,direction=None):
     sign=-1 if side=='L' else 1
     shoulder=s.shoulderL if side=='L' else s.shoulderR
     elbow=s.elbowL if side=='L' else s.elbowR
     wrist=s.wristL if side=='L' else s.wristR
     hand=s.handL if side=='L' else s.handR
     # Local +y bones; the hierarchy rotates around physically independent joints.
-    layers=hand_exposures(side,t)
+    layers=hand_exposures(side,t,direction)
     hand_markup=''.join(f'<g data-hand-subpose="{name}" opacity="{alpha:.4f}">{hand_svg(name)}</g>' for name,alpha in layers if alpha>1e-6)
     return (f'<g id="arm-{side}" data-layer="arm-{side}" transform="translate({108*sign},-4) rotate({shoulder})">'
             f'<g id="upper-arm-{side}" data-layer="upper-arm-{side}">{capsule(103,30,SHIRT)}</g>'
@@ -268,14 +275,14 @@ def official_brand_markup(path):
             'fill="#243F64">DIGITAL</text></g>'),False
 
 
-def frame_svg(t,plan=None,brand=None):
+def frame_svg(t,plan=None,brand=None,direction=None):
     if t<0:raise ValueError('Negative scene time')
-    s=state_at(t,plan)
+    s=state_at(t,plan,direction)
     if brand is None and BRAND_PATH.exists():brand=BRAND_PATH
     mark,verified=official_brand_markup(brand)
     return f'''<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
       width="1280" height="720" viewBox="0 0 1280 720" data-art-status="engineering-blockout"
-      data-official-brand={json.dumps(str(verified).lower())} data-speech-status="{'speech-plan-controls' if plan else 'synthetic-test-only'}">
+      data-official-brand={json.dumps(str(verified).lower())} data-performance-status="{'editorial-beat-blockout' if direction else 'synthetic-timeline'}" data-speech-status="{'speech-plan-controls' if plan else 'synthetic-test-only'}">
       <metadata>Cartoon Evan joint/face engineering blockout. Not approved source art or completed animation.</metadata>
       <rect id="background" width="1280" height="720" fill="#F3F3ED" />
       <path d="M 0,598 Q 600,553 1280,610 L 1280,720 L 0,720 Z" fill="#DCE5E5"/>
@@ -286,7 +293,7 @@ def frame_svg(t,plan=None,brand=None):
       <g id="character" data-layer="character" transform="translate(391,382) rotate({s.bodyLean:.2f})">
          <ellipse id="cast-shadow" cx="0" cy="267" rx="166" ry="19" fill="#768E9B" opacity=".27" />
          <g id="neck" data-layer="neck"><path d="M -45,-82 L -45,6 Q 0,37 45,6 L 45,-82" fill="{SKIN_SHADE}" stroke="{INK}" stroke-width="6"/></g>
-         {arm_svg('L',s,t)}{arm_svg('R',s,t)}
+         {arm_svg('L',s,t,direction)}{arm_svg('R',s,t,direction)}
          <g id="torso" data-layer="torso"><path d="M -103,-22 Q -145,5 -127,92 L -108,231
            Q 0,252 108,231 L 127,92 Q 145,5 103,-22 L 45,-41 Q 0,4 -45,-41 Z"
            fill="{SHIRT}" stroke="{INK}" stroke-width="7" />
@@ -304,7 +311,7 @@ def frame_svg(t,plan=None,brand=None):
     </svg>'''
 
 
-def render_demo(output,plan=None,brand=None,frames=96,fps=24):
+def render_demo(output,plan=None,brand=None,frames=96,fps=24,direction=None):
     """Save SVG frames and normal/half-speed films. No Moho involvement."""
     if fps<1 or frames<1:raise ValueError('fps and frames must be positive')
     if brand is None and BRAND_PATH.exists():brand=BRAND_PATH
@@ -316,7 +323,7 @@ def render_demo(output,plan=None,brand=None,frames=96,fps=24):
     output=Path(output); png=output/'frames';svg=output/'editable-svg';png.mkdir(parents=True,exist_ok=True);svg.mkdir(parents=True,exist_ok=True)
     # Keep original SVG per frame; each independently articulated component remains editable.
     for i in range(frames):
-        xml=frame_svg(i/fps,plan,brand)
+        xml=frame_svg(i/fps,plan,brand,direction)
         (svg/f'{i:04}.svg').write_text(xml,encoding='utf-8')
         cairosvg.svg2png(bytestring=xml.encode('utf-8'),write_to=str(png/f'{i:04}.png'))
     normal=output/'cartoon-blockout-normal.mp4';slow=output/'cartoon-blockout-half-speed.mp4'
@@ -325,6 +332,7 @@ def render_demo(output,plan=None,brand=None,frames=96,fps=24):
         subprocess.run(cmd,check=True)
     manifest={'sourceType':'independent SVG component blockout','animationReady':False,'brandAssetVerified':bool(brand and Path(brand).is_file()),
               'speechSource':'existing continuous control samples' if plan else 'synthetic motion fixture, no narration',
+               'performanceSource':'editorial-authored beats, construction blockout' if direction else 'legacy synthetic timed poses',
               'components':['neck','torso','head','jaw','oral-interior','upper-teeth','tongue','upper-lip','lower-lip','glasses','brow-left','brow-right','upper-arm-L','forearm-L','hand-L','upper-arm-R','forearm-R','hand-R'],
               'handPoses':['relaxed','open','point','explain','fist'],'frames':frames,'fps':fps,
               'limitations':['Construction artwork is not matched to design-sheet-v1.png','No native Moho rig','No actual narration audio used unless the plan is supplied','No visual quality approval']}
@@ -335,7 +343,8 @@ def render_demo(output,plan=None,brand=None,frames=96,fps=24):
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('output',type=Path);p.add_argument('--speech-plan',type=Path)
-    p.add_argument('--brand',type=Path);p.add_argument('--fps',type=int,default=24);p.add_argument('--frames',type=int,default=96)
+    p.add_argument('--brand',type=Path);p.add_argument('--direction',type=Path,help='Editorial acting-beat JSON, independent of speech plan');p.add_argument('--fps',type=int,default=24);p.add_argument('--frames',type=int,default=96)
     a=p.parse_args()
     plan=json.loads(a.speech_plan.read_text()) if a.speech_plan else None
-    print(json.dumps(render_demo(a.output,plan,a.brand,a.frames,a.fps),indent=2))
+    direction=json.loads(a.direction.read_text()) if a.direction else None
+    print(json.dumps(render_demo(a.output,plan,a.brand,a.frames,a.fps,direction),indent=2))
