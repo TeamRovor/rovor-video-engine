@@ -9,19 +9,19 @@ def ease(x):
     x=np.clip(x,0,1);return x*x*(3-2*x)
 
 @lru_cache(maxsize=8)
-def anchors(rows):
+def anchors(rows,preserve_short=False):
     # Very brief recognizer alternations should not throw the entire jaw open.
     # Preserve contact sounds; short vowels share neighbouring articulations.
     result=[]
     for start,end,symbol in rows:
-        if end-start<.04 and symbol not in 'AXG':continue
+        if not preserve_short and end-start<.04 and symbol not in 'AXG':continue
         center=(start+end)/2
         result.append((center,symbol,start,end))
     return result
 
-def speech_weights(t,cues):
+def speech_weights(t,cues,preserve_short=False):
     rows=tuple((float(c['start']),float(c['end']),c['value']) for c in cues)
-    a=anchors(rows);out=np.zeros(9,np.float32);out[0]=.055
+    a=anchors(rows,preserve_short);out=np.zeros(9,np.float32);out[0]=.055
     if not a:out[0]=1;return out
     # Compact temporal kernels overlap neighbouring gestures. Anticipation is
     # 25ms, rather than restarting a new previous->target tween at every boundary.

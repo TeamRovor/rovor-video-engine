@@ -95,20 +95,21 @@ class PaintedCharacter:
         self.face_cache[key]=im
         return im.copy()
 
-    def speaking_face(self,t,cues):
-        weights=speech_weights(t,cues)
+    def speaking_face(self,t,cues,plan=None):
+        from speech_planner import planned_weights
+        weights=planned_weights(t,plan,cues) if plan else speech_weights(t,cues)
         raw=blend_drawings(self.heads,weights)
         raw=self.heads['X'].astype('float32')*(1-self.weight)+raw*self.weight
         return Image.fromarray(np.clip(raw,0,255).astype('uint8'))
 
-    def render(self,t,cues,controls=None):
+    def render(self,t,cues,controls=None,speech_plan=None):
         controls=controls or {};pad=220
         canvas=Image.new('RGBA',(1464,1536))
         canvas.alpha_composite(self.torso,(pad,0))
         for name,arm in self.arms.items():
             angles=controls.get(name,(0,0,0));im,(x,y)=arm.render(angles)
             canvas.alpha_composite(im,(x+pad,y))
-        head=self.speaking_face(t,cues)
+        head=self.speaking_face(t,cues,speech_plan)
         trans=self.meta['head_transform'];scale=trans['scale'];head=head.resize((round(418*scale),round(418*scale)),Image.Resampling.LANCZOS)
         layer=Image.new('RGBA',canvas.size);x,y=trans['translate'];layer.alpha_composite(head,(x+pad,y))
         tilt=controls.get('head',0)

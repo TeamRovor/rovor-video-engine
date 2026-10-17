@@ -125,7 +125,7 @@ class PaintedScene:
     def presenter(self,im,t):
         s=self.scene
         # Authored asymmetric acting and a subtle continuous camera push.
-        controls=control_state(t,s);char=self.character.render(t,[] if s.get('mouthMode')=='still' else s.get('mouthCues',[]),controls)
+        controls=control_state(t,s);char=self.character.render(t,[] if s.get('mouthMode')=='still' else s.get('mouthCues',[]),controls,None if s.get('mouthMode')=='still' else s.get('speechPlan'))
         scale=flowing_track(t,s.get('cameraScale',[(0,.86),(15,.88)]))
         root_x=flowing_track(t,s.get('rootX',[(0,-80)]))
         root_y=flowing_track(t,s.get('rootY',[(0,45)]))

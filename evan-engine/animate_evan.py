@@ -78,6 +78,7 @@ def main():
     parser.add_argument('mp3', type=Path)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--config', type=Path, default=HERE / 'local_tools.json')
+    parser.add_argument('--script', type=Path, help='Authoritative narration text; painted pronunciation planning')
     parser.add_argument('--plan', type=Path, help='Optional hand-written JSON array of scenes')
     parser.add_argument('--resume', action='store_true', help='Continue stages in an existing output directory')
     parser.add_argument('--character', choices=('calibrated','reference','vector','painted'), default='calibrated', help='V4 calibrated sprites (default), V3 reference, V2 vector, or experimental painted mesh rig')
@@ -88,6 +89,8 @@ def main():
         parser.error('Frame rates other than 24 currently require --character painted.')
     if not args.mp3.is_file() or args.mp3.suffix.lower() != '.mp3':
         parser.error('Please provide an existing MP3 recording.')
+    if args.script and not args.script.is_file():
+        parser.error('The narration script file was not found.')
     if args.plan and not args.plan.is_file():
         parser.error('The scene-plan JSON file was not found.')
     audio = args.mp3.resolve()
@@ -98,7 +101,9 @@ def main():
     if args.fps != 24:
         fingerprint['fps'] = args.fps
     if args.character == 'painted':
-        fingerprint['painted_renderer_version'] = 2
+        fingerprint['painted_renderer_version'] = 3
+    if args.script:
+        fingerprint['script'] = args.script.read_text()
     args.output.mkdir(parents=True, exist_ok=args.resume)
     out = args.output.resolve()
     state = out / 'render_request.json'
@@ -130,7 +135,7 @@ def main():
             raise RuntimeError('Whisper did not produce usable segments.')
     dialog = out / 'dialog.txt'
     if not dialog.is_file():
-        dialog.write_text(' '.join(r['text'].strip() for r in transcript['transcription']))
+        dialog.write_text(args.script.read_text() if args.script else ' '.join(r['text'].strip() for r in transcript['transcription']))
     mouth_path = out / 'mouth.json'
     cues = read_json(mouth_path)
     if not cues or not cues.get('mouthCues'):
@@ -148,6 +153,15 @@ def main():
         scene['mouthMode'] = args.mouth_mode
         if args.character == 'painted':
             scene['fps'] = args.fps
+            word_path=out / 'words.json'
+            if not word_path.is_file():
+                run([cfg['whisper'], '-m', cfg['model'], '-f', wav, '-ojf', '-ml', '1', '-sow', '-of', out / 'words'])
+            planning_env=dict(os.environ)
+            if cfg.get('painted_packages'):
+                planning_env['PYTHONPATH']=str(cfg['painted_packages'])+os.pathsep+planning_env.get('PYTHONPATH','')
+            run([cfg.get('painted_python',sys.executable), HERE / 'speech_planner.py', dialog, word_path, wav, mouth_path, out / 'speech-plan.json'], planning_env)
+            scene['speechPlan']=read_json(out / 'speech-plan.json')
+            run([cfg.get('painted_python',sys.executable), HERE / 'speech_review.py', out / 'speech-plan.json', wav, out / 'speech-timeline.png'], planning_env)
         scene_path.write_text(json.dumps(scene, indent=2))
     current_scene=read_json(scene_path)
     if current_scene.get('duration') != duration:
