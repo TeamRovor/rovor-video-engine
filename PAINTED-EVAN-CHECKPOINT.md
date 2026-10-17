@@ -37,10 +37,16 @@ Read SPEECH-TIMING-REVIEW.md and evan-engine/reviews/evan-reference-timing-v1.js
 
 New speech_alignment_audit.py exports both hypotheses, sample-clock spectra and context clips; speech_review.py --audit-dir integrates it into new experimental planning runs. Existing cached scenes are unchanged. Spectrogram endpoint stretching is fixed. 75 checks pass; actual narration CLI integration verified. Outputs ../../outputs/evan-speech-timing-audit hold the review page, six graphs/audio clips and pause/onset films using existing cartoon artwork. Body/hand/face defects remain as before.
 
+## Latest separate-hand milestone
+
+Read CARTOON-EVAN-POINTING.md. CartoonGestureBody is a new opt-in study; original CartoonBody remains unchanged. Separate wrist-local open hand drawings and a generated/registered right pointing hand now attach to hierarchical hand transforms. New pivots are wrist [214,762]/[810,762], not old palm-centered positions. Source/prompt and registration matrix/hash live in hand-source and hand-rig. An oversized wrist-stub flap was shortened after assembled review. Thinner hand linework and a visible wrist contour remain; animationReady=false.
+
+The new 4.8125-second normal/quarter-speed narration shot points toward the browser card around globe/up here. It uses a pointing drawing throughout and does NOT demonstrate an open-to-point transition or independently moving fingers. Six actual body/hand pixel layers reopen in PSD and match assembly. Native open/point comparison and stage frames are in ../../outputs/evan-cartoon-pointing. 79 checks pass; no quality inference. Shoulder/armpit, neck, matte, FV and facial-expression limitations remain, and no new hidden shoulder/neck source was accepted. No Moho activity or approved release change.
+
 ## Next concrete work
 
 1. Repair visible armpit/neck seams with genuinely registered hidden-surface art. Do not accept generated replacement artwork that changes proportions; preserve original drawing and explicit rejected candidates.
-2. Add distinct relaxed/pointing hand drawings and an expression/brow rig; current open-hand FK study is not polished acting. Review full-resolution source and normal/slow film before increasing motion range.
+2. Clean the new pointing hand linework/wrist contour and add a relaxed hand plus a designed pose transition. Pointing exists as a separate drawing, not individual fingers. Build expression/brow acting; current study is not polished.
 3. The 18 timing disagreements have visual evidence review; exact phones still require listening/phonetic annotation. Preserve the review record and uncertainty. Speech-phone coverage and geometric tests do not prove lip-sync accuracy.
 4. Improve F/V and L anatomy with redrawn art/animator review, then render a stronger narration-driven scene with an actual pause and meaningful pointing gesture. Preserve the current baseline films for comparison.
 
