@@ -8,6 +8,8 @@ Two built-in image_gen edits created a mouthless hidden skin plate and an empty 
 
 The original drawn C teeth, H tongue and X closed lip stroke are extracted as independent surfaces. There is one moving teeth texture rather than cross-fading tooth rows. A single raised tongue drawing scales/moves toward the floor for vowels and lifts for tongue gestures. Rounded O/U suppress the white teeth layer, and silent bilabial closure hides teeth/tongue. Separate F/V artwork is retained as an explicit candidate; it still needs refinement. The oral layers use 2x subpixel sampling before downsampling.
 
+Interior surfaces are clipped behind the drawn lip boundary; the final comparison caught and corrected a tongue spilling outside the lower lip. A regression checks that a vowel tongue stays inside its cavity.
+
 A source-level repair makes the hidden skin fully replace the old lip ink, with feathering outside the ink rather than through it. The first preview retained a faint smile corner; the final plate removes it. A regression checks the old lip region rather than accepting a passing geometry test as evidence of clean skin.
 
 The tighter cartoon-only chroma key reduces magenta candidate pixels above alpha 32 from 1371 to 20 in C and 1447 to 70 in X. It preserves white teeth and black ink. Small residual edge specks remain; this is a reduction, not a claim of a perfect matte. The new registration lives in head-rig-v2 and preserves head-rig for comparison.
@@ -20,7 +22,7 @@ Evan-Separate-Mouth-Layers.mp4 is a 231-frame, 4.8125-second 48-fps diagnostic u
 
 Evan-Editable-Oral-Layers.psd contains seven real pixel layers, including hidden alternatives. Export/reopen verifies their names and produces an assembled PNG preview. It is an editable source assembly, not a native Moho project or a full-character rig. Runtime deformation is implemented separately.
 
-68 tests pass, including closure/rounding visibility, exact upper-face stability, localized independent surfaces, matte semantics and the hidden-skin repair. These do not establish perceptual smoothness. Full-resolution still comparisons and rendered frames remain the basis for the visible findings.
+69 tests pass, including closure/rounding visibility, exact upper-face stability, localized independent surfaces, matte semantics and the hidden-skin repair. These do not establish perceptual smoothness. Full-resolution still comparisons and rendered frames remain the basis for the visible findings.
 
 ## Limits and next steps
 

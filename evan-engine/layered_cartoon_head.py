@@ -42,6 +42,9 @@ class LayeredCartoonHead(CartoonHead):
         tongue_art=cv2.warpAffine(tongue_art,move,(SIZE,SIZE),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT)
         tongue_art=straight(tongue_art).astype('uint8')
         tongue=warp(tongue_art,POINTS['H'],oral,2)
+        # Interior surfaces must stay behind the inked lip boundary.
+        interior=cv2.erode(np.clip(cavity[:,:,3],0,255),np.ones((3,3),np.uint8))[:,:,None]/255
+        teeth*=interior;tongue*=interior
         # Reuse the original contact drawing while it awaits anatomical cleanup.
         visible=float(ease((aperture-2)/6))
         fv=float(w[7]);face=over(face,cavity,visible*(1-fv))

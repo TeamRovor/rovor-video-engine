@@ -28,3 +28,12 @@ class OralLayerTests(unittest.TestCase):
  def test_hidden_skin_has_no_remaining_lip_stroke(self):
   h=LayeredCartoonHead();skin=h.layers['face-skin'][309:336,190:288,:3]
   self.assertEqual(int((skin.max(axis=2)<235).sum()),0)
+
+ def test_vowel_tongue_does_not_cross_its_drawn_cavity(self):
+  h=LayeredCartoonHead();weights=np.eye(9)[3];on=np.asarray(h.weights(weights)).astype(int)
+  h.layers['tongue-raised']=np.zeros_like(h.layers['tongue-raised'])
+  off=np.asarray(h.weights(weights)).astype(int)
+  mask=np.asarray(Image.open(ROOT/'oral-rig/oral-mask.png'))>0
+  changed=np.abs(on-off).max(axis=2)>1
+  self.assertGreater(int(changed.sum()),0)
+  self.assertEqual(int((changed&~mask).sum()),0)
