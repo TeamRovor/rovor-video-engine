@@ -1,2 +1,2 @@
-mode=capability-audit
-sequence=7
+mode=chat-delivery-smoke
+sequence=8
