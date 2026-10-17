@@ -25,8 +25,11 @@ def frame(body,plan,t):
     return im.convert('RGB')
 if __name__=='__main__':
     cv2.setNumThreads(1)
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=231);p.add_argument('--sockets',action='store_true');a=p.parse_args();plan=json.loads(a.plan.read_text());
-    if a.sockets:
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=231);p.add_argument('--sockets',action='store_true');p.add_argument('--expressions',action='store_true');a=p.parse_args();plan=json.loads(a.plan.read_text());
+    if a.expressions:
+        from cartoon_gesture_body import CartoonExpressionBody
+        b=CartoonExpressionBody()
+    elif a.sockets:
         from cartoon_gesture_body import CartoonSocketBody
         b=CartoonSocketBody()
     else:b=CartoonBody()

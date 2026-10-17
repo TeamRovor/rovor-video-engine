@@ -48,3 +48,10 @@ class CartoonSocketBody(CartoonGestureBody):
     def __init__(self,root=ROOT,pose='point'):
         super().__init__(root,pose)
         self.torso=Image.open(root/'socket-rig/torso.png').convert('RGBA');self.socket_review=True
+
+class CartoonExpressionBody(CartoonSocketBody):
+    """Opt-in authored brows on the local-underarm gesture rig."""
+    def __init__(self,root=ROOT,pose='point'):
+        super().__init__(root,pose)
+        from expressive_cartoon_head import ExpressiveCartoonHead
+        self.head=ExpressiveCartoonHead(root)

@@ -49,12 +49,18 @@ Read CARTOON-EVAN-UNDERARM.md. New CartoonSocketBody is opt-in via render_cartoo
 
 Native white/gray comparisons reduce dangling black armpit tabs. Remaining sleeve/torso creases, shading transition and neck/collar join still need cleanup; neck was not repaired. Raw transparent previews can show hidden RGB and exaggerate edge speckles: use actual solid-background composites. Exporter now also writes a gray JPEG preview. 81 checks pass; six-layer PSD reopens and matches assembly. Normal/quarter-speed same-motion films and native before/after are in ../../outputs/evan-cartoon-joins. No Moho activity or approved release changes.
 
+## Latest independent-brow milestone
+
+Read CARTOON-EVAN-EXPRESSIONS.md. ExpressiveCartoonHead uses separately extracted original brows with generated hidden skin only under their footprints. Source/input/prompt, registered skin/ink layers, masks, pivots and hash live in expression-source/expression-rig. Stable-feature ECC 0.99950 is not a quality/confidence score. A regression caught outside-forehead rounding; final code preserves every original pixel outside the edit region. LayeredCartoonHead/default routes remain unchanged. animationReady=false.
+
+Authored ever/tiny/here accents follow aligned word times with holds and continuous independent raise/tilt controls. This is not automatic emotion inference. CartoonExpressionBody and render_cartoon_gesture_study.py --expressions integrate it with the body. New normal/quarter-speed native-head diagnostic, body still, neutral/acting comparison, cue record and reopened three-layer PSD are in ../../outputs/evan-cartoon-expressions. 85 checks pass, not visual acceptance. Hair/glasses restrict range; wide-shot effect is subtle; no eye/blink rig. The native comparison still shows the unacceptable F/V grimace at 0.35 s. Neck/wrist/shoulder and hand linework remain unfinished. No Moho activity or approved release changes.
+
 ## Next concrete work
 
 1. Build a clean neck/collar attachment and finish remaining shoulder crease/skinning defects. Local underarm tab cleanup now exists, but is not complete shoulder construction. Preserve original visible art and reject whole-body proportion changes.
 2. Clean the new pointing hand linework/wrist contour and add a relaxed hand plus a designed pose transition. Pointing exists as a separate drawing, not individual fingers. Build expression/brow acting; current study is not polished.
 3. The 18 timing disagreements have visual evidence review; exact phones still require listening/phonetic annotation. Preserve the review record and uncertainty. Speech-phone coverage and geometric tests do not prove lip-sync accuracy.
-4. Improve F/V and L anatomy with redrawn art/animator review, then render a stronger narration-driven scene with an actual pause and meaningful pointing gesture. Preserve the current baseline films for comparison.
+4. Highest facial priority: replace F/V grimace with a designed lower-lip/upper-teeth contact, then review F/V/L in real narration. Independent brows now exist but are restrained by the current hair/forehead construction. Preserve baseline films; seek artist/animator anatomy and acting review.
 
 ## Environment
 
