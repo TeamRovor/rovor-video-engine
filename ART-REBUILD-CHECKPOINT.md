@@ -1,0 +1,11 @@
+# Art reset checkpoint — Rovor Evan
+
+Date: 2026-10-17. Latest user reaction: earlier cartoon blockout previews are wholly unacceptable. The goal is **appealing professional original 2D animation**, not high automated-test counts. Work on development branches, do not deploy or merge.
+
+**Verified project context:** The source direction in `CARTOON-EVAN-DIRECTION.md` calls for dark tousled hair, sunglasses, navy shirt, black tie and expressive cartoon acting. The separate design-sheet and speech-poses sources are image references, not production rig plates. The existing procedural SVG generator remains useful only as a motion/control sandbox, **not an approved look**. Two recent generated exploration sheets and a montage feature hoodie/no sunglasses and/or mock player panels; reject instead of falsely rebranding as the correct Evan.
+
+**Work completed this pass:** `evan-engine/character_art_gate.py` and focused tests define a fail-closed *mechanical prerequisite* for genuine full-canvas, registered transparent independent art pieces, checksum-backed source reference, wardrobe/direction manifest, and hand-pose consistency. Human pixel/animation aesthetics remain outside test capability. `EVAN-VISUAL-REBUILD.md` records a concrete shot and visual acceptance standard. Do not call a passing plate gate artistic approval or advertise fresh generated stills as finished animation.
+
+**Unresolved, high priority:** There are no new acceptable Evan character plates or polished acting renders in this pass; full-resolution repo source PNGs are not readable through this text-only GitHub connector. The actual 22.05s recorded WAV/speech-plan and 18 unresolved phone timing checks were not reviewed here. The next meaningful production step is to inspect the existing verified image sources on the user's authorized local checkout and produce ONE approved still, then two registered genuine hand/face performance extremes and a short acted shot driven by the real WAV. Hard stop on identity drift, generic mechanical art or irrelevant mock UI. No more bad demo films presented as progress.
+
+**Safety:** Protect main, V3/V4, approved symlink/updater and native Moho. No Moho launch/probe, merge or deployment. Existing recurring work stays enabled. This pass creates no false artwork approval and no fake voice-sync certification.
