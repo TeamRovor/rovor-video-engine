@@ -16,6 +16,40 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  visual-qa:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor visual QA'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout read-only quality diagnostic
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            rovor-production/visual_dynamics_audit.py
+            rovor-production/test_visual_dynamics_audit.py
+          sparse-checkout-cone-mode: false
+      - name: Check visual-storyboarding gate against original baseline
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          test -x "$py"
+          (cd rovor-production && "$py" -m unittest test_visual_dynamics_audit -q)
+          original="$HOME/Documents/Codex/2026-10-17/new-chat/outputs/Evan_Evolution_1080p60_Landscape.mp4"
+          test -s "$original"
+          "$py" rovor-production/visual_dynamics_audit.py "$original" --report "$RUNNER_TEMP/rovor-visual-audit.json"
+          "$py" - "$RUNNER_TEMP/rovor-visual-audit.json" <<'PY'
+          import json,sys
+          report=json.load(open(sys.argv[1]))
+          assert report['status']=='VISUAL_REVIEW_REQUIRED',report
+          assert report['publicationApproved'] is False
+          print('BASELINE_VISUAL_QUALITY_REQUIRES_REDESIGN=YES')
+          print('SUBSTANTIAL_SCENE_CHANGES='+str(report['substantialChanges']))
+          PY
+
   deliver-existing-review:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor deliver existing review'
     runs-on: [self-hosted, macOS, X64, rovor-video]
