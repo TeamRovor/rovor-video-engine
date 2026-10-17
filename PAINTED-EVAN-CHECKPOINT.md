@@ -12,7 +12,7 @@ Checkout: work/engine, branch development/evan-painted-rig. Draft PR #4: https:/
 
 Read CARTOON-EVAN-DIRECTION.md and CARTOON-EVAN-SOURCE-REVIEW.md. Concept: evan-character/cartoon-v1/source/design-sheet-v1.png. New setup-v1.png and speech-poses-v2.png establish the cartoon setup and nine speech targets. speech-poses-v1.png failed F/V and L review and is retained for comparison. Prompts are recorded beside the PNGs. The v2 contact poses are improved candidates, not approved animation.
 
-Audit tool: evan-engine/audit_cartoon_sources.py records source geometry, alpha/frame margins and nine actual head component boxes. Do not slice by equal thirds: some hair crosses those lines. The source stage is explicitly unregistered and animationReady=false. New source review deliverables: ../../outputs/evan-cartoon-rig-study. No cartoon film or working layered rig exists yet.
+Audit tool: evan-engine/audit_cartoon_sources.py records source geometry, alpha/frame margins and nine actual head component boxes. Do not slice by equal thirds: some hair crosses those lines. The source stage is explicitly unregistered and animationReady=false. New source review deliverables: ../../outputs/evan-cartoon-rig-study. A first experimental registered cartoon head component and 4.8125-second diagnostic film now exist; full-character layered rig is still incomplete. Read CARTOON-EVAN-HEAD-MOTION.md. Registered plates live in cartoon-v1/head-rig; builder and renderer are build_cartoon_heads.py, cartoon_head.py and render_cartoon_head_study.py. Review outputs are ../../outputs/evan-cartoon-head-motion. Narrow mouth/teeth blends remain doubled or soft, and FV still reads as grimace. Do not call the head accepted or the animation finished. The latest full suite has 62 passing tests, which do not establish visual quality.
 
 ## Speech system
 
@@ -20,9 +20,9 @@ Read ACOUSTIC-SPEECH-ALIGNMENT.md. b585490 implements two-pass PocketSphinx acou
 
 ## Next concrete work
 
-1. Register cartoon head poses to ONE stable upper face. Measure outer/inner mouth, jaw and cheek landmarks, retaining the actual drawn mouth/teeth/tongue shapes. Verify F/V lower-lip contact and L tongue at normal viewing size; seek redrawn/animator cleanup if unclear instead of calling it good.
+1. Improve the experimental registered cartoon head: separate oral interior/teeth/tongue surfaces and match mouth contours. Inspect documented defects at 0.583, 0.708 and 0.3125 seconds. Upper-face invariance and non-inverting interpolation now work, but source anatomy and line blends are not yet accepted. Seek redrawn/animator cleanup if FV/L remains unclear. Keep existing normal/slow diagnostic films for comparison.
 2. Build genuinely separate head, neck, torso, arms and useful hands with hidden overlap surfaces. The setup PNG is flattened source, not an articulated rig. Export real editable layers and verify reassembly.
-3. Drive the cartoon rig with acoustic gesture weights. Render a short narration shot, especially P in open at 0.60–0.65 s, F/V/L and a pause. Review normal speed, slow speed and full-resolution sequences against the concept. No studio claim from tests or sprite swaps.
+3. Extend the acoustic-driven head component into a genuine cartoon body rig, then render a short narration acting shot, especially P in open at 0.60–0.65 s, F/V/L and a pause. Review normal speed, slow speed and full-resolution sequences against the concept. No studio claim from tests or sprite swaps.
 4. Review the 18 timing disagreements against audio/spectrogram evidence. Keep uncertainty and estimated fallbacks visible.
 
 ## Environment
