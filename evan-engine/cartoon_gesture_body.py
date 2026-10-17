@@ -62,3 +62,22 @@ class CartoonFVBody(CartoonExpressionBody):
         super().__init__(root,pose)
         from fv_cartoon_head import FVContactHead
         self.head=FVContactHead(root);self.fv_review=True
+
+class CartoonNeckBody(CartoonFVBody):
+    """One deforming neck surface beneath the untouched original collar."""
+    def __init__(self,root=ROOT,pose='point'):
+        super().__init__(root,pose)
+        from cartoon_neck import collar_torso
+        self.torso=collar_torso(self.torso);self.neck_review=True
+    def head_layer(self,t,plan,controls):
+        from cartoon_neck import split_head_neck,render_neck,SCALE,TRANSLATE,PIVOT
+        from speech_planner import planned_weights
+        from cartoon_head import SYMBOLS
+        w=planned_weights(t,plan,plan['fallbackCues']);delta=sum(float(v)*(self.head.geometry[s][8]-393) for s,v in zip(SYMBOLS,w))
+        head,neck=split_head_neck(self.head.at(t,plan),delta)
+        self._neck_layer=render_neck(neck,controls.get('head',0),delta)
+        head=head.resize((round(512*SCALE),round(512*SCALE)),Image.Resampling.LANCZOS);layer=Image.new('RGBA',(1464,1536));layer.alpha_composite(head,(int(TRANSLATE[0])+220,int(TRANSLATE[1])))
+        return layer.rotate(controls.get('head',0),Image.Resampling.BICUBIC,center=(PIVOT[0]+220,PIVOT[1]))
+    def layers(self,t,plan,controls=None):
+        layers=super().layers(t,plan,controls)
+        return {'neck':self._neck_layer,**layers}

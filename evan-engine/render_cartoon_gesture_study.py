@@ -21,12 +21,15 @@ def frame(body,plan,t):
     d.ellipse((791,368,814,391),outline='#49717b',width=2);d.arc((797,368,808,391),0,360,fill='#49717b',width=1);d.line((791,379,814,379),fill='#49717b',width=1)
     d.text((826,368),'Your website',font=font(18),fill='#46616b')
     d.text((719,439),'That tiny browser globe?',font=font(26),fill='#314b58');d.text((719,486),'It could be your brand.',font=font(23),fill='#62808a')
-    d.text((45,660),'F/V CONTACT STUDY' if getattr(body,'fv_review',False) else 'UNDERARM JOIN STUDY' if getattr(body,'socket_review',False) else 'POINTING HAND STUDY',font=font(18),fill='#48636d');d.text((685,603),'Independent shoulders, elbows and wrists',font=font(21),fill='#48636d');d.text((685,636),'F/V contact candidate · joins still pending' if getattr(body,'fv_review',False) else 'Local underarm cleanup · neck still pending' if getattr(body,'socket_review',False) else 'Separate wrist drawing · shoulder cleanup pending',font=font(18),fill='#657c83')
+    d.text((45,660),'NECK ATTACHMENT STUDY' if getattr(body,'neck_review',False) else 'F/V CONTACT STUDY' if getattr(body,'fv_review',False) else 'UNDERARM JOIN STUDY' if getattr(body,'socket_review',False) else 'POINTING HAND STUDY',font=font(18),fill='#48636d');d.text((685,603),'Independent shoulders, elbows and wrists',font=font(21),fill='#48636d');d.text((685,636),'Collar-fixed neck · limited cutout tilt' if getattr(body,'neck_review',False) else 'F/V contact candidate · joins still pending' if getattr(body,'fv_review',False) else 'Local underarm cleanup · neck still pending' if getattr(body,'socket_review',False) else 'Separate wrist drawing · shoulder cleanup pending',font=font(18),fill='#657c83')
     return im.convert('RGB')
 if __name__=='__main__':
     cv2.setNumThreads(1)
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=231);p.add_argument('--sockets',action='store_true');p.add_argument('--expressions',action='store_true');p.add_argument('--fv-contact',action='store_true');a=p.parse_args();plan=json.loads(a.plan.read_text());
-    if a.fv_contact:
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=231);p.add_argument('--sockets',action='store_true');p.add_argument('--expressions',action='store_true');p.add_argument('--fv-contact',action='store_true');p.add_argument('--neck',action='store_true');a=p.parse_args();plan=json.loads(a.plan.read_text());
+    if a.neck:
+        from cartoon_gesture_body import CartoonNeckBody
+        b=CartoonNeckBody()
+    elif a.fv_contact:
         from cartoon_gesture_body import CartoonFVBody
         b=CartoonFVBody()
     elif a.expressions:

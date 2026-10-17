@@ -73,3 +73,11 @@ Normal/quarter-speed same-audio old/new diagnostics use V in ever and F/V in fav
 Bundled Python: /Users/amarhavic/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3. Optional packages in ../painted/deps, config ../painted/tools.json. Use absolute PYTHONPATH from this checkout. Original audio is in sibling previous chat's work directory; see speech documentation/earlier outputs for exact paths. Existing local work: ../speech-alignment-v4 and ../painted-life. Previous painted films are archived references only, superseded visually by the cartoon direction.
 
 Continue authorized work autonomously; ask no routine questions. Notify only on meaningful milestones, failures, completion or required user action. Do not stop merely because source art exists. Once a polished cartoon animation with convincing facial acting, useful hand poses and timing is actually ready for review, disable the automation and report that milestone.
+
+## Latest neck attachment experiment
+
+Read CARTOON-EVAN-NECK-EXPERIMENT.md. CartoonNeckBody / --neck is an opt-in diagnostic: separate jaw/head-following neck mesh with a collar-fixed base, corrected head translate [285,-24], seven-layer PSD. Baseline routes preserve original placement/pixels. No generated artwork or Moho action. Neck-rig manifest explicitly animationReady=false.
+
+Native review FAILED larger-tilt acceptance: collar rim remains rough and a gap opens at -8 degrees. Retaining a two-pixel original collar skin rim reduces pinholes but is not new hidden anatomy. Do not call this a completed repair. Normal/quarter-speed authored-range shot and native 0/+8/-8 comparison are in ../../outputs/evan-cartoon-neck. Reopened PSD matches assembly; 92 checks pass, but geometry passing does not fix the visible defect.
+
+Next concrete work: redraw a registered continuous cartoon neck plus clean collar opening/overlap, preserving selected head/body proportions, and rerun this exact stress/word study. Do not keep expanding color-key/dilation workarounds; dilation candidates grew outline/hair colors and were rejected. Other hand/shoulder/FV/performance limitations remain. Full polished milestone remains incomplete; automation stays active.

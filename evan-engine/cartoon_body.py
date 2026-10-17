@@ -45,14 +45,16 @@ class CartoonBody:
         for name,arm in self.arms.items():
             im,(x,y)=arm.render(controls.get(name,(0,0,0)))
             layer=Image.new('RGBA',(1464,1536));layer.alpha_composite(im,(x+220,y));layers['arm-'+name]=layer
+        layers['head']=self.head_layer(t,plan,controls)
+        return layers
+    def head_layer(self,t,plan,controls):
         head=self.head.at(t,plan)
         raw=np.asarray(head).copy();raw[440:,:,3]=0
         raw[425:440,:,3]=(raw[425:440,:,3].astype(float)*np.linspace(1,0,15)[:,None]).astype('uint8')
         head=Image.fromarray(raw);tr=self.meta['head_transform'];s=tr['scale']
         head=head.resize((round(512*s),round(512*s)),Image.Resampling.LANCZOS)
         layer=Image.new('RGBA',(1464,1536));x,y=tr['translate'];layer.alpha_composite(head,(x+220,y))
-        layers['head']=layer.rotate(controls.get('head',0),Image.Resampling.BICUBIC,center=(tr['pivot'][0]+220,tr['pivot'][1]))
-        return layers
+        return layer.rotate(controls.get('head',0),Image.Resampling.BICUBIC,center=(tr['pivot'][0]+220,tr['pivot'][1]))
     def render(self,t,plan,controls=None):
         controls=acting(t) if controls is None else controls
         out=Image.new('RGBA',(1464,1536))
