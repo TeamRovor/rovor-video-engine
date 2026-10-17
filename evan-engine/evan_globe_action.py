@@ -77,9 +77,11 @@ def hop(t):
 
 def contact_pulse(t):
     """One authored catch-and-slip beat while Evan points at the mascot."""
-    if not 3.58 <= t <= 4.30:
+    if not 3.50 <= t <= 4.40:
         return 0.
-    u=ease((t-3.58)/.72)
+    u=ease((t-3.50)/.90)
+    if u<=0. or u>=1.:
+        return 0.
     return math.sin(math.pi*u)
 
 
