@@ -14,6 +14,19 @@ from cartoon_expression import upper_face
 ROOT=Path(__file__).resolve().parent.parent/'evan-character/cartoon-v1'
 REVIEW_BODY_OPTIONS={'body_cleanup':True,'mouth_anatomy':True}
 
+
+# Rotate the bounded head plate, not the 1464x1536 transparent stage.
+# The 50-pixel transparent guard comfortably encloses the authored ±2° nods;
+# the plate's pivot remains in the same global coordinate system.
+def rotate_head_plate(head, origin, pivot, degrees, canvas=(1464,1536), guard=50):
+    patch=Image.new('RGBA',(head.width+2*guard,head.height+2*guard))
+    patch.alpha_composite(head,(guard,guard))
+    local_pivot=(pivot[0]-origin[0]+guard,pivot[1]-origin[1]+guard)
+    rotated=patch.rotate(degrees,Image.Resampling.BICUBIC,center=local_pivot)
+    stage=Image.new('RGBA',canvas)
+    stage.alpha_composite(rotated,(origin[0]-guard,origin[1]-guard))
+    return stage
+
 class CartoonArm(ArmMesh):
     def __init__(self,image,geometry):
         super().__init__(image,geometry)
@@ -116,8 +129,8 @@ class CartoonBody:
         raw[425:440,:,3]=(raw[425:440,:,3].astype(float)*np.linspace(1,0,15)[:,None]).astype('uint8')
         head=Image.fromarray(raw);tr=self.meta['head_transform'];s=tr['scale']
         head=head.resize((round(512*s),round(512*s)),Image.Resampling.LANCZOS)
-        layer=Image.new('RGBA',(1464,1536));x,y=tr['translate'];layer.alpha_composite(head,(x+220,y))
-        layers['head']=layer.rotate(controls.get('head',0),Image.Resampling.BICUBIC,center=(tr['pivot'][0]+220,tr['pivot'][1]))
+        x,y=tr['translate']
+        layers['head']=rotate_head_plate(head,(x+220,y),(tr['pivot'][0]+220,tr['pivot'][1]),controls.get('head',0))
         return layers
     def render(self,t,plan,controls=None):
         controls=acting(t) if controls is None else controls
