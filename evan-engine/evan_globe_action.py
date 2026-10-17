@@ -47,21 +47,21 @@ def hop(t):
 def framespec(t,vertical=False):
     v,air,r,leg,progress,beat=hop(t)
     if vertical:
-        start=(200.,355.)
+        start=(159.,365.)
         # Laptop is upstage, the tiny mascot runs into foreground.
         if beat=="hatch":
             x=start[0]+v*380
             y=start[1]+v*595-160*math.sin(math.pi*clamped(v))
         else:
-            x=580+(v-1)*240
+            x=539+(v-1)*240
             y=950-26*abs(math.sin((t-2.97)*10)) if beat=="run" else 930
     else:
-        start=(260.,306.)
+        start=(219.,295.)
         if beat=="hatch":
             x=start[0]+v*480
             y=start[1]+v*384-190*math.sin(math.pi*clamped(v))
         else:
-            x=740+(v-1)*410
+            x=699+(v-1)*410
             y=684-30*abs(math.sin((t-2.97)*10)) if beat=="run" else 678
     return dict(x=x,y=y,r=r,air=air,leg=leg,beat=beat,progress=progress,
                 # Reaction displaces Evan's body plate without distorting the source drawing.
@@ -180,7 +180,7 @@ class CartoonDesktopSet:
         d.rounded_rectangle((x0+22,y0+22,x1-22,y1-22),radius=16,fill="#ecf4ef")
         d.rounded_rectangle((x0+35,y0+37,x1-35,y0+118),radius=15,fill="#d1e0db")
         # The favicon hole appears as the little globe takes off.
-        departure=ease((t-2.52)/.42)
+        departure=ease((t-2.35)/.25)
         px=x0+74
         py=y0+75
         if departure<.93:
