@@ -217,16 +217,28 @@ class EvanGlobeAction:
         if figure is None:
             figure=self.body.render(t,self.plan,narration_acting(t))
         if self.vertical:
-            width=900
-            x=170+int(st["evanRecoil"])
-            y=1060
-            # Genuine source layers; crop comes from foreground desk, not synthetic legs.
+            # Medium close-up shares the physical desk rather than splitting
+            # the frame into disconnected presentation-card halves.
+            width=1170
+            x=-40+int(st["evanRecoil"])
+            y=865
         else:
-            width=1030
-            x=1010+int(st["evanRecoil"]*2)
+            # Foreground Evan is staged for genuine interaction with the
+            # bouncing prop; his legs are occluded by the near desk.
+            width=1170
+            x=760+int(st["evanRecoil"]*2)
             y=35
         h=round(width*figure.height/figure.width)
         plate=figure.resize((width,h),Image.Resampling.LANCZOS)
+        # Acting accents: brief recoil, overshoot and settle around the waist.
+        # Only transforms original fully rendered art, retaining existing
+        # lip-sync and anatomical joint continuity inside the layer stack.
+        recoil=ease((t-3.48)/.22)*(1-ease((t-4.14)/.47))
+        settle=ease((t-4.25)/.24)*(1-ease((t-4.78)/.28))
+        angle=-4.2*recoil+1.25*settle
+        if abs(angle)>.01:
+            plate=plate.rotate(angle,Image.Resampling.BICUBIC,
+                               center=(round(width*.5),round(h*.86)))
         im.alpha_composite(plate,(x,y))
         self.set.foreground(im)
         # Prop in front of desk/Evan: their paths share the physical foreground.
