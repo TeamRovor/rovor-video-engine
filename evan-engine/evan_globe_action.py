@@ -59,13 +59,13 @@ def framespec(t,vertical=False):
         start=(260.,306.)
         if beat=="hatch":
             x=start[0]+v*480
-            y=start[1]+v*430-190*math.sin(math.pi*clamped(v))
+            y=start[1]+v*384-190*math.sin(math.pi*clamped(v))
         else:
             x=740+(v-1)*410
-            y=742-30*abs(math.sin((t-2.97)*10)) if beat=="run" else 732
+            y=684-30*abs(math.sin((t-2.97)*10)) if beat=="run" else 678
     return dict(x=x,y=y,r=r,air=air,leg=leg,beat=beat,progress=progress,
                 # Reaction displaces Evan's body plate without distorting the source drawing.
-                evanRecoil=(16*math.sin(math.pi*ease((t-3.48)/.62))
+                evanRecoil=(45*math.sin(math.pi*ease((t-3.48)/.62))
                             if 3.48<t<4.1 else 0))
 
 
@@ -162,6 +162,16 @@ class CartoonDesktopSet:
             d.polygon(((0,815),(w,815),(w,900),(0,937)),fill="#d3a086")
             d.line((0,815,w,815),fill="#845748",width=11)
 
+    def foreground(self,im):
+        """Landscape desk foreground hides the lower rig, preserving real depth."""
+        if self.vertical:
+            return
+        d=ImageDraw.Draw(im)
+        w,h=self.size
+        d.rectangle((0,815,w,h),fill="#bf8b73")
+        d.polygon(((0,815),(w,815),(w,900),(0,937)),fill="#d3a086")
+        d.line((0,815,w,815),fill="#845748",width=11)
+
     def monitor(self,im,box,t):
         d=ImageDraw.Draw(im)
         x0,y0,x1,y1=box
@@ -218,6 +228,7 @@ class EvanGlobeAction:
         h=round(width*figure.height/figure.width)
         plate=figure.resize((width,h),Image.Resampling.LANCZOS)
         im.alpha_composite(plate,(x,y))
+        self.set.foreground(im)
         # Prop in front of desk/Evan: their paths share the physical foreground.
         self.puppet.render(im,st,t)
         return im.convert("RGB")
