@@ -1,2 +1,2 @@
 mode=capability-audit
-sequence=2
+sequence=3
