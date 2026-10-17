@@ -137,6 +137,40 @@ class StoryboardFaviconScene:
                    (x+2*s,y+int(s*2.2)),(x+int(s*1.5),y+int(s*1.5)),(x+3*s,y+s//2)),
                   fill=NAVY,outline="white",width=2)
 
+    def doodle_globe(self, image, x, y, radius, t):
+        """Original hand-drawn-style comic globe with actual running motion.
+
+        Playful stand-in for the unwanted generic favicon; no third-party art.
+        """
+        d=ImageDraw.Draw(image)
+        hop=round(24*abs(math.sin((t-4.72)*6)))
+        x=int(x+42*math.sin((t-4.72)*2.4))
+        y=int(y-hop)
+        r=int(radius)
+        # Run cycle: arms counter-swing, shoes and shadow respond to airtime.
+        stride=math.sin((t-4.72)*12)
+        d.ellipse((x-r,y+r+24+hop,x+r,y+r+40+hop),fill="#c8d6d2")
+        d.line((x-r+12,y+10,x-r-55,y+50*stride),fill=NAVY,width=9)
+        d.line((x+r-12,y+10,x+r+55,y-50*stride),fill=NAVY,width=9)
+        d.line((x-25,y+r-5,x-45-35*stride,y+r+65),fill=NAVY,width=10)
+        d.line((x+25,y+r-5,x+40+35*stride,y+r+65),fill=NAVY,width=10)
+        d.ellipse((x-r,y-r,x+r,y+r),fill="white",outline=TEAL,width=9)
+        self.globe(d,x,y,r,TEAL)
+        for dx in (-int(r*.3),int(r*.3)):
+            d.ellipse((x+dx-14,y-23,x+dx+14,y+7),fill=NAVY)
+            d.ellipse((x+dx-9,y-17,x+dx-3,y-11),fill="white")
+        d.arc((x-25,y+9,x+25,y+40),0,180,fill=NAVY,width=6)
+
+    def glint(self, draw, x, y, t, start, radius=24):
+        """Finite sparkle when the replacement Rovor icon clicks into place."""
+        strength=max(0.,1-abs(t-start)/.35)
+        r=max(0,int(radius*strength))
+        if r<2:return
+        x=int(x);y=int(y)
+        draw.line((x-r,y,x+r,y),fill=GOLD,width=6)
+        draw.line((x,y-r,x,y+r),fill=GOLD,width=6)
+        draw.ellipse((x-5,y-5,x+5,y+5),fill="white")
+
     def render(self,t,figure=None):
         start,end,name=shot_at(t)
         im=Image.new("RGBA",self.size)
@@ -190,7 +224,8 @@ class StoryboardFaviconScene:
                     self.browser(im,(reveal_x,840,940,480),True,True,"WITH FAVICON",1.4)
                 else:
                     d.rounded_rectangle((70,860,1010,1290),radius=25,fill="#d9e5e1")
-                    self.label(d,(140,1000),"MISSING A FAVICON",50)
+                    self.label(d,(140,925),"MISSING A FAVICON",50)
+                    self.doodle_globe(im,730,1130,70,t)
                 self.character(im,t,figure,300,1250,850,start)
             else:
                 self.label(d,(100,115),"IT'S NOT A RANDOM BROWSER THING.",60)
@@ -202,8 +237,9 @@ class StoryboardFaviconScene:
                     self.label(d,(1240,898),"FAVICON",50,TEAL)
                 else:
                     d.rounded_rectangle((1000,350,1825,855),radius=25,fill="#d6e5de")
-                    self.label(d,(1090,565),"MISSING",76,INK)
-                    self.label(d,(1090,675),"A FAVICON",76,INK)
+                    self.label(d,(1090,440),"MISSING",76,INK)
+                    self.label(d,(1090,530),"A FAVICON",76,INK)
+                    self.doodle_globe(im,1540,680,70,t)
         elif name=="favicon-reveal":
             if vertical:
                 self.label(d,(70,85),"YOUR BRAND",68)
@@ -213,6 +249,7 @@ class StoryboardFaviconScene:
                 rad=225
                 d.ellipse((cx-rad,cy-rad,cx+rad,cy+rad),fill="white",outline=TEAL,width=10)
                 self.mark(im,cx-145,cy-145,290)
+                self.glint(d,cx+220,cy-190,t,10.15,32)
                 self.label(d,(92,1695),"SMALL IMAGE. CLEAR IDENTITY.",42)
             else:
                 self.label(d,(100,120),"THAT'S A FAVICON.",76)
@@ -222,6 +259,7 @@ class StoryboardFaviconScene:
                 r=200
                 d.ellipse((cx-r,cy-r,cx+r,cy+r),fill="white",outline=TEAL,width=12)
                 self.mark(im,cx-110,cy-110,220)
+                self.glint(d,cx+175,cy-125,t,10.15,28)
                 self.label(d,(1250,835),"YOUR BRAND",50,INK)
         elif name=="website-payoff":
             # Tab identities stay stable while cards slide into the comparison.
@@ -239,6 +277,9 @@ class StoryboardFaviconScene:
                 for i,(xx,txt) in enumerate(((100,"BROWSER"),(720,"TAB"),(1340,"BOOKMARK"))):
                     off=self.enter(t,start+.17*i,350)
                     self.browser(im,(xx,435+off,495,360),True,False,txt,1.05)
+                for j in range(3):
+                    xx=135+620*j
+                    self.glint(d,xx+30,430,t,15.2+j*.38,25)
                 self.label(d,(120,885),"YOUR MARK, WHERE PEOPLE ACTUALLY LOOK.",38)
         else:
             # Branded ending: original mark, Rovor copy and character close.
