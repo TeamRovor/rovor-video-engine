@@ -1,0 +1,50 @@
+{
+  "tests_full_environment": {
+    "run": 40,
+    "passed": 40
+  },
+  "tests_system_python": {
+    "run": 40,
+    "skipped": 9,
+    "result": "OK"
+  },
+  "framing": {
+    "sampled_frames": 356,
+    "hand_min_xy": [
+      43.34381967351743,
+      810.9052600242675
+    ],
+    "hand_max_xy": [
+      1083.1628556278843,
+      1040.1708327104898
+    ],
+    "frame_size": [
+      1920,
+      1080
+    ],
+    "inside_frame": true
+  },
+  "frame_count": 356,
+  "size": [
+    1920,
+    1080
+  ],
+  "fps": 24,
+  "duration_seconds": 14.8,
+  "parallel_render_reports": [
+    {
+      "nextFrame": 178,
+      "totalFrames": 178,
+      "complete": true,
+      "elapsed_seconds": 88.141
+    },
+    {
+      "nextFrame": 356,
+      "totalFrames": 356,
+      "complete": true,
+      "elapsed_seconds": 87.16
+    }
+  ],
+  "visual_verdict": "Development milestone; no studio/production acceptance",
+  "native_moho": "unverified; further native launches stopped after SIGABRT"
+}

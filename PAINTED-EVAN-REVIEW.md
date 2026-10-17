@@ -14,7 +14,7 @@ The user selected the **first painted visual-development board** derived only fr
 
 ## Review evidence and current verdict
 
-The full shot has 356 rendered frames. Rendering took 170.25 seconds on this local CPU workflow, about 2.1 fps. This is a workload measurement, not a controlled hardware benchmark or a finding that the Mac is inadequate. Frames have been inspected at 1920×1080 and facial transitions at native 418-pixel source resolution. A slow close-up is supplied for human playback review. No human perceptual approval is claimed.
+The full shot has 356 rendered frames. A serial pass took 170.25 seconds on this local CPU workflow, about 2.1 fps. The final camera revision rendered in two independent frame ranges taking 88.14 and 87.16 seconds. A complete sampled hand-geometry sweep across all 356 frames verified that both hands remain in the picture; sampled hand bounds are approximately x=43–1084 and y=811–1041. This is a workload measurement, not a controlled hardware benchmark or a finding that the Mac is inadequate. Frames have been inspected at 1920×1080 and facial transitions at native 418-pixel source resolution. A slow close-up is supplied for human playback review. No human perceptual approval is claimed.
 
 The painted face preserves natural lip volume, teeth/tongue shading, stubble and cheek response substantially better than the rejected study. Closed-to-open transitions now have one corresponding lip contour. The separated upper-face drawing remains stable instead of changing hair/glasses on every phoneme. Elbow and wrist motion is visible while shoulders overlap the reconstructed torso.
 
@@ -50,8 +50,11 @@ The local tools config can set `painted_python` to the environment's Python and 
 
 ## Validation
 
+- All 40 tests pass with the optional painted dependencies installed. The inherited O/U exporter test was corrected to preserve distinct rounded sounds.
 - New geometry checks cover zero-pose identity, hierarchy pivots and bone lengths, all 81 facial pose pairs at five interpolation fractions without triangle inversions, stable upper-face pixels, white-teeth alpha preservation and brief MBP closures.
 - Backend-routing tests preserve the existing renderer and select the painted worker only explicitly.
 - A separate 1.25-second input passed the complete existing MP3 pipeline, including Whisper, Rhubarb, rendering and encoding. It also exercised the generic non-favicon card.
 - The PSD was saved, reopened, its 12 layers counted and its composite regenerated.
+- The corrected camera framing was checked across all 356 sampled frame poses; both hands remain inside the image. The final 14.8-second H.264/AAC movie was decoded without errors. A 9.6-second silent quarter-speed native-resolution facial excerpt is available for human review.
+- The standard system Python also passes the 40-test suite with nine optional artwork tests skipped, preserving the dependency-light default path.
 - The original V3/V4 main checkout, approved release symlink and updater remain unchanged. No production merge or deployment is authorized.
