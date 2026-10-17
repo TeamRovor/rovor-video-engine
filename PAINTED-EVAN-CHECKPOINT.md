@@ -55,12 +55,18 @@ Read CARTOON-EVAN-EXPRESSIONS.md. ExpressiveCartoonHead uses separately extracte
 
 Authored ever/tiny/here accents follow aligned word times with holds and continuous independent raise/tilt controls. This is not automatic emotion inference. CartoonExpressionBody and render_cartoon_gesture_study.py --expressions integrate it with the body. New normal/quarter-speed native-head diagnostic, body still, neutral/acting comparison, cue record and reopened three-layer PSD are in ../../outputs/evan-cartoon-expressions. 85 checks pass, not visual acceptance. Hair/glasses restrict range; wide-shot effect is subtle; no eye/blink rig. The native comparison still shows the unacceptable F/V grimace at 0.35 s. Neck/wrist/shoulder and hand linework remain unfinished. No Moho activity or approved release changes.
 
+## Latest F/V contact milestone
+
+Read CARTOON-EVAN-FV-CONTACT.md. FVContactHead is opt-in: generated/registered relaxed contact art is split into local lip/outline and upper-teeth surfaces with new per-instance G geometry. Lip/teeth remain separate pixel layers; contact height is constrained during fading toward vowels. Source/prompt, masks, geometry/hash and limitations live in fv-source/fv-rig. animationReady=false. Old LayeredCartoonHead/expressive/body defaults keep old G and remain baselines. CartoonFVBody and --fv-contact integrate the candidate.
+
+Normal/quarter-speed same-audio old/new diagnostics use V in ever and F/V in favicon, with a labeled review cut (92 frames/48fps). Native peaks and transition frames, reopened three-layer source PSD and body integration are in ../../outputs/evan-cartoon-fv. 89 checks pass; constrained-contact geometry sweep also passes. Grimace is reduced, but the rolled lower lip remains simplified and can read as a narrow tooth hint. No anatomical/studio acceptance or timing correction is claimed. A character artist/animator is still needed for contact and performance review. All other documented join/hand/face limitations remain. No Moho activity or approved release changes.
+
 ## Next concrete work
 
 1. Build a clean neck/collar attachment and finish remaining shoulder crease/skinning defects. Local underarm tab cleanup now exists, but is not complete shoulder construction. Preserve original visible art and reject whole-body proportion changes.
 2. Clean the new pointing hand linework/wrist contour and add a relaxed hand plus a designed pose transition. Pointing exists as a separate drawing, not individual fingers. Build expression/brow acting; current study is not polished.
 3. The 18 timing disagreements have visual evidence review; exact phones still require listening/phonetic annotation. Preserve the review record and uncertainty. Speech-phone coverage and geometric tests do not prove lip-sync accuracy.
-4. Highest facial priority: replace F/V grimace with a designed lower-lip/upper-teeth contact, then review F/V/L in real narration. Independent brows now exist but are restrained by the current hair/forehead construction. Preserve baseline films; seek artist/animator anatomy and acting review.
+4. Refine the new F/V rolled-lip candidate with artist/animator anatomy review, then improve L/tongue articulation and a longer narration scene with a real pause. The old grimace remains the baseline; the new candidate reduces it but is not production-approved. Preserve both.
 
 ## Environment
 

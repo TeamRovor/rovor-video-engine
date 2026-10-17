@@ -55,3 +55,10 @@ class CartoonExpressionBody(CartoonSocketBody):
         super().__init__(root,pose)
         from expressive_cartoon_head import ExpressiveCartoonHead
         self.head=ExpressiveCartoonHead(root)
+
+class CartoonFVBody(CartoonExpressionBody):
+    """Opt-in relaxed F/V contact candidate on the current expressive rig."""
+    def __init__(self,root=ROOT,pose='point'):
+        super().__init__(root,pose)
+        from fv_cartoon_head import FVContactHead
+        self.head=FVContactHead(root);self.fv_review=True

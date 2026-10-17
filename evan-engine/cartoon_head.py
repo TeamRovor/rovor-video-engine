@@ -21,8 +21,8 @@ GEOMETRY={
  'G':(193,327,277,325,315,334,319,325,394),
  'H':(193,325,280,324,312,359,320,352,399)}
 
-def landmarks(symbol):
-    lx,ly,rx,ry,top,bottom,it,ib,chin=GEOMETRY[symbol];cx=(lx+rx)/2;r=(rx-lx)/2;pts=[]
+def landmarks(symbol,geometry=GEOMETRY):
+    lx,ly,rx,ry,top,bottom,it,ib,chin=geometry[symbol];cx=(lx+rx)/2;r=(rx-lx)/2;pts=[]
     for inner in (False,True):
         for i in range(16):
             angle=i*math.pi/8;c=math.cos(angle);s=math.sin(angle);inset=min(9,r*.35) if inner else 0;x=cx+(r-inset)*c

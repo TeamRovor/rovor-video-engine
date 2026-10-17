@@ -18,11 +18,14 @@ def straight(raw):
 class LayeredCartoonHead(CartoonHead):
     def __init__(self,root=ROOT):
         super().__init__(root/'head-rig-v2')
+        self.geometry=GEOMETRY;self.points=POINTS
         self.layers={name:np.asarray(Image.open(root/'oral-rig'/(name+'.png')).convert('RGBA')) for name in ['face-skin','cavity-outline','upper-teeth','tongue','tongue-raised','closed-lips','fv-contact']}
         self.contact=self.layers['fv-contact']
+    def contact_surface(self,target):
+        return warp(self.contact,self.points['G'],target)
     def weights(self,weights):
-        w=np.asarray(weights,float);w=w/w.sum();target=np.asarray(sum(POINTS[s]*v for s,v in zip(SYMBOLS,w)),np.float32)
-        aperture=float(sum(v*(GEOMETRY[s][7]-GEOMETRY[s][6]) for s,v in zip(SYMBOLS,w)))
+        w=np.asarray(weights,float);w=w/w.sum();target=np.asarray(sum(self.points[s]*v for s,v in zip(SYMBOLS,w)),np.float32)
+        aperture=float(sum(v*(self.geometry[s][7]-self.geometry[s][6]) for s,v in zip(SYMBOLS,w)))
         opening=float(ease((aperture-1)/7));oral=target.copy()
         cy=float((target[0,1]+target[8,1])/2)
         # Collapse the drawn oral surfaces at contact; facial cheek/jaw anchors
@@ -50,7 +53,7 @@ class LayeredCartoonHead(CartoonHead):
         fv=float(w[7]);face=over(face,cavity,visible*(1-fv))
         face=over(face,teeth,visible*float(ease((aperture-2)/7))*(1-fv)*(1-float(w[5]+w[6])))
         face=over(face,tongue,visible*float(ease((aperture-8)/12))*(1-fv))
-        contact=warp(self.contact,POINTS['G'],target)
+        contact=self.contact_surface(target)
         face=over(face,contact,fv)
         closed=warp(self.layers['closed-lips'],POINTS['X'],target,2)
         face=over(face,closed,(1-visible)*(1-fv))
