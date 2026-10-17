@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "origin": "editorial-authored",
+  "shotId": "cartoon-beat-blockout-01",
+  "status": "synthetic-director-demo-not-real-narration",
+  "beats": [
+    {"at": 0.55, "anticipate": 0.22, "hold": 0.45, "intent": "Prepare to explain a single idea with an open palm", "pose": {"headTilt": -4, "headNod": 5, "bodyLean": 3, "shoulderR": -110, "elbowR": 64, "wristR": -14, "handR": "open", "browL": -5, "smile": 0.55}},
+    {"at": 1.45, "anticipate": 0.22, "hold": 0.48, "intent": "Hold the explanation clearly so viewer reads gesture", "pose": {"headTilt": -2, "headNod": 2, "shoulderR": -90, "elbowR": 72, "shoulderL": 88, "elbowL": 80, "handL": "explain", "handR": "relaxed", "smile": 0.35}},
+    {"at": 2.48, "anticipate": 0.28, "hold": 0.45, "intent": "Point decisively at the on-screen example", "pose": {"bodyLean": 1, "headTilt": 7, "headNod": -4, "shoulderR": -128, "elbowR": 70, "wristR": -18, "handR": "point", "handL": "relaxed", "browL": -9, "browR": -9}},
+    {"at": 3.55, "anticipate": 0.26, "hold": 0.3, "intent": "Return to a relaxed conversational pose", "pose": {"bodyLean": 0, "headTilt": 1, "headNod": 0, "shoulderR": -25, "elbowR": 0, "shoulderL": 25, "elbowL": 0, "wristR": 0, "handR": "relaxed", "smile": 0.18}}
+  ]
+}
