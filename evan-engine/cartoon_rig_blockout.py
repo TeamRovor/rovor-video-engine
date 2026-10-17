@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import base64
 from dataclasses import dataclass
+from cartoon_hand_deform import isolated_pose, render_hand
 import json
 import math
 from pathlib import Path
@@ -123,30 +124,8 @@ def capsule(length,radius,fill,stroke=INK):
 
 
 def hand_svg(style):
-    """Five distinct registered hand constructions with skin-filled fingers."""
-    if style not in ('relaxed','open','point','explain','fist'):
-        raise ValueError(f'Unknown hand drawing: {style}')
-    palm=f'<path d="M -17,0 Q -23,23 -16,37 Q 0,50 19,35 L 17,0 Z" fill="{SKIN}" stroke="{INK}" stroke-width="3.5" />'
-    def finger(x,end,dx=0):
-        # These are CLOSED skin-colored plates, not black stroke-only fingers.
-        y=28
-        return (f'<path d="M {x},{y} Q {x+dx},{end-13} {x+dx},{end} '
-                f'Q {x+dx+3},{end+8} {x+dx+8},{end+4} Q {x+dx+10},{end+1} {x+dx+8},{end-4} '
-                f'Q {x+8},{y+4} {x+8},{y} Z" fill="{SKIN}" stroke="{INK}" stroke-width="2.6" />')
-    if style=='open':
-        fingers=''.join(finger(x,end,dx) for x,dx,end in [(-16,-12,60),(-7,-6,70),(2,0,74),(11,8,63)])
-    elif style=='explain':
-        fingers=''.join(finger(x,end,dx) for x,dx,end in [(-16,-19,57),(-7,-6,72),(2,9,72),(11,19,58)])
-    elif style=='point':
-        fingers=finger(-7,93,-2)
-        fingers+=f'<path d="M 6,29 Q 22,29 20,43 Q 11,55 3,41 Z" fill="{SKIN}" stroke="{INK}" stroke-width="3" />'
-    elif style=='fist':
-        fingers=f'<path d="M -17,23 Q -21,44 -12,49 L 12,49 Q 23,46 19,26 Z" fill="{SKIN}" stroke="{INK}" stroke-width="3" />'
-        fingers+=f'<path d="M -14,39 L 16,39" fill="none" stroke="{SKIN_SHADE}" stroke-width="2" />'
-    else:
-        fingers=''.join(finger(x,end,dx) for x,dx,end in [(-15,-3,48),(-6,-1,54),(3,2,57),(12,3,49)])
-    thumb=f'<path d="M -17,11 Q -35,15 -32,33 Q -28,45 -18,33" fill="{SKIN}" stroke="{INK}" stroke-width="3"/>'
-    return palm+fingers+thumb
+    """Registered five-pose hand geometry retained for isolated source inspection."""
+    return isolated_pose(style, SKIN, INK)
 
 
 def hand_exposures(side,t,direction=None):
@@ -177,7 +156,8 @@ def arm_svg(side,s,t,direction=None):
     hand=s.handL if side=='L' else s.handR
     # Local +y bones; the hierarchy rotates around physically independent joints.
     layers=hand_exposures(side,t,direction)
-    hand_markup=''.join(f'<g data-hand-subpose="{name}" opacity="{alpha:.4f}">{hand_svg(name)}</g>' for name,alpha in layers if alpha>1e-6)
+    # Interpolate corresponding finger joints; never ghost two flattened hands.
+    hand_markup=render_hand(layers,SKIN,INK,prefix=f'hand-{side}-')
     return (f'<g id="arm-{side}" data-layer="arm-{side}" transform="translate({108*sign},-4) rotate({shoulder})">'
             f'<g id="upper-arm-{side}" data-layer="upper-arm-{side}">{capsule(103,30,SHIRT)}</g>'
             f'<g id="elbow-{side}" transform="translate(0,103) rotate({elbow})">'
