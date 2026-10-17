@@ -1,2 +1,2 @@
-mode=chat-delivery-smoke
-sequence=8
+mode=deliver-existing-review
+sequence=9
