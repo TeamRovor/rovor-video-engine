@@ -266,8 +266,12 @@ def frame_svg(t,plan=None,brand=None,direction=None):
     </svg>'''
 
 
-def render_demo(output,plan=None,brand=None,frames=96,fps=24,direction=None):
+def render_demo(output,plan=None,brand=None,frames=96,fps=24,direction=None,engineering_only=False):
     """Save SVG frames and normal/half-speed films. No Moho involvement."""
+    if not engineering_only:
+        raise RuntimeError("Art rejected by user: procedural SVG films are diagnostic only. "
+                           "Use engineering_only=True for explicitly labeled internal test renders; "
+                           "never present them as finished Evan animation.")
     if fps<1 or frames<1:raise ValueError('fps and frames must be positive')
     if brand is None and BRAND_PATH.exists():brand=BRAND_PATH
     try:
@@ -290,6 +294,7 @@ def render_demo(output,plan=None,brand=None,frames=96,fps=24,direction=None):
                'performanceSource':'editorial-authored beats, construction blockout' if direction else 'legacy synthetic timed poses',
               'components':['neck','torso','head','jaw','oral-interior','upper-teeth','tongue','upper-lip','lower-lip','glasses','brow-left','brow-right','upper-arm-L','forearm-L','hand-L','upper-arm-R','forearm-R','hand-R'],
               'handPoses':['relaxed','open','point','explain','fist'],'frames':frames,'fps':fps,
+              'visualStatus':'user-rejected-procedural-art-engineering-only','publishable':False,
               'limitations':['Construction artwork is not matched to design-sheet-v1.png','No native Moho rig','No actual narration audio used unless the plan is supplied','No visual quality approval']}
     (output/'blockout-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     return manifest
@@ -299,7 +304,8 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('output',type=Path);p.add_argument('--speech-plan',type=Path)
     p.add_argument('--brand',type=Path);p.add_argument('--direction',type=Path,help='Editorial acting-beat JSON, independent of speech plan');p.add_argument('--fps',type=int,default=24);p.add_argument('--frames',type=int,default=96)
+    p.add_argument('--engineering-only',action='store_true',help='Explicit opt-in to render rejected procedural SVG diagnostics only')
     a=p.parse_args()
     plan=json.loads(a.speech_plan.read_text()) if a.speech_plan else None
     direction=json.loads(a.direction.read_text()) if a.direction else None
-    print(json.dumps(render_demo(a.output,plan,a.brand,a.frames,a.fps,direction),indent=2))
+    print(json.dumps(render_demo(a.output,plan,a.brand,a.frames,a.fps,direction,engineering_only=a.engineering_only),indent=2))
