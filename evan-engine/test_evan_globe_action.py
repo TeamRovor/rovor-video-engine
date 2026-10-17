@@ -1,7 +1,8 @@
 """Kinematic quality checks for original Evan/globe animated action."""
 import math
 import unittest
-from evan_globe_action import START,END,hop,framespec,clamped,ease
+from evan_globe_action import START,END,hop,framespec,clamped,ease,globe_action_controls
+from cartoon_body import narration_acting
 
 
 class GlobeActionTests(unittest.TestCase):
@@ -42,6 +43,30 @@ class GlobeActionTests(unittest.TestCase):
         self.assertEqual(ease(2),1)
         for i in range(100):
             self.assertLessEqual(ease(i/100),ease((i+1)/100))
+
+    def test_action_is_actual_independent_joint_motion(self):
+        # The old body held right elbow at -25 degrees for over a second.
+        # New staging actively retracts, points at, and misses the moving prop.
+        surprise=globe_action_controls(3.2)
+        reach=globe_action_controls(3.85)
+        self.assertGreater(abs(surprise['right'][1]-reach['right'][1]),12)
+        self.assertNotEqual(surprise['head'],reach['head'])
+        self.assertEqual(globe_action_controls(2.35),narration_acting(2.35))
+        self.assertEqual(globe_action_controls(5.65),narration_acting(5.65))
+
+    def test_joint_velocities_are_continuous_and_bounded(self):
+        previous=None
+        for frame in range(round(START*60),round(END*60)):
+            c=globe_action_controls(frame/60)
+            self.assertLess(abs(c['head']),5)
+            self.assertLess(abs(c['body_roll']),3)
+            self.assertEqual(c['right_hand'],narration_acting(frame/60)['right_hand'])
+            for side in ('left','right'):
+                self.assertTrue(all(abs(angle)<40 for angle in c[side]))
+            if previous is not None:
+                self.assertLess(max(abs(a-b) for side in ('left','right')
+                                    for a,b in zip(c[side],previous[side])),1.5)
+            previous=c
 
     def test_rejects_unrelated_narration(self):
         with self.assertRaises(ValueError):framespec(-1)
