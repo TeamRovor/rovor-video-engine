@@ -1,0 +1,53 @@
+{
+  "registration": {
+    "ecc": 0.9931055968994342,
+    "matrix": [
+      [
+        0.9982853531837463,
+        -4.0269784221891314e-05,
+        0.9518154859542847
+      ],
+      [
+        0.00018282316159456968,
+        1.0002681016921997,
+        -0.4455927312374115
+      ]
+    ]
+  },
+  "sourceSha256": "2e77d28a21bfd9afaaff2ba11a11cadc76787e1d14ae914ac0acf2b1ad360f73",
+  "originalSha256": "3c8c53b8801bfb2bd85a366a279be05a63b403c5de34385b1e64dda5d5d07f70",
+  "outputSha256": "803c27677b5759260f96feb8bdb95ebf1035b9efc8ad5a415819c94602e7c2a3",
+  "patchBoxes": [
+    [
+      334,
+      455,
+      404,
+      548
+    ],
+    [
+      620,
+      455,
+      690,
+      548
+    ]
+  ],
+  "neckRegistration": {
+    "ecc": 0.9934813979363862,
+    "matrix": [
+      [
+        1.0000810623168945,
+        0.0006565062794834375,
+        -0.6964560151100159
+      ],
+      [
+        0.00043570762500166893,
+        1.0025113821029663,
+        -2.318880558013916
+      ]
+    ]
+  },
+  "neckSourceSha256": "058f6b118a30d004a8b2ec9b1d001694cfdfe9ff62d4a39cd58eae748e3df41d",
+  "neckAlphaPreserved": true,
+  "visualApproved": false,
+  "status": "registered local repair candidate; inspect moving shoulder and neck overlaps"
+}

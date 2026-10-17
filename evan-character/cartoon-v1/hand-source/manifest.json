@@ -1,0 +1,92 @@
+{
+  "status": "experimental registered point/relaxed drawings; moving join under visual review",
+  "visualApproved": false,
+  "point-right": {
+    "file": "point-right-v1.png",
+    "attachment": [
+      90,
+      537
+    ],
+    "axisPoint": [
+      330,
+      700
+    ],
+    "scale": 0.18,
+    "sourceReference": "../source/setup-v1.png",
+    "targetAttachment": [
+      805,
+      744
+    ],
+    "trimAttachment": [
+      808,
+      751
+    ],
+    "rigWrist": [
+      805,
+      744
+    ],
+    "paletteScale": [
+      0.9920634920634921,
+      0.9702380952380952,
+      0.9823008849557522
+    ],
+    "paletteReference": {
+      "sourceForearmBox": [
+        782,
+        706,
+        798,
+        722
+      ],
+      "drawingWristBox": [
+        180,
+        585,
+        240,
+        645
+      ]
+    }
+  },
+  "relaxed-right": {
+    "file": "relaxed-right-v1.png",
+    "attachment": [
+      90,
+      537
+    ],
+    "axisPoint": [
+      330,
+      700
+    ],
+    "scale": 0.18,
+    "sourceReference": "../source/setup-v1.png",
+    "targetAttachment": [
+      805,
+      744
+    ],
+    "trimAttachment": [
+      808,
+      751
+    ],
+    "rigWrist": [
+      805,
+      744
+    ],
+    "paletteScale": [
+      0.9881422924901185,
+      0.9532163742690059,
+      0.9568965517241379
+    ],
+    "paletteReference": {
+      "sourceForearmBox": [
+        782,
+        706,
+        798,
+        722
+      ],
+      "drawingWristBox": [
+        180,
+        585,
+        240,
+        645
+      ]
+    }
+  }
+}

@@ -3,10 +3,37 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from moho_exposure import exposure, moho_dat, gesture_rows, convert
+from moho_exposure import exposure, exposure_review, moho_dat, gesture_rows, convert
 
 
 class MohoExposureTests(unittest.TestCase):
+    def test_review_distinguishes_short_from_lost(self):
+        cues = [{"start": 0, "end": .01, "value": "A"},
+                {"start": .01, "end": .02, "value": "G"},
+                {"start": .02, "end": .1, "value": "B"}]
+        report = exposure_review(cues, 24, .1)
+        self.assertEqual(report["unsampledCueIndices"], [1])
+        self.assertEqual(report["cues"][0]["sampledFrameCount"], 1)
+        self.assertIn("shorter-than-frame", report["cues"][0]["reviewReasons"])
+        self.assertFalse(report["phonemeTimingVerified"])
+
+    def test_adjacent_same_shapes_are_not_lost(self):
+        report = exposure_review([{"start": 0, "end": .1, "value": "A"},
+                                  {"start": .1, "end": .2, "value": "A"}], 24)
+        self.assertEqual(report["switchKeyCount"], 2)
+        self.assertEqual(report["unsampledCueIndices"], [])
+
+    def test_partial_audio_frame_is_covered(self):
+        report = exposure_review([{"start": 0, "end": 22.06, "value": "X"}], 24)
+        self.assertEqual(report["renderFrameCount"], 530)
+        self.assertEqual(report["endRestFrame"], 531)
+        self.assertGreaterEqual(report["renderDurationSeconds"], 22.06)
+        self.assertLess(report["renderDurationSeconds"] - 22.06, 1 / 24)
+
+    def test_trimmed_cue_is_flagged(self):
+        report = exposure_review([{"start": 0, "end": 1, "value": "B"}], 24, .5)
+        self.assertIn("extends-past-scene", report["cues"][0]["reviewReasons"])
+
     def test_empty(self):
         self.assertEqual(exposure([],24,0),[(1,"rest")])
     def test_simple(self):

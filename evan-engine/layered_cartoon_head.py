@@ -3,7 +3,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 from PIL import Image
-from cartoon_head import CartoonHead,GEOMETRY,POINTS,warp,SYMBOLS,SIZE
+from cartoon_head import CartoonHead,GEOMETRY,POINTS,warp,warp_maps,SYMBOLS,SIZE
 from painted_timing import ease
 ROOT=Path(__file__).resolve().parent.parent/'evan-character/cartoon-v1'
 
@@ -16,10 +16,15 @@ def straight(raw):
     return np.clip(result,0,255)
 
 class LayeredCartoonHead(CartoonHead):
-    def __init__(self,root=ROOT):
+    def __init__(self,root=ROOT,contact_candidate=False,mouth_anatomy=False):
         super().__init__(root/'head-rig-v2')
         self.layers={name:np.asarray(Image.open(root/'oral-rig'/(name+'.png')).convert('RGBA')) for name in ['face-skin','cavity-outline','upper-teeth','tongue','tongue-raised','closed-lips','fv-contact']}
         self.contact=self.layers['fv-contact']
+        self.mouth_anatomy=mouth_anatomy
+        if mouth_anatomy:
+            self.contact=np.asarray(Image.open(root/'oral-rig/fv-contact-v3.png').convert('RGBA'))
+        if contact_candidate:
+            self.contact=np.asarray(Image.open(root/'oral-rig/fv-contact-v2.png').convert('RGBA'))
     def weights(self,weights):
         w=np.asarray(weights,float);w=w/w.sum();target=np.asarray(sum(POINTS[s]*v for s,v in zip(SYMBOLS,w)),np.float32)
         aperture=float(sum(v*(GEOMETRY[s][7]-GEOMETRY[s][6]) for s,v in zip(SYMBOLS,w)))
@@ -31,14 +36,15 @@ class LayeredCartoonHead(CartoonHead):
         scale=(1.2+(height-1.2)*opening)/height
         oral[:32,1]=cy+(oral[:32,1]-cy)*scale
         face=warp(self.layers['face-skin'],POINTS['X'],target)
-        cavity=warp(self.layers['cavity-outline'],POINTS['C'],oral,2)
-        teeth=warp(self.layers['upper-teeth'],POINTS['C'],oral,2)
+        oral_maps=warp_maps(POINTS['C'],oral,2)
+        cavity=warp(self.layers['cavity-outline'],POINTS['C'],oral,2,maps=oral_maps)
+        teeth=warp(self.layers['upper-teeth'],POINTS['C'],oral,2,maps=oral_maps)
         # One raised tongue drawing moves down/scales toward the floor for
         # vowels, and lifts for L. It never dissolves between two tongue images.
         tongue_art=self.layers['tongue-raised'].astype('float32').copy()
         tongue_art[:,:,:3]*=tongue_art[:,:,3:4]/255
-        lift=float(w[8]);sy=.6+.4*lift
-        move=np.array([[1,0,0],[0,sy,340*(1-sy)+11*(1-lift)]],np.float32)
+        lift=float(w[8]);sy=.6+(.12 if self.mouth_anatomy else .4)*lift
+        move=np.array([[1,0,0],[0,sy,340*(1-sy)+11*(1-lift)-(8*lift if self.mouth_anatomy else 0)]],np.float32)
         tongue_art=cv2.warpAffine(tongue_art,move,(SIZE,SIZE),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT)
         tongue_art=straight(tongue_art).astype('uint8')
         tongue=warp(tongue_art,POINTS['H'],oral,2)
@@ -48,8 +54,10 @@ class LayeredCartoonHead(CartoonHead):
         # Reuse the original contact drawing while it awaits anatomical cleanup.
         visible=float(ease((aperture-2)/6))
         fv=float(w[7]);face=over(face,cavity,visible*(1-fv))
-        face=over(face,teeth,visible*float(ease((aperture-2)/7))*(1-fv)*(1-float(w[5]+w[6])))
+        teeth_opacity=visible*float(ease((aperture-2)/7))*(1-fv)*(1-float(w[5]+w[6]))
+        if not self.mouth_anatomy:face=over(face,teeth,teeth_opacity)
         face=over(face,tongue,visible*float(ease((aperture-8)/12))*(1-fv))
+        if self.mouth_anatomy:face=over(face,teeth,teeth_opacity)
         contact=warp(self.contact,POINTS['G'],target)
         face=over(face,contact,fv)
         closed=warp(self.layers['closed-lips'],POINTS['X'],target,2)

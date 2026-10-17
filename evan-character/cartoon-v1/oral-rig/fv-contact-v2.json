@@ -1,0 +1,19 @@
+{
+  "sourceSha256": "53c653bcf9203997f47086c39326c6043bff98ad56afa04d336e0d0366632d94",
+  "sourceBounds": [
+    187,
+    545,
+    1095,
+    818
+  ],
+  "targetBounds": [
+    194,
+    311,
+    284,
+    338
+  ],
+  "outputSha256": "4d9e969da4ed8b6a71be61fe17c254de51c17fab378d81b5362ce2459420f2f2",
+  "status": "experimental alternative; inspect labiodental contact in motion",
+  "visualApproved": false,
+  "phonemeCorrectnessVerified": false
+}
