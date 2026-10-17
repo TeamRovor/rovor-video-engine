@@ -35,6 +35,21 @@ jobs:
           base="$HOME/Documents/Codex"
           n="$(find "$base" -name local_tools.json -type f -maxdepth 10 2>/dev/null | wc -l | tr -d ' ')"
           echo "LOCAL_TOOL_CONFIG_COUNT=$n"
+          python3 - <<'PY'
+          import json, pathlib, glob, os
+          configs=glob.glob(str(pathlib.Path.home()/"Documents/Codex/**/local_tools.json"), recursive=True)
+          for k in ("ffmpeg","whisper","model","rhubarb","painted_python","painted_packages"):
+              hits=0
+              for name in configs[:20]:
+                  try:
+                      val=json.load(open(name)).get(k,"")
+                      if val and pathlib.Path(str(val)).exists():hits+=1
+                  except (OSError,ValueError,TypeError):pass
+              print("CONFIG_%s_PRESENT=%s"%(k.upper(),int(hits>0)))
+          cloud=pathlib.Path.home()/"Library/CloudStorage"
+          providers=sorted(x.name.split("-")[0] for x in cloud.glob("GoogleDrive*")) if cloud.is_dir() else []
+          print("GOOGLE_DRIVE_DESKTOP_MOUNT=%s"%("YES" if providers else "NO"))
+          PY
           py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
           if test -x "$py"; then
             for module in pocketsphinx cmudict matplotlib numpy; do
