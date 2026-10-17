@@ -1,0 +1,22 @@
+{
+  "schemaVersion":1,
+  "source":"editorial-authored",
+  "productionIntent":"Animatic structural sketch, not approved acting or final art",
+  "characterStyle":"rovor-evan-expressive-cartoon",
+  "characterArtStatus":"awaiting-visual-approval",
+  "fps":24,
+  "delivery":{"horizontal":[1920,1080],"vertical":[1080,1920],"safeLeftPct":0.12,"safeRightPct":0.12},
+  "shots":[
+    {"start":0,"end":7.59,"kind":"browser-explainer","purpose":"Open with the specific problem; Evan reacting to an unbranded browser tab","composition":"host-plus-browser-ui"},
+    {"start":7.59,"end":14.8,"kind":"favicon-detail","purpose":"Show the tiny globe/favicon mismatch, hold on it long enough to understand","composition":"detail-cutaway"},
+    {"start":14.8,"end":19.44,"kind":"brand-reveal","purpose":"Illustrate coherent branding without unnecessary camera shake","composition":"brand-and-host"},
+    {"start":19.44,"end":22.047375,"kind":"endcard","purpose":"Rovor Digital signoff, authentic verified logo asset required","composition":"brand-endcard"}
+  ],
+  "actingBeats":[
+    {"at":0.6,"intent":"curious question, small skeptical head angle"},
+    {"at":7.8,"intent":"precise eyebrow/head beat; do not shout or shake screen"},
+    {"at":15.1,"intent":"satisfied point to finished brand icon"},
+    {"at":19.7,"intent":"confident direct-to-viewer closing, hold pose"}
+  ],
+  "notYetVerified":{"sourceReferenceAudioIsFinalMaster":false,"phonemeAlignment":false,"art":false,"animation":false}
+}
