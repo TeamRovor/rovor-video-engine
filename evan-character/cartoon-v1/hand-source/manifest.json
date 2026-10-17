@@ -1,0 +1,21 @@
+{
+  "status": "experimental generated hand candidate; wrist registration requires visual review",
+  "visualApproved": false,
+  "point-right": {
+    "file": "point-right-v1.png",
+    "attachment": [
+      90,
+      537
+    ],
+    "axisPoint": [
+      330,
+      700
+    ],
+    "scale": 0.16,
+    "sourceReference": "../source/setup-v1.png",
+    "targetAttachment": [
+      810,
+      756
+    ]
+  }
+}

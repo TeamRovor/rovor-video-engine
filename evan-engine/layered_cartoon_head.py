@@ -16,10 +16,12 @@ def straight(raw):
     return np.clip(result,0,255)
 
 class LayeredCartoonHead(CartoonHead):
-    def __init__(self,root=ROOT):
+    def __init__(self,root=ROOT,contact_candidate=False):
         super().__init__(root/'head-rig-v2')
         self.layers={name:np.asarray(Image.open(root/'oral-rig'/(name+'.png')).convert('RGBA')) for name in ['face-skin','cavity-outline','upper-teeth','tongue','tongue-raised','closed-lips','fv-contact']}
         self.contact=self.layers['fv-contact']
+        if contact_candidate:
+            self.contact=np.asarray(Image.open(root/'oral-rig/fv-contact-v2.png').convert('RGBA'))
     def weights(self,weights):
         w=np.asarray(weights,float);w=w/w.sum();target=np.asarray(sum(POINTS[s]*v for s,v in zip(SYMBOLS,w)),np.float32)
         aperture=float(sum(v*(GEOMETRY[s][7]-GEOMETRY[s][6]) for s,v in zip(SYMBOLS,w)))

@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "directionId": "rovor-evan-expressive-cartoon",
+  "wardrobe": {
+    "hair": "dark-tousled",
+    "eyewear": "sunglasses",
+    "shirt": "navy-collared-shirt",
+    "tie": "black-tie"
+  },
+  "canvas": {
+    "width": 1024,
+    "height": 1536
+  },
+  "sourceConcept": {
+    "path": "reference/design-sheet-v1.png",
+    "sha256": "FILL-IN-SOURCE-SHA256"
+  },
+  "layers": {
+    "hair-back": {
+      "path": "layers/hair-back.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "hair-front": {
+      "path": "layers/hair-front.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "head-base": {
+      "path": "layers/head-base.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "eyes": {
+      "path": "layers/eyes.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "glasses": {
+      "path": "layers/glasses.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "brow-left": {
+      "path": "layers/brow-left.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "brow-right": {
+      "path": "layers/brow-right.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "jaw": {
+      "path": "layers/jaw.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "oral-cavity": {
+      "path": "layers/oral-cavity.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "upper-teeth": {
+      "path": "layers/upper-teeth.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "tongue": {
+      "path": "layers/tongue.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "upper-lip": {
+      "path": "layers/upper-lip.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "lower-lip": {
+      "path": "layers/lower-lip.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "neck": {
+      "path": "layers/neck.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "torso": {
+      "path": "layers/torso.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "tie": {
+      "path": "layers/tie.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "upper-arm-left": {
+      "path": "layers/upper-arm-left.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "forearm-left": {
+      "path": "layers/forearm-left.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "upper-arm-right": {
+      "path": "layers/upper-arm-right.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "forearm-right": {
+      "path": "layers/forearm-right.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "hand-left-relaxed": {
+      "path": "layers/hand-left-relaxed.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "hand-left-open": {
+      "path": "layers/hand-left-open.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "hand-left-point": {
+      "path": "layers/hand-left-point.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "hand-right-relaxed": {
+      "path": "layers/hand-right-relaxed.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "hand-right-open": {
+      "path": "layers/hand-right-open.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    },
+    "hand-right-point": {
+      "path": "layers/hand-right-point.png",
+      "pivot": {
+        "x": 512,
+        "y": 768
+      },
+      "sha256": "FILL-IN-LAYER-SHA256"
+    }
+  },
+  "notes": "TEMPLATE ONLY. Draw actual registered layers, set correct individually authored pivots/checksums. Never mark accepted from this file."
+}
