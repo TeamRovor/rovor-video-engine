@@ -86,7 +86,12 @@ def render_chunk(job):
                         figure=image.copy();hits+=1
                 except (OSError,ValueError):figure=None
             if figure is None:
-                figure=scenes[0].body.render(t,plan,narration_acting(t))
+                if visual_mode=='globe-action':
+                    from evan_globe_action import globe_action_controls
+                    controls=globe_action_controls(t)
+                else:
+                    controls=narration_acting(t)
+                figure=scenes[0].body.render(t,plan,controls)
                 temporary=cached.with_suffix('.partial.png')
                 figure.save(temporary,compress_level=1);temporary.replace(cached)
             for scene,proc in zip(scenes,processes):
@@ -120,6 +125,12 @@ def main():
     start=round(a.start_time*DEFAULT_FPS);end=start+frame_count(duration)
     a.output.mkdir(parents=True,exist_ok=True)
     cache_key=body_cache_key(a.plan)
+    if a.visual_mode=='globe-action':
+        digest=hashlib.sha256()
+        digest.update(b'evan-globe-action-controls-v1')
+        digest.update(cache_key.encode())
+        digest.update((Path(__file__).parent/'evan_globe_action.py').read_bytes())
+        cache_key=digest.hexdigest()
     cache=a.output.parent/'body-cache'/cache_key
     cache.mkdir(parents=True,exist_ok=True)
     # Include source bytes, not just timestamps, so old frames cannot be mixed
