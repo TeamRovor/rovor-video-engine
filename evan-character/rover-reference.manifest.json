@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assetCategory": "rovor-autonomous-rover",
+  "status": "user-authored-reference-not-rig",
+  "look": {
+    "silhouette": "compact enclosed autonomous delivery rover with sweeping rounded letter R architecture",
+    "construction": "white upper shell, continuous dark-glass belt, black lower volume, short wheelbase, four dark wheels, top sensor pod",
+    "mark": "black Rovor wordmark and emblem positioned on side and wheel caps",
+    "avoid": ["rugged pickup truck", "SUV", "off-road monster truck", "elongated conventional van", "invented wheel count", "generic stock vehicle"],
+    "usage": "optional scene prop only, not the entire animation assignment"
+  },
+  "references": [
+    {"id":"rovor-left-right-and-top","filename":"Rovor3dmodel(1).png","view":"multi-view design reference, includes side/front/rear/top/three-quarter","pixels":[1448,1086],"sha256":"2afbbbfd2fe0d17bf5d6108676d70fa9fc41914aa61a078c3acd65935ea356a7"},
+    {"id":"rovor-side-hero","filename":"rovor3dmodel2(1).png","view":"dark-studio side silhouette reference","pixels":[1254,1254],"sha256":"04d718c4364f640721001db1b906f028cae80c018ff85b13088e267a9f8d2373"}
+  ],
+  "rigReady":false,
+  "pixelIdentityMatters":true,
+  "sourceOfTruth":"user-provided images on October 17, 2026"
+}
