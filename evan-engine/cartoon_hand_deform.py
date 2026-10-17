@@ -117,13 +117,15 @@ def render_hand(exposures,skin='#D69B73',ink='#26303D',prefix=''):
     points=finger_landmarks(exposures)
     # Cover finger roots with a broad continuous palm silhouette; the fingers
     # use the same skin fill and deliberately visible drawn outlines.
-    out=[f'<g data-hand-deformation="registered-joints" data-hand-art-status="blockout">',
-         f'<path id="{prefix}hand-palm" d="M -18,1 Q -23,24 -17,39 Q -4,51 18,40 '
-         f'L 18,1 Q 0,-4 -18,1 Z" fill="{skin}" stroke="{ink}" stroke-width="3.5"/>']
+    out=[f'<g data-hand-deformation="registered-joints" data-hand-art-status="blockout">']
     for i,joints in enumerate(points['fingers']):
         out.append(f'<path id="{prefix}finger-{i}" data-articulated="true" '
                    f'd="{_finger_path(joints)}" fill="{skin}" stroke="{ink}" '
                    f'stroke-width="2.3" stroke-linejoin="round"/>')
+    # Palm conceals the proximal finger roots rather than outlining four
+    # separate digits across the palm surface.
+    out.append(f'<path id="{prefix}hand-palm" d="M -18,1 Q -23,24 -17,39 Q -4,51 18,40 '
+               f'L 18,1 Q 0,-4 -18,1 Z" fill="{skin}" stroke="{ink}" stroke-width="3.5"/>')
     out.append(f'<path id="{prefix}thumb" data-articulated="true" '
                f'd="{_finger_path(points["thumb"])}" fill="{skin}" '
                f'stroke="{ink}" stroke-width="2.7" stroke-linejoin="round"/>')
