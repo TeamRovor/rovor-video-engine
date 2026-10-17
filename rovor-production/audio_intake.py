@@ -101,9 +101,18 @@ def decode(audio, wav):
     ffmpeg = FFMPEG if FFMPEG.is_file() else None
     if ffmpeg is None:
         raise RuntimeError("Original known FFmpeg binary is unavailable; no audio was decoded")
-    subprocess.run([str(ffmpeg), "-nostdin", "-v", "error", "-y",
-                    "-i", str(audio), "-vn", "-ac", "1", "-ar", "16000",
-                    "-c:a", "pcm_s16le", str(wav)], check=True, timeout=900)
+    partial = wav.with_name("narration-16khz.partial.wav")
+    try:
+        subprocess.run([str(ffmpeg), "-nostdin", "-v", "error", "-y",
+                        "-i", str(audio), "-vn", "-ac", "1", "-ar", "16000",
+                        "-c:a", "pcm_s16le", str(partial)], check=True, timeout=900)
+        with wave.open(str(partial), "rb") as f:
+            if f.getnframes() <= 0:
+                raise ValueError("Audio decoder returned an empty WAV")
+        partial.replace(wav)
+    finally:
+        if partial.exists():
+            partial.unlink()
     with wave.open(str(wav), "rb") as f:
         duration = f.getnframes() / f.getframerate()
         if not (0 < duration <= MAX_DURATION):
