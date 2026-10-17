@@ -42,3 +42,9 @@ class CartoonGestureBody(CartoonBody):
         out['head']=layers['head'];return out
     def render(self,t,plan,controls=None):
         return super().render(t,plan,pointing_acting(t) if controls is None else controls)
+
+class CartoonSocketBody(CartoonGestureBody):
+    """Local underarm source replacement, preserving the original center art."""
+    def __init__(self,root=ROOT,pose='point'):
+        super().__init__(root,pose)
+        self.torso=Image.open(root/'socket-rig/torso.png').convert('RGBA');self.socket_review=True

@@ -43,9 +43,15 @@ Read CARTOON-EVAN-POINTING.md. CartoonGestureBody is a new opt-in study; origina
 
 The new 4.8125-second normal/quarter-speed narration shot points toward the browser card around globe/up here. It uses a pointing drawing throughout and does NOT demonstrate an open-to-point transition or independently moving fingers. Six actual body/hand pixel layers reopen in PSD and match assembly. Native open/point comparison and stage frames are in ../../outputs/evan-cartoon-pointing. 79 checks pass; no quality inference. Shoulder/armpit, neck, matte, FV and facial-expression limitations remain, and no new hidden shoulder/neck source was accepted. No Moho activity or approved release change.
 
+## Latest local-underarm milestone
+
+Read CARTOON-EVAN-UNDERARM.md. New CartoonSocketBody is opt-in via render_cartoon_gesture_study.py --sockets; earlier body/gesture classes remain baselines. Generated v2 torso source still shifted proportions, so only locally registered underarm bands are used. Center-shirt ECC 0.97885 is a registration diagnostic, not quality confidence. socket-source/socket-rig hold visible input, prompt, source/hash, matrix and patch mask. All pixels outside the masks, including neck/center/tie/legs, remain exact originals. animationReady=false.
+
+Native white/gray comparisons reduce dangling black armpit tabs. Remaining sleeve/torso creases, shading transition and neck/collar join still need cleanup; neck was not repaired. Raw transparent previews can show hidden RGB and exaggerate edge speckles: use actual solid-background composites. Exporter now also writes a gray JPEG preview. 81 checks pass; six-layer PSD reopens and matches assembly. Normal/quarter-speed same-motion films and native before/after are in ../../outputs/evan-cartoon-joins. No Moho activity or approved release changes.
+
 ## Next concrete work
 
-1. Repair visible armpit/neck seams with genuinely registered hidden-surface art. Do not accept generated replacement artwork that changes proportions; preserve original drawing and explicit rejected candidates.
+1. Build a clean neck/collar attachment and finish remaining shoulder crease/skinning defects. Local underarm tab cleanup now exists, but is not complete shoulder construction. Preserve original visible art and reject whole-body proportion changes.
 2. Clean the new pointing hand linework/wrist contour and add a relaxed hand plus a designed pose transition. Pointing exists as a separate drawing, not individual fingers. Build expression/brow acting; current study is not polished.
 3. The 18 timing disagreements have visual evidence review; exact phones still require listening/phonetic annotation. Preserve the review record and uncertainty. Speech-phone coverage and geometric tests do not prove lip-sync accuracy.
 4. Improve F/V and L anatomy with redrawn art/animator review, then render a stronger narration-driven scene with an actual pause and meaningful pointing gesture. Preserve the current baseline films for comparison.

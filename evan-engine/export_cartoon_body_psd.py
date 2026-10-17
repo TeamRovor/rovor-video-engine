@@ -6,10 +6,10 @@ from PIL import Image
 from psd_tools import PSDImage
 from cartoon_body import CartoonBody
 
-def export(plan,output,gesture=False,time=0):
-    if gesture:
-        from cartoon_gesture_body import CartoonGestureBody,pointing_acting
-        body=CartoonGestureBody();layers=body.layers(time,plan,pointing_acting(time))
+def export(plan,output,gesture=False,time=0,sockets=False):
+    if gesture or sockets:
+        from cartoon_gesture_body import CartoonGestureBody,CartoonSocketBody,pointing_acting
+        body=CartoonSocketBody() if sockets else CartoonGestureBody();layers=body.layers(time,plan,pointing_acting(time))
     else:
         body=CartoonBody();layers=body.layers(time,plan,{})
     psd=PSDImage.frompil(Image.new('RGBA',(1464,1536)))
@@ -19,10 +19,12 @@ def export(plan,output,gesture=False,time=0):
     opened=PSDImage.open(output)
     if [l.name for l in opened]!=list(layers):raise RuntimeError('PSD layer names changed')
     actual=opened.composite(force=True,ignore_preview=True).convert('RGBA');actual.save(output.with_suffix('.png'))
+    # Explicit backdrop prevents hidden RGB under zero alpha misleading review.
+    preview=Image.new('RGBA',actual.size,'#e6ede8');preview.alpha_composite(actual);preview.convert('RGB').save(output.with_suffix('.jpg'),quality=96)
     ea=np.asarray(expected).astype(float);aa=np.asarray(actual).astype(float)
     ea[:,:,:3]*=ea[:,:,3:4]/255;aa[:,:,:3]*=aa[:,:,3:4]/255
     delta=np.abs(ea-aa)
     if delta.mean()>1:raise RuntimeError('PSD reassembly differs from runtime')
     return dict(layers=list(layers),meanPixelDifference=float(delta.mean()),nativeMoho=False)
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('output',type=Path);p.add_argument('--gesture',action='store_true');p.add_argument('--time',type=float,default=0);a=p.parse_args();print(json.dumps(export(json.loads(a.plan.read_text()),a.output,a.gesture,a.time)))
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('output',type=Path);p.add_argument('--gesture',action='store_true');p.add_argument('--time',type=float,default=0);p.add_argument('--sockets',action='store_true');a=p.parse_args();print(json.dumps(export(json.loads(a.plan.read_text()),a.output,a.gesture,a.time,a.sockets)))
