@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   preflight:
-    if: github.event.head_commit.message == 'Approved Rovor preflight'
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor preflight'
     runs-on: [self-hosted, macOS, X64, rovor-video]
     timeout-minutes: 3
     steps:
@@ -37,7 +37,7 @@ jobs:
           printf 'EXPECTED_FORMATS=1920x1080_60fps,1080x1920_60fps\n'
 
   full-dual-format-render:
-    if: github.event.head_commit.message == 'Approved Rovor full render'
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor full render'
     runs-on: [self-hosted, macOS, X64, rovor-video]
     timeout-minutes: 240
     steps:
