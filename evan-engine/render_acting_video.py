@@ -63,6 +63,9 @@ def render_chunk(job):
     if visual_mode=='storyboard':
         from storyboard_favicon import StoryboardFaviconScene
         factory=StoryboardFaviconScene
+    elif visual_mode=='globe-action':
+        from evan_globe_action import EvanGlobeAction
+        factory=EvanGlobeAction
     else:
         factory=FaviconScene
     scenes=[factory(plan,False),factory(plan,True)]
@@ -106,7 +109,7 @@ def main():
     p.add_argument('plan',type=Path);p.add_argument('wav',type=Path);p.add_argument('output',type=Path)
     p.add_argument('--ffmpeg',required=True);p.add_argument('--start-time',type=float,default=0)
     p.add_argument('--duration',type=float);p.add_argument('--workers',type=int,choices=(1,2,3,4),default=2)
-    p.add_argument('--visual-mode',choices=('reference','storyboard'),default='reference',
+    p.add_argument('--visual-mode',choices=('reference','storyboard','globe-action'),default='reference',
                    help='Opt-in illustrated six-shot direction; baseline remains unchanged')
     a=p.parse_args()
     audio_match=verify_audio_plan(json.loads(a.plan.read_text()),a.wav)
