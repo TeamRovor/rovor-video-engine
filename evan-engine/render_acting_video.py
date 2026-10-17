@@ -4,6 +4,7 @@ Streams raw frames directly to local FFmpeg, with bounded worker chunks. The
 result is an internal acting study, not artistic or phoneme-timing approval.
 """
 import argparse
+import ast
 from concurrent.futures import ProcessPoolExecutor
 import hashlib
 import json
@@ -53,6 +54,23 @@ def body_cache_key(plan_path):
         if path.is_file():digest.update(str(path.relative_to(source.parent)).encode());digest.update(path.read_bytes())
     digest.update(Path(plan_path).read_bytes())
     return digest.hexdigest()
+
+
+def actor_controls_fingerprint(source_text):
+    """Hash the FK performance functions, not unrelated scene illustration.
+
+    A camera or prop edit should reuse thousands of unchanged body frames.
+    The existing body_cache_key covers all original rig modules and artwork.
+    """
+    tree=ast.parse(source_text)
+    names=('clamped','ease','acting_pulse','globe_action_controls')
+    chosen={node.name:node for node in tree.body
+            if isinstance(node,ast.FunctionDef) and node.name in names}
+    if set(chosen)!=set(names):
+        raise ValueError('Missing FK dependency in Evan action source')
+    normalized=''.join(ast.dump(chosen[name],include_attributes=False)
+                       for name in names)
+    return hashlib.sha256(normalized.encode()).hexdigest()
 
 
 def render_chunk(job):
@@ -129,7 +147,8 @@ def main():
         digest=hashlib.sha256()
         digest.update(b'evan-globe-action-controls-v1')
         digest.update(cache_key.encode())
-        digest.update((Path(__file__).parent/'evan_globe_action.py').read_bytes())
+        actor_source=(Path(__file__).parent/'evan_globe_action.py').read_text()
+        digest.update(actor_controls_fingerprint(actor_source).encode())
         cache_key=digest.hexdigest()
     cache=a.output.parent/'body-cache'/cache_key
     cache.mkdir(parents=True,exist_ok=True)
