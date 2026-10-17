@@ -1,0 +1,40 @@
+name: Rovor trusted source snapshot
+on:
+  push:
+    branches:
+      - development/evan-1080p60-acting-77a9561
+    paths:
+      - .github/rovor-mac-request.txt
+permissions: {}
+jobs:
+  source-snapshot:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor source snapshot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout original layered Evan art and trusted engine
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Assert expected source structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s evan-engine/evan_globe_action.py
+          test -s evan-engine/render_acting_video.py
+          test -s evan-character/cartoon-v1/body-rig/manifest.json
+          sha256sum evan-engine/evan_globe_action.py evan-engine/render_acting_video.py
+          echo "SOURCE_COMMIT=$GITHUB_SHA"
+          echo "PRIVATE_SOURCE_ONLY_NO_NARRATION=YES"
+      - name: Upload private development source snapshot for local authenticated render
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rovor-Source-Snapshot-${{ github.run_id }}
+          path: |
+            evan-engine/
+            evan-character/
+            rovor-production/visual_dynamics_audit.py
+          if-no-files-found: error
+          retention-days: 1
