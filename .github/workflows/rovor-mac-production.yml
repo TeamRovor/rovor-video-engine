@@ -16,6 +16,40 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  chat-delivery-smoke:
+    # Private, short-lived GH Actions artifact; only manually approved Rovor commit.
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor chat delivery smoke'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Verify existing reference MP4s and prepare private review copy
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          root="$HOME/Documents/Codex/2026-10-17/new-chat/outputs"
+          target="$RUNNER_TEMP/rovor-chat-smoke"
+          mkdir -p "$target"
+          a="$root/Evan_Evolution_1080p60_Landscape.mp4"
+          b="$root/Evan_Evolution_1080p60_Portrait.mp4"
+          test -s "$a" && test -s "$b"
+          actual_a="$(shasum -a 256 "$a" | awk '{print $1}')"
+          actual_b="$(shasum -a 256 "$b" | awk '{print $1}')"
+          test "$actual_a" = "44e54a2c5efcdc33e053b6c9b2d0398805711cf206bff6d3e150d20e346cb6e8"
+          test "$actual_b" = "6b5f4a2324012db46215d1cd47a18584ebbf93f53d0a4803299f116dbc612f7d"
+          cp "$a" "$b" "$target/"
+          printf 'REFERENCE_NOT_NEW_RENDER=YES\nLANDSCAPE_SHA256=%s\nPORTRAIT_SHA256=%s\n' "$actual_a" "$actual_b" > "$target/manifest.txt"
+          echo "PRIVATE_CHAT_DELIVERY_TEST_FILES=VERIFIED"
+      - name: Upload temporary private delivery artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rovor-reference-chat-delivery-${{ github.run_id }}
+          path: ${{ runner.temp }}/rovor-chat-smoke/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
   production-selftest:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor production selftest'
     runs-on: [self-hosted, macOS, X64, rovor-video]
