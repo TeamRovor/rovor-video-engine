@@ -1,2 +1,2 @@
-mode=visual-qa
+mode=storyboard-preview
 sequence=10
