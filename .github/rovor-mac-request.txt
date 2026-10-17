@@ -1,2 +1,2 @@
-mode=audio-catalog
-sequence=4
+mode=production-selftest
+sequence=5
