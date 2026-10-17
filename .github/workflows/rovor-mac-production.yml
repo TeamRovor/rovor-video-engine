@@ -148,6 +148,8 @@ jobs:
           base="$HOME/Documents/Codex"
           n="$(find "$base" -name local_tools.json -type f -maxdepth 10 2>/dev/null | wc -l | tr -d ' ')"
           echo "LOCAL_TOOL_CONFIG_COUNT=$n"
+          echo "MACOS_VERSION=$(sw_vers -productVersion)"
+          if test -d "/Applications/Google Drive.app"; then echo 'DRIVE_DESKTOP_APP_INSTALLED=YES'; else echo 'DRIVE_DESKTOP_APP_INSTALLED=NO'; fi
           python3 - <<'PY'
           import json, pathlib, glob, os
           configs=glob.glob(str(pathlib.Path.home()/"Documents/Codex/**/local_tools.json"), recursive=True)
