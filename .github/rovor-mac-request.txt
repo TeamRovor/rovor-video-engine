@@ -1,2 +1,4 @@
-mode=production-selftest
-sequence=5
+mode=audio-analyze
+audio_id=6e080df3f97b5cd2
+asr=off
+sequence=6
