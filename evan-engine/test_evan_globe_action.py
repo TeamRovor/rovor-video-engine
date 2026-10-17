@@ -3,6 +3,8 @@ import math
 import unittest
 from evan_globe_action import START,END,hop,framespec,clamped,ease,globe_action_controls,contact_pulse
 from cartoon_body import narration_acting
+from render_acting_video import actor_controls_fingerprint
+from pathlib import Path
 
 
 class GlobeActionTests(unittest.TestCase):
@@ -93,6 +95,17 @@ class GlobeActionTests(unittest.TestCase):
                                    (current['x'],current['y']))
                 self.assertLess(distance,24)
                 previous=current
+
+    def test_body_cache_ignores_only_unrelated_scene_drawings(self):
+        source=Path(__file__).with_name('evan_globe_action.py').read_text()
+        original=actor_controls_fingerprint(source)
+        # A change to scenery may reuse expensive, unchanged FK frames.
+        altered_visual=source.replace('        self.set.draw(im,t)',
+                                      '        self.set.draw(im,t)\n        pass')
+        self.assertEqual(original,actor_controls_fingerprint(altered_visual))
+        # A changed FK control must always invalidate the actor cache.
+        replacement=source.replace('2.5*surprise','2.6*surprise')
+        self.assertNotEqual(original,actor_controls_fingerprint(replacement))
 
     def test_rejects_unrelated_narration(self):
         with self.assertRaises(ValueError):framespec(-1)
