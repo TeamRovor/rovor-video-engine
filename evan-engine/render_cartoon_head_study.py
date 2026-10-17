@@ -31,8 +31,13 @@ def frame(head,plan,t,duration):
     return im.convert('RGB')
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int);p.add_argument('--duration',type=float,default=4.8);p.add_argument('--fps',type=int,default=48);a=p.parse_args()
-    plan=json.loads(a.plan.read_text());head=CartoonHead();a.frames.mkdir(parents=True,exist_ok=True)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int);p.add_argument('--duration',type=float,default=4.8);p.add_argument('--fps',type=int,default=48);p.add_argument('--mouth-method',choices=('mesh','layers'),default='mesh');a=p.parse_args()
+    plan=json.loads(a.plan.read_text())
+    if a.mouth_method=='layers':
+        from layered_cartoon_head import LayeredCartoonHead
+        head=LayeredCartoonHead()
+    else:head=CartoonHead()
+    a.frames.mkdir(parents=True,exist_ok=True)
     end=a.end if a.end is not None else math.ceil(a.duration*a.fps)
     for i in range(a.start,end):frame(head,plan,i/a.fps,a.duration).save(a.frames/f'{i:06}.jpg',quality=96)
     print(json.dumps(dict(start=a.start,end=end,fps=a.fps,component='cartoon head diagnostic')))

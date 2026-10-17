@@ -55,10 +55,11 @@ for i in range(16):
     TRIANGLES.extend(valid[0])
 for i in range(1,15):TRIANGLES.append([16,16+i,16+i+1])
 
-def warp(image,source,target):
-    mx=np.full((SIZE,SIZE),-1,np.float32);my=mx.copy()
+def warp(image,source,target,sample_scale=1):
+    output_size=SIZE*sample_scale;target=target*sample_scale
+    mx=np.full((output_size,output_size),-1,np.float32);my=mx.copy()
     for ids in TRIANGLES:
-        tri=target[ids];x,y,w,h=cv2.boundingRect(tri);x=max(0,x);y=max(0,y);w=min(SIZE-x,w);h=min(SIZE-y,h)
+        tri=target[ids];x,y,w,h=cv2.boundingRect(tri);x=max(0,x);y=max(0,y);w=min(output_size-x,w);h=min(output_size-y,h)
         if w<=0 or h<=0:continue
         inv=cv2.getAffineTransform(tri,source[ids]);yy,xx=np.mgrid[y:y+h,x:x+w].astype('float32')
         mask=np.zeros((h,w),np.uint8);cv2.fillConvexPoly(mask,np.rint(tri-[x,y]).astype('int32'),255)
@@ -66,7 +67,8 @@ def warp(image,source,target):
         mx[y:y+h,x:x+w][take]=(inv[0,0]*xx+inv[0,1]*yy+inv[0,2])[take]
         my[y:y+h,x:x+w][take]=(inv[1,0]*xx+inv[1,1]*yy+inv[1,2])[take]
     raw=image.astype('float32');raw[:,:,:3]*=raw[:,:,3:4]/255
-    return cv2.remap(raw,mx,my,cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT)
+    result=cv2.remap(raw,mx,my,cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT)
+    return cv2.resize(result,(SIZE,SIZE),interpolation=cv2.INTER_AREA) if sample_scale!=1 else result
 
 class CartoonHead:
     def __init__(self,root=ROOT):
