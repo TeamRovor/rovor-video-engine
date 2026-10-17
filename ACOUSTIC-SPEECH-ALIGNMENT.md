@@ -30,3 +30,7 @@ Native-resolution waveform/spectrogram exports for the opening and pause were in
 Limits: this is an older acoustic model with imperfect boundaries, not a ground-truth annotation system. All 66 words being assigned intervals does not mean all intervals are correct. Eighteen disagreements require audio/visual review, especially longer words and sentence boundaries. The inventory targets General American English, not every accent, language, nonverbal sound or possible spelling. Cartoon expression, asymmetry and lip/jaw art still require a proper layered rig and visual iteration; alignment alone cannot establish studio quality. Native Moho remains untouched.
 
 Primary implementation reference: https://pocketsphinx.readthedocs.io/en/stable/pocketsphinx.html (two-pass set_align_text / set_alignment / get_alignment).
+
+## Follow-up visual audit
+
+See SPEECH-TIMING-REVIEW.md. All 18 flags received waveform/spectrogram visual review; current acoustic regions are better supported than multiple pause/tail errors in Whisper. Exact word/phone boundaries remain unverified; no timings changed. New experimental planning runs export a side-by-side audit and context clips. Spectrogram centers now use the actual recording sample clock.

@@ -18,11 +18,11 @@ def render_review(plan,wav,output,start=0,duration=2.5):
     waveform,spectrum,controls,words,phones=axes
     time=np.arange(len(x))/rate;keep=(time>=start)&(time<=end)
     waveform.plot(time[keep][::4],x[keep][::4],lw=.5,color='#315674');waveform.set_ylabel('Actual waveform')
-    signal=x[keep];size=max(32,round(rate*.025));hop=max(1,round(rate*.01))
-    signal=np.pad(signal,(0,max(0,size-len(signal))))
-    frames=np.lib.stride_tricks.sliding_window_view(signal,size)[::hop]
-    db=20*np.log10(np.maximum(abs(np.fft.rfft(frames*np.hanning(size),axis=1)),1e-7))
-    spectrum.imshow(db.T,origin='lower',aspect='auto',extent=(start,end,0,rate/2),vmin=db.max()-70,vmax=db.max(),cmap='magma')
+    from speech_alignment_audit import spectrum as measured_spectrum
+    first=round(start*rate);last=round(end*rate)
+    db,centers,frequencies=measured_spectrum(x[first:last],rate,first)
+    if len(centers):
+        spectrum.pcolormesh(centers,frequencies,db,shading='nearest',vmin=db.max()-70,vmax=db.max(),cmap='magma')
     spectrum.set_ylim(0,min(6000,rate/2));spectrum.set_ylabel('Spectrum (Hz)')
     e=p['audio'];controls.plot(np.arange(len(e['energy']))*e['step'],e['energy'],label='Measured energy',alpha=.5)
     q=np.arange(start,end,1/240);weights=np.array([planned_weights(t,p,p['fallbackCues']) for t in q])
@@ -44,5 +44,9 @@ def render_review(plan,wav,output,start=0,duration=2.5):
     fig.tight_layout();fig.savefig(output,dpi=150);plt.close(fig)
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('wav',type=Path);p.add_argument('output',type=Path);p.add_argument('--start',type=float,default=0);p.add_argument('--duration',type=float,default=2.5);a=p.parse_args()
-    render_review(json.loads(a.plan.read_text()),a.wav,a.output,a.start,a.duration)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('wav',type=Path);p.add_argument('output',type=Path);p.add_argument('--start',type=float,default=0);p.add_argument('--duration',type=float,default=2.5);p.add_argument('--audit-dir',type=Path);a=p.parse_args()
+    plan=json.loads(a.plan.read_text())
+    render_review(plan,a.wav,a.output,a.start,a.duration)
+    if a.audit_dir and plan.get('alignment',{}).get('status')=='acoustic':
+        from speech_alignment_audit import audit
+        audit(plan,a.wav,a.audit_dir)

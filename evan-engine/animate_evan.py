@@ -161,7 +161,7 @@ def main():
                 planning_env['PYTHONPATH']=str(cfg['painted_packages'])+os.pathsep+planning_env.get('PYTHONPATH','')
             run([cfg.get('painted_python',sys.executable), HERE / 'speech_planner.py', dialog, word_path, wav, mouth_path, out / 'speech-plan.json', '--fps', args.fps], planning_env)
             scene['speechPlan']=read_json(out / 'speech-plan.json')
-            run([cfg.get('painted_python',sys.executable), HERE / 'speech_review.py', out / 'speech-plan.json', wav, out / 'speech-timeline.png'], planning_env)
+            run([cfg.get('painted_python',sys.executable), HERE / 'speech_review.py', out / 'speech-plan.json', wav, out / 'speech-timeline.png', '--audit-dir', out / 'speech-timing-audit'], planning_env)
         scene_path.write_text(json.dumps(scene, indent=2))
     current_scene=read_json(scene_path)
     if current_scene.get('duration') != duration:

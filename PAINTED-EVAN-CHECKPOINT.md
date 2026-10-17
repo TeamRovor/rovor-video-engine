@@ -19,7 +19,7 @@ Audit tool: evan-engine/audit_cartoon_sources.py records source geometry, alpha/
 
 Read CARTOON-EVAN-ORAL-LAYERS.md. A new optional LayeredCartoonHead separates skin, cavity/outline, teeth, floor/raised tongue, closed lips and FV contact. Built-in imagegen hidden skin/cavity sources and prompts live in oral-source; derived components and hashes in oral-rig; tighter matte registration in head-rig-v2. The original head-rig and default mesh diagnostic remain unchanged. Use render_cartoon_head_study.py --mouth-method layers. 69 tests pass. Review outputs ../../outputs/evan-cartoon-mouth-layers include normal and quarter-speed diagnostic films, native before/after comparison and a reopened seven-layer PSD. Teeth duplication is reduced; the old smile ink is removed from hidden skin. FV still looks like a grimace; tongue gestures remain simplified, and some lip/edge pixels remain rough. No production/studio claim.
 
-Next priority: stop static-head micro-polishing and build hidden-surface torso/arm/hand plates and the body rig, with meaningful cartoon acting. Refine FV/L anatomy with redrawn art/animator help where needed. Preserve old/new films for comparison. All 18 audio timing flags still require review.
+Next priority: stop static-head micro-polishing and build hidden-surface torso/arm/hand plates and the body rig, with meaningful cartoon acting. Refine FV/L anatomy with redrawn art/animator help where needed. Preserve old/new films for comparison. All 18 timing flags now have visual evidence review; exact boundaries remain unverified (see latest speech evidence review).
 
 ## Latest body-rig milestone
 
@@ -29,13 +29,19 @@ Review outputs ../../outputs/evan-cartoon-body-rig include 4.8125-second normal/
 
 ## Speech system
 
-Read ACOUSTIC-SPEECH-ALIGNMENT.md. b585490 implements two-pass PocketSphinx acoustic word/phone alignment, a 39-phone General American English catalog, diphthong glides, held vowels, lip contacts and six continuous controls at scene fps. Reference recording: 66 words, 248 phones, 1059 control samples, 18 word-anchor disagreements needing review. Coverage does not establish timing accuracy. Waveform/spectrogram exports show a useful pause/breath suppression after favicon. The earlier speech-system suite had 59 tests. Pipeline fingerprint is 4. Actual planner source is authoritative over historical painted docs.
+Read ACOUSTIC-SPEECH-ALIGNMENT.md. b585490 implements two-pass PocketSphinx acoustic word/phone alignment, a 39-phone General American English catalog, diphthong glides, held vowels, lip contacts and six continuous controls at scene fps. Reference recording: 66 words, 248 phones, 1059 control samples, 18 word-anchor disagreements with visual evidence review and exact boundaries still unverified. Coverage does not establish timing accuracy. Waveform/spectrogram exports show a useful pause/breath suppression after favicon. The earlier speech-system suite had 59 tests. Pipeline fingerprint is 4. Actual planner source is authoritative over historical painted docs.
+
+## Latest speech evidence review
+
+Read SPEECH-TIMING-REVIEW.md and evan-engine/reviews/evan-reference-timing-v1.json. All 18 flags now have waveform/spectrogram visual review in six regions, retaining current acoustic timing; exact phone boundaries remain UNVERIFIED and no listening verification is claimed. Clear Whisper pause/tail errors are documented, including digital ending beyond recording. Do not call these flags unreviewed, resolved or ground truth. Review is tied to exact audio/plan hashes. No timing/gesture weights changed.
+
+New speech_alignment_audit.py exports both hypotheses, sample-clock spectra and context clips; speech_review.py --audit-dir integrates it into new experimental planning runs. Existing cached scenes are unchanged. Spectrogram endpoint stretching is fixed. 75 checks pass; actual narration CLI integration verified. Outputs ../../outputs/evan-speech-timing-audit hold the review page, six graphs/audio clips and pause/onset films using existing cartoon artwork. Body/hand/face defects remain as before.
 
 ## Next concrete work
 
 1. Repair visible armpit/neck seams with genuinely registered hidden-surface art. Do not accept generated replacement artwork that changes proportions; preserve original drawing and explicit rejected candidates.
 2. Add distinct relaxed/pointing hand drawings and an expression/brow rig; current open-hand FK study is not polished acting. Review full-resolution source and normal/slow film before increasing motion range.
-3. Audit all 18 timing disagreements against waveform/spectrogram evidence. Keep uncertainty explicit. Speech-phone coverage and geometric tests do not prove lip-sync accuracy.
+3. The 18 timing disagreements have visual evidence review; exact phones still require listening/phonetic annotation. Preserve the review record and uncertainty. Speech-phone coverage and geometric tests do not prove lip-sync accuracy.
 4. Improve F/V and L anatomy with redrawn art/animator review, then render a stronger narration-driven scene with an actual pause and meaningful pointing gesture. Preserve the current baseline films for comparison.
 
 ## Environment
