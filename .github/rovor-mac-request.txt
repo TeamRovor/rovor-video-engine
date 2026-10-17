@@ -1,2 +1,2 @@
-mode=capability-audit
-sequence=3
+mode=audio-catalog
+sequence=4
