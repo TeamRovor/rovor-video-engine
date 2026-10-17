@@ -1,2 +1,2 @@
-mode=preflight
-sequence=16
+mode=trusted-source-snapshot
+sequence=17
