@@ -1,0 +1,4 @@
+# Explicitly approved Rovor Mac job request
+# This file contains no commands, tokens, private files, or media.
+mode=preflight
+sequence=1
