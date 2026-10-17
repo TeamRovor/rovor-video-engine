@@ -94,6 +94,65 @@ jobs:
           retention-days: 1
           compression-level: 0
 
+  storyboard-full-render:
+    # Explicit opt-in. Source remains local; videos are short-lived private GH artifacts.
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor storyboard full render'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 240
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout approved original rig to isolated directory
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_storyboard_full_${{ github.run_id }}
+      - name: Render six-shot layered Evan story in both 60fps formats
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          ffmpeg="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an/work/media-tools/ffmpeg"
+          wav="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an/work/evan-narration.wav"
+          plan="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an-2/work/speech-alignment-v4/speech-plan.json"
+          base="$GITHUB_WORKSPACE/_rovor_storyboard_full_$GITHUB_RUN_ID"
+          output="$HOME/Movies/RovorProduction/storyboard-favicon-$GITHUB_SHA"
+          test -x "$py" && test -x "$ffmpeg" && test -s "$wav" && test -s "$plan"
+          mkdir -p "$output"
+          cd "$base/evan-engine"
+          "$py" -m unittest -v test_storyboard_favicon
+          "$py" render_acting_video.py "$plan" "$wav" "$output" --ffmpeg "$ffmpeg" --workers 2 --visual-mode storyboard
+          "$py" verify_review_video.py "$output/landscape-acting-review.mp4" "$wav" --ffmpeg "$ffmpeg" --report "$output/final-landscape.json"
+          "$py" verify_review_video.py "$output/vertical-acting-review.mp4" "$wav" --ffmpeg "$ffmpeg" --vertical --report "$output/final-portrait.json"
+          "$py" "$base/rovor-production/visual_dynamics_audit.py" "$output/landscape-acting-review.mp4" --report "$output/visual-motion.json"
+          "$py" - "$output" <<'PY'
+          import json,sys
+          from pathlib import Path
+          out=Path(sys.argv[1]);m=json.loads((out/'visual-motion.json').read_text())
+          if m.get('status')!='STRUCTURAL_MOTION_PRESENT':
+              raise SystemExit('STORYBOARD_VISUAL_MOTION_GATE=FAIL '+str(m['problems']))
+          assert not m.get('publicationApproved'), 'Engineering motion audit cannot give artistic approval'
+          for name in ('final-landscape.json','final-portrait.json'):
+              j=json.loads((out/name).read_text())
+              assert j.get('decodedFrames')==1323 and j.get('fps')==60 and j.get('continuousTimestamps') is True
+          print('ORIGINAL_EVAN_STORYBOARD_1080P60_BOTH_FORMATS=VERIFIED')
+          print('ARTISTIC_APPROVAL=NOT_GIVEN')
+          PY
+          printf '%s' "$output" > "$RUNNER_TEMP/rovor-storyboard-output-path"
+      - name: Relay verified dual MP4s to chat as private one-day artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rovor-Storyboard-1080p60-${{ github.run_id }}
+          path: |
+            /Users/amarhavic/Movies/RovorProduction/storyboard-favicon-${{ github.sha }}/landscape-acting-review.mp4
+            /Users/amarhavic/Movies/RovorProduction/storyboard-favicon-${{ github.sha }}/vertical-acting-review.mp4
+            /Users/amarhavic/Movies/RovorProduction/storyboard-favicon-${{ github.sha }}/final-landscape.json
+            /Users/amarhavic/Movies/RovorProduction/storyboard-favicon-${{ github.sha }}/final-portrait.json
+            /Users/amarhavic/Movies/RovorProduction/storyboard-favicon-${{ github.sha }}/visual-motion.json
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
   storyboard-preview:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor storyboard preview'
     runs-on: [self-hosted, macOS, X64, rovor-video]
