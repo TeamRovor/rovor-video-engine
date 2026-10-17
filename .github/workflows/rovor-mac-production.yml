@@ -94,6 +94,54 @@ jobs:
           retention-days: 1
           compression-level: 0
 
+  storyboard-preview:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor storyboard preview'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout original Evan rig with opt-in storyboard
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Generate twelve genuine original-layered-animation keyframes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          plan="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an-2/work/speech-alignment-v4/speech-plan.json"
+          test -f "$plan" && test -x "$py"
+          cd evan-engine
+          "$py" -m unittest -v test_storyboard_favicon
+          mkdir -p "$RUNNER_TEMP/rovor-storyboard-preview"
+          "$py" storyboard_favicon.py "$plan" "$RUNNER_TEMP/rovor-storyboard-preview"
+          "$py" storyboard_favicon.py "$plan" "$RUNNER_TEMP/rovor-storyboard-preview" --vertical
+          "$py" - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import os,numpy as np
+          folder=Path(os.environ["RUNNER_TEMP"])/"rovor-storyboard-preview"
+          for layout,size in (("landscape",(1920,1080)),("portrait",(1080,1920))):
+              paths=sorted(folder.glob("*-"+layout+".jpg"))
+              assert len(paths)==6,(layout,len(paths))
+              frames=[]
+              for path in paths:
+                  with Image.open(path) as im:
+                      assert im.size==size,(path,im.size)
+                      frames.append(np.array(im.resize((320,180)),dtype=np.int16))
+              diffs=[float(np.abs(frames[i]-frames[i-1]).mean()) for i in range(1,6)]
+              assert min(diffs)>8,(layout,diffs)
+              print("SIX_DISTINCT_ORIGINAL_RIG_STORY_SHOTS_"+layout.upper()+"=YES")
+          PY
+      - name: Relay compact preview gallery to this chat
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rovor-Storyboard-Keyframes-${{ github.run_id }}
+          path: ${{ runner.temp }}/rovor-storyboard-preview/
+          if-no-files-found: error
+          retention-days: 1
+
   chat-delivery-smoke:
     # Private, short-lived GH Actions artifact; only manually approved Rovor commit.
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor chat delivery smoke'
