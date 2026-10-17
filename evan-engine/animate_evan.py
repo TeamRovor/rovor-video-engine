@@ -82,7 +82,10 @@ def main():
     parser.add_argument('--resume', action='store_true', help='Continue stages in an existing output directory')
     parser.add_argument('--character', choices=('calibrated','reference','vector','painted'), default='calibrated', help='V4 calibrated sprites (default), V3 reference, V2 vector, or experimental painted mesh rig')
     parser.add_argument('--mouth-mode', choices=('subtle','detailed','still'), default='subtle', help='Subtle lips (default), detailed phonemes or no lip swapping')
+    parser.add_argument('--fps', type=int, choices=(24,30,48,60), default=24, help='Painted frame rate; existing renderers remain 24 fps')
     args = parser.parse_args()
+    if args.character != 'painted' and args.fps != 24:
+        parser.error('Frame rates other than 24 currently require --character painted.')
     if not args.mp3.is_file() or args.mp3.suffix.lower() != '.mp3':
         parser.error('Please provide an existing MP3 recording.')
     if args.plan and not args.plan.is_file():
@@ -92,13 +95,17 @@ def main():
                    'modified_ns': audio.stat().st_mtime_ns,
                    'plan': str(args.plan.resolve()) if args.plan else None, 'character': args.character,
                    'mouth_mode': args.mouth_mode}
+    if args.fps != 24:
+        fingerprint['fps'] = args.fps
+    if args.character == 'painted':
+        fingerprint['painted_renderer_version'] = 2
     args.output.mkdir(parents=True, exist_ok=args.resume)
     out = args.output.resolve()
     state = out / 'render_request.json'
     if args.resume:
         previous = read_json(state)
         if previous != fingerprint:
-            raise ValueError('Resume requires an existing run with the same audio and scene plan.')
+            raise ValueError('Resume requires the same audio, plan and render settings; start a fresh output after a renderer update.')
     else:
         state.write_text(json.dumps(fingerprint, indent=2))
     cfg = json.loads(args.config.read_text())
@@ -139,13 +146,17 @@ def main():
         scene = make_scene(transcript, cues, duration, provided_plan)
         scene['characterStyle'] = args.character
         scene['mouthMode'] = args.mouth_mode
+        if args.character == 'painted':
+            scene['fps'] = args.fps
         scene_path.write_text(json.dumps(scene, indent=2))
     current_scene=read_json(scene_path)
     if current_scene.get('duration') != duration:
         raise ValueError('Scene metadata does not match the audio duration.')
     if current_scene.get('characterStyle') != args.character or current_scene.get('mouthMode','subtle') != args.mouth_mode:
         raise ValueError('Saved scene character/mouth settings differ; create a new output directory.')
-    total = math.ceil(duration * 24)
+    if current_scene.get('fps',24) != args.fps:
+        raise ValueError('Saved frame rate differs; create a new output directory.')
+    total = math.ceil(duration * args.fps)
     frames = out / 'frames'
     frames.mkdir(exist_ok=True)
     # Resume at the first missing frame. Preserve all completed original frames.
@@ -165,7 +176,7 @@ def main():
     if not video.is_file() or video.stat().st_size == 0:
         print('Encoding the final video...', flush=True)
         staging = out / 'evan.partial.mp4'
-        run([cfg['ffmpeg'], '-y', '-v', 'error', '-framerate', '24', '-i', frames / '%06d.jpg',
+        run([cfg['ffmpeg'], '-y', '-v', 'error', '-framerate', str(args.fps), '-i', frames / '%06d.jpg',
              '-i', audio, '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'libx264',
              '-preset', 'ultrafast', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac',
              '-t', duration, '-movflags', '+faststart', staging])

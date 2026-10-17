@@ -80,3 +80,33 @@ def interpolate(images,a,b,w):
         mix=mix*(1-m)+cavity*m
     mix[:,:,:3]=np.clip(mix[:,:,:3]*255/np.maximum(mix[:,:,3:4],1),0,255)
     return mix
+
+
+def blend_drawings(images,weights):
+    """Move active drawings to ONE shared anatomy before blending textures."""
+    symbols=list(GEOMETRY);weights=np.asarray(weights,dtype='float32')
+    if float(weights.max())>1-1e-7:
+        return images[symbols[int(weights.argmax())]].astype('float32')
+    target=sum(POINTS[s]*float(w) for s,w in zip(symbols,weights))
+    mix=np.zeros((418,418,4),np.float32)
+    cavity=np.zeros_like(mix);cavity_weight=0.
+    for symbol,weight in zip(symbols,weights):
+        if weight<1e-5:continue
+        warped=warp_painted(images[symbol],POINTS[symbol],target)
+        mix+=float(weight)*warped
+        if GEOMETRY[symbol][7]-GEOMETRY[symbol][6]>4:
+            cavity+=float(weight)*warped;cavity_weight+=float(weight)
+    # Blend all open interiors continuously. Selecting a single 'dominant'
+    # drawing made teeth/tongue jump when two pose weights crossed each other.
+    closed=float(weights[0]+weights[1])
+    aperture=float(sum(w*(GEOMETRY[s][7]-GEOMETRY[s][6]) for s,w in zip(symbols,weights)))
+    if cavity_weight>1e-5:
+        mask=np.zeros((418,418),np.uint8)
+        cv2.fillConvexPoly(mask,np.rint(target[16:32]*256).astype('int32'),255,lineType=cv2.LINE_AA,shift=8)
+        def soft(x):
+            x=np.clip(x,0,1);return x*x*(3-2*x)
+        strength=float(soft((closed-.01)/.09)*soft((aperture-1.5)/2))
+        m=cv2.GaussianBlur(mask,(3,3),.5).astype('float32')[:,:,None]/255*strength
+        mix=mix*(1-m)+(cavity/cavity_weight)*m
+    mix[:,:,:3]=np.clip(mix[:,:,:3]*255/np.maximum(mix[:,:,3:4],1),0,255)
+    return mix

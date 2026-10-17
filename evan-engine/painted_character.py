@@ -8,7 +8,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 from PIL import Image
-from painted_face_mesh import interpolate
+from painted_face_mesh import interpolate, blend_drawings
+from painted_timing import speech_weights, flowing_track
 
 ROOT=Path(__file__).resolve().parent.parent/'evan-character/painted-v1/rig'
 
@@ -81,9 +82,9 @@ class PaintedCharacter:
         self.face_cache={}
 
     def face(self,a,b,amount):
-        amount=max(0,min(1,amount));key=(a,b,round(amount*12))
+        amount=max(0,min(1,amount));key=(a,b,round(amount,6))
         if key in self.face_cache:return self.face_cache[key].copy()
-        w=key[2]/12
+        w=key[2]
         if a==b or w<=0:mix=self.heads[a].astype('float32')
         elif w>=1:mix=self.heads[b].astype('float32')
         else:mix=interpolate(self.heads,a,b,w)
@@ -94,15 +95,11 @@ class PaintedCharacter:
         self.face_cache[key]=im
         return im.copy()
 
-    @staticmethod
-    def exposure(t,cues):
-        for i,c in enumerate(cues):
-            if c['start']<=t<c['end']:
-                target=c['value'];previous=cues[i-1]['value'] if i else 'X'
-                if target=='A':return target,target,1 # never average away MBP
-                fraction=float(smooth((t-c['start'])/min(.075,(c['end']-c['start'])/2)))
-                return previous,target,fraction
-        return 'X','X',1
+    def speaking_face(self,t,cues):
+        weights=speech_weights(t,cues)
+        raw=blend_drawings(self.heads,weights)
+        raw=self.heads['X'].astype('float32')*(1-self.weight)+raw*self.weight
+        return Image.fromarray(np.clip(raw,0,255).astype('uint8'))
 
     def render(self,t,cues,controls=None):
         controls=controls or {};pad=220
@@ -111,10 +108,14 @@ class PaintedCharacter:
         for name,arm in self.arms.items():
             angles=controls.get(name,(0,0,0));im,(x,y)=arm.render(angles)
             canvas.alpha_composite(im,(x+pad,y))
-        a,b,w=self.exposure(t,cues);head=self.face(a,b,w)
+        head=self.speaking_face(t,cues)
         trans=self.meta['head_transform'];scale=trans['scale'];head=head.resize((round(418*scale),round(418*scale)),Image.Resampling.LANCZOS)
         layer=Image.new('RGBA',canvas.size);x,y=trans['translate'];layer.alpha_composite(head,(x+pad,y))
         tilt=controls.get('head',0)
         if tilt:layer=layer.rotate(tilt,Image.Resampling.BICUBIC,center=(trans['pivot'][0]+pad,trans['pivot'][1]))
         canvas.alpha_composite(layer)
+        # Whole upper-body follow-through around the hips connects the head and
+        # hands to a breathing, weight-bearing torso instead of a fixed statue.
+        roll=controls.get('body_roll',0.)
+        if roll:canvas=canvas.rotate(roll,Image.Resampling.BICUBIC,center=(755,965))
         return canvas

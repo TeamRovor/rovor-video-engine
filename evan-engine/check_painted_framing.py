@@ -4,7 +4,8 @@ import json
 import math
 from pathlib import Path
 import numpy as np
-from painted_character import PaintedCharacter, skin_vertices, sample_track
+from painted_character import PaintedCharacter, skin_vertices, rotation
+from painted_timing import flowing_track
 from render_painted_scene import control_state
 
 
@@ -19,15 +20,16 @@ def check(scene):
         hands[name] = points[::max(1, len(points) // 1000)]
     low = np.array([1e6, 1e6])
     high = -low
-    count = math.ceil(scene['duration'] * 24)
+    count = math.ceil(scene['duration'] * scene.get('fps',24))
     for frame in range(count):
-        t = frame / 24
+        t = frame / scene.get('fps',24)
         state = control_state(t, scene)
-        scale = sample_track(t, scene.get('cameraScale', [(0, .89)]))
-        origin = np.array([sample_track(t, scene.get('rootX', [(0, -100)])), sample_track(t, scene.get('rootY', [(0, 85)]))])
+        scale = flowing_track(t, scene.get('cameraScale', [(0, .89)]))
+        origin = np.array([flowing_track(t, scene.get('rootX', [(0, -100)])), flowing_track(t, scene.get('rootY', [(0, 85)]))])
         for name, points in hands.items():
             xy = skin_vertices(points, character.arms[name].geometry, state[name])
             xy[:, 0] += 220
+            xy = (np.c_[xy,np.ones(len(xy))] @ rotation((755,965),-state.get('body_roll',0)).T)[:,:2]
             xy = xy * scale + origin
             low = np.minimum(low, xy.min(axis=0))
             high = np.maximum(high, xy.max(axis=0))

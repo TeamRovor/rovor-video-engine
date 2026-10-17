@@ -7,6 +7,9 @@ import argparse,json,math,time
 from pathlib import Path
 from PIL import Image,ImageDraw,ImageFont
 from painted_character import PaintedCharacter,sample_track,smooth
+from painted_timing import flowing_track
+import numpy as np
+import cv2
 
 HERE=Path(__file__).resolve().parent
 FONT='/System/Library/Fonts/Supplemental/Arial.ttf'
@@ -36,10 +39,11 @@ def control_state(t,scene):
             state[side]=[sign*pulse,sign*8*pulse,sign*2*pulse]
             state['head']=-.7*pulse
         return state
-    state={'head':sample_track(t,tracks.get('head',[(0,0)]))}
+    state={'head':flowing_track(t-.035,tracks.get('head',[(0,0)]))}
     for name in ('left','right'):
         channels=tracks.get(name,{})
-        state[name]=tuple(sample_track(t,channels.get(j,[(0,0)])) for j in ('shoulder','elbow','wrist'))
+        state[name]=tuple(flowing_track(t-delay,channels.get(j,[(0,0)])) for j,delay in [('shoulder',0),('elbow',.035),('wrist',.085)])
+    state['body_roll']=.16*np.sin(t*1.45)+.13*state['head']
     return state
 
 class PaintedScene:
@@ -118,10 +122,16 @@ class PaintedScene:
         s=self.scene
         # Authored asymmetric acting and a subtle continuous camera push.
         controls=control_state(t,s);char=self.character.render(t,[] if s.get('mouthMode')=='still' else s.get('mouthCues',[]),controls)
-        scale=sample_track(t,s.get('cameraScale',[(0,.89),(15,.91)]))
-        char=char.resize((round(char.width*scale),round(char.height*scale)),Image.Resampling.LANCZOS)
-        root_x=sample_track(t,s.get('rootX',[(0,-100)]));root_y=sample_track(t,s.get('rootY',[(0,85)]))
-        im.alpha_composite(char,(round(root_x),round(root_y)))
+        scale=flowing_track(t,s.get('cameraScale',[(0,.89),(15,.91)]))
+        root_x=flowing_track(t,s.get('rootX',[(0,-100)]))
+        root_y=flowing_track(t,s.get('rootY',[(0,85)]))
+        # Subpixel camera composition avoids integer resize/placement steps and
+        # the fine hair/cloth shimmer those steps caused.
+        raw=np.asarray(char).astype('float32');raw[:,:,:3]*=raw[:,:,3:4]/255
+        matrix=np.array([[scale,0,root_x],[0,scale,root_y]],np.float32)
+        warped=cv2.warpAffine(raw,matrix,(1920,1080),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT)
+        warped[:,:,:3]=np.clip(warped[:,:,:3]*255/np.maximum(warped[:,:,3:4],1),0,255)
+        im.alpha_composite(Image.fromarray(np.clip(warped,0,255).astype('uint8')))
         d=ImageDraw.Draw(im)
         active=next((row for row in s.get('segments',[]) if row['start']<=t<row['end']),None)
         if active:
@@ -131,13 +141,13 @@ class PaintedScene:
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('scene',type=Path);p.add_argument('frames',type=Path);p.add_argument('start',type=int,nargs='?',default=0);p.add_argument('end',type=int,nargs='?');p.add_argument('--budget',type=float,default=23);p.add_argument('--stills',action='store_true');a=p.parse_args()
-    scene=json.loads(a.scene.read_text());end=a.end or math.ceil(scene['duration']*24)
+    scene=json.loads(a.scene.read_text());fps=scene.get('fps',24);end=a.end or math.ceil(scene['duration']*fps)
     renderer=PaintedScene(scene);a.frames.mkdir(parents=True,exist_ok=True);begin=time.monotonic();i=a.start
     if a.stills:
         for t in [0,.6,2.8,4.2,6.4,8.7,10.5,13.8]:renderer.render(t).save(a.frames/f'still-{t}.png')
     else:
         while i<end and (time.monotonic()-begin<a.budget or i==a.start):
             target=a.frames/f'{i:06}.jpg';tmp=a.frames/f'{i:06}.writing.jpg'
-            renderer.render(i/24).save(tmp,quality=95);tmp.replace(target);i+=1
+            renderer.render(i/fps).save(tmp,quality=95);tmp.replace(target);i+=1
     print(json.dumps({'nextFrame':i,'totalFrames':end,'complete':i==end,'elapsed_seconds':round(time.monotonic()-begin,3)}))
 if __name__=='__main__':main()
