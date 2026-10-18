@@ -1,0 +1,22 @@
+{
+  "status": "ART_NOT_READY",
+  "verifiedUniquePoseCount": 0,
+  "expectedPoseCount": 7,
+  "ready": false,
+  "problems": [
+    "Missing original three-quarter working pose view",
+    "anticipation: missing complete drawn pose",
+    "low_contact: missing complete drawn pose",
+    "midstroke: missing complete drawn pose",
+    "high_reach: missing complete drawn pose",
+    "overlap_pass: missing complete drawn pose",
+    "release: missing complete drawn pose",
+    "settle: missing complete drawn pose",
+    "landscape: requires independently staged shot review",
+    "portrait: requires independently staged shot review",
+    "Artist-directed visual review has not approved the source poses",
+    "Human normal-speed movement review not approved"
+  ],
+  "noAutomaticStudioQualityCertification": true,
+  "publicationApproved": false
+}
