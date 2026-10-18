@@ -62,6 +62,19 @@ class SpeechReviewTests(unittest.TestCase):
         out=audit(whisper([(0,.5," "),(1,2,"one actual word")]),10)
         self.assertEqual(out["segmentCount"],1)
         self.assertEqual(out["segments"][0]["text"],"one actual word")
+    def test_real_whisper_final_padding_is_truncated_not_filled(self):
+        result=audit(whisper([(0,5,"Some English words."),
+                              (19.44,22.4,"The actual recording ends right here.")]),22.047375)
+        tail=result["segments"][-1]
+        self.assertEqual(tail["endSeconds"],22.047)
+        self.assertIn("whisper-end-extends-past-real-recording-truncated",tail["reviewFlags"])
+        self.assertFalse(result["phonemeBoundariesCertified"])
+        self.assertFalse(result["canDriveFinalMouthAnimation"])
+
+    def test_large_false_future_whisper_segment_rejected(self):
+        with self.assertRaises(ValueError):
+            audit(whisper([(0,5,"Spoken words"),(19.44,26.0,"Impossible fake continuation")]),22.047375)
+
     def test_invalid_asr_segment_timestamps_rejected(self):
         for rows in [[(4,5,"later"),(1,2,"earlier")],
                      [(1,3,"too long")],[(2,2,"zero")],
