@@ -43,6 +43,12 @@ Read CARTOON-EVAN-CONTACT-MATERIAL.md. The brown lip around 8.7917 s includes a 
 
 Native full-resolution release/contact/vowel/pause comparisons and branded integration inspected. Release has darker/clearer shared interior; narrow lip outlines/rolled contact remain rough and need redraw. Outputs ../../outputs/evan-cartoon-contact-material hold the 8.25–10.0 s native-head normal/quarter-speed comparison with original audio/sample-clock waveform, notes and source hashes. 118 tests pass; final normal/quarter films decode cleanly (84/336 frames at 48 fps). Continuous playback/listening is not claimed. This addresses material transparency, not anatomical acceptance or studio quality. Full polished milestone incomplete; automation stays active.
 
+## Latest: contact-art candidate, not promoted
+
+Read CARTOON-EVAN-CONTACT-ART-V2.md. New built-in generated source/exact prompt in fv-source-v2; registered three-part lip/upper-teeth/lower-lip surfaces and source hash in fv-rig-v2. Stable-face ECC .99866 is a diagnostic only. SculptedContactHead exposes contact_parts, preserves original runtime geometry/targets and clips peach volume outside the actual opening. Initial geometry-changing/combined-volume trial caused a brown bulge and was rejected. Final held contact has a cleaner short tooth shelf; release remains wedge-like and is not a convincing general animation improvement. Do NOT promote this candidate into scene defaults or claim anatomical/studio acceptance.
+
+Outputs ../../outputs/evan-cartoon-lip-art: same-audio normal/quarter review through favicon/pause, native approach/contact/release comparisons, generated source/exact prompt, component PNGs and reopened three-layer source-space PSD (mean premultiplied difference .000393/255). 25 targeted tests pass; final films decode cleanly (84/336 frames at 48 fps). Full-resolution stills inspected; no continuous playback/listening claim. No timing changes; all 18 prior flag reviews retain exact-phone uncertainty. Only ../cartoon-lip-art/frames-final represents final candidate. Prefer designed contact-to-vowel construction over more generated full-head variants. Full polished milestone remains incomplete; automation ACTIVE.
+
 ## Next concrete work
 
 1. Clean the index root/knuckle/wrist artwork and add a designed softer palm/remaining-finger pose; current thumb/three curls remain rigid and the resting index can read as a hook. Review the whole shot at normal speed for deliberate rhythm before adding incidental motion.
