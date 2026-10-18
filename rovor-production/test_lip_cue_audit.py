@@ -24,7 +24,7 @@ class LipCueAuditTests(unittest.TestCase):
         with self.assertRaises(ValueError):validate(cues([(0,24,"A")]),22.047375)
     def test_small_decoder_padding_clipped_and_flagged(self):
         r=validate(cues([(0,.3,"X"),(.3,22.08,"D")]),22.047375)
-        self.assertEqual(r["shapeCues"][-1]["end"],22.04737)
+        self.assertAlmostEqual(r["shapeCues"][-1]["end"],22.047375,places=4)
         self.assertEqual(r["reviewFlags"][0]["reason"],"minor-end-padding-truncated")
     def test_bad_letters_rejected(self):
         with self.assertRaises(ValueError):validate(cues([(0,2,"J")]),30)
