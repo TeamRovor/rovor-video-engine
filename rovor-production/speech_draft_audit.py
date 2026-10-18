@@ -37,7 +37,10 @@ def extract(whisper,duration):
         begin=_time(offsets.get("from"),"segment start")/1000.
         end=_time(offsets.get("to"),"segment end")/1000.
         if not 0<=begin<end<=duration+.09 or begin<previous_start-.001:
-            raise ValueError("Invalid or reordered ASR segment relative to unmodified audio")
+            raise ValueError(
+                "Invalid whisper segment index=%d start=%.3f end=%.3f audioDuration=%.3f "
+                "previousStart=%.3f (transcript text withheld)" %
+                (idx,begin,end,duration,previous_start))
         previous_start=begin
         text=row.get("text","")
         if not isinstance(text,str):
