@@ -16,6 +16,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  integrated-scene-schedule-test:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor integrated scene schedule test'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout production timeline compiler only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_scene_schedule_${{ github.run_id }}
+          sparse-checkout: |
+            rovor-production
+      - name: Verify actual original-art and longform scene synchronization
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          test -x "$py"
+          cd "$GITHUB_WORKSPACE/_rovor_scene_schedule_$GITHUB_RUN_ID/rovor-production"
+          "$py" -m py_compile scene_audio_schedule.py test_scene_audio_schedule.py
+          "$py" -m unittest -v test_scene_audio_schedule
+          echo "ROVOR_REAL_8M27_WORK_UNITS=VALIDATED"
+          echo "ALL_SCENE_ASSETS_FROM_ORIGINAL_ART=REQUIRED"
+          echo "ACTUAL_ANIMATED_OUTPUT=NOT_RENDERED"
+
   audio-mix-selftest:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor audio mix selftest'
     runs-on: [self-hosted, macOS, X64, rovor-video]
