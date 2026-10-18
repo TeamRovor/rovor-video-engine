@@ -2,4 +2,4 @@ mode=original-music-score-build
 styles=curious,playful,inspiring
 musicIsDraft=true
 costUsd=0
-sequence=24
+sequence=25
