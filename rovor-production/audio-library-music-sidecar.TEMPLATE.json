@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "category": "background-music",
+  "description": "REPLACE: what the REAL instrumental track sounds like",
+  "eventTags": ["curious", "intro", "under-dialogue"],
+  "mood": "curious",
+  "vocalContent": "unknown",
+  "loopable": false,
+  "sourceSha256": null,
+  "license": {
+    "kind": "original-owned",
+    "ownerConfirmedRights": false,
+    "source": "REPLACE: recording or composition owned by Rovor Digital",
+    "evidence": ""
+  }
+}
