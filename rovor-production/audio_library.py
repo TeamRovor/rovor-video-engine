@@ -128,6 +128,10 @@ def _metadata_valid(meta, category):
         evidence = license_info.get("evidence")
         if not isinstance(evidence, str) or len(evidence.strip()) < 8:
             raise AssetRejected("CC0/third-party use requires recorded license evidence")
+    if license_info["kind"] == "separately-licensed":
+        credit=license_info.get("attributionText")
+        if not isinstance(credit,str) or len(credit.strip())<12:
+            raise AssetRejected("Free third-party tracks need a recorded visible attribution line")
     if category == "background-music":
         if meta.get("vocalContent") not in ("instrumental", "vocals", "unknown"):
             raise AssetRejected("Music vocal-content description required")
@@ -176,6 +180,8 @@ def inspect(path, category, root=ROOT, ffprobe=None):
         "vocalContent": meta.get("vocalContent", "not-applicable"),
         "loopable": meta.get("loopable", False),
         "licenseKind": meta["license"]["kind"],
+        "licenseSource": meta["license"]["source"],
+        "attributionText": meta["license"].get("attributionText",""),
         "ownerConfirmedRights": True,
         "editorialApproved": False,
         "autoPublishApproved": False,
