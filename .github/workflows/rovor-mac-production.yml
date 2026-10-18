@@ -81,7 +81,10 @@ jobs:
               assert obj.get('referenceCorrelation',0)>=.98 and abs(obj.get('offsetSamples',999))<=32, 'Audio mismatch '+label
               print('EXISTING_VERIFIED_VIDEO_READY='+label)
           PY
+      # Disabled: the current source audio is only 22.047 seconds.
+      # User-facing video artifacts require >=30 seconds of real narration.
       - name: Send finished existing review to private chat relay
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: Rovor-Evan-existing-verified-review-${{ github.run_id }}
@@ -139,7 +142,10 @@ jobs:
           print('ARTISTIC_APPROVAL=NOT_GIVEN')
           PY
           printf '%s' "$output" > "$RUNNER_TEMP/rovor-storyboard-output-path"
+      # Disabled: the current source audio is only 22.047 seconds.
+      # User-facing video artifacts require >=30 seconds of real narration.
       - name: Relay verified dual MP4s to chat as private one-day artifact
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: Rovor-Storyboard-1080p60-${{ github.run_id }}
@@ -227,7 +233,10 @@ jobs:
           cp "$a" "$b" "$target/"
           printf 'REFERENCE_NOT_NEW_RENDER=YES\nLANDSCAPE_SHA256=%s\nPORTRAIT_SHA256=%s\n' "$actual_a" "$actual_b" > "$target/manifest.txt"
           echo "PRIVATE_CHAT_DELIVERY_TEST_FILES=VERIFIED"
+      # Disabled: the current source audio is only 22.047 seconds.
+      # User-facing video artifacts require >=30 seconds of real narration.
       - name: Upload temporary private delivery artifact
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: rovor-reference-chat-delivery-${{ github.run_id }}
@@ -275,7 +284,9 @@ jobs:
           PY
 
   private-delivery:
-    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor private delivery'
+    # Existing private Drive script only supports the 22-second reference.
+    # Keep it inactive until >=30-second verified media delivery is implemented.
+    if: false
     runs-on: [self-hosted, macOS, X64, rovor-video]
     timeout-minutes: 90
     permissions:
@@ -466,7 +477,10 @@ jobs:
           echo 'OUTPUT_STAYS_ON_MAC=YES'
           echo 'PRIVATE_MEDIA_NOT_COMMITTED_TO_REPOSITORY=YES'
 
+      # Disabled: the current source audio is only 22.047 seconds.
+      # User-facing video artifacts require >=30 seconds of real narration.
       - name: Relay verified videos as short-lived private review artifact
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: Rovor-Evan-development-review-${{ github.run_id }}
