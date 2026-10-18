@@ -1,6 +1,5 @@
 mode=cinematic-scene-director-test
-originalEvan=preserve
-sceneCamera=independent-portrait-and-landscape
-physicalPropMotion=required
-costUsd=0
-sequence=31
+independentFraming=required
+complexPropReturnPath=allowed
+cacheOriginalArtPerWorker=true
+sequence=32
