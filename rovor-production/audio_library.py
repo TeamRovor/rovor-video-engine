@@ -43,6 +43,17 @@ def init_library(root=ROOT):
                 "Do not place copyrighted mainstream music in this folder without rights.\n"
                 "Nothing in this folder is uploaded to GitHub automatically.\n"
             )
+    # Ship the two rights sidecar forms to the user's local library, not
+    # just the GitHub repo, so importing existing files is straightforward.
+    package=Path(__file__).resolve().parent
+    for source_name,destination_name in (
+        ("audio-library-sfx-sidecar.TEMPLATE.json", "_SFX-SIDECAR-TEMPLATE.json"),
+        ("audio-library-music-sidecar.TEMPLATE.json", "_MUSIC-SIDECAR-TEMPLATE.json"),
+    ):
+        source=package/source_name
+        dest=root/destination_name
+        if source.is_file() and not dest.exists():
+            dest.write_bytes(source.read_bytes())
     return root
 
 
