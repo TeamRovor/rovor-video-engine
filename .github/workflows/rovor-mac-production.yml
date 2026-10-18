@@ -245,6 +245,32 @@ jobs:
           retention-days: 1
           compression-level: 0
 
+  video-handoff-gate-test:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor 30-second gate tests'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout technical release-gate tests in isolated folder
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_duration_${{ github.run_id }}
+          sparse-checkout: |
+            rovor-production/video_handoff_gate.py
+            rovor-production/test_video_handoff_gate.py
+          sparse-checkout-cone-mode: false
+      - name: Test 30-second minimum, audio integrity, 1080p60 and old video rejection
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$GITHUB_WORKSPACE/_rovor_duration_$GITHUB_RUN_ID/rovor-production"
+          python3 -m unittest -v test_video_handoff_gate
+          python3 -m py_compile video_handoff_gate.py
+          echo "ROVOR_MINIMUM_30_SECONDS_ENFORCED=YES"
+          echo "OLD_22_SECOND_AND_3_SECOND_SAMPLES_REJECTED=YES"
+
   production-selftest:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor production selftest'
     runs-on: [self-hosted, macOS, X64, rovor-video]
