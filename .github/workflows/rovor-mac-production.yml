@@ -37,6 +37,9 @@ jobs:
           cd "$GITHUB_WORKSPACE/_rovor_chapter_selftest_$GITHUB_RUN_ID/rovor-production"
           python3 -m py_compile longform_chapters.py audio_intake.py
           python3 -m unittest test_longform_chapters -v
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          test -x "$py"
+          "$py" -m unittest test_original_art_story_gate -v
           python3 - <<'PY'
           from longform_chapters import plan
           def energy(seconds):
