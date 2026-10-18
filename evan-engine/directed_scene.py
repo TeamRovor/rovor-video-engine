@@ -152,15 +152,30 @@ def check(config,registry,root):
                     has_actor=True
                 seen.add(aid)
                 keys=parse_keys(layer.get("keys"),begin,end,CHANNELS)
-                delta=sum(abs(keys[-1][1][k]-keys[0][1][k]) for k in ("x","y","scale","rotation"))
+                delta=sum(sum(abs(after[1][k]-before[1][k]) for k in ("x","y","scale","rotation"))
+                          for before,after in zip(keys,keys[1:]))
                 motion_score+=delta
                 if aid!=ACTOR_ID:non_actor_motion+=delta
                 processed.append({"assetId":aid,"role":layer["role"],"keys":keys})
-            cam_delta=sum(abs(camera[-1][1][k]-camera[0][1][k]) for k in CAMERA)
+            cam_delta=sum(sum(abs(after[1][k]-before[1][k]) for k in CAMERA)
+                              for before,after in zip(camera,camera[1:]))
             if end-begin>MAX_STILL_SECONDS*FPS and non_actor_motion<.07 and cam_delta<.06:
                 raise ValueError("Extended inert talking scene: add meaningful illustrated action")
             if shot.get("kind") in ("action","object-demo","visual-explainer") and non_actor_motion<.035:
                 raise ValueError("An action scene must actually animate original illustrated props")
+            if shot.get("kind")=="reaction" and not has_actor:
+                raise ValueError("A character reaction must contain the original Evan actor")
+            for item in processed:
+                if item["assetId"]!=ACTOR_ID:
+                    continue
+                for fno,values,_ in item["keys"]:
+                    cam=interpolate(camera,fno)
+                    center_x=.5+(values["x"]-.5)*cam["zoom"]-cam["panX"]
+                    center_y=.5+(values["y"]-.5)*cam["zoom"]-cam["panY"]
+                    if not (.06<center_x<.94 and .06<center_y<.94):
+                        rationale=layer.get("framingException") if isinstance(layer,dict) else None
+                        if not isinstance(rationale,str) or len(rationale.strip())<24:
+                            raise ValueError("Evan is outside safe portrait/landscape camera framing without editorial justification")
             compositions[view]={"background":fill,"camera":camera,
                                 "elements":processed,"hasActor":has_actor}
         ready.append({"startFrame":begin,"endFrameExclusive":end,
@@ -173,8 +188,8 @@ def check(config,registry,root):
 
 
 class DirectedScene:
-    def __init__(self,config,registry,artroot,portrait=False):
-        result=check(config,registry,artroot)
+    def __init__(self,config,registry,artroot,portrait=False,prepared=None):
+        result=prepared if prepared is not None else check(config,registry,artroot)
         self.scenes=result["scenes"]
         self.images=result["artwork"]
         self.view="portrait" if portrait else "landscape"
