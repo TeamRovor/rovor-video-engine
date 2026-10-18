@@ -57,8 +57,11 @@ def prepare(chapters,storyboard,registry,artroot,catalog,analysis):
                 if not isinstance(acting.get(key),str) or len(acting[key])<12:
                     raise ValueError("Missing real actor direction: "+key)
             ids=acting.get("rigControlIds")
-            if not isinstance(ids,list) or not ids or any(not isinstance(x,str) or not x.strip() for x in ids):
-                raise ValueError("No named animation rig controls")
+            allowed={"left","right","head","body_roll","brow_left","brow_right","right_hand"}
+            if not isinstance(ids,list) or not ids or any(not isinstance(x,str) or x not in allowed for x in ids):
+                raise ValueError("Unsupported original Evan rig control")
+            if s.get("kind") in ("action","object-demo") and not (set(ids)&{"left","right","body_roll"}):
+                raise ValueError("Physical action must animate a real arm or torso control")
         shots.append({"shot":idx,"kind":s["kind"],"startFrame":a,
                       "endFrameExclusive":b,"originalArt":s["originalAssetIds"],
                       "camera":camera,"acting":s.get("actorPerformance")})
