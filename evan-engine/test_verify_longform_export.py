@@ -82,6 +82,26 @@ class FinalVideoIntegrityTests(unittest.TestCase):
             f.writeframes(pcm.tobytes())
         with self.assertRaises(ValueError):
             verify(self.ffmpeg,self.movie,other,size=(320,180))
+    def test_original_32s_excerpt_from_70s_narration_is_matched_at_source_offset(self):
+        long_audio=self.root/"70seconds-unmodified.wav"
+        video=self.root/"32seconds-from-real-offset.mp4"
+        write_wav(long_audio,70)
+        subprocess.run([
+            self.ffmpeg,"-nostdin","-hide_banner","-loglevel","error","-y",
+            "-f","lavfi","-i","color=c=black:s=320x180:r=60:d=32",
+            "-ss","18","-i",str(long_audio),"-map","0:v:0","-map","1:a:0",
+            "-t","32","-c:v","libx264","-preset","ultrafast","-crf","35",
+            "-pix_fmt","yuv420p","-c:a","aac","-b:a","160k",
+            str(video)],check=True,timeout=200)
+        out=verify(self.ffmpeg,video,long_audio,size=(320,180),
+                   start_frame=18*60,end_frame=50*60)
+        self.assertEqual(out["selectedStartFrame"],1080)
+        self.assertEqual(out["decodedFrames"],1920)
+        self.assertGreaterEqual(out["voiceWindowsVerified"],3)
+        with self.assertRaises(ValueError):
+            verify(self.ffmpeg,video,long_audio,size=(320,180),
+                   start_frame=19*60,end_frame=51*60)
+
     def test_relative_shift_is_detected_in_nonrepeating_speech(self):
         rng=np.random.default_rng(2)
         reference=rng.normal(0,1,20000).astype(np.float32)
