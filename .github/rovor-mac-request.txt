@@ -1,5 +1,5 @@
 mode=longform-final-integrity-test
-fixtureDurationSec=31.2
-audioSourceUnchanged=true
-strictAacSpeechValidation=true
-sequence=45
+requireBothVideoFormats=true
+rejectBrokenPortrait=true
+preservePreviousReviewedExports=true
+sequence=46
