@@ -100,9 +100,21 @@ def _authored_performance(path):
     return EvanPerformance(json.loads(Path(path).read_text()))
 
 
+def persist_body_frames(mode,duration):
+    """Prevent tens of thousands of enormous PNGs during longform work.
+
+    The original Evans's layered image is already drawn once for BOTH views
+    in memory for each decoded video frame; storing it is optional, not needed
+    for either orientation. Fully verified MP4 chunks provide resume points.
+    """
+    if mode not in ('auto','on','off') or isinstance(duration,bool) or not isinstance(duration,(int,float)) or not math.isfinite(duration) or duration<=0:
+        raise ValueError('Invalid original body-frame cache policy')
+    return mode=='on' or (mode=='auto' and duration<30)
+
+
 def render_chunk(job):
     cv2.setNumThreads(1)
-    plan_path,root,ffmpeg,index,start,end,fps,cache,visual_mode,performance_path,director_path,registry_path=job
+    plan_path,root,ffmpeg,index,start,end,fps,cache,visual_mode,performance_path,director_path,registry_path,cache_frames=job
     root=Path(root);plan=json.loads(Path(plan_path).read_text())
     cache=Path(cache);hits=0
     if visual_mode=='storyboard':
@@ -132,7 +144,7 @@ def render_chunk(job):
             t=i/fps
             cached=cache/f'{i:06}.png'
             figure=None
-            if cached.exists():
+            if cache_frames and cached.exists():
                 try:
                     with Image.open(cached) as image:
                         if image.size!=(1464,1536) or image.mode!='RGBA':raise ValueError('Invalid cached geometry')
@@ -147,8 +159,9 @@ def render_chunk(job):
                 else:
                     controls=narration_acting(t)
                 figure=body.render(t,plan,controls)
-                temporary=cached.with_suffix('.partial.png')
-                figure.save(temporary,compress_level=1);temporary.replace(cached)
+                if cache_frames:
+                    temporary=cached.with_suffix('.partial.png')
+                    figure.save(temporary,compress_level=1);temporary.replace(cached)
             for scene,proc in zip(scenes,processes):
                 frame=scene.frame(i,figure) if visual_mode=='directed' else scene.render(t,figure)
                 proc.stdin.write(frame.tobytes())
@@ -177,6 +190,8 @@ def main():
     p.add_argument('plan',type=Path);p.add_argument('wav',type=Path);p.add_argument('output',type=Path)
     p.add_argument('--ffmpeg',required=True);p.add_argument('--start-time',type=float,default=0)
     p.add_argument('--duration',type=float);p.add_argument('--workers',type=int,choices=(1,2,3,4),default=2)
+    p.add_argument('--body-cache-frames',choices=('auto','on','off'),default='auto',
+                   help='Save body PNGs to disk; auto disables large 30+ second caches')
     p.add_argument('--visual-mode',choices=('reference','storyboard','globe-action','directed'),default='reference',
                    help='Opt-in illustrated six-shot direction; baseline remains unchanged')
     p.add_argument('--performance-json',type=Path,
@@ -233,7 +248,9 @@ def main():
         digest.update(actor_controls_fingerprint(actor_source).encode())
         cache_key=digest.hexdigest()
     cache=a.output.parent/'body-cache'/cache_key
-    cache.mkdir(parents=True,exist_ok=True)
+    cache_frames=persist_body_frames(a.body_cache_frames,duration)
+    if cache_frames:
+        cache.mkdir(parents=True,exist_ok=True)
     # Include source bytes, not just timestamps, so old frames cannot be mixed
     # with a different rig, drawing, plan or output profile.
     source_hash=hashlib.sha256()
@@ -245,7 +262,8 @@ def main():
     profile={'sourceHash':source_hash.hexdigest(),'planHash':hashlib.sha256(a.plan.read_bytes()).hexdigest(),
              'audioHash':hashlib.sha256(a.wav.read_bytes()).hexdigest(),
              'startFrame':start,'endFrame':end,'fps':DEFAULT_FPS,'visualApproved':False,
-             'audioMatch':audio_match,'bodyCacheKey':cache_key}
+             'audioMatch':audio_match,'bodyCacheKey':cache_key,
+             'bodyFrameDiskCacheEnabled':cache_frames}
     if a.visual_mode!='reference':
         profile['visualMode']=a.visual_mode
     if a.visual_mode=='directed':
@@ -280,7 +298,7 @@ def main():
             continue
         jobs.append((str(a.plan.resolve()),str(a.output.resolve()),a.ffmpeg,index,lo,hi,DEFAULT_FPS,str(cache.resolve()),a.visual_mode,str(a.performance_json.resolve()) if a.performance_json else '',
                      str(a.director_json.resolve()) if a.director_json else '',
-                     str(a.art_registry.resolve()) if a.art_registry else ''))
+                     str(a.art_registry.resolve()) if a.art_registry else '',cache_frames))
     with ProcessPoolExecutor(max_workers=a.workers) as pool:
         for index in pool.map(render_chunk,jobs):print(f'Completed chunk {index}',flush=True)
     chunks=math.ceil((end-start)/90)
