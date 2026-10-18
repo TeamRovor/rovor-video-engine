@@ -1,6 +1,6 @@
-mode=audio-mix-selftest
-minNarrationSeconds=30
-preserveOriginal=true
-noAutoPublish=true
-verifySameDecodedSignal=true
-sequence=27
+mode=integrated-scene-schedule-test
+realAudioMinSec=30
+originalArtRequired=true
+originalEvanRigRequired=true
+visualEventsMustMatchSound=true
+sequence=28
