@@ -90,6 +90,21 @@ class SoundLibraryTests(unittest.TestCase):
         self.sfxmeta["license"]["evidence"]="Verified archived CC0 license declaration for exact file"
         self.save()
         self.assertEqual(inspect(self.sfx,"sound-effect",self.root)["licenseKind"],"cc0")
+    def test_free_licensed_music_must_record_visible_credit(self):
+        self.musicmeta["license"]={
+            "kind":"separately-licensed",
+            "ownerConfirmedRights":True,
+            "source":"Composer official CC BY track webpage",
+            "evidence":"Creative Commons Attribution 4.0 composer track page",
+            "attributionText":""}
+        self.save()
+        with self.assertRaises(AssetRejected):
+            inspect(self.music,"background-music",self.root)
+        self.musicmeta["license"]["attributionText"]="Track by Example Composer — CC BY 4.0; example.com"
+        self.save()
+        item=inspect(self.music,"background-music",self.root)
+        self.assertIn("Example Composer",item["attributionText"])
+
     def test_audio_sha_integrity(self):
         self.sfxmeta["sourceSha256"]=sha256(self.sfx)
         self.save()
