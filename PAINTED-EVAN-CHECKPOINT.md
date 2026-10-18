@@ -17,6 +17,14 @@ All new modes are opt-in; original defaults remain baselines. Source artwork, re
 - Body: independently controlled arm/wrist chains. One index has three phalange controls, remaining thumb/three neighbors share a drawing. CompactIndexRig / CompactCartoonSceneBody scales resting bends and projected segment lengths to 70%, preserving full point pixels. Rest is still clenched, not a designed naturally relaxed hand.
 - Scene: 0–10.1875 s through favicon and its pause, two word-anchored gestures with anticipation/holds/follow-through/settle. Browser globe remains a missing-favicon example; official Rovor mark retained. No actual website update is demonstrated.
 
+## Latest: independent/eased jaw geometry
+
+Read CARTOON-EVAN-SEPARATED-JAW.md. SeparatedCartoonHead / --separated-jaw separates existing tongue/contact material weights from optional geometry_weights in Layered/Expressive head rendering. Five-binomial-sample jaw window spans 83.3 ms (±41.7 ms); transfer 75% of H geometry to modest B aperture, retain original H tongue lift. Current A/G contacts and settled rest remain exact. No art, source annotations, recording or planner weights changed. Shared H still does not distinguish L/TH/DH; this is authored animation tuning, not speaker calibration. Mouth aperture and chin still share one geometry vector, so fully separate jaw-bone/lip-seal movement remains future work.
+
+40 affected checks pass. Seven actual-time rooted-tongue baseline images remain pixel exact after optional-hook extraction. All 489 scene-clock skin/oral meshes retain positive orientation (min signed doubled triangle area .0544026); exact contact-weight difference zero. The 2.5–5.0 s aperture peak step reduces 14.8564→10.5905 native px/frame, with preserved bilabial closures remaining fastest. These metrics do not establish smooth acting or sync accuracy.
+
+Review outputs ../../outputs/evan-cartoon-separated-jaw: native-head before/after through complete “your logo” and settle; branded phrase lead-in, normal/quarter-speed; waveform/spectrogram/control evidence and exported 489-sample control track. Source intervals 2.5–5.0 s (120/480 normal/quarter frames) and 86/48–5.0 s (154/616 scene frames), 48 fps; all four decode cleanly. Selected full-resolution head pairs show less yawn-like contact openings and retained raised tongue. Narrow lips still pinch, rounded mouth and cheek texture warp remain, shallow apertures compress the tongue. No continuous playback/listening acceptance or studio-quality claim.
+
 ## Latest: rooted tongue study
 
 Read CARTOON-EVAN-LINGUAL-STUDY.md. New versioned tongue-source (exact imagegen prompt/raw isolated art/reference) and tongue-rig (registered blade/root floor/hash manifest). LingualCartoonHead fixes the root, retracts/scales the smaller blade and places upper teeth in front. A blade-only prototype read like a hanging uvula and was rejected; current assembly uses the original broad tongue floor. Still animationReady=false.
@@ -45,12 +53,12 @@ Details and reproduction: CARTOON-EVAN-CONTACT-ART-V2.md, CARTOON-EVAN-COMPACT-I
 
 ## Speech evidence
 
-Two-pass PocketSphinx word/phone alignment: 66 words/248 phones, 39-phone catalog, diphthong glides, contacts and silence gating. Reference ../../outputs/evan-speech-alignment/Aligned-Speech-Plan.json. All 18 word-anchor flags already have waveform/spectrogram VISUAL review in evan-engine/reviews/evan-reference-timing-v1.json; retain acoustic timing. Exact phone boundaries remain UNVERIFIED; no listening/ground-truth acceptance. Coverage is not accuracy. Current wrist work leaves annotations/planner weights/recording unchanged.
+Two-pass PocketSphinx word/phone alignment: 66 words/248 phones, 39-phone catalog, diphthong glides, contacts and silence gating. Reference ../../outputs/evan-speech-alignment/Aligned-Speech-Plan.json. All 18 word-anchor flags already have waveform/spectrogram VISUAL review in evan-engine/reviews/evan-reference-timing-v1.json; retain acoustic timing. Exact phone boundaries remain UNVERIFIED; no listening/ground-truth acceptance. Coverage is not accuracy. This jaw pass leaves annotations/planner weights/recording unchanged.
 
 ## Next concrete work / limits
 
 1. Design a softer palm/neighbor-finger pose and clean wrist/knuckle source linework. Keep the continuous wrist skin and independent index attachment; do not restore mismatched cut edges.
-2. PRIORITY: decouple tongue/dental contact from jaw opening, preserving existing audio/phone evidence; then redraw full lower-mouth contours and contact-to-vowel/FV construction. Prefer artist-designed anatomical correspondence over generated full-head variants. Preserve selected proportions.
+2. PRIORITY: design clean shallow-contact/rounded-vowel contours and separate L/dental tongue controls. Consider an independent jaw/chin envelope under lip seals without delaying contacts. Preserve audio/phone evidence and selected proportions; prefer artist-designed correspondence over more full-head variants.
 3. Critically review acting rhythm, then clean shoulder construction. Legs remain static; no eye/blink rig exists behind glasses. A human character artist/animator is still needed for final anatomy/performance approval. CPU raster rendering slows iteration; hardware cannot supply missing drawings. Full polished milestone remains incomplete.
 
 ## Runtime

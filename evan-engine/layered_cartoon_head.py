@@ -57,11 +57,14 @@ class LayeredCartoonHead(CartoonHead):
         tongue_art=cv2.warpAffine(tongue_art,move,(SIZE,SIZE),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT)
         tongue_art=straight(tongue_art).astype('uint8')
         return warp(tongue_art,POINTS['H'],oral,2)
-    def weights(self,weights,shape_weights=None):
-        w=np.asarray(weights,float);w=w/w.sum();target=self.target_points(w,shape_weights)
-        aperture=float(sum(v*(self.geometry[s][7]-self.geometry[s][6]) for s,v in zip(SYMBOLS,w)))
+    def weights(self,weights,shape_weights=None,geometry_weights=None):
+        w=np.asarray(weights,float);w=w/w.sum()
+        jaw=w if geometry_weights is None else np.asarray(geometry_weights,float)
+        jaw=jaw/jaw.sum() if geometry_weights is not None else jaw
+        target=self.target_points(jaw,shape_weights)
+        aperture=float(sum(v*(self.geometry[s][7]-self.geometry[s][6]) for s,v in zip(SYMBOLS,jaw)))
         oral=self.oral_target(target,aperture)
-        face=warp(self.layers['face-skin'],POINTS['X'],self.skin_target(w,target))
+        face=warp(self.layers['face-skin'],POINTS['X'],self.skin_target(jaw,target))
         cavity=warp(self.layers['cavity-outline'],POINTS['C'],oral,2)
         teeth=warp(self.layers['upper-teeth'],POINTS['C'],oral,2)
         tongue=self.tongue_surface(w,oral,shape_weights)

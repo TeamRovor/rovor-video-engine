@@ -18,9 +18,12 @@ def frame(body,plan,t):
     else:d.text((685,603),'A small detail that represents your brand.',font=font(22),fill='#48636d')
     return im
 if __name__=='__main__':
-    cv2.setNumThreads(1);p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--material',action='store_true');p.add_argument('--compact-index',action='store_true');p.add_argument('--joined-wrist',action='store_true');p.add_argument('--lingual-tongue',action='store_true');p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=FRAME_COUNT);a=p.parse_args()
+    cv2.setNumThreads(1);p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--material',action='store_true');p.add_argument('--compact-index',action='store_true');p.add_argument('--joined-wrist',action='store_true');p.add_argument('--lingual-tongue',action='store_true');p.add_argument('--separated-jaw',action='store_true');p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=FRAME_COUNT);a=p.parse_args()
     plan=json.loads(a.plan.read_text())
-    if a.lingual_tongue:
+    if a.separated_jaw:
+        from separated_cartoon_scene import SeparatedCartoonSceneBody
+        body=SeparatedCartoonSceneBody()
+    elif a.lingual_tongue:
         from lingual_cartoon_scene import LingualCartoonSceneBody
         body=LingualCartoonSceneBody()
     elif a.joined_wrist:
