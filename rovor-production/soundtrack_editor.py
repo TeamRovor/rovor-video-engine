@@ -189,6 +189,8 @@ def propose(storyboard,catalog):
                             "assetId":item["assetId"],"type":"sound-effect",
                             "gainDbProposal":gain,"underDialogue":has_voice,"shot":i,
                             "scene":scene_name,"syncsWithVisibleAction":purpose,
+                            "animatedAssetId":event.get("animatedAssetId"),
+                            "syncActorChannels":event.get("syncActorChannels",[]),
                             "approvalRequired":True})
             last_sfx=event_at
 
