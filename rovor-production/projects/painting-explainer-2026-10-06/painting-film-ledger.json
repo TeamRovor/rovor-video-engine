@@ -16,7 +16,7 @@
     ]
   },
   "total_source_frames": 15762,
-  "current_revision": "v11",
+  "current_revision": "v12",
   "human_visual_review_approved": false,
   "publication_approved": false,
   "revisions": [
@@ -102,6 +102,23 @@
       ],
       "editable_archive": "Rovor_Painting_Film_V11_Editable_Scene_Source.zip",
       "editable_archive_sha256": "7c086f759d6e4d0097ebaf78c80e9a92c48e1ac2f5e5b51929589d560226503c",
+      "artist_approved": false,
+      "publication_approved": false
+    },
+    {
+      "revision": "v12",
+      "review_coverage": [
+        0,
+        9377
+      ],
+      "edited_intervals": [
+        [
+          1752,
+          2484
+        ]
+      ],
+      "editable_archive": "Rovor_Painting_Film_V12_Editable_Storyboard_Source.zip",
+      "editable_archive_sha256": "14d0627e895a97c3be7ee091cf58d30573b90172a2084e9526095085f0bd274a",
       "artist_approved": false,
       "publication_approved": false
     }
