@@ -90,3 +90,69 @@ Never pad, loop or falsely extend shorter clips. Target complete actual
 
 Keep using original artwork and source audio, zero paid add-ons, and the
 current draft branch. Never restart work from scratch.
+
+
+## October 18 — source-audio acoustic articulation milestone (verified)
+
+Previous 22-second reference was used ONLY for DEVELOPMENT TESTS, not a
+customer-facing video. The original Mac local tool configuration has
+installed free Whisper-base and Rhubarb executables/models.
+
+New/updated repository source:
+- rovor-production/speech_draft_audit.py: verifies Whisper English transcript
+  segment ordering, duration, gaps, repeated/hallucinated text and boundaries
+  that intersect preproduction chapters. Does NOT fabricate words, script,
+  word alignment or phones.
+- rovor-production/lip_cue_audit.py: validates Rhubarb A-H/X mouth shape timing
+  directly against the decoded WAV end; no false claims that shape classes
+  are certified phonemes or word pronunciations.
+- evan-engine/build_acoustic_fallback_plan.py: deterministic original
+  Evan painted-face fallback from Rhubarb, 10ms waveform and SHA-locked
+  original narration; old mouth rig/source plates remain unchanged.
+- rovor-production/audio_intake.py: automatic protected Whisper+Rhubarb
+  source audio analysis, source matched transcript and acoustic review files,
+  and original-Evan paint-face fallback plan. Keeps speech transcript and
+  local model logs PRIVATE on Mac, out of GitHub logs and artifacts.
+- Added tests across all components. The fallback can be passed to the
+  preexisting CartoonBody mouth renderer and verify_audio_plan without
+  pretending the phoneme alignment is certified.
+
+Verified Mac runs:
+- 39100163634: 13 English machine draft timing tests PASS. Diagnosed
+  real whisper.cpp padding: reference WAV ends at 22.047s but an ASR
+  segment reported end 22.400s; now the machine endpoint is clipped to
+  measured source and explicitly flagged. Never extend animation/audio.
+- 39100377557: 22 transcript/Rhubarb timing tests PASS and real
+  audio-based Rhubarb mouth draft created.
+- 39100684553: 7 original-Evan acoustic fallback tests PASS. Rendered
+  two different real layered painted Evan mouth poses using acoustic
+  evidence, mean absolute pixel difference ~0.608. 22sec = development-only.
+- 39100869528: 25 full-intake tests PASS. The original rendered Evan
+  mouth fallback now appears automatically in its private source-hash
+  analysis folder.
+
+Important verified blocker:
+- Mac audio catalog COUNT=1, just the short reference WAV.
+- Google Drive Desktop app was NOT INSTALLED in the capability audit
+  on macOS 15.8.1 and Mac cloud mount is still FALSE in the latest
+  integrated audio-intake run.
+- Selected real 8m27s ElevenLabs original from connected Google Drive
+  is NOT locally available to the Mac renderer as of that check.
+- It is incorrect to claim the 8-minute film or 8-minute phonetic
+  transcript is rendered just because a 22-second source test passes.
+
+Immediate owner-side setup needed for long-form engine:
+- Authenticate Google Drive for Desktop on the Mac into the same
+  connected Rovor Drive account and let the MP3 folder appear under
+  ~/Library/CloudStorage, OR put the real original 8min MP3 file under
+  ~/Movies/RovorAudioInbox. Do not provide login credentials to ChatGPT
+  or upload source media to public GitHub.
+- Run a fresh local audio catalog job, choose that long-form ID and run
+  the existing approved audio analysis workflow. It will now produce
+  machine draft transcript, waveform, nine chapters, Rhubarb acoustic
+  mouth cues and an original-Evan-render-compatible speech fallback.
+- Then review the words and pronunciations, design original story
+  scenes, run exact-rig preflight and resumable 1080p60 full renders.
+
+NONE of these lip fallback outputs is a completed cartoon, certified
+English phone alignment, artist-approved acting, or final sound mix.
