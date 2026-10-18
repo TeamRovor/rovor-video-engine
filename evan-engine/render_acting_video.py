@@ -190,6 +190,8 @@ def main():
     p.add_argument('plan',type=Path);p.add_argument('wav',type=Path);p.add_argument('output',type=Path)
     p.add_argument('--ffmpeg',required=True);p.add_argument('--start-time',type=float,default=0)
     p.add_argument('--duration',type=float);p.add_argument('--workers',type=int,choices=(1,2,3,4),default=2)
+    p.add_argument('--preflight-only',action='store_true',
+                   help='Validate audio, scene art, rig, SFX and framing without rendering/writing media')
     p.add_argument('--body-cache-frames',choices=('auto','on','off'),default='auto',
                    help='Save body PNGs to disk; auto disables large 30+ second caches')
     p.add_argument('--visual-mode',choices=('reference','storyboard','globe-action','directed'),default='reference',
@@ -232,6 +234,28 @@ def main():
         actor=EvanPerformance(json.loads(a.performance_json.read_text()))
         if abs(actor.duration-audio_duration)>.025 or end>actor.end:
             p.error('Director acting controls do not match complete original narration')
+    if a.preflight_only:
+        report={
+            'status':'ROVOR_PREFLIGHT_OK_NOT_RENDERED',
+            'originalAudioDurationSec':audio_duration,
+            'requestedReviewDurationSec':duration,
+            'sceneFormat':a.visual_mode,
+            'framesToRender':end-start,'fps':DEFAULT_FPS,
+            'outputDimensions':{'landscape':LANDSCAPE,'portrait':VERTICAL},
+            'originalNarrationEnvelopeMatched':audio_match['rmsEnvelopeMatched'],
+            'originalBodyRigSource':'evan-character/cartoon-v1',
+            'futureVideoRendered':False,'phonemeTimingCertified':False,
+            'published':False,
+            'bodyFrameDiskCacheEnabled':persist_body_frames(a.body_cache_frames,duration)
+        }
+        if a.visual_mode=='directed':
+            report['originalSceneAssetsVerified']=len(planned['artwork'])
+            report['sceneCount']=len(planned['scenes'])
+            report['originalFKActingTimelineVerified']=True
+            if a.sound_cues:
+                report['physicalSoundEffectCuesVerified']=cue_status['verifiedEffects']
+        print(json.dumps(report,indent=2))
+        return
     a.output.mkdir(parents=True,exist_ok=True)
     cache_key=body_cache_key(a.plan)
     if a.performance_json:
