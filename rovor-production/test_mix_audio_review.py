@@ -1,5 +1,6 @@
 """Real streaming 32-second stereo mix audition regression, never published."""
 import json
+import subprocess
 import tempfile
 import unittest
 import wave
@@ -79,10 +80,16 @@ class MixReviewTests(unittest.TestCase):
             f.setpos(29*RATE)
             raw=f.readframes(1024)
         result_audio=np.frombuffer(raw,dtype="<i2").reshape(-1,2)
-        with wave.open(str(self.voice),"rb") as f:
-            f.setpos(29*RATE)
-            voice=np.frombuffer(f.readframes(1024),dtype="<i2")
-        self.assertTrue(np.max(np.abs(result_audio[:,0].astype(int)-voice.astype(int)))<=1)
+        # Compare to the decoded narration in the SAME stereo PCM format.
+        # FFmpeg may apply a normal mono-to-stereo pan law; that's not a sound
+        # effect and the source narration must remain on disk unchanged.
+        decoded=subprocess.run([
+            str(self.ffmpeg),"-nostdin","-hide_banner","-loglevel","error",
+            "-i",str(self.voice),"-map","0:a:0","-vn",
+            "-ar",str(RATE),"-ac","2","-f","s16le","pipe:1"],
+            capture_output=True,check=True).stdout
+        ref=np.frombuffer(decoded,dtype="<i2").reshape(-1,2)[29*RATE:29*RATE+1024]
+        self.assertTrue(np.max(np.abs(result_audio.astype(int)-ref.astype(int)))<=1)
 
     def test_preview_cannot_overwrite_existing_audio(self):
         dest=self.root/"mix-one.wav"
