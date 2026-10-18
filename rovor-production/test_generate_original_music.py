@@ -8,7 +8,7 @@ import wave
 
 import numpy as np
 from audio_library import scan
-from generate_original_music import SCORES, RATE, render_score, build
+from generate_original_music import SCORES, RATE, SR, render_score, build
 
 
 class MusicTests(unittest.TestCase):
