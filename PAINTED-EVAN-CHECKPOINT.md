@@ -8,6 +8,18 @@ Repo work/engine, branch development/evan-painted-rig (historical name). Draft P
 
 Automation develop-evan-painted-animation remains ACTIVE. Make routine decisions autonomously. Notify only meaningful review milestones/failure/completion/required action. Disable only when the full polished cartoon milestone is actually ready for review. It is NOT complete.
 
+## Latest: rounded cavity/rim artwork candidate
+
+Read CARTOON-EVAN-ROUNDED-ART.md. Built-in imagegen edited an isolated mouth component with the selected cartoon sheet as style reference. Raw v1 had an upper-left spur; targeted contour edit v2 is chosen. Exact prompts/reference in round-source-v1. No realistic portrait or surrounding skin patch. This is source artwork, not a complete rig.
+
+build_rounded_oral_art.py registers separate cavity/rim plus an interior occlusion matte in round-rig-v1, authored affine E space [211,320,240,366]. Snap intended-solid source alpha >=250 to 255 (generated fill was mostly 253); 4x supersampling; 12-source-pixel cavity underlap. Hashes/matrix/provenance in manifest; animationReady=false. Canonical fit is NOT traced anatomical correspondence.
+
+RoundedArtCartoonHead / --rounded-art warps cavity/rim separately on the existing mesh, uses current active rounded-phone identity for art interpolation and teeth hiding, and clips the separate tongue with the cavity matte. Original width easing/geometry/audio/timing remain unchanged. Using the width lead/release identity initially left too much old outline during full rounding; current art identity follows the actual phone mixture. Non-rounded controls and older modes remain baselines. Body/official branding unchanged.
+
+57 affected checks pass (6 new +51 prior); seven actual-time Bounded baseline images stay pixel exact after cavity/interior/clip hook extraction. All 489 scene-clock geometry targets remain exact; registered pixels rebuild deterministically. Two-layer E-space PSD reopens with mean premultiplied difference .0002743/255; it is not a full/native Moho rig.
+
+Review outputs ../../outputs/evan-cartoon-rounded-art: same-audio native-head before/after and branded shot through “little globe … your logo”/pause, source 2.5–5.0 s, normal/quarter 120/480 frames each at 48 fps, all four decode cleanly; source, exact prompt set, registered layers/matte, PSD and evidence. Native rounded holds have smoother contours/softer lower lip; entry/release still has a soft brown/double-edge appearance where art mixes, and lower-lip volume is heavier than the selected concept's tiny O. Keep this as an OPTIONAL CANDIDATE, not promoted into defaults or called polished/studio quality. Shallow B/FV and L/dental construction remain unfinished. No continuous playback/listening acceptance.
+
 ## Latest: bounded head samples (renderer QA)
 
 Read CARTOON-EVAN-BOUNDED-SURFACES.md. BoundedCartoonHead / --bounded-head enables constrain_surface hooks on sampled head skin/oral/FV/tongue layers and pre-composite tongue-affine samples. Negative coverage/RGB lobes are removed; alpha above 255 is rescaled with RGB to preserve positive-alpha straight colour, then RGB is limited to [0, alpha]. Valid finite samples stay exact. Body and brow sampling are unchanged; this is not global renderer enforcement or a linear-light conversion. Source art, targets, timing and phoneme weights are unchanged.
@@ -44,7 +56,7 @@ Two-pass PocketSphinx alignment: 66 words/248 phones, 39-phone catalog, diphthon
 
 ## Next concrete work / limits
 
-1. PRIORITY: artist-designed clean shallow-contact and rounded-vowel contours, registered as genuine separate components with shared anatomical correspondence. Inspect against selected cartoon source; do not promote a generated concept plate or flatter sprite as a working rig.
+1. PRIORITY: refine actual old/new rounded contour correspondence through entry/release (trace and align designed boundaries rather than piling on alpha layers). Preserve chosen source art as an optional candidate until that transition is convincingly clean. Then design shallow B/FV contacts. Do not generate another full-head replacement as a shortcut.
 2. Separate L/dental tongue controls and consider independent jaw/chin movement under lip seals without delaying contact. Preserve source proportions and audio evidence.
 3. Design softer palm/neighbor-finger poses, clean wrist/shoulder linework and critically review acting rhythm. Static legs and missing eye/blink rig remain. A human character artist/animator is needed for final anatomy/performance approval. Native raster detail and CPU rendering constrain iteration; hardware cannot supply missing drawings.
 

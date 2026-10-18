@@ -51,6 +51,12 @@ class LayeredCartoonHead(CartoonHead):
         return np.asarray(sum(self.points[s]*v for s,v in zip(SYMBOLS,weights)),np.float32)
     def skin_target(self,weights,target):
         return target
+    def cavity_surface(self,w,oral,shape_weights=None):
+        return self.sample_surface(self.layers['cavity-outline'],POINTS['C'],oral,2)
+    def interior_mask(self,cavity,w,oral,shape_weights=None):
+        return cv2.erode(np.clip(cavity[:,:,3],0,255),np.ones((3,3),np.uint8))[:,:,None]/255
+    def clip_interiors(self,teeth,tongue,interior,w,shape_weights=None):
+        return teeth*interior,tongue*interior
     def tongue_surface(self,w,oral,shape_weights=None):
         # One raised tongue drawing moves down/scales toward the floor for
         # vowels, and lifts for L. It never dissolves between two tongue images.
@@ -70,12 +76,12 @@ class LayeredCartoonHead(CartoonHead):
         aperture=float(sum(v*(self.geometry[s][7]-self.geometry[s][6]) for s,v in zip(SYMBOLS,jaw)))
         oral=self.oral_target(target,aperture)
         face=self.sample_surface(self.layers['face-skin'],POINTS['X'],self.skin_target(jaw,target))
-        cavity=self.sample_surface(self.layers['cavity-outline'],POINTS['C'],oral,2)
+        cavity=self.cavity_surface(w,oral,shape_weights)
         teeth=self.sample_surface(self.layers['upper-teeth'],POINTS['C'],oral,2)
         tongue=self.tongue_surface(w,oral,shape_weights)
         # Interior surfaces must stay behind the inked lip boundary.
-        interior=cv2.erode(np.clip(cavity[:,:,3],0,255),np.ones((3,3),np.uint8))[:,:,None]/255
-        teeth*=interior;tongue*=interior
+        interior=self.interior_mask(cavity,w,oral,shape_weights)
+        teeth,tongue=self.clip_interiors(teeth,tongue,interior,w,shape_weights)
         # Reuse the original contact drawing while it awaits anatomical cleanup.
         contact=self.contact_surface(target)
         closed=self.sample_surface(self.layers['closed-lips'],POINTS['X'],target,2)
