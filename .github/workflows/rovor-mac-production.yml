@@ -16,6 +16,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  longform-chapter-selftest:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor longform chapter selftest'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout preproduction-only tools in clean job directory
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_chapter_selftest_${{ github.run_id }}
+          sparse-checkout: |
+            rovor-production
+      - name: Test long-form source-audio frame planning and reject short narration
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$GITHUB_WORKSPACE/_rovor_chapter_selftest_$GITHUB_RUN_ID/rovor-production"
+          python3 -m py_compile longform_chapters.py audio_intake.py
+          python3 -m unittest test_longform_chapters -v
+          python3 - <<'PY'
+          from longform_chapters import plan
+          def energy(seconds):
+              return [(i/100.,-18.) for i in range(int(seconds*100))]
+          p=plan(540,energy(540))
+          assert p['totalTimelineFrames']==32400
+          assert sum(x['decodedFramesTarget'] for x in p['chapters'])==32400
+          assert p['artisticApproval'] is False
+          assert p['originalNarrationModified'] is False
+          print('ROVOR_9_MINUTE_ORIGINAL_AUDIO_CHAPTER_PLAN=PASS')
+          print('ARTISTIC_APPROVAL=NO')
+          PY
+          echo 'NO_PRIVATE_AUDIO_OR_VIDEO_UPLOADED=YES'
+
   visual-qa:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor visual QA'
     runs-on: [self-hosted, macOS, X64, rovor-video]
