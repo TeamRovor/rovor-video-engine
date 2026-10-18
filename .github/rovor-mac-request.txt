@@ -1,6 +1,6 @@
 mode=audio-library-setup
 categories=SoundEffects,BackgroundMusic
 seedSfx=original-procedural-only
-noMusicUntilCurated=true
-rightsGate=required
-sequence=20
+thirdPartyMusicRequiresAttribution=true
+noUnlicensedMusic=true
+sequence=21
