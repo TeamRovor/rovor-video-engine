@@ -6,6 +6,7 @@ result is an internal acting study, not artistic or phoneme-timing approval.
 import argparse
 import ast
 from concurrent.futures import ProcessPoolExecutor
+from functools import lru_cache
 import hashlib
 import json
 import math
@@ -74,6 +75,31 @@ def actor_controls_fingerprint(source_text):
     return hashlib.sha256(normalized.encode()).hexdigest()
 
 
+@lru_cache(maxsize=2)
+def _directed_worker_runtime(director_path,registry_path):
+    """Reuse decoded original illustrations and Evan body across worker chunks.
+
+    Previously the same images and 1464x1536 source rig were decoded twice per
+    90-frame chunk; eight-minute work repeatedly did that hundreds of times.
+    A ProcessPool worker owns its cache. New jobs spawn fresh workers, while
+    profile hashes pin every source and prevent mixing changes into a resume.
+    """
+    from directed_scene import DirectedScene,check
+    from cartoon_body import CartoonBody,REVIEW_BODY_OPTIONS
+    director=json.loads(Path(director_path).read_text())
+    registry=json.loads(Path(registry_path).read_text())
+    prepared=check(director,registry,Path(registry_path).parent)
+    return ([DirectedScene(director,registry,Path(registry_path).parent,False,prepared=prepared),
+             DirectedScene(director,registry,Path(registry_path).parent,True,prepared=prepared)],
+            CartoonBody(**REVIEW_BODY_OPTIONS))
+
+
+@lru_cache(maxsize=4)
+def _authored_performance(path):
+    from performance_tracks import EvanPerformance
+    return EvanPerformance(json.loads(Path(path).read_text()))
+
+
 def render_chunk(job):
     cv2.setNumThreads(1)
     plan_path,root,ffmpeg,index,start,end,fps,cache,visual_mode,performance_path,director_path,registry_path=job
@@ -88,19 +114,12 @@ def render_chunk(job):
     else:
         factory=FaviconScene
     if visual_mode=='directed':
-        from directed_scene import DirectedScene
-        from cartoon_body import CartoonBody,REVIEW_BODY_OPTIONS
-        director=json.loads(Path(director_path).read_text())
-        registry=json.loads(Path(registry_path).read_text())
-        scenes=[DirectedScene(director,registry,Path(registry_path).parent,False),
-                DirectedScene(director,registry,Path(registry_path).parent,True)]
-        body=CartoonBody(**REVIEW_BODY_OPTIONS)
+        scenes,body=_directed_worker_runtime(director_path,registry_path)
     else:
         scenes=[factory(plan,False),factory(plan,True)]
         body=scenes[0].body
     if performance_path:
-        from performance_tracks import EvanPerformance
-        custom=EvanPerformance(json.loads(Path(performance_path).read_text()))
+        custom=_authored_performance(performance_path)
     else:
         custom=None
     names=('landscape','vertical');processes=[]
