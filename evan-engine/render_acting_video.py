@@ -192,12 +192,17 @@ def main():
     for name in ('landscape','vertical'):
         listing=a.output/f'{name}-concat.txt'
         listing.write_text(''.join(f"file '{name}-{i:03}.mp4'\n" for i in range(chunks)))
+        # Keep any earlier verified export intact until the replacement has
+        # finished encoding. An interrupted FFmpeg process leaves only .partial.
+        target=a.output/f'{name}-acting-review.mp4'
+        temporary=a.output/f'{name}-acting-review.partial.mp4'
         subprocess.run([a.ffmpeg,'-nostdin','-hide_banner','-loglevel','error','-y',
                         '-f','concat','-safe','0','-i',str(listing),
                         '-ss',str(start/DEFAULT_FPS),'-i',str(a.wav),
                         '-map','0:v:0','-map','1:a:0','-c:v','copy','-c:a','aac',
                         '-t',str((end-start)/DEFAULT_FPS),'-movflags','+faststart',
-                        str(a.output/f'{name}-acting-review.mp4')],check=True)
+                        str(temporary)],check=True)
+        temporary.replace(target)
     print(json.dumps(profile),flush=True)
 
 
