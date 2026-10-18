@@ -122,5 +122,23 @@
       "artist_approved": false,
       "publication_approved": false
     }
-  ]
+  ],
+  "currentCreativeCheckpoint": {
+    "checkpoint": "v14-contact-engine-and-art-gate",
+    "artisticStatus": "ART_NOT_READY",
+    "reviewedVideoRevision": "v12",
+    "videoCoverageFrames": [
+      0,
+      9377
+    ],
+    "newApprovedVideoFrames": 0,
+    "physicsTestsPassed": 13,
+    "artReadinessTestsPassed": 8,
+    "totalTestsPassed": 21,
+    "blockedReason": "Procedural V13/V14 secondary painter poses fail visual acting and anatomy standard; original 7-pose registered art set and independently approved performance missing.",
+    "rejectedDemoMustNotBePromoted": true,
+    "originalNarrationUnchanged": true,
+    "nextMilestone": "Create a genuinely appealing source-layered seven-pose painter key-sheet and normal-speed acting pilot before any long-form extension.",
+    "publicationApproved": false
+  }
 }
