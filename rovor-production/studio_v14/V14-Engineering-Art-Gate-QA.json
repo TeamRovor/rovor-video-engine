@@ -1,0 +1,59 @@
+{
+  "status": "REUSABLE_ENGINE_PASS__VISUAL_ART_REJECTED",
+  "revision": "v14-physical-and-art-gates",
+  "sourceProject": "painting-explainer-2026-10-06",
+  "priorMainReview": "V12 original recording 156.283 seconds, NOT artistically approved",
+  "voiceFilesIncluded": false,
+  "newPlayableApprovedScene": false,
+  "modifiedOriginalNarration": false,
+  "readyToRenderAsStudioArt": false,
+  "physicsRegressionTests": 13,
+  "artReadinessTests": 8,
+  "totalTestsPassed": 21,
+  "artGate": {
+    "status": "ART_NOT_READY",
+    "verifiedUniquePoseCount": 0,
+    "expectedPoseCount": 7,
+    "ready": false,
+    "problems": [
+      "Missing original three-quarter working pose view",
+      "anticipation: missing complete drawn pose",
+      "low_contact: missing complete drawn pose",
+      "midstroke: missing complete drawn pose",
+      "high_reach: missing complete drawn pose",
+      "overlap_pass: missing complete drawn pose",
+      "release: missing complete drawn pose",
+      "settle: missing complete drawn pose",
+      "landscape: requires independently staged shot review",
+      "portrait: requires independently staged shot review",
+      "Artist-directed visual review has not approved the source poses",
+      "Human normal-speed movement review not approved"
+    ],
+    "noAutomaticStudioQualityCertification": true,
+    "publicationApproved": false
+  },
+  "mechanicLimitations": [
+    "vertical wall-contact brush only",
+    "2D procedural pigment not physically realistic",
+    "fixed-length IK visibly awkward in several poses"
+  ],
+  "artIssues": [
+    "V13/V14 secondary painter flat vector artwork rejected",
+    "no hand-drawn full body pose set",
+    "no native approved independent portrait artwork",
+    "no human performance approval"
+  ],
+  "originalAudioSha256": "346c9ea17f2ca4a7dea5b19248e6cddc113ae1a4e27b37b31049567ed2e47e45",
+  "includedSourceSha256": {
+    "physical_paint.py": "880211d0c6fd54d51e908ba93ea6b015b72b9a6845ee987dcc0bf994b57d0c59",
+    "painter_contact_v14.py": "fe018cc6afe45a2b14ff95171e09ab613bd524d88472d1a38e388bf34643ddbb",
+    "test_physical_paint.py": "1d6adf27e0924a0b18c60ea09cd48b1bd5e128d6dea57ec6d1521b6c812bd781",
+    "layered_art_gate.py": "45930b4f6a7fdabce311669c04e8b9bd3b35f508c988c7b4f8338f4610170e67",
+    "test_layered_art_gate.py": "04c0d49d6d61684e209bc84c48bb4db15050852faf8893208e46a9467060e5f5",
+    "V14-art-status.json": "b98f4cc7fb75250ab372cd6f311b20080b1cf88934b760e1b8ffe5f7c590a8fb",
+    "V14-art-report.json": "3f8e19bb8294ae0f9449fa97827b5778dc75fe553c0456879fea1464a9974a80",
+    "README-V14.md": "dbe2d3ef1d5406d693eed0c6f51d63e60284fc0830984616ae66df0dd5b0d7d8",
+    "V14_Contact_Physics_Comparison_NOT_ART.jpg": "abc2123804b335de09800e686ac7345357e8f6718b925d3df03527e47dbd8a17"
+  },
+  "publicationApproved": false
+}
