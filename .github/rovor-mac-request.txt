@@ -1,6 +1,6 @@
 mode=audio-analyze
 audio_id=6e080df3f97b5cd2
 asr=on
-source=original-evan-local-reference
-transcript=draft-not-certified
-sequence=37
+source=reference-audit-only
+reviewInvalidMachineSegments=true
+sequence=38
