@@ -228,6 +228,8 @@ def main():
             print('MUSIC_MIXED=NO')
     if not math.isfinite(a.start_time) or not 0<=a.start_time<audio_duration:p.error('Invalid start time')
     if duration<=0 or a.start_time+duration>audio_duration+1e-8:p.error('Review interval exceeds recording')
+    if duration<30 and not a.preflight_only:
+        p.error('Finished video exports must use at least 30 seconds of real narration; do not pad short takes')
     start=round(a.start_time*DEFAULT_FPS);end=start+frame_count(duration)
     if a.performance_json:
         from performance_tracks import EvanPerformance
@@ -326,6 +328,7 @@ def main():
     with ProcessPoolExecutor(max_workers=a.workers) as pool:
         for index in pool.map(render_chunk,jobs):print(f'Completed chunk {index}',flush=True)
     chunks=math.ceil((end-start)/90)
+    pending_exports=[]
     for name in ('landscape','vertical'):
         listing=a.output/f'{name}-concat.txt'
         listing.write_text(''.join(f"file '{name}-{i:03}.mp4'\n" for i in range(chunks)))
@@ -339,7 +342,37 @@ def main():
                         '-map','0:v:0','-map','1:a:0','-c:v','copy','-c:a','aac',
                         '-t',str((end-start)/DEFAULT_FPS),'-movflags','+faststart',
                         str(temporary)],check=True)
+        pending_exports.append((name,temporary,target))
+    # Check EVERY decoded frame, 60fps PTS continuity and multiple narration
+    # locations across the source take before replacing a single prior export.
+    # A one-chapter video may select [start,end) of a larger original voice,
+    # so source offsets are compared at exact frame boundaries.
+    from verify_longform_export import verify as verify_export
+    completed={}
+    for name,temporary,target in pending_exports:
+        size=LANDSCAPE if name=='landscape' else VERTICAL
+        completed[name]=verify_export(a.ffmpeg,temporary,a.wav,size=size,
+                                      start_frame=start,end_frame=end)
+    if len(completed)!=2 or any(r["voiceWindowsVerified"]<3 for r in completed.values()):
+        raise RuntimeError("Both 1080p60 original narration outputs must pass technical integrity")
+    report={
+        "status":"TWO_FORMAT_RENDERED_MEDIA_TECHNICALLY_VERIFIED",
+        "fps":DEFAULT_FPS,"sourceAudioHash":profile["audioHash"],
+        "landscape":completed["landscape"],"portrait":completed["vertical"],
+        "phonemeTimingArtistCertified":False,
+        "studioVisualQualityApproved":False,
+        "publicationApproved":False
+    }
+    # Each older complete export remains untouched on any verify exception;
+    # report is committed only after both independent checks succeed.
+    for name,temporary,target in pending_exports:
         temporary.replace(target)
+    report_path=a.output/'final-media-integrity.json'
+    temp_report=a.output/'final-media-integrity.partial.json'
+    temp_report.write_text(json.dumps(report,indent=2)+'\n')
+    temp_report.replace(report_path)
+    print("ROVOR_COMPLETE_BOTH_1080P60_VIDEO_FORMATS_TECHNICALLY_VERIFIED=YES")
+    print("CREATIVE_APPROVAL=NO")
     print(json.dumps(profile),flush=True)
 
 
