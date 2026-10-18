@@ -34,7 +34,7 @@ def validate(cues, duration):
         if (isinstance(a,bool) or isinstance(b,bool) or
             not isinstance(a,(float,int)) or not isinstance(b,(float,int))
             or not(math.isfinite(a) and math.isfinite(b))
-            or a<0 or a+1e-5<b is False):
+            or a<0):
             # The separate comparison below catches zero/negative spans.
             raise ValueError("Rhubarb emitted invalid source frame times")
         if not a<b or b>duration+.08 or a<cursor-.003:
