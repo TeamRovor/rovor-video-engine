@@ -54,3 +54,10 @@ class CartoonSceneBody(CartoonRoundedBody):
         return out
     def render(self,t,plan,controls=None):
         return super().render(t,plan,scene_controls(t,plan) if controls is None else controls)
+
+class CartoonMaterialSceneBody(CartoonSceneBody):
+    """Same scene controls, with contact material interpolation enabled."""
+    def __init__(self,root=ROOT):
+        super().__init__(root)
+        from material_cartoon_head import MaterialCartoonHead
+        self.head=MaterialCartoonHead(root)

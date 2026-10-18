@@ -37,10 +37,16 @@ New generated hidden-palm source/prompt is in index-source; registered working p
 
 Outputs ../../outputs/evan-cartoon-narrated-scene: normal/quarter-speed films, reopened eight-layer PSD (mean difference .00747/255), native curled/half/point composites, generated hidden-palm source/exact prompt, cue timeline and pause evidence. Original audio/annotations remain unchanged; central pause mouth rest weight is 1. All 18 timing flags retain their visual review and uncertainty. 114 checks pass, not perceptual approval. Full-resolution source/assembled frames inspected; no continuous movie playback/listening verification claimed. Only scratch ../cartoon-index/scene-final matches the final working components; earlier scene-frames and pose experiments are superseded.
 
+## Latest: contact-release material coverage
+
+Read CARTOON-EVAN-CONTACT-MATERIAL.md. The brown lip around 8.7917 s includes a compositing defect: separate F/V and vowel alpha-over exposes skin even where both oral drawings are opaque. MaterialCartoonHead interpolates the existing premultiplied oral groups before placing them on skin. Pure endpoints/non-contact paths remain exact, no new artwork/geometry/timing. CartoonMaterialSceneBody / render_cartoon_scene.py --material is opt-in; previous scene stays the baseline. Base composition extracted to a hook with identical default operation order; seven source-time samples match pre-hook pixels exactly.
+
+Native full-resolution release/contact/vowel/pause comparisons and branded integration inspected. Release has darker/clearer shared interior; narrow lip outlines/rolled contact remain rough and need redraw. Outputs ../../outputs/evan-cartoon-contact-material hold the 8.25–10.0 s native-head normal/quarter-speed comparison with original audio/sample-clock waveform, notes and source hashes. 118 tests pass; final normal/quarter films decode cleanly (84/336 frames at 48 fps). Continuous playback/listening is not claimed. This addresses material transparency, not anatomical acceptance or studio quality. Full polished milestone incomplete; automation stays active.
+
 ## Next concrete work
 
 1. Clean the index root/knuckle/wrist artwork and add a designed softer palm/remaining-finger pose; current thumb/three curls remain rigid and the resting index can read as a hook. Review the whole shot at normal speed for deliberate rhythm before adding incidental motion.
-2. Review the muddy narrow lip at 8.79 s locally, then redraw rounded/FV lower-lip and L/tongue anatomy with clean contours; keep generated source plates separate from registered working parts. Preserve selected likeness; reject global proportion changes.
+2. Redraw the remaining rough rounded/FV lower-lip and L/tongue anatomy with clean contours; keep generated source plates separate from registered working parts. Preserve selected likeness; reject global proportion changes.
 3. Clean shoulder construction; legs remain static and eyes have no blink rig behind glasses. A character artist/animator is still needed for final anatomy/performance. Do not equate tests, frame counts or flatter sprite swaps with studio quality. Full polished milestone remains incomplete; automation stays ACTIVE.
 
 ## Runtime

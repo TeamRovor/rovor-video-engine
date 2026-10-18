@@ -36,6 +36,13 @@ class LayeredCartoonHead(CartoonHead):
         scale=(1.2+(height-1.2)*opening)/height
         oral[:32,1]=cy+(oral[:32,1]-cy)*scale
         return oral
+    def composite_oral(self,face,cavity,teeth,tongue,contact,closed,aperture,w):
+        visible=self.cavity_visibility(aperture)
+        fv=float(w[7]);face=over(face,cavity,visible*(1-fv))
+        face=over(face,teeth,visible*float(ease((aperture-2)/7))*(1-fv)*(1-float(w[5]+w[6])))
+        face=over(face,tongue,visible*float(ease((aperture-8)/12))*(1-fv))
+        face=over(face,contact,fv)
+        return over(face,closed,self.closed_visibility(aperture)*(1-fv))
     def target_points(self,weights,shape_weights=None):
         return np.asarray(sum(self.points[s]*v for s,v in zip(SYMBOLS,weights)),np.float32)
     def skin_target(self,weights,target):
@@ -60,14 +67,9 @@ class LayeredCartoonHead(CartoonHead):
         interior=cv2.erode(np.clip(cavity[:,:,3],0,255),np.ones((3,3),np.uint8))[:,:,None]/255
         teeth*=interior;tongue*=interior
         # Reuse the original contact drawing while it awaits anatomical cleanup.
-        visible=self.cavity_visibility(aperture)
-        fv=float(w[7]);face=over(face,cavity,visible*(1-fv))
-        face=over(face,teeth,visible*float(ease((aperture-2)/7))*(1-fv)*(1-float(w[5]+w[6])))
-        face=over(face,tongue,visible*float(ease((aperture-8)/12))*(1-fv))
         contact=self.contact_surface(target)
-        face=over(face,contact,fv)
         closed=warp(self.layers['closed-lips'],POINTS['X'],target,2)
-        face=over(face,closed,self.closed_visibility(aperture)*(1-fv))
+        face=self.composite_oral(face,cavity,teeth,tongue,contact,closed,aperture,w)
         result=straight(face)
         result=self.images['X'].astype('float32')*(1-self.weight)+result*self.weight
         return Image.fromarray(np.clip(result,0,255).astype('uint8'))
