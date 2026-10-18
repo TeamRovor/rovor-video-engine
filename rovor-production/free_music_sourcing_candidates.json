@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Free licensed music research only; not downloaded; not eligible for audio catalog until real media and sidecar are locally verified",
+  "assetLocation": "~/Movies/RovorProduction/AudioLibrary/BackgroundMusic",
+  "notDownloaded": true,
+  "automaticPlacementAuthorized": false,
+  "licensePolicy": "Creative Commons Attribution — free commercial use with visible attribution in public video descriptions; retain artist/source/CC links and note modifications",
+  "candidates": [
+    {
+      "title": "Poofy Reel",
+      "composer": "Kevin MacLeod",
+      "mood": [
+        "quirky",
+        "playful",
+        "comedy",
+        "action"
+      ],
+      "durationApproxSeconds": 48,
+      "trackPage": "https://www.incompetech.com/music/royalty-free/index.html?isrc=USUAN1100003",
+      "licensePage": "https://music.kevin.macleod.incompetech.com/music/royalty-free/licenses/",
+      "licenseKind": "CC BY 4.0 as displayed on official artist track page",
+      "attributionText": "\"Poofy Reel\" Kevin MacLeod (incompetech.com), licensed under Creative Commons Attribution 4.0. https://creativecommons.org/licenses/by/4.0/",
+      "artistPageLicenseReviewed": true,
+      "downloaded": false,
+      "studioListeningApproved": false
+    },
+    {
+      "title": "Mesmerizing Galaxy",
+      "composer": "Kevin MacLeod",
+      "mood": [
+        "curious",
+        "tech",
+        "mysterious",
+        "space"
+      ],
+      "durationApproxSeconds": 93,
+      "trackPage": "https://www.incompetech.com/music/royalty-free/index.html?isrc=USUAN2300011",
+      "licensePage": "https://music.kevin.macleod.incompetech.com/music/royalty-free/licenses/",
+      "licenseKind": "CC BY 4.0 subject to checking individual download page",
+      "attributionText": "\"Mesmerizing Galaxy\" Kevin MacLeod (incompetech.com), licensed under Creative Commons Attribution 4.0. https://creativecommons.org/licenses/by/4.0/",
+      "artistPageLicenseReviewed": false,
+      "downloaded": false,
+      "studioListeningApproved": false
+    },
+    {
+      "title": "Signal to Noise",
+      "composer": "Scott Buckley",
+      "mood": [
+        "mysterious",
+        "cinematic",
+        "dramatic",
+        "technology"
+      ],
+      "durationApproxSeconds": 353,
+      "trackPage": "https://www.scottbuckley.com.au/library/signal-to-noise/",
+      "licensePage": "https://www.scottbuckley.com.au/library/using-this-music/",
+      "licenseKind": "CC BY 4.0",
+      "attributionText": "'Signal to Noise' by Scott Buckley — released under CC-BY 4.0. www.scottbuckley.com.au",
+      "artistPageLicenseReviewed": true,
+      "downloaded": false,
+      "studioListeningApproved": false
+    }
+  ],
+  "notes": [
+    "These are licensed MUSIC RESEARCH candidates, not three installed background tracks.",
+    "Artist license and individual recording must both be checked when imported.",
+    "YouTube video description must carry track-specific attribution.",
+    "Selection depends on listening to both the actual scene and original narration.",
+    "No credits means no use. No vocal music beneath Evan's narration."
+  ]
+}
