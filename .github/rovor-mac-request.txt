@@ -1,4 +1,6 @@
 mode=audio-library-setup
 categories=SoundEffects,BackgroundMusic
 rightsGate=required
-sequence=18
+silentByDefault=true
+cuePlanSafetyTests=true
+sequence=19
