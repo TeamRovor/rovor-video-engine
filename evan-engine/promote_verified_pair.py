@@ -40,6 +40,12 @@ def promote(pairs,ffmpeg,wav,start_frame,end_frame,output_dir,source_hash,
             ch not in "0123456789abcdef" for ch in source_hash):
         raise ValueError("Original audio source checksum missing")
 
+    h=hashlib.sha256()
+    with Path(wav).open("rb") as original_voice:
+        for block in iter(lambda:original_voice.read(2**20),b""):
+            h.update(block)
+    if h.hexdigest()!=source_hash:
+        raise ValueError("Immutable original narration changed before final export")
     results={}
     for name in ("landscape","vertical"):
         temp,dest=originals[name]
