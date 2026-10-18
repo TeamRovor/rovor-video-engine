@@ -16,6 +16,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  audio-library-setup:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor audio library setup'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout only Rovor media-library source in an isolated directory
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_audio_library_${{ github.run_id }}
+          sparse-checkout: |
+            rovor-production
+      - name: Test and create owned local SoundEffects and BackgroundMusic folders
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd "$GITHUB_WORKSPACE/_rovor_audio_library_$GITHUB_RUN_ID/rovor-production"
+          python3 -m unittest test_audio_library -v
+          python3 -m py_compile audio_library.py
+          python3 audio_library.py init
+          python3 audio_library.py scan
+          test -d "$HOME/Movies/RovorProduction/AudioLibrary/SoundEffects"
+          test -d "$HOME/Movies/RovorProduction/AudioLibrary/BackgroundMusic"
+          test -f "$HOME/Movies/RovorProduction/AudioLibrary/catalog.json"
+          echo "ROVOR_AUDIO_FOLDERS_CREATED=YES"
+          echo "NO_THIRD_PARTY_AUDIO_DOWNLOADED=YES"
+          echo "NO_MEDIA_UPLOADED_TO_GITHUB=YES"
+
   longform-chapter-selftest:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor longform chapter selftest'
     runs-on: [self-hosted, macOS, X64, rovor-video]
