@@ -76,7 +76,7 @@ def actor_controls_fingerprint(source_text):
 
 def render_chunk(job):
     cv2.setNumThreads(1)
-    plan_path,root,ffmpeg,index,start,end,fps,cache,visual_mode,performance_path=job
+    plan_path,root,ffmpeg,index,start,end,fps,cache,visual_mode,performance_path,director_path,registry_path=job
     root=Path(root);plan=json.loads(Path(plan_path).read_text())
     cache=Path(cache);hits=0
     if visual_mode=='storyboard':
@@ -87,7 +87,17 @@ def render_chunk(job):
         factory=EvanGlobeAction
     else:
         factory=FaviconScene
-    scenes=[factory(plan,False),factory(plan,True)]
+    if visual_mode=='directed':
+        from directed_scene import DirectedScene
+        from cartoon_body import CartoonBody,REVIEW_BODY_OPTIONS
+        director=json.loads(Path(director_path).read_text())
+        registry=json.loads(Path(registry_path).read_text())
+        scenes=[DirectedScene(director,registry,Path(registry_path).parent,False),
+                DirectedScene(director,registry,Path(registry_path).parent,True)]
+        body=CartoonBody(**REVIEW_BODY_OPTIONS)
+    else:
+        scenes=[factory(plan,False),factory(plan,True)]
+        body=scenes[0].body
     if performance_path:
         from performance_tracks import EvanPerformance
         custom=EvanPerformance(json.loads(Path(performance_path).read_text()))
@@ -117,11 +127,12 @@ def render_chunk(job):
                     controls=globe_action_controls(t)
                 else:
                     controls=narration_acting(t)
-                figure=scenes[0].body.render(t,plan,controls)
+                figure=body.render(t,plan,controls)
                 temporary=cached.with_suffix('.partial.png')
                 figure.save(temporary,compress_level=1);temporary.replace(cached)
             for scene,proc in zip(scenes,processes):
-                proc.stdin.write(scene.render(t,figure).tobytes())
+                frame=scene.frame(i,figure) if visual_mode=='directed' else scene.render(t,figure)
+                proc.stdin.write(frame.tobytes())
             if (i-start)%30==0:
                 (root/f'progress-{index:03}.json').write_text(json.dumps({'frame':i,'end':end}))
         for name,proc in zip(names,processes):
@@ -147,14 +158,29 @@ def main():
     p.add_argument('plan',type=Path);p.add_argument('wav',type=Path);p.add_argument('output',type=Path)
     p.add_argument('--ffmpeg',required=True);p.add_argument('--start-time',type=float,default=0)
     p.add_argument('--duration',type=float);p.add_argument('--workers',type=int,choices=(1,2,3,4),default=2)
-    p.add_argument('--visual-mode',choices=('reference','storyboard','globe-action'),default='reference',
+    p.add_argument('--visual-mode',choices=('reference','storyboard','globe-action','directed'),default='reference',
                    help='Opt-in illustrated six-shot direction; baseline remains unchanged')
     p.add_argument('--performance-json',type=Path,
                    help='Authored 60fps original Evan FK controls, not automatic acting')
+    p.add_argument('--director-json',type=Path,
+                   help='Verified original 2D assets and scene animation tracks')
+    p.add_argument('--art-registry',type=Path,
+                   help='Manifest of actual SHA-verified Rovor original scene art')
     a=p.parse_args()
+    if a.visual_mode=='directed' and not (a.director_json and a.art_registry and a.performance_json):
+        p.error('Directed scenes require original art registry, scenes and authored FK rig controls')
+    if a.visual_mode!='directed' and (a.director_json or a.art_registry):
+        p.error('Director/asset flags only apply to directed mode')
     audio_match=verify_audio_plan(json.loads(a.plan.read_text()),a.wav)
     with wave.open(str(a.wav)) as w:audio_duration=w.getnframes()/w.getframerate()
     duration=a.duration if a.duration is not None else audio_duration-a.start_time
+    if a.visual_mode=='directed':
+        from directed_scene import check
+        scenes=json.loads(a.director_json.read_text())
+        assets=json.loads(a.art_registry.read_text())
+        planned=check(scenes,assets,a.art_registry.parent)
+        if abs(planned['durationSec']-audio_duration)>.025:
+            p.error('Directed scene timeline does not cover entire unchanged audio')
     if not math.isfinite(a.start_time) or not 0<=a.start_time<audio_duration:p.error('Invalid start time')
     if duration<=0 or a.start_time+duration>audio_duration+1e-8:p.error('Review interval exceeds recording')
     start=round(a.start_time*DEFAULT_FPS);end=start+frame_count(duration)
@@ -194,6 +220,18 @@ def main():
              'audioMatch':audio_match,'bodyCacheKey':cache_key}
     if a.visual_mode!='reference':
         profile['visualMode']=a.visual_mode
+    if a.visual_mode=='directed':
+        director_hash=hashlib.sha256(a.director_json.read_bytes()).hexdigest()
+        registry_hash=hashlib.sha256(a.art_registry.read_bytes()).hexdigest()
+        asset_hash=hashlib.sha256()
+        from directed_scene import open_artwork
+        verified=open_artwork(assets,a.art_registry.parent)
+        for name in sorted(verified):
+            asset_hash.update(name.encode())
+            asset_hash.update(hashlib.sha256(verified[name].tobytes()).digest())
+        profile['sceneDirectionSha256']=director_hash
+        profile['sourceArtRegistrySha256']=registry_hash
+        profile['sourceSceneArtPixelsSha256']=asset_hash.hexdigest()
     if a.performance_json:
         profile['actorPerformanceSha256']=hashlib.sha256(a.performance_json.read_bytes()).hexdigest()
     manifest=a.output/'profile.json'
@@ -207,7 +245,9 @@ def main():
         if all(chunk_matches(a.output/f'{name}-{index:03}.mp4',hi-lo,size,DEFAULT_FPS)
                for name,size in (('landscape',LANDSCAPE),('vertical',VERTICAL))):
             continue
-        jobs.append((str(a.plan.resolve()),str(a.output.resolve()),a.ffmpeg,index,lo,hi,DEFAULT_FPS,str(cache.resolve()),a.visual_mode,str(a.performance_json.resolve()) if a.performance_json else ''))
+        jobs.append((str(a.plan.resolve()),str(a.output.resolve()),a.ffmpeg,index,lo,hi,DEFAULT_FPS,str(cache.resolve()),a.visual_mode,str(a.performance_json.resolve()) if a.performance_json else '',
+                     str(a.director_json.resolve()) if a.director_json else '',
+                     str(a.art_registry.resolve()) if a.art_registry else ''))
     with ProcessPoolExecutor(max_workers=a.workers) as pool:
         for index in pool.map(render_chunk,jobs):print(f'Completed chunk {index}',flush=True)
     chunks=math.ceil((end-start)/90)
