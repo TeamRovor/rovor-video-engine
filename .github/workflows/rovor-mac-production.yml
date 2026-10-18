@@ -39,8 +39,8 @@ jobs:
           test -x "$py" && test -x "$ff"
           export ROVOR_TEST_FFMPEG="$ff"
           cd "$GITHUB_WORKSPACE/_rovor_longform_integrity_$GITHUB_RUN_ID/evan-engine"
-          "$py" -m py_compile verify_longform_export.py test_verify_longform_export.py
-          "$py" -m unittest -v test_verify_longform_export
+          "$py" -m py_compile verify_longform_export.py promote_verified_pair.py render_acting_video.py test_verify_longform_export.py test_promote_verified_pair.py
+          "$py" -m unittest -v test_verify_longform_export test_promote_verified_pair
           echo 'FULL_LENGTH_60FPS_TIMESTAMP_CHECK=TESTED'
           echo 'FULL_LENGTH_SOURCE_VOICE_MATCHING=TESTED'
           echo 'MEDIA_ONLY_SYNTHETIC_FIXTURE=YES'
