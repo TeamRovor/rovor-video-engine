@@ -16,7 +16,8 @@ import cv2
 from PIL import Image
 from cartoon_body import narration_acting
 from render_favicon_acting import FaviconScene
-from render_profile import DEFAULT_FPS, frame_count
+from render_profile import DEFAULT_FPS, LANDSCAPE, VERTICAL, frame_count
+from chunk_integrity import chunk_matches
 from speech_planner import audio_envelope
 
 
@@ -119,6 +120,13 @@ def render_chunk(job):
         for name,proc in zip(names,processes):
             proc.stdin.close();error=proc.stderr.read().decode('utf-8','replace');code=proc.wait()
             if code:raise RuntimeError(error[-2000:])
+        # Do not publish either member of the pair until both chunks fully
+        # decode at their expected native sizes and frame cadence.
+        for name,scene in zip(names,scenes):
+            target=root/f'{name}-{index:03}.partial.mp4'
+            if not chunk_matches(target,end-start,scene.size,fps):
+                raise RuntimeError(f'Encoded {name} chunk {index} failed decoded-frame integrity')
+        for name in names:
             (root/f'{name}-{index:03}.partial.mp4').replace(root/f'{name}-{index:03}.mp4')
     finally:
         for proc in processes:
@@ -172,7 +180,11 @@ def main():
     jobs=[]
     for index,lo in enumerate(range(start,end,90)):
         hi=min(end,lo+90)
-        if all((a.output/f'{name}-{index:03}.mp4').exists() for name in ('landscape','vertical')):continue
+        # A file left by a crashed render is not proof that it is complete.
+        # Reuse only if both formats decode in full; otherwise rebuild both.
+        if all(chunk_matches(a.output/f'{name}-{index:03}.mp4',hi-lo,size,DEFAULT_FPS)
+               for name,size in (('landscape',LANDSCAPE),('vertical',VERTICAL))):
+            continue
         jobs.append((str(a.plan.resolve()),str(a.output.resolve()),a.ffmpeg,index,lo,hi,DEFAULT_FPS,str(cache.resolve()),a.visual_mode))
     with ProcessPoolExecutor(max_workers=a.workers) as pool:
         for index in pool.map(render_chunk,jobs):print(f'Completed chunk {index}',flush=True)
