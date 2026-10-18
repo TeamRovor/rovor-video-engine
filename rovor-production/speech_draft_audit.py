@@ -49,7 +49,7 @@ def extract(whisper,duration):
         flags=[]
         if not words:
             flags.append("non-word-transcription")
-        if idx and begin < items[-1]["endSeconds"]-.08:
+        if items and begin < items[-1]["endSeconds"]-.08:
             flags.append("asr-timestamp-overlap")
         if end-begin>32:
             flags.append("segment-longer-than-32sec")
