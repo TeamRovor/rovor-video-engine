@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "category": "sound-effect",
+  "description": "REPLACE: describe a REAL sound in this file (e.g. one wooden click)",
+  "eventTags": ["browser-click", "interface", "subtle"],
+  "mood": "light",
+  "sourceSha256": null,
+  "license": {
+    "kind": "original-owned",
+    "ownerConfirmedRights": false,
+    "source": "REPLACE: recorded or created by Rovor Digital",
+    "evidence": ""
+  }
+}
