@@ -1,5 +1,6 @@
 mode=longform-final-integrity-test
-requireBothVideoFormats=true
-rejectBrokenPortrait=true
-preservePreviousReviewedExports=true
-sequence=46
+trueSourceAudioSeconds=70
+extractedExcerptSeconds=32
+sourceOffsetVerification=true
+previousExportPreservation=true
+sequence=47
