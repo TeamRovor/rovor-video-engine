@@ -47,13 +47,7 @@ class LayeredCartoonHead(CartoonHead):
         return np.asarray(sum(self.points[s]*v for s,v in zip(SYMBOLS,weights)),np.float32)
     def skin_target(self,weights,target):
         return target
-    def weights(self,weights,shape_weights=None):
-        w=np.asarray(weights,float);w=w/w.sum();target=self.target_points(w,shape_weights)
-        aperture=float(sum(v*(self.geometry[s][7]-self.geometry[s][6]) for s,v in zip(SYMBOLS,w)))
-        oral=self.oral_target(target,aperture)
-        face=warp(self.layers['face-skin'],POINTS['X'],self.skin_target(w,target))
-        cavity=warp(self.layers['cavity-outline'],POINTS['C'],oral,2)
-        teeth=warp(self.layers['upper-teeth'],POINTS['C'],oral,2)
+    def tongue_surface(self,w,oral,shape_weights=None):
         # One raised tongue drawing moves down/scales toward the floor for
         # vowels, and lifts for L. It never dissolves between two tongue images.
         tongue_art=self.layers['tongue-raised'].astype('float32').copy()
@@ -62,7 +56,15 @@ class LayeredCartoonHead(CartoonHead):
         move=np.array([[1,0,0],[0,sy,340*(1-sy)+11*(1-lift)]],np.float32)
         tongue_art=cv2.warpAffine(tongue_art,move,(SIZE,SIZE),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT)
         tongue_art=straight(tongue_art).astype('uint8')
-        tongue=warp(tongue_art,POINTS['H'],oral,2)
+        return warp(tongue_art,POINTS['H'],oral,2)
+    def weights(self,weights,shape_weights=None):
+        w=np.asarray(weights,float);w=w/w.sum();target=self.target_points(w,shape_weights)
+        aperture=float(sum(v*(self.geometry[s][7]-self.geometry[s][6]) for s,v in zip(SYMBOLS,w)))
+        oral=self.oral_target(target,aperture)
+        face=warp(self.layers['face-skin'],POINTS['X'],self.skin_target(w,target))
+        cavity=warp(self.layers['cavity-outline'],POINTS['C'],oral,2)
+        teeth=warp(self.layers['upper-teeth'],POINTS['C'],oral,2)
+        tongue=self.tongue_surface(w,oral,shape_weights)
         # Interior surfaces must stay behind the inked lip boundary.
         interior=cv2.erode(np.clip(cavity[:,:,3],0,255),np.ones((3,3),np.uint8))[:,:,None]/255
         teeth*=interior;tongue*=interior

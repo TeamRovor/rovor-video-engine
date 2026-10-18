@@ -17,6 +17,16 @@ All new modes are opt-in; original defaults remain baselines. Source artwork, re
 - Body: independently controlled arm/wrist chains. One index has three phalange controls, remaining thumb/three neighbors share a drawing. CompactIndexRig / CompactCartoonSceneBody scales resting bends and projected segment lengths to 70%, preserving full point pixels. Rest is still clenched, not a designed naturally relaxed hand.
 - Scene: 0–10.1875 s through favicon and its pause, two word-anchored gestures with anticipation/holds/follow-through/settle. Browser globe remains a missing-favicon example; official Rovor mark retained. No actual website update is demonstrated.
 
+## Latest: rooted tongue study
+
+Read CARTOON-EVAN-LINGUAL-STUDY.md. New versioned tongue-source (exact imagegen prompt/raw isolated art/reference) and tongue-rig (registered blade/root floor/hash manifest). LingualCartoonHead fixes the root, retracts/scales the smaller blade and places upper teeth in front. A blade-only prototype read like a hanging uvula and was rejected; current assembly uses the original broad tongue floor. Still animationReady=false.
+
+Important: existing acoustic H already survives energy attenuation; do not claim a new energy fix. Existing H controls lift and is shared by L/TH/DH. No timings/planner weights changed. One stylized clear-L blade does not resolve dark/coda L or dental contacts. H remains coupled to excessive jaw aperture; next work must separate tongue/dental contact from jaw opening, not suppress contact based on volume.
+
+LingualCartoonSceneBody / --lingual-tongue integrates on JoinedWristSceneBody. Old defaults unchanged, rejected contact-art candidate excluded. 33 affected head checks pass; seven actual-time default renders remain pixel exact after tongue-hook extraction. Four-layer oral construction PSD reopens with mean premultiplied error .002736/255; not a full/native Moho rig.
+
+Outputs ../../outputs/evan-cartoon-lingual: 2.5–4.5-second same-audio native-head before/after and branded scene, normal/quarter-speed (96/384 frames each), all decode cleanly; waveform/spectrogram/control plot, source/registered parts, PSD, selected stills and evidence. Full-resolution selected stills inspected; no continuous playback/listening acceptance. Smaller tongue/teeth overlap improved, but narrow lip pinching, rounded-vowel warp/ear-adjacent cheek defect and fast aperture excursions remain. Current source-space and native-head views are the final rooted prototype, not earlier thin-blade-only scratch.
+
 ## Latest: continuous right wrist
 
 Read CARTOON-EVAN-JOINED-WRIST.md. build_joined_wrist.py fits existing hidden-palm wrist width/center to the original forearm, then blends source pixels locally (-36..-12 along wrist axis; fit released over 0..40). Remote forearm and distal palm pixels remain exact. No new generated art or timing. Versioned source hashes/profile in wrist-rig/manifest.json.
@@ -40,7 +50,7 @@ Two-pass PocketSphinx word/phone alignment: 66 words/248 phones, 39-phone catalo
 ## Next concrete work / limits
 
 1. Design a softer palm/neighbor-finger pose and clean wrist/knuckle source linework. Keep the continuous wrist skin and independent index attachment; do not restore mismatched cut edges.
-2. Improve full lower-mouth contours and designed contact-to-vowel/FV/L tongue construction. Prefer artist-designed anatomical correspondence over more generated full-head variants. Preserve selected proportions.
+2. PRIORITY: decouple tongue/dental contact from jaw opening, preserving existing audio/phone evidence; then redraw full lower-mouth contours and contact-to-vowel/FV construction. Prefer artist-designed anatomical correspondence over generated full-head variants. Preserve selected proportions.
 3. Critically review acting rhythm, then clean shoulder construction. Legs remain static; no eye/blink rig exists behind glasses. A human character artist/animator is still needed for final anatomy/performance approval. CPU raster rendering slows iteration; hardware cannot supply missing drawings. Full polished milestone remains incomplete.
 
 ## Runtime
