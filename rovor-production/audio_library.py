@@ -49,6 +49,7 @@ def init_library(root=ROOT):
     for source_name,destination_name in (
         ("audio-library-sfx-sidecar.TEMPLATE.json", "_SFX-SIDECAR-TEMPLATE.json"),
         ("audio-library-music-sidecar.TEMPLATE.json", "_MUSIC-SIDECAR-TEMPLATE.json"),
+        ("free_music_sourcing_candidates.json", "_FREE-MUSIC-CANDIDATES-REVIEW.json"),
     ):
         source=package/source_name
         dest=root/destination_name
