@@ -172,7 +172,14 @@ def graphs(wav, out):
             "spectrogramCount": math.ceil(len(x) / (rate * 60))}
 
 
-def transcribe(wav, out):
+def decode_duration(wav):
+    with wave.open(str(wav), "rb") as f:
+        if (f.getframerate(), f.getnchannels(), f.getsampwidth()) != (16000,1,2):
+            raise ValueError("Source WAV must be 16khz mono PCM16")
+        return f.getnframes()/f.getframerate()
+
+
+def transcribe(wav, out, chapters=None):
     cfg = tool_config()
     if not cfg:
         return {"status": "tool-unavailable", "reason": "No matching configured local Whisper executable and model"}
@@ -180,8 +187,16 @@ def transcribe(wav, out):
     prefix = out / "whisper-draft"
     expected = out / "whisper-draft.json"
     if not expected.is_file():
-        subprocess.run([exe, "-m", cfg["model"], "-f", str(wav),
-                        "-l", "en", "-oj", "-of", str(prefix)], check=True, timeout=7200)
+        # Never echo private Evan narration/transcript into GitHub action logs.
+        # Keep local model diagnostics on the user's own Mac for troubleshooting.
+        command = [exe, "-m", cfg["model"], "-f", str(wav),
+                   "-l", "en", "-oj", "-of", str(prefix)]
+        with (out / "whisper-run-local-private.log").open("w") as private_log:
+            run = subprocess.run(command, stdout=private_log, stderr=subprocess.STDOUT,
+                                 timeout=7200, check=False)
+        if run.returncode:
+            raise RuntimeError("Local Whisper failed with exit code " + str(run.returncode) +
+                               "; diagnostic output stays on Mac")
     if not expected.is_file():
         return {"status": "tool-output-missing", "reason": "Whisper did not create transcript JSON"}
     result = json.loads(expected.read_text())
@@ -191,8 +206,16 @@ def transcribe(wav, out):
         if text:
             lines.append(text)
     (out / "transcript-DRAFT.txt").write_text(" ".join(lines) + "\n")
+    from speech_draft_audit import audit
+    evidence = out / "waveform-10ms.csv"
+    review = audit(result, decode_duration(wav), chapters,
+                   evidence if evidence.is_file() else None)
+    write_json(out / "transcript-timing-REVIEW.json", review)
     return {"status": "machine-draft-requires-human-correction",
             "segmentCount": len(lines), "transcript": "transcript-DRAFT.txt",
+            "timingAudit": "transcript-timing-REVIEW.json",
+            "reviewFlags": review["reviewFlagsCount"],
+            "chapterBoundaryConcerns": len(review["chapterBoundaryConcerns"]),
             "phonemeBoundariesCertified": False}
 
 
@@ -219,6 +242,7 @@ def analyze(selected_id, with_asr=True):
         evidence = graphs(wav, target)
     else:
         evidence = {"status": "existing graphs preserved"}
+    chapters = None
     if duration >= 30.0:
         from longform_chapters import make_plan
         chapters = make_plan(duration, target / "waveform-10ms.csv", target / "chapters-PREPRODUCTION.json")
@@ -227,7 +251,7 @@ def analyze(selected_id, with_asr=True):
                          "editorialStatus": "UNAPPROVED-REQUIRES-REAL-SCENES"}
     else:
         chapter_state = {"status": "INELIGIBLE-SHORTER-THAN-30-SECONDS"}
-    transcription = transcribe(wav, target) if with_asr else {"status": "not-requested"}
+    transcription = transcribe(wav, target, chapters) if with_asr else {"status": "not-requested"}
     manifest = {
         "audioId": selected_id,
         "audioSha256": sha,
