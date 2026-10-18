@@ -1,4 +1,5 @@
 mode=cinematic-scene-director-test
-physicalSfxTiming=must-match-actual-illustrated-motion
-sfxReviewNotPublishing=true
-sequence=33
+originalPainting=preserved
+synchronizedSfx=physicalOnly
+safeCachePolicy=longform-no-png-disk
+sequence=34
