@@ -183,13 +183,15 @@ def main():
                    help='Authored 60fps original Evan FK controls, not automatic acting')
     p.add_argument('--director-json',type=Path,
                    help='Verified original 2D assets and scene animation tracks')
+    p.add_argument('--sound-cues',type=Path,
+                   help='Review-only sound design linked to actual illustrated moving objects')
     p.add_argument('--art-registry',type=Path,
                    help='Manifest of actual SHA-verified Rovor original scene art')
     a=p.parse_args()
     if a.visual_mode=='directed' and not (a.director_json and a.art_registry and a.performance_json):
         p.error('Directed scenes require original art registry, scenes and authored FK rig controls')
-    if a.visual_mode!='directed' and (a.director_json or a.art_registry):
-        p.error('Director/asset flags only apply to directed mode')
+    if a.visual_mode!='directed' and (a.director_json or a.art_registry or a.sound_cues):
+        p.error('Director, art and sound cue flags only apply to directed mode')
     audio_match=verify_audio_plan(json.loads(a.plan.read_text()),a.wav)
     with wave.open(str(a.wav)) as w:audio_duration=w.getnframes()/w.getframerate()
     duration=a.duration if a.duration is not None else audio_duration-a.start_time
@@ -200,6 +202,13 @@ def main():
         planned=check(scenes,assets,a.art_registry.parent)
         if abs(planned['durationSec']-audio_duration)>.025:
             p.error('Directed scene timeline does not cover entire unchanged audio')
+        if a.sound_cues:
+            from visible_sound_sync import verify
+            performance=json.loads(a.performance_json.read_text())
+            cues=json.loads(a.sound_cues.read_text())
+            cue_status=verify(scenes,assets,a.art_registry.parent,cues,performance,prepared=planned)
+            print('VERIFIED_PHYSICAL_SFX_CUES='+str(cue_status['verifiedEffects']))
+            print('MUSIC_MIXED=NO')
     if not math.isfinite(a.start_time) or not 0<=a.start_time<audio_duration:p.error('Invalid start time')
     if duration<=0 or a.start_time+duration>audio_duration+1e-8:p.error('Review interval exceeds recording')
     start=round(a.start_time*DEFAULT_FPS);end=start+frame_count(duration)
@@ -251,6 +260,11 @@ def main():
         profile['sceneDirectionSha256']=director_hash
         profile['sourceArtRegistrySha256']=registry_hash
         profile['sourceSceneArtPixelsSha256']=asset_hash.hexdigest()
+        profile['soundtrackMixed']=False
+        if a.sound_cues:
+            profile['physicalCueSheetSha256']=hashlib.sha256(a.sound_cues.read_bytes()).hexdigest()
+            profile['physicalCueTimingVerified']=cue_status['verifiedEffects']
+            profile['musicPublishingApproved']=False
     if a.performance_json:
         profile['actorPerformanceSha256']=hashlib.sha256(a.performance_json.read_bytes()).hexdigest()
     manifest=a.output/'profile.json'
