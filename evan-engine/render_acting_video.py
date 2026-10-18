@@ -76,7 +76,7 @@ def actor_controls_fingerprint(source_text):
 
 def render_chunk(job):
     cv2.setNumThreads(1)
-    plan_path,root,ffmpeg,index,start,end,fps,cache,visual_mode=job
+    plan_path,root,ffmpeg,index,start,end,fps,cache,visual_mode,performance_path=job
     root=Path(root);plan=json.loads(Path(plan_path).read_text())
     cache=Path(cache);hits=0
     if visual_mode=='storyboard':
@@ -88,6 +88,11 @@ def render_chunk(job):
     else:
         factory=FaviconScene
     scenes=[factory(plan,False),factory(plan,True)]
+    if performance_path:
+        from performance_tracks import EvanPerformance
+        custom=EvanPerformance(json.loads(Path(performance_path).read_text()))
+    else:
+        custom=None
     names=('landscape','vertical');processes=[]
     try:
         for name,scene in zip(names,scenes):
@@ -105,7 +110,9 @@ def render_chunk(job):
                         figure=image.copy();hits+=1
                 except (OSError,ValueError):figure=None
             if figure is None:
-                if visual_mode=='globe-action':
+                if custom is not None:
+                    controls=custom.at_frame(i)
+                elif visual_mode=='globe-action':
                     from evan_globe_action import globe_action_controls
                     controls=globe_action_controls(t)
                 else:
@@ -142,6 +149,8 @@ def main():
     p.add_argument('--duration',type=float);p.add_argument('--workers',type=int,choices=(1,2,3,4),default=2)
     p.add_argument('--visual-mode',choices=('reference','storyboard','globe-action'),default='reference',
                    help='Opt-in illustrated six-shot direction; baseline remains unchanged')
+    p.add_argument('--performance-json',type=Path,
+                   help='Authored 60fps original Evan FK controls, not automatic acting')
     a=p.parse_args()
     audio_match=verify_audio_plan(json.loads(a.plan.read_text()),a.wav)
     with wave.open(str(a.wav)) as w:audio_duration=w.getnframes()/w.getframerate()
@@ -149,8 +158,19 @@ def main():
     if not math.isfinite(a.start_time) or not 0<=a.start_time<audio_duration:p.error('Invalid start time')
     if duration<=0 or a.start_time+duration>audio_duration+1e-8:p.error('Review interval exceeds recording')
     start=round(a.start_time*DEFAULT_FPS);end=start+frame_count(duration)
+    if a.performance_json:
+        from performance_tracks import EvanPerformance
+        actor=EvanPerformance(json.loads(a.performance_json.read_text()))
+        if abs(actor.duration-audio_duration)>.025 or end>actor.end:
+            p.error('Director acting controls do not match complete original narration')
     a.output.mkdir(parents=True,exist_ok=True)
     cache_key=body_cache_key(a.plan)
+    if a.performance_json:
+        digest=hashlib.sha256()
+        digest.update(cache_key.encode())
+        digest.update(a.performance_json.read_bytes())
+        digest.update((Path(__file__).parent/'performance_tracks.py').read_bytes())
+        cache_key=digest.hexdigest()
     if a.visual_mode=='globe-action':
         digest=hashlib.sha256()
         digest.update(b'evan-globe-action-controls-v1')
@@ -174,6 +194,8 @@ def main():
              'audioMatch':audio_match,'bodyCacheKey':cache_key}
     if a.visual_mode!='reference':
         profile['visualMode']=a.visual_mode
+    if a.performance_json:
+        profile['actorPerformanceSha256']=hashlib.sha256(a.performance_json.read_bytes()).hexdigest()
     manifest=a.output/'profile.json'
     if manifest.exists() and json.loads(manifest.read_text())!=profile:p.error('Output belongs to another source/profile')
     manifest.write_text(json.dumps(profile,indent=2)+'\n')
@@ -185,7 +207,7 @@ def main():
         if all(chunk_matches(a.output/f'{name}-{index:03}.mp4',hi-lo,size,DEFAULT_FPS)
                for name,size in (('landscape',LANDSCAPE),('vertical',VERTICAL))):
             continue
-        jobs.append((str(a.plan.resolve()),str(a.output.resolve()),a.ffmpeg,index,lo,hi,DEFAULT_FPS,str(cache.resolve()),a.visual_mode))
+        jobs.append((str(a.plan.resolve()),str(a.output.resolve()),a.ffmpeg,index,lo,hi,DEFAULT_FPS,str(cache.resolve()),a.visual_mode,str(a.performance_json.resolve()) if a.performance_json else ''))
     with ProcessPoolExecutor(max_workers=a.workers) as pool:
         for index in pool.map(render_chunk,jobs):print(f'Completed chunk {index}',flush=True)
     chunks=math.ceil((end-start)/90)
