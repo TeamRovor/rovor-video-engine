@@ -1,0 +1,12 @@
+{
+  "kind": "rovor-layered-cartoon-pose-package-v1",
+  "scene": "painting-explainer-2026-10-06 / wall-contact",
+  "style": "original-2d-illustration",
+  "characterRole": "secondary-painter",
+  "sourceViews": ["front-blockout"],
+  "requiredPoseIds": ["anticipation", "low_contact", "midstroke", "high_reach", "overlap_pass", "release", "settle"],
+  "poses": {},
+  "layouts": {"landscape": {"independentShotComposition": false},"portrait":{"independentShotComposition":false}},
+  "humanVisualReview": {"artApproved": false, "performanceInMotionApproved": false, "reviewerEvidence": ""},
+  "note": "V13–V14 mechanical pilot rejected. This manifest intentionally blocks final release until original professionally drawn layers and human artistic review exist."
+}
