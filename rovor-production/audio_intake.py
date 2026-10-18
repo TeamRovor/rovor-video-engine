@@ -223,6 +223,8 @@ def analyze(selected_id, with_asr=True):
         "audioId": selected_id,
         "audioSha256": sha,
         "durationSec": duration,
+        "minimumUserVideoSeconds": 30.0,
+        "eligibleForProduction": duration >= 30.0,
         "sourceType": row["source"],
         "recordingName": row["name"],
         "sampleRate": 16000,
@@ -235,7 +237,8 @@ def analyze(selected_id, with_asr=True):
         "notes": ["Machine transcript is not authoritative.",
                   "English pronunciation and phoneme timing require verified script and acoustic alignment.",
                   "A waveform alone cannot identify English words or phonemes.",
-                  "This intake does not claim visual or artistic approval."]
+                  "This intake does not claim visual or artistic approval.",
+                  "Audio shorter than 30 seconds is development-only; do not pad or loop for production."]
     }
     write_json(target / "analysis.json", manifest)
     print("ROVOR_AUDIO_ANALYSIS=COMPLETE")
