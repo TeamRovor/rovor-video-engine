@@ -1,5 +1,4 @@
 mode=cinematic-scene-director-test
-originalPainting=preserved
-synchronizedSfx=physicalOnly
-safeCachePolicy=longform-no-png-disk
-sequence=34
+noOutputBefore40secPreflight=true
+originalArtMusicSfxStageGated=true
+sequence=35
