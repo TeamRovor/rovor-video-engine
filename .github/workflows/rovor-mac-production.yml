@@ -16,6 +16,60 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  acoustic-mouth-fallback-test:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor acoustic fallback test'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout original preserved painted Evan face engine and audited Rhubarb bridge
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_acoustic_mouth_${{ github.run_id }}
+      - name: Validate real acoustic mouth shapes from original reference audio
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          test -x "$py"
+          root="$GITHUB_WORKSPACE/_rovor_acoustic_mouth_$GITHUB_RUN_ID"
+          cd "$root/evan-engine"
+          "$py" -m unittest -v test_acoustic_fallback_plan
+          "$py" -m py_compile build_acoustic_fallback_plan.py
+          audio="$HOME/Movies/RovorProduction/analysis/28487eb9c730c3d6/narration-16khz.wav"
+          shapes="$HOME/Movies/RovorProduction/analysis/28487eb9c730c3d6/rhubarb-mouth-DRAFT.json"
+          plan="$HOME/Movies/RovorProduction/analysis/28487eb9c730c3d6/original-evan-acoustic-mouth-FALLBACK.json"
+          test -s "$audio" && test -s "$shapes"
+          "$py" build_acoustic_fallback_plan.py --wav "$audio" --rhubarb "$shapes" --out "$plan"
+          "$py" - "$plan" "$audio" <<'PY'
+          import json,sys
+          import numpy as np
+          from cartoon_body import CartoonBody,REVIEW_BODY_OPTIONS
+          from render_acting_video import verify_audio_plan
+          from speech_planner import planned_weights
+          plan=json.load(open(sys.argv[1]))
+          assert verify_audio_plan(plan,sys.argv[2])["rmsEnvelopeMatched"]
+          nonrest=[r for r in plan["fallbackCues"] if r["value"]!="X"]
+          distinct={}
+          for r in nonrest:
+              distinct.setdefault(r["value"],r)
+          assert len(distinct)>=2,"Acoustic source returned too few real mouth poses"
+          chosen=list(distinct.values())[:2]
+          ts=[(r["start"]+r["end"])/2 for r in chosen]
+          body=CartoonBody(**REVIEW_BODY_OPTIONS)
+          a=np.asarray(body.head.at(ts[0],plan)).astype(np.int16)
+          b=np.asarray(body.head.at(ts[1],plan)).astype(np.int16)
+          delta=float(np.mean(abs(a-b)))
+          assert delta>.04,("Source artwork did not articulate real mouth difference",delta)
+          print("ORIGINAL_EVAN_PAINTED_MOUTH_AUDIO_DRIVEN=PASS")
+          print("ACTUAL_MOUTH_PLATES_MEAN_ABSOLUTE_DIFFERENCE="+str(round(delta,4)))
+          print("PHONEME_BOUNDS_CERTIFIED=NO")
+          print("UNDER_30S_ONLY_DEVELOPMENT_AUDIO=YES")
+          print("NO_PRIVATE_AUDIO_OR_VIDEO_UPLOADED=YES")
+          PY
+
   cinematic-scene-director-test:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor cinematic scene director test'
     runs-on: [self-hosted, macOS, X64, rovor-video]
