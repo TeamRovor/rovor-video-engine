@@ -1,0 +1,553 @@
+{
+  "schemaVersion": 1,
+  "title": "Rovor Digital — Show What Customers Cannot See",
+  "source": "User-provided original 2026-10-06 ElevenLabs Evan narration; first 4m23 film",
+  "durationSeconds": 262.687375,
+  "mp3Sha256": "346c9ea17f2ca4a7dea5b19248e6cddc113ae1a4e27b37b31049567ed2e47e45",
+  "sourceMp3StoredInRepository": false,
+  "fps": 60,
+  "frameCount": 15762,
+  "portrait": [
+    1080,
+    1920
+  ],
+  "landscape": [
+    1920,
+    1080
+  ],
+  "chapters": [
+    {
+      "chapter": 1,
+      "title": "Two rooms, different work",
+      "startFrame": 0,
+      "endFrameExclusive": 1752,
+      "firstShot": 1,
+      "lastShot": 5
+    },
+    {
+      "chapter": 2,
+      "title": "What does the customer compare?",
+      "startFrame": 1752,
+      "endFrameExclusive": 3588,
+      "firstShot": 6,
+      "lastShot": 10
+    },
+    {
+      "chapter": 3,
+      "title": "Experienced painter versus customer",
+      "startFrame": 3588,
+      "endFrameExclusive": 5376,
+      "firstShot": 11,
+      "lastShot": 15
+    },
+    {
+      "chapter": 4,
+      "title": "Reveal hidden stages",
+      "startFrame": 5376,
+      "endFrameExclusive": 7200,
+      "firstShot": 16,
+      "lastShot": 20
+    },
+    {
+      "chapter": 5,
+      "title": "Make process specific",
+      "startFrame": 7200,
+      "endFrameExclusive": 8688,
+      "firstShot": 21,
+      "lastShot": 25
+    },
+    {
+      "chapter": 6,
+      "title": "Explain why details matter",
+      "startFrame": 8688,
+      "endFrameExclusive": 10410,
+      "firstShot": 26,
+      "lastShot": 30
+    },
+    {
+      "chapter": 7,
+      "title": "Connect details to buyer value",
+      "startFrame": 10410,
+      "endFrameExclusive": 12054,
+      "firstShot": 31,
+      "lastShot": 35
+    },
+    {
+      "chapter": 8,
+      "title": "Fair comparison of quotes",
+      "startFrame": 12054,
+      "endFrameExclusive": 13956,
+      "firstShot": 36,
+      "lastShot": 40
+    },
+    {
+      "chapter": 9,
+      "title": "Actionable project story & Rovor close",
+      "startFrame": 13956,
+      "endFrameExclusive": 15762,
+      "firstShot": 41,
+      "lastShot": 45
+    }
+  ],
+  "shots": [
+    {
+      "id": "S01",
+      "slug": "two_painters_intro",
+      "chapter": 1,
+      "startFrame": 0,
+      "endFrameExclusive": 350,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S02",
+      "slug": "matching_finished_rooms",
+      "chapter": 1,
+      "startFrame": 350,
+      "endFrameExclusive": 701,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S03",
+      "slug": "careful_preparation",
+      "chapter": 1,
+      "startFrame": 701,
+      "endFrameExclusive": 1051,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S04",
+      "slug": "rushed_preparation",
+      "chapter": 1,
+      "startFrame": 1051,
+      "endFrameExclusive": 1402,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S05",
+      "slug": "photo_looks_identical",
+      "chapter": 1,
+      "startFrame": 1402,
+      "endFrameExclusive": 1752,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S06",
+      "slug": "two_price_quotes",
+      "chapter": 2,
+      "startFrame": 1752,
+      "endFrameExclusive": 2119,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S07",
+      "slug": "quality_free_estimate_slogans",
+      "chapter": 2,
+      "startFrame": 2119,
+      "endFrameExclusive": 2486,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S08",
+      "slug": "comparison_question",
+      "chapter": 2,
+      "startFrame": 2486,
+      "endFrameExclusive": 2854,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S09",
+      "slug": "hidden_expertise_problem",
+      "chapter": 2,
+      "startFrame": 2854,
+      "endFrameExclusive": 3221,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S10",
+      "slug": "business_owner_perspective",
+      "chapter": 2,
+      "startFrame": 3221,
+      "endFrameExclusive": 3588,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S11",
+      "slug": "painter_sees_details",
+      "chapter": 3,
+      "startFrame": 3588,
+      "endFrameExclusive": 3946,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S12",
+      "slug": "customer_sees_blue",
+      "chapter": 3,
+      "startFrame": 3946,
+      "endFrameExclusive": 4303,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S13",
+      "slug": "different_knowledge_same_job",
+      "chapter": 3,
+      "startFrame": 4303,
+      "endFrameExclusive": 4661,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S14",
+      "slug": "website_forgets_context",
+      "chapter": 3,
+      "startFrame": 4661,
+      "endFrameExclusive": 5018,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S15",
+      "slug": "professional_painting_services",
+      "chapter": 3,
+      "startFrame": 5018,
+      "endFrameExclusive": 5376,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S16",
+      "slug": "show_unseen_process",
+      "chapter": 4,
+      "startFrame": 5376,
+      "endFrameExclusive": 5741,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S17",
+      "slug": "covering_furniture",
+      "chapter": 4,
+      "startFrame": 5741,
+      "endFrameExclusive": 6106,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S18",
+      "slug": "repair_wall",
+      "chapter": 4,
+      "startFrame": 6106,
+      "endFrameExclusive": 6470,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S19",
+      "slug": "finished_result",
+      "chapter": 4,
+      "startFrame": 6470,
+      "endFrameExclusive": 6835,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S20",
+      "slug": "explain_each_stage",
+      "chapter": 4,
+      "startFrame": 6835,
+      "endFrameExclusive": 7200,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S21",
+      "slug": "protection_value",
+      "chapter": 5,
+      "startFrame": 7200,
+      "endFrameExclusive": 7498,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S22",
+      "slug": "surface_preparation_value",
+      "chapter": 5,
+      "startFrame": 7498,
+      "endFrameExclusive": 7795,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S23",
+      "slug": "final_walkthrough",
+      "chapter": 5,
+      "startFrame": 7795,
+      "endFrameExclusive": 8093,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S24",
+      "slug": "specific_evaluation",
+      "chapter": 5,
+      "startFrame": 8093,
+      "endFrameExclusive": 8390,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S25",
+      "slug": "select_details",
+      "chapter": 5,
+      "startFrame": 8390,
+      "endFrameExclusive": 8688,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S26",
+      "slug": "mechanic_list_parts",
+      "chapter": 6,
+      "startFrame": 8688,
+      "endFrameExclusive": 9032,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S27",
+      "slug": "what_and_why",
+      "chapter": 6,
+      "startFrame": 9032,
+      "endFrameExclusive": 9377,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S28",
+      "slug": "technique_without_context",
+      "chapter": 6,
+      "startFrame": 9377,
+      "endFrameExclusive": 9721,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S29",
+      "slug": "buyer_simple_question",
+      "chapter": 6,
+      "startFrame": 9721,
+      "endFrameExclusive": 10066,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S30",
+      "slug": "responsive_phone_demo",
+      "chapter": 6,
+      "startFrame": 10066,
+      "endFrameExclusive": 10410,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S31",
+      "slug": "contact_form_on_phone",
+      "chapter": 7,
+      "startFrame": 10410,
+      "endFrameExclusive": 10739,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S32",
+      "slug": "technical_explanation_optional",
+      "chapter": 7,
+      "startFrame": 10739,
+      "endFrameExclusive": 11068,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S33",
+      "slug": "scope_comparison_third_improvement",
+      "chapter": 7,
+      "startFrame": 11068,
+      "endFrameExclusive": 11396,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S34",
+      "slug": "not_equivalent_prices",
+      "chapter": 7,
+      "startFrame": 11396,
+      "endFrameExclusive": 11725,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S35",
+      "slug": "the_question_is_scope",
+      "chapter": 7,
+      "startFrame": 11725,
+      "endFrameExclusive": 12054,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S36",
+      "slug": "scope_checklist",
+      "chapter": 8,
+      "startFrame": 12054,
+      "endFrameExclusive": 12434,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S37",
+      "slug": "no_forced_winner",
+      "chapter": 8,
+      "startFrame": 12434,
+      "endFrameExclusive": 12815,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S38",
+      "slug": "meaningful_value",
+      "chapter": 8,
+      "startFrame": 12815,
+      "endFrameExclusive": 13195,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S39",
+      "slug": "quality_claim_limit",
+      "chapter": 8,
+      "startFrame": 13195,
+      "endFrameExclusive": 13576,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S40",
+      "slug": "facts_have_to_match_work",
+      "chapter": 8,
+      "startFrame": 13576,
+      "endFrameExclusive": 13956,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S41",
+      "slug": "try_one_completed_job",
+      "chapter": 9,
+      "startFrame": 13956,
+      "endFrameExclusive": 14317,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S42",
+      "slug": "three_overlooked_details",
+      "chapter": 9,
+      "startFrame": 14317,
+      "endFrameExclusive": 14678,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S43",
+      "slug": "why_each_matters",
+      "chapter": 9,
+      "startFrame": 14678,
+      "endFrameExclusive": 15040,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S44",
+      "slug": "where_to_share_it",
+      "chapter": 9,
+      "startFrame": 15040,
+      "endFrameExclusive": 15401,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    },
+    {
+      "id": "S45",
+      "slug": "rovor_brand_closing",
+      "chapter": 9,
+      "startFrame": 15401,
+      "endFrameExclusive": 15762,
+      "wordTimingVerified": false,
+      "originalIllustrationsFinished": false,
+      "rendered": false
+    }
+  ],
+  "brandAudioReview": "The supplied transcript ends with Rover Digital and Rover Digital dot com; intended Rovor Digital / rovordigital.com. Verify audio and obtain corrected narration before publishing; do not alter original.",
+  "creativeRestrictions": [
+    "Only original Evan layered rig, dark tousled hair, sunglasses, navy shirt, black tie",
+    "Painter and mechanic are hypothetical educational characters, never testimonials",
+    "Every effect must be tied to actually illustrated physical events",
+    "One source MP3 unchanged, no filler or invented spoken words",
+    "All source-specific assets, camera staging, words and phonemes require review"
+  ],
+  "productionStatus": "SCENE-SPECIFIC PREPRODUCTION. No painted scenes finished, no complete film rendered, no phone-level forced alignment."
+}
