@@ -147,7 +147,7 @@ def _correlate_window(reference,actual,limit):
     return {"lagSamples":lag,"correlation":round(correlation,6)}
 
 
-def _distributed_audio_checks(ffmpeg,video,wav,voice_duration):
+def _distributed_audio_checks(ffmpeg,video,wav,voice_duration,source_start=0.):
     positions=[max(0.,(voice_duration-1.35)*i/11) for i in range(12)]
     tested=[]
     quiet=0
@@ -155,7 +155,7 @@ def _distributed_audio_checks(ffmpeg,video,wav,voice_duration):
         window=min(1.35,voice_duration-at)
         if window<1.0:
             continue
-        reference=_decode_window(ffmpeg,wav,at,window)
+        reference=_decode_window(ffmpeg,wav,source_start+at,window)
         actual=_decode_window(ffmpeg,video,at,window)
         match=_correlate_window(reference,actual,round(SAMPLE_RATE*MAX_AUDIO_LAG_SEC))
         if match is None:
@@ -171,21 +171,34 @@ def _distributed_audio_checks(ffmpeg,video,wav,voice_duration):
     return tested,quiet
 
 
-def verify(ffmpeg,video,wav,size=(1920,1080),minimum_seconds=30):
+def verify(ffmpeg,video,wav,size=(1920,1080),minimum_seconds=30,
+           start_frame=0,end_frame=None):
     video=Path(video)
     if video.is_symlink() or not video.is_file() or not video.stat().st_size:
         raise ValueError("Missing actual rendered video")
     if size not in ((1920,1080),(1080,1920),(320,180)):
         raise ValueError("Unexpected unapproved canvas size")
-    source_samples,voice_duration=duration_wav(wav)
+    source_samples,source_duration=duration_wav(wav)
+    total_frames=math.ceil(source_duration*FPS-1e-9)
+    if end_frame is None:
+        end_frame=total_frames
+    if (isinstance(start_frame,bool) or not isinstance(start_frame,int) or
+        isinstance(end_frame,bool) or not isinstance(end_frame,int) or
+        start_frame<0 or end_frame>total_frames or end_frame<=start_frame):
+        raise ValueError("Narration clip must be a contiguous existing source frame interval")
+    first_sample=round(start_frame*SAMPLE_RATE/FPS)
+    last_sample=min(source_samples,round(end_frame*SAMPLE_RATE/FPS))
+    expected_audio_samples=last_sample-first_sample
+    voice_duration=expected_audio_samples/SAMPLE_RATE
     if voice_duration<minimum_seconds:
         raise ValueError("Video shorter than user's 30-second minimum")
-    expected=math.ceil(voice_duration*FPS-1e-9)
+    expected=end_frame-start_frame
     frames=_read_video_frames(ffmpeg,video,size,expected)
     audio_samples=_audio_length_samples(ffmpeg,video)
-    if abs(audio_samples-source_samples)>AUDIO_TOLERANCE_SEC*SAMPLE_RATE:
-        raise ValueError(f"Final audio duration differs from untouched narration by {(audio_samples-source_samples)/SAMPLE_RATE:.4f}s")
-    checks,silent=_distributed_audio_checks(ffmpeg,video,wav,voice_duration)
+    if abs(audio_samples-expected_audio_samples)>AUDIO_TOLERANCE_SEC*SAMPLE_RATE:
+        raise ValueError(f"Final audio duration differs from untouched narration segment by {(audio_samples-expected_audio_samples)/SAMPLE_RATE:.4f}s")
+    checks,silent=_distributed_audio_checks(ffmpeg,video,wav,voice_duration,
+                                             source_start=start_frame/FPS)
     h=hashlib.sha256()
     with video.open("rb") as f:
         for piece in iter(lambda:f.read(2**20),b""):
@@ -194,6 +207,9 @@ def verify(ffmpeg,video,wav,size=(1920,1080),minimum_seconds=30):
         "status":"FULL_VIDEO_TECHNICAL_INTEGRITY_VERIFIED_NOT_ARTISTIC_APPROVAL",
         "frameRate":FPS,**frames,
         "sourceAudioSeconds":round(voice_duration,6),
+        "sourceNarrationFullSeconds":round(source_duration,6),
+        "selectedStartFrame":start_frame,
+        "selectedEndFrameExclusive":end_frame,
         "finalAudioSeconds":round(audio_samples/SAMPLE_RATE,6),
         "sourceAudioPreserved":True,"voiceWindowsVerified":len(checks),
         "quietWindowsNotUsedAsProof":silent,
