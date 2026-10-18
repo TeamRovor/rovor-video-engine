@@ -16,6 +16,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  audio-mix-selftest:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor audio mix selftest'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout offline mixer and its synthetic fixtures only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_audio_mix_${{ github.run_id }}
+          sparse-checkout: |
+            rovor-production
+      - name: Verify source narration preservation and controlled score/event mix
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          test -x "$py"
+          cd "$GITHUB_WORKSPACE/_rovor_audio_mix_$GITHUB_RUN_ID/rovor-production"
+          "$py" -m py_compile mix_audio_review.py test_mix_audio_review.py
+          "$py" -m unittest test_mix_audio_review -v
+          echo "SOURCE_NARRATION_WRITES=NONE"
+          echo "LONGFORM_MIXER_SMOKE=PASS"
+          echo "NO_PRIVATE_NARRATION_UPLOADED=YES"
+          echo "ARTISTIC_MIX_APPROVAL=NO"
+
   music-score-build:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor music score build'
     runs-on: [self-hosted, macOS, X64, rovor-video]
