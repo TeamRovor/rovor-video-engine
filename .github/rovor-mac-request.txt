@@ -1,5 +1,4 @@
 mode=cinematic-scene-director-test
-independentFraming=required
-complexPropReturnPath=allowed
-cacheOriginalArtPerWorker=true
-sequence=32
+physicalSfxTiming=must-match-actual-illustrated-motion
+sfxReviewNotPublishing=true
+sequence=33
