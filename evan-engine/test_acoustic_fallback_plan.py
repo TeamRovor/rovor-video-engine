@@ -65,8 +65,8 @@ class AcousticFallbackPlanTests(unittest.TestCase):
         self.assertFalse(plan["isProductionEligibleByDuration"])
     def test_audio_renamed_or_changed_is_not_same_shot(self):
         a=build(self.wav,cues())
-        with wave.open(str(self.wav),"r+b") as f:
-            f.setpos(3);f.writeframes(b"\0\0"*100)
+        with self.wav.open("r+b") as f:
+            f.seek(128);f.write(b"\0\0"*100)
         b=build(self.wav,cues())
         self.assertNotEqual(a["sourceNarrationSha256"],b["sourceNarrationSha256"])
     def test_invalid_cues_do_not_make_fake_speech(self):
