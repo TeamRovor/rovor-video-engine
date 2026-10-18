@@ -713,7 +713,12 @@ jobs:
             rovor-production/test_speech_draft_audit.py
             rovor-production/lip_cue_audit.py
             rovor-production/test_lip_cue_audit.py
+            rovor-production/test_audio_intake_fallback_integration.py
             rovor-production/longform_chapters.py
+            evan-engine/build_acoustic_fallback_plan.py
+            evan-engine/speech_planner.py
+            evan-engine/painted_timing.py
+            evan-engine/english_articulation.py
             .github/rovor-mac-request.txt
           sparse-checkout-cone-mode: false
       - name: Analyze only allowlisted recording ID
@@ -725,7 +730,7 @@ jobs:
           py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
           test -x "$py"
           "$py" -m py_compile rovor-production/audio_intake.py rovor-production/speech_draft_audit.py rovor-production/lip_cue_audit.py rovor-production/longform_chapters.py
-          (cd rovor-production && "$py" -m unittest -v test_speech_draft_audit test_lip_cue_audit)
+          (cd rovor-production && "$py" -m unittest -v test_speech_draft_audit test_lip_cue_audit test_audio_intake_fallback_integration)
           asr="$(sed -n 's/^asr=//p' .github/rovor-mac-request.txt | head -1)"
           case "$asr" in
             off) "$py" rovor-production/audio_intake.py analyze --id "$source_id" --no-asr ;;
@@ -735,6 +740,22 @@ jobs:
           echo 'NO_PRIVATE_MEDIA_UPLOADED=YES'
           echo 'WHISPER_WORDS_REMAIN_DRAFT=YES'
           echo 'PRIVATE_TRANSCRIPT_NOT_EMITTED_TO_LOG=YES'
+          "$py" - <<'PY'
+          import sys,json
+          sys.path.insert(0,'rovor-production')
+          from audio_intake import collect,OUT,digest
+          row=json.load(open('.github/rovor-mac-request.txt')) if False else None
+          audio_id=[x.split('=',1)[1].strip() for x in open('.github/rovor-mac-request.txt') if x.startswith('audio_id=')][0]
+          items=collect()
+          if audio_id in items:
+              target=OUT/'analysis'/digest(items[audio_id]['_path'])[:16]/'analysis.json'
+              analysis=json.loads(target.read_text())
+              result=analysis.get('originalEvanPaintedMouthFallback',{})
+              print('EVAN_PAINTED_FACE_FALLBACK='+str(result.get('status','MISSING')))
+              if analysis['transcription']['status']=='machine-draft-requires-human-correction':
+                  assert result.get('status')=='original-evan-mouth-fallback-renderable-needs-review',result
+              assert analysis.get('phonemeAlignment')=='NOT_CERTIFIED'
+          PY
           "$py" - <<'PY'
           import sys
           from pathlib import Path
