@@ -1,6 +1,7 @@
 mode=audio-analyze
 audio_id=6e080df3f97b5cd2
 asr=on
-source=original-reference-audit
-endPadding=bound-to-exact-wav
-sequence=40
+source=original-local-evan-reference
+phonemeCertification=forbidden
+rhubarbMouthCues=technical-validation
+sequence=41
