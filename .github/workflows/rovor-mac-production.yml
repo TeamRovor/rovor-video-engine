@@ -744,7 +744,6 @@ jobs:
           import sys,json
           sys.path.insert(0,'rovor-production')
           from audio_intake import collect,OUT,digest
-          row=json.load(open('.github/rovor-mac-request.txt')) if False else None
           audio_id=[x.split('=',1)[1].strip() for x in open('.github/rovor-mac-request.txt') if x.startswith('audio_id=')][0]
           items=collect()
           if audio_id in items:
