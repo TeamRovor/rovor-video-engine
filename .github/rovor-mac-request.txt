@@ -1,6 +1,4 @@
 mode=integrated-scene-schedule-test
-realAudioMinSec=30
-originalArtRequired=true
-originalEvanRigRequired=true
-visualEventsMustMatchSound=true
-sequence=28
+rejectFictionalRigControlIds=true
+requirePhysicalActingInActionScenes=true
+sequence=29
