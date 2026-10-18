@@ -22,9 +22,12 @@ def split_head_neck(image,delta=0):
     neck=raw.copy();head=raw.copy();neck[:,:,3]=(raw[:,:,3]*neck_weight).astype('uint8');head[:,:,3]=(raw[:,:,3]*head_weight).astype('uint8')
     return Image.fromarray(head),Image.fromarray(neck)
 
-def neck_vertices(tilt,delta=0):
-    xs=np.linspace(208,349,10);ys=np.linspace(330,480,18);source=np.array([(x,y) for y in ys for x in xs],np.float32)
+def neck_vertices(tilt,delta=0,bounds=(208,349),spread=0):
+    xs=np.linspace(*bounds,10);ys=np.linspace(330,480,18);source=np.array([(x,y) for y in ys for x in xs],np.float32)
     rest=source*SCALE+TRANSLATE
+    if spread:
+        widen=np.clip((source[:,1]-380)/25,0,1)
+        rest[:,0]=510.5+(rest[:,0]-510.5)*(1+spread*widen)
     # Original short neck is extended underneath the original V-shaped collar.
     u=np.clip((source[:,1]-(420+delta))/(458-(420+delta)),0,1);ease=u*u*(3-2*u)
     rest[:,1]+=35*ease
@@ -37,8 +40,8 @@ for y in range(17):
     for x in range(9):
         a=y*10+x;TRIANGLES.extend([(a,a+1,a+11),(a,a+11,a+10)])
 
-def render_neck(image,tilt,delta=0):
-    source,target=neck_vertices(tilt,delta);origin=np.floor(target.min(axis=0)-2).astype(int);end=np.ceil(target.max(axis=0)+2).astype(int);width,height=end-origin
+def render_neck(image,tilt,delta=0,bounds=(208,349),spread=0):
+    source,target=neck_vertices(tilt,delta,bounds,spread);origin=np.floor(target.min(axis=0)-2).astype(int);end=np.ceil(target.max(axis=0)+2).astype(int);width,height=end-origin
     mx=np.full((height,width),-1,np.float32);my=mx.copy()
     for ids in TRIANGLES:
         src=source[list(ids)];tri=target[list(ids)]-origin;x,y,w,h=cv2.boundingRect(tri.astype('float32'));x=max(0,x);y=max(0,y);w=min(width-x,w);h=min(height-y,h)

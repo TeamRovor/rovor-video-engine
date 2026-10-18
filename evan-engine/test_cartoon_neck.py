@@ -30,4 +30,26 @@ class NeckTests(unittest.TestCase):
         blue=before[:,:,2].astype(int)>before[:,:,0].astype(int)+10
         np.testing.assert_array_equal(after[:,:,3][blue],before[:,:,3][blue])
 
+    def test_extended_art_mesh_remains_attached_and_noninverting(self):
+        for jaw in (0,11,22):
+            _,rest=neck_vertices(0,jaw,(195,355),.25)
+            for angle in np.linspace(-8,8,17):
+                _,v=neck_vertices(angle,jaw,(195,355),.25)
+                np.testing.assert_allclose(v[-10:],rest[-10:],atol=.001)
+                tri=v[np.asarray(TRIANGLES)];a=tri[:,1]-tri[:,0];b=tri[:,2]-tri[:,0]
+                self.assertGreater(float(np.min(a[:,0]*b[:,1]-a[:,1]*b[:,0])),1)
+    def test_registered_art_discards_generated_face_and_supplies_base(self):
+        art=np.asarray(Image.open(ROOT/'neck-art-rig/neck.png').convert('RGBA'))
+        self.assertEqual(int(art[:380,:,3].max()),0)
+        self.assertGreater(int(art[470,260,3]),240)
+        self.assertGreater(int(art[470,320,3]),240)
+
+    def test_redrawn_collar_is_local_and_has_empty_neck_opening(self):
+        before=np.asarray(Image.open(ROOT/'socket-rig/torso.png').convert('RGBA'))
+        after=np.asarray(Image.open(ROOT/'neck-art-rig/torso.png').convert('RGBA'))
+        yy,xx=np.mgrid[:1536,:1024];outside=(xx<=430)|(xx>=590)|(yy<=280)|(yy>=400)
+        np.testing.assert_array_equal(before[outside],after[outside])
+        self.assertEqual(int(after[325,510,3]),0)
+        self.assertGreater(int(after[350,450,3]),240)
+
 if __name__=='__main__':unittest.main()
