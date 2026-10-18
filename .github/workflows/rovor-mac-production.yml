@@ -657,6 +657,8 @@ jobs:
             rovor-production/audio_intake.py
             rovor-production/speech_draft_audit.py
             rovor-production/test_speech_draft_audit.py
+            rovor-production/lip_cue_audit.py
+            rovor-production/test_lip_cue_audit.py
             rovor-production/longform_chapters.py
             .github/rovor-mac-request.txt
           sparse-checkout-cone-mode: false
@@ -668,8 +670,8 @@ jobs:
           [[ "$source_id" =~ ^[0-9a-f]{16}$ ]] || { echo 'Invalid audio ID'; exit 1; }
           py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
           test -x "$py"
-          "$py" -m py_compile rovor-production/audio_intake.py rovor-production/speech_draft_audit.py rovor-production/longform_chapters.py
-          (cd rovor-production && "$py" -m unittest -v test_speech_draft_audit)
+          "$py" -m py_compile rovor-production/audio_intake.py rovor-production/speech_draft_audit.py rovor-production/lip_cue_audit.py rovor-production/longform_chapters.py
+          (cd rovor-production && "$py" -m unittest -v test_speech_draft_audit test_lip_cue_audit)
           asr="$(sed -n 's/^asr=//p' .github/rovor-mac-request.txt | head -1)"
           case "$asr" in
             off) "$py" rovor-production/audio_intake.py analyze --id "$source_id" --no-asr ;;
