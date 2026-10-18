@@ -219,6 +219,33 @@ def transcribe(wav, out, chapters=None):
             "phonemeBoundariesCertified": False}
 
 
+def acoustic_mouth_draft(wav, target):
+    """Independent audio-based mouth shapes; never pass them off as phones."""
+    cfg = tool_config()
+    exe = Path(str(cfg.get("rhubarb", ""))) if cfg.get("rhubarb") else None
+    dialogue = target / "transcript-DRAFT.txt"
+    if not exe or not exe.is_file() or not dialogue.is_file():
+        return {"status": "unavailable", "phonemeTimingCertified": False}
+    output = target / "rhubarb-mouth-DRAFT.json"
+    if not output.is_file():
+        with (target / "rhubarb-run-local-private.log").open("w") as private:
+            run = subprocess.run(
+                [str(exe), "-f", "json", "-o", str(output), "-d",
+                 str(dialogue), str(wav)],
+                stdout=private, stderr=subprocess.STDOUT, timeout=7200,
+                check=False)
+        if run.returncode:
+            raise RuntimeError("Local Rhubarb failed; diagnostics stay private on Mac")
+    from lip_cue_audit import validate
+    report = validate(json.loads(output.read_text()), decode_duration(wav))
+    write_json(target / "rhubarb-mouth-timing-REVIEW.json", report)
+    return {"status": "audio-based-mouth-shape-draft-needs-review",
+            "cueCount": report["cueCount"],
+            "mouthTimingReview": "rhubarb-mouth-timing-REVIEW.json",
+            "phonemeTimingCertified": False,
+            "wordPronunciationVerified": False}
+
+
 def analyze(selected_id, with_asr=True):
     if not ID_RE.fullmatch(selected_id):
         raise ValueError("Invalid audio selection ID; use a catalog ID")
@@ -252,6 +279,9 @@ def analyze(selected_id, with_asr=True):
     else:
         chapter_state = {"status": "INELIGIBLE-SHORTER-THAN-30-SECONDS"}
     transcription = transcribe(wav, target, chapters) if with_asr else {"status": "not-requested"}
+    mouth_draft = (acoustic_mouth_draft(wav, target)
+                   if transcription.get("status")=="machine-draft-requires-human-correction"
+                   else {"status": "not-requested", "phonemeTimingCertified": False})
     manifest = {
         "audioId": selected_id,
         "audioSha256": sha,
@@ -264,6 +294,7 @@ def analyze(selected_id, with_asr=True):
         "pcmChannels": 1,
         "evidence": evidence,
         "transcription": transcription,
+        "acousticMouthDraft": mouth_draft,
         "chapterPlan": chapter_state,
         "phonemeAlignment": "NOT_CERTIFIED",
         "studioStoryboard": "NOT_CREATED",
@@ -280,6 +311,7 @@ def analyze(selected_id, with_asr=True):
     print("DURATION_SEC=" + str(round(duration, 3)))
     print("TRANSCRIPTION_STATUS=" + transcription["status"])
     print("PHONEME_CERTIFIED=NO")
+    print("RUBARB_AUDIO_MOUTH_STATUS=" + mouth_draft["status"])
     print("STORYBOARD_APPROVED=NO")
     print("CHAPTER_COUNT=" + str(chapter_state.get("count",0)))
     print("PRIVATE_OUTPUT_DIR=" + str(target))
