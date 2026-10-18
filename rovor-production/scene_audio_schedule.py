@@ -39,7 +39,10 @@ def prepare(chapters,storyboard,registry,artroot,catalog,analysis):
     shots=[]
     cur=0
     for idx,s in enumerate(storyboard["shots"],1):
-        a,b=frame(s["start"]),frame(s["end"])
+        a=frame(s["start"])
+        # Real source audio is not necessarily an exact 60fps multiple. The
+        # final frame is a partial source-audio frame, never synthetic silence.
+        b=count if idx==len(storyboard["shots"]) else frame(s["end"])
         if a!=cur or b<=a:raise ValueError("Scene frame discontinuity")
         cur=b
         camera=s.get("cameraMotion")
