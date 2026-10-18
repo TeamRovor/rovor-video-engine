@@ -246,6 +246,35 @@ def acoustic_mouth_draft(wav, target):
             "wordPronunciationVerified": False}
 
 
+def original_evan_mouth_fallback(wav, target):
+    """Build original-face weights from acoustic Rhubarb shapes, no phone claims.
+
+    All source data stays local, is keyed by original source SHA and never
+    changes the narration. The future 8-9 minute job can reuse this directly
+    as the exact-aligned WAV's provisional painted-face animation plan.
+    """
+    raw=target / "rhubarb-mouth-DRAFT.json"
+    if not raw.is_file():
+        return {"status": "unavailable-no-source-mouth-cues",
+                "phonemeTimingCertified": False}
+    evan_engine=Path(__file__).resolve().parent.parent / "evan-engine"
+    if not (evan_engine / "build_acoustic_fallback_plan.py").is_file():
+        return {"status": "evan-engine-source-not-checked-out",
+                "phonemeTimingCertified": False}
+    if str(evan_engine) not in sys.path:
+        sys.path.insert(0,str(evan_engine))
+    from build_acoustic_fallback_plan import build
+    plan=build(wav,json.loads(raw.read_text()))
+    target_file=target / "original-evan-acoustic-mouth-FALLBACK.json"
+    write_json(target_file,plan)
+    return {"status":"original-evan-mouth-fallback-renderable-needs-review",
+            "plan":"original-evan-acoustic-mouth-FALLBACK.json",
+            "rhubarbCues":len(plan["fallbackCues"]),
+            "productionEligibleDuration":plan["isProductionEligibleByDuration"],
+            "phonemeTimingCertified":False,
+            "humanSpeechReviewCompleted":False}
+
+
 def analyze(selected_id, with_asr=True):
     if not ID_RE.fullmatch(selected_id):
         raise ValueError("Invalid audio selection ID; use a catalog ID")
@@ -282,6 +311,9 @@ def analyze(selected_id, with_asr=True):
     mouth_draft = (acoustic_mouth_draft(wav, target)
                    if transcription.get("status")=="machine-draft-requires-human-correction"
                    else {"status": "not-requested", "phonemeTimingCertified": False})
+    fallback = (original_evan_mouth_fallback(wav, target)
+                if mouth_draft.get("status")=="audio-based-mouth-shape-draft-needs-review"
+                else {"status":"not-requested", "phonemeTimingCertified":False})
     manifest = {
         "audioId": selected_id,
         "audioSha256": sha,
@@ -295,6 +327,7 @@ def analyze(selected_id, with_asr=True):
         "evidence": evidence,
         "transcription": transcription,
         "acousticMouthDraft": mouth_draft,
+        "originalEvanPaintedMouthFallback": fallback,
         "chapterPlan": chapter_state,
         "phonemeAlignment": "NOT_CERTIFIED",
         "studioStoryboard": "NOT_CREATED",
@@ -312,6 +345,7 @@ def analyze(selected_id, with_asr=True):
     print("TRANSCRIPTION_STATUS=" + transcription["status"])
     print("PHONEME_CERTIFIED=NO")
     print("RHUBARB_AUDIO_MOUTH_STATUS=" + mouth_draft["status"])
+    print("ORIGINAL_EVAN_MOUTH_FALLBACK_STATUS=" + fallback["status"])
     print("STORYBOARD_APPROVED=NO")
     print("CHAPTER_COUNT=" + str(chapter_state.get("count",0)))
     print("PRIVATE_OUTPUT_DIR=" + str(target))
