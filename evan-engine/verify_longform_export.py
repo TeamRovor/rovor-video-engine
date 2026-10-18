@@ -72,11 +72,12 @@ def _read_video_frames(ffmpeg,video,size,expected,rate=FPS):
         ret=process.wait(timeout=25)
         if ret:
             raise ValueError("Video decode failed: "+error[-350:])
-    except Exception:
+    finally:
         if process.poll() is None:
             process.kill()
             process.wait()
-        raise
+        process.stdout.close()
+        process.stderr.close()
     if dimensions!=tuple(size):
         raise ValueError("Wrong decoded video dimensions "+str(dimensions))
     if count!=expected:
@@ -119,6 +120,8 @@ def _audio_length_samples(ffmpeg,video):
     finally:
         if process.poll() is None:
             process.kill();process.wait()
+        process.stdout.close()
+        process.stderr.close()
     return count//2
 
 
