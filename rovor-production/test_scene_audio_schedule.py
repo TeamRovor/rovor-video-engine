@@ -23,7 +23,7 @@ def acting():
             "bodyAction":"Evan catches the animated globe moving across a desk",
             "facialReaction":"Evan follows the object with visible surprise",
             "eyelineTarget":"Center of moving illustrated browser globe",
-            "rigControlIds":["evan.arm","evan.head","evan.eyeline"]}
+            "rigControlIds":["right","head","brow_left"]}
 
 
 def package(root,duration=40):
@@ -99,6 +99,14 @@ class IntegratedSceneTests(unittest.TestCase):
     def test_no_undeclared_motion(self):
         self.args[1]["shots"][0]["actorPerformance"].pop("rigControlIds")
         with self.assertRaises(ValueError):self.run_gate()
+    def test_fictional_control_name_is_not_real_acting(self):
+        self.args[1]["shots"][0]["actorPerformance"]["rigControlIds"]=["evan.eyeline"]
+        with self.assertRaises(ValueError):self.run_gate()
+
+    def test_action_cannot_be_head_tilt_only(self):
+        self.args[1]["shots"][0]["actorPerformance"]["rigControlIds"]=["head"]
+        with self.assertRaises(ValueError):self.run_gate()
+
     def test_missing_camera_is_not_studio_scene(self):
         self.args[1]["shots"][0].pop("cameraMotion")
         with self.assertRaises(ValueError):self.run_gate()
