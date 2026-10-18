@@ -35,8 +35,8 @@ jobs:
         run: |
           set -Eeuo pipefail
           cd "$GITHUB_WORKSPACE/_rovor_audio_library_$GITHUB_RUN_ID/rovor-production"
-          python3 -m unittest test_audio_library -v
-          python3 -m py_compile audio_library.py
+          python3 -m unittest test_audio_library test_soundtrack_editor -v
+          python3 -m py_compile audio_library.py soundtrack_editor.py
           python3 audio_library.py init
           python3 audio_library.py scan
           test -d "$HOME/Movies/RovorProduction/AudioLibrary/SoundEffects"
