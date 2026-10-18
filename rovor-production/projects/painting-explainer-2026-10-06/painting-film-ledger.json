@@ -5,16 +5,33 @@
     "duration_seconds": 262.687313
   },
   "fps": 60,
-  "orientations": {"landscape": [1920, 1080], "portrait": [1080, 1920]},
+  "orientations": {
+    "landscape": [
+      1920,
+      1080
+    ],
+    "portrait": [
+      1080,
+      1920
+    ]
+  },
   "total_source_frames": 15762,
-  "current_revision": "v7",
+  "current_revision": "v9",
   "human_visual_review_approved": false,
   "publication_approved": false,
   "revisions": [
     {
       "revision": "v4",
-      "review_coverage": [0, 7920],
-      "edited_intervals": [[0, 7920]],
+      "review_coverage": [
+        0,
+        7920
+      ],
+      "edited_intervals": [
+        [
+          0,
+          7920
+        ]
+      ],
       "editable_archive": "First132s_ArtPassV4_Editable_Source.zip",
       "editable_archive_sha256": "49254e426bad4a1d30c4ba80dee826b848e6759d14de62cadfdb78b96965c342",
       "artist_approved": false,
@@ -22,8 +39,16 @@
     },
     {
       "revision": "v6",
-      "review_coverage": [0, 7920],
-      "edited_intervals": [[6840, 7800]],
+      "review_coverage": [
+        0,
+        7920
+      ],
+      "edited_intervals": [
+        [
+          6840,
+          7800
+        ]
+      ],
       "editable_archive": "Rovor_Painting_Film_V6_Editable_Vector_Art_Source.zip",
       "editable_archive_sha256": "a8b1d9a42dab77be87b7177c8655d7ac037e6e0a8bfa772982c81e26b314adcb",
       "artist_approved": false,
@@ -31,10 +56,35 @@
     },
     {
       "revision": "v7",
-      "review_coverage": [0, 8688],
-      "edited_intervals": [[7920, 8688]],
+      "review_coverage": [
+        0,
+        8688
+      ],
+      "edited_intervals": [
+        [
+          7920,
+          8688
+        ]
+      ],
       "editable_archive": "Rovor_Painting_Film_V7_Editable_Story_Source.zip",
       "editable_archive_sha256": "b24f3f0013c7fbe2c9d6519e8fd398ad530f7556f506b50ba04f8f88fbff567f",
+      "artist_approved": false,
+      "publication_approved": false
+    },
+    {
+      "revision": "v9",
+      "review_coverage": [
+        0,
+        9377
+      ],
+      "edited_intervals": [
+        [
+          8688,
+          9377
+        ]
+      ],
+      "editable_archive": "Rovor_Painting_Film_V9B_Editable_Story_Source.zip",
+      "editable_archive_sha256": "3aa4ecda1ee74c6247a8b8c360652dd22a0abc048dcd8e06ff136cc58c52bb6f",
       "artist_approved": false,
       "publication_approved": false
     }
