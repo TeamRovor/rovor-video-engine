@@ -1,4 +1,6 @@
-mode=original-evan-performance-test
-realisticComicActing=anticipation-action-hold-recovery
-originalHandArt=required
-sequence=36
+mode=audio-analyze
+audio_id=6e080df3f97b5cd2
+asr=on
+source=original-evan-local-reference
+transcript=draft-not-certified
+sequence=37
