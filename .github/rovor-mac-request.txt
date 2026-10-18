@@ -1,6 +1,6 @@
 mode=audio-analyze
 audio_id=6e080df3f97b5cd2
 asr=on
-source=reference-audit-only
-stampDiagnostic=numeric-no-transcript
-sequence=39
+source=original-reference-audit
+endPadding=bound-to-exact-wav
+sequence=40
