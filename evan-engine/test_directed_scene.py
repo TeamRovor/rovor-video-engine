@@ -88,6 +88,43 @@ class DirectedSceneTests(unittest.TestCase):
         self.config["shots"][0]["endFrameExclusive"]=700
         self.config["shots"][0]["compositions"]["landscape"]["elements"][-1]["keys"][-1]["x"]=.17
         with self.assertRaises(ValueError):check(self.config,self.registry,self.root)
+    def test_actor_face_cannot_disappear_in_portrait(self):
+        actor=self.config["shots"][0]["compositions"]["portrait"]["elements"][1]
+        actor["keys"][0]["x"]=.01
+        with self.assertRaises(ValueError):check(self.config,self.registry,self.root)
+
+    def test_actor_crop_must_be_explicitly_directed(self):
+        actor=self.config["shots"][0]["compositions"]["portrait"]["elements"][1]
+        actor["keys"][0]["x"]=.01
+        actor["framingException"]="Intentional entrance from the side, returning during reaction"
+        self.assertEqual(check(self.config,self.registry,self.root)["totalFrames"],2400)
+
+    def test_actual_prop_returns_to_origin_is_still_motion(self):
+        for view in ("portrait","landscape"):
+            layer=self.config["shots"][0]["compositions"][view]["elements"][-1]
+            end=layer["keys"][-1]
+            mid=key(240,.89,.6+(.22 if view=="portrait" else 0),.5,rotation=18.)
+            end["x"]=.17
+            end["rotation"]=0.
+            layer["keys"].insert(1,mid)
+            comp=self.config["shots"][0]["compositions"][view]
+            comp["camera"][-1]["panX"]=0
+            comp["camera"][-1]["zoom"]=1
+        self.assertEqual(check(self.config,self.registry,self.root)["totalFrames"],2400)
+
+    def test_reaction_shot_must_contain_evan(self):
+        for view in ("portrait","landscape"):
+            comp=self.config["shots"][1]["compositions"][view]
+            comp["elements"]=[e for e in comp["elements"] if e["assetId"]!="original-evan-rig"]
+        with self.assertRaises(ValueError):check(self.config,self.registry,self.root)
+
+    def test_prepared_assets_are_shared_not_redecoded(self):
+        prepared=check(self.config,self.registry,self.root)
+        a=DirectedScene(self.config,self.registry,self.root,False,prepared=prepared)
+        b=DirectedScene(self.config,self.registry,self.root,True,prepared=prepared)
+        self.assertIs(a.images,b.images)
+        self.assertIs(a.images,prepared["artwork"])
+
     def test_short_under_30s_rejected(self):
         self.config["durationSec"]=22
         with self.assertRaises(ValueError):check(self.config,self.registry,self.root)
