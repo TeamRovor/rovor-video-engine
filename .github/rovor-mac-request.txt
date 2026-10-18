@@ -1,6 +1,6 @@
-mode=audio-analyze
-audio_id=6e080df3f97b5cd2
-asr=on
-originalPaintedRigFallback=automatic
-noPrivateSpeechInLogs=true
-sequence=43
+mode=longform-final-integrity-test
+fixtureDurationSec=31.2
+narrationPreservation=required
+validatePtsAndAllFrames=true
+noSourceMediaUpload=true
+sequence=44
