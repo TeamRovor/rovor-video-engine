@@ -1,6 +1,5 @@
-mode=audio-library-setup
-categories=SoundEffects,BackgroundMusic
-seedSfx=original-procedural-only
-thirdPartyMusicRequiresAttribution=true
-installFreeMusicCandidateSheet=true
-sequence=22
+mode=original-music-score-build
+styles=curious,playful,inspiring
+musicIsDraft=true
+costUsd=0
+sequence=23
