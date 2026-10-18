@@ -92,16 +92,17 @@ jobs:
           plan="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an-2/work/speech-alignment-v4/speech-plan.json"
           test -x "$py" && test -f "$plan"
           cd "$GITHUB_WORKSPACE/_rovor_performance_$GITHUB_RUN_ID/evan-engine"
-          "$py" -m unittest -v test_performance_tracks
-          "$py" -m py_compile performance_tracks.py render_acting_video.py
+          "$py" -m unittest -v test_performance_tracks test_choreograph_story_beats
+          "$py" -m py_compile performance_tracks.py choreograph_story_beats.py render_acting_video.py
           "$py" - "$plan" <<'PY'
           import json,sys,math
           import numpy as np
           from cartoon_body import CartoonBody,REVIEW_BODY_OPTIONS
           from performance_tracks import EvanPerformance
-          from test_performance_tracks import authored
+          from choreograph_story_beats import build
+          from test_choreograph_story_beats import sheet
           source=json.load(open(sys.argv[1]))
-          actor=EvanPerformance(authored())
+          actor=EvanPerformance(build(sheet()))
           rig=CartoonBody(**REVIEW_BODY_OPTIONS)
           before=rig.render(2.0,source,actor.at_frame(0))
           after=rig.render(2.0,source,actor.at_frame(120))
@@ -112,6 +113,7 @@ jobs:
           assert before.size==(1464,1536) and after.size==(1464,1536)
           assert actor.end==30473
           print('ORIGINAL_LAYERED_EVAN_ACTUATOR_RENDER=VERIFIED')
+          print('ACTUAL_NARRATIVE_ACTION_ANTICIPATION_RECOVERY=VERIFIED')
           print('BODY_IMAGE_MEAN_ABSOLUTE_CHANGE='+str(round(difference,3)))
           print('LONGFORM_SOURCE_AUDIO_FRAMES=30473')
           print('PUBLISH_APPROVAL=NO')
