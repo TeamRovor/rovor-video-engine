@@ -16,6 +16,60 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  music-score-build:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor music score build'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout original score source into isolated job directory
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_music_build_${{ github.run_id }}
+          sparse-checkout: |
+            rovor-production
+      - name: Test and compose three distinct original 48k stereo scores
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          test -x "$py"
+          cd "$GITHUB_WORKSPACE/_rovor_music_build_$GITHUB_RUN_ID/rovor-production"
+          "$py" -m py_compile generate_original_music.py test_generate_original_music.py
+          "$py" -m unittest -v test_generate_original_music
+          "$py" generate_original_music.py
+          "$py" - <<'PY'
+          import json,sys
+          from pathlib import Path
+          sys.path.insert(0,'.')
+          from audio_library import scan
+          from generate_original_music import SCORES
+          cat=scan()
+          music=[x for x in cat['assets'] if x['category']=='background-music']
+          assert len(music)>=3,(len(music),cat['rejected'])
+          assert {x['mood'] for x in music}>={'curious','playful','inspiring'}
+          assert all(x['ownerConfirmedRights'] and not x['autoPublishApproved'] for x in music)
+          for key in SCORES:
+              match=[x for x in music if x['filename']=='rovor-'+key+'.wav']
+              assert len(match)==1,(key,match)
+              assert 47<match[0]['durationSeconds']<65
+          print('ORIGINAL_INSTRUMENTAL_MUSIC_LIBRARY=VERIFIED')
+          print('CREATIVE_AUDIO_APPROVAL=NOT_GIVEN')
+          PY
+      - name: Send only original music drafts for in-chat audition
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rovor-Original-Music-Auditions-${{ github.run_id }}
+          path: |
+            /Users/amarhavic/Movies/RovorProduction/AudioLibrary/BackgroundMusic/rovor-curious-expedition.wav
+            /Users/amarhavic/Movies/RovorProduction/AudioLibrary/BackgroundMusic/rovor-playful-mechanics.wav
+            /Users/amarhavic/Movies/RovorProduction/AudioLibrary/BackgroundMusic/rovor-quiet-new-ground.wav
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
   audio-library-setup:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor audio library setup'
     runs-on: [self-hosted, macOS, X64, rovor-video]
