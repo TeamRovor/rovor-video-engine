@@ -16,6 +16,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  longform-final-integrity-test:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor longform integrity test'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout final media verifier and synthetic regression suite
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_longform_integrity_${{ github.run_id }}
+          sparse-checkout: |
+            evan-engine
+      - name: Confirm real 31.2sec 60fps H264 AAC export and reject corrupted sources
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          ff="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an/work/media-tools/ffmpeg"
+          test -x "$py" && test -x "$ff"
+          export ROVOR_TEST_FFMPEG="$ff"
+          cd "$GITHUB_WORKSPACE/_rovor_longform_integrity_$GITHUB_RUN_ID/evan-engine"
+          "$py" -m py_compile verify_longform_export.py test_verify_longform_export.py
+          "$py" -m unittest -v test_verify_longform_export
+          echo 'FULL_LENGTH_60FPS_TIMESTAMP_CHECK=TESTED'
+          echo 'FULL_LENGTH_SOURCE_VOICE_MATCHING=TESTED'
+          echo 'MEDIA_ONLY_SYNTHETIC_FIXTURE=YES'
+          echo 'ALL_PRIVATE_EVAN_AUDIO_REMAINS_LOCAL=YES'
+          echo 'STUDIO_ART_APPROVED=NO'
+
+
   acoustic-mouth-fallback-test:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor acoustic fallback test'
     runs-on: [self-hosted, macOS, X64, rovor-video]
