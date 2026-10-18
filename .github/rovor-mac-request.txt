@@ -1,4 +1,5 @@
 mode=longform-chapter-selftest
 minimumSeconds=30
 maximumSeconds=900
-sequence=15
+qualityOriginalArt=required
+sequence=16
