@@ -1,5 +1,6 @@
 mode=longform-chapter-selftest
 minimumSeconds=30
 maximumSeconds=900
-qualityOriginalArt=required
-sequence=16
+preferSustainedPauses=true
+balancedTotalFrames=30473
+sequence=17
