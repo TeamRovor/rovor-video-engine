@@ -1,2 +1,3 @@
-mode=trusted-source-snapshot
-sequence=17
+mode=video-handoff-gate-test
+minSeconds=30
+sequence=14
