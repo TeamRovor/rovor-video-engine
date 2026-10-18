@@ -14,6 +14,7 @@ import numpy as np
 from audio_library import ROOT, init_library, sha256, scan
 
 SR=48000
+RATE=SR  # Compat alias for library sample-rate test and future render adapters
 BARS=24
 SCORES=OrderedDict([
  ("curious-expedition",dict(bpm=96,mood="curious",tags=["curious","explainer","discovery","under-dialogue"],
