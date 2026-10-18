@@ -32,9 +32,10 @@ def roots():
     candidates += list(Path("/Volumes").glob("GoogleDrive*"))
     for mount in candidates:
         for prefix in ("My Drive", "MyDrive", ""):
-            folder = mount / prefix / "shortsrovordigital"
-            if folder.is_dir():
-                folders.append(folder)
+            for collection in ("shortsrovordigital", "Youtubevideorovor"):
+                folder = mount / prefix / collection
+                if folder.is_dir():
+                    folders.append(folder)
     return folders
 
 
@@ -214,10 +215,18 @@ def analyze(selected_id, with_asr=True):
             raise ValueError("Cached WAV duration invalid")
     else:
         duration = decode(original, wav)
-    if not (target / "waveform-10ms.csv").is_file():
+    if not all((target / key).is_file() for key in ("waveform-10ms.csv", "waveform-overview.png")):
         evidence = graphs(wav, target)
     else:
         evidence = {"status": "existing graphs preserved"}
+    if duration >= 30.0:
+        from longform_chapters import make_plan
+        chapters = make_plan(duration, target / "waveform-10ms.csv", target / "chapters-PREPRODUCTION.json")
+        chapter_state = {"path": "chapters-PREPRODUCTION.json", "count": chapters["chapterCount"],
+                         "endFrame": chapters["totalTimelineFrames"],
+                         "editorialStatus": "UNAPPROVED-REQUIRES-REAL-SCENES"}
+    else:
+        chapter_state = {"status": "INELIGIBLE-SHORTER-THAN-30-SECONDS"}
     transcription = transcribe(wav, target) if with_asr else {"status": "not-requested"}
     manifest = {
         "audioId": selected_id,
@@ -231,6 +240,7 @@ def analyze(selected_id, with_asr=True):
         "pcmChannels": 1,
         "evidence": evidence,
         "transcription": transcription,
+        "chapterPlan": chapter_state,
         "phonemeAlignment": "NOT_CERTIFIED",
         "studioStoryboard": "NOT_CREATED",
         "fullRender": "NOT_STARTED",
@@ -247,6 +257,7 @@ def analyze(selected_id, with_asr=True):
     print("TRANSCRIPTION_STATUS=" + transcription["status"])
     print("PHONEME_CERTIFIED=NO")
     print("STORYBOARD_APPROVED=NO")
+    print("CHAPTER_COUNT=" + str(chapter_state.get("count",0)))
     print("PRIVATE_OUTPUT_DIR=" + str(target))
     return manifest
 
