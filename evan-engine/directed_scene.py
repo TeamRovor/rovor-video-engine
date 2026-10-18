@@ -156,7 +156,8 @@ def check(config,registry,root):
                           for before,after in zip(keys,keys[1:]))
                 motion_score+=delta
                 if aid!=ACTOR_ID:non_actor_motion+=delta
-                processed.append({"assetId":aid,"role":layer["role"],"keys":keys})
+                processed.append({"assetId":aid,"role":layer["role"],"keys":keys,
+                                  "framingException":layer.get("framingException")})
             cam_delta=sum(sum(abs(after[1][k]-before[1][k]) for k in CAMERA)
                               for before,after in zip(camera,camera[1:]))
             if end-begin>MAX_STILL_SECONDS*FPS and non_actor_motion<.07 and cam_delta<.06:
@@ -173,7 +174,7 @@ def check(config,registry,root):
                     center_x=.5+(values["x"]-.5)*cam["zoom"]-cam["panX"]
                     center_y=.5+(values["y"]-.5)*cam["zoom"]-cam["panY"]
                     if not (.06<center_x<.94 and .06<center_y<.94):
-                        rationale=layer.get("framingException") if isinstance(layer,dict) else None
+                        rationale=item.get("framingException")
                         if not isinstance(rationale,str) or len(rationale.strip())<24:
                             raise ValueError("Evan is outside safe portrait/landscape camera framing without editorial justification")
             compositions[view]={"background":fill,"camera":camera,
