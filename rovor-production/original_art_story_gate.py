@@ -8,6 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+from PIL import Image
 
 ASSET_ID = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$")
 SHA256 = re.compile(r"^[a-f0-9]{64}$")
@@ -59,12 +60,23 @@ def check_source_artwork(registry, folder):
         if path in distinct_paths:
             raise ValueError("Several IDs point to one flattened artwork source")
         distinct_paths.add(path)
-        if path.suffix.lower() not in (".png",".psd"):
-            raise ValueError("Registered scene asset must be editable artwork or PNG: "+key)
+        if path.suffix.lower() != ".png":
+            raise ValueError("Scene registry needs an actual exported PNG image: "+key)
         with path.open("rb") as f:
-            prefix=f.read(8)
-        if not (prefix.startswith(PNG_SIGNATURE) or prefix.startswith(PSD_SIGNATURE)):
-            raise ValueError("Fake image payload: "+key)
+            if f.read(8) != PNG_SIGNATURE:
+                raise ValueError("Fake image header: "+key)
+        try:
+            with Image.open(path) as image:
+                image.verify()
+            with Image.open(path) as image:
+                image.load()
+                if image.width < 32 or image.height < 32:
+                    raise ValueError("Scene illustration too small for an animated asset: "+key)
+                if entry["kind"] != "environment":
+                    if image.mode != "RGBA" or image.getchannel("A").getextrema() == (0,0):
+                        raise ValueError("Character/prop must have a nonempty RGBA layer: "+key)
+        except (OSError,SyntaxError) as exc:
+            raise ValueError("Cannot decode actual scene image: "+key) from exc
         if sha256(path) != expected:
             raise ValueError("Artwork SHA256 changed: "+key)
         recorded[key]={"path":str(path),"kind":entry["kind"],"sha256":expected}
