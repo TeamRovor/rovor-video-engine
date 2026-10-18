@@ -37,7 +37,8 @@ jobs:
           test -x "$py" && test -s "$plan"
           cd "$GITHUB_WORKSPACE/_rovor_directed_scenes_$GITHUB_RUN_ID/evan-engine"
           "$py" -m py_compile directed_scene.py render_acting_video.py
-          "$py" -m unittest -v test_directed_scene
+          "$py" -m unittest -v test_directed_scene test_visible_sound_sync
+          "$py" -m py_compile visible_sound_sync.py
           "$py" - "$plan" <<'PY'
           import json,sys,tempfile
           import numpy as np
