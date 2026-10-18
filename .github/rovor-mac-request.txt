@@ -1,6 +1,5 @@
 mode=longform-final-integrity-test
 fixtureDurationSec=31.2
-narrationPreservation=required
-validatePtsAndAllFrames=true
-noSourceMediaUpload=true
-sequence=44
+audioSourceUnchanged=true
+strictAacSpeechValidation=true
+sequence=45
