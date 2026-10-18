@@ -35,10 +35,18 @@ jobs:
         run: |
           set -Eeuo pipefail
           cd "$GITHUB_WORKSPACE/_rovor_audio_library_$GITHUB_RUN_ID/rovor-production"
-          python3 -m unittest test_audio_library test_soundtrack_editor -v
-          python3 -m py_compile audio_library.py soundtrack_editor.py
+          python3 -m unittest test_audio_library test_soundtrack_editor test_generate_original_sfx -v
+          python3 -m py_compile audio_library.py soundtrack_editor.py generate_original_sfx.py
           python3 audio_library.py init
+          python3 generate_original_sfx.py
           python3 audio_library.py scan
+          python3 - <<'PY'
+          from audio_library import scan
+          catalog=scan()
+          assert len([a for a in catalog['assets'] if a['category']=='sound-effect']) >= 7
+          assert catalog['approvedForAutomatedPublishing'] is False
+          print('ORIGINAL_AUDIO_CHOICES_REGISTERED=YES')
+          PY
           test -d "$HOME/Movies/RovorProduction/AudioLibrary/SoundEffects"
           test -d "$HOME/Movies/RovorProduction/AudioLibrary/BackgroundMusic"
           test -f "$HOME/Movies/RovorProduction/AudioLibrary/catalog.json"
