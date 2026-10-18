@@ -1,3 +1,4 @@
-mode=video-handoff-gate-test
-minSeconds=30
-sequence=14
+mode=longform-chapter-selftest
+minimumSeconds=30
+maximumSeconds=900
+sequence=15
