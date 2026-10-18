@@ -18,7 +18,12 @@ def frame(body,plan,t):
     else:d.text((685,603),'A small detail that represents your brand.',font=font(22),fill='#48636d')
     return im
 if __name__=='__main__':
-    cv2.setNumThreads(1);p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--material',action='store_true');p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=FRAME_COUNT);a=p.parse_args()
-    plan=json.loads(a.plan.read_text());body=CartoonMaterialSceneBody() if a.material else CartoonSceneBody();a.frames.mkdir(parents=True,exist_ok=True)
+    cv2.setNumThreads(1);p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--material',action='store_true');p.add_argument('--compact-index',action='store_true');p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=FRAME_COUNT);a=p.parse_args()
+    plan=json.loads(a.plan.read_text())
+    if a.compact_index:
+        from compact_cartoon_scene import CompactCartoonSceneBody
+        body=CompactCartoonSceneBody()
+    else:body=CartoonMaterialSceneBody() if a.material else CartoonSceneBody()
+    a.frames.mkdir(parents=True,exist_ok=True)
     for i in range(a.start,a.end):frame(body,plan,i/FPS).save(a.frames/f'{i:06}.jpg',quality=96)
     print(json.dumps(dict(start=a.start,end=a.end,fps=FPS)))
