@@ -2,5 +2,5 @@ mode=audio-library-setup
 categories=SoundEffects,BackgroundMusic
 seedSfx=original-procedural-only
 thirdPartyMusicRequiresAttribution=true
-noUnlicensedMusic=true
-sequence=21
+installFreeMusicCandidateSheet=true
+sequence=22
