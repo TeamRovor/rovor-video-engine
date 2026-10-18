@@ -110,9 +110,16 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("storyboard", type=Path)
     p.add_argument("--report", type=Path)
+    p.add_argument("--production-assets", type=Path,
+                   help="Strict production-only source-art manifest; no fake asset labels")
     args = p.parse_args()
     plan = json.loads(args.storyboard.read_text())
-    report = audit(plan)
+    if args.production_assets:
+        from original_art_story_gate import inspect_storyboard
+        registry = json.loads(args.production_assets.read_text())
+        report = inspect_storyboard(plan, registry, args.production_assets.parent)
+    else:
+        report = audit(plan)
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(json.dumps(report, indent=2) + "\n")
