@@ -8,13 +8,21 @@ Repo work/engine, branch development/evan-painted-rig (historical name). Draft P
 
 Automation develop-evan-painted-animation remains ACTIVE. Make routine decisions autonomously. Notify only meaningful review milestones/failure/completion/required action. Disable only when the full polished cartoon milestone is actually ready for review. It is NOT complete.
 
+## Latest: bounded head samples (renderer QA)
+
+Read CARTOON-EVAN-BOUNDED-SURFACES.md. BoundedCartoonHead / --bounded-head enables constrain_surface hooks on sampled head skin/oral/FV/tongue layers and pre-composite tongue-affine samples. Negative coverage/RGB lobes are removed; alpha above 255 is rescaled with RGB to preserve positive-alpha straight colour, then RGB is limited to [0, alpha]. Valid finite samples stay exact. Body and brow sampling are unchanged; this is not global renderer enforcement or a linear-light conversion. Source art, targets, timing and phoneme weights are unchanged.
+
+51 affected checks pass (six new plus prior head regressions). Seven actual-time baseline frames remain pixel exact after default hook extraction. Across 135 sampled surfaces, invalid pixel samples fall 50,668→0 and alpha extrema -41.2608…301.9288→0…255. These count repeated surface samples, not artistic quality. Visible head differences are small; raw hidden-RGB changes must not be presented as visible improvement.
+
+Review outputs ../../outputs/evan-cartoon-bounded-surfaces: native-head before/after and branded “missing a favicon”/pause shot, source 8.1875–10.1875 s, normal/quarter 96/384 frames each at 48 fps, all four decode cleanly; sample audit and visible-difference evidence. Selected full-resolution rounded/contact/release/rest frames inspected. No continuous playback/listening acceptance. This is renderer maintenance, NOT a new animation-quality milestone; pinched/gray contacts and mechanical rounded lips remain. Use this valid-sample head as the next artwork-study base, while preserving older comparison modes.
+
 ## Latest: anchored face skin
 
 Read CARTOON-EVAN-ANCHORED-SKIN.md. AnchoredCartoonHead extends SeparatedCartoonHead and holds the first 32 skin-ring anchors at original X coordinates; all external anchors retain the articulated jaw/chin target. Oral layers keep their own unchanged targets. This removes the inspected sideburn/ear-ink triangle dragged onto the cheek by rounded vowels. No generated art, bitmap patch, timing or planner change.
 
 AnchoredCartoonSceneBody / render_cartoon_scene.py --anchored-skin integrates the current continuous-wrist/independent-index body and official branding. Old modes/defaults remain baselines. Skin paint is stable under visemes; separately authored cheek acting can be designed later. The lower jaw is not frozen.
 
-29 affected checks pass: anchored skin (5) plus separated jaw/tongue/material/rounding (24). All 489 existing scene-clock samples retain positive skin-mesh orientation (min signed doubled triangle area .9903469), exact oral targets and external jaw anchors. Native cheek-region mean RGB drift at 3.125/4.6667 s falls 9.1234/10.6951→0. Opaque oral cores remain exact. Legacy cubic oral resampling overshoots alpha above 255; tested pure C/E/F/H fringe changes are bounded to one 8-bit level under new skin. Fix premultiplied range enforcement next; do not claim this separate issue is solved.
+29 affected checks pass: anchored skin (5) plus separated jaw/tongue/material/rounding (24). All 489 existing scene-clock samples retain positive skin-mesh orientation (min signed doubled triangle area .9903469), exact oral targets and external jaw anchors. Native cheek-region mean RGB drift at 3.125/4.6667 s falls 9.1234/10.6951→0. Opaque oral cores remain exact. Legacy Anchored-only mode retains cubic overshoot; its tested C/E/F/H fringe changes are bounded to one 8-bit level. The newer Bounded head above corrects sampled head surfaces; other pixel pipelines are unchanged.
 
 Review outputs ../../outputs/evan-cartoon-anchored-skin: same-audio native-head before/after, full branded integration and muted quarter-speed versions; source 2.5–5.0 s, 120/480 frames each at 48 fps; all four decode cleanly. Quarter speed repeats source frames. Selected full-resolution rounded/contact/FV/open-jaw views show clean cheek paint and retained jaw motion. No continuous playback/listening acceptance or studio-quality claim. Pinched lips, mechanical rounded silhouettes and shared tongue targets remain.
 
@@ -36,8 +44,8 @@ Two-pass PocketSphinx alignment: 66 words/248 phones, 39-phone catalog, diphthon
 
 ## Next concrete work / limits
 
-1. Enforce valid premultiplied cubic-sampling ranges before oral compositing; review edge/closure evidence and established endpoints.
-2. Design clean shallow-contact/rounded-vowel contours and separate L/dental tongue controls. Consider an independent jaw/chin envelope under lip seals without delaying contact. Preserve source proportions and audio evidence.
+1. PRIORITY: artist-designed clean shallow-contact and rounded-vowel contours, registered as genuine separate components with shared anatomical correspondence. Inspect against selected cartoon source; do not promote a generated concept plate or flatter sprite as a working rig.
+2. Separate L/dental tongue controls and consider independent jaw/chin movement under lip seals without delaying contact. Preserve source proportions and audio evidence.
 3. Design softer palm/neighbor-finger poses, clean wrist/shoulder linework and critically review acting rhythm. Static legs and missing eye/blink rig remain. A human character artist/animator is needed for final anatomy/performance approval. Native raster detail and CPU rendering constrain iteration; hardware cannot supply missing drawings.
 
 ## Runtime

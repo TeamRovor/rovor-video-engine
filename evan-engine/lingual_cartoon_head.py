@@ -21,8 +21,9 @@ class LingualCartoonHead(MaterialCartoonHead):
     def tongue_surface(self,w,oral,shape_weights=None):
         art=self.blade.astype('float32').copy();art[:,:,:3]*=art[:,:,3:4]/255
         art=cv2.warpAffine(art,tongue_matrix(tongue_lift(w)),(SIZE,SIZE),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT)
-        blade=warp(straight(art).astype('uint8'),POINTS['H'],oral,2)
-        root=warp(self.root_floor,POINTS['H'],oral,2)
+        art=self.constrain_surface(art)
+        blade=self.sample_surface(straight(art).astype('uint8'),POINTS['H'],oral,2)
+        root=self.sample_surface(self.root_floor,POINTS['H'],oral,2)
         return over(root,blade)
     def composite_oral(self,face,cavity,teeth,tongue,contact,closed,aperture,w):
         visible=self.cavity_visibility(aperture);fv=float(w[7])

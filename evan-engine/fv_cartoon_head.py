@@ -18,6 +18,6 @@ class FVContactHead(ExpressiveCartoonHead):
         return contact
     def contact_surface(self,target):
         contact=self.contact_target(target)
-        lips=warp(self.fv_layers['lip-contact'],self.points['G'],contact,2)
-        teeth=warp(self.fv_layers['upper-teeth'],self.points['G'],contact,2)
+        lips=self.sample_surface(self.fv_layers['lip-contact'],self.points['G'],contact,2)
+        teeth=self.sample_surface(self.fv_layers['upper-teeth'],self.points['G'],contact,2)
         return over(lips,teeth)
