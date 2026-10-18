@@ -16,6 +16,51 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  original-evan-performance-test:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor performance track test'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout original source art and authored performance engine
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_performance_${{ github.run_id }}
+      - name: Validate actual Evan rig actuation across long narration timeline
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          plan="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an-2/work/speech-alignment-v4/speech-plan.json"
+          test -x "$py" && test -f "$plan"
+          cd "$GITHUB_WORKSPACE/_rovor_performance_$GITHUB_RUN_ID/evan-engine"
+          "$py" -m unittest -v test_performance_tracks
+          "$py" -m py_compile performance_tracks.py render_acting_video.py
+          "$py" - "$plan" <<'PY'
+          import json,sys,math
+          import numpy as np
+          from cartoon_body import CartoonBody,REVIEW_BODY_OPTIONS
+          from performance_tracks import EvanPerformance
+          from test_performance_tracks import authored
+          source=json.load(open(sys.argv[1]))
+          actor=EvanPerformance(authored())
+          rig=CartoonBody(**REVIEW_BODY_OPTIONS)
+          before=rig.render(2.0,source,actor.at_frame(0))
+          after=rig.render(2.0,source,actor.at_frame(120))
+          p=np.asarray(before).astype(np.int16)
+          q=np.asarray(after).astype(np.int16)
+          difference=float(np.mean(np.abs(p-q)))
+          assert difference>0.15, 'Original rig did not visibly respond to acting controls'
+          assert before.size==(1464,1536) and after.size==(1464,1536)
+          assert actor.end==30473
+          print('ORIGINAL_LAYERED_EVAN_ACTUATOR_RENDER=VERIFIED')
+          print('BODY_IMAGE_MEAN_ABSOLUTE_CHANGE='+str(round(difference,3)))
+          print('LONGFORM_SOURCE_AUDIO_FRAMES=30473')
+          print('PUBLISH_APPROVAL=NO')
+          PY
+
   integrated-scene-schedule-test:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor integrated scene schedule test'
     runs-on: [self-hosted, macOS, X64, rovor-video]
