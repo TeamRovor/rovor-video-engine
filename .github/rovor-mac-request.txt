@@ -1,7 +1,5 @@
-mode=audio-analyze
-audio_id=6e080df3f97b5cd2
-asr=on
-source=original-local-evan-reference
-phonemeCertification=forbidden
-rhubarbMouthCues=technical-validation
-sequence=41
+mode=acoustic-mouth-fallback-test
+source=original-reference-audio
+actualPaintedEvanMouthArt=true
+notCertifiedPhones=true
+sequence=42
