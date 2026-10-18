@@ -1,6 +1,4 @@
-mode=longform-chapter-selftest
-minimumSeconds=30
-maximumSeconds=900
-preferSustainedPauses=true
-balancedTotalFrames=30473
-sequence=17
+mode=audio-library-setup
+categories=SoundEffects,BackgroundMusic
+rightsGate=required
+sequence=18
