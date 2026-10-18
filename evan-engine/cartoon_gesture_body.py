@@ -108,3 +108,11 @@ class CartoonSolidMouthBody(CartoonNeckArtBody):
         super().__init__(root,pose)
         from solid_cartoon_head import SolidCavityHead
         self.head=SolidCavityHead(root);self.solid_mouth_review=True
+
+
+class CartoonRoundedBody(CartoonSolidMouthBody):
+    """Opt-in phone-driven rounding with energy-weighted jaw opening."""
+    def __init__(self,root=ROOT,pose='point'):
+        super().__init__(root,pose)
+        from rounded_cartoon_head import RoundedCartoonHead
+        self.head=RoundedCartoonHead(root);self.rounding_review=True

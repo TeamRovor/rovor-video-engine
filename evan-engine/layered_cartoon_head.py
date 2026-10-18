@@ -36,11 +36,15 @@ class LayeredCartoonHead(CartoonHead):
         scale=(1.2+(height-1.2)*opening)/height
         oral[:32,1]=cy+(oral[:32,1]-cy)*scale
         return oral
-    def weights(self,weights):
-        w=np.asarray(weights,float);w=w/w.sum();target=np.asarray(sum(self.points[s]*v for s,v in zip(SYMBOLS,w)),np.float32)
+    def target_points(self,weights,shape_weights=None):
+        return np.asarray(sum(self.points[s]*v for s,v in zip(SYMBOLS,weights)),np.float32)
+    def skin_target(self,weights,target):
+        return target
+    def weights(self,weights,shape_weights=None):
+        w=np.asarray(weights,float);w=w/w.sum();target=self.target_points(w,shape_weights)
         aperture=float(sum(v*(self.geometry[s][7]-self.geometry[s][6]) for s,v in zip(SYMBOLS,w)))
         oral=self.oral_target(target,aperture)
-        face=warp(self.layers['face-skin'],POINTS['X'],target)
+        face=warp(self.layers['face-skin'],POINTS['X'],self.skin_target(w,target))
         cavity=warp(self.layers['cavity-outline'],POINTS['C'],oral,2)
         teeth=warp(self.layers['upper-teeth'],POINTS['C'],oral,2)
         # One raised tongue drawing moves down/scales toward the floor for

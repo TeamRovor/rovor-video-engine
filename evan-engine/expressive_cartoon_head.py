@@ -35,8 +35,8 @@ class ExpressiveCartoonHead(LayeredCartoonHead):
         self.repair=np.asarray(Image.open(folder/'repair-mask.png'))>0
         self.forehead=np.asarray(Image.open(folder/'forehead-mask.png')).astype('float32')/255
         self.brows={n:np.asarray(Image.open(folder/f'brow-{n}.png').convert('RGBA')).astype('float32') for n in ('left','right')}
-    def weights(self,weights,expression=None):
-        out=np.asarray(super().weights(weights)).copy();out[self.repair,:3]=self.clean[self.repair,:3]
+    def weights(self,weights,expression=None,shape_weights=None):
+        out=np.asarray(super().weights(weights,shape_weights=shape_weights)).copy();out[self.repair,:3]=self.clean[self.repair,:3]
         canvas=out.astype('float32');canvas[:,:,:3]*=canvas[:,:,3:4]/255
         expression=expression or {}
         for name,raw in self.brows.items():

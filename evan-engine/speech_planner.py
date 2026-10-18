@@ -86,7 +86,7 @@ def planned_weights(t,plan,fallback):
     silence=float(np.clip(energy/.035,0,1));weights*=silence;weights[0]+=1-silence
     return weights/weights.sum()
 
-def acoustic_weights(t,plan,fallback):
+def acoustic_weights(t,plan,fallback,*,energy_weighting=True):
     from painted_timing import ease
     out=np.zeros(9,float);out[0]=.06;contact=0.;fv=0.
     for g in plan.get('gestures',plan['phonemes']):
@@ -108,8 +108,9 @@ def acoustic_weights(t,plan,fallback):
     out[0]=max(.06,1-out[1:].sum())
     out/=out.sum()
     env=plan['audio'];energy=float(np.interp(t,np.arange(len(env['energy']))*env['step'],env['energy']))
-    for symbol in 'CDEF':
-        i='XABCDEFGH'.index(symbol);removed=out[i]*(1-(.40+.60*np.sqrt(energy)));out[i]-=removed;out[0]+=removed
+    if energy_weighting:
+        for symbol in 'CDEF':
+            i='XABCDEFGH'.index(symbol);removed=out[i]*(1-(.40+.60*np.sqrt(energy)));out[i]-=removed;out[0]+=removed
     # Sustained silence settles to rest. Silent bilabial closures still retain
     # their contact target; waveform amplitude never decides phone identity.
     gate=1.
