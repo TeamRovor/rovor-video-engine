@@ -36,7 +36,12 @@ def extract(whisper,duration):
             raise ValueError("Missing measured ASR segment offsets")
         begin=_time(offsets.get("from"),"segment start")/1000.
         end=_time(offsets.get("to"),"segment end")/1000.
-        if not 0<=begin<end<=duration+.09 or begin<previous_start-.001:
+        # whisper.cpp reports padded-end times on its final 30-second
+        # processing window. The real Evan WAV ends at 22.047 seconds while
+        # the final machine segment can claim 22.400 seconds. Clamp that
+        # *timestamp* to the measured original WAV, preserve an explicit
+        # review flag, and never synthesize extra speech or animation.
+        if not 0<=begin<end<=duration+.75 or begin>=duration or begin<previous_start-.001:
             raise ValueError(
                 "Invalid whisper segment index=%d start=%.3f end=%.3f audioDuration=%.3f "
                 "previousStart=%.3f (transcript text withheld)" %
@@ -52,6 +57,8 @@ def extract(whisper,duration):
         flags=[]
         if not words:
             flags.append("non-word-transcription")
+        if end>duration+.02:
+            flags.append("whisper-end-extends-past-real-recording-truncated")
         if items and begin < items[-1]["endSeconds"]-.08:
             flags.append("asr-timestamp-overlap")
         if end-begin>32:
