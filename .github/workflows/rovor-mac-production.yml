@@ -16,6 +16,52 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  cinematic-scene-director-test:
+    if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor cinematic scene director test'
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout preserved original Evan layered rig
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: _rovor_directed_scenes_${{ github.run_id }}
+      - name: Test physical camera/prop motion and source-art rendering
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          py="$HOME/Desktop/ROVOR_Evan_Full_Verified/venv/bin/python3"
+          plan="$HOME/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an-2/work/speech-alignment-v4/speech-plan.json"
+          test -x "$py" && test -s "$plan"
+          cd "$GITHUB_WORKSPACE/_rovor_directed_scenes_$GITHUB_RUN_ID/evan-engine"
+          "$py" -m py_compile directed_scene.py render_acting_video.py
+          "$py" -m unittest -v test_directed_scene
+          "$py" - "$plan" <<'PY'
+          import json,sys,tempfile
+          import numpy as np
+          from pathlib import Path
+          from cartoon_body import CartoonBody,REVIEW_BODY_OPTIONS,narration_acting
+          from directed_scene import DirectedScene
+          from test_directed_scene import fixture
+          voiceplan=json.load(open(sys.argv[1]))
+          actual=CartoonBody(**REVIEW_BODY_OPTIONS).render(2.0,voiceplan,narration_acting(2.0))
+          assert actual.mode=='RGBA' and actual.size==(1464,1536)
+          with tempfile.TemporaryDirectory() as d:
+              scene,registry=fixture(Path(d))
+              for portrait,size in ((False,(1920,1080)),(True,(1080,1920))):
+                  compositor=DirectedScene(scene,registry,d,portrait)
+                  a=np.asarray(compositor.frame(0,actual))
+                  b=np.asarray(compositor.frame(200,actual))
+                  difference=float(np.mean(abs(a.astype(np.int16)-b.astype(np.int16))))
+                  assert difference>.25,("Physical movement invisible",portrait,difference)
+                  assert a.shape[:2]==(size[1],size[0])
+                  print("ORIGINAL_EVAN_DIRECTED_COMPOSITING_"+("PORTRAIT" if portrait else "LANDSCAPE")+"=PASS")
+                  print("REAL_SCENE_MEAN_MOVEMENT="+str(round(difference,3)))
+          print("STUDIO_ART_APPROVAL=NO")
+          PY
+
   original-evan-performance-test:
     if: github.actor == 'TeamRovor' && github.event.head_commit.message == 'Approved Rovor performance track test'
     runs-on: [self-hosted, macOS, X64, rovor-video]
