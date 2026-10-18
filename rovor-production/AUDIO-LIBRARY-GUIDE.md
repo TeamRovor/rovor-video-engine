@@ -85,3 +85,55 @@ It never modifies narration, uploads audio or claims creative approval.
   silently claimed completed.
 - 30-second actual-audio minimum and 1080p60 animated storytelling requirement
   are unchanged. Long-form Evan speech/rig animation remains in development.
+
+
+## Three original instrumental choices (created on Mac)
+
+- rovor-curious-expedition.wav — exploratory keys and gentle arpeggios; 60s
+- rovor-playful-mechanics.wav — quirky plucks and bouncy syncopation; 48s
+- rovor-quiet-new-ground.wav — restrained atmospheric progressions; 55.385s
+
+All three are 48 kHz stereo source WAVs, with owner-authored source-code
+provenance and independent sidecars. They were synthesized with zero external
+samples, licensed software or spending. These tracks are **drafts**:
+listen to them and compare them with the intended scene at normal volume
+before deciding whether to use, recompose or discard them. Studio production
+approval is not implied by a passing unit test or catalog registration.
+A compressed MP3 audition copy of each has also been saved in ChatGPT
+Library's Rovor Audio Library folder for convenient listening on a phone.
+The full-size WAV sources remain on the Mac.
+
+Rebuild missing original instrumental WAV sources without replacing existing
+user-edited files by running locally:
+    python3 rovor-production/generate_original_music.py
+
+## Real mixed soundtrack review — separate from the original narration
+
+Once a chapter has been directed with specific visible SFX events and a
+music mood, produce a candidate cue file using soundtrack_editor.py, then
+render a separate non-destructive *audio* audition:
+
+    python3 rovor-production/mix_audio_review.py \
+      /path/to/real-narration.mp3 \
+      /path/to/sound-cue-proposals.json \
+      /path/to/new-mix-review.wav \
+      --ffmpeg /path/to/ffmpeg
+
+This 48k stereo streaming mixer can read 30s–15m recordings and only
+mixes catalog-verified, licensed sounds. It applies the proposed audio
+levels at exact 60fps cue positions; respects quiet sections; fades selected
+instrumental beds; and refuses automatic looping, missing clips, excessive
+peaks, overlong audio, overwriting existing files and fabricated asset IDs.
+
+The **original narration file is never modified**. The preview has its own
+WAV and JSON validation report with source SHA-256, actual duration,
+number of used cues, peak and RMS. Since decoding mono narration to stereo
+may legitimately use the decoder's channel panning, the review file is not
+claimed to be a bit-for-bit equivalent of the original voice data.
+
+The mixer is not a music director. Creative timing, scene-specific mood,
+human listening, true ducking/artistic mastering, verified word/phone timing
+and finished illustration are NOT automatically solved. A 30+ second audio
+mix cannot be called a finished 1080p60 cartoon. The first controlled
+32-second synthetic-narration rehearsal on Rovor-Mac passed; real long-form
+Evan narration has not yet gone through a fully directed soundtrack.
