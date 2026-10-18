@@ -343,34 +343,8 @@ def main():
                         '-t',str((end-start)/DEFAULT_FPS),'-movflags','+faststart',
                         str(temporary)],check=True)
         pending_exports.append((name,temporary,target))
-    # Check EVERY decoded frame, 60fps PTS continuity and multiple narration
-    # locations across the source take before replacing a single prior export.
-    # A one-chapter video may select [start,end) of a larger original voice,
-    # so source offsets are compared at exact frame boundaries.
-    from verify_longform_export import verify as verify_export
-    completed={}
-    for name,temporary,target in pending_exports:
-        size=LANDSCAPE if name=='landscape' else VERTICAL
-        completed[name]=verify_export(a.ffmpeg,temporary,a.wav,size=size,
-                                      start_frame=start,end_frame=end)
-    if len(completed)!=2 or any(r["voiceWindowsVerified"]<3 for r in completed.values()):
-        raise RuntimeError("Both 1080p60 original narration outputs must pass technical integrity")
-    report={
-        "status":"TWO_FORMAT_RENDERED_MEDIA_TECHNICALLY_VERIFIED",
-        "fps":DEFAULT_FPS,"sourceAudioHash":profile["audioHash"],
-        "landscape":completed["landscape"],"portrait":completed["vertical"],
-        "phonemeTimingArtistCertified":False,
-        "studioVisualQualityApproved":False,
-        "publicationApproved":False
-    }
-    # Each older complete export remains untouched on any verify exception;
-    # report is committed only after both independent checks succeed.
-    for name,temporary,target in pending_exports:
-        temporary.replace(target)
-    report_path=a.output/'final-media-integrity.json'
-    temp_report=a.output/'final-media-integrity.partial.json'
-    temp_report.write_text(json.dumps(report,indent=2)+'\n')
-    temp_report.replace(report_path)
+    from promote_verified_pair import promote
+    promote(pending_exports,a.ffmpeg,a.wav,start,end,a.output,profile["audioHash"])
     print("ROVOR_COMPLETE_BOTH_1080P60_VIDEO_FORMATS_TECHNICALLY_VERIFIED=YES")
     print("CREATIVE_APPROVAL=NO")
     print(json.dumps(profile),flush=True)
