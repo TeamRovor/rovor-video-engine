@@ -57,34 +57,68 @@ def read_energy(csv_path, duration):
     return values
 
 
-def _candidate_frames(total, here, energy, fps, minimum, maximum, target):
-    remaining = total - here
-    if remaining <= maximum:
-        return None
-    low = here + minimum
-    high = min(here + maximum, total - minimum)
-    if low > high:
-        raise ValueError("Cannot fit another >=30-second chapter")
-    ideal = min(high, max(low, here + target))
-    # Only select boundaries where observations actually exist. No energy
-    # inference is made for missing windows or unknown acoustic phones.
-    observations = {}
-    for sec, db in energy:
-        frame = int(round(sec * fps))
-        if low <= frame <= high:
-            old = observations.get(frame)
-            observations[frame] = db if old is None else min(old, db)
+def _pause_candidates(energy, fps, threshold=SILENCE_DBFS, min_duration=.18):
+    """Sustained low-energy spans, not isolated 10 ms samples.
 
-    in_window = [(frame,db) for frame,db in observations.items()
-                 if abs(frame - ideal) <= 11*fps]
-    silent = [(frame,db) for frame,db in in_window if db <= SILENCE_DBFS]
-    if silent:
-        # Favor a silence near the desired chapter length, then quieter energy.
-        frame,db = min(silent,key=lambda row:(abs(row[0]-ideal),row[1]))
-        return (frame,"low-energy-candidate",round(db,2))
-    # A quiet dip is NOT automatically a safe phonetic edit point.
-    # Any fallback boundary stays editorially unapproved.
-    return (ideal,"timing-only-REQUIRES-LISTENING",None)
+    A fricative or stop-closure can be quiet too. Every resulting candidate
+    remains flagged for editorial/audio and word-boundary review.
+    """
+    result = []
+    start = None
+    previous = None
+    lowest = 0.
+    for sec, db in energy:
+        if db <= threshold:
+            if start is None or (previous is not None and sec-previous > .035):
+                if start is not None and previous is not None and previous-start+.01 >= min_duration:
+                    center = round((start+previous+.01)/2 * fps)
+                    result.append((center, round(lowest, 2)))
+                start = sec
+                lowest = db
+            else:
+                lowest = min(lowest, db)
+            previous = sec
+        elif start is not None:
+            if previous is not None and previous-start+.01 >= min_duration:
+                center = round((start+previous+.01)/2 * fps)
+                result.append((center, round(lowest, 2)))
+            start = None
+            previous = None
+    if start is not None and previous is not None and previous-start+.01 >= min_duration:
+        result.append((round((start+previous+.01)/2*fps),round(lowest,2)))
+    return result
+
+
+def _number_of_chapters(total, target, minimum, maximum):
+    """Select a fixed globally feasible chapter count.
+
+    Greedy cuts near 55s previously created a needless 30s tail for an
+    8m27s real narration. A fixed count prevents that waste and guarantees
+    every later boundary remains feasible.
+    """
+    lo = math.ceil(total/maximum)
+    hi = total//minimum
+    if lo > hi:
+        raise ValueError("Narration cannot be partitioned into valid chapters")
+    return min(hi,max(lo,round(total/target)))
+
+
+def _candidate_frames(total, here, index, chapter_count, pauses, fps,
+                      minimum, maximum):
+    """Return the next 60fps edit candidate while preserving future space."""
+    remaining_chapters = chapter_count-index
+    low=max(here+minimum,total-remaining_chapters*maximum)
+    high=min(here+maximum,total-remaining_chapters*minimum)
+    if low>high:
+        raise ValueError("No feasible future minimum/maximum chapter coverage")
+    ideal=min(high,max(low,round(total*index/chapter_count)))
+    eligible=[(abs(frame-ideal),frame,db) for frame,db in pauses
+              if low<=frame<=high and abs(frame-ideal)<=11*fps]
+    if eligible:
+        _,frame,db=min(eligible)
+        return frame,"sustained-low-energy-candidate",db
+    # No reliable pause: never claim this is an acoustically safe word cut.
+    return ideal,"timing-only-REQUIRES-LISTENING",None
 
 
 def plan(duration, energy, fps=FPS, target_seconds=TARGET_CHAPTER_SECONDS,
@@ -103,17 +137,21 @@ def plan(duration, energy, fps=FPS, target_seconds=TARGET_CHAPTER_SECONDS,
     minimum = math.ceil(min_seconds*fps)
     maximum = int(max_seconds*fps)
     target = round(target_seconds*fps)
+    chapter_count=_number_of_chapters(count,target,minimum,maximum)
+    pauses=_pause_candidates(energy,fps)
     frames = 0
     chapters = []
-    while frames < count:
-        nxt = _candidate_frames(count,frames,energy,fps,minimum,maximum,target)
-        if nxt is None:
+    for index in range(1,chapter_count+1):
+        if index==chapter_count:
             end=count
             cut="end-of-original-recording"
             db=None
+            nxt=None
         else:
-            end,cut,db=nxt
-        if end <= frames or end - frames < minimum:
+            end,cut,db=_candidate_frames(count,frames,index,chapter_count,
+                                         pauses,fps,minimum,maximum)
+            nxt=True
+        if end <= frames or not minimum <= end-frames <= maximum:
             raise ValueError("Too-short or non-progressing production chapter")
         chapter_number=len(chapters)+1
         source_start=frames/fps
