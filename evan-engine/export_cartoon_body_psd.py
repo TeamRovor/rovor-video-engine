@@ -6,8 +6,11 @@ from PIL import Image
 from psd_tools import PSDImage
 from cartoon_body import CartoonBody
 
-def export(plan,output,gesture=False,time=0,sockets=False,neck=False,neck_art=False):
-    if gesture or sockets or neck or neck_art:
+def export(plan,output,gesture=False,time=0,sockets=False,neck=False,neck_art=False,scene=False):
+    if scene:
+        from cartoon_scene import CartoonSceneBody,scene_controls
+        body=CartoonSceneBody();layers=body.layers(time,plan,scene_controls(time,plan))
+    elif gesture or sockets or neck or neck_art:
         from cartoon_gesture_body import CartoonGestureBody,CartoonSocketBody,CartoonNeckBody,CartoonNeckArtBody,pointing_acting
         body=CartoonNeckArtBody() if neck_art else CartoonNeckBody() if neck else CartoonSocketBody() if sockets else CartoonGestureBody();layers=body.layers(time,plan,pointing_acting(time))
     else:
@@ -27,4 +30,4 @@ def export(plan,output,gesture=False,time=0,sockets=False,neck=False,neck_art=Fa
     if delta.mean()>1:raise RuntimeError('PSD reassembly differs from runtime')
     return dict(layers=list(layers),meanPixelDifference=float(delta.mean()),nativeMoho=False)
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('output',type=Path);p.add_argument('--gesture',action='store_true');p.add_argument('--time',type=float,default=0);p.add_argument('--sockets',action='store_true');p.add_argument('--neck',action='store_true');p.add_argument('--neck-art',action='store_true');a=p.parse_args();print(json.dumps(export(json.loads(a.plan.read_text()),a.output,a.gesture,a.time,a.sockets,a.neck,a.neck_art)))
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('output',type=Path);p.add_argument('--gesture',action='store_true');p.add_argument('--time',type=float,default=0);p.add_argument('--sockets',action='store_true');p.add_argument('--neck',action='store_true');p.add_argument('--neck-art',action='store_true');p.add_argument('--scene',action='store_true');a=p.parse_args();print(json.dumps(export(json.loads(a.plan.read_text()),a.output,a.gesture,a.time,a.sockets,a.neck,a.neck_art,a.scene)))

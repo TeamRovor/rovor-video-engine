@@ -15,7 +15,7 @@ All latest work is opt-in. Original classes/defaults remain comparison baselines
 - LayeredCartoonHead separates skin/cavity/teeth/tongue/lips. ExpressiveCartoonHead adds original independent brows; FVContactHead uses a relaxed separate lip/upper-teeth contact candidate.
 - SolidCavityHead fixes the brown neutral/rounded transition by keeping the cavity solid, retaining tilted closure geometry and solid closed ink until the inner opening replaces it. See CARTOON-EVAN-SOLID-CAVITY.md.
 - Registered neck/collar art closes the previously observed pale gaps in native 0/+8/-8 tilt checks. Neck is independent from the fixed collar, with a small residual left-jaw fold. Seven-layer PSD is real pixel layers, not a verified Moho bone rig. See CARTOON-EVAN-NECK-ART.md.
-- Separate open and pointing drawings attach to hierarchical wrists; there is no relaxed-to-point transition or independent finger rig. Underarm bands reduce tabs; shoulder/wrist creases and thin hand linework remain.
+- Original open and pointing drawings attach to hierarchical wrists; the new scene adds a separate continuously bent index, while the other digits remain drawn. Underarm bands reduce tabs; shoulder/wrist creases and thin hand linework remain.
 
 ## Latest: independent rounded lip width
 
@@ -29,11 +29,19 @@ Earlier review outputs remain under ../../outputs/evan-cartoon-solid-mouth, evan
 
 Two-pass PocketSphinx forced word/phone alignment, 66 words/248 phones, 39-phone catalog with diphthong glides/contacts/held vowels and silence gating. Reference plan ../../outputs/evan-speech-alignment/Aligned-Speech-Plan.json. All 18 word-anchor flags already have waveform/spectrogram visual evidence review in evan-engine/reviews/evan-reference-timing-v1.json; retain current acoustic timings. Exact phone boundaries remain UNVERIFIED, with no listening/ground-truth verification. Coverage is not timing accuracy. Current changes leave annotations/cached controls untouched. See SPEECH-TIMING-REVIEW.md and ACOUSTIC-SPEECH-ALIGNMENT.md.
 
+## Latest: longer scene and independent index
+
+Read CARTOON-EVAN-NARRATED-SCENE.md. New CartoonSceneBody / render_cartoon_scene.py integrates the existing current head/neck rig in a 0–10.1875 s scene through favicon and its pause. Two authored word-anchored gestures have drawback, follow-through, held pointing and a pause settle. Browser globe remains a placeholder, highlighted on favicon; official Rovor mark is used. Engineering captions are omitted from the new scene only.
+
+New generated hidden-palm source/prompt is in index-source; registered working palm/index and source hashes in index-rig. First local patch left a notch; final coherent hidden palm below a feathered wrist fixes that visible cut. The original point drawing supplies a separate three-phalange index with continuous skinning. Only the index is articulated; thumb/three curled neighbors remain one drawing. Rest is a loose curled index, not a fully relaxed new hand pose. Range is MCP -10..0 / PIP 0..60 / DIP 0..35; unreviewed ranges are rejected. Sharp initial weights pinched; broad final weights preserve orientation across the shot.
+
+Outputs ../../outputs/evan-cartoon-narrated-scene: normal/quarter-speed films, reopened eight-layer PSD (mean difference .00747/255), native curled/half/point composites, generated hidden-palm source/exact prompt, cue timeline and pause evidence. Original audio/annotations remain unchanged; central pause mouth rest weight is 1. All 18 timing flags retain their visual review and uncertainty. 114 checks pass, not perceptual approval. Full-resolution source/assembled frames inspected; no continuous movie playback/listening verification claimed. Only scratch ../cartoon-index/scene-final matches the final working components; earlier scene-frames and pose experiments are superseded.
+
 ## Next concrete work
 
-1. Use the current layered assembly and separate width/jaw controls in a longer scene through favicon and the real 9.15–10.19 s pause. Design relaxed-to-point hand poses, anticipation and held word accents. Judge normal-speed motion before adding incidental drifting.
-2. Redraw rounded/FV lower-lip and L/tongue anatomy with clean contours; keep generated source plates separate from registered working parts. Apply imagegen skill for generated artwork and inspect at full resolution. Preserve likeness; reject global proportion changes.
-3. Clean hand/wrist/shoulder construction; legs remain static and eyes have no blink rig behind glasses. A character artist/animator is still needed for final anatomy/performance. Do not equate tests, frame counts or flatter sprite swaps with studio quality.
+1. Clean the index root/knuckle/wrist artwork and add a designed softer palm/remaining-finger pose; current thumb/three curls remain rigid and the resting index can read as a hook. Review the whole shot at normal speed for deliberate rhythm before adding incidental motion.
+2. Review the muddy narrow lip at 8.79 s locally, then redraw rounded/FV lower-lip and L/tongue anatomy with clean contours; keep generated source plates separate from registered working parts. Preserve selected likeness; reject global proportion changes.
+3. Clean shoulder construction; legs remain static and eyes have no blink rig behind glasses. A character artist/animator is still needed for final anatomy/performance. Do not equate tests, frame counts or flatter sprite swaps with studio quality. Full polished milestone remains incomplete; automation stays ACTIVE.
 
 ## Runtime
 
