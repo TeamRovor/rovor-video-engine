@@ -1,4 +1,4 @@
-mode=cinematic-scene-director-test
-noOutputBefore40secPreflight=true
-originalArtMusicSfxStageGated=true
-sequence=35
+mode=original-evan-performance-test
+realisticComicActing=anticipation-action-hold-recovery
+originalHandArt=required
+sequence=36
