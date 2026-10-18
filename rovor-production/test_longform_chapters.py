@@ -54,12 +54,30 @@ class ChapterTests(unittest.TestCase):
 
     def test_cut_is_only_review_candidate(self):
         result=plan(150,envelope(150,[(54.7,55.3)]))
-        self.assertEqual(result["chapters"][0]["boundaryAfter"]["type"],"low-energy-candidate")
+        self.assertEqual(result["chapters"][0]["boundaryAfter"]["type"],"sustained-low-energy-candidate")
         self.assertTrue(result["chapters"][0]["boundaryAfter"]["requiresAudibleWordBoundaryReview"])
         with_no_silence=plan(150,envelope(150))
         self.assertEqual(with_no_silence["chapters"][0]["boundaryAfter"]["type"],
                          "timing-only-REQUIRES-LISTENING")
         self.assertTrue(with_no_silence["chapters"][0]["boundaryAfter"]["requiresAudibleWordBoundaryReview"])
+
+    def test_real_8m27_duration_balanced_not_wasted_tail(self):
+        duration=507.8726875
+        result=plan(duration,envelope(507.88))
+        self.assertEqual(result["totalTimelineFrames"],30473)
+        self.assertEqual(result["chapterCount"],9)
+        lengths=[c["decodedFramesTarget"]/60 for c in result["chapters"]]
+        self.assertTrue(all(48 <= seconds <= 64 for seconds in lengths),lengths)
+        self.assertEqual(sum(c["decodedFramesTarget"] for c in result["chapters"]),30473)
+        self.assertFalse(result["artisticApproval"])
+
+    def test_single_quiet_ten_ms_consonant_is_not_edit_candidate(self):
+        # A single silent analysis sample is NOT a meaningful pause.
+        burst=envelope(150,[(49.99,49.99)])
+        result=plan(150,burst)
+        self.assertEqual(result["chapters"][0]["boundaryAfter"]["type"],
+                         "timing-only-REQUIRES-LISTENING")
+        self.assertTrue(result["chapters"][0]["boundaryAfter"]["requiresAudibleWordBoundaryReview"])
 
     def test_nonfinite_and_too_long_rejected(self):
         for value in (0,25,901,float("nan"),float("inf")):
