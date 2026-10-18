@@ -1,4 +1,2 @@
-mode=integrated-scene-schedule-test
-rejectFictionalRigControlIds=true
-requirePhysicalActingInActionScenes=true
-sequence=29
+mode=performance-test
+sequence=30
