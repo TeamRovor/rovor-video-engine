@@ -61,7 +61,10 @@ jobs:
           PY
           "$py" "$root/rovor-production/visual_dynamics_audit.py" "$out/landscape-acting-review.mp4" --report "$out/visual-motion.json"
           echo "ARTISTIC_APPROVAL=NOT_GIVEN"
+      # Diagnostic-only 3.3-second snippet. Never publish as a user-facing video.
+      # Only >=30-second completed videos are eligible for private delivery.
       - name: Deliver rendered review as short-lived private artifact
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: Rovor-Evan-Acted-Sequence-${{ github.run_id }}
