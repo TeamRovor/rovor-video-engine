@@ -226,9 +226,19 @@ def propose(storyboard,catalog):
             continue
         music.append(bed)
         last_music=bed
+    used_assets={row["assetId"] for row in effects+music}
+    attribution=[]
+    for key in sorted(used_assets):
+        item=assets[key]
+        if item.get("licenseKind")=="separately-licensed":
+            credit=item.get("attributionText")
+            if not isinstance(credit,str) or len(credit.strip())<12:
+                raise ValueError("Missing required track attribution for "+key)
+            attribution.append({"assetId":key,"creditLine":credit.strip()})
     return {
         "schemaVersion":1,
         "status":"EDITORIAL_AUDIO_CUE_PROPOSALS",
+        "requiredAttributions":attribution,
         "sourceNarrationSeconds":duration,
         "fps":FPS,
         "speechEvidence":evidence,
