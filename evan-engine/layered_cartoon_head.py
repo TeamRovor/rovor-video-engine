@@ -23,9 +23,11 @@ class LayeredCartoonHead(CartoonHead):
         self.contact=self.layers['fv-contact']
     def contact_surface(self,target):
         return warp(self.contact,self.points['G'],target)
-    def weights(self,weights):
-        w=np.asarray(weights,float);w=w/w.sum();target=np.asarray(sum(self.points[s]*v for s,v in zip(SYMBOLS,w)),np.float32)
-        aperture=float(sum(v*(self.geometry[s][7]-self.geometry[s][6]) for s,v in zip(SYMBOLS,w)))
+    def cavity_visibility(self,aperture):
+        return float(ease((aperture-2)/6))
+    def closed_visibility(self,aperture):
+        return 1-self.cavity_visibility(aperture)
+    def oral_target(self,target,aperture):
         opening=float(ease((aperture-1)/7));oral=target.copy()
         cy=float((target[0,1]+target[8,1])/2)
         # Collapse the drawn oral surfaces at contact; facial cheek/jaw anchors
@@ -33,6 +35,11 @@ class LayeredCartoonHead(CartoonHead):
         height=max(1.,float(target[:16,1].max()-target[:16,1].min()))
         scale=(1.2+(height-1.2)*opening)/height
         oral[:32,1]=cy+(oral[:32,1]-cy)*scale
+        return oral
+    def weights(self,weights):
+        w=np.asarray(weights,float);w=w/w.sum();target=np.asarray(sum(self.points[s]*v for s,v in zip(SYMBOLS,w)),np.float32)
+        aperture=float(sum(v*(self.geometry[s][7]-self.geometry[s][6]) for s,v in zip(SYMBOLS,w)))
+        oral=self.oral_target(target,aperture)
         face=warp(self.layers['face-skin'],POINTS['X'],target)
         cavity=warp(self.layers['cavity-outline'],POINTS['C'],oral,2)
         teeth=warp(self.layers['upper-teeth'],POINTS['C'],oral,2)
@@ -49,14 +56,14 @@ class LayeredCartoonHead(CartoonHead):
         interior=cv2.erode(np.clip(cavity[:,:,3],0,255),np.ones((3,3),np.uint8))[:,:,None]/255
         teeth*=interior;tongue*=interior
         # Reuse the original contact drawing while it awaits anatomical cleanup.
-        visible=float(ease((aperture-2)/6))
+        visible=self.cavity_visibility(aperture)
         fv=float(w[7]);face=over(face,cavity,visible*(1-fv))
         face=over(face,teeth,visible*float(ease((aperture-2)/7))*(1-fv)*(1-float(w[5]+w[6])))
         face=over(face,tongue,visible*float(ease((aperture-8)/12))*(1-fv))
         contact=self.contact_surface(target)
         face=over(face,contact,fv)
         closed=warp(self.layers['closed-lips'],POINTS['X'],target,2)
-        face=over(face,closed,(1-visible)*(1-fv))
+        face=over(face,closed,self.closed_visibility(aperture)*(1-fv))
         result=straight(face)
         result=self.images['X'].astype('float32')*(1-self.weight)+result*self.weight
         return Image.fromarray(np.clip(result,0,255).astype('uint8'))

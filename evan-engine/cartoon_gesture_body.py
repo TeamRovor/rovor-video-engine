@@ -100,3 +100,11 @@ class CartoonNeckArtBody(CartoonNeckBody):
         raw[:,:,3]=(raw[:,:,3]*np.clip((yy-jaw_cut(xx,delta)+3)/5,0,1)).astype('uint8')
         plate=Image.fromarray(raw);plate.alpha_composite(neck)
         return render_neck(plate,tilt,delta,bounds=(195,355),spread=.25)
+
+
+class CartoonSolidMouthBody(CartoonNeckArtBody):
+    """Opt-in solid cavity during narrow vowel transitions."""
+    def __init__(self,root=ROOT,pose='point'):
+        super().__init__(root,pose)
+        from solid_cartoon_head import SolidCavityHead
+        self.head=SolidCavityHead(root);self.solid_mouth_review=True
