@@ -2,4 +2,5 @@ mode=audio-mix-selftest
 minNarrationSeconds=30
 preserveOriginal=true
 noAutoPublish=true
-sequence=26
+verifySameDecodedSignal=true
+sequence=27
