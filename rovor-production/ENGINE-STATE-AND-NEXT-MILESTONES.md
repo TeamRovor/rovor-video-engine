@@ -156,3 +156,49 @@ Immediate owner-side setup needed for long-form engine:
 
 NONE of these lip fallback outputs is a completed cartoon, certified
 English phone alignment, artist-approved acting, or final sound mix.
+
+
+## October 18 — verified complete video integrity and dual-output gate
+
+This milestone is engineering reliability work and does NOT mean a
+Hollywood-quality cartoon or publication-ready Evan video has been made.
+
+- evan-engine/verify_longform_export.py: bounded-memory FFmpeg verifier
+  checks every actual decoded frame, 60fps PTS/cadence, exact dimensions
+  and frame count; streams voice duration and checks untouched narration
+  correlation at 12 distributed audio checkpoints. It avoids holding
+  8-9 minutes of decoded audio in memory at once.
+- Supports original >=30-second source excerpts from a longer WAV via
+  exact 60fps start/end frames. This prevents a correct chapter from
+  being wrongly matched to the opening of the original long take.
+- evan-engine/promote_verified_pair.py: verify BOTH landscape and
+  portrait, original audio SHA, and equal source intervals BEFORE
+  replacing previously verified user review exports. An invalid
+  portrait must leave the previous landscape untouched.
+- evan-engine/render_acting_video.py now invokes this dual-format
+  verifier automatically after generating both full H264/AAC exports.
+  Finished exports shorter than 30 actual narration seconds are blocked.
+  Complete integrity status is stored as final-media-integrity.json,
+  with creativity/phoneme/publication still explicitly unapproved.
+
+Verified Rovor-Mac results:
+- 39101719719: seven tests PASS on a genuine 31.2-second synthetic
+  local 60fps H264/AAC fixture and corruption/voice mismatch cases.
+  https://github.com/TeamRovor/rovor-video-engine/actions/runs/39101719719
+- 39102040319: twelve tests PASS; corrupt portrait is refused without
+  overwriting either previous verified video.
+  https://github.com/TeamRovor/rovor-video-engine/actions/runs/39102040319
+- 39102146606: thirteen tests PASS, including a 32-second clip
+  extracted 18 seconds into an independent 70-second source WAV and
+  a correct-source-offset check.
+  https://github.com/TeamRovor/rovor-video-engine/actions/runs/39102146606
+
+These are PRIVATE synthetic fixtures; no actual finished original
+Evan animation of 30+ seconds has been produced or approved.
+Real 8:27 narration remains absent from the Mac allowlisted audio
+catalog without Drive Desktop / a local file copy. Do not claim
+studio storytelling, correct full-length phoneme alignment or private
+user video delivery is complete. Next milestones remain full original
+audio local intake, human-reviewed longform English alignment, original
+illustrated scenes and richer source-authentic acting drawings, chapter
+render, end-to-end proof and private deliverables.
