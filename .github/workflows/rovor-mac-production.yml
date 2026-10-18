@@ -50,8 +50,17 @@ jobs:
           assert actual.mode=='RGBA' and actual.size==(1464,1536)
           with tempfile.TemporaryDirectory() as d:
               scene,registry=fixture(Path(d))
+              from render_acting_video import _directed_worker_runtime
+              sj=Path(d)/'scene.json';rj=Path(d)/'assets.json'
+              sj.write_text(json.dumps(scene));rj.write_text(json.dumps(registry))
+              paired,shared_actor=_directed_worker_runtime(str(sj),str(rj))
+              paired_second,actor_second=_directed_worker_runtime(str(sj),str(rj))
+              assert paired is paired_second and shared_actor is actor_second
+              assert paired[0].images is paired[1].images
+              assert _directed_worker_runtime.cache_info().hits>=1
+              print('ORIGINAL_ASSETS_REUSED_BETWEEN_RENDER_CHUNKS=PASS')
               for portrait,size in ((False,(1920,1080)),(True,(1080,1920))):
-                  compositor=DirectedScene(scene,registry,d,portrait)
+                  compositor=paired[1 if portrait else 0]
                   a=np.asarray(compositor.frame(0,actual))
                   b=np.asarray(compositor.frame(200,actual))
                   difference=float(np.mean(abs(a.astype(np.int16)-b.astype(np.int16))))
