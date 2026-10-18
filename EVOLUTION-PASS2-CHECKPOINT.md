@@ -35,3 +35,16 @@ Intermediate directory: parent `work/full-take-evolution-v3`; source body frames
 ## Recheck a completed preview
 
 Run `evan-engine/verify_review_video.py VIDEO.mp4 ORIGINAL.wav --ffmpeg /absolute/path/to/ffmpeg --report report.json`, adding `--vertical` for portrait. The reference stays private and is not added to the repository. The verifier checks this full original take, rather than accepting a short clip as a completed delivery.
+
+## Continuation — 2026-10-17 render-resume hardening (not a new art pass)
+
+After the original nine upgrades, draft PR #5 gained one targeted reliability change without modifying source paintings, rig poses, phoneme timing, private voice files, or approved Mac updater:
+
+- `evan-engine/chunk_integrity.py` decodes every frame of an existing chunk and checks native dimensions, expected frame count, and 60 fps. Missing, truncated, extra-frame, wrong-size, and wrong-rate outputs are not reused on resume.
+- `render_acting_video.py` validates both formats before promoting newly encoded chunk files, and before skipping existing chunks. Completed final MP4 concatenations are now written to `.partial.mp4` files, then atomically renamed after successful encoding.
+- `test_chunk_integrity.py` has five passing local unit tests. A separately encoded real H.264 three-frame sample also passed the gate, while a deliberately wrong expected frame count failed. These checks were performed in the chat's isolated test container, **not** on the Mac or the private original recording.
+- Current draft PR head after these changes: `4e6691263aed51866368046789ccd2d3c81a783f`. No merge, deployment, narration re-alignment, or regenerated source art.
+
+**Mac status at review:** the dedicated `rovor-video` self-hosted Mac runner succeeded in earlier GitHub Action sessions, including the read-only connection check. A later approved preflight run (GitHub Actions run `39073496099`) remains queued, so do not claim this new code has been executed on the Mac until a runner job actually finishes. Restart or reconnect the Mac runner to continue local FFmpeg/rig tests and artistic review.
+
+**Next:** run the new five-test suite on the Mac, then the existing rig/render and full decoded-video verification tests. Inspect the open-to-relaxed-to-point hand transitions and remaining neck/sleeve contours on actual 60fps frame strips; static and structural passes are not artistic approval.
