@@ -113,12 +113,23 @@ def produce(root=ROOT):
         output=folder/name
         meta=folder/(name+".asset.json")
         values=samples(kind,duration,index*1531)
-        # Create candidate atomically; never overwrite something supplied or edited by owner.
-        if not output.exists():
-            temporary=output.with_suffix(".partial.wav")
+        # Compare deterministic bytes before describing any existing audio as
+        # created by this generator. Never bless unrelated user media as ours.
+        if output.is_symlink() or meta.is_symlink():
+            raise ValueError("Symlinked audio/metadata is not trusted")
+        temporary=output.with_name(name+".generated.partial.wav")
+        try:
             write_pcm(temporary,values)
-            temporary.replace(output)
-            created.append(name)
+            expected_hash=sha256(temporary)
+            if output.exists():
+                if not output.is_file() or sha256(output)!=expected_hash:
+                    raise ValueError("Existing user sound differs; leave untouched: "+name)
+            else:
+                temporary.replace(output)
+                created.append(name)
+        finally:
+            if temporary.exists():
+                temporary.unlink()
         if not meta.exists():
             metadata={
                 "schemaVersion":1,
