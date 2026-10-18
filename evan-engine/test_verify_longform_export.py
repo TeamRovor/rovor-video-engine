@@ -23,7 +23,7 @@ def write_wav(path,seconds):
     envelope=(.28+.18*np.sin(2*np.pi*.7*t))*(.75+.25*np.sin(2*np.pi*.11*t))
     wave_values=(np.sin(2*np.pi*(180*t+13*t*t/seconds))+
                  .28*np.sin(2*np.pi*430*t)+
-                 .13*rng.normal(0,1,size=n))
+                 .035*rng.normal(0,1,size=n))
     pcm=np.rint(np.clip(envelope*wave_values,-.8,.8)*32767).astype("<i2")
     with wave.open(str(path),"wb") as f:
         f.setnchannels(1);f.setsampwidth(2);f.setframerate(16000)
