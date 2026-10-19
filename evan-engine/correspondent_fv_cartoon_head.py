@@ -14,6 +14,9 @@ from painted_timing import ease
 class CorrespondentFVCartoonHead(PlanarFVCartoonHead):
     def __init__(self,root=ROOT):
         super().__init__(root);self.fv_correspondence_fallbacks=0;self.fv_correspondence_samples=0;self.capture_fv_registration=False;self.last_fv_registration=None
+    def registered_contact_surface(self,contact,field,w):
+        return self._remap(contact,field)
+
     def composite_oral(self,face,cavity,teeth,tongue,contact,closed,aperture,w):
         fv=float(w[7]);visible=self.cavity_visibility(aperture)
         if fv<=0 or fv>=1:
@@ -34,7 +37,7 @@ class CorrespondentFVCartoonHead(PlanarFVCartoonHead):
         # tongue stay registered to their lip parent and retain material alpha.
         before_vowel=vowel;before_contact=contact
         vowel=assemble(*(self._remap(part,fields[0]) for part in [cavity,teeth,tongue,closed]))
-        contact=self._remap(contact,fields[1])
+        contact=self.registered_contact_surface(contact,fields[1],w)
         if self.capture_fv_registration:
             def mismatch(a,b):return int(np.count_nonzero((a[:,:,3]>=127.5)!=(b[:,:,3]>=127.5)))
             self.last_fv_registration=dict(contactWeight=fv,beforeDisagreementPixels=mismatch(before_vowel,before_contact),afterDisagreementPixels=mismatch(vowel,contact),validPremultiplied=all(bool(np.isfinite(v).all() and np.all(v>=0) and np.all(v[:,:,:3]<=v[:,:,3:4]+1e-4) and v[:,:,3].max()<=255.0001) for v in [vowel,contact]))
