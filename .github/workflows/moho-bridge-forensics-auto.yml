@@ -217,6 +217,22 @@ jobs:
                           process.terminate()
                           process.wait(timeout=2)
                       except Exception:process.kill()
+          add("#### Restricted command queue workflow status")
+          try:
+              api_url="https://api.github.com/repos/TeamRovor/rovor-video-engine/actions/workflows/rovor-moho-read-queue.yml/runs?per_page=5"
+              api_req=urllib.request.Request(api_url,headers={
+                  "Authorization":"Bearer "+os.environ["GH_TOKEN"],
+                  "Accept":"application/vnd.github+json",
+                  "X-GitHub-Api-Version":"2022-11-28"})
+              with urllib.request.urlopen(api_req,timeout=15) as response:
+                  runs=json.load(response).get("workflow_runs",[])
+              if not runs:add("No read-queue workflow runs returned")
+              for run in runs:
+                  add("Read-queue run id="+str(run.get("id"))+" status="+str(run.get("status"))+
+                      " conclusion="+str(run.get("conclusion"))+" sha="+str(run.get("head_sha",""))[:12]+
+                      " link="+str(run.get("html_url","")))
+          except Exception as queueerr:
+              add("Queue workflow lookup error: "+type(queueerr).__name__+" "+str(queueerr)[:120])
           add("#### Assessment gate")
           add("Live read: NOT verified by this diagnostic. Next step only after IPC path and Lua polling agree.")
           body="\n".join(lines)[:12500]
