@@ -8,7 +8,15 @@ Repo work/engine, branch development/evan-painted-rig (historical name). Draft P
 
 Automation develop-evan-painted-animation remains ACTIVE. Make routine decisions autonomously. Notify only meaningful review milestones/failure/completion/required action. Disable only when the full polished cartoon milestone is actually ready for review. It is NOT complete.
 
-## Latest: rounded cavity/rim artwork candidate
+## Latest: shared outer contour during rounding
+
+Read CARTOON-EVAN-CONTOUR-CORRESPONDENCE.md. ContourCartoonHead / --contour-art is a new OPTIONAL extension of the prior rounded-art candidate. During partial rounding, derive each sampled material's largest 50%-alpha contour (4x alpha sampling), centroid and 256 outermost radial intersections. Remap both premultiplied oral materials toward one interpolated radial envelope before mixing colour; old/new interior masks follow their respective fields. No new artwork, skin patch, flattened sprite, source/audio/planner/annotation change. Fully rounded/nonrounded endpoints bypass added resampling; all nine pure controls remain exact. This is radial outer-envelope correspondence, NOT anatomical tracing or inner-lip registration.
+
+63 affected checks pass (6 new +57 prior), including endpoint equality, real transition locality/bounded samples, tongue occlusion and a synthetic known-boundary correspondence test. Across all 489 existing scene-clock states geometry stays exact; 67 partial rounded states have zero fallback. Total unequal 50%-alpha silhouette pixels between the two materials fall 17,804→822 after correspondence. This counts repeated states and measures contour alignment, not artistic quality or speech accuracy.
+
+Review ../../outputs/evan-cartoon-contour: native-head comparison and branded integration through “little globe … your logo”/settle, source 2.5–5.0 s, normal/quarter 120/480 frames at 48 fps; all four files decode cleanly. The inspected entry has a tighter outer edge, but brown inner shading/heavy lower lip and pinched shallow contacts remain. The concept's mouth is simpler and more appealing. Do not promote to defaults or call this polished/studio quality. No continuous playback/listening acceptance; inspect normal/slow files plus selected native frames. Existing two-layer oral PSD/source/prompts remain unchanged in the prior rounded-art output. Full milestone incomplete; automation remains ACTIVE.
+
+## Prior: rounded cavity/rim artwork candidate
 
 Read CARTOON-EVAN-ROUNDED-ART.md. Built-in imagegen edited an isolated mouth component with the selected cartoon sheet as style reference. Raw v1 had an upper-left spur; targeted contour edit v2 is chosen. Exact prompts/reference in round-source-v1. No realistic portrait or surrounding skin patch. This is source artwork, not a complete rig.
 
@@ -56,7 +64,7 @@ Two-pass PocketSphinx alignment: 66 words/248 phones, 39-phone catalog, diphthon
 
 ## Next concrete work / limits
 
-1. PRIORITY: refine actual old/new rounded contour correspondence through entry/release (trace and align designed boundaries rather than piling on alpha layers). Preserve chosen source art as an optional candidate until that transition is convincingly clean. Then design shallow B/FV contacts. Do not generate another full-head replacement as a shortcut.
+1. PRIORITY: improve the actual oral drawings toward the selected concept's lighter, simpler lip construction: clean inner ink/brown shading and lower-lip volume, then design shallow B/FV contacts. The shared outer radial envelope reduces doubled edges but does not align inner lip anatomy or make a poor drawing appealing. Preserve both optional comparison modes. Do not generate another full-head replacement as a shortcut; a human artist is needed for final anatomy/design approval.
 2. Separate L/dental tongue controls and consider independent jaw/chin movement under lip seals without delaying contact. Preserve source proportions and audio evidence.
 3. Design softer palm/neighbor-finger poses, clean wrist/shoulder linework and critically review acting rhythm. Static legs and missing eye/blink rig remain. A human character artist/animator is needed for final anatomy/performance approval. Native raster detail and CPU rendering constrain iteration; hardware cannot supply missing drawings.
 
