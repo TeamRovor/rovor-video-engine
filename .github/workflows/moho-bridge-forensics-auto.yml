@@ -1,0 +1,115 @@
+name: Moho Bridge Forensics Auto Report
+
+# Restricted diagnostic, runs once when introduced and can be re-run manually.
+# Only reads scripts and IPC metadata; never calls mutation tools or changes Moho.
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/moho-bridge-forensics-auto.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: moho-bridge-forensics
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 4
+    steps:
+      - name: Compare live IPC and installed Lua source, report to issue 6
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import os, subprocess, pathlib, tempfile, time, json, re, hashlib, urllib.request
+          home=pathlib.Path.home()
+          lines=["### Automatic Moho bridge forensic report", "Read-only run; no Moho commands or project changes."]
+          def add(s):
+              lines.append(str(s))
+              print(s, flush=True)
+          def sha(p):
+              return hashlib.sha256(p.read_bytes()).hexdigest()[:12] if p.is_file() else "MISSING"
+          node="/usr/local/bin/node"
+          node_tmp=None
+          try:
+              out=subprocess.run([node,"-p","require('os').tmpdir()"],capture_output=True,text=True,timeout=8)
+              if out.returncode==0:
+                  node_tmp=out.stdout.strip()
+          except Exception as exc:
+              add("Node temp path probe: "+type(exc).__name__)
+          add("Node os.tmpdir() = "+repr(node_tmp))
+          add("Python tempfile.gettempdir() = "+repr(tempfile.gettempdir()))
+          add("MOHO_MCP_IPC_DIR override present = "+str(bool(os.getenv("MOHO_MCP_IPC_DIR"))))
+          candidates=[pathlib.Path(node_tmp)/"moho-mcp"] if node_tmp else []
+          candidates.extend([pathlib.Path(tempfile.gettempdir())/"moho-mcp",pathlib.Path("/tmp/moho-mcp")])
+          if os.getenv("MOHO_MCP_IPC_DIR"):
+              candidates.insert(0,pathlib.Path(os.getenv("MOHO_MCP_IPC_DIR")))
+          add("#### IPC queue states")
+          seen=set()
+          for d in candidates:
+              resolved=str(d.resolve())
+              if resolved in seen: continue
+              seen.add(resolved)
+              add("* Queue: "+str(d)+" ; exists = "+str(d.is_dir()))
+              if not d.is_dir(): continue
+              status=d/"status.json"
+              if status.is_file():
+                  try:
+                      data=json.loads(status.read_text())
+                      add("  - status.running = "+repr(data.get("running")))
+                      add("  - status keys = "+repr(sorted(data.keys())))
+                  except (OSError,ValueError) as exc:
+                      add("  - status parse error = "+str(type(exc).__name__))
+                  add("  - status file age (seconds) = "+str(round(time.time()-status.stat().st_mtime,1)))
+              else:
+                  add("  - status.json MISSING")
+              for pat in ["req_*.json","resp_*.json"]:
+                  files=list(d.glob(pat))
+                  add("  - "+pat+" count = "+str(len(files)))
+                  if files:
+                      add("  - oldest age = "+str(round(time.time()-min(f.stat().st_mtime for f in files),1)))
+          add("#### Lua source installation comparison")
+          actual=pathlib.Path("/Applications/Moho.app/Contents/Resources/Support/Scripts")
+          dev=home/"Documents/Moho-Astra/Evan/Projects/MohoMCP-Connection-Dev/moho-plugin"
+          old=home/"Documents/Moho-Astra/MohoMCP-master/moho-plugin"
+          for name in ["MohoMCP_Server.lua","MohoMCP_Poller.lua","MohoMCP_ProcessPending.lua"]:
+              for label,base in [("installed-menu", actual/"Menu/MohoMCP"),("installed-tool",actual/"Tool"),("dev",dev),("legacy",old)]:
+                  f=base/name
+                  if f.is_file():
+                      add("* "+name+" "+label+" hash="+sha(f)+" age_days="+str(round((time.time()-f.stat().st_mtime)/86400,2)))
+          add("#### Actual installed server & poller IPC/polling references")
+          sources=[actual/"Menu/MohoMCP/MohoMCP_Server.lua",actual/"Tool/MohoMCP_Poller.lua",dev/"MohoMCP_Server.lua",dev/"MohoMCP_Poller.lua"]
+          regex=re.compile(r'IPC|tmp|temp|req_|resp_|pollActive|DrawMe|processPending|server.poll|GetTemp|status.json|startServer',re.I)
+          unsafe=re.compile(r'token|secret|password|private.key|credential',re.I)
+          for f in sources:
+              if not f.is_file(): continue
+              label=("installed: " if str(f).startswith("/Applications/") else "dev: ")+f.name
+              add("* "+label)
+              matching=[]
+              for n,line in enumerate(f.read_text(errors="replace").splitlines(),1):
+                  if regex.search(line) and not unsafe.search(line):
+                      matching.append("  - L"+str(n)+": "+line.strip()[:160])
+              lines.extend(matching[:27])
+              print("\n".join(matching[:27]),flush=True)
+          add("#### Assessment gate")
+          add("Live read: NOT verified by this diagnostic. Next step only after IPC path and Lua polling agree.")
+          body="\n".join(lines)[:12500]
+          # GitHub issue is private, but avoid including secrets, request data or absolute user files.
+          request=urllib.request.Request(
+              "https://api.github.com/repos/TeamRovor/rovor-video-engine/issues/6/comments",
+              data=json.dumps({"body":body}).encode("utf-8"),
+              headers={"Authorization":"Bearer "+os.environ["GH_TOKEN"],
+                       "Accept":"application/vnd.github+json",
+                       "Content-Type":"application/json",
+                       "X-GitHub-Api-Version":"2022-11-28"},
+              method="POST")
+          with urllib.request.urlopen(request,timeout=20) as response:
+              add("Posted sanitized diagnostics to issue #6 (HTTP "+str(response.status)+")")
+          PY
