@@ -1,0 +1,54 @@
+name: Moho Mac Read-Only Connection Check
+
+# Manual-only verification. This workflow never checks out untrusted code,
+# modifies local files, or executes arbitrary commands from workflow inputs.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: moho-mac-readonly-check
+  cancel-in-progress: false
+
+jobs:
+  verify-host:
+    name: Inspect Rovor-Mac prerequisites
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 5
+    steps:
+      - name: Read-only environment checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== Rovor-Mac connectivity: job received ==="
+          echo "OS: $(uname -s)"
+          echo "Architecture: $(uname -m)"
+          if [ -d "/Applications/Moho.app" ]; then
+            echo "Moho installation: found"
+          else
+            echo "Moho installation: not found at /Applications/Moho.app"
+          fi
+          if pgrep -if '/Applications/Moho.app|Moho Pro' >/dev/null 2>&1; then
+            echo "Moho process: detected"
+          else
+            echo "Moho process: not detected (app may be closed or have a different process name)"
+          fi
+          if [ -f "$HOME/Documents/Moho-Astra/MohoMCP-Enhanced/bridge/dist/index.js" ]; then
+            echo "Moho MCP bridge: file found"
+          else
+            echo "Moho MCP bridge: file not found"
+          fi
+          if [ -f "$HOME/Documents/Moho-Astra/MohoMCP-master/moho-plugin/MohoMCP_Poller.lua" ]; then
+            echo "Moho Lua poller source: found"
+          else
+            echo "Moho Lua poller source: not found at prior location"
+          fi
+          if command -v node >/dev/null 2>&1; then
+            echo "Node.js: available"
+          else
+            echo "Node.js: not on PATH (the MCP registration used /usr/local/bin/node)"
+          fi
+          echo "=== Basic Mac runner check completed ==="
+          echo "NOTE: This is NOT yet proof that a live Moho MCP read call succeeds."
