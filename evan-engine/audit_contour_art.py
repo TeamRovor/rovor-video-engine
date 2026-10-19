@@ -10,8 +10,13 @@ from separated_cartoon_head import jaw_weights
 
 if __name__=='__main__':
     cv2.setNumThreads(1)
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('output',type=Path);a=p.parse_args()
-    plan=json.loads(a.plan.read_text());head=ContourCartoonHead();old_head=RoundedArtCartoonHead();rows=[];geometry_delta=0.
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('output',type=Path);p.add_argument('--light-lip',action='store_true');a=p.parse_args()
+    plan=json.loads(a.plan.read_text());
+    if a.light_lip:
+        from light_lip_cartoon_head import LightLipCartoonHead
+        head=LightLipCartoonHead();old_head=ContourCartoonHead()
+    else:head=ContourCartoonHead();old_head=RoundedArtCartoonHead()
+    rows=[];geometry_delta=0.
     for i in range(489):
         t=i/48;w=planned_weights(t,plan,plan['fallbackCues']);shape=rounding_identity(t,plan);jaw=jaw_weights(t,plan,w)
         target=head.target_points(jaw,shape)
