@@ -18,9 +18,12 @@ def frame(body,plan,t):
     else:d.text((685,603),'A small detail that represents your brand.',font=font(22),fill='#48636d')
     return im
 if __name__=='__main__':
-    cv2.setNumThreads(1);p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--material',action='store_true');p.add_argument('--compact-index',action='store_true');p.add_argument('--joined-wrist',action='store_true');p.add_argument('--lingual-tongue',action='store_true');p.add_argument('--separated-jaw',action='store_true');p.add_argument('--anchored-skin',action='store_true');p.add_argument('--bounded-head',action='store_true');p.add_argument('--rounded-art',action='store_true');p.add_argument('--contour-art',action='store_true');p.add_argument('--light-lip',action='store_true');p.add_argument('--broad-cavity',action='store_true');p.add_argument('--occluded-teeth',action='store_true');p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=FRAME_COUNT);a=p.parse_args()
+    cv2.setNumThreads(1);p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--material',action='store_true');p.add_argument('--compact-index',action='store_true');p.add_argument('--joined-wrist',action='store_true');p.add_argument('--lingual-tongue',action='store_true');p.add_argument('--separated-jaw',action='store_true');p.add_argument('--anchored-skin',action='store_true');p.add_argument('--bounded-head',action='store_true');p.add_argument('--rounded-art',action='store_true');p.add_argument('--contour-art',action='store_true');p.add_argument('--light-lip',action='store_true');p.add_argument('--broad-cavity',action='store_true');p.add_argument('--occluded-teeth',action='store_true');p.add_argument('--planar-fv',action='store_true');p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=FRAME_COUNT);a=p.parse_args()
     plan=json.loads(a.plan.read_text())
-    if a.occluded_teeth:
+    if a.planar_fv:
+        from planar_fv_cartoon_scene import PlanarFVCartoonSceneBody
+        body=PlanarFVCartoonSceneBody()
+    elif a.occluded_teeth:
         from occluded_teeth_cartoon_scene import OccludedTeethCartoonSceneBody
         body=OccludedTeethCartoonSceneBody()
     elif a.broad_cavity:
