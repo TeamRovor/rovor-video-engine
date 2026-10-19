@@ -1,0 +1,13 @@
+{
+  "task_id": "Moho_LiveRead_20261019_01",
+  "commands": [
+    {
+      "name": "document_getInfo",
+      "arguments": {}
+    },
+    {
+      "name": "document_getLayers",
+      "arguments": {}
+    }
+  ]
+}
