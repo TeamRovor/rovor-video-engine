@@ -1,0 +1,68 @@
+name: Rovor Native Moho Test Template Inventory
+
+# Read-only scan of project-specific folders, never touches original artwork.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rovor-moho-native-template-inventory.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  survey:
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: Find eligible native Moho files without opening or editing
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib,urllib.request
+          home=pathlib.Path.home()
+          roots=[
+              home/"Documents/Moho-Astra",
+              home/"Documents/Rovor",
+              home/"Desktop/ROVOR_Evan_Full_Verified",
+              pathlib.Path("/Applications/Moho.app/Contents/Resources/Support")
+          ]
+          report=["### Native Moho template inventory","Read-only; no files opened or modified."]
+          total=0
+          for root in roots:
+              if not root.is_dir():continue
+              found=[]
+              examined=0
+              for where,dirs,files in os.walk(root):
+                  dirs[:]=[x for x in dirs if x not in (".git","node_modules","venv",".venv","__pycache__")]
+                  examined+=1
+                  if examined>600:break
+                  for name in files:
+                      if pathlib.Path(name).suffix.lower() in (".moho",".anme"):
+                          p=pathlib.Path(where)/name
+                          if p.is_file() and not p.is_symlink():
+                              found.append((p.relative_to(root),p.stat().st_size))
+                  if len(found)>=25:break
+              report.append("#### "+str(root).replace(str(home),"~")+
+                            " — "+str(len(found))+" native files found")
+              for rel,size in found[:20]:
+                  report.append("- "+str(rel)+" ("+str(size)+" bytes)")
+              total+=len(found)
+          report.append("Total eligible discovered templates = "+str(total))
+          report.append("No Moho project changes made. Next: only COPY an eligible template into a disposable folder.")
+          body="\n".join(report)
+          print(body,flush=True)
+          req=urllib.request.Request(
+              "https://api.github.com/repos/TeamRovor/rovor-video-engine/issues/6/comments",
+              data=json.dumps({"body":body[:6500]}).encode(),
+              headers={"Authorization":"Bearer "+os.environ["GH_TOKEN"],
+                       "Content-Type":"application/json",
+                       "Accept":"application/vnd.github+json",
+                       "X-GitHub-Api-Version":"2022-11-28"},
+              method="POST")
+          with urllib.request.urlopen(req,timeout=18) as resp:
+              print("Posted read-only template inventory:",resp.status)
+          PY
