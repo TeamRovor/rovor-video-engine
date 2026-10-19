@@ -131,6 +131,82 @@ jobs:
                       else: add("No numeric pid in status.json")
                   except Exception as exc:
                       add("Status PID check failed: "+type(exc).__name__)
+          add("#### Live document_getInfo request consumption test (read-only)")
+          import select
+          bridge=home/"Documents/Moho-Astra/MohoMCP-Enhanced/bridge/dist/index.js"
+          if not bridge.is_file() or not node_tmp:
+              add("Bridge file or temp path missing, live test skipped")
+          else:
+              process=None
+              pending_seen=0
+              cleared_seen=0
+              response_seen=0
+              rpc_response=None
+              try:
+                  process=subprocess.Popen([node,str(bridge)],
+                      stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,bufsize=0)
+                  def req(i,method,params=None):
+                      q={"jsonrpc":"2.0","id":i,"method":method}
+                      if params is not None:q["params"]=params
+                      process.stdin.write((json.dumps(q)+"\\n").encode())
+                      process.stdin.flush()
+                  def wait(i,timeout):
+                      deadline=time.monotonic()+timeout
+                      while time.monotonic()<deadline:
+                          ready,_,_=select.select([process.stdout],[],[],max(0,deadline-time.monotonic()))
+                          if not ready:break
+                          raw=process.stdout.readline()
+                          if not raw: break
+                          try: data=json.loads(raw)
+                          except Exception:continue
+                          if data.get("id")==i:return data
+                      return None
+                  req(101,"initialize",{"protocolVersion":"2025-03-26",
+                      "capabilities":{},"clientInfo":{"name":"rovor-safe-ipc-consumption-check","version":"1"}})
+                  a=wait(101,8)
+                  if not a or a.get("error"):raise RuntimeError("MCP initialization failed")
+                  process.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized"}\\n')
+                  process.stdin.flush()
+                  req(103,"tools/call",{"name":"document_getInfo","arguments":{}})
+                  queue=pathlib.Path(node_tmp)/"moho-mcp"
+                  deadline=time.monotonic()+13
+                  while time.monotonic()<deadline:
+                      ps=list(queue.glob("req_*.json"))
+                      rs=list(queue.glob("resp_*.json"))
+                      if ps:pending_seen+=1
+                      elif pending_seen:cleared_seen+=1
+                      if rs:response_seen+=1
+                      ready,_,_=select.select([process.stdout],[],[],0.15)
+                      if ready:
+                          raw=process.stdout.readline()
+                          try:data=json.loads(raw)
+                          except Exception:data={}
+                          if data.get("id")==103:
+                              rpc_response=data
+                              break
+                  add("Observed pending request snapshots = "+str(pending_seen))
+                  add("Snapshots without pending request after first seen = "+str(cleared_seen))
+                  add("Observed response-file snapshots = "+str(response_seen))
+                  if rpc_response:
+                      if rpc_response.get("error"):
+                          add("MCP transport error = "+str(rpc_response["error"].get("message",""))[:300])
+                      else:
+                          value=rpc_response.get("result") or {}
+                          content=" | ".join(str(t.get("text","")) for t in value.get("content",[]) if isinstance(t,dict))
+                          if value.get("isError"):
+                              add("Moho read failed = "+content[:360])
+                          else:
+                              add("Live Moho read SUCCESS = "+content[:600])
+                  else:
+                      add("No MCP tool response within 13 seconds")
+              except Exception as exc:
+                  add("Live test setup error = "+type(exc).__name__+": "+str(exc)[:260])
+              finally:
+                  if process:
+                      try:
+                          process.terminate()
+                          process.wait(timeout=2)
+                      except Exception:process.kill()
           add("#### Assessment gate")
           add("Live read: NOT verified by this diagnostic. Next step only after IPC path and Lua polling agree.")
           body="\n".join(lines)[:12500]
