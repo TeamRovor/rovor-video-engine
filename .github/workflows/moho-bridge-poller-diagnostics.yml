@@ -1,0 +1,75 @@
+name: Moho Bridge and Poller Path Diagnostics
+
+# Manual-only, read-only diagnostics. Reports only paths, timestamps,
+# safe file-name summaries, and code references relevant to queue routing.
+# Does not invoke a Moho tool, write local files, install scripts or expose secrets.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: Compare installed Lua poller and MCP bridge endpoints
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re, glob, hashlib, time
+          home = pathlib.Path.home()
+          roots = {
+            "BRIDGE_ENTRY": home/"Documents/Moho-Astra/MohoMCP-Enhanced/bridge/dist/index.js",
+            "POLLER_SOURCE": home/"Documents/Moho-Astra/MohoMCP-master/moho-plugin/MohoMCP_Poller.lua",
+          }
+          print("=== Runner and Moho process ===")
+          print("runner UID:", os.getuid())
+          print("Moho installed:", pathlib.Path("/Applications/Moho.app").is_dir())
+          print("=== Bridge and source poller files ===")
+          for name, path in roots.items():
+              if path.is_file():
+                  data=path.read_bytes()
+                  print(name, "exists", "bytes", len(data), "sha256", hashlib.sha256(data).hexdigest()[:16],
+                        "mtime_epoch", round(path.stat().st_mtime))
+              else:
+                  print(name, "MISSING")
+          print("=== Candidate installed MohoMCP Lua scripts ===")
+          patterns=[
+              str(home/"Library/Application Support/Lost Marble/Moho*/Scripts/**/*MCP*.lua"),
+              str(home/"Library/Application Support/Lost Marble/Moho*/Scripts/**/*mcp*.lua"),
+              str(home/"Library/Application Support/Smith Micro/Moho*/Scripts/**/*MCP*.lua"),
+              str(home/"Documents/Moho-Astra/**/MohoMCP*.lua")
+          ]
+          seen=set()
+          for pat in patterns:
+              for f in sorted(glob.glob(pat, recursive=True))[:20]:
+                  if f not in seen:
+                      seen.add(f)
+                      path=pathlib.Path(f)
+                      print("poller candidate:", str(path).replace(str(home), "~"),
+                            "mtime_epoch", round(path.stat().st_mtime))
+          if not seen:
+              print("No candidate poller files found at standard script locations or Moho-Astra")
+          print("=== Source queue/path references (safe source snippets) ===")
+          candidates=[roots["POLLER_SOURCE"], roots["BRIDGE_ENTRY"]]
+          distdir=roots["BRIDGE_ENTRY"].parent
+          if distdir.exists():
+              candidates += sorted(distdir.glob("*.js"))[:12]
+          seenpaths=set()
+          patt=re.compile(r"queue|request|response|poll|status|pending|ipc|file[_-]?path|directory|path\.join|homedir|MOHO", re.I)
+          for path in candidates:
+              if path in seenpaths or not path.is_file(): continue
+              seenpaths.add(path)
+              print("SOURCE:", str(path).replace(str(home),"~"))
+              try: txt=path.read_text(errors="replace")
+              except OSError: continue
+              hits=0
+              for n,line in enumerate(txt.splitlines(),1):
+                  if patt.search(line) and not re.search(r"token|password|secret|credential|authorization|private[_-]?key",line,re.I):
+                      print(" %s: %s"%(n,line.strip()[:190]))
+                      hits+=1
+                  if hits>=22: break
+          print("=== Diagnostic complete: no project reads or mutations performed ===")
+          PY
