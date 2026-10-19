@@ -1,0 +1,82 @@
+name: Rovor Moho Animation Tool Schema Audit
+
+# Discover MCP tool schemas, without calling a Moho project command.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rovor-moho-animation-tool-audit.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: Read exact animation command schemas (no edits)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json,os,select,subprocess,time,urllib.request
+          cmd=["/usr/local/bin/node",os.path.expanduser("~/Documents/Moho-Astra/MohoMCP-Enhanced/bridge/dist/index.js")]
+          p=subprocess.Popen(cmd,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,bufsize=0)
+          def send(i,method,params=None):
+              v={"jsonrpc":"2.0","id":i,"method":method}
+              if params is not None:v["params"]=params
+              p.stdin.write((json.dumps(v)+"\n").encode());p.stdin.flush()
+          def receive(i):
+              deadline=time.monotonic()+12
+              while time.monotonic()<deadline:
+                  ready,_,_=select.select([p.stdout],[],[],max(0,deadline-time.monotonic()))
+                  if not ready:break
+                  raw=p.stdout.readline()
+                  if not raw:break
+                  try:obj=json.loads(raw)
+                  except ValueError:continue
+                  if obj.get("id")==i:return obj
+              raise RuntimeError("MCP discovery timed out")
+          try:
+              send(1,"initialize",{"protocolVersion":"2025-03-26",
+                   "capabilities":{},"clientInfo":{"name":"rovor-mcp-schema-reader","version":"1"}})
+              response=receive(1)
+              if "error" in response:raise RuntimeError(str(response["error"])[:200])
+              p.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized"}\n');p.stdin.flush()
+              send(2,"tools/list")
+              tools=receive(2).get("result",{}).get("tools",[])
+              wanted=["production_projectPreflight","character_rigReport",
+                      "animation_applyPoseSequence","animation_setKeyframe",
+                      "bone_setTransform","layer_getBones","document_getInfo",
+                      "document_getLayers"]
+              lines=["### Moho MCP animation schema audit","Read-only discovery; no Moho project actions."]
+              for name in wanted:
+                  t=next((x for x in tools if x.get("name")==name),None)
+                  if not t:
+                      lines.append("- "+name+": MISSING")
+                      continue
+                  schema=t.get("inputSchema",{})
+                  lines.append("#### "+name+"\nDescription: "+
+                               str(t.get("description",""))[:300]+
+                               "\nRequired inputs: "+json.dumps(schema.get("required",[]))+
+                               "\nSchema: "+json.dumps(schema)[:1200])
+              lines.append("No bone, keyframe, layer, or project state was changed.")
+              report="\n\n".join(lines)[:8500]
+              print(report,flush=True)
+              request=urllib.request.Request(
+                  "https://api.github.com/repos/TeamRovor/rovor-video-engine/issues/6/comments",
+                  data=json.dumps({"body":report}).encode(),
+                  headers={"Authorization":"Bearer "+os.environ["GH_TOKEN"],
+                           "Accept":"application/vnd.github+json",
+                           "Content-Type":"application/json"},
+                  method="POST")
+              with urllib.request.urlopen(request,timeout=15) as r:
+                  print("Schema audit posted; HTTP",r.status)
+          finally:
+              p.terminate()
+              try:p.wait(timeout=3)
+              except subprocess.TimeoutExpired:p.kill()
+          PY
