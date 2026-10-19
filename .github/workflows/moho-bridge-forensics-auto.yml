@@ -148,7 +148,7 @@ jobs:
                   def req(i,method,params=None):
                       q={"jsonrpc":"2.0","id":i,"method":method}
                       if params is not None:q["params"]=params
-                      process.stdin.write((json.dumps(q)+"\\n").encode())
+                      process.stdin.write((json.dumps(q)+"\n").encode())
                       process.stdin.flush()
                   def wait(i,timeout):
                       deadline=time.monotonic()+timeout
@@ -164,8 +164,8 @@ jobs:
                   req(101,"initialize",{"protocolVersion":"2025-03-26",
                       "capabilities":{},"clientInfo":{"name":"rovor-safe-ipc-consumption-check","version":"1"}})
                   a=wait(101,8)
-                  if not a or a.get("error"):raise RuntimeError("MCP initialization failed")
-                  process.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized"}\\n')
+                  if not a or a.get("error"):raise RuntimeError("MCP initialization failed: "+repr(a)[:180]+", process_status="+repr(process.poll()))
+                  process.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized"}\n')
                   process.stdin.flush()
                   req(103,"tools/call",{"name":"document_getInfo","arguments":{}})
                   queue=pathlib.Path(node_tmp)/"moho-mcp"
