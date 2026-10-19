@@ -1,0 +1,33 @@
+name: Rovor Moho Restricted Read Queue
+
+# Read-only. The MCP client whitelists exactly two non-mutating tool names.
+# A new request JSON in the queue triggers the connected Rovor-Mac runner.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'rovor-production/moho-queue/read-*.json'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: rovor-moho-readonly
+  cancel-in-progress: false
+
+jobs:
+  read-moho:
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: Checkout trusted main-branch queue client and request
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Execute whitelisted Moho MCP read through Mac runner
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          /usr/bin/python3 .github/scripts/rovor_moho_read_queue.py
