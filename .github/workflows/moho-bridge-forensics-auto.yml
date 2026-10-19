@@ -98,6 +98,39 @@ jobs:
                       matching.append("  - L"+str(n)+": "+line.strip()[:160])
               lines.extend(matching[:27])
               print("\n".join(matching[:27]),flush=True)
+          add("#### Installed versus development server diff (first 100 changed lines)")
+          installed=actual/"Menu/MohoMCP/MohoMCP_Server.lua"
+          development=dev/"MohoMCP_Server.lua"
+          if installed.is_file() and development.is_file():
+              import difflib
+              differences=list(difflib.unified_diff(
+                  installed.read_text(errors="replace").splitlines(),
+                  development.read_text(errors="replace").splitlines(),
+                  fromfile="installed server",tofile="development server",lineterm=""))
+              add("Changed diff lines total = "+str(len(differences)))
+              lines.append("~~~diff")
+              for line in differences[:100]:
+                  if not unsafe.search(line): lines.append(line[:185])
+              lines.append("~~~")
+              print("\n".join(differences[:100]),flush=True)
+          add("#### Runtime status PID check")
+          if node_tmp:
+              sf=pathlib.Path(node_tmp)/"moho-mcp/status.json"
+              if sf.is_file():
+                  try:
+                      sd=json.loads(sf.read_text())
+                      pid=sd.get("pid")
+                      if type(pid) is int and pid>0:
+                          try:
+                              os.kill(pid,0)
+                              add("Status-file PID is alive = True")
+                          except ProcessLookupError:
+                              add("Status-file PID is alive = False")
+                          except PermissionError:
+                              add("Status-file PID exists but permission denied")
+                      else: add("No numeric pid in status.json")
+                  except Exception as exc:
+                      add("Status PID check failed: "+type(exc).__name__)
           add("#### Assessment gate")
           add("Live read: NOT verified by this diagnostic. Next step only after IPC path and Lua polling agree.")
           body="\n".join(lines)[:12500]
