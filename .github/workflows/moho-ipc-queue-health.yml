@@ -1,0 +1,84 @@
+name: Moho IPC Queue Health Diagnostics
+
+# Read-only; prints summarized queue health and Lua source routing.
+# Does not invoke Moho commands, alter process state, or write files.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: Inspect bridge/poller IPC and redraw dependencies
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib, os, json, glob, re, time
+          home=pathlib.Path.home()
+          now=time.time()
+          ipc=pathlib.Path("/tmp/moho-mcp")
+          print("== Runtime IPC queue ==")
+          print("Expected IPC directory:", ipc)
+          print("Directory exists:", ipc.exists())
+          if ipc.is_dir():
+              for filename in ["status.json"]:
+                  f=ipc/filename
+                  if f.is_file():
+                      try:
+                          d=json.loads(f.read_text())
+                          print("status.running:",d.get("running","UNSET"))
+                          print("status keys:",sorted(d.keys()))
+                      except Exception as e:
+                          print("status not parsable:",str(e)[:120])
+                      print("status age_seconds:",round(now-f.stat().st_mtime,1))
+                  else:
+                      print("status file MISSING")
+              for name,pat in [("requests","req_*.json"),("responses","resp_*.json")]:
+                  matches=sorted(ipc.glob(pat),key=lambda x:x.stat().st_mtime,reverse=True)
+                  print(name,"count:",len(matches))
+                  for f in matches[:3]:
+                      print(name+" latest age_seconds:",round(now-f.stat().st_mtime,1))
+          print("== Source Lua installs and IPC paths ==")
+          dirs=[
+              home/"Documents/Moho-Astra/MohoMCP-master/moho-plugin",
+              home/"Documents/Moho-Astra/Evan/Projects/MohoMCP-Connection-Dev/moho-plugin"
+          ]
+          for d in dirs:
+              for filename in ["MohoMCP_Server.lua","MohoMCP_Poller.lua","MohoMCP_ProcessPending.lua"]:
+                  f=d/filename
+                  if not f.is_file(): continue
+                  print("Lua file:",str(f).replace(str(home),"~"),"modified_days_ago:",round((now-f.stat().st_mtime)/86400,2))
+                  txt=f.read_text(errors="replace")
+                  matches=[]
+                  for n,line in enumerate(txt.splitlines(),1):
+                      if re.search(r'moho-mcp|status.json|req_|resp_|pollActive|DrawMe|function .*poll|ipcDir|os.tmpname|GetTemp|tmpdir|ProcessPending',line,re.I):
+                          if not re.search(r'token|password|secret|auth|private.key',line,re.I):
+                              matches.append((n,line.strip()[:145]))
+                  for n,line in matches[:22]:
+                      print(f"  {n}: {line}")
+          print("== Installed script locations ==")
+          dirs=[
+              home/"Library/Application Support/Lost Marble",
+              home/"Library/Application Support/Smith Micro",
+              pathlib.Path("/Applications/Moho.app/Contents/Resources")
+          ]
+          for root in dirs:
+              if not root.exists(): continue
+              checked=0
+              for dirpath, subdirs, files in os.walk(root):
+                  subdirs[:]=[x for x in subdirs if x not in ["node_modules",".git"]]
+                  for f in files:
+                      if f in ("MohoMCP_Poller.lua","MohoMCP_Server.lua","MohoMCP_ProcessPending.lua"):
+                          p=pathlib.Path(dirpath)/f
+                          print("Installed script:",str(p).replace(str(home),"~"),"age_days:",round((now-p.stat().st_mtime)/86400,2))
+                  checked+=1
+                  if checked>1000:
+                      print("Scan limited after 1000 directories under",root)
+                      break
+          print("== Safety ==")
+          print("PASS: read-only IPC diagnostics completed; nothing changed.")
+          PY
