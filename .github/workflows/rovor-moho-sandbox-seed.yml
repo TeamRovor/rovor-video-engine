@@ -1,0 +1,64 @@
+name: Seed Disposable Moho Animation Test Project
+
+# Creates one independent copy of a bundled Moho tutorial template.
+# Never opens Moho, alters the active project, or overwrites the source.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rovor-moho-sandbox-seed.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  create-sandbox:
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: Make verified disposable native Moho test project
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib,hashlib,shutil,urllib.request
+          home=pathlib.Path.home()
+          source=pathlib.Path("/Applications/Moho.app/Contents/Resources/Support/Pro/Tutorials/3 - Bones/Tutorial 3.08 Finished.moho")
+          target=home/"Documents/Rovor/Moho-Connection-Sandbox/ROVOR_MCP_BONE_TEST_DISPOSABLE.moho"
+          report=["### Disposable native Moho test project prepared"]
+          if not source.is_file() or source.is_symlink():
+              raise SystemExit("Expected bundled bone tutorial absent; no files changed")
+          target.parent.mkdir(parents=True,exist_ok=True)
+          if not target.exists():
+              with open(source,"rb") as src,open(target,"xb") as dst:
+                  shutil.copyfileobj(src,dst)
+              report.append("Created a new isolated copy; no original overwritten")
+          else:
+              report.append("Sandbox copy already exists; left untouched")
+          def digest(path):
+              h=hashlib.sha256()
+              with open(path,"rb") as f:
+                  for chunk in iter(lambda:f.read(1024*1024),b""):
+                      h.update(chunk)
+              return h.hexdigest()
+          same=digest(source)==digest(target)
+          report.append("Source SHA256 matches sandbox: "+str(same))
+          report.append("Source size bytes: "+str(source.stat().st_size))
+          report.append("Sandbox location: ~/Documents/Rovor/Moho-Connection-Sandbox/ROVOR_MCP_BONE_TEST_DISPOSABLE.moho")
+          report.append("NO active Moho document was opened or modified by this operation")
+          report.append("Next gate: the test COPY must be active in Moho before any MCP write operation")
+          if not same:
+              raise SystemExit("Existing sandbox does not match source; manual reconciliation required")
+          body="\n".join(report)
+          print(body)
+          req=urllib.request.Request(
+              "https://api.github.com/repos/TeamRovor/rovor-video-engine/issues/6/comments",
+              data=json.dumps({"body":body}).encode(),
+              headers={"Authorization":"Bearer "+os.environ["GH_TOKEN"],
+                       "Content-Type":"application/json","Accept":"application/vnd.github+json"},
+              method="POST")
+          with urllib.request.urlopen(req,timeout=15) as resp:
+              print("Logged test project to issue #6: HTTP",resp.status)
+          PY
