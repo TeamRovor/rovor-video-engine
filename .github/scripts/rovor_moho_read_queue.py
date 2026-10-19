@@ -69,16 +69,58 @@ def rpc_reply(proc, ident, timeout):
             return obj
     raise TimeoutError("MCP tool response timed out")
 
-def wake_viewport():
-    # No mouse/keyboard input, animation edits, or project writes.
+def wake_viewport(refresh=False):
+    # Focus-only, never mouse clicks/keystrokes or project writes.
     try:
-        p = subprocess.run(
+        if refresh:
+            subprocess.run(
+                ["/usr/bin/osascript", "-e", 'tell application "Finder" to activate'],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=4
+            )
+        result = subprocess.run(
             ["/usr/bin/osascript", "-e", 'tell application "Moho" to activate'],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5
         )
-        return p.returncode == 0
+        return result.returncode == 0
     except (OSError, subprocess.TimeoutExpired):
         return False
+
+
+def rpc_reply_with_queue_wake(proc, ident, timeout=14):
+    """Wait for Moho's actual queued request before asking it to repaint."""
+    tmp = subprocess.run(
+        [NODE, "-p", "require('os').tmpdir()"],
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, timeout=4
+    )
+    if tmp.returncode != 0 or not tmp.stdout.strip():
+        raise RuntimeError("Unable to resolve MCP IPC directory")
+    ipc_dir = pathlib.Path(tmp.stdout.strip()) / "moho-mcp"
+    deadline = time.monotonic() + timeout
+    wakes = 0
+    seen_pending = False
+    while time.monotonic() < deadline:
+        now = time.monotonic()
+        # Only wake the app after its request has actually arrived.
+        if ipc_dir.is_dir() and list(ipc_dir.glob("req_*.json")):
+            seen_pending = True
+            if wakes < 3:
+                woke = wake_viewport(refresh=(wakes > 0))
+                print("Moho queue wake", wakes + 1, "success", woke, flush=True)
+                wakes += 1
+        readable, _, _ = select.select([proc.stdout], [], [], 0.75)
+        if not readable:
+            continue
+        line = proc.stdout.readline()
+        if not line:
+            raise RuntimeError("Moho bridge closed output during tool call")
+        try:
+            value = json.loads(line)
+        except (ValueError, UnicodeDecodeError):
+            continue
+        if value.get("id") == ident:
+            return value, seen_pending, wakes
+    raise TimeoutError("Moho read timed out (pending request observed=" +
+                       str(seen_pending) + ", viewport wakes=" + str(wakes) + ")")
 
 def append_issue(body):
     token = os.environ["GH_TOKEN"]
@@ -117,9 +159,8 @@ def run_commands(plan):
         for idx, cmd in enumerate(plan["commands"], 2):
             name = cmd["name"]
             rpc_write(process, idx, "tools/call", {"name": name, "arguments": {}})
-            time.sleep(0.45)
-            woke = wake_viewport()
-            result = rpc_reply(process, idx, 12)
+            result, queue_seen, wake_count = rpc_reply_with_queue_wake(process, idx, 15)
+            woke = queue_seen and wake_count > 0
             if result.get("error"):
                 raise RuntimeError(name + " RPC error: " + repr(result["error"])[:250])
             payload = result.get("result") or {}
