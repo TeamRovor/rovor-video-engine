@@ -142,6 +142,7 @@ jobs:
               cleared_seen=0
               response_seen=0
               rpc_response=None
+              focus_attempted=False
               try:
                   process=subprocess.Popen([node,str(bridge)],
                       stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,bufsize=0)
@@ -175,6 +176,15 @@ jobs:
                       rs=list(queue.glob("resp_*.json"))
                       if ps:pending_seen+=1
                       elif pending_seen:cleared_seen+=1
+                      if pending_seen==6 and not focus_attempted:
+                          focus_attempted=True
+                          try:
+                              active=subprocess.run(["/usr/bin/osascript","-e",
+                                  'tell application "Moho" to activate'],
+                                  capture_output=True,text=True,timeout=5)
+                              add("Moho foreground-only activation exit code = "+str(active.returncode))
+                          except Exception as focuserr:
+                              add("Moho activation failed: "+type(focuserr).__name__)
                       if rs:response_seen+=1
                       ready,_,_=select.select([process.stdout],[],[],0.15)
                       if ready:
