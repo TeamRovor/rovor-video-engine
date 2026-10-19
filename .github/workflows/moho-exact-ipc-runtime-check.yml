@@ -1,0 +1,88 @@
+name: Moho Exact IPC Runtime Check
+
+# Manual-only, read-only. Inspect the Mac's real temporary directory,
+# status freshness, and whether Moho's INSTALLED scripts match development.
+# No changes to files, open documents, or process states.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: Inspect real Moho IPC location and script versions
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, tempfile, time, hashlib, json, re
+          now=time.time()
+          home=pathlib.Path.home()
+          def short_path(p): return str(p).replace(str(home),"~")
+          print("=== Mac runtime temporary directory ===",flush=True)
+          print("Python tempfile.gettempdir():",tempfile.gettempdir(),flush=True)
+          print("TMPDIR set:",bool(os.environ.get("TMPDIR")),flush=True)
+          candidates = [pathlib.Path(tempfile.gettempdir())/"moho-mcp",
+                        pathlib.Path("/tmp/moho-mcp"),
+                        pathlib.Path("/private/tmp/moho-mcp")]
+          if os.environ.get("MOHO_MCP_IPC_DIR"):
+              candidates.append(pathlib.Path(os.environ["MOHO_MCP_IPC_DIR"]))
+          inspected=set()
+          print("=== IPC candidates (no writes) ===",flush=True)
+          for candidate in candidates:
+              try: canonical=str(candidate.resolve(strict=False))
+              except OSError: canonical=str(candidate)
+              if canonical in inspected: continue
+              inspected.add(canonical)
+              print("IPC:",short_path(candidate),"exists:",candidate.is_dir(),flush=True)
+              if not candidate.is_dir(): continue
+              f=candidate/"status.json"
+              if f.is_file():
+                  try:
+                      status=json.loads(f.read_text())
+                      print(" status.running:",status.get("running"),flush=True)
+                      print(" status keys:",sorted(status.keys()),flush=True)
+                  except (ValueError,OSError) as e:
+                      print(" status JSON invalid:",str(e)[:100],flush=True)
+                  print(" status age seconds:",round(now-f.stat().st_mtime,1),flush=True)
+              else:
+                  print(" status.json not found",flush=True)
+              for pattern in ("req_*.json","resp_*.json"):
+                  queue=list(candidate.glob(pattern))
+                  print(" ",pattern,"count:",len(queue),
+                        "oldest age s:",round(now-min(x.stat().st_mtime for x in queue),1) if queue else "-",flush=True)
+          print("=== Installed vs development Moho Lua scripts ===",flush=True)
+          installed=pathlib.Path("/Applications/Moho.app/Contents/Resources/Support/Scripts")
+          development=home/"Documents/Moho-Astra/Evan/Projects/MohoMCP-Connection-Dev/moho-plugin"
+          old=home/"Documents/Moho-Astra/MohoMCP-master/moho-plugin"
+          names=["MohoMCP_Server.lua","MohoMCP_Poller.lua","MohoMCP_ProcessPending.lua"]
+          for name in names:
+              variants=[installed/"Menu/MohoMCP"/name, installed/"Tool"/name,
+                        development/name,old/name]
+              recorded=[]
+              for p in variants:
+                  if not p.is_file(): continue
+                  raw=p.read_bytes()
+                  digest=hashlib.sha256(raw).hexdigest()[:16]
+                  print(name,short_path(p),"sha16",digest,"age_days",round((now-p.stat().st_mtime)/86400,2),flush=True)
+                  recorded.append((p,digest))
+              if not recorded: print(name,"NOT FOUND",flush=True)
+          print("=== Installed server IPC source references ===",flush=True)
+          for p in [installed/"Menu/MohoMCP/MohoMCP_Server.lua",
+                    development/"MohoMCP_Server.lua",
+                    installed/"Tool/MohoMCP_Poller.lua"]:
+              if not p.is_file(): continue
+              print("SOURCE",short_path(p),flush=True)
+              lines=p.read_text(errors="replace").splitlines()
+              found=0
+              for i,line in enumerate(lines,1):
+                  if re.search(r'ipcDir|tmpdir|TMPDIR|temp|status|processPending|pollActive|server\.poll|DrawMe|GetTemp|poll\(',line,re.I):
+                      if not re.search(r'password|token|secret|credential|auth',line,re.I):
+                          print(" %d: %s"%(i,line.strip()[:160]),flush=True)
+                          found+=1
+                  if found>=22: break
+          print("PASS: read-only exact runtime inspection finished; no Moho operations attempted",flush=True)
+          PY
