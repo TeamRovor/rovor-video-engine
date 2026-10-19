@@ -10,9 +10,13 @@ from separated_cartoon_head import jaw_weights
 
 if __name__=='__main__':
     cv2.setNumThreads(1)
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('output',type=Path);p.add_argument('--light-lip',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('output',type=Path);p.add_argument('--light-lip',action='store_true');p.add_argument('--broad-cavity',action='store_true');a=p.parse_args()
     plan=json.loads(a.plan.read_text());
-    if a.light_lip:
+    if a.broad_cavity:
+        from broad_cavity_cartoon_head import BroadCavityCartoonHead
+        from light_lip_cartoon_head import LightLipCartoonHead
+        head=BroadCavityCartoonHead();old_head=LightLipCartoonHead()
+    elif a.light_lip:
         from light_lip_cartoon_head import LightLipCartoonHead
         head=LightLipCartoonHead();old_head=ContourCartoonHead()
     else:head=ContourCartoonHead();old_head=RoundedArtCartoonHead()

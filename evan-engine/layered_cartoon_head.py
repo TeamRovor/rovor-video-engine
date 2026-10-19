@@ -52,8 +52,12 @@ class LayeredCartoonHead(CartoonHead):
     def skin_target(self,weights,target):
         return target
     def cavity_surface(self,w,oral,shape_weights=None):
+        return self.broad_cavity_surface(oral)
+    def broad_cavity_surface(self,oral):
         return self.sample_surface(self.layers['cavity-outline'],POINTS['C'],oral,2)
     def interior_mask(self,cavity,w,oral,shape_weights=None):
+        return self.broad_interior_mask(cavity,oral)
+    def broad_interior_mask(self,cavity,oral):
         return cv2.erode(np.clip(cavity[:,:,3],0,255),np.ones((3,3),np.uint8))[:,:,None]/255
     def clip_interiors(self,teeth,tongue,interior,w,shape_weights=None):
         return teeth*interior,tongue*interior

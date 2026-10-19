@@ -8,7 +8,15 @@ Repo work/engine; branch development/evan-painted-rig (legacy name). Draft PR #4
 
 Automation develop-evan-painted-animation remains ACTIVE. Notify only meaningful review milestones/failure/completion/required action; routine decisions are authorized. Full polished cartoon animation milestone is NOT complete. Disable automation only once it actually is ready for review.
 
-## Latest: lighter rounded source artwork
+## Latest: broad cavity/rim artwork candidate
+
+Read CARTOON-EVAN-BROAD-CAVITY-ART.md. Built-in imagegen edits the original isolated broad cavity to remove the painted red floor; retained cavity gradient is acknowledged despite flat-fill prompt. Source/reference/exact prompt in broad-source-v1, chosen broad-mouth-v1.png SHA 85e71f85065c5e86b3f41a2b667732851d348c33111c41a6b5ee61df073b5da9. Reference hidden RGB was zeroed only where alpha=0; visible source unchanged. New broad-rig-v1 has separate cavity/rim/matte, canonical affine C fit [195,316,281,361], alpha>=250 normalized, 12-source-pixel underlap and 4x sampling. Manifest animationReady=false with hashes/matrix/generation chain. Source pixels rebuild exactly. Two-layer C-space PSD reopens at mean premultiplied error .0004806/255; not full/native Moho rig.
+
+BroadCavityCartoonHead / --broad-cavity extends the lighter O/contour rig. Cavity/rim warp independently; matte clips separate teeth/tongue. New default-pass-through broad-surface/matte hooks preserve previous modes; LightLip actual frames at 2.69/3.125/4.6666667 s remain pixel exact. Old artwork modes/defaults, phone identity/timing, geometry, brows and body are unchanged. 22 targeted checks pass (5 new +17 prior); closure/FV/full-rounded X/A/G/E/F stay exact, broad changes local and tongue clipped. All 489 geometry targets remain exact; 67 partial rounded states have zero fallback. All four final films decode cleanly: normal/quarter 120/480 frames at 48 fps (2.5/10 s), source 2.5–5.0 s.
+
+Review ../../outputs/evan-cartoon-broad-cavity: normal/quarter native-head comparison and branded integration, source 2.5–5.0 s. Initial native broad contour is cleaner and baked red floor gone, but grey upper strip persists in the old upper-teeth surface; do NOT claim this source fixes all brown/grey shading. Shallow B/FV contact/release still needs new construction. Keep OPTIONAL; no default promotion, polished or studio claim. No continuous playback/listening acceptance. Full milestone incomplete; automation remains ACTIVE.
+
+## Prior: lighter rounded source artwork
 
 Read CARTOON-EVAN-LIGHTER-LIP-ART.md. Built-in imagegen edited the isolated prior rounded mouth with the selected cartoon sheet as style context. New source removes the thick peach lip band and baked red floor. A second flattening edit did NOT remove all gradients; retain this limitation honestly. Both raw outputs/exact prompts in light-lip-source-v1; chosen light-mouth-v2.png SHA d2b759ad9cc454d087a13c289d4bde1fe68753fb0252099fa4bbc4e9c8510e50. It is source art, not a complete rig.
 
@@ -34,7 +42,7 @@ Two-pass PocketSphinx alignment: 66 words/248 phones, 39-phone catalog, diphthon
 
 ## Next concrete work
 
-1. Design clean broad/shallow mouth construction, beginning with B/FV contact and release: remove the older C-mouth brown strip through better source drawings/registration, not more full-head swaps or alpha layers. Keep the lighter O optional until performance review. The chosen concept's simple inked shapes are the design reference; an artist should approve anatomy.
+1. PRIORITY: redesign/register the upper-teeth band and shallow B/FV contact/release. The new broad cavity removes the painted floor and cleans the outline, but remaining grey upper strip implicates the old tooth surface; Ablation at frame 148 removes only the upper-teeth contribution and the grey strip disappears (Upper-Teeth-Diagnostic.jpg; render_broad_teeth_diagnostic.py). Inspect cumulative rounded-phone opacity factors plus tooth placement and lip occlusion before redrawing; At frame 148 the existing two rounded-tooth opacity factors .6820×.7827 leave .53385 before source alpha/matte; control evidence is in Review-Evidence.json. The ablation is not a proposed tooth-free design. Keep broad and lighter-O candidates optional; no more full-head swaps or alpha layers. Use the concept's simple shapes and seek artist approval for final anatomy.
 2. Distinct L/dental tongue controls and independent jaw/chin under lip seals, preserving exact current contact timing. No invented measured phonetic precision.
 3. Softer palm/neighbor-finger drawings, wrist/shoulder linework and more expressive acting/eyes. Do not expand scope once the agreed polished milestone actually is ready.
 

@@ -17,6 +17,8 @@ def export(output,root=ROOT,rig_dir='round-rig-v1'):
     actual=np.asarray(composite).astype('float32');actual[:,:,:3]*=actual[:,:,3:4]/255
     error=float(abs(actual-expected).mean())
     if error>.1:raise RuntimeError(f'PSD pixel mismatch {error}')
-    return dict(layers=['cavity','rim'],canvas=[512,512],meanPremultipliedDifference255=error,status='registered source-space E construction plate; runtime mesh, teeth/tongue and timing are separate')
+    manifest=root/rig_dir/'manifest.json'
+    geometry=json.loads(manifest.read_text()).get('sourceGeometry','E') if manifest.exists() else 'E'
+    return dict(layers=['cavity','rim'],canvas=[512,512],meanPremultipliedDifference255=error,status=f'registered source-space {geometry} construction plate; runtime mesh, teeth/tongue and timing are separate')
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('output',type=Path);p.add_argument('--rig-dir',default='round-rig-v1');a=p.parse_args();print(json.dumps(export(a.output,rig_dir=a.rig_dir),indent=2))
