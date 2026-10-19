@@ -8,15 +8,15 @@ Repo work/engine, branch development/evan-painted-rig (legacy name). Draft PR #4
 
 Automation develop-evan-painted-animation remains ACTIVE. Routine decisions are authorized. Notify only meaningful review milestones/failure/completion/required action. Full polished cartoon milestone is NOT complete; disable automation only once it actually is ready for review.
 
-## Latest: optional shallow F/V source and uniform placement
+## Latest: shared F/V release silhouette (optional)
 
-Read CARTOON-EVAN-PLANAR-FV.md. PlanarFVCartoonHead / --planar-fv extends OccludedTeeth. Built-in imagegen contact-v4 plus generated tooth-hidden underpaint are separated into two actual registered lip-contact/upper-teeth layers (fv-source-v3 / fv-rig-v3), with exact prompts/source hashes/generation graph and reopened two-layer PSD evidence. The raw source plate is not a rig. Uniform corner placement prevents jaw aperture from crushing/inflating contact art; both layers currently share a parent. One shared F/V pose, no calibrated anatomy or independent tooth contact joint. Older/default modes unchanged.
+Read CARTOON-EVAN-FV-CORRESPONDENCE.md. CorrespondentFVCartoonHead / --correspondent-fv extends PlanarFV. Reuses existing contour_maps: largest50%-alpha contours at4x,256 radial rays, weighted center/envelope. Remap separate cavity/teeth/tongue/closed lips with the vowel field and F/V construction with contact field before mixing. No source art/timing/annotation/face geometry changes. This is drawn-envelope correspondence, not anatomical topology. Source/registered fv-rig-v3 layers/PSD/prompts remain recorded in CARTOON-EVAN-PLANAR-FV.md.
 
-12 targeted checks pass (6 new +6 tooth-occlusion), eight non-G pure controls exact; G intentionally changes. All489 jaw/face targets exact,34 active contact samples; positive uniform matrices (minimum determinant .176753, max uniform error .000001799). No timing/recording/annotation changes. Canonical source reassembly local mean premultiplied error .492607/255; reopened PSD .00007991/255 globally.
+New oral blend is restricted to the original largest opaque oral bounds+3px antialias margin; previous blend exact outside. Initial locality test caught four one-step skin-pixel differences from resampled alpha dust; guard added, final tests/renders rerun. Ten targeted checks pass (4 new +6 prior planar tests), including all9 pure visemes exact, local change, reduced silhouette mismatch, valid surfaces and degenerate fallback. Across489 targets jaw/face delta0. All34 mixed-contact samples register, no FV/rounded fallback;50%-alpha silhouette disagreement sum29419→1919pixels (414:779→48;422:570→49). Metric is outer contour only, not phonetic/artistic/temporal acceptance.
 
-outputs/evan-cartoon-planar-fv has native-head before/after and branded normal/quarter-speed shots covering source8.1875–10.1875s,96/384frames at48fps, chosen raw source/hidden underpaint/exact prompt set/PSD/registration/audit. Full-resolution contact411/420 is clearer than the slit but still slightly smiling/heavy-lipped. Transition414/422 exposes DOUBLE LIP CONTOURS from existing contact/vowel alpha blend. Following vowel426 unchanged. Candidate is NOT promoted, animationReady:false. No continuous playback/listening or studio-quality acceptance claimed.
+outputs/evan-cartoon-fv-correspondence contains native-head before/after and branded normal/quarter-speed clips, source8.375–9.375s (“a favicon” through start of pause),48/192frames at48fps, all4final films decode cleanly,18review mixed samples no fallback. Full-resolution release414/422 shows reduced obvious double outer edge. Contact still slightly smiling/heavy-lipped; corner spurs, thin tooth strip and internal colour interpolation remain mechanical. No continuous playback/listening acceptance. animationReady:false, default unchanged; full milestone incomplete.
 
-Previous geometric tooth occlusion remains optional and unchanged (CARTOON-EVAN-TOOTH-OCCLUSION.md); separate retraction preserves material until the lip matte hides teeth. Previous checkpoint archived PAINTED-EVAN-HISTORY-2026-10-19-C.md.
+Previous planar source/placement candidate and geometric tooth occlusion remain optional. Earlier checkpoint archived verbatim PAINTED-EVAN-HISTORY-2026-10-19-D.md. Do not regenerate another cavity/full head to hide remaining anatomy.
 
 ## Retained systems
 
@@ -32,7 +32,7 @@ Two-pass PocketSphinx alignment:66words/248phones,39-phone catalog, diphthong gl
 
 ## Next concrete work / limits
 
-1. Fix mixed F/V-to-vowel double contours at frames414/422 through shared outer-lip correspondence and incisor/lower-lip occlusion. Preserve acoustic timing and exact non-contact controls. Do not promote the new source/placement candidate yet; do not hide it with a full-face patch. Then assess B seals and tooth-band anatomy.
+1. Add independent incisor/lower-lip contact occlusion through F/V release; a shared outer envelope does not solve internal contact anatomy. Use414/422 plus high-contact411/420, retain exact pure/non-contact controls and acoustic weights. Assess early F/V regions too. Keep optional until normal-speed performance is acceptable, then assess B seals/tooth-band anatomy.
 2. Distinct L/dental tongue poses and independent chin/jaw under lip seals; retain exact current contacts. Source drawing/inbetweens and a human character artist/animator are needed for final anatomy/performance approval.
 3. Softer palm/neighbor fingers, wrist/shoulder linework and expressive eyes/acting. CPU raster warping/source pixels constrain iteration/detail; more output pixels cannot supply drawings. Stop expanding scope and disable automation only when the agreed polished milestone is actually ready.
 
@@ -40,4 +40,4 @@ Two-pass PocketSphinx alignment:66words/248phones,39-phone catalog, diphthong gl
 
 Python /Users/amarhavic/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3; PYTHONPATH=../painted/deps:evan-engine from repo. Always cv2.setNumThreads(1) for batches. Recording /Users/amarhavic/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an/work/evan-narration.wav (mono PCM16). FFmpeg sibling work/media-tools/ffmpeg. Scratch in work/, deliverables in outputs/. Composite alpha art over a solid backdrop; hidden RGB misleads.
 
-Previous checkpoints archived verbatim PAINTED-EVAN-HISTORY-2026-10-19-C.md and -B.md; -2026-10-19.md and earlier -2026-10-18.md/-B.md/-C.md retained. Read specific review docs for details; do not restore superseded defaults.
+Previous checkpoints archived verbatim PAINTED-EVAN-HISTORY-2026-10-19-D.md, -C.md and -B.md; -2026-10-19.md and earlier -2026-10-18.md/-B.md/-C.md retained. Read specific review docs for details; do not restore superseded defaults.
