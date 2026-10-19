@@ -1,0 +1,99 @@
+name: Moho MCP Read-Only Protocol Test
+
+# This manually triggered test checks only whether the existing MCP bridge
+# starts and offers tools. It does not invoke any tool or change Moho projects.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: moho-mcp-protocol-readonly
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: MCP handshake and read-only tool discovery
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, select, subprocess, sys, time
+
+          bridge = os.path.expanduser(
+              "~/Documents/Moho-Astra/MohoMCP-Enhanced/bridge/dist/index.js"
+          )
+          node = "/usr/local/bin/node"
+          if not os.path.isfile(bridge) or not os.path.isfile(node):
+              print("ERROR: Node.js or Moho bridge file missing")
+              sys.exit(1)
+
+          p = subprocess.Popen(
+              [node, bridge], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+              stderr=subprocess.DEVNULL, bufsize=0
+          )
+          print("Moho MCP bridge launched for read-only protocol test")
+
+          def request(request_id, method, params=None):
+              payload = {"jsonrpc": "2.0", "id": request_id, "method": method}
+              if params is not None:
+                  payload["params"] = params
+              p.stdin.write((json.dumps(payload) + "\n").encode())
+              p.stdin.flush()
+
+          def response(request_id, timeout=20):
+              limit = time.monotonic() + timeout
+              while time.monotonic() < limit:
+                  remaining = max(0, limit - time.monotonic())
+                  ready, _, _ = select.select([p.stdout], [], [], remaining)
+                  if not ready:
+                      continue
+                  line = p.stdout.readline()
+                  if not line:
+                      raise RuntimeError("Bridge closed stdout unexpectedly")
+                  try:
+                      data = json.loads(line)
+                  except (UnicodeDecodeError, json.JSONDecodeError):
+                      continue
+                  if data.get("id") == request_id:
+                      return data
+              raise TimeoutError("No MCP response within " + str(timeout) + " seconds")
+
+          try:
+              request(1, "initialize", {
+                  "protocolVersion": "2025-03-26",
+                  "capabilities": {},
+                  "clientInfo": {"name": "rovor-readonly-runner-probe", "version": "1.0"}
+              })
+              result = response(1)
+              if "error" in result:
+                  raise RuntimeError("MCP initialize error: " + str(result["error"].get("message")))
+              init = result.get("result") or {}
+              print("MCP initialized:", (init.get("serverInfo") or {}).get("name", "unnamed"))
+              print("MCP negotiated version:", init.get("protocolVersion", "not reported"))
+              p.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized"}\n')
+              p.stdin.flush()
+
+              request(2, "tools/list")
+              tool_result = response(2)
+              if "error" in tool_result:
+                  raise RuntimeError("Tool discovery error: " + str(tool_result["error"].get("message")))
+              tools = (tool_result.get("result") or {}).get("tools", [])
+              print("MCP tool count:", len(tools))
+              for t in tools[:60]:
+                  print("MCP tool:", str(t.get("name", "<unnamed>"))[:100])
+              print("PASS: MCP bridge handshake and tool discovery succeeded.")
+              print("NOTE: No Moho tool has been called. Live poller access remains unverified.")
+          except Exception as exc:
+              print("FAIL:", type(exc).__name__, str(exc)[:300])
+              sys.exit(1)
+          finally:
+              try:
+                  p.terminate()
+                  p.wait(timeout=3)
+              except (ProcessLookupError, subprocess.TimeoutExpired):
+                  p.kill()
+          PY
