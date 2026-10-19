@@ -1,0 +1,111 @@
+name: Moho Live Read-Only Project Test
+
+# Deliberately manual and restricted to two read-only commands.
+# Does NOT modify project state, keyframes, files, or application UI.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: moho-live-read-only-test
+  cancel-in-progress: false
+
+jobs:
+  read-open-project:
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 3
+    steps:
+      - name: Read active Moho project through MCP
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, select, subprocess, sys, time
+
+          bridge = os.path.expanduser("~/Documents/Moho-Astra/MohoMCP-Enhanced/bridge/dist/index.js")
+          node = "/usr/local/bin/node"
+          if not os.path.isfile(bridge):
+              sys.exit("Moho bridge missing")
+          if not os.path.isfile(node):
+              sys.exit("Node.js missing")
+
+          process = subprocess.Popen([node, bridge],
+                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                     stderr=subprocess.DEVNULL, bufsize=0)
+
+          def request(id, method, params=None):
+              obj = {"jsonrpc": "2.0", "id": id, "method": method}
+              if params is not None:
+                  obj["params"] = params
+              process.stdin.write((json.dumps(obj) + "\n").encode("utf-8"))
+              process.stdin.flush()
+
+          def reply(id, timeout=30):
+              end = time.monotonic() + timeout
+              while time.monotonic() < end:
+                  ready, _, _ = select.select([process.stdout], [], [], end-time.monotonic())
+                  if not ready:
+                      continue
+                  line = process.stdout.readline()
+                  if not line:
+                      raise RuntimeError("MCP bridge exited before responding")
+                  try:
+                      payload = json.loads(line)
+                  except (ValueError, UnicodeDecodeError):
+                      continue
+                  if payload.get("id") == id:
+                      return payload
+              raise TimeoutError("No response to MCP request %s within %ss" % (id, timeout))
+
+          try:
+              request(1, "initialize", {
+                  "protocolVersion": "2025-03-26",
+                  "capabilities": {},
+                  "clientInfo": {"name": "rovor-mac-github-project-reader", "version": "1.0"}
+              })
+              init = reply(1, 20)
+              if "error" in init:
+                  raise RuntimeError("MCP handshake error: " + str(init["error"]))
+              process.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized"}\n')
+              process.stdin.flush()
+              request(2, "tools/list")
+              listing = reply(2, 20)
+              if "error" in listing:
+                  raise RuntimeError("MCP tools/list error: " + str(listing["error"]))
+              tools = {tool["name"]: tool for tool in (listing.get("result") or {}).get("tools", [])}
+              allowed = ["document_getInfo", "document_getLayers"]
+              for name in allowed:
+                  if name not in tools:
+                      raise RuntimeError("Required read-only tool absent: " + name)
+                  schema = tools[name].get("inputSchema") or {}
+                  required = schema.get("required") or []
+                  if required:
+                      raise RuntimeError("%s requires arguments %s; refusing to guess" % (name, required))
+              for i, name in enumerate(allowed, 3):
+                  print("Invoking read-only Moho tool:", name, flush=True)
+                  request(i, "tools/call", {"name": name, "arguments": {}})
+                  res = reply(i, 30)
+                  if "error" in res:
+                      raise RuntimeError(name + " transport error: " + str(res["error"])[:350])
+                  result = res.get("result") or {}
+                  if result.get("isError"):
+                      details = " ".join(str(c.get("text", "")) for c in result.get("content", [])
+                                         if isinstance(c, dict))
+                      raise RuntimeError(name + " tool error: " + details[:400])
+                  parts = [str(c.get("text", "")) for c in result.get("content", [])
+                           if isinstance(c, dict) and c.get("type") == "text"]
+                  if result.get("structuredContent"):
+                      parts.append(json.dumps(result["structuredContent"]))
+                  print("Read-only result for %s: %s" % (name, " ".join(parts)[:1500]), flush=True)
+              print("PASS: real Moho document and layers read through the running MCP poller.", flush=True)
+          except Exception as exc:
+              print("FAIL: %s: %s" % (type(exc).__name__, str(exc)[:500]), flush=True)
+              sys.exit(1)
+          finally:
+              try:
+                  process.terminate()
+                  process.wait(timeout=3)
+              except (ProcessLookupError, subprocess.TimeoutExpired):
+                  process.kill()
+          PY
