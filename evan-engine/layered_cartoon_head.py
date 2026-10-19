@@ -43,7 +43,7 @@ class LayeredCartoonHead(CartoonHead):
     def composite_oral(self,face,cavity,teeth,tongue,contact,closed,aperture,w):
         visible=self.cavity_visibility(aperture)
         fv=float(w[7]);face=over(face,cavity,visible*(1-fv))
-        face=over(face,teeth,visible*float(ease((aperture-2)/7))*(1-fv)*(1-float(w[5]+w[6])))
+        face=over(face,teeth,visible*float(ease((aperture-2)/7))*(1-fv)*self.teeth_rounding_visibility(w))
         face=over(face,tongue,visible*float(ease((aperture-8)/12))*(1-fv))
         face=over(face,contact,fv)
         return over(face,closed,self.closed_visibility(aperture)*(1-fv))
@@ -61,6 +61,10 @@ class LayeredCartoonHead(CartoonHead):
         return cv2.erode(np.clip(cavity[:,:,3],0,255),np.ones((3,3),np.uint8))[:,:,None]/255
     def clip_interiors(self,teeth,tongue,interior,w,shape_weights=None):
         return teeth*interior,tongue*interior
+    def teeth_rounding_visibility(self,w):
+        return 1-float(w[5]+w[6])
+    def teeth_surface(self,w,oral,shape_weights=None):
+        return self.sample_surface(self.layers['upper-teeth'],POINTS['C'],oral,2)
     def tongue_surface(self,w,oral,shape_weights=None):
         # One raised tongue drawing moves down/scales toward the floor for
         # vowels, and lifts for L. It never dissolves between two tongue images.
@@ -81,7 +85,7 @@ class LayeredCartoonHead(CartoonHead):
         oral=self.oral_target(target,aperture)
         face=self.sample_surface(self.layers['face-skin'],POINTS['X'],self.skin_target(jaw,target))
         cavity=self.cavity_surface(w,oral,shape_weights)
-        teeth=self.sample_surface(self.layers['upper-teeth'],POINTS['C'],oral,2)
+        teeth=self.teeth_surface(w,oral,shape_weights)
         tongue=self.tongue_surface(w,oral,shape_weights)
         # Interior surfaces must stay behind the inked lip boundary.
         interior=self.interior_mask(cavity,w,oral,shape_weights)

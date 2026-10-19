@@ -34,6 +34,6 @@ class LingualCartoonHead(MaterialCartoonHead):
         vowel=cavity*visible
         vowel=over(vowel,tongue,visible*max(floor,lifted))
         # The blade stays inside the cavity and behind the upper incisors.
-        vowel=over(vowel,teeth,visible*float(ease((aperture-2)/7))*(1-float(w[5]+w[6])))
+        vowel=over(vowel,teeth,visible*float(ease((aperture-2)/7))*self.teeth_rounding_visibility(w))
         vowel=over(vowel,closed,self.closed_visibility(aperture))
         return over(face,vowel*(1-fv)+contact*fv)

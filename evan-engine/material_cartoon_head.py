@@ -11,7 +11,7 @@ class MaterialCartoonHead(RoundedCartoonHead):
             return super().composite_oral(face,cavity,teeth,tongue,contact,closed,aperture,w)
         visible=self.cavity_visibility(aperture)
         vowel=cavity*visible
-        vowel=over(vowel,teeth,visible*float(ease((aperture-2)/7))*(1-float(w[5]+w[6])))
+        vowel=over(vowel,teeth,visible*float(ease((aperture-2)/7))*self.teeth_rounding_visibility(w))
         vowel=over(vowel,tongue,visible*float(ease((aperture-8)/12)))
         vowel=over(vowel,closed,self.closed_visibility(aperture))
         # Interpolate the two premultiplied oral groups BEFORE placing on skin.
