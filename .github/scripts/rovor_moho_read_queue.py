@@ -22,14 +22,14 @@ NODE = "/usr/local/bin/node"
 BRIDGE = pathlib.Path.home() / "Documents/Moho-Astra/MohoMCP-Enhanced/bridge/dist/index.js"
 
 def load_plan():
-    with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as f:
-        event = json.load(f)
-    commit = event.get("head_commit") or {}
-    touched = list(commit.get("added") or []) + list(commit.get("modified") or [])
-    paths = sorted({p for p in touched if QUEUE_PATH.fullmatch(p)})
-    if len(paths) != 1:
-        raise RuntimeError("Expected one changed whitelisted read request; got " + repr(paths))
-    p = pathlib.Path(paths[0])
+    # Request path is determined by a verified, exact commit diff in the caller.
+    # A push event's head_commit.added/modified fields can be absent.
+    request_path = os.environ.get("ROVOR_REQUEST_PATH", "")
+    if not QUEUE_PATH.fullmatch(request_path):
+        raise RuntimeError("Missing or unapproved read-only request path")
+    p = pathlib.Path(request_path)
+    if not p.is_file() or p.is_symlink():
+        raise RuntimeError("Whitelisted request file missing or linked")
     plan = json.loads(p.read_text(encoding="utf-8"))
     if set(plan) != {"task_id", "commands"}:
         raise RuntimeError("Unexpected request fields")
