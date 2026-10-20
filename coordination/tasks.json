@@ -203,6 +203,25 @@
       "next_update": "After binary blob/tree verification",
       "next_action": "Import 13 accessible MP3 filenames (10 unique byte streams), preserve exact bytes and names, and add a duration/checksum index. Amar explicitly requested GitHub audio access; this supersedes the prior default of excluding recordings from commits.",
       "acceptance": "All 13 known uploaded MP3 paths appear on main with matching Git blob hashes; index lists durations and exact duplicates; Windows branch can access the same files."
+    },
+    {
+      "id": "remote-github-handoff",
+      "title": "Enable an auditable GitHub-only handoff for Evan's ChatGPT",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar GitHub-only handoff session",
+      "branch": "feature/remote-github-handoff",
+      "scopes": [
+        "REMOTE-EVAN-GITHUB.md",
+        "tools/remote_handoff.py",
+        "tests/test_remote_handoff.py",
+        ".github/workflows/remote-handoff.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-20T03:48:48.520Z",
+      "next_update": "After adding remote handoff files and verifying hosted CI",
+      "next_action": "Publish a GitHub-only entrypoint and read-only status report, test the report generator, and record evidence from hosted Actions without asserting laptop access.",
+      "acceptance": "GitHub-only instructions accessible from main/PR, report shows correct blocked/ready/done work and source provenance; hosted CI passes; no laptop code execution claimed."
     }
   ]
 }
