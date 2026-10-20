@@ -63,5 +63,10 @@ def glide_strengths(t, start, end):
     # Rounded to spread (or reverse) through the entire vowel's middle.
     # Long phones sustain their first and last paint poses instead of
     # spending the whole sound in a 50/50 dissolve.
-    phase = smoothstep((t-(start+.20*span))/(max(.001,.60*span)))
+    # Never squeeze the entire mouth-shape shift into only one or two
+    # 60fps frames on rapid speech. Widen the VISUAL transition around
+    # the existing vowel center; do not change its acoustic timestamps.
+    glide_window = max(.10, .60*span)
+    glide_begin = (start+end-glide_window)/2
+    phase = smoothstep((t-glide_begin)/glide_window)
     return envelope*(1.-phase), envelope*phase
