@@ -208,7 +208,7 @@
       "id": "remote-github-handoff",
       "title": "Enable an auditable GitHub-only handoff for Evan's ChatGPT",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar GitHub-only handoff session",
       "branch": "feature/remote-github-handoff",
       "scopes": [
@@ -219,10 +219,25 @@
         "AGENTS.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T03:51:56.766Z",
-      "next_update": "After the canonical AGENTS.md entrypoint is linked and hosted checks pass",
-      "next_action": "Link the merged GitHub-only guide from AGENTS.md, validate shared CI, then close the claim with merge and CI evidence.",
-      "acceptance": "GitHub-only instructions accessible from main/PR, report shows correct blocked/ready/done work and source provenance; hosted CI passes; no laptop code execution claimed."
+      "updated_at": "2026-10-20T03:52:23.480Z",
+      "next_action": "Any GitHub-connected ChatGPT session should read main AGENTS.md and REMOTE-EVAN-GITHUB.md, then check the shared queue and open PRs. Confirm all laptop actions separately; the Windows runtime and audio import retain their existing owners.",
+      "acceptance": "GitHub-only instructions accessible from main/PR, report shows correct blocked/ready/done work and source provenance; hosted CI passes; no laptop code execution claimed.",
+      "evidence": [
+        {
+          "commit": "1f0c57bb9a7d7e80f4d92367f24cc86509553832",
+          "platform": "GitHub-hosted Ubuntu / main",
+          "check": "Read-only remote summary generation, four handoff unit tests, and shared queue validation; artifact and job summary",
+          "result": "PASS (hosted; not Evan laptop)",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39366481606"
+        },
+        {
+          "commit": "bb0e6161d5ce6622f67c974ed712989d772bc4e2",
+          "platform": "GitHub main branch",
+          "check": "Canonical AGENTS.md directs all new sessions to GitHub-only handoff; docs/tool/workflow included through PR #9",
+          "result": "MERGED; content linked",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/9"
+        }
+      ]
     }
   ]
 }
