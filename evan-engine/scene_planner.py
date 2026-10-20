@@ -123,9 +123,14 @@ def validate_plan(plan, duration):
     for i, item in enumerate(plan):
         if not isinstance(item, dict) or item.get('kind') not in KINDS:
             raise ValueError(f'Scene {i+1}: unknown illustration type')
+        raw_start, raw_end = item.get('start'), item.get('end')
+        if (isinstance(raw_start, bool) or isinstance(raw_end, bool) or
+                not isinstance(raw_start, (int, float)) or
+                not isinstance(raw_end, (int, float))):
+            raise ValueError(f'Scene {i+1}: timings must be JSON numbers')
         try:
-            start, end = float(item['start']), float(item['end'])
-        except (KeyError, ValueError, TypeError) as error:
+            start, end = float(raw_start), float(raw_end)
+        except OverflowError as error:
             raise ValueError(f'Scene {i+1}: invalid timing') from error
         if not (0 <= start < end <= duration + 0.02 and start < duration):
             raise ValueError(f'Scene {i+1}: invalid time range')
