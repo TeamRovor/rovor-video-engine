@@ -18,9 +18,12 @@ def frame(body,plan,t):
     else:d.text((685,603),'A small detail that represents your brand.',font=font(22),fill='#48636d')
     return im
 if __name__=='__main__':
-    cv2.setNumThreads(1);p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--material',action='store_true');p.add_argument('--compact-index',action='store_true');p.add_argument('--joined-wrist',action='store_true');p.add_argument('--lingual-tongue',action='store_true');p.add_argument('--separated-jaw',action='store_true');p.add_argument('--anchored-skin',action='store_true');p.add_argument('--bounded-head',action='store_true');p.add_argument('--rounded-art',action='store_true');p.add_argument('--contour-art',action='store_true');p.add_argument('--light-lip',action='store_true');p.add_argument('--broad-cavity',action='store_true');p.add_argument('--occluded-teeth',action='store_true');p.add_argument('--planar-fv',action='store_true');p.add_argument('--correspondent-fv',action='store_true');p.add_argument('--duration-jaw',action='store_true');p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=FRAME_COUNT);a=p.parse_args()
+    cv2.setNumThreads(1);p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('--material',action='store_true');p.add_argument('--compact-index',action='store_true');p.add_argument('--joined-wrist',action='store_true');p.add_argument('--lingual-tongue',action='store_true');p.add_argument('--separated-jaw',action='store_true');p.add_argument('--anchored-skin',action='store_true');p.add_argument('--bounded-head',action='store_true');p.add_argument('--rounded-art',action='store_true');p.add_argument('--contour-art',action='store_true');p.add_argument('--light-lip',action='store_true');p.add_argument('--broad-cavity',action='store_true');p.add_argument('--occluded-teeth',action='store_true');p.add_argument('--planar-fv',action='store_true');p.add_argument('--correspondent-fv',action='store_true');p.add_argument('--duration-jaw',action='store_true');p.add_argument('--rooted-floor',action='store_true');p.add_argument('--start',type=int,default=0);p.add_argument('--end',type=int,default=FRAME_COUNT);a=p.parse_args()
     plan=json.loads(a.plan.read_text())
-    if a.duration_jaw:
+    if a.rooted_floor:
+        from rooted_floor_cartoon_scene import RootedFloorCartoonSceneBody
+        body=RootedFloorCartoonSceneBody()
+    elif a.duration_jaw:
         from duration_cartoon_scene import DurationCartoonSceneBody
         body=DurationCartoonSceneBody()
     elif a.correspondent_fv:
@@ -65,4 +68,6 @@ if __name__=='__main__':
     else:body=CartoonMaterialSceneBody() if a.material else CartoonSceneBody()
     a.frames.mkdir(parents=True,exist_ok=True)
     for i in range(a.start,a.end):frame(body,plan,i/FPS).save(a.frames/f'{i:06}.jpg',quality=96)
-    print(json.dumps(dict(start=a.start,end=a.end,fps=FPS)))
+    summary=dict(start=a.start,end=a.end,fps=FPS)
+    if a.rooted_floor:summary.update(meshCacheHits=body.head.mesh_cache_hits,meshCacheMisses=body.head.mesh_cache_misses,meshCacheEntries=len(body.head._surface_cache),fvFallbacks=body.head.fv_correspondence_fallbacks,dentalFallbacks=body.head.dental_fallbacks,roundedFallbacks=body.head.contour_fallbacks)
+    print(json.dumps(summary))
