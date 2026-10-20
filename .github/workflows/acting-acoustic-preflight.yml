@@ -1,0 +1,43 @@
+name: Evan acting acoustic preflight
+
+on:
+  pull_request:
+    paths:
+      - 'evan-engine/production_speech_preflight.py'
+      - 'evan-engine/speech_plan_gate.py'
+      - 'evan-engine/test_production_speech_preflight.py'
+      - 'evan-engine/render_acting_video.py'
+      - '.github/workflows/acting-acoustic-preflight.yml'
+  push:
+    branches: [feature/acting-acoustic-preflight, development/evan-1080p60-acting-77a9561]
+    paths:
+      - 'evan-engine/production_speech_preflight.py'
+      - 'evan-engine/speech_plan_gate.py'
+      - 'evan-engine/test_production_speech_preflight.py'
+      - 'evan-engine/render_acting_video.py'
+      - '.github/workflows/acting-acoustic-preflight.yml'
+
+permissions:
+  contents: read
+concurrency:
+  group: evan-acoustic-preflight-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  phoneme-preflight:
+    name: Acoustic contract (hosted, source-free)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify acoustic QA integration does not certify artwork
+        working-directory: evan-engine
+        run: python -m unittest -v test_production_speech_preflight
