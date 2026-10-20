@@ -21,7 +21,7 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 import render_jobs
 
 MAX_UPLOAD = render_jobs.MAX_BYTES
-MAX_ARTIFACT = 512 * 1024 * 1024
+MAX_ARTIFACT = 64 * 1024 * 1024
 ALLOWED_SUFFIXES = (".oaiusercontent.com", ".openai.com", ".chatgpt.com")
 REDIRECTS = 4
 
