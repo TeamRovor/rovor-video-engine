@@ -3,7 +3,7 @@ EVAN V3.1.1 PORTABILITY AND RENDER RELIABILITY — OCTOBER 19 2026
 IMPLEMENTED IN THIS UPDATE:
 - Windows and macOS launchers share validated local-tool configuration.
 - Windows paths with spaces are supported by the interactive launcher.
-- Resume checks now fingerprint audio, manual scene plans, and tool configuration contents.
+- Resume checks fingerprint audio, manual scene plans, tool configuration, and resolved tool/model file metadata.
 - Resume checks include the engine version so newer rendering code cannot silently reuse old frames.
 - Saved render metadata is written atomically; malformed transcript and lip-sync outputs are rejected.
 - Empty audio is rejected before transcription; malformed timing values are filtered out.
