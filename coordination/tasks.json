@@ -25,20 +25,21 @@
       "id": "moho-disposable-pose",
       "title": "Verify a native pose on the disposable Moho project",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar native Moho bridge verification",
       "branch": "feature/remote-render-job-loop",
       "scopes": [
         "subsystem:mac-moho-sandbox"
       ],
       "depends_on": [],
-      "next_action": "Verify existing disposable copy and bone schema using live bridge; preserve current unsaved project.",
+      "next_action": "Preserve live sandbox; continue independent file compiler task.",
       "acceptance": "Evidence identifies exact disposable project and bones, dry-run response and verification. Preserve source and unsaved documents. Live reads alone do not complete this pose task.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/6"
       ],
-      "updated_at": "2026-10-20T04:51:09.086Z",
-      "next_update": "After fresh disposable identity and dry-run pose verification"
+      "updated_at": "2026-10-20T04:55:07.145Z",
+      "next_update": "After file-compiled native artifact verification",
+      "blocker": "User redirected to zero-UI file compilation before the prepared write test ran. Live identity, 11 bones and dry-run verified; no animation writes performed."
     },
     {
       "id": "evan-acting-review",
@@ -396,6 +397,25 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
         }
       ]
+    },
+    {
+      "id": "moho-file-compiler",
+      "title": "Compile observed native Moho JSON channels at 60 fps",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar headless compiler session",
+      "branch": "feature/remote-render-job-loop",
+      "scopes": [
+        "tools/moho_compile.py",
+        "tests/test_moho_compile.py",
+        "MOHO-FILE-COMPILER.md",
+        ".github/workflows/moho-file-compiler.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-20T04:55:07.145Z",
+      "next_update": "After schema-preservation tests and native CLI capability check",
+      "next_action": "Compile into new archives only using observed channel schema; use exact 60fps phone sampling and calibrated bone inputs.",
+      "acceptance": "Original archive untouched; frame zero and non-target data preserved; strict schema and collision checks; runtime limits documented."
     }
   ]
 }
