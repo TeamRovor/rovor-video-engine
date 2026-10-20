@@ -10,6 +10,8 @@ import subprocess
 import sys
 from datetime import datetime
 
+from local_tools import dependency_errors, load_config
+
 ENGINE = Path(__file__).resolve().parent
 OUTPUTS = ENGINE.parent / "evan-videos"
 SERVER_NAME = "rovor-evan-v3"
@@ -27,7 +29,7 @@ def tools():
             "description": "Start generating a Rovor Digital animated Evan MP4 from an absolute local MP3 file path; returns a render folder for polling. Works without internet if local tools are present. 60-second audio limit.",
             "inputSchema": {
                 "type": "object",
-                "properties": {"mp3_path": {"type": "string", "description": "Absolute path to an existing MP3 on this Mac"}},
+                "properties": {"mp3_path": {"type": "string", "description": "Absolute path to an existing local MP3 file"}},
                 "required": ["mp3_path"],
             },
         },
@@ -36,7 +38,7 @@ def tools():
             "description": "Check progress and locate the MP4 from a previously started Evan render.",
             "inputSchema": {
                 "type": "object",
-                "properties": {"render_folder": {"type": "string", "description": "Absolute render folder returned by evan_render_mp3"}},
+                "properties": {"render_folder": {"type": "string", "description": "Render folder returned by evan_render_mp3"}},
                 "required": ["render_folder"],
             },
         },
@@ -44,16 +46,40 @@ def tools():
 
 
 def dependency_status():
-    config = json.loads((ENGINE / "local_tools.json").read_text())
-    missing = [key for key, value in config.items() if not Path(value).exists()]
+    try:
+        config, config_path = load_config()
+        missing = dependency_errors(config)
+    except ValueError as error:
+        return {"ready": False, "missing": ["config"], "error": str(error),
+                "engine": str(ENGINE), "output_folder": str(OUTPUTS)}
     return {"ready": not missing, "missing": missing,
             "engine": str(ENGINE), "output_folder": str(OUTPUTS),
+            "config": str(config_path),
             "note": "This MCP controls Evan Engine V3, not Moho."}
 
 
 def is_running(pid):
     if not pid:
         return False
+    if os.name == "nt":
+        try:
+            import ctypes
+            kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+            kernel.OpenProcess.argtypes = [ctypes.c_uint32, ctypes.c_bool, ctypes.c_uint32]
+            kernel.OpenProcess.restype = ctypes.c_void_p
+            kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+            kernel.CloseHandle.restype = ctypes.c_bool
+            kernel.GetExitCodeProcess.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
+            kernel.GetExitCodeProcess.restype = ctypes.c_bool
+            handle = kernel.OpenProcess(0x1000, False, int(pid))  # PROCESS_QUERY_LIMITED_INFORMATION
+            if not handle:
+                return False
+            code = ctypes.c_uint32()
+            active = kernel.GetExitCodeProcess(ctypes.c_void_p(handle), ctypes.byref(code))
+            kernel.CloseHandle(ctypes.c_void_p(handle))
+            return bool(active and code.value == 259)  # STILL_ACTIVE
+        except (OSError, ValueError, TypeError):
+            return False
     try:
         os.kill(int(pid), 0)
         return True
@@ -69,7 +95,10 @@ def call_tool(name, args):
         if not status["ready"]:
             raise ValueError("Missing dependencies: " + ", ".join(status["missing"]))
         supplied = str(args.get("mp3_path", "")).strip()
-        mp3 = Path(supplied).expanduser().resolve()
+        mp3 = Path(supplied).expanduser()
+        if not mp3.is_absolute():
+            raise ValueError("Provide an absolute path to an existing .mp3 file.")
+        mp3 = mp3.resolve()
         if not mp3.is_file() or mp3.suffix.lower() != ".mp3":
             raise ValueError("Provide an existing absolute .mp3 file path.")
         OUTPUTS.mkdir(parents=True, exist_ok=True)
@@ -77,9 +106,18 @@ def call_tool(name, args):
         folder.mkdir()
         logfile = folder / "render.log"
         with logfile.open("w") as output:
+            launch = {
+                "stdout": output,
+                "stderr": subprocess.STDOUT,
+                "stdin": subprocess.DEVNULL,
+            }
+            if os.name == "nt":
+                launch["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+            else:
+                launch["start_new_session"] = True
             process = subprocess.Popen(
                 [sys.executable, str(ENGINE / "animate_evan.py"), str(mp3), "--output", str(folder)],
-                stdout=output, stderr=subprocess.STDOUT, start_new_session=True,
+                **launch,
             )
         (folder / "mcp_job.json").write_text(json.dumps({"pid": process.pid, "mp3": str(mp3)}))
         return {"started": True, "pid": process.pid, "render_folder": str(folder),
@@ -94,7 +132,9 @@ def call_tool(name, args):
         logfile = folder / "render.log"
         log = logfile.read_text(errors="replace")[-1800:] if logfile.exists() else ""
         ready = video.exists() and video.stat().st_size > 0
-        return {"completed": ready, "running": False if ready else is_running(job.get("pid")),
+        running = False if ready else is_running(job.get("pid"))
+        return {"completed": ready, "running": running,
+                "failed": not ready and not running,
                 "video": str(video) if ready else None, "log_tail": log,
                 "render_folder": str(folder)}
     raise ValueError("Unknown tool: " + str(name))
@@ -114,7 +154,7 @@ def dispatch(req):
         if method == "initialize":
             version = req.get("params", {}).get("protocolVersion", "2025-06-18")
             result = {"protocolVersion": version, "capabilities": {"tools": {}},
-                      "serverInfo": {"name": SERVER_NAME, "version": "3.0"}}
+                      "serverInfo": {"name": SERVER_NAME, "version": "3.1"}}
         elif method == "ping":
             result = {}
         elif method == "tools/list":
@@ -142,3 +182,4 @@ if __name__ == "__main__":
             dispatch(json.loads(line))
         except Exception as exc:
             print("MCP input error: " + str(exc), file=sys.stderr)
+
