@@ -1,3 +1,11 @@
+ROVOR DIGITAL VIDEO ENGINE V3.4.0 — OCTOBER 19 2026
+
+RENDER DIAGNOSTICS:
+- Completed renders write render_result.json with output settings, media size, and caption/scene fingerprints.
+- Per-stage timing and active elapsed time persist across resumed attempts; downtime between attempts is excluded.
+- MCP render status returns the completed render report and validates it against the current MP4.
+- Metrics are saved atomically after local processing stages; diagnostic write failures do not stop a render.
+
 ROVOR DIGITAL VIDEO ENGINE V3.3.0 — OCTOBER 19 2026
 
 CAPTION REVIEW AND RENDER SAFETY:
@@ -29,7 +37,7 @@ IMPLEMENTED IN THIS UPDATE:
 - Frame batch ranges and saved scene plans are validated before rendering.
 - Render and MCP process handling now accounts for Windows process semantics.
 - Sharp is pinned in package.json for repeatable setup on supported Node versions.
-- Engine and MCP versions are aligned at 3.3.0.
+- Engine and MCP versions are aligned at 3.3.0 for that release.
 
 VALIDATION:
 - The existing test suite and a full Windows render were not run for this update.
