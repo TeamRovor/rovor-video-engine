@@ -57,6 +57,7 @@ Resuming verifies the audio contents, scene-plan contents, character mode, and t
 
 - Recordings are limited to 60 seconds.
 - Scene selection is deterministic and keyword-based; review captions and scene choices before publishing.
+- Captions from unusually long transcript segments are limited to three lines to stay inside the video frame.
 - V3 uses reference-art pose swaps, not a native Moho skeletal rig. The V2 vector mode remains available with `--character vector`.
 - Local stage timeouts are longer for transcription and encoding than for frame batches. Interrupted jobs can resume from completed work, but a local tool that repeatedly exceeds its stage budget still needs a faster model or shorter input.
 
