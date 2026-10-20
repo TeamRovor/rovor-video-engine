@@ -154,7 +154,7 @@ def dispatch(req):
         if method == "initialize":
             version = req.get("params", {}).get("protocolVersion", "2025-06-18")
             result = {"protocolVersion": version, "capabilities": {"tools": {}},
-                      "serverInfo": {"name": SERVER_NAME, "version": "3.1"}}
+                      "serverInfo": {"name": SERVER_NAME, "version": "3.1.1"}}
         elif method == "ping":
             result = {}
         elif method == "tools/list":
