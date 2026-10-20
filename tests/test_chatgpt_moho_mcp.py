@@ -74,6 +74,25 @@ class ChatGPTMohoBridge(unittest.TestCase):
             self.assertEqual(called, [])
             self.assertFalse((Path(tmp) / "jobs").exists())
 
+    def test_setup_reports_missing_native_frame_checker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            moho = root / "Moho"
+            adapter = root / "adapter.json"
+            moho.write_text("test executable")
+            moho.chmod(0o700)
+            adapter.write_text(json.dumps([str(moho)]))
+            adapter.chmod(0o600)
+            def which(command):
+                return "/usr/bin/ffprobe" if command == "ffprobe" else None
+            with patch.dict(bridge.os.environ, {"MOHO_EXECUTABLE": str(moho)}), \
+                 patch.object(bridge.shutil, "which", side_effect=which):
+                result = bridge.inspect_setup(adapter)
+            self.assertTrue(result["mediaProbeAvailable"])
+            self.assertTrue(result["mohoCliAvailable"])
+            self.assertTrue(result["adapterConfigValid"])
+            self.assertIn("Black/frozen-frame checks", " ".join(result["blockers"]))
+
     def test_artifact_is_exposed_only_after_hash_checked_status(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
