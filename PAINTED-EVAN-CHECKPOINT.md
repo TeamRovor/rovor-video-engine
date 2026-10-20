@@ -8,6 +8,10 @@ Repo work/engine, branch development/evan-painted-rig (legacy name). Draft PR #4
 
 Automation develop-evan-painted-animation remains ACTIVE. Routine decisions are authorized. Notify only meaningful review milestones/failure/completion/required action. Full polished cartoon milestone is NOT complete; disable automation only once it actually is ready for review.
 
+## Current work: phone-specific tongue study, NOT promoted
+
+Read CARTOON-EVAN-PHONE-TONGUE.md. Optional PhoneTongueCartoonHead partitions existing H acoustic kernels into L and TH/DH, using original18ms anticipation/radius and unchanged H salience/timing/energy/jaw/masks. L and direct controls retain prior pixels; TH/DH flatten/widen the existing blade around fixed root. Context resets on exceptions. No new drawings/imagegen. Initial native512px comparisons87/129/258/325 inspected: dental change mostly hides the stem behind the floor; L remains exact. This is NOT convincing dental anatomy and must NOT be promoted or called a visual quality milestone. A distinct registered broad tongue-tip drawing and coordinated inner lower-lip/teeth occlusion are next, preserving selected head. outputs/evan-cartoon-phone-tongue contains72 native-head comparison frames in a normal1.5s film/original concatenated audio and288frame muted quarter-speed film. Both decode clean; audio24000samples16k. All24 L frames exact; only7 DH/8 TH frames change, max174/171pixels. All72 tongue rows valid, no fallback. Nine checks passed (4phone-specific+5rooted). Full-resolution panels11/29/61 and earlier source87/129/258/325 inspected; continuous playback/listening unassessed. Review.md records rejection and distinct drawing next.
+
 ## Latest: rooted tongue floor + complete reference (optional)
 
 Read CARTOON-EVAN-ROOTED-FLOOR.md. RootedFloorCartoonHead / --rooted-floor extends Duration. Reuse actual blade/root-floor parts; bladeY=.12+.88*ease(H), X=.8+.2*H, rooted at source(237,354). Floor composites OVER blade; existing lip/interior matte and upper teeth cover the tongue. Ordinary vowel stem retracts, raised tip retained. H still shared L/TH/DH, not separate dental anatomy. Source PNG hashes unchanged; no imagegen/whole-face patch/timing/jaw/body changes this pass.
@@ -34,7 +38,7 @@ Two-pass PocketSphinx alignment:66words/248phones,39-phone catalog, diphthong gl
 
 ## Next concrete work / limits
 
-1. Separate L versus dental TH/DH tongue shapes and improve inner lower-lip aperture using consistent source drawings. Use full-reference normal/slow films to target visible defects; review short stressed accents against original voice. Preserve phonetic/material identity and avoid whole-head regeneration. Current ordinary-vowel floor now works without new source art.
+1. Replace the unapproved flattened-blade dental study with a distinct registered broad dental tip and coordinated inner lower-lip aperture using consistent source drawings. Use full-reference normal/slow films to target visible defects; review short stressed accents against original voice. Preserve phonetic/material identity and avoid whole-head regeneration. Current ordinary-vowel floor now works without new source art.
 2. Distinct L/dental tongue poses and independent chin/jaw under lip seals; retain exact current contacts. Source drawing/inbetweens and a human character artist/animator are needed for final anatomy/performance approval.
 3. Softer palm/neighbor fingers, wrist/shoulder linework and expressive eyes/acting. CPU raster warping/source pixels constrain iteration/detail; more output pixels cannot supply drawings. Stop expanding scope and disable automation only when the agreed polished milestone is actually ready.
 

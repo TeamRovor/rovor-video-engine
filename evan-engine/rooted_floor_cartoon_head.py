@@ -18,9 +18,11 @@ def rooted_blade_matrix(lift):
 class RootedFloorCartoonHead(CachedSurfaceMixin,DurationCartoonHead):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs);self.capture_tongue=False;self.last_tongue=None
+    def blade_matrix(self,w):
+        return rooted_blade_matrix(tongue_lift(w))
     def tongue_parts(self,w,oral):
         art=self.blade.astype('float32').copy();art[:,:,:3]*=art[:,:,3:4]/255
-        art=cv2.warpAffine(art,rooted_blade_matrix(tongue_lift(w)),(SIZE,SIZE),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT)
+        art=cv2.warpAffine(art,self.blade_matrix(w),(SIZE,SIZE),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT)
         art=self.constrain_surface(art)
         blade=self.sample_surface(straight(art).astype('uint8'),POINTS['H'],oral,2)
         floor=self.sample_surface(self.root_floor,POINTS['H'],oral,2)
@@ -30,5 +32,5 @@ class RootedFloorCartoonHead(CachedSurfaceMixin,DurationCartoonHead):
         # The broad floor covers the blade root; lifted tip remains exposed.
         if self.capture_tongue:
             exposed=blade[:,:,3]*(1-floor[:,:,3]/255)
-            self.last_tongue=dict(lift=tongue_lift(w),sourceBladeYScale=float(rooted_blade_matrix(tongue_lift(w))[1,1]),bladeCoverageBeforeFloor=float(blade[:,:,3].sum()/255),bladeCoverageAfterFloor=float(exposed.sum()/255),floorCoverage=float(floor[:,:,3].sum()/255),validPremultiplied=all(bool(np.isfinite(v).all() and v.min()>=0 and v[:,:,3].max()<=255.0001 and np.all(v[:,:,:3]<=v[:,:,3:4]+1e-4)) for v in [blade,floor]))
+            self.last_tongue=dict(lift=tongue_lift(w),sourceBladeYScale=float(self.blade_matrix(w)[1,1]),bladeCoverageBeforeFloor=float(blade[:,:,3].sum()/255),bladeCoverageAfterFloor=float(exposed.sum()/255),floorCoverage=float(floor[:,:,3].sum()/255),validPremultiplied=all(bool(np.isfinite(v).all() and v.min()>=0 and v[:,:,3].max()<=255.0001 and np.all(v[:,:,:3]<=v[:,:,3:4]+1e-4)) for v in [blade,floor]))
         return over(blade,floor)
