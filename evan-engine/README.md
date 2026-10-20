@@ -1,4 +1,4 @@
-# Rovor Digital Video Engine — V3.3.0
+# Rovor Digital Video Engine — V3.4.0
 
 An offline MP3-to-MP4 animation pipeline for Rovor Digital. It transcribes speech locally, times mouth shapes, selects illustrated topic scenes, animates Evan, adds captions, and exports a vertical video. It does not call paid AI services or use network APIs while rendering.
 
@@ -49,6 +49,8 @@ Once transcription and lip-sync are ready, the render folder includes an editabl
 The engine checkpoints completed frames and prevents two processes from writing to the same render folder at once. Changed captions or saved scene data invalidate the old frames and encoded video while leaving the existing MP4 in place until the replacement is ready. MCP polling continues to report a render as active while that replacement is being created.
 
 The local MCP adapter can start renders with optional `captions_path`, `plan_path`, and `character` values. It returns the output `captions_file` path so you can edit subtitles, then continue the job with `evan_continue_render`; the adapter uses the saved tool configuration and render stages.
+
+Each completed render writes `render_result.json` with the output settings, file size, caption and scene fingerprints, total active render time, and time spent in each local processing stage. Timing totals carry across resumed attempts; waiting between attempts is not counted. `evan_render_status` includes this report after completion. The report helps identify whether transcription, mouth timing, frame rendering, or video encoding is the slow step.
 
 To provide a hand-authored scene plan:
 
