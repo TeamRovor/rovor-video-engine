@@ -1,6 +1,6 @@
 # Repository collaboration instructions
 
-Read PROJECT-LOOP.md before selecting work. Fetch and consult the latest shared coordination revision, current PRs/issues and relevant branch checkpoint. On older branches, read the remote coordination copy; do not assume a missing local file means there is no shared plan.
+Read PROJECT-LOOP.md and coordination/tasks.json before selecting work. Use coordination/README.md for the session commands. The JSON task queue is the single ownership/dependency record; do not create a parallel claim table. Run `python tools/project_loop.py check` before pushing queue changes. Fetch and consult the latest shared coordination revision, current PRs/issues and relevant branch checkpoint. On older branches, read the remote coordination copy; do not assume a missing local file means there is no shared plan.
 
 Before implementation, record and push a bounded task claim with participant/session, branch, scope, timestamp, acceptance result and next update point. Re-fetch and resolve overlapping claims. Never overwrite another session's work or infer a task is abandoned from silence. Use independent files/tasks while an overlapping owner remains active.
 

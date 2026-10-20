@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "windows-runtime",
+      "title": "Validate the existing Windows setup and render workflow",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "codex/windows-reliability-v3-1",
+      "scopes": [
+        "evan-engine",
+        "install-on-windows.ps1"
+      ],
+      "depends_on": [],
+      "next_action": "Check PR #7 for active work, claim this task, then use the existing launcher tool check on Evan's Windows laptop. Preserve local changes.",
+      "acceptance": "Record Windows version, exact commit and commands; verify tool check, original-audio render, interrupted resume and caption correction. Record actual output settings and failures.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/7"
+      ]
+    },
+    {
+      "id": "moho-disposable-pose",
+      "title": "Verify a native pose on the disposable Moho project",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "scopes": [
+        "subsystem:mac-moho-sandbox"
+      ],
+      "depends_on": [],
+      "next_action": "Read latest Issue #6 evidence and claims; verify active disposable file identity, inspect its bones, and dry-run a supported pose before any permitted write.",
+      "acceptance": "Evidence identifies exact disposable project and bones, dry-run response and verification. Preserve source and unsaved documents. Live reads alone do not complete this pose task.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/issues/6"
+      ]
+    },
+    {
+      "id": "evan-acting-review",
+      "title": "Identify the next visible character defect from existing acting work",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "development/evan-1080p60-acting-77a9561",
+      "scopes": [
+        "subsystem:evan-visual-review"
+      ],
+      "depends_on": [],
+      "next_action": "Read Issue #1 and PRs #4/#5 plus latest checkpoints. Review available existing samples before selecting one bounded visual fix; no renderer rebuild.",
+      "acceptance": "Record exact source commit, sample and timestamps, observed defect and the next bounded art/acting task. Engineering tests alone do not establish visual approval.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/issues/1",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/5"
+      ]
+    },
+    {
+      "id": "scene-moho-contract",
+      "title": "Document the smallest shared scene-to-Moho contract",
+      "priority": 2,
+      "status": "ready",
+      "owner": null,
+      "branch": "codex/windows-reliability-v3-1",
+      "scopes": [
+        "subsystem:scene-moho-contract-review"
+      ],
+      "depends_on": [
+        "windows-runtime",
+        "moho-disposable-pose"
+      ],
+      "next_action": "After runtime and native-pose evidence, compare existing scene metadata with actual Moho capabilities; document timing, coordinate units, assets and capability gaps before adapter implementation.",
+      "acceptance": "Reviewed mapping reuses scene.json, cites both tested commits and identifies unsupported operations; no duplicate scene format or speculative adapter.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/7",
+        "https://github.com/TeamRovor/rovor-video-engine/issues/6"
+      ]
+    },
+    {
+      "id": "shared-session-checks",
+      "title": "Add and verify shared coordination checks",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar coordination session",
+      "branch": "coordination/shared-project-loop",
+      "scopes": [
+        "tools/project_loop.py",
+        "tests/test_project_loop.py",
+        "coordination",
+        ".github/workflows/project-loop-check.yml",
+        "AGENTS.md",
+        "PROJECT-LOOP.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-20T02:42:16.577462+00:00",
+      "next_update": "After hosted checks and handoff",
+      "next_action": "Publish the locally checked tool and inspect hosted checks.",
+      "acceptance": "Regression checks pass, task validation passes, and hosted cross-platform results are recorded."
+    }
+  ]
+}

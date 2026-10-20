@@ -25,7 +25,7 @@ Evan's Windows laptop is connected to GitHub according to Amar; runner status an
 ## Start every work session
 
 1. Fetch remote changes. Read `AGENTS.md`, this page from the latest shared coordination revision, and the relevant PR/issue/checkpoint. Older feature branches must consult the remote copy rather than assuming their local copy is current.
-2. Check active claims below and open PRs. Select one next task with a visible acceptance result.
+2. Check the shared task queue and open PRs. Select one next task with a visible acceptance result.
 3. Record a claim before implementation: participant/session, task, branch, files or subsystem, timestamp with timezone, acceptance result, and next update point.
 4. Push the claim and re-fetch to check for an overlapping claim. If another session owns the same files/subsystem, choose independent work or explicitly arrange a handoff first. A local unpushed claim is not shared.
 5. Work on the existing relevant branch or a small branch based on it. Do not merge experimental animation branches into the Windows branch merely to synchronize progress.
@@ -33,14 +33,14 @@ Evan's Windows laptop is connected to GitHub according to Amar; runner status an
 Git commits alone are not an atomic task lock. Concurrent claims must be reconciled explicitly; do not assume silence or an old timestamp releases ownership.
 If this coordination change is still a draft, use its branch as the shared reference. After integration, use main as the canonical reference and include coordination updates in work PRs.
 
-## Active claims
+## Shared task queue
 
-| Participant/session | Task | Branch | Scope | Claimed at | Acceptance result | Next update |
-| --- | --- | --- | --- | --- | --- | --- |
-| Codex / Amar coordination session | Build shared status checker, machine preflight and handoff validation | coordination/shared-project-loop | tools/project_loop.py, tests, coordination data, coordination CI and docs | 2026-10-20T02:40:00Z | Passing regression checks; no engine changes | After implementation and checks |
-| Unclaimed | Windows runtime validation | codex/windows-reliability-v3-1 | Windows setup and render checks | — | Actual machine evidence | Before implementation |
+Use [coordination/tasks.json](coordination/tasks.json) as the single ownership and dependency record.
+Run `python tools/project_loop.py status` for available tasks and `python tools/project_loop.py check` before pushing a claim or handoff.
+See [coordination/README.md](coordination/README.md) for the start/claim/handoff steps and reading a fetched shared revision from a feature branch.
 
-Existing PR activity does not identify who is currently running a coding session. Confirm it through a shared claim; do not silently take ownership.
+A claim must reach the shared record before work begins. Proposed claim PRs and local edits are not a distributed lock.
+Existing PR activity does not identify who is currently running a coding session. Check linked PRs and reconcile overlapping work before taking ownership.
 
 ## End a session or hand off
 
