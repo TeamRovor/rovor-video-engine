@@ -13,6 +13,7 @@ import sys
 import uuid
 
 MAX_BYTES = 25 * 1024 * 1024
+MAX_ARTIFACT_BYTES = 64 * 1024 * 1024
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -91,7 +92,7 @@ def verify(path, request, runtime_root=None):
             or evidence.get('disposableProjectVerified') is not True or not evidence.get('rigSha256')):
         raise ValueError('Missing Moho source/rig/disposable-project evidence')
     media = path/'render.mp4'
-    if media.is_symlink() or not media.is_file() or media.stat().st_size > 512 * 1024 * 1024:
+    if media.is_symlink() or not media.is_file() or media.stat().st_size > MAX_ARTIFACT_BYTES:
         raise ValueError('Invalid or oversized artifact')
     m = probe(media, runtime_root)
     video = [s for s in m['streams'] if s.get('codec_type') == 'video']
