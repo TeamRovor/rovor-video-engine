@@ -34,9 +34,11 @@ def duration_jaw_weights(t,plan,identity=None):
     return out
 
 class DurationCartoonHead(DentalFVCartoonHead):
+    def expression_control(self,t,plan):
+        return brow_controls(t,plan)
     def jaw_control(self,t,plan,identity=None):
         return duration_jaw_weights(t,plan,identity)
     def at(self,t,plan):
         if plan.get('alignment',{}).get('status')!='acoustic':return super().at(t,plan)
         identity=planned_weights(t,plan,plan['fallbackCues'])
-        return self.weights(identity,brow_controls(t,plan),shape_weights=rounding_identity(t,plan),geometry_weights=self.jaw_control(t,plan,identity))
+        return self.weights(identity,self.expression_control(t,plan),shape_weights=rounding_identity(t,plan),geometry_weights=self.jaw_control(t,plan,identity))

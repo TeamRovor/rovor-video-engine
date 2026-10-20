@@ -8,7 +8,15 @@ Repo work/engine; branch development/evan-painted-rig (legacy name), draft PR#4 
 
 Automation develop-evan-painted-animation remains ACTIVE; complete polished milestone is NOT ready. Routine decisions authorized. Notify meaningful milestones/failure/completion/required action only. Disable only once the agreed polished milestone is actually ready.
 
-## Latest: optional short rounded-vowel height study
+## Latest: narrated detail acting accent (optional)
+
+Read CARTOON-EVAN-DETAIL-ACTING.md. DetailCartoonSceneBody / --detail-acting builds on RoundedDuration, excluding rejected UniformSeal. Contiguous script43/44/45 “super small detail” anchors one authored preparation/held accent/staggered settle. Reuses actual separate brow/head/neck/arm/wrist/index controls, not flattened pose replacement. Elbow35ms/wrist75ms/index60–110ms offsets; head25ms/body70ms. Right elbow/wrist adjusted after first full-resolution pose pointed too low. Final gesture indicates browser card, not exact globe target or thumb/index pinch. Default Duration.expression_control hook matches old native0/680/742 images pixel exact. No source artwork/phone time/plan changes.
+
+outputs/evan-cartoon-detail-acting: source684–827(14.25–17.25s),144normal original-voice/576muted quarter-speedframes at1280x720/48fps. LEFT old/RIGHT new comparison source706–771,66/264frames,2560x720 preserving1280perpanel; shorter than full anticipation/settle. All4films fully decode clean; audio48000/22000decoded PCM16samples16k.4tests pass.144arm/index range checks:minimum doubled arm areas left535.8228/right131.7511; all oral fallback counters0. These are mechanical checks, not acting acceptance.
+
+Selected concept and1280px scene684/720/748/780/827 inspected; source-frame748 from encoded comparison inspected (2560image display was resized by tool; native single scenes inspected separately).1920x1080voice/control plot inspected. Clearer gesture silhouette over previous idle body, but source clenched neighboring fingers, shoulder/wrist linework, frontal cutout head, static legs and missing eye acting remain. No independent listening/continuous playback approval. No Moho launch, release/updater change or deployment. Polished milestone incomplete; automation ACTIVE. No pending renders.
+
+## Prior: optional short rounded-vowel height study
 
 Read CARTOON-EVAN-ROUNDED-DURATION.md. RoundedDurationCartoonHead / --rounded-duration extends IndependentChin, explicitly excludes rejected UniformSeal. Conservative authored AO/E-only excursion floor75% at<=80ms, unchanged at>=220ms. Removed E geometry transfers to B; original mouth X/corners/rounding and non-mouth anchors preserved. Old independent chin/skin track retained. Default jaw_control hook extraction pixel exact at native0/680/742. All other phones, material identity, contact weights and plan times unchanged. This is not measured speaker biomechanics/stress detection; acoustic boundaries remain unverified.
 
@@ -36,12 +44,12 @@ Speech:66words/248phones/39ARPABET catalog, two-pass acoustic alignment, diphtho
 
 ## Next concrete work
 
-1. Add a narrated acting accent over “Super small detail” using existing separate brow/head/arm/wrist controls; judge full-scene silhouette, anticipation, hold and settle. Stop further isolated mouth-glyph/control microtuning after this bounded comparison.
-2. Coordinate real lower-inner-lip/seal/open-lip/jaw inbetweens and less clenched neighboring-finger/palm poses. Human character artist/animator still needed for final anatomy, redraws and performance approval. Faster hardware cannot supply those drawings.
-3. Continue original-voice normal/slow full-head and full-scene review. Preserve timing uncertainty and all release safeguards. Full polished milestone remains incomplete.
+1. Improve gesture vocabulary with a genuinely drawn relaxed/open right-hand source and registered wrist/palm overlap, preserving cartoon identity. Existing neighbors/thumb are one clenched source; do not claim independent finger rig from index articulation. Apply imagegen skill if generating source, distinguish concept from working registered components, compare native joins under motion before promotion.
+2. Coordinate artist-drawn lower-inner-lip/seal/open-lip/jaw inbetweens; no more isolated seam glyphs or indefinite minor mouth-control tuning. Human character artist/animator still needed for final anatomy and performance review. More hardware cannot supply missing drawings.
+3. Review continuous real-voice full-scene normal/slow acting; keep exact18flagged acoustic boundaries unverified until independent evidence. Preserve release safeguards. Full polished milestone remains incomplete.
 
 ## Runtime / history
 
-Python /Users/amarhavic/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3; PYTHONPATH=../painted/deps:evan-engine from repo; cv2.setNumThreads(1). Local8GiB/8logical CPUs, CPU raster sampling; use temporary caffeinate scoped to long renderer/encoder, allow display sleep. Completed this pass; no pending renders. Recording sibling referenced-chatgpt-conversation-this-is-an/work/evan-narration.wav monoPCM16. FFmpeg sibling work/media-tools/ffmpeg. No scipy installed; FFT evidence uses numpy/matplotlib, MPLCONFIGDIR in work/. Scratch work/cartoon-rounded-duration; previous work/cartoon-lip-seal; previous work/cartoon-jaw-review; previous work/cartoon-dental-tongue retained. User deliverables outputs/.
+Python /Users/amarhavic/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3; PYTHONPATH=../painted/deps:evan-engine from repo; cv2.setNumThreads(1). Local8GiB/8logical CPUs, CPU raster sampling; use temporary caffeinate scoped to long renderer/encoder, allow display sleep. Completed this pass; no pending renders. Recording sibling referenced-chatgpt-conversation-this-is-an/work/evan-narration.wav monoPCM16. FFmpeg sibling work/media-tools/ffmpeg. No scipy installed; FFT evidence uses numpy/matplotlib, MPLCONFIGDIR in work/. Scratch work/cartoon-detail-acting; previous work/cartoon-rounded-duration; previous work/cartoon-lip-seal; previous work/cartoon-jaw-review; previous work/cartoon-dental-tongue retained. User deliverables outputs/.
 
-Previous checkpoint archived PAINTED-EVAN-HISTORY-2026-10-20-D.md, -C.md, -B.md and -2026-10-20.md; prior -2026-10-19-G/-F/-E/-D/-C/-B retained. Do not restart completed full renders or treat partial old duration frames as a complete baseline.
+Previous checkpoint archived PAINTED-EVAN-HISTORY-2026-10-20-E.md, -D.md, -C.md, -B.md and -2026-10-20.md; prior -2026-10-19-G/-F/-E/-D/-C/-B retained. Do not restart completed full renders or treat partial old duration frames as a complete baseline.
