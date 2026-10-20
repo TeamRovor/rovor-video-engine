@@ -192,6 +192,8 @@ def main():
     p.add_argument('--duration',type=float);p.add_argument('--workers',type=int,choices=(1,2,3,4),default=2)
     p.add_argument('--preflight-only',action='store_true',
                    help='Validate audio, scene art, rig, SFX and framing without rendering/writing media')
+    p.add_argument('--speech-qa',choices=('off','report','require'),default='off',
+                   help='Optional English acoustic phone QA: report flags or require clean metadata before rendering')
     p.add_argument('--body-cache-frames',choices=('auto','on','off'),default='auto',
                    help='Save body PNGs to disk; auto disables large 30+ second caches')
     p.add_argument('--visual-mode',choices=('reference','storyboard','globe-action','directed'),default='reference',
@@ -209,8 +211,19 @@ def main():
         p.error('Directed scenes require original art registry, scenes and authored FK rig controls')
     if a.visual_mode!='directed' and (a.director_json or a.art_registry or a.sound_cues):
         p.error('Director, art and sound cue flags only apply to directed mode')
-    audio_match=verify_audio_plan(json.loads(a.plan.read_text()),a.wav)
+    plan_data=json.loads(a.plan.read_text())
+    audio_match=verify_audio_plan(plan_data,a.wav)
     with wave.open(str(a.wav)) as w:audio_duration=w.getnframes()/w.getframerate()
+    speech_qa=None
+    if a.speech_qa!='off':
+        # This read-only gate runs BEFORE source-art checks or output-folder creation.
+        # Existing experimental fallback renders still work with --speech-qa off.
+        from production_speech_preflight import check_speech_plan
+        try:
+            speech_qa=check_speech_plan(plan_data,a.wav,mode=a.speech_qa,fps=DEFAULT_FPS)
+        except ValueError as exc:
+            p.error(str(exc))
+        print('ROVOR_ENGLISH_SPEECH_QA='+json.dumps(speech_qa,sort_keys=True))
     duration=a.duration if a.duration is not None else audio_duration-a.start_time
     if a.visual_mode=='directed':
         from directed_scene import check
@@ -256,6 +269,7 @@ def main():
             report['originalFKActingTimelineVerified']=True
             if a.sound_cues:
                 report['physicalSoundEffectCuesVerified']=cue_status['verifiedEffects']
+        if speech_qa is not None:report['speechQa']=speech_qa
         print(json.dumps(report,indent=2))
         return
     a.output.mkdir(parents=True,exist_ok=True)
@@ -290,6 +304,8 @@ def main():
              'startFrame':start,'endFrame':end,'fps':DEFAULT_FPS,'visualApproved':False,
              'audioMatch':audio_match,'bodyCacheKey':cache_key,
              'bodyFrameDiskCacheEnabled':cache_frames}
+    if speech_qa is not None:
+        profile['speechQa']=speech_qa
     if a.visual_mode!='reference':
         profile['visualMode']=a.visual_mode
     if a.visual_mode=='directed':
