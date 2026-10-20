@@ -371,7 +371,7 @@
       "id": "remote-render-job-loop",
       "title": "Bounded Mac render job intake, status and artifact transport",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar MP3 remote loop session",
       "branch": "feature/remote-render-job-loop",
       "scopes": [
@@ -381,10 +381,19 @@
         ".github/workflows/render-job-loop.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T04:39:39.343Z",
+      "updated_at": "2026-10-20T04:41:15.398Z",
       "next_update": "After offline transport tests and documented Mac adapter gates",
-      "next_action": "Implement isolated job transport only; preserve existing aligner, art, Windows reliability and Moho sandbox ownership.",
-      "acceptance": "Offline job round trip and failure gates tested; no unverified Moho renderer or Mac access claim."
+      "next_action": "Review draft PR #13 transport foundation. Separately claim verified native Moho adapter and authenticated upload connector work after current sandbox/rig evidence. No real Moho render, remote trigger or visual approval verified.",
+      "acceptance": "Offline job round trip and failure gates tested; no unverified Moho renderer or Mac access claim.",
+      "evidence": [
+        {
+          "commit": "2b0dd6f31f2eee2d7d344986102cbb1a1509a6ed",
+          "platform": "local macOS / Python 3 standard library",
+          "check": "7 synthetic/mocked transport tests and project_loop.py check",
+          "result": "PASS; real media/Moho/remote runtime unverified",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
+        }
+      ]
     }
   ]
 }
