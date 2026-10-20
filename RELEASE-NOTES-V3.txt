@@ -7,6 +7,9 @@ RENDER DIAGNOSTICS:
 - MCP status reads saved logs only from inside that render's own folder.
 - Metrics are saved atomically after local processing stages; diagnostic write failures do not stop a render.
 
+PREFLIGHT:
+- Shared Windows/macOS dependency checks require Node.js 20.9.0 or newer for the pinned Sharp renderer.
+
 ROVOR DIGITAL VIDEO ENGINE V3.3.0 — OCTOBER 19 2026
 
 CAPTION REVIEW AND RENDER SAFETY:
