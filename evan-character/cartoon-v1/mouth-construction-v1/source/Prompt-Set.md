@@ -1,0 +1,15 @@
+# Coordinated mouth construction
+
+Mode: built-in image_gen; transparent_background=true. Construction sources only, not registered rig components.
+
+## Exact prompt v1
+
+References: Full-Face-Reference.png (working rig seal/release/rounded full-face edit target), source/design-sheet-v1.png (style reference).
+
+Use case: precise-object-edit. Asset type: coordinated 2D cartoon lower-face animation construction study, THREE aligned full heads in one horizontal row, transparent background. Image 1 is the EDIT TARGET, the current Evan lip seal / release inbetween / rounded vowel triptych. Image 2 is the approved cartoon STYLE/IDENTITY reference only. Improve the coordinated lower-face drawing below the nose across all three heads, keeping the exact same hair, sunglasses, nose, ears, head angle, scale, skin palette and ink style. Left: relaxed closed bilabial seal, a clear fine lip meeting line with softly compressed corners and a subtle lower-lip plane, no hooked smile corner. Middle: a genuine very small release inbetween, only a narrow dark opening; a controlled lower inner lip and slight jaw lowering, no broad teeth grin. Right: modest rounded spoken vowel, same stable corners, rounded inner lip, simple tongue/floor behind it, with slightly more jaw lowering and preserved chin volume. Treat seal, inner lower lip, chin and jaw as one coordinated anatomical construction, not three pasted-on mouth stickers. Keep the masculine entertaining cartoon likeness. No realistic fleshy lips, lipstick, red outer lip border, exaggerated cheek stretching, heavy black corner hooks or unrelated expression change. Three heads only, evenly spaced, no labels, no text, no decorative elements. Preserve original transparency in the generated cutouts. These are construction source drawings to inspect and register later, not finished rig components.
+
+## Exact prompt v2
+
+Reference/edit target: coordinated-face-v1.png. V1 rejected: corner hook and too-wide release with teeth.
+
+Use case: precise-object-edit. Edit this THREE-head cartoon construction sheet with only the following coordinated mouth correction. Keep all hair, glasses, nose, ears, upper face, head placement, proportions, jaw silhouette, colors and transparency unchanged. LEFT mouth: remove the upturned triangular hook at the right corner; make both ends of the closed lip meeting line softly taper with no black wedge or smile curl. MIDDLE mouth: reduce the opening to a very narrow dark slit, no more than ONE QUARTER the height of the right-hand mouth opening; completely remove the visible white teeth strip and tongue from this middle release inbetween. It must read as lips just parting after contact, not a grin or a full vowel. Preserve a subtle peach lower-lip plane beneath it. RIGHT mouth: retain the modest rounded open vowel and its simple tongue/floor. Across all three, avoid a thick red outer lip outline, glossy realistic lips or heavy black corner blobs. Keep the approved entertaining masculine 2D cartoon style. No text, no extra heads, no labels. Genuinely transparent background. Source construction study only.
