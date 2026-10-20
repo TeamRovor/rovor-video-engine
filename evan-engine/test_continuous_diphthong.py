@@ -93,6 +93,16 @@ class ContinuousVowelGlideTests(unittest.TestCase):
         self.assertGreater(float(samples.sum(axis=1).max()),.05)
         self.assertLess(float(np.max(np.abs(np.diff(samples,axis=0)))),.5)
 
+    def test_multiple_phone_lengths_keep_frame_motion_bounded(self):
+        for duration in (.012,.018,.025,.033,.055,.075,.10,.15,.30,.60):
+            with self.subTest(seconds=duration):
+                sampled=np.array([glide_strengths(t,.2,.2+duration)
+                                  for t in np.arange(.0,1.05,1/60)])
+                self.assertTrue(np.isfinite(sampled).all())
+                self.assertLessEqual(float(sampled.sum(axis=1).max()),1.0000001)
+                # Bound visible animation steps, not acoustic word timing.
+                self.assertLess(float(np.max(np.abs(np.diff(sampled,axis=0)))),.42)
+
     def test_no_change_to_bilabial_contact_or_outside_glide(self):
         p=synthetic_plan();new=enabled(p)
         for t in (.01,.13,.87,.90,.92,.93,.95,1.09):
