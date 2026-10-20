@@ -48,5 +48,30 @@ class Jobs(unittest.TestCase):
         with patch.object(j, 'probe') as probe:
             with self.assertRaises(ValueError): j.verify(path, {})
             probe.assert_not_called()
+    def test_verify_requires_nonblack_nonfrozen_frames(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)
+            (path/'render.mp4').write_bytes(b'mock video')
+            request = {'sourceSha256':'a'*64, 'duration':31}
+            (path/'speech-audit.json').write_text(json.dumps({'status':'technical_pass_pending_visual_review',
+                'alignmentSource':'acoustic','provenance':'source-WAV header read','fps':60,'errors':[],'reviewFlags':[]}))
+            (path/'moho-evidence.json').write_text(json.dumps({'renderer':'Moho Pro 14',
+                'sourceSha256':request['sourceSha256'],'disposableProjectVerified':True,'rigSha256':'b'*64}))
+            media = {'format':{'duration':'31'},'streams':[{'codec_type':'video','width':1920,
+                'height':1080,'avg_frame_rate':'60/1'},{'codec_type':'audio'}]}
+            cases = [
+                ({'sampleCount':12,'distinctFrameCount':12,'blackFrameCount':2}, 'black'),
+                ({'sampleCount':12,'distinctFrameCount':1,'blackFrameCount':0}, 'frozen'),
+                ({'sampleCount':12,'distinctFrameCount':12,'blackFrameCount':0}, None),
+                ({'sampleCount':12,'distinctFrameCount':12,'blackFrameCount':1}, None),
+            ]
+            for quality, error in cases:
+                with self.subTest(quality=quality), patch.object(j, 'probe', return_value=media), \
+                     patch.object(j, 'video_quality', return_value=quality):
+                    if error:
+                        with self.assertRaisesRegex(ValueError, 'frozen, mostly black'):
+                            j.verify(path, request)
+                    else:
+                        self.assertEqual(j.verify(path, request)['name'], 'render.mp4')
 
 if __name__ == '__main__': unittest.main()
