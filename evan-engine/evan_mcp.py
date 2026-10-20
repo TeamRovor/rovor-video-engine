@@ -259,7 +259,15 @@ def call_tool(name, args):
             job = {}
         if not isinstance(job, dict):
             job = {}
-        logfile = Path(job.get("log_path") or (folder / "render.log"))
+        logfile = folder / "render.log"
+        saved_log = job.get("log_path")
+        if isinstance(saved_log, str) and saved_log:
+            try:
+                candidate_log = Path(saved_log).expanduser().resolve()
+                candidate_log.relative_to(folder)
+                logfile = candidate_log
+            except (OSError, RuntimeError, ValueError):
+                pass
         if not logfile.is_file():
             logfile = folder / "render.log"
         log = logfile.read_text(errors="replace")[-1800:] if logfile.exists() else ""
