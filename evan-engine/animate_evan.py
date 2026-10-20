@@ -399,11 +399,10 @@ def main():
         STAGE_SECONDS.update({
             name: float(seconds) for name, seconds in stage_seconds.items()
             if isinstance(name, str) and isinstance(seconds, (int, float)) and
-            not isinstance(seconds, bool) and math.isfinite(seconds) and seconds >= 0
+            finite_number(seconds) and seconds >= 0
         })
     elapsed_seconds = previous_metrics.get('elapsed_seconds', 0) if isinstance(previous_metrics, dict) else 0
-    if (isinstance(elapsed_seconds, (int, float)) and not isinstance(elapsed_seconds, bool) and
-            math.isfinite(elapsed_seconds) and elapsed_seconds >= 0):
+    if finite_number(elapsed_seconds) and elapsed_seconds >= 0:
         BASE_ELAPSED_SECONDS = float(elapsed_seconds)
     METRICS_PATH = metrics_path
     RUN_STARTED = time.monotonic()
@@ -572,3 +571,4 @@ if __name__ == '__main__':
     except (EOFError, OSError, RuntimeError, ValueError, wave.Error) as error:
         print('ERROR: ' + str(error), file=sys.stderr)
         sys.exit(1)
+
