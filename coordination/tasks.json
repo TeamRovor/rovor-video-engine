@@ -148,7 +148,7 @@
       "id": "windows-regression-ci",
       "title": "Improve Windows engine reliability and shared workspace awareness",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar engine validation session",
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
@@ -161,10 +161,48 @@
         "evan-engine/test_renderer.cjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T02:59:46.732Z",
-      "next_update": "After existing code review and targeted tests",
-      "next_action": "39 Python checks pass on hosted Windows/macOS/Linux. Add real Sharp/reference-art renderer smoke checks to the same portable workflow.",
-      "acceptance": "A meaningful dependency-free regression suite and CI on supported operating systems; report actual results without claiming laptop runtime or art approval."
+      "updated_at": "2026-10-20T03:03:25.554Z",
+      "next_action": "Evan can pull the existing Windows branch to receive the resume fix, workspace-status MCP tool and portable tests. Actual laptop toolchain and production animation remain separate validation.",
+      "acceptance": "A meaningful dependency-free regression suite and CI on supported operating systems; report actual results without claiming laptop runtime or art approval.",
+      "evidence": [
+        {
+          "commit": "371f63648ce5f4d4e1aa818370fb11fc47622540",
+          "platform": "regression (macos-latest)",
+          "check": "39 Python checks and four actual Sharp/vector/reference-art renderer smoke checks",
+          "result": "PASS",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39362097231"
+        },
+        {
+          "commit": "371f63648ce5f4d4e1aa818370fb11fc47622540",
+          "platform": "regression (windows-latest)",
+          "check": "39 Python checks and four actual Sharp/vector/reference-art renderer smoke checks",
+          "result": "PASS",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39362097231"
+        },
+        {
+          "commit": "371f63648ce5f4d4e1aa818370fb11fc47622540",
+          "platform": "regression (ubuntu-latest)",
+          "check": "39 Python checks and four actual Sharp/vector/reference-art renderer smoke checks",
+          "result": "PASS",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39362097231"
+        }
+      ]
+    },
+    {
+      "id": "shared-audio-import",
+      "title": "Make all accessible uploaded MP3s available in the private GitHub repo",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar audio import session",
+      "branch": "main",
+      "scopes": [
+        "audio"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-20T03:03:25.554Z",
+      "next_update": "After binary blob/tree verification",
+      "next_action": "Import 13 accessible MP3 filenames (10 unique byte streams), preserve exact bytes and names, and add a duration/checksum index. Amar explicitly requested GitHub audio access; this supersedes the prior default of excluding recordings from commits.",
+      "acceptance": "All 13 known uploaded MP3 paths appear on main with matching Git blob hashes; index lists durations and exact duplicates; Windows branch can access the same files."
     }
   ]
 }
