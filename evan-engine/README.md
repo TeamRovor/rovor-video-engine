@@ -52,6 +52,10 @@ The local MCP adapter can start renders with optional `captions_path`, `plan_pat
 
 Each completed render writes `render_result.json` with the output settings, file size, caption and scene fingerprints, total active render time, and time spent in each local processing stage. Timing totals carry across resumed attempts; waiting between attempts is not counted. `evan_render_status` includes this report after completion. The report helps identify whether transcription, mouth timing, frame rendering, or video encoding is the slow step.
 
+## Future Moho Pro bridge
+
+`scene.json` is the handoff point for a future Moho adapter: it contains the timed transcript segments, mouth cues, scene plan, gestures, captions, and character style. A later adapter can translate that data for Moho Pro while the current local renderer remains usable on its own. This version does not launch or modify Moho.
+
 To provide a hand-authored scene plan:
 
 ```text
@@ -69,3 +73,4 @@ Resuming verifies the audio and scene-plan contents, character mode, engine vers
 - Captions from unusually long transcript segments are limited to three lines to stay inside the video frame.
 - V3 uses reference-art pose swaps, not a native Moho skeletal rig. The V2 vector mode remains available with `--character vector`.
 - Local stage timeouts are longer for transcription and encoding than for frame batches. Interrupted jobs can resume from completed work, but a local tool that repeatedly exceeds its stage budget still needs a faster model or shorter input.
+
