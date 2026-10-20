@@ -5,6 +5,8 @@ IMPLEMENTED IN THIS UPDATE:
 - Windows paths with spaces are supported by the interactive launcher.
 - Resume checks now fingerprint audio, manual scene plans, and tool configuration contents.
 - Saved render metadata is written atomically; malformed transcript and lip-sync outputs are rejected.
+- Empty audio is rejected before transcription; malformed timing values are filtered out.
+- Long captions are wrapped and bounded to the on-screen caption area in both character styles.
 - Reference frames use one Sharp compositing pipeline, avoiding an extra full-frame encode/decode.
 - Frame batch ranges and saved scene plans are validated before rendering.
 - Render and MCP process handling now accounts for Windows process semantics.
