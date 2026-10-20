@@ -141,6 +141,23 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/76117537fbd669b0870c6874220c6229aed07b79"
         }
       ]
+    },
+    {
+      "id": "windows-regression-ci",
+      "title": "Exercise Windows engine invariants and add portable regression CI",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar engine validation session",
+      "branch": "codex/windows-reliability-v3-1",
+      "scopes": [
+        "evan-engine/test_windows_reliability.py",
+        ".github/workflows/engine-regression.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-20T02:51:06.068Z",
+      "next_update": "After existing code review and targeted tests",
+      "next_action": "Read the current Windows implementation, add regression coverage for real correctness risks, and run dependency-free checks before publishing. Expand scope explicitly before fixing shared implementation files.",
+      "acceptance": "A meaningful dependency-free regression suite and CI on supported operating systems; report actual results without claiming laptop runtime or art approval."
     }
   ]
 }
