@@ -25,29 +25,17 @@
       "id": "moho-disposable-pose",
       "title": "Verify a native pose on the disposable Moho project",
       "priority": 1,
-      "status": "done",
-      "owner": "Codex / Amar native Moho bridge verification",
-      "branch": "feature/remote-render-job-loop",
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
       "scopes": [
         "subsystem:mac-moho-sandbox"
       ],
       "depends_on": [],
-      "next_action": "Pose sequence compiled into isolated diagnostic archive at 60fps; native CLI render established file-compiled channel takes effect. Tutorial B1 remains generic proof fixture, not Evan's rig.",
+      "next_action": "Read latest Issue #6 evidence and claims; verify active disposable file identity, inspect its bones, and dry-run a supported pose before any permitted write.",
       "acceptance": "Evidence identifies exact disposable project and bones, dry-run response and verification. Preserve source and unsaved documents. Live reads alone do not complete this pose task.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/6"
-      ],
-      "updated_at": "2026-10-20T05:00:23.147Z",
-      "next_update": "After file-compiled native artifact verification",
-      "blocker": "User redirected to zero-UI file compilation before the prepared write test ran. Live identity, 11 bones and dry-run verified; no animation writes performed.",
-      "evidence": [
-        {
-          "commit": "63e896974225b31a1fe3d020624ddf24e105cb7b",
-          "platform": "macOS / Moho Pro 14 CLI",
-          "check": "Read disposable project identity and 11-bone skeleton; dry-run 3-key B1 motion; compile isolated 60-key variation and render baseline",
-          "result": "PASS; source 24fps disposable preserved, output 60fps render changed as expected; no original edited",
-          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
-        }
       ]
     },
     {
@@ -93,7 +81,7 @@
       "id": "shared-session-checks",
       "title": "Add and verify shared coordination checks",
       "priority": 1,
-      "status": "done",
+      "status": "active",
       "owner": "Codex / Amar coordination session",
       "branch": "coordination/shared-project-loop",
       "scopes": [
@@ -374,7 +362,7 @@
         "commands": [
           "python -m unittest -v test_continuous_diphthong (isolated source-equivalent copies of english_articulation, acoustic_weights, and new glide/test source)"
         ],
-        "result": "10/10 synthetic tests PASS locally, including duration sweep 12ms–600ms and unchanged bilabial contact",
+        "result": "10/10 synthetic tests PASS locally, including duration sweep 12ms\u2013600ms and unchanged bilabial contact",
         "knownDifference": "Isolated environment used a reduced support-module shim rather than the entire GitHub checkout; not GitHub CI or media verification.",
         "head_sha": "bf030a47b4e1fc3c422e2d175ae180c32582fe35"
       }
@@ -383,26 +371,35 @@
       "id": "remote-render-job-loop",
       "title": "Bounded Mac render job intake, status and artifact transport",
       "priority": 1,
-      "status": "done",
+      "status": "active",
       "owner": "Codex / Amar MP3 remote loop session",
       "branch": "feature/remote-render-job-loop",
       "scopes": [
         "tools/render_jobs.py",
+        "tools/chatgpt_moho_mcp.py",
+        "tools/media_probe.swift",
+        "plugin.json",
+        "mcp.json",
+        "skills/moho-mp3/SKILL.md",
+        "tests/test_chatgpt_moho_mcp.py",
         "tests/test_render_jobs.py",
         "REMOTE-RENDER-LOOP.md",
         ".github/workflows/render-job-loop.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T05:06:00Z",
-      "next_update": "After offline transport tests and documented Mac adapter gates",
-      "next_action": "The isolated transport loop is complete. Next production work requires an administrator-authorized authenticated Mac transport and a reviewed host-owned Moho adapter using the approved Evan project, forced-aligned speech plan, native 1080p/60 export and verified artifact return.",
-      "acceptance": "Offline job round trip and failure gates tested; no unverified Moho renderer or Mac access claim.",
+      "updated_at": "2026-10-20T06:00:00Z",
+      "next_update": "After the desktop-local plugin is connected and the owner supplies the approved Evan project and adapter mapping",
+      "next_action": "ChatGPT local stdio MCP bridge is implemented and packaged in PR #13: MP3 file parameter, private intake, status and hash-checked MP4 resource link. This Mac lacks the trusted Moho adapter and approved Evan rig, and the ChatGPT host has not verified MP4 attachment surfacing. Continue only with owner-authorized project/adapter setup; keep GUI interaction out of the execution path.",
+      "acceptance": "A real user MP3 traverses ChatGPT file input to a headless Moho Pro 14 render of a disposable Evan project, passes forced-acoustic and render quality gates, then returns as a playable downloadable ChatGPT artifact. Until that run succeeds, record the task as active and report exact blockers.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/13"
+      ],
       "evidence": [
         {
           "commit": "84fadaa7ffa6c1e8b18040567d7a34c84d7e374e",
           "platform": "local macOS",
-          "check": "18 Python tests and coordination queue validation",
-          "result": "PASS; synthetic transport boundaries only, no personal Mac runner dispatch or production render",
+          "check": "25 Python tests and coordination queue validation",
+          "result": "PASS; native probe passed synthetic WAV, MCP transport uses mocked MP3 boundary; no personal Mac production render",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39360421222"
         },
         {
@@ -415,40 +412,9 @@
         {
           "commit": "84fadaa7ffa6c1e8b18040567d7a34c84d7e374e",
           "platform": "GitHub-hosted Windows/macOS/Linux",
-          "check": "Native compiler checks and separate local Moho Pro 14 diagnostic render",
-          "result": "PASS; generic tutorial native render on Mac, not Evan",
+          "check": "Native compiler, shared project loop and GitHub-only handoff workflows",
+          "result": "PASS; generic tutorial native rendering separately validated on the Mac, not Evan",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39372962573"
-        }
-      ],
-      "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/pull/13"
-      ]
-    },
-    {
-      "id": "moho-file-compiler",
-      "title": "Compile observed native Moho JSON channels at 60 fps",
-      "priority": 1,
-      "status": "done",
-      "owner": "Codex / Amar headless compiler session",
-      "branch": "feature/remote-render-job-loop",
-      "scopes": [
-        "tools/moho_compile.py",
-        "tests/test_moho_compile.py",
-        "MOHO-FILE-COMPILER.md",
-        ".github/workflows/moho-file-compiler.yml"
-      ],
-      "depends_on": [],
-      "updated_at": "2026-10-20T05:00:23.147Z",
-      "next_update": "After schema-preservation tests and native CLI capability check",
-      "next_action": "Next remaining stage is a host-owned adapter that feeds real forced-aligned English phones and the approved Evan rig through the compiler, runs native 1080p60 rendering, verifies narration mux, then exposes it through authenticated ChatGPT upload/return.",
-      "acceptance": "Original archive untouched; frame zero and non-target data preserved; strict schema and collision checks; runtime limits documented.",
-      "evidence": [
-        {
-          "commit": "ffd8f175812e9df33024b4580f605ddb37dc1ded",
-          "platform": "macOS / Moho Pro 14 CLI",
-          "check": "Compile JSON into new 60fps archive; native 60-frame 1920x1080 render plus unpatched baseline control",
-          "result": "PASS; 3.574s, 60 frames, all dimensions correct, 40 distinct frame hashes, injected frame differs from baseline; generic tutorial rig only",
-          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
         }
       ]
     }
