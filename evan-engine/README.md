@@ -44,9 +44,9 @@ python launch_evan.py --resume EXISTING_OUTPUT_FOLDER
 
 ## Review and correct captions
 
-Every render folder contains an editable `captions.srt`. Correct its text or timings in any subtitle editor, save it, then run `python launch_evan.py --resume EXISTING_OUTPUT_FOLDER`. The engine reads the saved transcript and lip-sync data, redraws frames with the corrected captions, and replaces the MP4 only after the new render finishes. It does not rerun Whisper or Rhubarb for caption-only edits. The same SRT can be supplied explicitly with `--captions PATH_TO_FILE.srt`.
+Once transcription and lip-sync are ready, the render folder includes an editable `captions.srt`. Correct its text or timings in any subtitle editor, save it, then run `python launch_evan.py --resume EXISTING_OUTPUT_FOLDER`. The engine reads the saved transcript and lip-sync data, redraws frames with the corrected captions, and replaces the MP4 only after the new render finishes. It does not rerun Whisper or Rhubarb for caption-only edits. The same SRT can be supplied explicitly with `--captions PATH_TO_FILE.srt`.
 
-The engine checkpoints completed frames and prevents two processes from writing to the same render folder at once. A changed caption file invalidates the old frames and encoded video while leaving the existing MP4 in place until the replacement is ready.
+The engine checkpoints completed frames and prevents two processes from writing to the same render folder at once. A changed caption file invalidates the old frames and encoded video while leaving the existing MP4 in place until the replacement is ready. MCP polling continues to report a render as active while that replacement is being created.
 
 To provide a hand-authored scene plan:
 
