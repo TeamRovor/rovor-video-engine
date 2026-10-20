@@ -5,19 +5,20 @@
       "id": "windows-runtime",
       "title": "Validate the existing Windows setup and render workflow",
       "priority": 1,
-      "status": "ready",
-      "owner": null,
+      "status": "active",
+      "owner": "Codex / Keona Windows desktop session",
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
-        "evan-engine",
-        "install-on-windows.ps1"
+        "subsystem:windows-runtime-validation"
       ],
       "depends_on": [],
-      "next_action": "Check PR #7 for active work, claim this task, then use the existing launcher tool check on Evan's Windows laptop. Preserve local changes.",
+      "next_action": "Run the launcher --check on Windows; if local tools and original narration are available, run an original-audio render, interrupted resume, and caption correction. Record exact Windows build, PR commit, commands, output settings, results, and blockers.",
       "acceptance": "Record Windows version, exact commit and commands; verify tool check, original-audio render, interrupted resume and caption correction. Record actual output settings and failures.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/7"
-      ]
+      ],
+      "updated_at": "2026-10-20T02:54:28Z",
+      "next_update": "After the launcher tool check and input/config availability audit"
     },
     {
       "id": "moho-disposable-pose",
