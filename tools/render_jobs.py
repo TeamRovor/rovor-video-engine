@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import re
 import shutil
@@ -19,7 +20,9 @@ def digest(path):
 def write(path, value):
     tmp = path.with_suffix('.partial')
     tmp.write_text(json.dumps(value, indent=2) + '\n', encoding='utf-8')
+    os.chmod(tmp, 0o600)
     tmp.replace(path)
+    os.chmod(path, 0o600)
 
 def job(root, ident):
     if not re.fullmatch(r'[0-9a-f]{32}', ident):
@@ -29,14 +32,34 @@ def job(root, ident):
         raise ValueError('Unknown job')
     return path
 
-def probe(path):
-    r = subprocess.run(['ffprobe', '-v', 'error', '-show_streams', '-show_format', '-of', 'json', str(path)], capture_output=True, text=True, timeout=20, check=True)
+def probe(path, runtime_root=None):
+    """Inspect media with ffprobe when installed, otherwise Apple's AVFoundation."""
+    ffprobe = shutil.which('ffprobe')
+    if ffprobe:
+        r = subprocess.run([ffprobe, '-v', 'error', '-show_streams', '-show_format', '-of', 'json', str(path)], capture_output=True, text=True, timeout=20, check=True)
+        return json.loads(r.stdout)
+    swiftc = shutil.which('swiftc')
+    helper = Path(__file__).with_name('media_probe.swift')
+    if not swiftc or not helper.is_file():
+        raise RuntimeError('Media verification needs ffprobe or macOS swiftc with the bundled AVFoundation probe')
+    runtime = Path(runtime_root or Path.home() / 'Library' / 'Application Support' / 'Rovor' / 'moho-render') / 'runtime'
+    runtime.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(runtime, 0o700)
+    executable = runtime / 'media-probe'
+    if not executable.is_file() or executable.stat().st_mtime < helper.stat().st_mtime:
+        partial = runtime / 'media-probe.partial'
+        module_cache = runtime / 'module-cache'
+        module_cache.mkdir(mode=0o700, exist_ok=True)
+        subprocess.run([swiftc, '-parse-as-library', '-module-cache-path', str(module_cache), '-O', str(helper), '-o', str(partial)], capture_output=True, text=True, timeout=180, check=True)
+        os.chmod(partial, 0o700)
+        partial.replace(executable)
+    r = subprocess.run([str(executable), str(path)], capture_output=True, text=True, timeout=30, check=True)
     return json.loads(r.stdout)
 
 def submit(root, audio):
     if audio.suffix.lower() != '.mp3' or not audio.is_file() or not 0 < audio.stat().st_size <= MAX_BYTES:
         raise ValueError('Expected nonempty MP3, at most 25 MiB')
-    metadata = probe(audio)
+    metadata = probe(audio, root)
     duration = float(metadata['format']['duration'])
     if not math.isfinite(duration) or not 0 < duration <= 60:
         raise ValueError('Initial limit is 60 seconds; never truncate narration')
@@ -47,6 +70,7 @@ def submit(root, audio):
     path.mkdir(mode=0o700)
     try:
         shutil.copyfile(audio, path / 'source.mp3')
+        os.chmod(path / 'source.mp3', 0o600)
         request = dict(id=ident, sourceSha256=digest(path/'source.mp3'), duration=duration, width=1920, height=1080, fps=60)
         write(path/'request.json', request)
         write(path/'status.json', dict(state='queued', id=ident, artisticApproval=False))
@@ -55,7 +79,7 @@ def submit(root, audio):
         raise
     return ident
 
-def verify(path, request):
+def verify(path, request, runtime_root=None):
     # Adapter must use the existing acoustic plan gate; reject unresolved flags.
     qa = json.loads((path/'speech-audit.json').read_text())
     if (qa.get('status') != 'technical_pass_pending_visual_review' or qa.get('alignmentSource') != 'acoustic'
@@ -69,7 +93,7 @@ def verify(path, request):
     media = path/'render.mp4'
     if media.is_symlink() or not media.is_file() or media.stat().st_size > 512 * 1024 * 1024:
         raise ValueError('Invalid or oversized artifact')
-    m = probe(media)
+    m = probe(media, runtime_root)
     video = [s for s in m['streams'] if s.get('codec_type') == 'video']
     if len(video) != 1 or not any(s.get('codec_type') == 'audio' for s in m['streams']):
         raise ValueError('Expected one video and narration audio')
@@ -104,7 +128,7 @@ def run(root, ident, adapter):
             # It receives a private job directory; no shell expansion.
             with (path/'worker.log').open('wb') as log:
                 subprocess.run(argv + [str(path.resolve())], stdout=log, stderr=log, timeout=1800, check=True)
-            artifact = verify(path, request)
+            artifact = verify(path, request, root)
             write(path/'status.json', dict(id=ident, state='review_required', artifact=artifact, artisticApproval=False, diagnostic=request['duration'] < 30))
         except Exception as exc:
             write(path/'status.json', dict(id=ident, state='failed', reason=type(exc).__name__, artisticApproval=False))
