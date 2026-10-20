@@ -46,6 +46,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mp3", nargs="?", help="MP3 path; if omitted, the launcher prompts for it")
     parser.add_argument("--resume", type=Path, help="Continue an interrupted render folder")
+    parser.add_argument("--captions", type=Path, help="Use an edited SRT subtitle file")
+    parser.add_argument("--plan", type=Path, help="Optional hand-written JSON scene plan")
+    parser.add_argument("--character", choices=("reference", "vector"),
+                        help="Character artwork mode (default: reference)")
     parser.add_argument("--config", type=Path, default=None,
                         help="Path to local_tools.json (or set ROVOR_LOCAL_TOOLS_CONFIG)")
     parser.add_argument("--check", action="store_true", help="Check local tools without rendering")
@@ -61,13 +65,13 @@ def main():
         if not isinstance(state, dict) or not state.get("mp3"):
             raise ValueError("The render folder is missing its source recording path.")
         recording = Path(state["mp3"]).expanduser()
-        options = ["--resume", "--character", state.get("character", "reference")]
-        if state.get("plan"):
-            options.extend(["--plan", state["plan"]])
+        options = ["--resume", "--character", args.character or state.get("character", "reference")]
+        plan_path = args.plan or state.get("plan")
     else:
         recording = None
         destination = None
-        options = []
+        options = ["--character", args.character or "reference"]
+        plan_path = args.plan
 
     config_option = args.config or (state.get("config_path") if state else None)
     config, config_path = load_config(config_option)
@@ -79,6 +83,15 @@ def main():
         return
     if missing:
         raise ValueError("Missing local tools: " + ", ".join(missing))
+    if args.captions:
+        if not args.captions.is_file():
+            raise ValueError("The SRT captions file was not found.")
+        options.extend(["--captions", str(args.captions.expanduser().resolve())])
+    if plan_path:
+        plan_path = Path(plan_path).expanduser()
+        if not plan_path.is_file():
+            raise ValueError("The scene-plan JSON file was not found.")
+        options.extend(["--plan", str(plan_path.resolve())])
 
     if not args.resume:
         print("EVAN — local recording to animation\nNo paid services are used.\n")
@@ -110,4 +123,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nStopped.")
         sys.exit(130)
-
