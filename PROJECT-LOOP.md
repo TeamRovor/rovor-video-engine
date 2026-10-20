@@ -37,6 +37,7 @@ If this coordination change is still a draft, use its branch as the shared refer
 
 | Participant/session | Task | Branch | Scope | Claimed at | Acceptance result | Next update |
 | --- | --- | --- | --- | --- | --- | --- |
+| Codex / Amar coordination session | Build shared status checker, machine preflight and handoff validation | coordination/shared-project-loop | tools/project_loop.py, tests, coordination data, coordination CI and docs | 2026-10-20T02:40:00Z | Passing regression checks; no engine changes | After implementation and checks |
 | Unclaimed | Windows runtime validation | codex/windows-reliability-v3-1 | Windows setup and render checks | — | Actual machine evidence | Before implementation |
 
 Existing PR activity does not identify who is currently running a coding session. Confirm it through a shared claim; do not silently take ownership.
