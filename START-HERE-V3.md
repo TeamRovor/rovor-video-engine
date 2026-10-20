@@ -1,4 +1,4 @@
-# Rovor Digital Video Engine V3.3 — Reference Art Edition
+# Rovor Digital Video Engine V3.4 — Reference Art Edition
 
 This package turns a short MP3 narration into a captioned vertical Evan animation. The renderer is local and offline after its tools and Whisper model are configured.
 
@@ -13,6 +13,7 @@ The ZIP includes the engine and character artwork. It does not include platform-
 - Uses three pose-based raster illustrations and nine mouth shapes taken from the supplied reference art.
 - Adds offline Whisper transcription, Rhubarb lip-sync, deterministic keyword scenes, and captions.
 - Saves intermediate stages so interrupted renders can resume after checking that the input audio, scene plan, character mode, and tool configuration still match. Captions can be edited in `captions.srt` and rendered again without repeating transcription or lip-sync, using either the launcher or local MCP adapter.
+- Writes a render report with output details and cumulative processing-stage timings, including time carried over from resumed jobs.
 - Preserves the V2 vector style as an option with `--character vector`.
 
 ## Limits
