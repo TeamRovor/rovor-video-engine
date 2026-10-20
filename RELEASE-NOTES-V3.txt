@@ -14,7 +14,7 @@ CAPTION INPUT:
 - Overlapping SRT cues are rejected because the video displays one caption at a time.
 
 SCENE PLAN INPUT:
-- Manual plans reject scenes that start at or after the audio ends, avoiding empty scenes at the duration boundary.
+- Manual plans reject boolean or nonnumeric timings and scenes that start at or after the audio end, avoiding empty scenes at the duration boundary.
 
 ROVOR DIGITAL VIDEO ENGINE V3.3.0 — OCTOBER 19 2026
 
