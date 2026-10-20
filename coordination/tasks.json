@@ -300,7 +300,7 @@
       "id": "acting-acoustic-preflight",
       "title": "Attach strict English acoustic plan gate before expensive cartoon acting renders",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar cartoon phoneme integration session",
       "branch": "feature/acting-acoustic-preflight",
       "scopes": [
@@ -313,10 +313,25 @@
       "depends_on": [
         "acoustic-production-gate"
       ],
-      "updated_at": "2026-10-20T04:11:15.485Z",
-      "next_update": "After creating isolated V5 development PR and CI validation",
-      "next_action": "Reuse main's tested phoneme QC inside the existing PR #5 acting renderer as an explicitly opt-in strict gate before costly frame work; preserve original footage, narration and other art branches.",
-      "acceptance": "Strict mode refuses fallback/unreviewed/invalid phone and viseme plans before creating render output; source-WAV duration and approved 60fps checked; non-strict development baseline unchanged; hosted tests pass with synthetic audio, no production approval claimed."
+      "updated_at": "2026-10-20T04:16:25.267Z",
+      "next_action": "On V5 acting branch, use `--speech-qa report` for diagnostics and `--speech-qa require` to stop unresolved/estimated pronunciation before audio-envelope scanning and frame work. Next distinct task is actual audio-based speech QA and artistic approval, not rerunning synthetic tests. Keep main V3 unchanged and prioritize real 30s+ user review.",
+      "acceptance": "Strict mode refuses fallback/unreviewed/invalid phone and viseme plans before creating render output; source-WAV duration and approved 60fps checked; non-strict development baseline unchanged; hosted tests pass with synthetic audio, no production approval claimed.",
+      "evidence": [
+        {
+          "commit": "4066117e569d25e98fb2876e9f10366213664fba",
+          "platform": "GitHub-hosted Windows/macOS/Linux",
+          "check": "Synthetic English-phoneme & source-WAV QA tests; AST checks reject before full waveform scan and frame renderer",
+          "result": "PASS, no original recording or full MP4 render performed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39368552431"
+        },
+        {
+          "commit": "4452132d9467de9ded1dcd7d32326d6ede3addd7",
+          "platform": "V5 acting development branch via PR #11",
+          "check": "Merged optional acoustic QA into existing V5 renderer; verified flag and call present at merged branch head; cross-platform CI reran",
+          "result": "MERGED and hosted CI PASS; creative/audio pronunciation unapproved",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39368637027"
+        }
+      ]
     }
   ]
 }
