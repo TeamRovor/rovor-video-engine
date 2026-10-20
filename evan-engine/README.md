@@ -44,7 +44,7 @@ python launch_evan.py --resume EXISTING_OUTPUT_FOLDER
 
 ## Review and correct captions
 
-Once transcription and lip-sync are ready, the render folder includes an editable `captions.srt`. Correct its text or timings in any subtitle editor, save it, then run `python launch_evan.py --resume EXISTING_OUTPUT_FOLDER`. The engine reads the saved transcript and lip-sync data, redraws frames with the corrected captions, and replaces the MP4 only after the new render finishes. It does not rerun Whisper or Rhubarb for caption-only edits. The same SRT can be supplied explicitly with `--captions PATH_TO_FILE.srt`.
+Once transcription and lip-sync are ready, the render folder includes an editable `captions.srt`. Correct its text or timings in any subtitle editor, save it, then run `python launch_evan.py --resume EXISTING_OUTPUT_FOLDER`. The engine reads the saved transcript and lip-sync data, redraws frames with the corrected captions, and replaces the MP4 only after the new render finishes. It does not rerun Whisper or Rhubarb for caption-only edits. The same SRT can be supplied explicitly with `--captions PATH_TO_FILE.srt`. Keep cues in start-time order and avoid overlap because the video shows one caption at a time.
 
 The engine checkpoints completed frames and prevents two processes from writing to the same render folder at once. Changed captions or saved scene data invalidate the old frames and encoded video while leaving the existing MP4 in place until the replacement is ready. MCP polling continues to report a render as active while that replacement is being created.
 
@@ -73,4 +73,3 @@ Resuming verifies the audio and scene-plan contents, character mode, engine vers
 - Captions from unusually long transcript segments are limited to three lines to stay inside the video frame.
 - V3 uses reference-art pose swaps, not a native Moho skeletal rig. The V2 vector mode remains available with `--character vector`.
 - Local stage timeouts are longer for transcription and encoding than for frame batches. Interrupted jobs can resume from completed work, but a local tool that repeatedly exceeds its stage budget still needs a faster model or shorter input.
-
