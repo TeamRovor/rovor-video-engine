@@ -19,6 +19,17 @@ from scene_planner import generate_plan, validate_plan
 HERE = Path(__file__).resolve().parent
 
 
+def read_engine_version():
+    try:
+        version = json.loads((HERE / 'package.json').read_text(encoding='utf-8')).get('version')
+        return version if isinstance(version, str) and version else 'unknown'
+    except (OSError, ValueError):
+        return 'unknown'
+
+
+ENGINE_VERSION = read_engine_version()
+
+
 def run(args, env=None, timeout=180, stage='local step'):
     try:
         result = subprocess.run([str(a) for a in args], capture_output=True, text=True,
@@ -55,12 +66,7 @@ def sha256_file(path):
 
 
 def same_request(previous, current):
-    if previous == current:
-        return True
-    # Older V3 render folders predate content fingerprints. Keep their resume path usable.
-    legacy_keys = ('mp3', 'size', 'modified_ns', 'plan', 'character')
-    return (isinstance(previous, dict) and 'fingerprint_version' not in previous and
-            all(previous.get(key) == current.get(key) for key in legacy_keys))
+    return isinstance(previous, dict) and previous == current
 
 
 def finite_number(value):
@@ -114,6 +120,28 @@ def valid_frame(path):
         return False
 
 
+def wav_duration(path):
+    try:
+        with wave.open(str(path), 'rb') as voice:
+            sample_count = voice.getnframes()
+            sample_rate = voice.getframerate()
+            channels = voice.getnchannels()
+            sample_width = voice.getsampwidth()
+            if sample_count <= 0 or sample_rate <= 0 or channels <= 0 or sample_width <= 0:
+                return None
+            duration = sample_count / sample_rate
+            if not math.isfinite(duration) or duration <= 0:
+                return None
+            if duration > 61:
+                return duration
+            expected_bytes = sample_count * channels * sample_width
+            if len(voice.readframes(sample_count)) != expected_bytes:
+                return None
+        return duration if math.isfinite(duration) and duration > 0 else None
+    except (EOFError, OSError, ValueError, wave.Error):
+        return None
+
+
 def make_scene(transcript, cues, duration, manual_plan=None):
     segments = []
     for row in transcript['transcription']:
@@ -149,35 +177,35 @@ def main():
     if missing:
         parser.error('Missing local tools: ' + ', '.join(missing))
     audio = args.mp3.resolve()
-    fingerprint = {'fingerprint_version': 2, 'mp3': str(audio), 'size': audio.stat().st_size,
+    fingerprint = {'fingerprint_version': 3, 'mp3': str(audio), 'size': audio.stat().st_size,
                    'modified_ns': audio.stat().st_mtime_ns,
                    'input_sha256': sha256_file(audio),
                    'plan': str(args.plan.resolve()) if args.plan else None,
                    'plan_sha256': sha256_file(args.plan) if args.plan else None,
                    'config_path': str(config_path), 'config_sha256': sha256_file(config_path),
-                   'character': args.character}
+                   'character': args.character, 'engine_version': ENGINE_VERSION}
     args.output.mkdir(parents=True, exist_ok=args.resume)
     out = args.output.resolve()
     state = out / 'render_request.json'
     if args.resume:
         previous = read_json(state)
         if not same_request(previous, fingerprint):
-            raise ValueError('Resume needs the same audio, scene-plan contents, character mode, and tool config.')
+            raise ValueError('Continue only when the audio, scene plan, character mode, tool config, and engine version match.')
     else:
         write_json_atomic(state, fingerprint)
     wav = out / 'narration.wav'
-    if not wav.is_file():
+    duration = wav_duration(wav)
+    if duration is None:
         print('Reading the recording locally...', flush=True)
-        run([cfg['ffmpeg'], '-v', 'error', '-i', audio, '-ar', '16000', '-ac', '1',
-             '-c:a', 'pcm_s16le', wav], timeout=120, stage='Audio conversion')
-    with wave.open(str(wav)) as voice:
-        sample_count = voice.getnframes()
-        sample_rate = voice.getframerate()
-    if sample_count <= 0 or sample_rate <= 0:
-        raise ValueError('The recording contains no usable audio samples.')
-    duration = sample_count / sample_rate
-    if not math.isfinite(duration) or duration <= 0:
-        raise ValueError('The recording has an invalid audio duration.')
+        staging_wav = out / 'narration.partial.wav'
+        if staging_wav.exists():
+            staging_wav.unlink()
+        run([cfg['ffmpeg'], '-y', '-v', 'error', '-i', audio, '-t', '61', '-ar', '16000', '-ac', '1',
+             '-c:a', 'pcm_s16le', staging_wav], timeout=120, stage='Audio conversion')
+        duration = wav_duration(staging_wav)
+        if duration is None:
+            raise RuntimeError('FFmpeg did not produce a complete, usable audio file.')
+        staging_wav.replace(wav)
     if duration > 60:
         raise ValueError('This prototype supports recordings up to 60 seconds.')
     transcript_path = out / 'transcript.json'
