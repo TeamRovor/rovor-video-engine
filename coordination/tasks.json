@@ -349,17 +349,22 @@
       "depends_on": [
         "acting-acoustic-preflight"
       ],
-      "updated_at": "2026-10-20T04:24:37.165Z",
-      "next_update": "After permitted hosted/local full regression and approved original-audio mouth-strip inspection",
-      "next_action": "On draft PR #12, run `python -m unittest -v test_continuous_diphthong test_acoustic_alignment` in the existing V5 development environment; compare actual 60fps source-art mouths and preserved audio for OW/AW/AY/EY/OY. If regressions pass, review a bounded visual change before integrating opt-in profile. Do not try to circumvent workflow-creation restrictions.",
+      "updated_at": "2026-10-20T04:33:07.430Z",
+      "next_update": "After a permitted full-repository regression run and original-audio 60fps visual comparison",
+      "next_action": "Retain corrected candidate commits bf030a47b4e1fc3c422e2d175ae180c32582fe35 and source-preserving profile in PR #12; independently run full `test_continuous_diphthong` and `test_acoustic_alignment` with real V5 dependencies. Verify closure, OW/AY/AW/EY/OY mouth strips on original narration. Do not bypass workflow tool restrictions or merge before validated.",
       "acceptance": "New opt-in profile does not split an acoustic vowel into a false new sound; the two original painted targets blend smoothly through the original phone interval. Existing defaults stay pixel/weight-preserving, contacts and silences unchanged, CI passes; visual approval still separate.",
-      "blocker": "GitHub workflow creation for this candidate was blocked by tool safety checks. New regression source exists but its full suite has NOT run, and there is no original-audio/60fps visual comparison evidence; do not merge this draft into PR #5.",
+      "blocker": "PR #12 remains DRAFT: its source-equivalent isolated local unit suite passed 10/10 after the rapid-vowel six-frame fix, but full repository / hosted CI did NOT run (workflow creation was blocked), and no original Evan narration or rendered 60fps mouth strip was tested. Do not merge as visually or production approved.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/12"
       ],
       "validation": {
-        "status": "not-run",
-        "notes": "Numerical envelope independently spot-checked; not a substitute for repository unit suite or visual media review."
+        "status": "targeted-isolated-pass/full-repository-unverified",
+        "commands": [
+          "python -m unittest -v test_continuous_diphthong (isolated source-equivalent copies of english_articulation, acoustic_weights, and new glide/test source)"
+        ],
+        "result": "10/10 synthetic tests PASS locally, including duration sweep 12ms–600ms and unchanged bilabial contact",
+        "knownDifference": "Isolated environment used a reduced support-module shim rather than the entire GitHub checkout; not GitHub CI or media verification.",
+        "head_sha": "bf030a47b4e1fc3c422e2d175ae180c32582fe35"
       }
     }
   ]
