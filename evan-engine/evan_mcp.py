@@ -168,6 +168,18 @@ def start_render(folder, mp3, config_path, resume=False, captions_path=None,
     return process, logfile
 
 
+def read_log_tail(path):
+    """Read a bounded log tail so frequent status polling stays cheap."""
+    try:
+        with path.open("rb") as source:
+            source.seek(0, os.SEEK_END)
+            source.seek(max(0, source.tell() - 8192))
+            tail = source.read()
+    except OSError:
+        return ""
+    return tail.decode("utf-8", errors="replace")[-1800:]
+
+
 def call_tool(name, args):
     if name == "evan_engine_status":
         return dependency_status()
@@ -270,7 +282,7 @@ def call_tool(name, args):
                 pass
         if not logfile.is_file():
             logfile = folder / "render.log"
-        log = logfile.read_text(errors="replace")[-1800:] if logfile.exists() else ""
+        log = read_log_tail(logfile)
         ready = video.exists() and video.stat().st_size > 0
         running = is_running(job.get("pid"))
         report_path = folder / "render_result.json"
@@ -338,4 +350,3 @@ if __name__ == "__main__":
             dispatch(json.loads(line))
         except Exception as exc:
             print("MCP input error: " + str(exc), file=sys.stderr)
-
