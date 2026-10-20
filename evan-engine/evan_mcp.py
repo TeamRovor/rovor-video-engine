@@ -48,6 +48,18 @@ def tools():
                 "required": ["render_folder"],
             },
         },
+        {
+            "name": "evan_continue_render",
+            "description": "Continue a stopped Rovor Digital video render from its saved local stages, optionally using an edited SRT captions file.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "render_folder": {"type": "string", "description": "Render folder returned by evan_render_mp3"},
+                    "captions_path": {"type": "string", "description": "Optional absolute path to an edited SRT file"},
+                },
+                "required": ["render_folder"],
+            },
+        },
     ]
 
 
@@ -93,6 +105,32 @@ def is_running(pid):
         return False
 
 
+def start_render(folder, mp3, config_path, resume=False, captions_path=None):
+    command = [sys.executable, str(ENGINE / "animate_evan.py"), str(mp3),
+               "--output", str(folder), "--config", str(config_path)]
+    if resume:
+        command.append("--resume")
+    if captions_path is not None:
+        command.extend(["--captions", str(captions_path)])
+    logfile = (folder / ("resume-" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") + ".log")
+               if resume else folder / "render.log")
+    with logfile.open("w", encoding="utf-8") as output:
+        launch = {
+            "stdout": output,
+            "stderr": subprocess.STDOUT,
+            "stdin": subprocess.DEVNULL,
+        }
+        if os.name == "nt":
+            launch["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+        else:
+            launch["start_new_session"] = True
+        process = subprocess.Popen(command, **launch)
+    write_json_atomic(folder / "mcp_job.json",
+                      {"pid": process.pid, "mp3": str(mp3), "config_path": str(config_path),
+                       "log_path": str(logfile)})
+    return process, logfile
+
+
 def call_tool(name, args):
     if name == "evan_engine_status":
         return dependency_status()
@@ -110,22 +148,47 @@ def call_tool(name, args):
         OUTPUTS.mkdir(parents=True, exist_ok=True)
         folder = OUTPUTS / datetime.now().strftime("%Y%m%d-%H%M%S-%f")
         folder.mkdir()
-        logfile = folder / "render.log"
-        with logfile.open("w") as output:
-            launch = {
-                "stdout": output,
-                "stderr": subprocess.STDOUT,
-                "stdin": subprocess.DEVNULL,
-            }
-            if os.name == "nt":
-                launch["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
-            else:
-                launch["start_new_session"] = True
-            process = subprocess.Popen(
-                [sys.executable, str(ENGINE / "animate_evan.py"), str(mp3), "--output", str(folder)],
-                **launch,
-            )
-        write_json_atomic(folder / "mcp_job.json", {"pid": process.pid, "mp3": str(mp3)})
+        process, logfile = start_render(folder, mp3, status["config"])
+        return {"started": True, "pid": process.pid, "render_folder": str(folder),
+                "status_tool": "evan_render_status", "log": str(logfile)}
+    if name == "evan_continue_render":
+        folder = Path(str(args.get("render_folder", ""))).expanduser().resolve()
+        if not folder.is_dir() or folder.parent != OUTPUTS.resolve():
+            raise ValueError("That render folder is not one of this engine's jobs.")
+        request_path = folder / "render_request.json"
+        try:
+            request = json.loads(request_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError("That render folder has no readable render request to resume.") from error
+        if not isinstance(request, dict) or not request.get("mp3"):
+            raise ValueError("The saved render request is incomplete.")
+        try:
+            job = json.loads((folder / "mcp_job.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            job = {}
+        if not isinstance(job, dict):
+            job = {}
+        if is_running(job.get("pid")):
+            raise ValueError("That render is already running.")
+        config_path = request.get("config_path")
+        try:
+            config, resolved_config = load_config(config_path)
+        except ValueError as error:
+            raise ValueError("The saved local tool configuration is unavailable: " + str(error)) from error
+        missing = dependency_errors(config)
+        if missing:
+            raise ValueError("Missing local tools for this render: " + ", ".join(missing))
+        captions_path = args.get("captions_path")
+        if captions_path:
+            captions_path = Path(str(captions_path)).expanduser()
+            if not captions_path.is_absolute() or not captions_path.is_file() or captions_path.suffix.lower() != ".srt":
+                raise ValueError("Provide an absolute path to an existing .srt captions file.")
+            captions_path = captions_path.resolve()
+        mp3 = Path(request["mp3"]).expanduser()
+        if not mp3.is_file():
+            raise ValueError("The source MP3 for this render is no longer available.")
+        process, logfile = start_render(folder, mp3, resolved_config, resume=True,
+                                        captions_path=captions_path)
         return {"started": True, "pid": process.pid, "render_folder": str(folder),
                 "status_tool": "evan_render_status", "log": str(logfile)}
     if name == "evan_render_status":
@@ -138,11 +201,15 @@ def call_tool(name, args):
             job = json.loads(jobpath.read_text(encoding="utf-8")) if jobpath.exists() else {}
         except (OSError, json.JSONDecodeError):
             job = {}
-        logfile = folder / "render.log"
+        if not isinstance(job, dict):
+            job = {}
+        logfile = Path(job.get("log_path") or (folder / "render.log"))
+        if not logfile.is_file():
+            logfile = folder / "render.log"
         log = logfile.read_text(errors="replace")[-1800:] if logfile.exists() else ""
         ready = video.exists() and video.stat().st_size > 0
         running = is_running(job.get("pid"))
-        completed = ready and not running
+        completed = ready and not running and ("Created: " + str(video)) in log
         return {"completed": completed, "running": running,
                 "failed": not completed and not running,
                 "video": str(video) if ready else None, "log_tail": log,
@@ -164,7 +231,7 @@ def dispatch(req):
         if method == "initialize":
             version = req.get("params", {}).get("protocolVersion", "2025-06-18")
             result = {"protocolVersion": version, "capabilities": {"tools": {}},
-                      "serverInfo": {"name": SERVER_NAME, "version": "3.2.0"}}
+                      "serverInfo": {"name": SERVER_NAME, "version": "3.3.0"}}
         elif method == "ping":
             result = {}
         elif method == "tools/list":
