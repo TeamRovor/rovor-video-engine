@@ -57,6 +57,26 @@ def probe(path, runtime_root=None):
     r = subprocess.run([str(executable), str(path)], capture_output=True, text=True, timeout=30, check=True)
     return json.loads(r.stdout)
 
+def video_quality(path, runtime_root=None):
+    """Sample native frames to reject completely black or frozen MP4 exports."""
+    swiftc = shutil.which('swiftc')
+    helper = Path(__file__).with_name('video_quality.swift')
+    if not swiftc or not helper.is_file():
+        raise RuntimeError('Visual frame verification needs macOS swiftc and the bundled AVFoundation helper')
+    runtime = Path(runtime_root or Path.home() / 'Library' / 'Application Support' / 'Rovor' / 'moho-render') / 'runtime'
+    runtime.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(runtime, 0o700)
+    executable = runtime / 'video-quality'
+    if not executable.is_file() or executable.stat().st_mtime < helper.stat().st_mtime:
+        partial = runtime / 'video-quality.partial'
+        module_cache = runtime / 'module-cache'
+        module_cache.mkdir(mode=0o700, exist_ok=True)
+        subprocess.run([swiftc, '-parse-as-library', '-module-cache-path', str(module_cache), '-O', str(helper), '-o', str(partial)], capture_output=True, text=True, timeout=180, check=True)
+        os.chmod(partial, 0o700)
+        partial.replace(executable)
+    result = subprocess.run([str(executable), str(path)], capture_output=True, text=True, timeout=60, check=True)
+    return json.loads(result.stdout)
+
 def submit(root, audio):
     if audio.suffix.lower() != '.mp3' or not audio.is_file() or not 0 < audio.stat().st_size <= MAX_BYTES:
         raise ValueError('Expected nonempty MP3, at most 25 MiB')
@@ -103,6 +123,13 @@ def verify(path, request, runtime_root=None):
         raise ValueError('Artifact must be native 1920x1080 at 60 fps')
     if abs(float(m['format']['duration']) - request['duration']) > .15:
         raise ValueError('Narration duration changed')
+    quality = video_quality(media, runtime_root)
+    if (type(quality.get('sampleCount')) is not int or quality['sampleCount'] != 12
+            or type(quality.get('distinctFrameCount')) is not int
+            or not 2 <= quality['distinctFrameCount'] <= quality['sampleCount']
+            or type(quality.get('blackFrameCount')) is not int
+            or not 0 <= quality['blackFrameCount'] <= 1):
+        raise ValueError('Video is frozen, mostly black, or lacks 12-frame sampling evidence')
     return dict(name='render.mp4', sha256=digest(media), bytes=media.stat().st_size)
 
 def run(root, ident, adapter):
