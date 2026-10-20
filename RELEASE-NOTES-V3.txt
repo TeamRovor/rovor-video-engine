@@ -1,3 +1,18 @@
+EVAN V3.1 PORTABILITY AND RENDER RELIABILITY — OCTOBER 19 2026
+
+IMPLEMENTED IN THIS UPDATE:
+- Windows and macOS launchers share validated local-tool configuration.
+- Windows paths with spaces are supported by the interactive launcher.
+- Resume checks now fingerprint audio, manual scene plans, and tool configuration contents.
+- Saved render metadata is written atomically; malformed transcript and lip-sync outputs are rejected.
+- Reference frames use one Sharp compositing pipeline, avoiding an extra full-frame encode/decode.
+- Frame batch ranges and saved scene plans are validated before rendering.
+- Render and MCP process handling now accounts for Windows process semantics.
+- Sharp is pinned in package.json for repeatable setup on supported Node versions.
+
+VALIDATION:
+- The existing test suite and a full Windows render were not run for this update.
+
 EVAN V3 REFERENCE ART — OCTOBER 16 2026
 
 SUCCESSFULLY VERIFIED LOCALLY:
@@ -21,3 +36,4 @@ IMPORTANT:
 - The install script intentionally does not overwrite rovor-evan-v2 or moho-mcp.
 - Default V3 art mode: --character reference. Old vector option: --character vector.
 - See START-HERE-V3.md and MOHO-RIG-SPEC-V3.md for instructions.
+
