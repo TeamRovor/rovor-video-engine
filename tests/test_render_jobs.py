@@ -36,7 +36,7 @@ class Jobs(unittest.TestCase):
         ident = self.submit(); path = self.root/ident
         config = self.root/'adapter.json'; config.write_text('["trusted-adapter"]')
         def adapter(*args, **kwargs): (path/'render.mp4').write_bytes(b'mock video')
-        with patch.object(j.subprocess, 'run', side_effect=adapter), patch.object(j, 'verify', side_effect=lambda p,r:dict(name='render.mp4',sha256=j.digest(p/'render.mp4'),bytes=10)):
+        with patch.object(j.subprocess, 'run', side_effect=adapter), patch.object(j, 'verify', side_effect=lambda p,r,*args:dict(name='render.mp4',sha256=j.digest(p/'render.mp4'),bytes=10)):
             j.run(self.root, ident, config)
         j.artifact(self.root, ident, self.root/'out.mp4')
         self.assertEqual((self.root/'out.mp4').read_bytes(), b'mock video')
