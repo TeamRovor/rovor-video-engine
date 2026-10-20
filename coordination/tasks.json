@@ -238,6 +238,39 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/9"
         }
       ]
+    },
+    {
+      "id": "acoustic-production-gate",
+      "title": "Build audio-grounded English phoneme and mouth-plan acceptance checks",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar animation intelligence",
+      "branch": "feature/acoustic-production-gate",
+      "scopes": [
+        "tools/speech_plan_gate.py",
+        "tests/test_speech_plan_gate.py",
+        ".github/workflows/speech-plan-gate.yml",
+        "ROVOR-MP3-FIRST-ENGINE.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-20T03:58:04.671Z",
+      "next_update": "After source-branch alignment audit and hosted QA of independent speech-plan checks",
+      "next_action": "Read existing acoustic alignment/viseme work in PR #5, implement inexpensive independent checks for time/phone/viseme/silence/frames, with honest review gates, and publish test evidence. Do not change the live narrator or art.",
+      "acceptance": "Fails closed on unknown phones, invalid durations, conflicting word/phone timing and bad mouth mapping; flags undersampled contacts and unreviewed words; CI passes with no private recording or paid model."
+    },
+    {
+      "id": "engine-efficiency-benchmarks",
+      "title": "Benchmark and reduce the MP3-to-video pipeline cost without compromising quality",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "codex/windows-reliability-v3-1",
+      "scopes": [
+        "subsystem:engine-throughput-benchmark"
+      ],
+      "depends_on": [],
+      "next_action": "Evan's GitHub-connected ChatGPT should fetch main and PR #7, claim this task if free, build a CPU/RAM/time/cache-hit benchmark on hosted Windows/macOS/Linux using synthetic permitted data; measure before changing caching or render logic. Do not require laptop access or reimplement phoneme/acting work. Coordinate stage/cache keys with Amar's acoustic gate.",
+      "acceptance": "Reproducible hosted benchmark with wall time, peak memory, stage timings, frame cache reuse, failure/resume overhead, and explicit baseline vs after results; no invented performance percentages or changed output settings."
     }
   ]
 }
