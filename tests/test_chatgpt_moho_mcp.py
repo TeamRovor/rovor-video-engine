@@ -48,7 +48,7 @@ class ChatGPTMohoBridge(unittest.TestCase):
                 destination.write_bytes(b"fake-mp3")
             probe = {"format": {"duration": "4.0"}, "streams": [{"codec_name": "mp3", "codec_type": "audio"}]}
             with patch.object(bridge, "_check_url", return_value="https://files.oaiusercontent.com/a"), \
-                 patch.object(bridge, "inspect_setup", return_value={"state": "ready_to_test", "ffprobeAvailable": True, "mohoCliAvailable": True, "adapterConfigValid": True, "productionBridgeVerified": False, "blockers": []}), \
+                 patch.object(bridge, "inspect_setup", return_value={"state": "ready_to_test", "mediaProbeAvailable": True, "mohoCliAvailable": True, "adapterConfigValid": True, "productionBridgeVerified": False, "blockers": []}), \
                  patch.object(render_jobs, "probe", return_value=probe), \
                  patch.object(bridge.subprocess, "Popen") as popen:
                 result = bridge.start_render(file_param(), root, adapter, downloader)
@@ -65,7 +65,7 @@ class ChatGPTMohoBridge(unittest.TestCase):
     def test_prerequisite_failure_does_not_download_or_retain_mp3(self):
         with tempfile.TemporaryDirectory() as tmp:
             called = []
-            blockers = ["ffprobe unavailable"]
+            blockers = ["media probe unavailable"]
             with patch.object(bridge, "inspect_setup", return_value={"state": "blocked", "blockers": blockers}):
                 result = bridge.start_render(file_param(), Path(tmp) / "jobs", Path(tmp) / "adapter.json",
                                              lambda url, destination: called.append(destination))
@@ -92,6 +92,23 @@ class ChatGPTMohoBridge(unittest.TestCase):
             media.write_bytes(b"changed")
             with self.assertRaisesRegex(ValueError, "checksum"):
                 bridge.artifact_resource(root, job_id)
+
+    def test_artifact_tool_returns_resource_link_after_verification(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            job_id = "b" * 32
+            job = root / job_id
+            job.mkdir()
+            media = job / "render.mp4"
+            media.write_bytes(b"verified-mp4-resource")
+            sha = hashlib.sha256(media.read_bytes()).hexdigest()
+            (job / "status.json").write_text(json.dumps({"state": "review_required", "artifact": {"sha256": sha}}))
+            reply = bridge.handle({"jsonrpc": "2.0", "id": 7, "method": "tools/call",
+                                   "params": {"name": "get_render_artifact", "arguments": {"jobId": job_id}}}, root)
+            content = reply["result"]["content"]
+            link = next(block for block in content if block["type"] == "resource_link")
+            self.assertEqual(link["uri"], f"rovor-moho://jobs/{job_id}/render.mp4")
+            self.assertEqual(link["mimeType"], "video/mp4")
 
     def test_stdio_initializes_and_advertises_upload_tool(self):
         messages = [
