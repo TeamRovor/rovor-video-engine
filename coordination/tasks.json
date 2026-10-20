@@ -5,20 +5,21 @@
       "id": "windows-runtime",
       "title": "Validate the existing Windows setup and render workflow",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Keona Windows desktop session",
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
         "subsystem:windows-runtime-validation"
       ],
       "depends_on": [],
-      "next_action": "Run the launcher --check on Windows; if local tools and original narration are available, run an original-audio render, interrupted resume, and caption correction. Record exact Windows build, PR commit, commands, output settings, results, and blockers.",
+      "next_action": "Resume the Windows tool check and original-audio render, interruption/resume, and caption-correction validation after the original narration and machine-specific tool config are available. Record actual output settings, results, and failures.",
       "acceptance": "Record Windows version, exact commit and commands; verify tool check, original-audio render, interrupted resume and caption correction. Record actual output settings and failures.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/7"
       ],
-      "updated_at": "2026-10-20T02:54:28Z",
-      "next_update": "After the launcher tool check and input/config availability audit"
+      "updated_at": "2026-10-20T02:55:39Z",
+      "next_update": "When Keona provides the original narration file path and local tool paths/configuration",
+      "blocker": "The Windows launcher --check exits 1 because evan-engine/local_tools.json is absent. The workspace and supplied source ZIP contain no narration audio; FFmpeg, ffprobe, Rhubarb, and npm are not on PATH. No original-audio render/resume/caption-correction run is possible from the available inputs."
     },
     {
       "id": "moho-disposable-pose",
