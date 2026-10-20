@@ -8,7 +8,13 @@ Repo work/engine; development/evan-painted-rig (legacy name), draft PR #4 https:
 
 Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful milestones/failure/completion/required action only; disable once the agreed polished milestone is actually ready. Routine decisions need no question.
 
-## Latest: registered clean skin component; rejected paint extraction
+## Latest: separate painted oral source layers, not runtime promotion
+
+Read CARTOON-EVAN-PAINTED-ORAL-PARTS.md. Assets painted-oral-parts-v1/source/rounded-parts-v1/v2.png generated with built-in image_gen from coordinated full-face v2; exact prompts/provenance retained. V1 pink lower rim superseded by muted v2. Rim/cavity/tongue are genuinely separate painted alpha components, unlike rejected minimum-opacity extraction. Source sheets remain unchanged. V2 slightly redrew cavity/tongue despite requested invariants; no pixel-exact claim.
+
+build_painted_oral_parts.py saves three diagnostic layers and PSD. Cavity column mapping follows filled rim silhouette; tongue clipped by shared envelope. Original alpha resampled in associated color; derived masking/correspondence explicit, no color key or speckle threshold cleanup. Closed transparent aperture required. Final zero unbacked eroded-interior pixels and zero tongue spill; PSD mean premultiplied difference .13165/255. Two tests pass for backing/containment, source immutability and rejection of open/filled rims. Source sheets, full review and native face/mouth pixels inspected. Lower rim still heavier than full-face source. This is static ONE-pose construction, not cross-pose mesh correspondence, separately drawn jaw or accurate speech. NOT installed in runtime. No source-only squeeze movie substituted for voiced performance. Existing films and phoneme timings unchanged. Outputs evan-cartoon-painted-oral-parts includes source, prompt set, separate PNGs/PSD, audit and review. Full polished milestone incomplete; automation ACTIVE.
+
+## Retained: registered clean skin component; rejected paint extraction
 
 Read CARTOON-EVAN-CONSTRUCTION-SKIN.md. Built-in image_gen clean-skin-v1 source removes mouth artwork from coordinated v2 three-head sheet, alpha retained. Exact prompt/provenance under construction-skin-v1/source. Each pose fitted to its matching source construction; ECC .998787/.998460/.998405. One Seal skin supplies optional working-face-skin.png in existing rig coordinates: ellipse center(237,337), radii65/29, smooth outer30%, original-nose guard y<=310. Cheek RGB calibration[0,5,6]. Original alpha, nose and pixels outside mask exact. ConstructionSkinCartoonHead replaces ONLY face-skin on RoundedDuration; other oral art, controls, mesh/independent chin and phone timing unchanged. No separate mandible drawing or fixed lip-release claim.
 
@@ -32,7 +38,7 @@ Speech:66 words/248 phones/39 ARPABET; two-pass acoustic alignment, coarticulati
 
 ## Next concrete work
 
-1. Paint proper transparent lip rim/lower inner lip and cavity surfaces from coordinated v2 FULL-FACE context, with shared lip-corner and inner-contour landmarks. This is layer breakup of a coordinated drawing, not more isolated seam design. Reject the minimum-opacity paint trials; no threshold cleanup or full-head swaps. The clean skin component is available beneath future oral layers.
+1. Resolve the heavier lower rim in painted-oral-parts-v1; derive compatible seal/release components from their coordinated full-face context. Establish shared corners and upper/lower inner contours across poses. One-pose cavity backing is done, but static bounding-box placement is not cross-pose topology. Keep these source parts out of runtime until voiced contact-to-open comparisons succeed. No more isolated seam glyphs, opacity extraction cleanup or full-head swaps.
 2. Establish compatible source correspondence, contact sealing, interior occlusion and separate jaw articulation, then native voiced normal/slow review before any promotion. Human character artist/animator redraw and review remain needed for final anatomy/performance. Hardware cannot supply missing drawings.
 3. Keep narration sample-complete via narrated_export, retain18flagged boundary uncertainty and all release safeguards. Full polished milestone incomplete.
 
@@ -40,4 +46,4 @@ Speech:66 words/248 phones/39 ARPABET; two-pass acoustic alignment, coarticulati
 
 Python /Users/amarhavic/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3; PYTHONPATH=../painted/deps:evan-engine from repo. cv2.setNumThreads(1). Local8GiB/8logical CPUs, CPU raster rendering. Temporary caffeinate scoped to long renderer/encoder, display sleep allowed. No scipy: FFT evidence uses numpy/matplotlib with MPLCONFIGDIR in work/. Recording sibling referenced-chatgpt-conversation-this-is-an/work/evan-narration.wav mono PCM16/16k; FFmpeg sibling work/media-tools/ffmpeg. Scratch work/cartoon-skin-construction, work/cartoon-mouth-construction, work/cartoon-finished-thought and work/cartoon-relaxed-hand and earlier work/cartoon-detail-acting/rounded-duration/lip-seal retained. User deliverables outputs/.
 
-Previous checkpoint archived PAINTED-EVAN-HISTORY-2026-10-20-I.md; -H/-G/-F/-E/-D/-C/-B and prior history retain details. No pending renders/exports. Continue from actual branch state.
+Previous checkpoint archived PAINTED-EVAN-HISTORY-2026-10-20-J.md; -I, -H/-G/-F/-E/-D/-C/-B and prior history retain details. No pending renders/exports. Continue from actual branch state.
