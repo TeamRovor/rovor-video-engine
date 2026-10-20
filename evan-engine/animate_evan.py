@@ -4,11 +4,13 @@ Runs local Whisper, Rhubarb, Sharp/Node, FFmpeg. Supports --resume after a stopp
 stage and --plan for manually specifying timed original illustrations. No APIs.
 """
 import argparse
+import atexit
 import hashlib
 import json
 import math
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import wave
@@ -17,6 +19,9 @@ from local_tools import default_config_path, dependency_errors, load_config
 from scene_planner import generate_plan, validate_plan
 
 HERE = Path(__file__).resolve().parent
+SRT_TIME = re.compile(r'^(\d{2,}):(\d{2}):(\d{2})[,.](\d{3})$')
+SRT_CUE = re.compile(r'^(\d{2,}:\d{2}:\d{2}[,.]\d{3})\s+-->\s+'
+                     r'(\d{2,}:\d{2}:\d{2}[,.]\d{3})(?:\s+.*)?$')
 
 
 def read_engine_version():
@@ -57,11 +62,136 @@ def write_json_atomic(path, value):
     staging.replace(path)
 
 
+def write_text_atomic(path, value):
+    staging = path.with_name(path.name + '.writing')
+    with staging.open('w', encoding='utf-8', newline='\n') as target:
+        target.write(value)
+    staging.replace(path)
+
+
+def acquire_render_lock(path):
+    lock = path.open('a+b')
+    try:
+        if os.name == 'nt':
+            import msvcrt
+            lock.seek(0, os.SEEK_END)
+            if lock.tell() == 0:
+                lock.write(b' ')
+                lock.flush()
+            lock.seek(0)
+            msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except (OSError, BlockingIOError) as error:
+        lock.close()
+        raise ValueError('This render folder is already being used by another engine process.') from error
+    lock.seek(0)
+    lock.truncate()
+    lock.write(str(os.getpid()).encode('ascii'))
+    lock.flush()
+    return lock
+
+
+def parse_srt_time(value):
+    match = SRT_TIME.fullmatch(value.strip())
+    if not match:
+        raise ValueError('Use SRT timestamps such as 00:00:01,250 --> 00:00:02,500.')
+    hours, minutes, seconds, millis = (int(part) for part in match.groups())
+    if minutes >= 60 or seconds >= 60:
+        raise ValueError('Subtitle minutes and seconds must be between 00 and 59.')
+    return hours * 3600 + minutes * 60 + seconds + millis / 1000
+
+
+def parse_srt(path, duration):
+    if path.stat().st_size > 2 * 1024 * 1024:
+        raise ValueError('The captions file is too large to safely render.')
+    source = path.read_text(encoding='utf-8-sig').replace('\r\n', '\n').replace('\r', '\n')
+    blocks = re.split(r'\n[ \t]*\n', source.strip()) if source.strip() else []
+    if not blocks or len(blocks) > 2000:
+        raise ValueError('The captions file must contain between 1 and 2,000 subtitle cues.')
+    captions = []
+    for block in blocks:
+        lines = block.splitlines()
+        if lines and lines[0].strip().isdigit():
+            lines = lines[1:]
+        if len(lines) < 2:
+            raise ValueError('Each SRT cue needs a timestamp line and caption text.')
+        match = SRT_CUE.fullmatch(lines[0].strip())
+        if not match:
+            raise ValueError('A subtitle timestamp is invalid. Expected HH:MM:SS,mmm --> HH:MM:SS,mmm.')
+        start, end = (parse_srt_time(value) for value in match.groups())
+        text = ' '.join(line.strip() for line in lines[1:] if line.strip())
+        if not text or len(text) > 10000 or any(ord(char) < 32 and char not in '\t' for char in text):
+            raise ValueError('Subtitle text must contain 1 to 10,000 printable characters.')
+        if start < 0 or start >= duration or end <= start or end > duration + 0.05:
+            raise ValueError('Every subtitle must start before the audio ends and have a positive duration.')
+        captions.append({'start': start, 'end': min(end, duration), 'text': text})
+    if any(captions[index]['start'] > captions[index + 1]['start']
+           for index in range(len(captions) - 1)):
+        raise ValueError('Subtitle cues must be ordered by start time.')
+    return captions
+
+
+def format_srt_time(value):
+    millis = max(0, int(round(value * 1000)))
+    hours, millis = divmod(millis, 3_600_000)
+    minutes, millis = divmod(millis, 60_000)
+    seconds, millis = divmod(millis, 1000)
+    return f'{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}'
+
+
+def serialize_srt(captions):
+    return '\n\n'.join(
+        f"{index}\n{format_srt_time(cue['start'])} --> {format_srt_time(cue['end'])}\n{cue['text']}"
+        for index, cue in enumerate(captions, start=1)
+    ) + '\n'
+
+
+def transcript_captions(transcript, duration):
+    rows = []
+    for row in transcript['transcription']:
+        start = max(0, row['offsets']['from'] / 1000)
+        end = min(duration, row['offsets']['to'] / 1000)
+        printable = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', row['text'])
+        text = ' '.join(printable.split())
+        if text and start < end and start < duration:
+            rows.append({'start': start, 'end': end, 'text': text})
+    rows.sort(key=lambda cue: (cue['start'], cue['end']))
+    captions = []
+    for index, cue in enumerate(rows):
+        if index + 1 < len(rows):
+            cue['end'] = min(cue['end'], rows[index + 1]['start'])
+        if cue['start'] < cue['end']:
+            captions.append(cue)
+    if not captions:
+        raise ValueError('No usable subtitle cues were found in the transcript.')
+    return captions
+
+
 def sha256_file(path):
     digest = hashlib.sha256()
     with path.open('rb') as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b''):
             digest.update(chunk)
+    return digest.hexdigest()
+
+
+def renderer_fingerprint():
+    root = HERE.parent
+    sources = [HERE / name for name in (
+        'animate_evan.py', 'local_tools.py', 'scene_planner.py', 'package.json',
+        'render_frames.cjs', 'evan_puppet.cjs', 'evan_reference.cjs',
+        'caption_utils.cjs', 'scene_graphics.cjs')]
+    assets = root / 'evan-character' / 'v3-assets'
+    if assets.is_dir():
+        sources.extend(path for path in assets.rglob('*') if path.is_file())
+    digest = hashlib.sha256()
+    for path in sorted(sources, key=lambda item: str(item.relative_to(root)).casefold()):
+        digest.update(str(path.relative_to(root)).replace(os.sep, '/').encode('utf-8') + b'\0')
+        with path.open('rb') as source:
+            for chunk in iter(lambda: source.read(1024 * 1024), b''):
+                digest.update(chunk)
     return digest.hexdigest()
 
 
@@ -172,6 +302,8 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--config', type=Path, default=default_config_path())
     parser.add_argument('--plan', type=Path, help='Optional hand-written JSON array of scenes')
+    parser.add_argument('--captions', type=Path,
+                        help='Optional SRT file; defaults to captions.srt in the output folder')
     parser.add_argument('--resume', action='store_true', help='Continue stages in an existing output directory')
     parser.add_argument('--character', choices=('reference','vector'), default='reference', help='Character artwork mode (reference sprites or V2 vector rig)')
     args = parser.parse_args()
@@ -179,6 +311,8 @@ def main():
         parser.error('Please provide an existing MP3 recording.')
     if args.plan and not args.plan.is_file():
         parser.error('The scene-plan JSON file was not found.')
+    if args.captions and not args.captions.is_file():
+        parser.error('The SRT captions file was not found.')
     try:
         cfg, config_path = load_config(args.config)
     except ValueError as error:
@@ -187,17 +321,20 @@ def main():
     if missing:
         parser.error('Missing local tools: ' + ', '.join(missing))
     audio = args.mp3.resolve()
-    fingerprint = {'fingerprint_version': 3, 'mp3': str(audio), 'size': audio.stat().st_size,
+    fingerprint = {'fingerprint_version': 4, 'mp3': str(audio), 'size': audio.stat().st_size,
                    'modified_ns': audio.stat().st_mtime_ns,
                    'input_sha256': sha256_file(audio),
                    'plan': str(args.plan.resolve()) if args.plan else None,
                    'plan_sha256': sha256_file(args.plan) if args.plan else None,
                    'config_path': str(config_path), 'config_sha256': sha256_file(config_path),
                    'character': args.character, 'engine_version': ENGINE_VERSION,
+                   'renderer_sha256': renderer_fingerprint(),
                    'tool_files': {name: file_stamp(cfg[name])
                                   for name in ('ffmpeg', 'whisper', 'model', 'rhubarb', 'node')}}
     args.output.mkdir(parents=True, exist_ok=args.resume)
     out = args.output.resolve()
+    lock = acquire_render_lock(out / '.render.lock')
+    atexit.register(lock.close)
     state = out / 'render_request.json'
     if args.resume:
         previous = read_json(state)
@@ -253,11 +390,42 @@ def main():
     scene['scenePlan'] = validate_plan(scene.get('scenePlan'), duration)
     if not isinstance(scene.get('segments'), list) or not valid_cues({'mouthCues': scene.get('mouthCues')}):
         raise ValueError('Saved scene data is incomplete. Remove scene.json and resume to rebuild it.')
+    captions_path = out / 'captions.srt'
+    captions_source = args.captions.resolve() if args.captions else captions_path
+    if captions_source.is_file():
+        captions = parse_srt(captions_source, duration)
+    else:
+        captions = transcript_captions(transcript, duration)
+    if captions_source.resolve() != captions_path.resolve() or not captions_path.exists():
+        write_text_atomic(captions_path, serialize_srt(captions))
+    scene['captions'] = captions
+    write_json_atomic(scene_path, scene)
     total = math.ceil(duration * 24)
     frames = out / 'frames'
     frames.mkdir(exist_ok=True)
-    # Resume at the first missing frame. Preserve all completed original frames.
-    start = next((i for i in range(total) if not valid_frame(frames / f'{i:06d}.jpg')), total)
+    caption_hash = hashlib.sha256(serialize_srt(captions).encode('utf-8')).hexdigest()
+    progress_path = out / 'render_progress.json'
+    progress = read_json(progress_path)
+    progress_matches = (isinstance(progress, dict) and
+                        progress.get('caption_sha256') == caption_hash and
+                        progress.get('engine_version') == ENGINE_VERSION and
+                        progress.get('frame_count') == total and
+                        isinstance(progress.get('next_frame'), int) and
+                        not isinstance(progress.get('next_frame'), bool) and
+                        0 <= progress['next_frame'] <= total)
+    if not progress_matches:
+        progress = {'caption_sha256': caption_hash, 'engine_version': ENGINE_VERSION,
+                    'frame_count': total, 'next_frame': 0}
+    start = progress['next_frame']
+    # If a previously completed JPEG is missing or truncated, rebuild from that frame.
+    for frame_number in range(start):
+        if not valid_frame(frames / f'{frame_number:06d}.jpg'):
+            start = frame_number
+            break
+    if start < total:
+        progress.pop('encoded_caption_sha256', None)
+    progress['next_frame'] = start
+    write_json_atomic(progress_path, progress)
     print(f'Animating Evan: {start}/{total} frames already present...', flush=True)
     env = dict(os.environ, EVAN_SHARP=cfg['sharp'])
     while start < total:
@@ -268,8 +436,11 @@ def main():
         if isinstance(next_frame, bool) or not isinstance(next_frame, int) or not start < next_frame <= total:
             raise RuntimeError('The renderer returned an invalid frame range. Re-run with --resume.')
         start = next_frame
+        progress['next_frame'] = start
+        write_json_atomic(progress_path, progress)
     video = out / 'evan.mp4'
-    if not video.is_file() or video.stat().st_size == 0:
+    video_ready = video.is_file() and video.stat().st_size > 0
+    if not video_ready or progress.get('encoded_caption_sha256') != caption_hash:
         print('Encoding the final video...', flush=True)
         staging = out / 'evan.partial.mp4'
         run([cfg['ffmpeg'], '-y', '-v', 'error', '-framerate', '24', '-i', frames / '%06d.jpg',
@@ -277,6 +448,8 @@ def main():
              '-preset', 'ultrafast', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac',
              '-t', duration, '-movflags', '+faststart', staging], timeout=300, stage='Video encoding')
         staging.replace(video)
+        progress['encoded_caption_sha256'] = caption_hash
+        write_json_atomic(progress_path, progress)
     print('Created: ' + str(video))
 
 
@@ -289,4 +462,3 @@ if __name__ == '__main__':
     except (EOFError, OSError, RuntimeError, ValueError, wave.Error) as error:
         print('ERROR: ' + str(error), file=sys.stderr)
         sys.exit(1)
-
