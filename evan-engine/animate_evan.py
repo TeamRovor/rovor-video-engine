@@ -10,6 +10,7 @@ import math
 import os
 from pathlib import Path
 import subprocess
+import sys
 import wave
 
 from local_tools import default_config_path, dependency_errors, load_config
@@ -21,7 +22,8 @@ HERE = Path(__file__).resolve().parent
 def run(args, env=None, timeout=180, stage='local step'):
     try:
         result = subprocess.run([str(a) for a in args], capture_output=True, text=True,
-                                timeout=timeout, env=env, check=False)
+                                encoding='utf-8', errors='replace', timeout=timeout,
+                                env=env, check=False)
     except subprocess.TimeoutExpired as exc:
         raise RuntimeError(f'{stage.capitalize()} exceeded {timeout} seconds. Re-run with --resume; '
                            'completed stages and frames will be reused.') from exc
@@ -61,6 +63,15 @@ def same_request(previous, current):
             all(previous.get(key) == current.get(key) for key in legacy_keys))
 
 
+def finite_number(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(value)
+    except (OverflowError, TypeError, ValueError):
+        return False
+
+
 def valid_transcript(value):
     rows = value.get('transcription') if isinstance(value, dict) else None
     if not isinstance(rows, list) or not rows:
@@ -68,8 +79,9 @@ def valid_transcript(value):
     for row in rows:
         offsets = row.get('offsets') if isinstance(row, dict) else None
         if (not isinstance(offsets, dict) or not isinstance(row.get('text'), str) or
-                not isinstance(offsets.get('from'), (int, float)) or
-                not isinstance(offsets.get('to'), (int, float))):
+                not finite_number(offsets.get('from')) or
+                not finite_number(offsets.get('to')) or
+                offsets['from'] < 0 or offsets['to'] <= offsets['from']):
             return False
     return True
 
@@ -80,9 +92,10 @@ def valid_cues(value):
         return False
     return all(
         isinstance(row, dict) and
-        isinstance(row.get('start'), (int, float)) and
-        isinstance(row.get('end'), (int, float)) and
-        row['start'] < row['end'] and isinstance(row.get('value'), str)
+        finite_number(row.get('start')) and finite_number(row.get('end')) and
+        0 <= row['start'] < row['end'] and
+        isinstance(row.get('value'), str) and
+        row['value'] in {'X', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'}
         for row in rows
     )
 
@@ -158,7 +171,13 @@ def main():
         run([cfg['ffmpeg'], '-v', 'error', '-i', audio, '-ar', '16000', '-ac', '1',
              '-c:a', 'pcm_s16le', wav], timeout=120, stage='Audio conversion')
     with wave.open(str(wav)) as voice:
-        duration = voice.getnframes() / voice.getframerate()
+        sample_count = voice.getnframes()
+        sample_rate = voice.getframerate()
+    if sample_count <= 0 or sample_rate <= 0:
+        raise ValueError('The recording contains no usable audio samples.')
+    duration = sample_count / sample_rate
+    if not math.isfinite(duration) or duration <= 0:
+        raise ValueError('The recording has an invalid audio duration.')
     if duration > 60:
         raise ValueError('This prototype supports recordings up to 60 seconds.')
     transcript_path = out / 'transcript.json'
@@ -205,9 +224,9 @@ def main():
         raw = run([cfg['node'], HERE / 'render_frames.cjs', scene_path, frames, start, total],
                   env, timeout=35, stage='Frame rendering')
         result = json.loads(raw)
-        next_frame = result['nextFrame']
-        if next_frame <= start:
-            raise RuntimeError('The renderer made no progress. Re-run with --resume.')
+        next_frame = result.get('nextFrame') if isinstance(result, dict) else None
+        if isinstance(next_frame, bool) or not isinstance(next_frame, int) or not start < next_frame <= total:
+            raise RuntimeError('The renderer returned an invalid frame range. Re-run with --resume.')
         start = next_frame
     video = out / 'evan.mp4'
     if not video.is_file() or video.stat().st_size == 0:
@@ -222,5 +241,12 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('\nRender stopped.', file=sys.stderr)
+        sys.exit(130)
+    except (EOFError, OSError, RuntimeError, ValueError, wave.Error) as error:
+        print('ERROR: ' + str(error), file=sys.stderr)
+        sys.exit(1)
 
