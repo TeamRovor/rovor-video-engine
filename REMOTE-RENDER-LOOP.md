@@ -10,6 +10,8 @@ The existing `.github/scripts/rovor_moho_read_queue.py` accepts only two read me
 
 A read-only Mac inventory found no approved Evan production rig to bind. `Evan/Projects/Untitled 2.moho` is schema 1045 at 1280×720/24fps and contains two ordinary mesh layers with no skeleton or mouth switch. `Spacewoman-Compiler-Demo.moho` belongs to a different character. The Evan `Assets` and `References` folders are empty. The local `MohoMCP-Connection-Dev/production/README.md` describes its output as an approximation, not the finished artwork or a Moho rig; the dev bridge README says its background Lua poller is untested and nothing has been deployed. A read-only live MCP batch timed out at 11.5 seconds. Do not adapt any of these into Evan's production asset or treat the dev server as a reliable headless worker.
 
+The separate open PR #4 branch `development/evan-painted-rig` does contain `evan-engine/acoustic_alignment.py`, a PocketSphinx two-pass forced word/phone aligner; reuse this rather than inventing letter-based timings. It is still an unmerged draft branch, and the current Mac Python has none of `pocketsphinx`, `cmudict`, or `numpy` installed, so this integration is not yet runnable or validated here. The local production prototype's Rhubarb mouth-shape path is not a substitute for this phone aligner or the strict acoustic gate.
+
 ## Smallest usable transport
 
 `tools/render_jobs.py` uses a private local spool with four commands. Use an absolute spool path. Media checks use `ffprobe` when installed, or the bundled macOS AVFoundation probe compiled by Apple `swiftc`; the latter avoids a Homebrew dependency.
