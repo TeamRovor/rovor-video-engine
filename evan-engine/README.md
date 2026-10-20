@@ -51,7 +51,7 @@ python animate_evan.py INPUT.mp3 --plan PLAN.json --output NEW_OUTPUT_FOLDER
 
 The plan is a JSON array of scenes with `start`, `end`, `kind`, and `title`. Scenes must be ordered and cover the full recording. Available kinds: `browser`, `favicon`, `brand`, `social`, `store`, `search`, `contact`, `endcard`, and `topic`.
 
-Resuming verifies the audio contents, scene-plan contents, character mode, tool configuration, and engine version before reusing generated stages. Frame files are written atomically, so an interrupted frame is rendered again. Runs made before versioned fingerprints were added must use a new output folder.
+Resuming verifies the audio and scene-plan contents, character mode, engine version, tool configuration, and the resolved tool/model file metadata before reusing generated stages. Frame files are written atomically, so an interrupted frame is rendered again. Runs made before versioned fingerprints were added must use a new output folder.
 
 ## Limits
 
