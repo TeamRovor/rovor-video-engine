@@ -182,6 +182,7 @@ def call_tool(name, args):
                                         captions_path=captions_path, plan_path=plan_path,
                                         character=character)
         return {"started": True, "pid": process.pid, "render_folder": str(folder),
+                "captions_file": str(folder / "captions.srt"),
                 "status_tool": "evan_render_status", "log": str(logfile)}
     if name == "evan_continue_render":
         folder = Path(str(args.get("render_folder", ""))).expanduser().resolve()
@@ -225,6 +226,7 @@ def call_tool(name, args):
                                         captions_path=captions_path, plan_path=plan_path,
                                         character=character)
         return {"started": True, "pid": process.pid, "render_folder": str(folder),
+                "captions_file": str(folder / "captions.srt"),
                 "status_tool": "evan_render_status", "log": str(logfile)}
     if name == "evan_render_status":
         folder = Path(str(args.get("render_folder", ""))).expanduser().resolve()
@@ -248,6 +250,7 @@ def call_tool(name, args):
         return {"completed": completed, "running": running,
                 "failed": not completed and not running,
                 "video": str(video) if ready else None, "log_tail": log,
+                "captions_file": str(folder / "captions.srt"),
                 "render_folder": str(folder)}
     raise ValueError("Unknown tool: " + str(name))
 
