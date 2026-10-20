@@ -1,65 +1,75 @@
-# Evan Cartoon Engine — V3 Reference Art Edition (offline prototype)
+# Rovor Digital Video Engine — V3.4.0
 
-An MP3-to-reference-faithful 2D cartoon pipeline for Rovor Digital. It uses locally installed Whisper, Rhubarb, Node/Sharp, and FFmpeg to transcribe a recording, time Evan's mouth shapes, choose *illustrated topic scenes*, animate his head/hands, add captions, and export an MP4. No paid AI APIs, network requests, stock video sources, or Moho launch.
+An offline MP3-to-MP4 animation pipeline for Rovor Digital. It transcribes speech locally, times mouth shapes, selects illustrated topic scenes, animates Evan, adds captions, and exports a vertical video. It does not call paid AI services or use network APIs while rendering.
 
-Read `../START-HERE-V3.md` first; it explains the new reference sprites and optional vector mode.
+The renderer supports macOS and Windows. Both platforms need local FFmpeg, Whisper.cpp, Rhubarb, Node.js, Sharp, and a Whisper model. The source ZIP intentionally does not include executables, models, or `local_tools.json`.
 
-## Mac: use it with one MP3
+## Configure local tools
 
-1. **Keep the existing Codex handoff workspace and its `work/` directory**; `local_tools.json` points to the installed local executables/model there. This ZIP does not duplicate those Mac-specific tools.
-2. Put this whole `evan-engine` folder somewhere convenient next to `evan-character` (it doesn't need to overwrite your existing Moho project).
-3. Double-click `Make Evan Video.command`, drag one **MP3** file into the Terminal window, and press Return.
-4. The video will appear in the new, timestamped `evan-videos/` folder next to this engine folder. Earlier results are not replaced.
+Copy `local_tools.windows.example.json` to `local_tools.json` and edit the executable and model paths. `ffmpeg`, `node`, and other tools may be command names when they are on `PATH`; `model` must be a file path. `local_tools.json` is ignored by Git because it contains machine-specific paths.
 
-If macOS prevents the command file from opening because of permissions, run `chmod +x '/path/to/evan-engine/Make Evan Video.command'` **on the copied command file only**.
+Install the pinned Sharp dependency from this directory with `npm install`. Sharp 0.35.5 requires Node.js 20.9 or newer; see [Sharp installation requirements](https://sharp.pixelplumbing.com/install/#prerequisites).
 
-If the local-tool check says files are missing, inspect `local_tools.json` and update only the relevant paths to existing executables. Do **not** delete the original Codex `work/` folder.
+To keep the configuration elsewhere, set `ROVOR_LOCAL_TOOLS_CONFIG` to its full path. The launcher and MCP adapter use the same setting.
 
-## Advanced commands
+## Windows
 
-Fresh render:
+From PowerShell in this directory:
+
+```powershell
+..\install-on-windows.ps1
+py -3 .\launch_evan.py --check
+py -3 .\launch_evan.py "C:\path\to\narration.mp3"
+```
+
+The setup script keeps any existing config, installs the pinned Sharp package, and registers `rovor-evan-v3` if the Codex CLI is available. It does not install FFmpeg, Whisper.cpp, Rhubarb, or the Whisper model. Edit `local_tools.json` so the `whisper`, `model`, and `rhubarb` entries point to tools installed on your machine before running `--check`. You can also open `Make Evan Video.cmd` or drop an MP3 onto it. To use a path containing spaces, keep it in quotes when running the PowerShell command.
+
+## macOS
+
+Configure the same JSON keys with macOS tool paths, then run:
 
 ```bash
-python3 animate_evan.py '/absolute/path/evan.mp3' --output '/absolute/path/NEW-result-directory'
+python3 launch_evan.py --check
+python3 launch_evan.py '/absolute/path/to/narration.mp3'
 ```
 
-Continue an interrupted render (same input, same result directory):
+Or open `Make Evan Video.command` and drop an MP3 into Terminal when prompted. The existing `install-on-mac.sh` can register the local `rovor-evan-v3` MCP adapter without replacing other MCP entries.
 
-```bash
-python3 launch_evan.py --resume '/absolute/path/existing-result-directory'
+## Direct render and resume
+
+```text
+python animate_evan.py INPUT.mp3 --output NEW_OUTPUT_FOLDER
+python launch_evan.py --resume EXISTING_OUTPUT_FOLDER
 ```
 
-Provide your own scene plan rather than the local keyword-based storyboard:
+## Review and correct captions
 
-```bash
-python3 animate_evan.py '/absolute/path/evan.mp3' --plan '/absolute/path/my-scenes.json' --output '/absolute/path/NEW-result-directory'
+Once transcription and lip-sync are ready, the render folder includes an editable `captions.srt`. Correct its text or timings in any subtitle editor, save it, then run `python launch_evan.py --resume EXISTING_OUTPUT_FOLDER`. The engine reads the saved transcript and lip-sync data, redraws frames with the corrected captions, and replaces the MP4 only after the new render finishes. It does not rerun Whisper or Rhubarb for caption-only edits. The same SRT can be supplied explicitly with `--captions PATH_TO_FILE.srt`. Keep cues in start-time order and avoid overlap because the video shows one caption at a time.
+
+The engine checkpoints completed frames and prevents two processes from writing to the same render folder at once. Changed captions or saved scene data invalidate the old frames and encoded video while leaving the existing MP4 in place until the replacement is ready. MCP polling continues to report a render as active while that replacement is being created.
+
+The local MCP adapter can start renders with optional `captions_path`, `plan_path`, and `character` values. It returns the output `captions_file` path so you can edit subtitles, then continue the job with `evan_continue_render`; the adapter uses the saved tool configuration and render stages.
+
+Each completed render writes `render_result.json` with the output settings, file size, caption and scene fingerprints, total active render time, and time spent in each local processing stage. Timing totals carry across resumed attempts; waiting between attempts is not counted. `evan_render_status` includes this report after completion. The report helps identify whether transcription, mouth timing, frame rendering, or video encoding is the slow step.
+
+## Future Moho Pro bridge
+
+`scene.json` is the handoff point for a future Moho adapter: it contains the timed transcript segments, mouth cues, scene plan, gestures, captions, and character style. A later adapter can translate that data for Moho Pro while the current local renderer remains usable on its own. This version does not launch or modify Moho.
+
+To provide a hand-authored scene plan:
+
+```text
+python animate_evan.py INPUT.mp3 --plan PLAN.json --output NEW_OUTPUT_FOLDER
 ```
 
-The scene plan is a JSON array, e.g. for a **12-second recording**:
+The plan is a JSON array of scenes with `start`, `end`, `kind`, and `title`. Scenes must be ordered and cover the full recording. Available kinds: `browser`, `favicon`, `brand`, `social`, `store`, `search`, `contact`, `endcard`, and `topic`.
 
-```json
-[
-  {"start":0,"end":4,"kind":"browser","title":"Your website"},
-  {"start":4,"end":9,"kind":"favicon","title":"A favicon"},
-  {"start":9,"end":12,"kind":"endcard","title":"Rovor Digital"}
-]
-```
+Resuming verifies the audio and scene-plan contents, character mode, engine version, tool configuration, and the resolved tool/model file metadata before reusing generated stages. Frame files are written atomically, so an interrupted frame is rendered again. Runs made before versioned fingerprints were added must use a new output folder.
 
-Scenes must cover the full duration with no gaps. Available kinds: `browser`, `favicon`, `brand`, `social`, `store`, `search`, `contact`, `endcard`, `topic`.
+## Limits
 
-## What's new in V2
-
-- Automatic rule-based illustrated scene suggestions from transcript phrases.
-- Phrase-driven pointing, presenting, small-detail, emphasis and outro gestures.
-- Original SVG browser, favicon, branding, social, online store, search, inquiry and end-card scenes.
-- A manually editable scene plan for exact direction.
-- Output recovery with `--resume`; intermediate stages and completed frames are reused, and truncated JPEG frames are detected and repaired. Video output is written atomically.
-- Ten local unit tests. `python3 -m unittest -v test_evan_engine.py` runs them without an API account.
-
-The included `../evan-character/evan-storyboard-v2.mp4` is a **22-second verified example** derived from the original Evan favicon voice recording and synced captions. The `../evan-character/scene.json` shows its real timing, scenes, and gesture data. The additional `storyboard-preview.jpg` shows four distinct moments. The full recording was verified as 529 H.264 frames with AAC audio.
-
-## Boundaries / current limitations
-
-This is **not** a finished Moho rig or a frame-by-frame studio animation. The default V3 is a reference-faithful raster pose-switching puppet, not yet a native Moho skeletal rig; the old simplified vector rig remains as `--character vector`. Scene selection is **keyword-based, not deep semantic comprehension**, and can miss subtle phrases. It picks from nine purpose-built graphic categories instead of making arbitrary new art or selecting photos. Captions rely on local ASR and may require corrections. The 60-second recording cap and 28-second subprocess budget remain; some long or slow transcription requests may still time out. The resume path helps with interrupted rendering, but cannot force a local tool to run successfully if that tool itself repeatedly exceeds the limit.
-
-Moho is **not** started, and the provided references and original video are left unchanged. The original Moho project and its AGENTS.md are not in this ZIP and have not been inspected in this chat.
+- Recordings are limited to 60 seconds.
+- Scene selection is deterministic and keyword-based; review captions and scene choices before publishing.
+- Captions from unusually long transcript segments are limited to three lines to stay inside the video frame.
+- V3 uses reference-art pose swaps, not a native Moho skeletal rig. The V2 vector mode remains available with `--character vector`.
+- Local stage timeouts are longer for transcription and encoding than for frame batches. Interrupted jobs can resume from completed work, but a local tool that repeatedly exceeds its stage budget still needs a faster model or shorter input.

@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 venv/
 node_modules/
+evan-engine/package-lock.json
 .env
 .env.*
 *.pem
@@ -22,3 +23,4 @@ evan-videos/
 outputs/
 work/
 ggml-*.bin
+
