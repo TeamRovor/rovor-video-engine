@@ -127,7 +127,7 @@ def validate_plan(plan, duration):
             start, end = float(item['start']), float(item['end'])
         except (KeyError, ValueError, TypeError) as error:
             raise ValueError(f'Scene {i+1}: invalid timing') from error
-        if not (0 <= start < end <= duration + 0.02):
+        if not (0 <= start < end <= duration + 0.02 and start < duration):
             raise ValueError(f'Scene {i+1}: invalid time range')
         if output and abs(start - output[-1]['end']) > .03:
             raise ValueError('Scenes must be ordered, non-overlapping and cover the recording')
@@ -136,4 +136,3 @@ def validate_plan(plan, duration):
     if output[0]['start'] > .03 or abs(output[-1]['end']-duration) > .03:
         raise ValueError('Scene plan must cover the entire recording')
     return output
-
