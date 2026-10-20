@@ -17,13 +17,12 @@ To keep the configuration elsewhere, set `ROVOR_LOCAL_TOOLS_CONFIG` to its full 
 From PowerShell in this directory:
 
 ```powershell
-Copy-Item .\local_tools.windows.example.json .\local_tools.json
-npm install
+..\install-on-windows.ps1
 py -3 .\launch_evan.py --check
 py -3 .\launch_evan.py "C:\path\to\narration.mp3"
 ```
 
-Edit the copied JSON before the check so the `whisper`, `model`, and `rhubarb` entries point to files installed on your machine. You can also open `Make Evan Video.cmd` or drop an MP3 onto it. To use a path containing spaces, keep it in quotes when running the PowerShell command.
+The setup script keeps any existing config, installs the pinned Sharp package, and registers `rovor-evan-v3` if the Codex CLI is available. It does not install FFmpeg, Whisper.cpp, Rhubarb, or the Whisper model. Edit `local_tools.json` so the `whisper`, `model`, and `rhubarb` entries point to tools installed on your machine before running `--check`. You can also open `Make Evan Video.cmd` or drop an MP3 onto it. To use a path containing spaces, keep it in quotes when running the PowerShell command.
 
 ## macOS
 
