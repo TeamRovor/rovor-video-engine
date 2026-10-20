@@ -117,6 +117,22 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39360421222"
         }
       ]
+    },
+    {
+      "id": "windows-session-entrypoint",
+      "title": "Connect the Windows branch to shared session coordination",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar coordination session",
+      "branch": "codex/windows-reliability-v3-1",
+      "scopes": [
+        "AGENTS.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-20T02:45:35.009Z",
+      "next_update": "After pointer read-back",
+      "next_action": "Add a root instruction pointer on the existing Windows branch; preserve all engine files.",
+      "acceptance": "Windows root instructions direct sessions to fetched origin/main coordination records; read-back verifies exact content."
     }
   ]
 }
