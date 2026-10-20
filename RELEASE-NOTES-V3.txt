@@ -4,7 +4,7 @@ RENDER DIAGNOSTICS:
 - Completed renders write render_result.json with output settings, media size, and caption/scene fingerprints.
 - Per-stage timing and active elapsed time persist across resumed attempts; downtime between attempts is excluded.
 - MCP render status returns the completed render report and validates it against the current MP4.
-- MCP status reads saved logs only from inside that render's own folder.
+- MCP status reads only the last 8 KB of a render log, keeping repeated polling bounded on long runs.
 - Metrics are saved atomically after local processing stages; diagnostic write failures do not stop a render.
 
 PREFLIGHT:
