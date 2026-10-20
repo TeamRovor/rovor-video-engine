@@ -157,12 +157,13 @@
         "evan-engine/animate_evan.py",
         "evan-engine/workspace_status.py",
         "evan-engine/evan_mcp.py",
-        "evan-engine/README.md"
+        "evan-engine/README.md",
+        "evan-engine/test_renderer.cjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T02:55:50.552Z",
+      "updated_at": "2026-10-20T02:59:46.732Z",
       "next_update": "After existing code review and targeted tests",
-      "next_action": "Inspect cross-platform CI for the resume fix; add read-only Git/update and shared-task awareness to the engine MCP with regression coverage.",
+      "next_action": "39 Python checks pass on hosted Windows/macOS/Linux. Add real Sharp/reference-art renderer smoke checks to the same portable workflow.",
       "acceptance": "A meaningful dependency-free regression suite and CI on supported operating systems; report actual results without claiming laptop runtime or art approval."
     }
   ]
