@@ -5,6 +5,7 @@ CAPTION REVIEW AND RENDER SAFETY:
 - Caption-only revisions reuse saved Whisper and Rhubarb results instead of repeating those slower stages.
 - Caption changes invalidate cached frames and trigger a new MP4 encode; the previous MP4 stays available until replacement.
 - Render progress is checkpointed, incomplete frames are regenerated, and concurrent processes cannot write to one render folder.
+- MCP polling reports an active render correctly even while an earlier MP4 remains available.
 - Both character styles now render the edited SRT captions while keeping legacy scene files readable.
 
 PORTABILITY AND RENDER RELIABILITY:
