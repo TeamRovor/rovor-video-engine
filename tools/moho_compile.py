@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compile explicitly targeted native channels into a NEW Moho archive at 60 fps.
 
-Schema support is deliberately limited to observed Project.mohoproj version 1038.
+The targeted channel envelope has been observed in Project.mohoproj versions 1038 and 1045. This is not general support for every field in either schema.
 No UI, network, subprocess, invented bone names or inferred phoneme timings.
 """
 import argparse
@@ -18,6 +18,7 @@ FPS = 60
 PAYLOAD = 'Project.mohoproj'
 MAX_ARCHIVE_BYTES = 128 * 1024 * 1024
 CHANNELS = {'anim_angle': 'Val', 'anim_pos': 'Vec2', 'anim_scale': 'Val'}
+SUPPORTED_SCHEMAS = {1038, 1045}
 
 def reject_constant(value):
     raise ValueError('Nonfinite JSON number: ' + value)
@@ -51,7 +52,7 @@ def load_archive(path):
     if len(payloads) != 1:
         raise ValueError('Expected one Project.mohoproj JSON payload')
     doc = decode(payloads[0])
-    if doc.get('mime_type') != 'application/x-vnd.lm_mohodoc' or doc.get('version') != 1038:
+    if doc.get('mime_type') != 'application/x-vnd.lm_mohodoc' or doc.get('version') not in SUPPORTED_SCHEMAS:
         raise ValueError('Unverified Moho schema version; inspect before extending compiler')
     return doc, members, comment
 
@@ -110,6 +111,8 @@ def channel_replace(channel, keys, kind, end_frame):
     channel.update(when=times, val=values, interp=interps)
 
 def compile_doc(original, plan):
+    if original.get('mime_type') != 'application/x-vnd.lm_mohodoc' or original.get('version') not in SUPPORTED_SCHEMAS:
+        raise ValueError('Unverified Moho schema version; inspect before extending compiler')
     if set(plan) != {'fps', 'sourceSha256', 'replaceTargetAnimation', 'patches'} or plan['fps'] != FPS or plan['replaceTargetAnimation'] is not True:
         raise ValueError('Require explicit 60 fps plan and replacement of targeted animation')
     doc = copy.deepcopy(original)
