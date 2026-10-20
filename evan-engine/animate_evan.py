@@ -151,9 +151,10 @@ def parse_srt(path, duration):
         if start < 0 or start >= duration or end <= start or end > duration + 0.05:
             raise ValueError('Every subtitle must start before the audio ends and have a positive duration.')
         captions.append({'start': start, 'end': min(end, duration), 'text': text})
-    if any(captions[index]['start'] > captions[index + 1]['start']
+    if any(captions[index]['start'] > captions[index + 1]['start'] or
+           captions[index]['end'] > captions[index + 1]['start']
            for index in range(len(captions) - 1)):
-        raise ValueError('Subtitle cues must be ordered by start time.')
+        raise ValueError('Subtitle cues must be ordered and must not overlap.')
     return captions
 
 
@@ -571,4 +572,3 @@ if __name__ == '__main__':
     except (EOFError, OSError, RuntimeError, ValueError, wave.Error) as error:
         print('ERROR: ' + str(error), file=sys.stderr)
         sys.exit(1)
-
