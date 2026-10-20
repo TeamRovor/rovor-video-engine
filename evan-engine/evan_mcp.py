@@ -32,10 +32,15 @@ def tools():
         },
         {
             "name": "evan_render_mp3",
-            "description": "Start generating a Rovor Digital animated Evan MP4 from an absolute local MP3 file path; returns a render folder for polling. Works without internet if local tools are present. 60-second audio limit.",
+            "description": "Start generating a Rovor Digital animated Evan MP4 from a local MP3; optional SRT captions, scene plan, and character style are supported. Returns a render folder for polling. Works offline with local tools. 60-second audio limit.",
             "inputSchema": {
                 "type": "object",
-                "properties": {"mp3_path": {"type": "string", "description": "Absolute path to an existing local MP3 file"}},
+                "properties": {
+                    "mp3_path": {"type": "string", "description": "Absolute path to an existing local MP3 file"},
+                    "captions_path": {"type": "string", "description": "Optional absolute path to an SRT subtitle file"},
+                    "plan_path": {"type": "string", "description": "Optional absolute path to a JSON scene plan"},
+                    "character": {"type": "string", "enum": ["reference", "vector"], "description": "Character artwork mode; defaults to reference"},
+                },
                 "required": ["mp3_path"],
             },
         },
@@ -105,13 +110,26 @@ def is_running(pid):
         return False
 
 
-def start_render(folder, mp3, config_path, resume=False, captions_path=None):
+def local_file(value, suffix, description):
+    if not value:
+        return None
+    path = Path(str(value)).expanduser()
+    if not path.is_absolute() or not path.is_file() or path.suffix.lower() != suffix:
+        raise ValueError("Provide an absolute path to an existing " + description + ".")
+    return path.resolve()
+
+
+def start_render(folder, mp3, config_path, resume=False, captions_path=None,
+                 plan_path=None, character="reference"):
     command = [sys.executable, str(ENGINE / "animate_evan.py"), str(mp3),
-               "--output", str(folder), "--config", str(config_path)]
+               "--output", str(folder), "--config", str(config_path),
+               "--character", character]
     if resume:
         command.append("--resume")
     if captions_path is not None:
         command.extend(["--captions", str(captions_path)])
+    if plan_path is not None:
+        command.extend(["--plan", str(plan_path)])
     logfile = (folder / ("resume-" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") + ".log")
                if resume else folder / "render.log")
     with logfile.open("w", encoding="utf-8") as output:
@@ -145,10 +163,24 @@ def call_tool(name, args):
         mp3 = mp3.resolve()
         if not mp3.is_file() or mp3.suffix.lower() != ".mp3":
             raise ValueError("Provide an existing absolute .mp3 file path.")
+        captions_path = local_file(args.get("captions_path"), ".srt", ".srt captions file")
+        plan_path = local_file(args.get("plan_path"), ".json", ".json scene plan")
+        if plan_path is not None:
+            try:
+                plan_data = json.loads(plan_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as error:
+                raise ValueError("The scene plan must be readable UTF-8 JSON.") from error
+            if not isinstance(plan_data, list):
+                raise ValueError("The scene plan JSON must contain an array of scenes.")
+        character = args.get("character", "reference")
+        if character not in ("reference", "vector"):
+            raise ValueError("Character mode must be reference or vector.")
         OUTPUTS.mkdir(parents=True, exist_ok=True)
         folder = OUTPUTS / datetime.now().strftime("%Y%m%d-%H%M%S-%f")
         folder.mkdir()
-        process, logfile = start_render(folder, mp3, status["config"])
+        process, logfile = start_render(folder, mp3, status["config"],
+                                        captions_path=captions_path, plan_path=plan_path,
+                                        character=character)
         return {"started": True, "pid": process.pid, "render_folder": str(folder),
                 "status_tool": "evan_render_status", "log": str(logfile)}
     if name == "evan_continue_render":
@@ -178,17 +210,20 @@ def call_tool(name, args):
         missing = dependency_errors(config)
         if missing:
             raise ValueError("Missing local tools for this render: " + ", ".join(missing))
-        captions_path = args.get("captions_path")
-        if captions_path:
-            captions_path = Path(str(captions_path)).expanduser()
-            if not captions_path.is_absolute() or not captions_path.is_file() or captions_path.suffix.lower() != ".srt":
-                raise ValueError("Provide an absolute path to an existing .srt captions file.")
-            captions_path = captions_path.resolve()
+        captions_path = local_file(args.get("captions_path"), ".srt", ".srt captions file")
         mp3 = Path(request["mp3"]).expanduser()
         if not mp3.is_file():
             raise ValueError("The source MP3 for this render is no longer available.")
+        plan_path = request.get("plan")
+        plan_path = Path(plan_path).expanduser() if plan_path else None
+        if plan_path is not None and not plan_path.is_file():
+            raise ValueError("The scene-plan file saved for this render is no longer available.")
+        character = request.get("character", "reference")
+        if character not in ("reference", "vector"):
+            raise ValueError("The saved character mode is invalid.")
         process, logfile = start_render(folder, mp3, resolved_config, resume=True,
-                                        captions_path=captions_path)
+                                        captions_path=captions_path, plan_path=plan_path,
+                                        character=character)
         return {"started": True, "pid": process.pid, "render_folder": str(folder),
                 "status_tool": "evan_render_status", "log": str(logfile)}
     if name == "evan_render_status":
