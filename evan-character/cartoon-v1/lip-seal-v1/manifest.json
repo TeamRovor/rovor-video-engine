@@ -1,0 +1,67 @@
+{
+  "sourceSha256": "22016f16947359df8f8920c3bc971019ef586ed6f19ad96bf0491651c8d4f1e1",
+  "sourceCorners": [
+    [
+      321.0,
+      472.0
+    ],
+    [
+      1349.0,
+      472.0
+    ]
+  ],
+  "workingCorners": [
+    [
+      194.0,
+      326.0
+    ],
+    [
+      280.0,
+      314.0
+    ]
+  ],
+  "sourceHorizontalSplit": 529,
+  "sourceResize": [
+    282,
+    159
+  ],
+  "workingCanvas": [
+    512,
+    512
+  ],
+  "shadowOffsetNativePixels": 3,
+  "parts": {
+    "seam": {
+      "placementAt2x": [
+        [
+          0.9914313931728773,
+          0.13833932794870382,
+          324.2283305656033
+        ],
+        [
+          -0.13833926416365763,
+          0.9914306508694374,
+          581.2786049538096
+        ]
+      ],
+      "sha256": "8bc7e0dd44c2a3ad776594700af3d9c1593841ae6690e3bb12ae256fe9284642"
+    },
+    "lower-shadow": {
+      "placementAt2x": [
+        [
+          0.9914313931728773,
+          0.13833932794870382,
+          323.51150778713736
+        ],
+        [
+          -0.13833926416365763,
+          0.9914306508694374,
+          577.1154627278642
+        ]
+      ],
+      "sha256": "058d0bccdf3da9cf41d4873c736f96f6bacdd86db7010640c28849dc0e7360c1"
+    }
+  },
+  "animationReady": false,
+  "limits": "Separate marks from generated source, not a full mouth/jaw rig. Palette/alpha retained; independent shadow placement. No source repaint."
+}

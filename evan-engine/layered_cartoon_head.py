@@ -25,6 +25,8 @@ class LayeredCartoonHead(CartoonHead):
         return raw
     def sample_surface(self,image,source,target,sample_scale=1):
         return self.constrain_surface(warp(image,source,target,sample_scale))
+    def closed_surface(self,target):
+        return self.sample_surface(self.layers['closed-lips'],POINTS['X'],target,2)
     def contact_surface(self,target):
         return self.sample_surface(self.contact,self.points['G'],target)
     def cavity_visibility(self,aperture):
@@ -92,7 +94,7 @@ class LayeredCartoonHead(CartoonHead):
         teeth,tongue=self.clip_interiors(teeth,tongue,interior,w,shape_weights)
         # Reuse the original contact drawing while it awaits anatomical cleanup.
         contact=self.contact_surface(target)
-        closed=self.sample_surface(self.layers['closed-lips'],POINTS['X'],target,2)
+        closed=self.closed_surface(target)
         face=self.composite_oral(face,cavity,teeth,tongue,contact,closed,aperture,w)
         result=straight(face)
         result=self.images['X'].astype('float32')*(1-self.weight)+result*self.weight
