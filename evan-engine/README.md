@@ -35,6 +35,23 @@ python3 launch_evan.py '/absolute/path/to/narration.mp3'
 
 Or open `Make Evan Video.command` and drop an MP3 into Terminal when prompted. The existing `install-on-mac.sh` can register the local `rovor-evan-v3` MCP adapter without replacing other MCP entries.
 
+## Shared workspace and update awareness
+
+Before starting a new task, check which code is installed and what other sessions are doing:
+
+```text
+python workspace_status.py
+python workspace_status.py --fetch
+```
+
+On Windows, use `py -3`; on macOS, use `python3` if needed. The first command reads local Git state only. `--fetch` refreshes origin refs without pulling code, switching branches, changing working files, or installing anything. The report identifies the current commit, tracking branch, ahead/behind counts, local changes, and open task claims from fetched `origin/main`.
+
+The MCP adapter exposes the same check through `evan_workspace_status`, with optional `fetch: true`. `evan_engine_status` also includes a cached workspace snapshot, even when render dependencies are missing. Restart an existing MCP server after pulling to discover the new tool.
+
+A pending pull is reported separately from local modifications or diverged commits. Preserve active work before updating. A clean checkout that is only behind its intended tracking branch can use `git pull --ff-only`; the helper never runs that command. Shared claims must be recorded on main before work begins. Read the canonical `AGENTS.md`, `PROJECT-LOOP.md` and task queue before claiming work; the report is a snapshot rather than a task lock.
+
+The helper requires a Git checkout to compare updates. A standalone ZIP install reports that comparison as unavailable. Without a successful fetch, remote information is explicitly labeled as cached.
+
 ## Direct render and resume
 
 ```text
@@ -66,8 +83,19 @@ The plan is a JSON array of scenes with numeric `start` and `end` times, `kind`,
 
 Resuming verifies the audio and scene-plan contents, character mode, engine version, tool configuration, and the resolved tool/model file metadata before reusing generated stages. Frame files are written atomically, so an interrupted frame is rendered again. Runs made before versioned fingerprints were added must use a new output folder.
 
+## Automated regression checks
+
+```text
+python -m unittest discover -p 'test_*.py' -v
+```
+
+The portable CI matrix checks Linux, Windows and macOS. Tests exercise real pipeline/resume decisions with synthetic external-process output: unchanged resume reuse, saved frame checkpoints, caption-only corrections, transcript/mouth invalidation, preservation of the prior video on encode failure, folder locks, Windows-style subtitle files, Unicode paths, and MCP status. Workspace checks use temporary local Git repositories to verify pending updates and divergent/local work without network access.
+
+These checks do not establish a successful real Whisper/Rhubarb/Sharp/FFmpeg render, Evan's laptop readiness, or visual animation approval.
+
 ## Limits
 
+- Current renderer output is 720×1280 at 24 fps; the 1080p60 production target remains separate work.
 - Recordings are limited to 60 seconds.
 - Scene selection is deterministic and keyword-based; review captions and scene choices before publishing.
 - Captions from unusually long transcript segments are limited to three lines to stay inside the video frame.

@@ -12,6 +12,7 @@ import sys
 from datetime import datetime
 
 from local_tools import dependency_errors, load_config
+from workspace_status import workspace_status
 
 ENGINE = Path(__file__).resolve().parent
 OUTPUTS = ENGINE.parent / "evan-videos"
@@ -26,6 +27,13 @@ def write_json_atomic(path, value):
 
 def tools():
     return [
+        {
+            "name": "evan_workspace_status",
+            "description": "Read this checkout's branch, commit, pending pulls, local-change state and shared task claims from fetched origin/main. Optional fetch refreshes origin refs; never pulls, resets, installs or renders.",
+            "inputSchema": {"type": "object", "properties": {
+                "fetch": {"type": "boolean", "description": "Refresh origin refs without changing working files; false by default"}
+            }},
+        },
         {
             "name": "evan_engine_status",
             "description": "Check whether local Evan animation engine dependencies are installed and identify any missing tools.",
@@ -181,8 +189,13 @@ def read_log_tail(path):
 
 
 def call_tool(name, args):
+    if name == "evan_workspace_status":
+        fetch = args.get("fetch", False)
+        if not isinstance(fetch, bool):
+            raise ValueError("fetch must be true or false.")
+        return workspace_status(ENGINE.parent, fetch=fetch)
     if name == "evan_engine_status":
-        return dependency_status()
+        return dict(dependency_status(), workspace=workspace_status(ENGINE.parent))
     if name == "evan_render_mp3":
         status = dependency_status()
         if not status["ready"]:

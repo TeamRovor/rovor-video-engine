@@ -39,4 +39,4 @@ jobs:
           python-version: '3.11'
       - name: Check Python engine behavior and preserved reference assets
         working-directory: evan-engine
-        run: python -m unittest discover -p test_*.py -v
+        run: python -m unittest discover -p 'test_*.py' -v

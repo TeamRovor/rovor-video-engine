@@ -15,6 +15,7 @@ import animate_evan as engine
 import evan_mcp as mcp
 import launch_evan as launcher
 import local_tools
+import workspace_status as workspace
 
 
 def write_wav(path, seconds=2):
@@ -30,7 +31,7 @@ class PipelineTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.mp3 = self.root / 'original Evan recording.mp3'
         self.mp3.write_bytes(b'synthetic original recording fixture')
         self.config_path = self.root / 'local_tools.json'
@@ -202,7 +203,7 @@ class PortableBoundaryTests(unittest.TestCase):
 
     def test_config_resolves_relative_paths_from_config_folder(self):
         with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
+            root = Path(folder).resolve()
             config = {name: './tools/' + name for name in local_tools.REQUIRED}
             config['sharp'] = 'sharp'
             file = root / 'local_tools.json'
@@ -247,7 +248,7 @@ class StatusTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.outputs = Path(self.temp.name)
+        self.outputs = Path(self.temp.name).resolve()
         self.folder = self.outputs / 'job'
         self.folder.mkdir()
         self.video = self.folder / 'evan.mp4'
@@ -286,6 +287,101 @@ class StatusTests(unittest.TestCase):
         (self.folder / 'mcp_job.json').write_text(json.dumps({'log_path': str(private)}), encoding='utf-8')
         result = self.status()
         self.assertNotIn('outside content', result['log_tail'])
+
+
+class WorkspaceTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        self.remote = self.root / 'origin.git'
+        self.repo = self.root / 'working'
+        self.peer = self.root / 'peer'
+        self.git(self.root, 'init', '--bare', '--initial-branch=main', str(self.remote))
+        self.git(self.root, 'init', '--initial-branch=main', str(self.repo))
+        (self.repo / 'coordination').mkdir()
+        (self.repo / 'coordination/tasks.json').write_text(json.dumps({'version': 1, 'tasks': [
+            {'id': 'windows-runtime', 'status': 'ready', 'branch': 'main', 'next_action': 'Verify locally'},
+            {'id': 'previous-work', 'status': 'done'},
+        ]}), encoding='utf-8')
+        (self.repo / 'source.txt').write_text('original', encoding='utf-8')
+        self.git(self.repo, 'add', '.')
+        self.git(self.repo, 'commit', '-m', 'initial fixture')
+        self.git(self.repo, 'remote', 'add', 'origin', str(self.remote))
+        self.git(self.repo, 'push', '--set-upstream', 'origin', 'main')
+        self.git(self.root, 'clone', str(self.remote), str(self.peer))
+
+    def git(self, folder, *args):
+        return subprocess.run(['git', '-C', str(folder), '-c', 'user.name=Regression Test',
+            '-c', 'user.email=regression@example.invalid', *args], check=True,
+            capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=15).stdout.strip()
+
+    def peer_update(self):
+        (self.peer / 'source.txt').write_text('remote update', encoding='utf-8')
+        self.git(self.peer, 'add', '.')
+        self.git(self.peer, 'commit', '-m', 'remote fixture update')
+        self.git(self.peer, 'push')
+
+    def test_cached_status_reports_identity_and_shared_queue(self):
+        report = workspace.workspace_status(self.repo)
+        self.assertTrue(report['available'])
+        self.assertEqual(report['branch'], 'main')
+        self.assertEqual((report['ahead'], report['behind']), (0, 0))
+        self.assertFalse(report['fetched_this_call'])
+        self.assertTrue(report['coordination']['available'])
+        self.assertEqual([t['id'] for t in report['coordination']['tasks']], ['windows-runtime'])
+
+    def test_fetch_detects_pending_pull_without_changing_code(self):
+        self.peer_update()
+        before = self.git(self.repo, 'rev-parse', 'HEAD')
+        report = workspace.workspace_status(self.repo, fetch=True)
+        self.assertTrue(report['fetched_this_call'])
+        self.assertEqual(report['behind'], 1)
+        self.assertIn('pull --ff-only', report['next_action'])
+        self.assertEqual(self.git(self.repo, 'rev-parse', 'HEAD'), before)
+        self.assertEqual((self.repo / 'source.txt').read_text(), 'original')
+
+    def test_no_fetch_does_not_pretend_cached_refs_are_current(self):
+        self.peer_update()
+        report = workspace.workspace_status(self.repo)
+        self.assertEqual(report['behind'], 0)
+        self.assertIn('cached', report['remote_state'])
+        self.assertFalse(report['fetched_this_call'])
+
+    def test_dirty_checkout_keeps_local_work_and_avoids_pull_suggestion(self):
+        self.peer_update()
+        (self.repo / 'source.txt').write_text('uncommitted work', encoding='utf-8')
+        report = workspace.workspace_status(self.repo, fetch=True)
+        self.assertTrue(report['local_changes'])
+        self.assertEqual(report['behind'], 1)
+        self.assertIn('Preserve local changes', report['next_action'])
+        self.assertNotIn('pull --ff-only', report['next_action'])
+        self.assertEqual((self.repo / 'source.txt').read_text(), 'uncommitted work')
+
+    def test_diverged_branches_require_reconciliation(self):
+        self.peer_update()
+        (self.repo / 'local.txt').write_text('local work', encoding='utf-8')
+        self.git(self.repo, 'add', '.')
+        self.git(self.repo, 'commit', '-m', 'local fixture change')
+        report = workspace.workspace_status(self.repo, fetch=True)
+        self.assertEqual((report['ahead'], report['behind']), (1, 1))
+        self.assertIn('diverged', report['next_action'])
+        self.assertNotIn('pull --ff-only', report['next_action'])
+
+    def test_standalone_install_and_failed_fetch_are_explicit(self):
+        self.assertFalse(workspace.workspace_status(self.root)['available'])
+        self.git(self.repo, 'remote', 'remove', 'origin')
+        report = workspace.workspace_status(self.repo, fetch=True)
+        self.assertFalse(report['fetched_this_call'])
+        self.assertIn('fetch failed', report['remote_state'])
+
+    def test_mcp_can_check_workspace_without_ready_render_tools(self):
+        with patch.object(mcp, 'workspace_status', return_value={'branch': 'test'}) as status:
+            result = mcp.call_tool('evan_workspace_status', {'fetch': True})
+            self.assertEqual(result['branch'], 'test')
+            status.assert_called_once_with(mcp.ENGINE.parent, fetch=True)
+        with self.assertRaisesRegex(ValueError, 'true or false'):
+            mcp.call_tool('evan_workspace_status', {'fetch': 'false'})
 
 
 if __name__ == '__main__':
