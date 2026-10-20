@@ -36,8 +36,12 @@ function arm(side, shoulder, elbow, point) {
 
 function strength(t, data, kind) {
   if (!Array.isArray(data.gestures)) return 0;
-  return Math.max(0, ...data.gestures.filter(g=>g.kind===kind && t>=g.start-.36 && t<=g.end+.36)
-    .map(g=>pulse(t,g.start-.20,g.end+.20)));
+  let strongest=0;
+  for(const gesture of data.gestures){
+    if(gesture.kind!==kind || t<gesture.start-.36 || t>gesture.end+.36) continue;
+    strongest=Math.max(strongest,pulse(t,gesture.start-.20,gesture.end+.20));
+  }
+  return strongest;
 }
 
 function render(t, data) {
@@ -113,3 +117,4 @@ function render(t, data) {
   return svg;
 }
 module.exports={render,mouth};
+
