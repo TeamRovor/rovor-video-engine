@@ -332,6 +332,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39368637027"
         }
       ]
+    },
+    {
+      "id": "continuous-english-diphthongs",
+      "title": "Add opt-in continuous acoustic vowel-glides to Evan painted mouth rig",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar animation articulation session",
+      "branch": "feature/continuous-english-diphthongs",
+      "scopes": [
+        "evan-engine/continuous_diphthong.py",
+        "evan-engine/speech_planner.py",
+        "evan-engine/test_continuous_diphthong.py",
+        ".github/workflows/diphthong-articulation.yml"
+      ],
+      "depends_on": [
+        "acting-acoustic-preflight"
+      ],
+      "updated_at": "2026-10-20T04:20:17.223Z",
+      "next_update": "After candidate acoustic-vowel-glide unit tests and hosted cross-platform checks",
+      "next_action": "Implement bounded, deterministic 60fps vowel diphthong coarticulation on a child of the existing V5 acting branch with explicit opt-in; measure shape transition and contact preservation. Do not change source phoneme boundaries, recordings, rendered art or Windows speed work.",
+      "acceptance": "New opt-in profile does not split an acoustic vowel into a false new sound; the two original painted targets blend smoothly through the original phone interval. Existing defaults stay pixel/weight-preserving, contacts and silences unchanged, CI passes; visual approval still separate."
     }
   ]
 }
