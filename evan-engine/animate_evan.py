@@ -4,6 +4,7 @@ Runs local Whisper, Rhubarb, Sharp/Node, FFmpeg. Supports --resume after a stopp
 stage and --plan for manually specifying timed original illustrations. No APIs.
 """
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -11,29 +12,79 @@ from pathlib import Path
 import subprocess
 import wave
 
+from local_tools import default_config_path, dependency_errors, load_config
 from scene_planner import generate_plan, validate_plan
 
 HERE = Path(__file__).resolve().parent
 
 
-def run(args, env=None):
+def run(args, env=None, timeout=180, stage='local step'):
     try:
         result = subprocess.run([str(a) for a in args], capture_output=True, text=True,
-                                timeout=28, env=env, check=False)
+                                timeout=timeout, env=env, check=False)
     except subprocess.TimeoutExpired as exc:
-        raise RuntimeError('A local step exceeded 28 seconds. Re-run with --resume; '
-                           'if it repeats, the tool may need a faster model or shorter audio.') from exc
+        raise RuntimeError(f'{stage.capitalize()} exceeded {timeout} seconds. Re-run with --resume; '
+                           'completed stages and frames will be reused.') from exc
     if result.returncode:
-        raise RuntimeError('Local tool failed: ' + ' '.join(str(a) for a in args[:2]) +
+        raise RuntimeError(stage.capitalize() + ' failed: ' + ' '.join(str(a) for a in args[:2]) +
                            '\n' + result.stderr[-2000:])
     return result.stdout
 
 
 def read_json(path):
     try:
-        return json.loads(path.read_text()) if path.is_file() else None
+        return json.loads(path.read_text(encoding='utf-8')) if path.is_file() else None
     except (ValueError, OSError):
         return None
+
+
+def write_json_atomic(path, value):
+    staging = path.with_name(path.name + '.writing')
+    staging.write_text(json.dumps(value, indent=2), encoding='utf-8')
+    staging.replace(path)
+
+
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with path.open('rb') as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def same_request(previous, current):
+    if previous == current:
+        return True
+    # Older V3 render folders predate content fingerprints. Keep their resume path usable.
+    legacy_keys = ('mp3', 'size', 'modified_ns', 'plan', 'character')
+    return (isinstance(previous, dict) and 'fingerprint_version' not in previous and
+            all(previous.get(key) == current.get(key) for key in legacy_keys))
+
+
+def valid_transcript(value):
+    rows = value.get('transcription') if isinstance(value, dict) else None
+    if not isinstance(rows, list) or not rows:
+        return False
+    for row in rows:
+        offsets = row.get('offsets') if isinstance(row, dict) else None
+        if (not isinstance(offsets, dict) or not isinstance(row.get('text'), str) or
+                not isinstance(offsets.get('from'), (int, float)) or
+                not isinstance(offsets.get('to'), (int, float))):
+            return False
+    return True
+
+
+def valid_cues(value):
+    rows = value.get('mouthCues') if isinstance(value, dict) else None
+    if not isinstance(rows, list) or not rows:
+        return False
+    return all(
+        isinstance(row, dict) and
+        isinstance(row.get('start'), (int, float)) and
+        isinstance(row.get('end'), (int, float)) and
+        row['start'] < row['end'] and isinstance(row.get('value'), str)
+        for row in rows
+    )
 
 
 def valid_frame(path):
@@ -68,7 +119,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mp3', type=Path)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--config', type=Path, default=HERE / 'local_tools.json')
+    parser.add_argument('--config', type=Path, default=default_config_path())
     parser.add_argument('--plan', type=Path, help='Optional hand-written JSON array of scenes')
     parser.add_argument('--resume', action='store_true', help='Continue stages in an existing output directory')
     parser.add_argument('--character', choices=('reference','vector'), default='reference', help='Character artwork mode (reference sprites or V2 vector rig)')
@@ -77,57 +128,72 @@ def main():
         parser.error('Please provide an existing MP3 recording.')
     if args.plan and not args.plan.is_file():
         parser.error('The scene-plan JSON file was not found.')
+    try:
+        cfg, config_path = load_config(args.config)
+    except ValueError as error:
+        parser.error(str(error))
+    missing = dependency_errors(cfg)
+    if missing:
+        parser.error('Missing local tools: ' + ', '.join(missing))
     audio = args.mp3.resolve()
-    fingerprint = {'mp3': str(audio), 'size': audio.stat().st_size,
+    fingerprint = {'fingerprint_version': 2, 'mp3': str(audio), 'size': audio.stat().st_size,
                    'modified_ns': audio.stat().st_mtime_ns,
-                   'plan': str(args.plan.resolve()) if args.plan else None, 'character': args.character}
+                   'input_sha256': sha256_file(audio),
+                   'plan': str(args.plan.resolve()) if args.plan else None,
+                   'plan_sha256': sha256_file(args.plan) if args.plan else None,
+                   'config_path': str(config_path), 'config_sha256': sha256_file(config_path),
+                   'character': args.character}
     args.output.mkdir(parents=True, exist_ok=args.resume)
     out = args.output.resolve()
     state = out / 'render_request.json'
     if args.resume:
         previous = read_json(state)
-        if previous != fingerprint:
-            raise ValueError('Resume requires an existing run with the same audio and scene plan.')
+        if not same_request(previous, fingerprint):
+            raise ValueError('Resume needs the same audio, scene-plan contents, character mode, and tool config.')
     else:
-        state.write_text(json.dumps(fingerprint, indent=2))
-    cfg = json.loads(args.config.read_text())
+        write_json_atomic(state, fingerprint)
     wav = out / 'narration.wav'
     if not wav.is_file():
         print('Reading the recording locally...', flush=True)
         run([cfg['ffmpeg'], '-v', 'error', '-i', audio, '-ar', '16000', '-ac', '1',
-             '-c:a', 'pcm_s16le', wav])
+             '-c:a', 'pcm_s16le', wav], timeout=120, stage='Audio conversion')
     with wave.open(str(wav)) as voice:
         duration = voice.getnframes() / voice.getframerate()
     if duration > 60:
         raise ValueError('This prototype supports recordings up to 60 seconds.')
     transcript_path = out / 'transcript.json'
     transcript = read_json(transcript_path)
-    if not transcript or not transcript.get('transcription'):
+    if not valid_transcript(transcript):
         print('Transcribing speech locally...', flush=True)
-        run([cfg['whisper'], '-m', cfg['model'], '-f', wav, '-oj', '-of', out / 'transcript'])
+        run([cfg['whisper'], '-m', cfg['model'], '-f', wav, '-oj', '-of', out / 'transcript'],
+            timeout=300, stage='Speech transcription')
         transcript = read_json(transcript_path)
-        if not transcript or not transcript.get('transcription'):
+        if not valid_transcript(transcript):
             raise RuntimeError('Whisper did not produce usable segments.')
     dialog = out / 'dialog.txt'
     if not dialog.is_file():
-        dialog.write_text(' '.join(r['text'].strip() for r in transcript['transcription']))
+        dialog.write_text(' '.join(r['text'].strip() for r in transcript['transcription']), encoding='utf-8')
     mouth_path = out / 'mouth.json'
     cues = read_json(mouth_path)
-    if not cues or not cues.get('mouthCues'):
+    if not valid_cues(cues):
         print('Timing mouth shapes locally...', flush=True)
-        run([cfg['rhubarb'], '-f', 'json', '-o', mouth_path, '-d', dialog, wav])
+        run([cfg['rhubarb'], '-f', 'json', '-o', mouth_path, '-d', dialog, wav],
+            timeout=120, stage='Mouth timing')
         cues = read_json(mouth_path)
-        if not cues or not cues.get('mouthCues'):
+        if not valid_cues(cues):
             raise RuntimeError('Rhubarb did not produce lip-sync timings.')
     scene_path = out / 'scene.json'
     scene = read_json(scene_path)
     if not scene:
-        provided_plan = json.loads(args.plan.read_text()) if args.plan else None
+        provided_plan = json.loads(args.plan.read_text(encoding='utf-8')) if args.plan else None
         scene = make_scene(transcript, cues, duration, provided_plan)
         scene['characterStyle'] = args.character
-        scene_path.write_text(json.dumps(scene, indent=2))
-    if read_json(scene_path).get('duration') != duration:
+        write_json_atomic(scene_path, scene)
+    if not isinstance(scene, dict) or scene.get('duration') != duration:
         raise ValueError('Scene metadata does not match the audio duration.')
+    scene['scenePlan'] = validate_plan(scene.get('scenePlan'), duration)
+    if not isinstance(scene.get('segments'), list) or not valid_cues({'mouthCues': scene.get('mouthCues')}):
+        raise ValueError('Saved scene data is incomplete. Remove scene.json and resume to rebuild it.')
     total = math.ceil(duration * 24)
     frames = out / 'frames'
     frames.mkdir(exist_ok=True)
@@ -136,7 +202,8 @@ def main():
     print(f'Animating Evan: {start}/{total} frames already present...', flush=True)
     env = dict(os.environ, EVAN_SHARP=cfg['sharp'])
     while start < total:
-        raw = run([cfg['node'], HERE / 'render_frames.cjs', scene_path, frames, start, total], env)
+        raw = run([cfg['node'], HERE / 'render_frames.cjs', scene_path, frames, start, total],
+                  env, timeout=35, stage='Frame rendering')
         result = json.loads(raw)
         next_frame = result['nextFrame']
         if next_frame <= start:
@@ -149,10 +216,11 @@ def main():
         run([cfg['ffmpeg'], '-y', '-v', 'error', '-framerate', '24', '-i', frames / '%06d.jpg',
              '-i', audio, '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'libx264',
              '-preset', 'ultrafast', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac',
-             '-t', duration, '-movflags', '+faststart', staging])
+             '-t', duration, '-movflags', '+faststart', staging], timeout=300, stage='Video encoding')
         staging.replace(video)
     print('Created: ' + str(video))
 
 
 if __name__ == '__main__':
     main()
+
