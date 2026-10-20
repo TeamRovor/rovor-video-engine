@@ -10,6 +10,9 @@ RENDER DIAGNOSTICS:
 PREFLIGHT:
 - Shared Windows/macOS dependency checks require Node.js 20.9.0 or newer for the pinned Sharp renderer.
 
+CAPTION INPUT:
+- Overlapping SRT cues are rejected because the video displays one caption at a time.
+
 ROVOR DIGITAL VIDEO ENGINE V3.3.0 — OCTOBER 19 2026
 
 CAPTION REVIEW AND RENDER SAFETY:
@@ -69,4 +72,3 @@ IMPORTANT:
 - The install script intentionally does not overwrite rovor-evan-v2 or moho-mcp.
 - Default V3 art mode: --character reference. Old vector option: --character vector.
 - See START-HERE-V3.md and MOHO-RIG-SPEC-V3.md for instructions.
-
