@@ -17,6 +17,12 @@ OUTPUTS = ENGINE.parent / "evan-videos"
 SERVER_NAME = "rovor-evan-v3"
 
 
+def write_json_atomic(path, value):
+    staging = path.with_name(path.name + ".writing")
+    staging.write_text(json.dumps(value), encoding="utf-8")
+    staging.replace(path)
+
+
 def tools():
     return [
         {
@@ -119,7 +125,7 @@ def call_tool(name, args):
                 [sys.executable, str(ENGINE / "animate_evan.py"), str(mp3), "--output", str(folder)],
                 **launch,
             )
-        (folder / "mcp_job.json").write_text(json.dumps({"pid": process.pid, "mp3": str(mp3)}))
+        write_json_atomic(folder / "mcp_job.json", {"pid": process.pid, "mp3": str(mp3)})
         return {"started": True, "pid": process.pid, "render_folder": str(folder),
                 "status_tool": "evan_render_status", "log": str(logfile)}
     if name == "evan_render_status":
@@ -128,13 +134,17 @@ def call_tool(name, args):
             raise ValueError("That render folder is not one of this engine's jobs.")
         video = folder / "evan.mp4"
         jobpath = folder / "mcp_job.json"
-        job = json.loads(jobpath.read_text()) if jobpath.exists() else {}
+        try:
+            job = json.loads(jobpath.read_text(encoding="utf-8")) if jobpath.exists() else {}
+        except (OSError, json.JSONDecodeError):
+            job = {}
         logfile = folder / "render.log"
         log = logfile.read_text(errors="replace")[-1800:] if logfile.exists() else ""
         ready = video.exists() and video.stat().st_size > 0
-        running = False if ready else is_running(job.get("pid"))
-        return {"completed": ready, "running": running,
-                "failed": not ready and not running,
+        running = is_running(job.get("pid"))
+        completed = ready and not running
+        return {"completed": completed, "running": running,
+                "failed": not completed and not running,
                 "video": str(video) if ready else None, "log_tail": log,
                 "render_folder": str(folder)}
     raise ValueError("Unknown tool: " + str(name))
