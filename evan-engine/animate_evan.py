@@ -5,6 +5,7 @@ stage and --plan for manually specifying timed original illustrations. No APIs.
 """
 import argparse
 import atexit
+from datetime import datetime, timezone
 import hashlib
 import json
 import math
@@ -13,6 +14,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time
 import wave
 
 from local_tools import default_config_path, dependency_errors, load_config
@@ -33,9 +35,28 @@ def read_engine_version():
 
 
 ENGINE_VERSION = read_engine_version()
+STAGE_SECONDS = {}
+RUN_STARTED = time.monotonic()
+BASE_ELAPSED_SECONDS = 0.0
+METRICS_PATH = None
+
+
+def save_render_metrics():
+    if METRICS_PATH is None:
+        return
+    elapsed = BASE_ELAPSED_SECONDS + max(0.0, time.monotonic() - RUN_STARTED)
+    try:
+        write_json_atomic(METRICS_PATH, {
+            'stage_seconds': STAGE_SECONDS,
+            'elapsed_seconds': elapsed,
+        })
+    except OSError:
+        # Diagnostics must never make an otherwise usable render fail.
+        pass
 
 
 def run(args, env=None, timeout=180, stage='local step'):
+    started = time.monotonic()
     try:
         result = subprocess.run([str(a) for a in args], capture_output=True, text=True,
                                 encoding='utf-8', errors='replace', timeout=timeout,
@@ -43,6 +64,9 @@ def run(args, env=None, timeout=180, stage='local step'):
     except subprocess.TimeoutExpired as exc:
         raise RuntimeError(f'{stage.capitalize()} exceeded {timeout} seconds. Re-run with --resume; '
                            'completed stages and frames will be reused.') from exc
+    finally:
+        STAGE_SECONDS[stage] = STAGE_SECONDS.get(stage, 0.0) + (time.monotonic() - started)
+        save_render_metrics()
     if result.returncode:
         raise RuntimeError(stage.capitalize() + ' failed: ' + ' '.join(str(a) for a in args[:2]) +
                            '\n' + result.stderr[-2000:])
@@ -321,6 +345,7 @@ def make_scene(transcript, cues, duration, manual_plan=None):
 
 
 def main():
+    global BASE_ELAPSED_SECONDS, METRICS_PATH, RUN_STARTED
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mp3', type=Path)
     parser.add_argument('--output', required=True, type=Path)
@@ -345,6 +370,7 @@ def main():
     if missing:
         parser.error('Missing local tools: ' + ', '.join(missing))
     audio = args.mp3.resolve()
+    renderer_sha = renderer_fingerprint()
     fingerprint = {'fingerprint_version': 4, 'mp3': str(audio), 'size': audio.stat().st_size,
                    'modified_ns': audio.stat().st_mtime_ns,
                    'input_sha256': sha256_file(audio),
@@ -352,7 +378,7 @@ def main():
                    'plan_sha256': sha256_file(args.plan) if args.plan else None,
                    'config_path': str(config_path), 'config_sha256': sha256_file(config_path),
                    'character': args.character, 'engine_version': ENGINE_VERSION,
-                   'renderer_sha256': renderer_fingerprint(),
+                   'renderer_sha256': renderer_sha,
                    'tool_files': {name: file_stamp(cfg[name])
                                   for name in ('ffmpeg', 'whisper', 'model', 'rhubarb', 'node')}}
     args.output.mkdir(parents=True, exist_ok=args.resume)
@@ -366,6 +392,23 @@ def main():
             raise ValueError('Continue only when the audio, scene plan, character mode, tool config, and engine version match.')
     else:
         write_json_atomic(state, fingerprint)
+    metrics_path = out / 'render_metrics.json'
+    previous_metrics = read_json(metrics_path) if args.resume else None
+    stage_seconds = previous_metrics.get('stage_seconds') if isinstance(previous_metrics, dict) else None
+    if isinstance(stage_seconds, dict):
+        STAGE_SECONDS.update({
+            name: float(seconds) for name, seconds in stage_seconds.items()
+            if isinstance(name, str) and isinstance(seconds, (int, float)) and
+            not isinstance(seconds, bool) and math.isfinite(seconds) and seconds >= 0
+        })
+    elapsed_seconds = previous_metrics.get('elapsed_seconds', 0) if isinstance(previous_metrics, dict) else 0
+    if (isinstance(elapsed_seconds, (int, float)) and not isinstance(elapsed_seconds, bool) and
+            math.isfinite(elapsed_seconds) and elapsed_seconds >= 0):
+        BASE_ELAPSED_SECONDS = float(elapsed_seconds)
+    METRICS_PATH = metrics_path
+    RUN_STARTED = time.monotonic()
+    atexit.register(save_render_metrics)
+    save_render_metrics()
     wav = out / 'narration.wav'
     duration = wav_duration(wav)
     if duration is None:
@@ -496,6 +539,27 @@ def main():
         staging.replace(video)
         progress['encoded_caption_sha256'] = caption_hash
         write_json_atomic(progress_path, progress)
+    save_render_metrics()
+    write_json_atomic(out / 'render_result.json', {
+        'status': 'completed',
+        'completed_at': datetime.now(timezone.utc).isoformat(),
+        'engine_version': ENGINE_VERSION,
+        'renderer_sha256': renderer_sha,
+        'audio_file': audio.name,
+        'audio_sha256': fingerprint['input_sha256'],
+        'duration_seconds': duration,
+        'frame_rate': 24,
+        'frame_count': total,
+        'resolution': '720x1280',
+        'character_style': args.character,
+        'caption_count': len(captions),
+        'caption_sha256': caption_hash,
+        'scene_sha256': scene_hash,
+        'video_file': video.name,
+        'video_bytes': video.stat().st_size,
+        'stage_seconds': {name: round(seconds, 2) for name, seconds in STAGE_SECONDS.items()},
+        'elapsed_seconds': round(BASE_ELAPSED_SECONDS + time.monotonic() - RUN_STARTED, 2),
+    })
     print('Created: ' + str(video))
 
 
