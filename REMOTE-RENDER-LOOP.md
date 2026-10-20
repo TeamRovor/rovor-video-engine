@@ -4,9 +4,9 @@
 
 ## Verified boundaries
 
-Issue #6 records Mac runner reads of document metadata/layers, a native-template inventory and a checksum-matched disposable tutorial copy. The last recorded document read was unsaved Untitled at 1280x720/24fps, not an approved Evan production project. This session's direct Moho preflight timed out after 10 seconds. The V4 Evan status tool reports ready but explicitly says it is not Moho. Current runner online status, Moho writes/export, and native Evan rig readiness are unverified.
+The native command-line compiler/render path is independently verified against a disposable tutorial archive. An early MCP preflight timed out; the existing live bridge later answered after its Mac viewport wake sequence. That wake flow is interactive and is not part of the headless compiler or CLI renderer. The V4 Evan status tool explicitly says it is not Moho. No approved Evan rig mapping or MP3-to-Moho production adapter is verified.
 
-Existing main `.github/scripts/rovor_moho_read_queue.py` accepts only two read methods. Its workflow targets `[self-hosted, macOS, X64, rovor-video]`, uses the exact main commit, and wakes the viewport after IPC arrives. Do not widen that read allowlist to execute render commands. Do not reinstall the already documented bridge. PR #7 owns Windows reliability; #4/#5 own art/acting and acoustic alignment. No experimental branches are merged here.
+The existing `.github/scripts/rovor_moho_read_queue.py` accepts only two read methods. Its workflow uses the interactive viewport-wake bridge and is read-only; it is separate from the verified CLI render path. Keep it out of the headless production job path. PR #7 owns Windows reliability; #4/#5 own art/acting and acoustic alignment. No experimental branches are merged here.
 
 ## Smallest usable transport
 
