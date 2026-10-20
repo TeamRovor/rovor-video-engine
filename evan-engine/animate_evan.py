@@ -229,7 +229,30 @@ def valid_transcript(value):
                 not finite_number(offsets.get('to')) or
                 offsets['from'] < 0 or offsets['to'] <= offsets['from']):
             return False
-    return True
+    return any(row['text'].strip() for row in rows)
+
+
+def valid_segments(rows, duration):
+    if not isinstance(rows, list) or not rows:
+        return False
+    return all(
+        isinstance(row, dict) and isinstance(row.get('text'), str) and row['text'].strip() and
+        finite_number(row.get('start')) and finite_number(row.get('end')) and
+        0 <= row['start'] < row['end'] <= duration
+        for row in rows
+    )
+
+
+def valid_gestures(rows, duration):
+    if not isinstance(rows, list):
+        return False
+    kinds = {'outro', 'present', 'pinch', 'emphasis', 'point'}
+    return all(
+        isinstance(row, dict) and isinstance(row.get('kind'), str) and row['kind'] in kinds and
+        finite_number(row.get('start')) and finite_number(row.get('end')) and
+        0 <= row['start'] < row['end'] <= duration
+        for row in rows
+    )
 
 
 def valid_cues(value):
@@ -287,8 +310,9 @@ def make_scene(transcript, cues, duration, manual_plan=None):
     for row in transcript['transcription']:
         start = row['offsets']['from'] / 1000
         end = min(duration, row['offsets']['to'] / 1000)
-        if start < end:
-            segments.append(dict(start=start, end=end, text=row['text'].strip()))
+        text = row['text'].strip()
+        if text and start < end:
+            segments.append(dict(start=start, end=end, text=text))
     scenes, gestures = generate_plan(segments, duration)
     if manual_plan is not None:
         scenes = validate_plan(manual_plan, duration)
@@ -367,10 +391,16 @@ def main():
         if not valid_transcript(transcript):
             raise RuntimeError('Whisper did not produce usable segments.')
     dialog = out / 'dialog.txt'
-    if not dialog.is_file():
-        dialog.write_text(' '.join(r['text'].strip() for r in transcript['transcription']), encoding='utf-8')
+    dialog_text = ' '.join(row['text'].strip() for row in transcript['transcription'])
+    try:
+        existing_dialog = dialog.read_text(encoding='utf-8')
+    except (OSError, UnicodeError):
+        existing_dialog = None
+    dialog_changed = existing_dialog != dialog_text
+    if dialog_changed:
+        write_text_atomic(dialog, dialog_text)
     mouth_path = out / 'mouth.json'
-    cues = read_json(mouth_path)
+    cues = None if dialog_changed else read_json(mouth_path)
     if not valid_cues(cues):
         print('Timing mouth shapes locally...', flush=True)
         run([cfg['rhubarb'], '-f', 'json', '-o', mouth_path, '-d', dialog, wav],
@@ -379,16 +409,26 @@ def main():
         if not valid_cues(cues):
             raise RuntimeError('Rhubarb did not produce lip-sync timings.')
     scene_path = out / 'scene.json'
+    transcript_hash = sha256_file(transcript_path)
+    mouth_hash = sha256_file(mouth_path)
     scene = read_json(scene_path)
-    if not scene:
+    if (not isinstance(scene, dict) or not scene or
+            scene.get('transcript_sha256') != transcript_hash or
+            scene.get('mouth_sha256') != mouth_hash):
         provided_plan = json.loads(args.plan.read_text(encoding='utf-8')) if args.plan else None
         scene = make_scene(transcript, cues, duration, provided_plan)
         scene['characterStyle'] = args.character
+        scene['transcript_sha256'] = transcript_hash
+        scene['mouth_sha256'] = mouth_hash
         write_json_atomic(scene_path, scene)
-    if not isinstance(scene, dict) or scene.get('duration') != duration:
+    if scene.get('duration') != duration:
         raise ValueError('Scene metadata does not match the audio duration.')
     scene['scenePlan'] = validate_plan(scene.get('scenePlan'), duration)
-    if not isinstance(scene.get('segments'), list) or not valid_cues({'mouthCues': scene.get('mouthCues')}):
+    if (scene.get('characterStyle') not in ('reference', 'vector') or
+            scene.get('characterStyle') != args.character or
+            not valid_segments(scene.get('segments'), duration) or
+            not valid_gestures(scene.get('gestures'), duration) or
+            not valid_cues({'mouthCues': scene.get('mouthCues')})):
         raise ValueError('Saved scene data is incomplete. Remove scene.json and resume to rebuild it.')
     captions_path = out / 'captions.srt'
     captions_source = args.captions.resolve() if args.captions else captions_path
@@ -404,17 +444,23 @@ def main():
     frames = out / 'frames'
     frames.mkdir(exist_ok=True)
     caption_hash = hashlib.sha256(serialize_srt(captions).encode('utf-8')).hexdigest()
+    scene_hash = hashlib.sha256(json.dumps(scene, sort_keys=True, separators=(',', ':'),
+                                           ensure_ascii=False).encode('utf-8')).hexdigest()
     progress_path = out / 'render_progress.json'
     progress = read_json(progress_path)
     progress_matches = (isinstance(progress, dict) and
                         progress.get('caption_sha256') == caption_hash and
+                        progress.get('scene_sha256') == scene_hash and
                         progress.get('engine_version') == ENGINE_VERSION and
-                        progress.get('frame_count') == total and
+                        isinstance(progress.get('frame_count'), int) and
+                        not isinstance(progress.get('frame_count'), bool) and
+                        progress['frame_count'] == total and
                         isinstance(progress.get('next_frame'), int) and
                         not isinstance(progress.get('next_frame'), bool) and
                         0 <= progress['next_frame'] <= total)
     if not progress_matches:
-        progress = {'caption_sha256': caption_hash, 'engine_version': ENGINE_VERSION,
+        progress = {'caption_sha256': caption_hash, 'scene_sha256': scene_hash,
+                    'engine_version': ENGINE_VERSION,
                     'frame_count': total, 'next_frame': 0}
     start = progress['next_frame']
     # If a previously completed JPEG is missing or truncated, rebuild from that frame.
