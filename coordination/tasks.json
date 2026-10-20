@@ -389,7 +389,7 @@
       "depends_on": [],
       "updated_at": "2026-10-20T06:00:00Z",
       "next_update": "After the desktop-local plugin is connected and the owner supplies the approved Evan project and adapter mapping",
-      "next_action": "ChatGPT local stdio MCP bridge is implemented and packaged in PR #13: MP3 file parameter, private intake, status and hash-checked MP4 resource link. This Mac lacks the trusted Moho adapter and approved Evan rig, and the ChatGPT host has not verified MP4 attachment surfacing. Continue only with owner-authorized project/adapter setup; keep GUI interaction out of the execution path.",
+      "next_action": "Private ChatGPT local stdio MCP bridge is active: MP3 file parameter, private intake, status and hash-checked MP4 resource link. This Mac lacks the trusted adapter and approved Evan rig; its local candidate is a 24fps unrigged two-mesh project, and the ChatGPT host has not verified MP4 attachment surfacing. Existing Moho dev bridge batch timed out. Continue only after the owner provides the real rig/art and authorizes adapter setup; keep GUI interaction out of the execution path.",
       "acceptance": "A real user MP3 traverses ChatGPT file input to a headless Moho Pro 14 render of a disposable Evan project, passes forced-acoustic and render quality gates, then returns as a playable downloadable ChatGPT artifact. Until that run succeeds, record the task as active and report exact blockers.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/13"
