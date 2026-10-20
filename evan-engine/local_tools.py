@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 
@@ -66,8 +67,27 @@ def _executable_available(value):
     return shutil.which(value) is not None
 
 
+def _node_supports_sharp(value):
+    try:
+        result = subprocess.run(
+            [value, "--version"], capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=5, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    if result.returncode:
+        return False
+    match = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)(?:\+.*)?", result.stdout.strip())
+    if not match:
+        return False
+    major, minor, _patch = (int(part) for part in match.groups())
+    return major > 20 or (major == 20 and minor >= 9)
+
+
 def dependency_errors(config):
     missing = [name for name in EXECUTABLES if not _executable_available(config[name])]
+    if "node" not in missing and not _node_supports_sharp(config["node"]):
+        missing.append("node>=20.9.0")
     model = Path(config["model"])
     if not model.is_file():
         missing.append("model")
