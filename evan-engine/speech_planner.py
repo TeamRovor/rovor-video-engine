@@ -88,8 +88,16 @@ def planned_weights(t,plan,fallback):
 
 def acoustic_weights(t,plan,fallback):
     from painted_timing import ease
+    # A two-pose English diphthong is ONE acoustic phone. In the opt-in
+    # profile, replace its independently timed half-phoneme envelopes with
+    # two continuous, complementary strengths over its ORIGINAL phone span.
+    from continuous_diphthong import PROFILE, glide_strengths
+    glides=plan.get('continuousGlides',[]) if plan.get('coarticulationProfile')==PROFILE else []
+    skip={g['phoneIndex'] for g in glides}
     out=np.zeros(9,float);out[0]=.06;contact=0.;fv=0.
     for g in plan.get('gestures',plan['phonemes']):
+        if g.get('phoneIndex') in skip:
+            continue
         a,b=g['start'],g['end'];center=(a+b)/2;symbol=g['value']
         if abs(t-center)>.25+(b-a)/2:continue
         base=g['phone'].rstrip('012')
@@ -105,6 +113,10 @@ def acoustic_weights(t,plan,fallback):
         envelope=float(ease((t-(a-.045))/.060))*(1-float(ease((t-(b-.010))/.065)))
         if symbol=='A':contact=max(contact,envelope)
         if symbol=='G':fv=max(fv,envelope)
+    for glide in glides:
+        first,second=glide_strengths(t,glide['start'],glide['end'])
+        out['XABCDEFGH'.index(glide['targets'][0])]+=first
+        out['XABCDEFGH'.index(glide['targets'][1])]+=second
     out[0]=max(.06,1-out[1:].sum())
     out/=out.sum()
     env=plan['audio'];energy=float(np.interp(t,np.arange(len(env['energy']))*env['step'],env['energy']))
@@ -123,11 +135,19 @@ def acoustic_weights(t,plan,fallback):
     out*=1-contact;out[1]+=contact
     return out/out.sum()
 
-def finalize_plan(plan,wav,fps=48,required=False):
+def finalize_plan(plan,wav,fps=48,required=False,coarticulation_profile='legacy'):
     from acoustic_alignment import upgrade_plan
     from english_articulation import phone_gestures,PHONE_CATALOG,cartoon_controls
     plan=upgrade_plan(plan,wav,required)
     plan['gestures']=phone_gestures(plan['phonemes'])
+    if coarticulation_profile!='legacy':
+        from continuous_diphthong import PROFILE, prepare_glides
+        if coarticulation_profile!=PROFILE:
+            raise ValueError('Unknown coarticulation profile')
+        if plan.get('alignment',{}).get('status')!='acoustic':
+            raise ValueError('Continuous diphthongs require audio-grounded phone alignment')
+        plan['coarticulationProfile']=PROFILE
+        plan['continuousGlides']=prepare_glides(plan['phonemes'],plan['gestures'])
     plan['phoneCatalog']=PHONE_CATALOG
     plan['controlContract']='Normalized animation targets, not anatomical measurements; spelling maps to pronunciation, not one pose per letter'
     n=int(np.ceil(len(plan['audio']['energy'])*plan['audio']['step']*fps))
@@ -138,7 +158,7 @@ def finalize_plan(plan,wav,fps=48,required=False):
 if __name__=='__main__':
     import argparse,json
     from pathlib import Path
-    p=argparse.ArgumentParser();p.add_argument('script',type=Path);p.add_argument('words',type=Path);p.add_argument('wav',type=Path);p.add_argument('cues',type=Path);p.add_argument('output',type=Path);p.add_argument('--fps',type=int,choices=(24,30,48,60,120),default=48);p.add_argument('--require-alignment',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('script',type=Path);p.add_argument('words',type=Path);p.add_argument('wav',type=Path);p.add_argument('cues',type=Path);p.add_argument('output',type=Path);p.add_argument('--fps',type=int,choices=(24,30,48,60,120),default=48);p.add_argument('--require-alignment',action='store_true');p.add_argument('--coarticulation-profile',choices=('legacy','continuous-diphthong-v1'),default='legacy');a=p.parse_args()
     plan=build_plan(a.script.read_text(),json.loads(a.words.read_text()),a.wav,json.loads(a.cues.read_text())['mouthCues'])
-    plan=finalize_plan(plan,a.wav,a.fps,a.require_alignment)
+    plan=finalize_plan(plan,a.wav,a.fps,a.require_alignment,a.coarticulation_profile)
     a.output.write_text(json.dumps(plan,indent=2))
