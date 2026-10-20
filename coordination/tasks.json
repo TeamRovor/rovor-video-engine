@@ -215,12 +215,13 @@
         "REMOTE-EVAN-GITHUB.md",
         "tools/remote_handoff.py",
         "tests/test_remote_handoff.py",
-        ".github/workflows/remote-handoff.yml"
+        ".github/workflows/remote-handoff.yml",
+        "AGENTS.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T03:48:48.520Z",
-      "next_update": "After adding remote handoff files and verifying hosted CI",
-      "next_action": "Publish a GitHub-only entrypoint and read-only status report, test the report generator, and record evidence from hosted Actions without asserting laptop access.",
+      "updated_at": "2026-10-20T03:51:56.766Z",
+      "next_update": "After the canonical AGENTS.md entrypoint is linked and hosted checks pass",
+      "next_action": "Link the merged GitHub-only guide from AGENTS.md, validate shared CI, then close the claim with merge and CI evidence.",
       "acceptance": "GitHub-only instructions accessible from main/PR, report shows correct blocked/ready/done work and source provenance; hosted CI passes; no laptop code execution claimed."
     }
   ]
