@@ -295,6 +295,28 @@
       "depends_on": [],
       "next_action": "Evan's GitHub-connected ChatGPT should fetch main and PR #7, claim this task if free, build a CPU/RAM/time/cache-hit benchmark on hosted Windows/macOS/Linux using synthetic permitted data; measure before changing caching or render logic. Do not require laptop access or reimplement phoneme/acting work. Coordinate stage/cache keys with Amar's acoustic gate.",
       "acceptance": "Reproducible hosted benchmark with wall time, peak memory, stage timings, frame cache reuse, failure/resume overhead, and explicit baseline vs after results; no invented performance percentages or changed output settings."
+    },
+    {
+      "id": "acting-acoustic-preflight",
+      "title": "Attach strict English acoustic plan gate before expensive cartoon acting renders",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar cartoon phoneme integration session",
+      "branch": "feature/acting-acoustic-preflight",
+      "scopes": [
+        "evan-engine/speech_plan_gate.py",
+        "evan-engine/production_speech_preflight.py",
+        "evan-engine/test_production_speech_preflight.py",
+        "evan-engine/render_acting_video.py",
+        ".github/workflows/acting-acoustic-preflight.yml"
+      ],
+      "depends_on": [
+        "acoustic-production-gate"
+      ],
+      "updated_at": "2026-10-20T04:11:15.485Z",
+      "next_update": "After creating isolated V5 development PR and CI validation",
+      "next_action": "Reuse main's tested phoneme QC inside the existing PR #5 acting renderer as an explicitly opt-in strict gate before costly frame work; preserve original footage, narration and other art branches.",
+      "acceptance": "Strict mode refuses fallback/unreviewed/invalid phone and viseme plans before creating render output; source-WAV duration and approved 60fps checked; non-strict development baseline unchanged; hosted tests pass with synthetic audio, no production approval claimed."
     }
   ]
 }
