@@ -110,6 +110,9 @@ class SpeechPreflightTests(unittest.TestCase):
         cache_lines = [line for line, name in calls if name == "body_cache_key"]
         self.assertEqual(len(cache_lines), 1)
         self.assertLess(qa_lines[0], cache_lines[0])
+        recording_scan_lines = [line for line, name in calls if name == 'verify_audio_plan']
+        self.assertEqual(len(recording_scan_lines), 1)
+        self.assertLess(qa_lines[0], recording_scan_lines[0])
         text = (HERE / "render_acting_video.py").read_text()
         self.assertIn("--speech-qa", text)
 
