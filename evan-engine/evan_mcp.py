@@ -272,9 +272,11 @@ def call_tool(name, args):
             report = None
         report_matches = False
         if ready and isinstance(report, dict):
+            video_bytes = report.get("video_bytes")
             report_matches = (report.get("status") == "completed" and
                               report.get("video_file") == video.name and
-                              report.get("video_bytes") == video.stat().st_size)
+                              isinstance(video_bytes, int) and not isinstance(video_bytes, bool) and
+                              video_bytes == video.stat().st_size)
         completed = (ready and not running and report_matches and
                      ("Created: " + str(video)) in log)
         return {"completed": completed, "running": running,
@@ -328,3 +330,4 @@ if __name__ == "__main__":
             dispatch(json.loads(line))
         except Exception as exc:
             print("MCP input error: " + str(exc), file=sys.stderr)
+
