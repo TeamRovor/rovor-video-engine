@@ -65,6 +65,16 @@ def sha256_file(path):
     return digest.hexdigest()
 
 
+def file_stamp(value):
+    path = Path(value)
+    try:
+        metadata = path.stat()
+        return {'path': str(path.resolve()), 'size': metadata.st_size,
+                'modified_ns': metadata.st_mtime_ns}
+    except OSError:
+        return {'path': str(path)}
+
+
 def same_request(previous, current):
     return isinstance(previous, dict) and previous == current
 
@@ -183,7 +193,9 @@ def main():
                    'plan': str(args.plan.resolve()) if args.plan else None,
                    'plan_sha256': sha256_file(args.plan) if args.plan else None,
                    'config_path': str(config_path), 'config_sha256': sha256_file(config_path),
-                   'character': args.character, 'engine_version': ENGINE_VERSION}
+                   'character': args.character, 'engine_version': ENGINE_VERSION,
+                   'tool_files': {name: file_stamp(cfg[name])
+                                  for name in ('ffmpeg', 'whisper', 'model', 'rhubarb', 'node')}}
     args.output.mkdir(parents=True, exist_ok=args.resume)
     out = args.output.resolve()
     state = out / 'render_request.json'
