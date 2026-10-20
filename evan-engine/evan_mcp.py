@@ -47,7 +47,7 @@ def tools():
         },
         {
             "name": "evan_render_status",
-            "description": "Check progress and locate the MP4 from a previously started Evan render.",
+            "description": "Check progress, locate the MP4, and read stage timing diagnostics for a completed Evan render.",
             "inputSchema": {
                 "type": "object",
                 "properties": {"render_folder": {"type": "string", "description": "Render folder returned by evan_render_mp3"}},
@@ -265,11 +265,23 @@ def call_tool(name, args):
         log = logfile.read_text(errors="replace")[-1800:] if logfile.exists() else ""
         ready = video.exists() and video.stat().st_size > 0
         running = is_running(job.get("pid"))
-        completed = ready and not running and ("Created: " + str(video)) in log
+        report_path = folder / "render_result.json"
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            report = None
+        report_matches = False
+        if ready and isinstance(report, dict):
+            report_matches = (report.get("status") == "completed" and
+                              report.get("video_file") == video.name and
+                              report.get("video_bytes") == video.stat().st_size)
+        completed = (ready and not running and report_matches and
+                     ("Created: " + str(video)) in log)
         return {"completed": completed, "running": running,
                 "failed": not completed and not running,
                 "video": str(video) if ready else None, "log_tail": log,
                 "captions_file": str(folder / "captions.srt"),
+                "render_report": report if completed else None,
                 "render_folder": str(folder)}
     raise ValueError("Unknown tool: " + str(name))
 
@@ -288,7 +300,7 @@ def dispatch(req):
         if method == "initialize":
             version = req.get("params", {}).get("protocolVersion", "2025-06-18")
             result = {"protocolVersion": version, "capabilities": {"tools": {}},
-                      "serverInfo": {"name": SERVER_NAME, "version": "3.3.0"}}
+                      "serverInfo": {"name": SERVER_NAME, "version": "3.4.0"}}
         elif method == "ping":
             result = {}
         elif method == "tools/list":
