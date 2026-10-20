@@ -4,6 +4,7 @@ RENDER DIAGNOSTICS:
 - Completed renders write render_result.json with output settings, media size, and caption/scene fingerprints.
 - Per-stage timing and active elapsed time persist across resumed attempts; downtime between attempts is excluded.
 - MCP render status returns the completed render report and validates it against the current MP4.
+- MCP status reads saved logs only from inside that render's own folder.
 - Metrics are saved atomically after local processing stages; diagnostic write failures do not stop a render.
 
 ROVOR DIGITAL VIDEO ENGINE V3.3.0 — OCTOBER 19 2026
@@ -65,3 +66,4 @@ IMPORTANT:
 - The install script intentionally does not overwrite rovor-evan-v2 or moho-mcp.
 - Default V3 art mode: --character reference. Old vector option: --character vector.
 - See START-HERE-V3.md and MOHO-RIG-SPEC-V3.md for instructions.
+
