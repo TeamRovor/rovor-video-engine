@@ -393,18 +393,35 @@
         ".github/workflows/render-job-loop.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T04:41:15.398Z",
+      "updated_at": "2026-10-20T05:06:00Z",
       "next_update": "After offline transport tests and documented Mac adapter gates",
-      "next_action": "Review draft PR #13 transport foundation. Separately claim verified native Moho adapter and authenticated upload connector work after current sandbox/rig evidence. No real Moho render, remote trigger or visual approval verified.",
+      "next_action": "The isolated transport loop is complete. Next production work requires an administrator-authorized authenticated Mac transport and a reviewed host-owned Moho adapter using the approved Evan project, forced-aligned speech plan, native 1080p/60 export and verified artifact return.",
       "acceptance": "Offline job round trip and failure gates tested; no unverified Moho renderer or Mac access claim.",
       "evidence": [
         {
-          "commit": "2b0dd6f31f2eee2d7d344986102cbb1a1509a6ed",
-          "platform": "local macOS / Python 3 standard library",
-          "check": "7 synthetic/mocked transport tests and project_loop.py check",
-          "result": "PASS; real media/Moho/remote runtime unverified",
-          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
+          "commit": "84fadaa7ffa6c1e8b18040567d7a34c84d7e374e",
+          "platform": "local macOS",
+          "check": "18 Python tests and coordination queue validation",
+          "result": "PASS; synthetic transport boundaries only, no personal Mac runner dispatch or production render",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39360421222"
+        },
+        {
+          "commit": "84fadaa7ffa6c1e8b18040567d7a34c84d7e374e",
+          "platform": "GitHub-hosted Windows/macOS/Linux",
+          "check": "Render job transport checks",
+          "result": "PASS; hosted test runner only, no access to the personal Mac",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39372962538"
+        },
+        {
+          "commit": "84fadaa7ffa6c1e8b18040567d7a34c84d7e374e",
+          "platform": "GitHub-hosted Windows/macOS/Linux",
+          "check": "Native compiler checks and separate local Moho Pro 14 diagnostic render",
+          "result": "PASS; generic tutorial native render on Mac, not Evan",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39372962573"
         }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/13"
       ]
     },
     {
