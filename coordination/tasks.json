@@ -25,18 +25,20 @@
       "id": "moho-disposable-pose",
       "title": "Verify a native pose on the disposable Moho project",
       "priority": 1,
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "Codex / Amar native Moho bridge verification",
+      "branch": "feature/remote-render-job-loop",
       "scopes": [
         "subsystem:mac-moho-sandbox"
       ],
       "depends_on": [],
-      "next_action": "Read latest Issue #6 evidence and claims; verify active disposable file identity, inspect its bones, and dry-run a supported pose before any permitted write.",
+      "next_action": "Verify existing disposable copy and bone schema using live bridge; preserve current unsaved project.",
       "acceptance": "Evidence identifies exact disposable project and bones, dry-run response and verification. Preserve source and unsaved documents. Live reads alone do not complete this pose task.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/6"
-      ]
+      ],
+      "updated_at": "2026-10-20T04:51:09.086Z",
+      "next_update": "After fresh disposable identity and dry-run pose verification"
     },
     {
       "id": "evan-acting-review",
