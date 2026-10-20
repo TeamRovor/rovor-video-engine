@@ -366,6 +366,25 @@
         "knownDifference": "Isolated environment used a reduced support-module shim rather than the entire GitHub checkout; not GitHub CI or media verification.",
         "head_sha": "bf030a47b4e1fc3c422e2d175ae180c32582fe35"
       }
+    },
+    {
+      "id": "remote-render-job-loop",
+      "title": "Bounded Mac render job intake, status and artifact transport",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar MP3 remote loop session",
+      "branch": "feature/remote-render-job-loop",
+      "scopes": [
+        "tools/render_jobs.py",
+        "tests/test_render_jobs.py",
+        "REMOTE-RENDER-LOOP.md",
+        ".github/workflows/render-job-loop.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-20T04:39:39.343Z",
+      "next_update": "After offline transport tests and documented Mac adapter gates",
+      "next_action": "Implement isolated job transport only; preserve existing aligner, art, Windows reliability and Moho sandbox ownership.",
+      "acceptance": "Offline job round trip and failure gates tested; no unverified Moho renderer or Mac access claim."
     }
   ]
 }
