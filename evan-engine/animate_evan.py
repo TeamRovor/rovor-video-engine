@@ -176,7 +176,7 @@ def serialize_srt(captions):
 def transcript_captions(transcript, duration):
     rows = []
     for row in transcript['transcription']:
-        start = max(0, row['offsets']['from'] / 1000)
+        start = max(0.0, row['offsets']['from'] / 1000)
         end = min(duration, row['offsets']['to'] / 1000)
         printable = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', row['text'])
         text = ' '.join(printable.split())
