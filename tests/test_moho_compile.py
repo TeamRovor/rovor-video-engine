@@ -24,6 +24,14 @@ def plan():
             'patches':[{'layerUuid':'rig','bone':'jaw','channel':'anim_angle','keys':[{'frame':1,'value':1.5},{'frame':60,'value':1.7}]}]}
 
 class Compiler(unittest.TestCase):
+    def test_observed_schema_versions_share_target_channel_contract(self):
+        for version in (1038, 1045):
+            source=fixture();source['version']=version
+            result=m.compile_doc(source,plan())
+            self.assertEqual(result['version'],version)
+        source=fixture();source['version']=1046
+        with self.assertRaises(ValueError):m.compile_doc(source,plan())
+
     def test_only_target_changes_and_zero_preserved(self):
         source=fixture(); result=m.compile_doc(source,plan())
         expected=copy.deepcopy(source)
