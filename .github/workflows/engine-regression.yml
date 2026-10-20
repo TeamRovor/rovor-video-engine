@@ -40,3 +40,12 @@ jobs:
       - name: Check Python engine behavior and preserved reference assets
         working-directory: evan-engine
         run: python -m unittest discover -p 'test_*.py' -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned local renderer dependency
+        working-directory: evan-engine
+        run: npm install --no-audit --no-fund --package-lock=false
+      - name: Draw and decode real reference-art and vector frames
+        working-directory: evan-engine
+        run: node --test test_renderer.cjs

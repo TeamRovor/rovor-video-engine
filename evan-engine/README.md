@@ -91,7 +91,9 @@ python -m unittest discover -p 'test_*.py' -v
 
 The portable CI matrix checks Linux, Windows and macOS. Tests exercise real pipeline/resume decisions with synthetic external-process output: unchanged resume reuse, saved frame checkpoints, caption-only corrections, transcript/mouth invalidation, preservation of the prior video on encode failure, folder locks, Windows-style subtitle files, Unicode paths, and MCP status. Workspace checks use temporary local Git repositories to verify pending updates and divergent/local work without network access.
 
-These checks do not establish a successful real Whisper/Rhubarb/Sharp/FFmpeg render, Evan's laptop readiness, or visual animation approval.
+The workflow also installs the pinned Sharp dependency and runs `node --test test_renderer.cjs`. Those smoke checks draw and fully decode frames using the unchanged reference poses, rasterize the vector renderer, exercise caption escaping/wrapping, and run the frame subprocess for a tiny requested range. These are internal diagnostics, not a finished video.
+
+The checks do not establish a successful full Whisper/Rhubarb/FFmpeg run, Evan's laptop readiness, or visual animation approval.
 
 ## Limits
 
