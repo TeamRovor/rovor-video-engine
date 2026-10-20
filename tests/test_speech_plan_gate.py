@@ -13,7 +13,7 @@ from speech_plan_gate import PHONE_TO_SHAPE, audit, frames_sampled, main, wav_du
 
 def plan():
     # "phone": pronounced /F OW N/, not its five written letters.
-    return {'alignment': {'status': 'acoustic', 'wordCoverage': 1.0},
+    return {'script':'phone', 'alignment': {'status': 'acoustic', 'wordCoverage': 1.0},
             'words': [{'start': .1, 'end': .70, 'scriptIndex': 0,
                        'word': 'phone', 'reviewFlags': []}],
             'phonemes': [
@@ -42,6 +42,22 @@ class SpeechGateTests(unittest.TestCase):
         r = audit(p, 1.)
         self.assertEqual(r['status'], 'blocked')
         self.assertIn('unsupported phoneme', ' '.join(r['errors']))
+
+    def test_script_missing_or_different_fails_closed(self):
+        p=plan();del p['script']
+        self.assertEqual(audit(p,1.)['status'],'blocked')
+        p=plan();p['script']='phony'
+        self.assertEqual(audit(p,1.)['status'],'blocked')
+
+    def test_word_index_gaps_and_overlaps_block(self):
+        p=plan();p['words'][0]['scriptIndex']=2
+        for ph in p['phonemes']:ph['scriptIndex']=2
+        self.assertEqual(audit(p,1.)['status'],'blocked')
+        p=plan()
+        p['script']='phone now'
+        p['words'].append({'start':.60,'end':.95,'scriptIndex':1,'word':'now','reviewFlags':[]})
+        p['phonemes'].append({'start':.73,'end':.90,'scriptIndex':1,'word':'now','phone':'N','value':'B'})
+        self.assertEqual(audit(p,1.)['status'],'blocked')
 
     def test_fallback_cannot_be_certified(self):
         p=plan();p['alignment']={'status':'fallback'}
