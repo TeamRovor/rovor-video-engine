@@ -212,7 +212,6 @@ def main():
     if a.visual_mode!='directed' and (a.director_json or a.art_registry or a.sound_cues):
         p.error('Director, art and sound cue flags only apply to directed mode')
     plan_data=json.loads(a.plan.read_text())
-    audio_match=verify_audio_plan(plan_data,a.wav)
     with wave.open(str(a.wav)) as w:audio_duration=w.getnframes()/w.getframerate()
     speech_qa=None
     if a.speech_qa!='off':
@@ -224,6 +223,8 @@ def main():
         except ValueError as exc:
             p.error(str(exc))
         print('ROVOR_ENGLISH_SPEECH_QA='+json.dumps(speech_qa,sort_keys=True))
+    # Compare every RMS envelope only after fast structural/phoneme QA accepts it.
+    audio_match=verify_audio_plan(plan_data,a.wav)
     duration=a.duration if a.duration is not None else audio_duration-a.start_time
     if a.visual_mode=='directed':
         from directed_scene import check
