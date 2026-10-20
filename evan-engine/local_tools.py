@@ -48,6 +48,11 @@ def load_config(explicit=None):
             if not candidate.is_absolute():
                 candidate = path.parent / candidate
             config[key] = str(candidate.resolve())
+    for key in EXECUTABLES:
+        if not _has_path_component(config[key]):
+            resolved = shutil.which(config[key])
+            if resolved:
+                config[key] = str(Path(resolved).resolve())
     return config, path
 
 
