@@ -1,6 +1,7 @@
 // Articulated vector prototype based on Evan's supplied character references.
 // Original vector artwork, not a cutout or edit of the reference bitmaps.
 const {renderScene} = require('./scene_graphics.cjs');
+const {wrapCaption} = require('./caption_utils.cjs');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const ease = x => {x=clamp(x,0,1);return x*x*(3-2*x)};
@@ -59,8 +60,7 @@ function render(t, data) {
   const rightElbow=-15-pointing*65-presenting*67-ending*50-pinch*56-emphasis*20;
   const segments=data.segments || [];
   const line=segments.find(s=>t>=s.start&&t<s.end)?.text || '';
-  const words=line.trim().split(/\s+/); let lines=[''];
-  for(const word of words){const j=lines.length-1;if((lines[j]+' '+word).trim().length>35)lines.push(word);else lines[j]=(lines[j]+' '+word).trim();}
+  const lines=wrapCaption(line,35,3);
   const subtitle=lines.slice(0,3).map((s,i)=>`<text x="360" y="${1160+i*34}" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#fff">${esc(s)}</text>`).join('');
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280" viewBox="0 0 720 1280" font-family="Arial,sans-serif">
   <defs>
