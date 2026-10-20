@@ -70,8 +70,15 @@ def audit(plan, duration, fps=60, wav_header_checked=False):
         errors.append('Nonempty words and phonemes arrays are required')
         words = words if isinstance(words, list) else []
         phones = phones if isinstance(phones, list) else []
+    script = plan.get('script')
+    scripted = re.findall(r"[a-z]+(?:'[a-z]+)?", script.lower()) if isinstance(script, str) else []
+    if not scripted:
+        errors.append('Missing reviewed English script; cannot reconcile phoneme words')
+    elif len(scripted) != len(words):
+        errors.append('Script word count and acoustically aligned words disagree')
     word_times = {}
     previous_start = -1.0
+    previous_word_end = -1.0
     previous_word = -1
     for i, word in enumerate(words):
         label = 'word[%d]' % i
@@ -79,15 +86,19 @@ def audit(plan, duration, fps=60, wav_header_checked=False):
         if t is None:
             continue
         index = word.get('scriptIndex')
-        if type(index) is not int or index < 0 or index <= previous_word:
-            errors.append(label + ': missing or unordered scriptIndex')
+        if type(index) is not int or index != i or index <= previous_word:
+            errors.append(label + ': missing or noncontiguous scriptIndex')
             continue
         previous_word = index
         if t[0] < previous_start - .02:
             errors.append(label + ': word time moves backwards')
-        previous_start = t[0]
+        if i and t[0] < previous_word_end - .025:
+            errors.append(label + ': acoustic word overlaps previous word')
+        previous_start, previous_word_end = t
         if not isinstance(word.get('word'), str) or not word['word'].strip():
             errors.append(label + ': missing spoken word')
+        elif i < len(scripted) and str(word['word']).lower() != scripted[i]:
+            errors.append(label + ': recognized word differs from corrected script')
         word_times[index] = (t[0], t[1], str(word.get('word', '')).lower())
         if word.get('reviewFlags'):
             flags.append({'type':'unreviewed-acoustic-word', 'wordIndex':index,
