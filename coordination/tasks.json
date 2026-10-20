@@ -25,21 +25,30 @@
       "id": "moho-disposable-pose",
       "title": "Verify a native pose on the disposable Moho project",
       "priority": 1,
-      "status": "blocked",
+      "status": "done",
       "owner": "Codex / Amar native Moho bridge verification",
       "branch": "feature/remote-render-job-loop",
       "scopes": [
         "subsystem:mac-moho-sandbox"
       ],
       "depends_on": [],
-      "next_action": "Preserve live sandbox; continue independent file compiler task.",
+      "next_action": "Pose sequence compiled into isolated diagnostic archive at 60fps; native CLI render established file-compiled channel takes effect. Tutorial B1 remains generic proof fixture, not Evan's rig.",
       "acceptance": "Evidence identifies exact disposable project and bones, dry-run response and verification. Preserve source and unsaved documents. Live reads alone do not complete this pose task.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/6"
       ],
-      "updated_at": "2026-10-20T04:55:07.145Z",
+      "updated_at": "2026-10-20T05:00:23.147Z",
       "next_update": "After file-compiled native artifact verification",
-      "blocker": "User redirected to zero-UI file compilation before the prepared write test ran. Live identity, 11 bones and dry-run verified; no animation writes performed."
+      "blocker": "User redirected to zero-UI file compilation before the prepared write test ran. Live identity, 11 bones and dry-run verified; no animation writes performed.",
+      "evidence": [
+        {
+          "commit": "63e896974225b31a1fe3d020624ddf24e105cb7b",
+          "platform": "macOS / Moho Pro 14 CLI",
+          "check": "Read disposable project identity and 11-bone skeleton; dry-run 3-key B1 motion; compile isolated 60-key variation and render baseline",
+          "result": "PASS; source 24fps disposable preserved, output 60fps render changed as expected; no original edited",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
+        }
+      ]
     },
     {
       "id": "evan-acting-review",
@@ -402,7 +411,7 @@
       "id": "moho-file-compiler",
       "title": "Compile observed native Moho JSON channels at 60 fps",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar headless compiler session",
       "branch": "feature/remote-render-job-loop",
       "scopes": [
@@ -412,10 +421,19 @@
         ".github/workflows/moho-file-compiler.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T04:55:07.145Z",
+      "updated_at": "2026-10-20T05:00:23.147Z",
       "next_update": "After schema-preservation tests and native CLI capability check",
-      "next_action": "Compile into new archives only using observed channel schema; use exact 60fps phone sampling and calibrated bone inputs.",
-      "acceptance": "Original archive untouched; frame zero and non-target data preserved; strict schema and collision checks; runtime limits documented."
+      "next_action": "Next remaining stage is a host-owned adapter that feeds real forced-aligned English phones and the approved Evan rig through the compiler, runs native 1080p60 rendering, verifies narration mux, then exposes it through authenticated ChatGPT upload/return.",
+      "acceptance": "Original archive untouched; frame zero and non-target data preserved; strict schema and collision checks; runtime limits documented.",
+      "evidence": [
+        {
+          "commit": "ffd8f175812e9df33024b4580f605ddb37dc1ded",
+          "platform": "macOS / Moho Pro 14 CLI",
+          "check": "Compile JSON into new 60fps archive; native 60-frame 1920x1080 render plus unpatched baseline control",
+          "result": "PASS; 3.574s, 60 frames, all dimensions correct, 40 distinct frame hashes, injected frame differs from baseline; generic tutorial rig only",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
+        }
+      ]
     }
   ]
 }
