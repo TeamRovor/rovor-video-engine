@@ -48,7 +48,7 @@ Once transcription and lip-sync are ready, the render folder includes an editabl
 
 The engine checkpoints completed frames and prevents two processes from writing to the same render folder at once. A changed caption file invalidates the old frames and encoded video while leaving the existing MP4 in place until the replacement is ready. MCP polling continues to report a render as active while that replacement is being created.
 
-The local MCP adapter can also continue a stopped render with `evan_continue_render`. It uses the saved tool configuration and render stages; pass `captions_path` when applying an SRT file from outside the render folder.
+The local MCP adapter can start renders with optional `captions_path`, `plan_path`, and `character` values. It can also continue a stopped render with `evan_continue_render`, using the saved tool configuration and render stages; pass `captions_path` when applying an SRT file from outside the render folder.
 
 To provide a hand-authored scene plan:
 
