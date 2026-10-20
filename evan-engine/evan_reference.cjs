@@ -62,8 +62,13 @@ async function renderReference(t,scene){
   const image=await sprite(pose,mouths[shape]||'rest');
   const bounce=Math.round(3*Math.sin(2.3*t)+2*Math.sin(4*t));
   const drift=Math.round(3*Math.sin(1.2*t));
-  const plate=await sharp(Buffer.from(background(t,scene))).png().toBuffer();
-  const combined=await sharp(plate).composite([{input:image,left:cfg.left+drift,top:cfg.top+bounce}]).png().toBuffer();
-  return sharp(combined).composite([{input:Buffer.from(overlay(t,scene)),left:0,top:0}]).jpeg({quality:92}).toBuffer();
+  return sharp(Buffer.from(background(t,scene)))
+    .composite([
+      {input:image,left:cfg.left+drift,top:cfg.top+bounce},
+      {input:Buffer.from(overlay(t,scene)),left:0,top:0}
+    ])
+    .jpeg({quality:92})
+    .toBuffer();
 }
 module.exports={renderReference,activePose,background,overlay};
+
