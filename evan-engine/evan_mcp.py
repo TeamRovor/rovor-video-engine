@@ -4,6 +4,7 @@
 This is a separate MCP server, not a Moho plug-in. It does not access the network.
 """
 import json
+import errno
 import os
 from pathlib import Path
 import subprocess
@@ -84,6 +85,12 @@ def dependency_status():
 def is_running(pid):
     if not pid:
         return False
+    try:
+        pid = int(pid)
+    except (TypeError, ValueError):
+        return False
+    if pid <= 0:
+        return False
     if os.name == "nt":
         try:
             import ctypes
@@ -94,7 +101,7 @@ def is_running(pid):
             kernel.CloseHandle.restype = ctypes.c_bool
             kernel.GetExitCodeProcess.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
             kernel.GetExitCodeProcess.restype = ctypes.c_bool
-            handle = kernel.OpenProcess(0x1000, False, int(pid))  # PROCESS_QUERY_LIMITED_INFORMATION
+            handle = kernel.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
             if not handle:
                 return False
             code = ctypes.c_uint32()
@@ -104,7 +111,19 @@ def is_running(pid):
         except (OSError, ValueError, TypeError):
             return False
     try:
-        os.kill(int(pid), 0)
+        waited, _ = os.waitpid(pid, os.WNOHANG)
+        if waited == pid:
+            return False
+        return True
+    except ChildProcessError:
+        pass
+    except OSError as error:
+        if error.errno == errno.ESRCH:
+            return False
+        if error.errno not in (errno.ECHILD, errno.EINTR):
+            return False
+    try:
+        os.kill(pid, 0)
         return True
     except (OSError, ValueError, TypeError):
         return False
