@@ -250,12 +250,14 @@
         "tools/speech_plan_gate.py",
         "tests/test_speech_plan_gate.py",
         ".github/workflows/speech-plan-gate.yml",
-        "ROVOR-MP3-FIRST-ENGINE.md"
+        "ROVOR-MP3-FIRST-ENGINE.md",
+        "AGENTS.md",
+        "REMOTE-EVAN-GITHUB.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T03:58:04.671Z",
-      "next_update": "After source-branch alignment audit and hosted QA of independent speech-plan checks",
-      "next_action": "Read existing acoustic alignment/viseme work in PR #5, implement inexpensive independent checks for time/phone/viseme/silence/frames, with honest review gates, and publish test evidence. Do not change the live narrator or art.",
+      "updated_at": "2026-10-20T04:02:21.406Z",
+      "next_update": "After canonical AGENTS.md and remote Evan guide link the new track boundary",
+      "next_action": "Link the merged MP3-first architecture and split ownership from existing session entrypoints, verify main CI, then record exact evidence.",
       "acceptance": "Fails closed on unknown phones, invalid durations, conflicting word/phone timing and bad mouth mapping; flags undersampled contacts and unreviewed words; CI passes with no private recording or paid model."
     },
     {
