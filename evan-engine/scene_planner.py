@@ -16,12 +16,14 @@ RULES = [
     ('brand', (r'\blogos?\b', r'\bbranding\b', r'\bbrand\b', r'\bidentity\b', r'\bpolished\b')),
     ('browser', (r'\bwebsites?\b', r'\bbrowser\b', r'\bwebpage\b', r'\bhome ?page\b', r'\bweb design\b')),
 ]
+RULES = [(kind, tuple(re.compile(pattern, re.I) for pattern in patterns))
+         for kind, patterns in RULES]
 
 
 def classify(text):
-    text = text.lower()
+    text = str(text or '')
     for kind, patterns in RULES:
-        if any(re.search(p, text) for p in patterns):
+        if any(pattern.search(text) for pattern in patterns):
             return kind
     return None
 
@@ -39,11 +41,13 @@ def generate_plan(segments, duration):
     if not duration or duration <= 0:
         raise ValueError('Recording duration must be positive')
     duration = float(duration)
-    segments = [x for x in segments if x.get('text') and 0 <= x.get('start', -1) < duration]
+    segments = [x for x in segments if isinstance(x, dict) and x.get('text') and
+                isinstance(x.get('start'), (int, float)) and 0 <= x['start'] < duration]
     if not segments:
         return [{'start': 0.0, 'end': duration, 'kind': 'topic', 'title': 'A minute with Evan'}], []
     full = ' '.join(x['text'] for x in segments)
-    first_topic = next((classify(x['text']) for x in segments if classify(x['text']) not in (None, 'endcard')), 'topic')
+    classified = [(x, classify(x['text'])) for x in segments]
+    first_topic = next((kind for _, kind in classified if kind not in (None, 'endcard')), 'topic')
     # Favicon videos have a natural three-part demonstration: problem, icon, payoff.
     # The beats come from detected narration cues, not arbitrary clip fractions.
     if re.search(r'\bfavicons?\b', full, re.I):
@@ -65,9 +69,8 @@ def generate_plan(segments, duration):
     visuals = [{'start': 0.0, 'kind': first_topic, 'title': clean_title(segments[0]['text'])}]
     last_start = 0.0
     last_kind = first_topic
-    for index, seg in enumerate(segments[1:], 1):
+    for index, (seg, kind) in enumerate(classified[1:], 1):
         when = float(seg['start'])
-        kind = classify(seg['text'])
         if not kind or kind == last_kind:
             continue
         # Avoid frantic slides. An explicit Rovor closing can arrive in the final seconds.
@@ -133,3 +136,4 @@ def validate_plan(plan, duration):
     if output[0]['start'] > .03 or abs(output[-1]['end']-duration) > .03:
         raise ValueError('Scene plan must cover the entire recording')
     return output
+
