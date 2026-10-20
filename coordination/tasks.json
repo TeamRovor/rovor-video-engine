@@ -243,7 +243,7 @@
       "id": "acoustic-production-gate",
       "title": "Build audio-grounded English phoneme and mouth-plan acceptance checks",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar animation intelligence",
       "branch": "feature/acoustic-production-gate",
       "scopes": [
@@ -255,10 +255,32 @@
         "REMOTE-EVAN-GITHUB.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T04:02:21.406Z",
-      "next_update": "After canonical AGENTS.md and remote Evan guide link the new track boundary",
-      "next_action": "Link the merged MP3-first architecture and split ownership from existing session entrypoints, verify main CI, then record exact evidence.",
-      "acceptance": "Fails closed on unknown phones, invalid durations, conflicting word/phone timing and bad mouth mapping; flags undersampled contacts and unreviewed words; CI passes with no private recording or paid model."
+      "updated_at": "2026-10-20T04:04:32.359Z",
+      "next_action": "Review and integrate the existing phoneme audit as a pre-render metadata gate in the active PR #5 pipeline after separately claiming integration. Run it against original-audio plans, resolve flagged anchors/unsampled contacts and obtain Amar's visual approval. Evan's `engine-efficiency-benchmarks` remains unclaimed for a separate GitHub session.",
+      "acceptance": "Fails closed on unknown phones, invalid durations, conflicting word/phone timing and bad mouth mapping; flags undersampled contacts and unreviewed words; CI passes with no private recording or paid model.",
+      "evidence": [
+        {
+          "commit": "8a898fe3afc22942a5b98a757c1039bc7ac391f6",
+          "platform": "GitHub main / Ubuntu hosted CI",
+          "check": "Merged standalone English acoustic plan gate and single-MP3 pipeline design via PR #10; initial 11 synthetic tests",
+          "result": "PASS; standalone and NOT integrated into renderer",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39367414546"
+        },
+        {
+          "commit": "44ff6d2bb00257119ea9e549cdb1fd56b0ebc9ab",
+          "platform": "GitHub main / Ubuntu hosted CI",
+          "check": "Additional corrected-script, omitted-word, and overlap checks. English speech-plan integrity suite",
+          "result": "PASS; no user media processed, no visual approval",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39367578672"
+        },
+        {
+          "commit": "9580546592b3aa162a6fb3db7e89ec737cd227c1",
+          "platform": "GitHub main / shared entrypoints",
+          "check": "Canonical AGENTS.md and REMOTE-EVAN-GITHUB.md link task split and explicit no-laptop-access boundary",
+          "result": "COMMITTED and read back; no remote laptop execution",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/blob/main/REMOTE-EVAN-GITHUB.md"
+        }
+      ]
     },
     {
       "id": "engine-efficiency-benchmarks",
