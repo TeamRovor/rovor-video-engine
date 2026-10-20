@@ -7,6 +7,7 @@ CAPTION REVIEW AND RENDER SAFETY:
 - Render progress is checkpointed, incomplete frames are regenerated, and concurrent processes cannot write to one render folder.
 - MCP polling reports an active render correctly even while an earlier MP4 remains available.
 - The MCP adapter can continue a stopped render from saved stages and its original local tool configuration.
+- MCP render requests can select a scene plan and character style or provide a reviewed SRT from the start.
 - Both character styles now render the edited SRT captions while keeping legacy scene files readable.
 
 PORTABILITY AND RENDER RELIABILITY:
