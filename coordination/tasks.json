@@ -79,7 +79,7 @@
       "id": "shared-session-checks",
       "title": "Add and verify shared coordination checks",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar coordination session",
       "branch": "coordination/shared-project-loop",
       "scopes": [
@@ -91,10 +91,32 @@
         "PROJECT-LOOP.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T02:42:16.577462+00:00",
-      "next_update": "After hosted checks and handoff",
-      "next_action": "Publish the locally checked tool and inspect hosted checks.",
-      "acceptance": "Regression checks pass, task validation passes, and hosted cross-platform results are recorded."
+      "updated_at": "2026-10-20T02:43:47.672Z",
+      "next_action": "Other sessions should fetch this coordination revision, read the queue, and claim one available task. Windows laptop runtime and production animation remain unverified.",
+      "acceptance": "Regression checks pass, task validation passes, and hosted cross-platform results are recorded.",
+      "evidence": [
+        {
+          "commit": "065d5c801167090eae8a9cd75751d562a0fbce09",
+          "platform": "coordination (ubuntu-latest)",
+          "check": "Task queue validation and 14 coordination regression tests",
+          "result": "PASS",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39360421222"
+        },
+        {
+          "commit": "065d5c801167090eae8a9cd75751d562a0fbce09",
+          "platform": "coordination (macos-latest)",
+          "check": "Task queue validation and 14 coordination regression tests",
+          "result": "PASS",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39360421222"
+        },
+        {
+          "commit": "065d5c801167090eae8a9cd75751d562a0fbce09",
+          "platform": "coordination (windows-latest)",
+          "check": "Task queue validation and 14 coordination regression tests",
+          "result": "PASS",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39360421222"
+        }
+      ]
     }
   ]
 }
