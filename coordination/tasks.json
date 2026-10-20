@@ -122,17 +122,25 @@
       "id": "windows-session-entrypoint",
       "title": "Connect the Windows branch to shared session coordination",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar coordination session",
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
         "AGENTS.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T02:45:35.009Z",
-      "next_update": "After pointer read-back",
-      "next_action": "Add a root instruction pointer on the existing Windows branch; preserve all engine files.",
-      "acceptance": "Windows root instructions direct sessions to fetched origin/main coordination records; read-back verifies exact content."
+      "updated_at": "2026-10-20T02:46:23.493Z",
+      "next_action": "The Windows session must fetch/pull this branch and read AGENTS.md before selecting work. Claim Windows runtime validation only after checking PR #7 for active work.",
+      "acceptance": "Windows root instructions direct sessions to fetched origin/main coordination records; read-back verifies exact content.",
+      "evidence": [
+        {
+          "commit": "76117537fbd669b0870c6874220c6229aed07b79",
+          "platform": "GitHub repository / Windows branch",
+          "check": "Read back AGENTS.md at the exact committed revision and compare full content",
+          "result": "PASS",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/76117537fbd669b0870c6874220c6229aed07b79"
+        }
+      ]
     }
   ]
 }
