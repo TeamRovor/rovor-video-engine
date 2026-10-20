@@ -53,8 +53,11 @@ class ArmMesh:
                 a=y*9+x;b=a+1;c=a+9;d=c+1
                 self.triangles.extend([(a,b,d),(a,d,c)])
 
+    def posed_vertices(self,angles):
+        return skin_vertices(self.vertices,self.geometry,angles)
+
     def render(self,angles):
-        dst=skin_vertices(self.vertices,self.geometry,angles)
+        dst=self.posed_vertices(angles)
         x0,y0=np.floor(dst.min(axis=0)-2).astype(int);x1,y1=np.ceil(dst.max(axis=0)+2).astype(int)
         width,height=x1-x0,y1-y0
         mx=np.full((height,width),-1,np.float32);my=mx.copy()
