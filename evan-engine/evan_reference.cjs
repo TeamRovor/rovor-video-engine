@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require(process.env.EVAN_SHARP || 'sharp');
 const {renderScene} = require('./scene_graphics.cjs');
+const {wrapCaption} = require('./caption_utils.cjs');
 const root=path.join(__dirname,'..','evan-character','v3-assets');
 const clamp=(x,min,max)=>Math.min(max,Math.max(min,x));
 const xml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
@@ -32,12 +33,10 @@ function background(t,scene){
 }
 function overlay(t,scene){
   let line=(scene.segments||[]).find(s=>t>=s.start&&t<s.end)?.text||'';
-  const words=line.split(/\s+/).filter(Boolean);
-  const lines=[''];
-  for(let word of words){let j=lines.length-1;if((lines[j]+' '+word).trim().length>34&&lines.length<3)lines.push(word);else lines[j]=(lines[j]+' '+word).trim();}
-  const n=Math.max(1,lines.filter(Boolean).length);
+  const lines=wrapCaption(line,34,3);
+  const n=Math.max(1,lines.length);
   const y=n>2?1109:1139;
-  const labels=lines.filter(Boolean).map((txt,i)=>`<text x="360" y="${y+32+i*37}" text-anchor="middle" font-size="28" font-weight="800" fill="#fff">${xml(txt)}</text>`).join('');
+  const labels=lines.map((txt,i)=>`<text x="360" y="${y+32+i*37}" text-anchor="middle" font-size="28" font-weight="800" fill="#fff">${xml(txt)}</text>`).join('');
   const progress=628*clamp(t/scene.duration,0,1);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280" font-family="Arial,sans-serif">
     <rect x="34" y="${y-22}" width="652" height="${n>2?143:104}" rx="21" fill="#142840" opacity=".97"/>
