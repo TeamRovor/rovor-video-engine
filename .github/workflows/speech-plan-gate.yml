@@ -1,0 +1,36 @@
+name: English speech-plan integrity
+
+on:
+  pull_request:
+    paths:
+      - 'tools/speech_plan_gate.py'
+      - 'tests/test_speech_plan_gate.py'
+      - '.github/workflows/speech-plan-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/speech_plan_gate.py'
+      - 'tests/test_speech_plan_gate.py'
+      - '.github/workflows/speech-plan-gate.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: speech-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    name: Phoneme/viseme integrity checks (no user media)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check phone-to-viseme audit and no false approval
+        run: python -m unittest discover -s tests -p 'test_speech_plan_gate.py' -v
