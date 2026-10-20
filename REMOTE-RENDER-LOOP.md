@@ -1,6 +1,6 @@
 # Private MP3 job transport — implemented, Moho renderer pending
 
-2026-10-19 America/Chicago. Inspected main 996f8948, open PRs #2/#4/#5/#7/#12, Issue #6 comments and existing read-queue runner code. Preserve those branches and Evan artwork. This change adds transport only; it does not substitute the V3 sprite engine for Moho.
+2026-10-20 America/Chicago. Inspected main 996f8948, open PRs #2/#4/#5/#7/#12, Issue #6 comments and existing read-queue runner code. Preserve those branches and Evan artwork. This change adds transport only; it does not substitute the V3 sprite engine for Moho.
 
 ## Verified boundaries
 
@@ -21,7 +21,7 @@ python3 tools/render_jobs.py --root /private/job-spool artifact JOB_ID /private/
 
 Without an administrator adapter, `run` changes queued to blocked; no Moho mutation occurs. When verified, supply `run JOB_ID --adapter /private/config/adapter.json`. That configuration is a host-owned JSON argv array, never uploaded job content. The trusted adapter receives the job directory as its last argument. No arbitrary URL fetch, incoming shell command, automatic paid service or render retry is supported.
 
-State: queued → running → review_required or failed; missing adapter → blocked. Jobs cannot be replayed. New attempts get a new ID, preserving previous output. One worker lock serializes all jobs; if killed, inspect the process/Moho state before manually removing the stale lock. Never automatically retry an uncertain native write. Initial limits: 25 MiB, 60 seconds input, 30 minute adapter timeout, 512 MiB output. No truncation, audio stretching or automatic portrait second render. Under 30 seconds is explicitly diagnostic. There is no dedup/cache claim; integrate existing content-hash stage caches in the adapter.
+State: queued → running → review_required or failed; missing adapter → blocked. Jobs cannot be replayed. New attempts get a new ID, preserving previous output. One worker lock serializes all jobs; if killed, verify the worker process has exited before removing the stale lock. Never automatically retry an uncertain native write. Initial limits: 25 MiB, 60 seconds input, 30 minute adapter timeout, 512 MiB output. No truncation, audio stretching or automatic portrait second render. Under 30 seconds is explicitly diagnostic. There is no dedup/cache claim; integrate existing content-hash stage caches in the adapter.
 
 ## Remaining headless integration steps
 
@@ -33,6 +33,6 @@ State: queued → running → review_required or failed; missing adapter → blo
 
 ## Evidence and recovery
 
-Seven local standard-library tests passed on macOS using synthetic inputs and mocked media/adapter boundaries: transport roundtrip, missing-adapter blocking, mutation refusal, job traversal, duration cap, serial lock and estimated-speech refusal. They do not verify real MP3 decoding, native Moho rendering, SSH or a live runner. CI workflow runs hosted transport tests only; it never executes PR code on the personal Mac. No external service costs or real media processing incurred.
+Seven local standard-library tests passed on macOS using synthetic inputs and mocked media/adapter boundaries: transport roundtrip, missing-adapter blocking, mutation refusal, job traversal, duration cap, serial lock and estimated-speech refusal. They do not verify real MP3 decoding, authenticated SSH or a live runner. A separate 60-frame native Moho CLI diagnostic using the generic tutorial rig is recorded in MOHO-FILE-COMPILER.md. CI runs synthetic transport tests only; it never executes PR code on the personal Mac. No external service costs or real media processing incurred.
 
 Adapter timeout does not guarantee termination of Moho or child processes; inspect and stop them before another job. Logs remain private and currently have no size cap. Retention/cleanup is manual; preserve inputs and previous success until explicit deletion. Use only a trusted local spool owner; this is not a hostile multi-user service or sandbox for arbitrary adapter code.
