@@ -68,22 +68,18 @@ def dependency_errors(config):
         missing.append("model")
 
     sharp = config.get("sharp", "sharp")
-    if _has_path_component(sharp):
-        if not Path(sharp).exists():
+    try:
+        result = subprocess.run(
+            [config["node"], "-e", "require.resolve(process.argv[1])", sharp],
+            cwd=ENGINE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=10,
+            check=False,
+        )
+        if result.returncode:
             missing.append("sharp")
-    else:
-        try:
-            result = subprocess.run(
-                [config["node"], "-e", "require.resolve(process.argv[1])", sharp],
-                cwd=ENGINE,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=10,
-                check=False,
-            )
-            if result.returncode:
-                missing.append("sharp")
-        except (OSError, subprocess.TimeoutExpired):
-            missing.append("sharp")
+    except (OSError, subprocess.TimeoutExpired):
+        missing.append("sharp")
     return missing
 
