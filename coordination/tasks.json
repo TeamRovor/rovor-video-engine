@@ -151,12 +151,13 @@
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
         "evan-engine/test_windows_reliability.py",
-        ".github/workflows/engine-regression.yml"
+        ".github/workflows/engine-regression.yml",
+        "evan-engine/animate_evan.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T02:51:06.068Z",
+      "updated_at": "2026-10-20T02:53:40.867Z",
       "next_update": "After existing code review and targeted tests",
-      "next_action": "Read the current Windows implementation, add regression coverage for real correctness risks, and run dependency-free checks before publishing. Expand scope explicitly before fixing shared implementation files.",
+      "next_action": "Fix proven first-resume scene-hash mismatch (caption start 0 versus 0.0), then run cache/resume regression tests and hosted CI.",
       "acceptance": "A meaningful dependency-free regression suite and CI on supported operating systems; report actual results without claiming laptop runtime or art approval."
     }
   ]
