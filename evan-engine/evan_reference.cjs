@@ -32,7 +32,9 @@ function background(t,scene){
   </svg>`;
 }
 function overlay(t,scene){
-  let line=(scene.segments||[]).find(s=>t>=s.start&&t<s.end)?.text||'';
+  const captions=scene.captions||scene.segments||[];
+  let line='';
+  for(let i=captions.length-1;i>=0;i--){if(t>=captions[i].start&&t<captions[i].end){line=captions[i].text;break}}
   const lines=wrapCaption(line,34,3);
   const n=Math.max(1,lines.length);
   const y=n>2?1109:1139;
@@ -70,4 +72,3 @@ async function renderReference(t,scene){
     .toBuffer();
 }
 module.exports={renderReference,activePose,background,overlay};
-
