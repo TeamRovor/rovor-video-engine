@@ -58,8 +58,9 @@ function render(t, data) {
   const rightShoulder=12+pointing*42+presenting*22+ending*12+pinch*34+emphasis*17;
   const leftElbow=-15-presenting*67-ending*55-emphasis*25;
   const rightElbow=-15-pointing*65-presenting*67-ending*50-pinch*56-emphasis*20;
-  const segments=data.segments || [];
-  const line=segments.find(s=>t>=s.start&&t<s.end)?.text || '';
+  const captions=data.captions || data.segments || [];
+  let line='';
+  for(let i=captions.length-1;i>=0;i--){if(t>=captions[i].start&&t<captions[i].end){line=captions[i].text;break}}
   const lines=wrapCaption(line,35,3);
   const subtitle=lines.slice(0,3).map((s,i)=>`<text x="360" y="${1160+i*34}" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#fff">${esc(s)}</text>`).join('');
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280" viewBox="0 0 720 1280" font-family="Arial,sans-serif">
@@ -117,4 +118,3 @@ function render(t, data) {
   return svg;
 }
 module.exports={render,mouth};
-
