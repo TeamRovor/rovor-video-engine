@@ -57,6 +57,7 @@ def inspect_setup(adapter: Optional[Path] = None) -> dict:
     ffprobe = shutil.which("ffprobe") is not None
     native_probe = shutil.which("swiftc") is not None and Path(__file__).with_name("media_probe.swift").is_file()
     media_probe = ffprobe or native_probe
+    visual_checks = shutil.which("swiftc") is not None and Path(__file__).with_name("video_quality.swift").is_file()
     moho_path = Path(os.environ.get("MOHO_EXECUTABLE", "/Applications/Moho.app/Contents/MacOS/Moho")).expanduser()
     moho = moho_path.is_file() and os.access(moho_path, os.X_OK)
     adapter_valid = False
@@ -71,6 +72,8 @@ def inspect_setup(adapter: Optional[Path] = None) -> dict:
     blockers = []
     if not media_probe:
         blockers.append("Media verification needs ffprobe or the bundled macOS AVFoundation probe")
+    if not visual_checks:
+        blockers.append("Black/frozen-frame checks need macOS swiftc and the bundled AVFoundation helper")
     if not moho:
         blockers.append("Moho Pro 14 command-line renderer is not available at its configured path")
     if not adapter_valid:
