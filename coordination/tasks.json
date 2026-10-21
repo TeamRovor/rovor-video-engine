@@ -1033,9 +1033,9 @@
       ]
     },
     {
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "ChatGPT / Amar knowledge pack 2026-10-21",
+      "branch": "business/rovor-knowledge-pack",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
       ],
@@ -1047,7 +1047,9 @@
       ],
       "depends_on": [],
       "next_action": "Create a compact source-backed knowledge pack from current repository instructions and actual approved Rovor references. Record services, brand rules, preserved assets, decision dates, uncertain facts and source links. Store no private client records or credentials; do not duplicate chat histories. Use a focused branch from main.",
-      "acceptance": "A fresh ChatGPT session can retrieve the correct Rovor service/brand constraints with source/version and distinguish unknowns, concepts and approved facts. No invented prices, testimonials, revenue or production approvals."
+      "acceptance": "A fresh ChatGPT session can retrieve the correct Rovor service/brand constraints with source/version and distinguish unknowns, concepts and approved facts. No invented prices, testimonials, revenue or production approvals.",
+      "updated_at": "2026-10-21T22:19:11.118Z",
+      "next_update": "After source-backed fact pack and retrieval walkthrough verification"
     },
     {
       "status": "ready",
