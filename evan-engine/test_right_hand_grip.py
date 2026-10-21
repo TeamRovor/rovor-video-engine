@@ -66,7 +66,7 @@ class RealWristGripTests(unittest.TestCase):
             def pos(frame, angles):
                 wrist = wrist_xy(self.meta, self.hand, (*angles, 0))
                 source = _inside_canvas_wrist(wrist, 0)
-                actor_xy = interpolate(actor["keys"], frame)
+                actor_xy = actor["keys"][0]  # storyboard fixture uses original dict keys
                 return actor_xy["x"] + (source[0] - 732) * actor_xy["scale"] / size[0], (
                     actor_xy["y"] + (source[1] - 768) * actor_xy["scale"] / size[1])
             a = pos(0, (-1., 0.))
