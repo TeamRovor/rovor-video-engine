@@ -1,0 +1,38 @@
+name: Moho chapter audio payload integrity
+
+on:
+  push:
+    branches: [feature/native-chapter-package-v1]
+    paths:
+      - 'tools/chapter_package.py'
+      - 'tests/test_chapter_package.py'
+      - '.github/workflows/chapter-package.yml'
+  pull_request:
+    paths:
+      - 'tools/chapter_package.py'
+      - 'tests/test_chapter_package.py'
+      - '.github/workflows/chapter-package.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-reconstruction:
+    name: PCM and localized phoneme continuity
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test existing chapter planner and acoustic gate plus package payloads
+        run: |
+          python -m py_compile tools/chapter_package.py tests/test_chapter_package.py
+          python -m unittest -v tests.test_chapter_package tests.test_longform_chapters tests.test_speech_plan_gate
