@@ -1033,11 +1033,12 @@
       ]
     },
     {
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar knowledge pack 2026-10-21",
       "branch": "business/rovor-knowledge-pack",
       "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/27"
       ],
       "id": "rovor-knowledge-pack",
       "title": "Curate the reusable Rovor brand, service and decision source pack",
@@ -1046,10 +1047,19 @@
         "business/knowledge"
       ],
       "depends_on": [],
-      "next_action": "Create a compact source-backed knowledge pack from current repository instructions and actual approved Rovor references. Record services, brand rules, preserved assets, decision dates, uncertain facts and source links. Store no private client records or credentials; do not duplicate chat histories. Use a focused branch from main.",
+      "next_action": "Read business/knowledge/README.md and facts.json; resolve only relevant gaps from approved sources. Complete separate business-proof-catalog before capability evaluations. Pack is a sourced index, not a complete approved brand kit.",
       "acceptance": "A fresh ChatGPT session can retrieve the correct Rovor service/brand constraints with source/version and distinguish unknowns, concepts and approved facts. No invented prices, testimonials, revenue or production approvals.",
-      "updated_at": "2026-10-21T22:19:11.118Z",
-      "next_update": "After source-backed fact pack and retrieval walkthrough verification"
+      "updated_at": "2026-10-21T22:21:02.086Z",
+      "next_update": "When an authorized project needs a missing brand/business fact",
+      "evidence": [
+        {
+          "commit": "98e840e2c7d2c48ebf538694ff190de6a44c8ed9",
+          "platform": "GitHub source retrieval + local Python / Linux + manual document review",
+          "check": "Pinned-source verification for 14 facts; unique IDs/revision/limitations review; six retrieval walkthroughs; python tools/project_loop.py check",
+          "result": "PASS; missing local PROJECT-LOOP.md resolved by pinned GitHub read. No model benchmark, asset inspection, client approval or hosted CI success claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/27"
+        }
+      ]
     },
     {
       "status": "ready",
