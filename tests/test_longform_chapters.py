@@ -145,8 +145,12 @@ class ChapterTests(unittest.TestCase):
             c.plan_chapters(self.wav, self.plan)
 
     def test_reject_over_15_minutes_before_processing(self):
-        self.make(1)
-        self.wav.write_bytes(self.wav.read_bytes()[:44] + b"\x00" * (901 * 32000))
+        with wave.open(str(self.wav), "wb") as output:
+            output.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+            one_second = b"\x00\x00" * 16000
+            for _ in range(901):
+                output.writeframesraw(one_second)
+            output.writeframes(b"")
         with self.assertRaisesRegex(ValueError, "15 minutes"):
             c.pcm_samples(self.wav)
 
