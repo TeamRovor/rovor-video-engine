@@ -715,6 +715,26 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/20"
         }
       ]
+    },
+    {
+      "id": "render-cache-file-identity",
+      "title": "Prevent stale render resume after local dependency replacement",
+      "priority": 2,
+      "status": "active",
+      "owner": "Codex / Keona Windows desktop session",
+      "branch": "codex/windows-reliability-v3-1",
+      "scopes": [
+        "evan-engine/animate_evan.py",
+        "subsystem:render-cache-file-identity"
+      ],
+      "depends_on": [],
+      "next_action": "Add low-cost file identity metadata to local dependency fingerprints so a replacement at the same path with the same size and modification time cannot reuse stale render outputs; review platform behavior and limitations.",
+      "acceptance": "A replaced tool/model file with matching path, size, and modification time produces a different resume fingerprint where filesystem identity metadata is supported; unrelated resume invalidation remains unchanged. Record static review and any hosted workflow results without claiming a render on Keona's laptop.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/7"
+      ],
+      "updated_at": "2026-10-21T11:00:42Z",
+      "next_update": "After the cache fingerprint change is published and the PR branch head is rechecked."
     }
   ]
 }
