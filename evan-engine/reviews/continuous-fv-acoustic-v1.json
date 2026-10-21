@@ -1,0 +1,254 @@
+{
+  "sourceAudioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "sampleRate": 16000,
+  "windows": [
+    {
+      "window": [
+        11.35,
+        11.92
+      ],
+      "sourceSamples": [
+        181600,
+        190720
+      ],
+      "estimatedPhones": [
+        {
+          "start": 11.33,
+          "end": 11.41,
+          "phone": "IY",
+          "value": "B",
+          "word": "tiny",
+          "scriptIndex": 33,
+          "timing": "acoustic-forced",
+          "acousticScore": -258,
+          "confidence": null
+        },
+        {
+          "start": 11.41,
+          "end": 11.48,
+          "phone": "V",
+          "value": "G",
+          "word": "version",
+          "scriptIndex": 34,
+          "timing": "acoustic-forced",
+          "acousticScore": -356,
+          "confidence": null
+        },
+        {
+          "start": 11.48,
+          "end": 11.6,
+          "phone": "ER",
+          "value": "C",
+          "word": "version",
+          "scriptIndex": 34,
+          "timing": "acoustic-forced",
+          "acousticScore": -66,
+          "confidence": null
+        },
+        {
+          "start": 11.6,
+          "end": 11.68,
+          "phone": "ZH",
+          "value": "B",
+          "word": "version",
+          "scriptIndex": 34,
+          "timing": "acoustic-forced",
+          "acousticScore": -49,
+          "confidence": null
+        },
+        {
+          "start": 11.68,
+          "end": 11.71,
+          "phone": "AH",
+          "value": "C",
+          "word": "version",
+          "scriptIndex": 34,
+          "timing": "acoustic-forced",
+          "acousticScore": -106,
+          "confidence": null
+        },
+        {
+          "start": 11.71,
+          "end": 11.75,
+          "phone": "N",
+          "value": "B",
+          "word": "version",
+          "scriptIndex": 34,
+          "timing": "acoustic-forced",
+          "acousticScore": -76,
+          "confidence": null
+        },
+        {
+          "start": 11.75,
+          "end": 11.81,
+          "phone": "AH",
+          "value": "C",
+          "word": "of",
+          "scriptIndex": 35,
+          "timing": "acoustic-forced",
+          "acousticScore": -88,
+          "confidence": null
+        },
+        {
+          "start": 11.81,
+          "end": 11.85,
+          "phone": "V",
+          "value": "G",
+          "word": "of",
+          "scriptIndex": 35,
+          "timing": "acoustic-forced",
+          "acousticScore": -152,
+          "confidence": null
+        },
+        {
+          "start": 11.85,
+          "end": 11.91,
+          "phone": "Y",
+          "value": "B",
+          "word": "your",
+          "scriptIndex": 36,
+          "timing": "acoustic-forced",
+          "acousticScore": -114,
+          "confidence": null
+        },
+        {
+          "start": 11.91,
+          "end": 11.94,
+          "phone": "UH",
+          "value": "F",
+          "word": "your",
+          "scriptIndex": 36,
+          "timing": "acoustic-forced",
+          "acousticScore": -18,
+          "confidence": null
+        }
+      ]
+    },
+    {
+      "window": [
+        13.1,
+        13.66
+      ],
+      "sourceSamples": [
+        209600,
+        218560
+      ],
+      "estimatedPhones": [
+        {
+          "start": 12.88,
+          "end": 13.11,
+          "phone": "S",
+          "value": "B",
+          "word": "specifically",
+          "scriptIndex": 39,
+          "timing": "acoustic-forced",
+          "acousticScore": -226,
+          "confidence": null
+        },
+        {
+          "start": 13.11,
+          "end": 13.19,
+          "phone": "IH",
+          "value": "B",
+          "word": "specifically",
+          "scriptIndex": 39,
+          "timing": "acoustic-forced",
+          "acousticScore": -79,
+          "confidence": null
+        },
+        {
+          "start": 13.19,
+          "end": 13.25,
+          "phone": "F",
+          "value": "G",
+          "word": "specifically",
+          "scriptIndex": 39,
+          "timing": "acoustic-forced",
+          "acousticScore": -366,
+          "confidence": null
+        },
+        {
+          "start": 13.25,
+          "end": 13.29,
+          "phone": "IH",
+          "value": "B",
+          "word": "specifically",
+          "scriptIndex": 39,
+          "timing": "acoustic-forced",
+          "acousticScore": -114,
+          "confidence": null
+        },
+        {
+          "start": 13.29,
+          "end": 13.37,
+          "phone": "K",
+          "value": "B",
+          "word": "specifically",
+          "scriptIndex": 39,
+          "timing": "acoustic-forced",
+          "acousticScore": -152,
+          "confidence": null
+        },
+        {
+          "start": 13.37,
+          "end": 13.43,
+          "phone": "L",
+          "value": "H",
+          "word": "specifically",
+          "scriptIndex": 39,
+          "timing": "acoustic-forced",
+          "acousticScore": -154,
+          "confidence": null
+        },
+        {
+          "start": 13.43,
+          "end": 13.48,
+          "phone": "IY",
+          "value": "B",
+          "word": "specifically",
+          "scriptIndex": 39,
+          "timing": "acoustic-forced",
+          "acousticScore": -144,
+          "confidence": null
+        },
+        {
+          "start": 13.48,
+          "end": 13.55,
+          "phone": "F",
+          "value": "G",
+          "word": "for",
+          "scriptIndex": 40,
+          "timing": "acoustic-forced",
+          "acousticScore": -87,
+          "confidence": null
+        },
+        {
+          "start": 13.55,
+          "end": 13.6,
+          "phone": "ER",
+          "value": "C",
+          "word": "for",
+          "scriptIndex": 40,
+          "timing": "acoustic-forced",
+          "acousticScore": -41,
+          "confidence": null
+        },
+        {
+          "start": 13.6,
+          "end": 13.67,
+          "phone": "B",
+          "value": "A",
+          "word": "browser",
+          "scriptIndex": 41,
+          "timing": "acoustic-forced",
+          "acousticScore": -45,
+          "confidence": null
+        }
+      ]
+    }
+  ],
+  "timingChanged": false,
+  "exactBoundariesVerified": false,
+  "independentListening": false
+}
