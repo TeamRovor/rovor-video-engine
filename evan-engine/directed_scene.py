@@ -18,6 +18,7 @@ from directed_contact import audit as audit_contact_geometry
 from directed_contact_lock import apply_locked_contacts
 from directed_paint import prepare_paint_tracks
 from right_hand_grip import solve_grips
+from directed_grip_occlusion import ForegroundHand, grip_foreground_rules
 
 SIZES={"landscape":(1920,1080),"portrait":(1080,1920)}
 FPS=60
@@ -116,6 +117,7 @@ def check(config,registry,root,performance=None,rig_meta=None,hand_meta=None):
     cursor=0
     ready=[]
     seen=set()
+    original_foreground_hand=None
     for index,shot in enumerate(shots,1):
         begin,end=shot.get("startFrame"),shot.get("endFrameExclusive")
         if (isinstance(begin,bool) or isinstance(end,bool) or not isinstance(begin,int)
@@ -189,12 +191,17 @@ def check(config,registry,root,performance=None,rig_meta=None,hand_meta=None):
         grip_controls,grip_evidence = solve_grips(
             shot,compositions,images,SIZES,ACTOR_ID,interpolate,
             performance,rig_meta,hand_meta)
+        foreground_rules=grip_foreground_rules(shot,grip_controls,performance)
+        if foreground_rules and original_foreground_hand is None:
+            original_foreground_hand=ForegroundHand(rig_meta,hand_meta)
         ready.append({"startFrame":begin,"endFrameExclusive":end,
                       "kind":shot.get("kind"),"visualPurpose":shot["visualPurpose"],
                       "actionPayoff":shot["actionPayoff"],"compositions":compositions,
                       "contactEvidence":contact_evidence,"lockEvidence":lock_evidence,
                       "paintTracks":paint_tracks,"paintEvidence":paint_evidence,
-                      "gripControls":grip_controls,"gripEvidence":grip_evidence})
+                      "gripControls":grip_controls,"gripEvidence":grip_evidence,
+                      "gripForeground":foreground_rules,
+                      "gripHandRaster":original_foreground_hand if foreground_rules else None})
     if cursor!=total:
         raise ValueError("Directed scenes do not cover full original narration")
     return {"durationSec":duration,"totalFrames":total,"scenes":ready,
@@ -233,13 +240,8 @@ class DirectedScene:
         w,h=self.size
         stage=Image.new("RGBA",self.size,view["background"])
         camera=interpolate(view["camera"],index)
-        for item in view["elements"]:
-            aid=item["assetId"]
-            src=evan if aid==ACTOR_ID else self.images[aid]
-            paint=shot["paintTracks"][self.view].get(aid)
-            if paint is not None:src=paint.source_at(index)
-            if src is None:
-                raise ValueError("Missing actual layered Evan RGBA frame")
+        def place_art(src,item):
+            if src is None:raise ValueError("Missing illustrated source art for stage")
             if src.mode!="RGBA":src=src.convert("RGBA")
             k=interpolate(item["keys"],index)
             zoom=camera["zoom"]
@@ -256,4 +258,24 @@ class DirectedScene:
             x=round((k["x"]-.5)*w*zoom+w*(.5-camera["panX"]))
             y=round((k["y"]-.5)*h*zoom+h*(.5-camera["panY"]))
             stage.alpha_composite(layer,(x-layer.width//2,y-layer.height//2))
+        grip=shot["gripForeground"].get(index)
+        actor_layer=None
+        if grip is not None:
+            actors=[element for element in view["elements"] if element["assetId"]==ACTOR_ID]
+            if len(actors)!=1:raise ValueError("Foreground tool contact requires original Evan layer")
+            actor_layer=actors[0]
+        for item in view["elements"]:
+            aid=item["assetId"]
+            src=evan if aid==ACTOR_ID else self.images[aid]
+            paint=shot["paintTracks"][self.view].get(aid)
+            if paint is not None:src=paint.source_at(index)
+            if src is None:
+                raise ValueError("Missing actual layered Evan RGBA frame")
+            place_art(src,item)
+            if grip is not None and aid==grip[0]:
+                # Source arm stays behind the object; precisely the same
+                # registered relaxed-hand plate is drawn once above the
+                # handle, before any separately authored foreground layers.
+                hand=shot["gripHandRaster"].image_at(index,grip[1],grip[2])
+                place_art(hand,actor_layer)
         return stage.convert("RGB")
