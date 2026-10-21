@@ -59,6 +59,19 @@ class Jobs(unittest.TestCase):
                 'sourceSha256':request['sourceSha256'],'disposableProjectVerified':True,'rigSha256':'b'*64}))
             media = {'format':{'duration':'31'},'streams':[{'codec_type':'video','width':1920,
                 'height':1080,'avg_frame_rate':'60/1'},{'codec_type':'audio'}]}
+            for invalid in ('NaN', 'Infinity', '-Infinity', '0', '-1'):
+                with self.subTest(duration=invalid), patch.object(j, 'probe',
+                        return_value=dict(media, format={'duration': invalid})), \
+                     patch.object(j, 'video_quality') as frame_check:
+                    with self.assertRaisesRegex(ValueError, 'Invalid source or artifact duration'):
+                        j.verify(path, request)
+                    frame_check.assert_not_called()
+            for invalid in (float('nan'), float('inf'), 0, -1, True):
+                with self.subTest(source_duration=invalid), patch.object(j, 'probe', return_value=media), \
+                     patch.object(j, 'video_quality') as frame_check:
+                    with self.assertRaisesRegex(ValueError, 'Invalid source or artifact duration'):
+                        j.verify(path, dict(request, duration=invalid))
+                    frame_check.assert_not_called()
             cases = [
                 ({'sampleCount':12,'distinctFrameCount':12,'blackFrameCount':2}, 'black'),
                 ({'sampleCount':12,'distinctFrameCount':1,'blackFrameCount':0}, 'frozen'),
