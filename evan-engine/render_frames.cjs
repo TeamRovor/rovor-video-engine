@@ -14,17 +14,23 @@ if(!Number.isFinite(totalFrames)||totalFrames<1||!Number.isInteger(start)||!Numb
 fs.mkdirSync(directory,{recursive:true});
 (async()=>{
   const deadline=Date.now()+23000;
-  let i=start;
-  for(;i<end && Date.now()<deadline;i++){
-    let target=path.join(directory,String(i).padStart(6,'0')+'.jpg');
-    let staging=path.join(directory,String(i).padStart(6,'0')+'.writing.jpg');
-    if(data.characterStyle==='reference'){
-      fs.writeFileSync(staging,await renderReference(i/24,data));
-    }else{
-      await sharp(Buffer.from(render(i/24,data))).jpeg({quality:92}).toFile(staging);
-    }
-    fs.renameSync(staging,target);
+const concurrency=2;
+const renderFrame=async i=>{
+  let target=path.join(directory,String(i).padStart(6,'0')+'.jpg');
+  let staging=path.join(directory,String(i).padStart(6,'0')+'.writing.jpg');
+  if(data.characterStyle==='reference'){
+    fs.writeFileSync(staging,await renderReference(i/24,data));
+  }else{
+    await sharp(Buffer.from(render(i/24,data))).jpeg({quality:92}).toFile(staging);
   }
+  fs.renameSync(staging,target);
+};
+let i=start;
+while(i<end && Date.now()<deadline){
+  const batchEnd=Math.min(end,i+concurrency);
+  await Promise.all(Array.from({length:batchEnd-i},(_,offset)=>renderFrame(i+offset)));
+  i=batchEnd;
+}
   console.log(JSON.stringify({nextFrame:i,totalFrames:end,complete:i===end}));
 })().catch(e=>{console.error(e.stack||e);process.exit(1)});
 
