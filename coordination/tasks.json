@@ -971,6 +971,26 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/templates/opportunity-brief.md"
       ]
+    },
+    {
+      "id": "rovor-ai-master-plan",
+      "title": "Establish ChatGPT-first multi-capability Rovor AI roadmap with later local migration",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar Rovor AI planning 2026-10-21",
+      "branch": "coordination/rovor-ai-master-plan",
+      "scopes": [
+        "ROVOR-AI-PLAN.md",
+        "architecture",
+        "AGENTS.md",
+        "WORK.md",
+        "coordination/work-routing.json"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-21T22:07:28.004Z",
+      "next_update": "After roadmap, capability map and executable task dependencies are checked and published",
+      "next_action": "Plan ChatGPT-first operations across business capabilities and preserve local-PC migration path; connect all sessions to same roadmap without replacing existing engines or active owners.",
+      "acceptance": "One versioned master plan, capability/status map, phased dependency tasks and ChatGPT session playbook; queue/routing valid, current runtime limits explicit, published on main."
     }
   ]
 }
