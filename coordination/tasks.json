@@ -571,7 +571,7 @@
       "id": "native-chapter-switch-compiler",
       "title": "Compile source-verified chapter phones into native Moho switch channels",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar native-chapter-switch integration session",
       "branch": "feature/native-chapter-switch-compiler-v1",
       "scopes": [
@@ -584,10 +584,25 @@
         "moho-file-compiler",
         "longform-native-chapter-packaging"
       ],
-      "updated_at": "2026-10-21T03:38:37.644Z",
-      "next_update": "Draft PR with hosted native archive regression results; original Evan rig and Moho rendering pending",
-      "next_action": "Use verified PR #16 chapter package plus PR #13 Moho compiler to compile exact phoneme switch keys into a NEW disposable existing-60fps Moho archive, requiring verified rig-layer UUID, exact original rig and template hashes, source key setup, correct per-chapter frame count; never invent rig names or reconfigure a 24fps project.",
-      "acceptance": "A source-free native schema 1038/1045 ZIP fixture shows exact frame-zero preservation, entire source archive preserved, frame-count match and acoustically derived switch keys; fail closed on unknown child mapping, wrong template duration, tampering, unsafe source; no media/render/studio approval claim."
+      "updated_at": "2026-10-21T03:46:09.709Z",
+      "next_action": "Draft PR #17 compiles private chapter acoustic phones into verified native Moho ZIP SwitchLayer channels with exact existing layer names and 60fps frame counts. Next, validate/approve the real production Evan native Moho master rig and actual Mac CLI render; create disposable 60fps chapter templates, inspect mouth artwork and anatomy/acting, verify frame PTS and original narration on real output, then stage portrait/landscape scene integration. No real Moho video/audio or approved rig on hosted CI.",
+      "acceptance": "A source-free native schema 1038/1045 ZIP fixture shows exact frame-zero preservation, entire source archive preserved, frame-count match and acoustically derived switch keys; fail closed on unknown child mapping, wrong template duration, tampering, unsafe source; no media/render/studio approval claim.",
+      "evidence": [
+        {
+          "commit": "a2dcc250ae372751fc6ee7e8df5deebf3592d0f4",
+          "platform": "GitHub-hosted Linux/Windows/macOS Python 3.11",
+          "check": "18 new native Moho switch archive fixture regressions + 63 existing compiler/packager/chapter/acoustic tests; exact frame zero, existing layers, original artwork member hashes, per-chapter phone switches and interrupted-copy cleanup",
+          "result": "PASS 81/81 on all 3 OS; synthetic fixture native archive only. No Moho app execution, real Evan rig, original MP3 or visual approval",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39540276684"
+        },
+        {
+          "commit": "a2dcc250ae372751fc6ee7e8df5deebf3592d0f4",
+          "platform": "GitHub draft review",
+          "check": "Stacked isolated native Moho chapter compilation PR against PR #16",
+          "result": "Open DRAFT PR #17; mergeable but intentionally unmerged; 4 new isolated files and unchanged original production media",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/17"
+        }
+      ]
     }
   ]
 }
