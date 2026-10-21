@@ -84,7 +84,7 @@ def _distance(a, b):
     return math.hypot(a[0] - b[0], a[1] - b[1])
 
 
-def _solve(meta, hand_meta, authored, wanted):
+def _solve(meta, hand_meta, authored, wanted, previous=None):
     """Damped two-joint FK correction, limits identical to performance_tracks.
 
     No actor translation, fake body scale, or 24fps key conversion.
@@ -92,7 +92,17 @@ def _solve(meta, hand_meta, authored, wanted):
     authored, preserving the actual relaxed-hand plate pose/roll.
     """
     base = (float(authored[0]), float(authored[1]))
-    a, b = base
+    a, b = previous[:2] if previous is not None else base
+    # The source pose is near fully extended; inverse kinematics has two
+    # mathematical elbow branches. Keep the previous real pose as the
+    # continuity constraint instead of allowing flips between those branches.
+    alow, ahigh = -JOINT_LIMITS[0], JOINT_LIMITS[0]
+    blow, bhigh = -JOINT_LIMITS[1], JOINT_LIMITS[1]
+    if previous is not None:
+        alow = max(alow, previous[0] - MAX_SPEED_DEG_PER_FRAME)
+        ahigh = min(ahigh, previous[0] + MAX_SPEED_DEG_PER_FRAME)
+        blow = max(blow, previous[1] - MAX_SPEED_DEG_PER_FRAME)
+        bhigh = min(bhigh, previous[1] + MAX_SPEED_DEG_PER_FRAME)
     for _ in range(MAX_SOLVER_STEPS):
         point = wrist_xy(meta, hand_meta, (a, b, authored[2]))
         ex, ey = wanted[0] - point[0], wanted[1] - point[1]
@@ -106,7 +116,7 @@ def _solve(meta, hand_meta, authored, wanted):
         radians = math.pi / 180
         j11, j21 = -(point[1] - shoulder[1]) * radians, (point[0] - shoulder[0]) * radians
         j12, j22 = -(point[1] - elbow[1]) * radians, (point[0] - elbow[0]) * radians
-        damp = .045
+        damp = .80
         aa = j11*j11 + j21*j21 + damp
         ab = j11*j12 + j21*j22
         bb = j12*j12 + j22*j22 + damp
@@ -116,8 +126,8 @@ def _solve(meta, hand_meta, authored, wanted):
             raise ValueError("Original FK arm singularity")
         da = (bb*v1-ab*v2)/det
         db = (aa*v2-ab*v1)/det
-        a = max(-JOINT_LIMITS[0], min(JOINT_LIMITS[0], a + max(-4., min(4., da))))
-        b = max(-JOINT_LIMITS[1], min(JOINT_LIMITS[1], b + max(-4., min(4., db))))
+        a = max(alow, min(ahigh, a + max(-.75, min(.75, da))))
+        b = max(blow, min(bhigh, b + max(-.75, min(.75, db))))
     output = (a, b, float(authored[2]))
     error = _distance(wrist_xy(meta, hand_meta, output), wanted)
     if error > MAX_SOURCE_ERROR_PX:
@@ -207,7 +217,8 @@ def solve_grips(shot, compositions, images, canvases, actor_id,
                 raise ValueError("Portrait and landscape require incompatible grip targets for the one Evan skeleton")
             wanted = ((local_wanted[0][0] + local_wanted[1][0]) / 2.,
                       (local_wanted[0][1] + local_wanted[1][1]) / 2.)
-            solution = _solve(rig_meta, hand_meta, base["right"], wanted)
+            solution = _solve(rig_meta, hand_meta, base["right"], wanted,
+                              previous=last_angles)
             if (last_angles is not None and any(
                     abs(a - b) > MAX_SPEED_DEG_PER_FRAME
                     for a, b in zip(last_angles[:2], solution[:2]))):
