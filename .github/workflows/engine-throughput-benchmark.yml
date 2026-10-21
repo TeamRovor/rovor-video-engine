@@ -1,0 +1,70 @@
+name: Engine throughput benchmark
+
+on:
+  push:
+    branches: [codex/windows-reliability-v3-1]
+    paths:
+      - 'evan-engine/**'
+      - 'evan-character/v3-assets/**'
+      - '.github/workflows/engine-throughput-benchmark.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: engine-throughput-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - name: Check out the updated engine
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check out the parent commit for the baseline
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.before }}
+          path: benchmark-baseline
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install pinned renderer dependency in both trees
+        shell: bash
+        run: |
+          npm install --no-audit --no-fund --package-lock=false --prefix benchmark-baseline/evan-engine
+          npm install --no-audit --no-fund --package-lock=false --prefix evan-engine
+
+      - name: Compare cold, cached, and interrupted runs
+        env:
+          ROVOR_BASELINE_REF: ${{ github.event.before }}
+        run: >-
+          python evan-engine/benchmark_engine.py
+          --frames 96
+          --baseline-root benchmark-baseline/evan-engine
+          --after-root evan-engine
+          --output engine-throughput-report-${{ runner.os }}.json
+
+      - name: Save benchmark report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine-throughput-${{ runner.os }}
+          path: engine-throughput-report-${{ runner.os }}.json
+          if-no-files-found: ignore
+
