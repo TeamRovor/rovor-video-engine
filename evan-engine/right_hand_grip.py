@@ -240,6 +240,21 @@ def solve_grips(shot, compositions, images, canvases, actor_id,
                                      (view, frame, gap))
                 worst[view] = max(worst[view], gap)
             controls[frame] = solution
+        # The entire actor must keep moving continuously when the tool
+        # is picked up and released. Source-authored joints must already
+        # approach/leave the solver's original pose without sudden snaps.
+        if first > 0:
+            preceding = performance.at_frame(first - 1)["right"]
+            initial = controls[first]
+            if any(abs(a - z) > MAX_SPEED_DEG_PER_FRAME
+                   for a, z in zip(initial[:2], preceding[:2])):
+                raise ValueError("Original FK wrist grip starts with an abrupt arm snap")
+        if last < performance.end:
+            following = performance.at_frame(last)["right"]
+            final = controls[last - 1]
+            if any(abs(a - z) > MAX_SPEED_DEG_PER_FRAME
+                   for a, z in zip(final[:2], following[:2])):
+                raise ValueError("Original FK wrist grip release snaps original arm")
         evidence.append({
             "gripIndex": n, "startFrame": first, "endFrameExclusive": last,
             "framesChecked": last - first,
