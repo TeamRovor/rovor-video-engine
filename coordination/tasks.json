@@ -997,20 +997,22 @@
       "id": "business-offer-brief",
       "title": "Create one evidence-backed Rovor offer draft",
       "priority": 2,
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "ChatGPT / Amar first reusable conversion-site offer 2026-10-21",
+      "branch": "business/first-conversion-site-offer-v1",
       "scopes": [
         "business/offers/first-offer-draft.md"
       ],
       "depends_on": [
         "business-proof-catalog"
       ],
-      "next_action": "Use verified proof-catalog evidence and opportunity-brief template to draft one scoped Rovor service offer for a clearly labeled target business type. Explain customer problem, deliverable, acceptance and missing pricing/client inputs. Avoid inventing a specific prospect or its problems; research a named public prospect only when appropriate access exists. Prepare a draft; do not send.",
-      "acceptance": "One review-ready offer draft with source-backed proof, explicit scope/exclusions and unagreed price/deadline marked; unsupported sales claims removed; no outreach sent.",
+      "next_action": "Produce one reusable internal sales offer for local home-service business websites/inquiry systems using merged delivery playbook, brand knowledge and proof catalog. Give actual deliverable, qualifications, exclusions, test criteria, draft customer wording, and unspecified commercial terms; avoid inventing paid clients or live deployment.",
+      "acceptance": "Versioned source-grounded single offer for a named service category, actual customer problem phrased as discovery hypothesis, explicit smallest useful deliverable, client inputs, acceptance tests, exclusions, truthful proof and unsent outreach draft. Branch PR reviewable and ideally merged.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/templates/opportunity-brief.md"
-      ]
+      ],
+      "updated_at": "2026-10-21T22:47:59.418Z",
+      "next_update": "After concrete scoped, no-fiction draft is published and proof links verified on the actual branch"
     },
     {
       "id": "rovor-ai-master-plan",
