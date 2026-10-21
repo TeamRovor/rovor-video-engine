@@ -25,17 +25,29 @@
       "id": "moho-disposable-pose",
       "title": "Verify a native pose on the disposable Moho project",
       "priority": 1,
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "done",
+      "owner": "Codex / Amar native Moho bridge verification",
+      "branch": "feature/remote-render-job-loop",
       "scopes": [
         "subsystem:mac-moho-sandbox"
       ],
       "depends_on": [],
-      "next_action": "Read latest Issue #6 evidence and claims; verify active disposable file identity, inspect its bones, and dry-run a supported pose before any permitted write.",
+      "next_action": "Pose sequence compiled into isolated diagnostic archive at 60fps; native CLI render established file-compiled channel takes effect. Tutorial B1 remains generic proof fixture, not Evan's rig.",
       "acceptance": "Evidence identifies exact disposable project and bones, dry-run response and verification. Preserve source and unsaved documents. Live reads alone do not complete this pose task.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/6"
+      ],
+      "updated_at": "2026-10-20T05:00:23.147Z",
+      "next_update": "After file-compiled native artifact verification",
+      "blocker": "User redirected to zero-UI file compilation before the prepared write test ran. Live identity, 11 bones and dry-run verified; no animation writes performed.",
+      "evidence": [
+        {
+          "commit": "63e896974225b31a1fe3d020624ddf24e105cb7b",
+          "platform": "macOS / Moho Pro 14 CLI",
+          "check": "Read disposable project identity and 11-bone skeleton; dry-run 3-key B1 motion; compile isolated 60-key variation and render baseline",
+          "result": "PASS; source 24fps disposable preserved, output 60fps render changed as expected; no original edited",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
+        }
       ]
     },
     {
@@ -81,7 +93,7 @@
       "id": "shared-session-checks",
       "title": "Add and verify shared coordination checks",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar coordination session",
       "branch": "coordination/shared-project-loop",
       "scopes": [
@@ -286,15 +298,17 @@
       "id": "engine-efficiency-benchmarks",
       "title": "Benchmark and reduce the MP3-to-video pipeline cost without compromising quality",
       "priority": 1,
-      "status": "ready",
-      "owner": null,
+      "status": "active",
+      "owner": "Codex / Keona Windows desktop session",
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
         "subsystem:engine-throughput-benchmark"
       ],
       "depends_on": [],
-      "next_action": "Evan's GitHub-connected ChatGPT should fetch main and PR #7, claim this task if free, build a CPU/RAM/time/cache-hit benchmark on hosted Windows/macOS/Linux using synthetic permitted data; measure before changing caching or render logic. Do not require laptop access or reimplement phoneme/acting work. Coordinate stage/cache keys with Amar's acoustic gate.",
-      "acceptance": "Reproducible hosted benchmark with wall time, peak memory, stage timings, frame cache reuse, failure/resume overhead, and explicit baseline vs after results; no invented performance percentages or changed output settings."
+      "next_action": "Add an isolated synthetic-data benchmark on PR #7 that records wall time, process CPU, peak memory, stage timings, frame-cache reuse, and failure/resume overhead on hosted Windows/macOS/Linux. Establish the baseline before changing cache or render logic, preserve output settings, and document the synthetic benchmark's limits.",
+      "acceptance": "Reproducible hosted benchmark with wall time, peak memory, stage timings, frame cache reuse, failure/resume overhead, and explicit baseline vs after results; no invented performance percentages or changed output settings.",
+      "updated_at": "2026-10-20T19:23:28-05:00",
+      "next_update": "After the first hosted Windows/macOS/Linux benchmark run completes."
     },
     {
       "id": "acting-acoustic-preflight",
@@ -362,7 +376,7 @@
         "commands": [
           "python -m unittest -v test_continuous_diphthong (isolated source-equivalent copies of english_articulation, acoustic_weights, and new glide/test source)"
         ],
-        "result": "10/10 synthetic tests PASS locally, including duration sweep 12ms\u2013600ms and unchanged bilabial contact",
+        "result": "10/10 synthetic tests PASS locally, including duration sweep 12ms–600ms and unchanged bilabial contact",
         "knownDifference": "Isolated environment used a reduced support-module shim rather than the entire GitHub checkout; not GitHub CI or media verification.",
         "head_sha": "bf030a47b4e1fc3c422e2d175ae180c32582fe35"
       }
@@ -387,14 +401,21 @@
         ".github/workflows/render-job-loop.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T06:00:00Z",
-      "next_update": "After the desktop-local plugin is connected and the owner supplies the approved Evan project and adapter mapping",
-      "next_action": "Private ChatGPT local stdio MCP bridge is active: MP3 file parameter, private intake, status and hash-checked MP4 resource link. This Mac lacks the trusted adapter and approved Evan rig; its local candidate is a 24fps unrigged two-mesh project, and the ChatGPT host has not verified MP4 attachment surfacing. Reuse the PocketSphinx forced aligner in open PR #4 after its missing Python dependencies are provisioned and tested. Existing Moho dev bridge batch timed out. Continue only after the owner provides the real rig/art and authorizes adapter setup; keep GUI interaction out of the execution path.",
+      "updated_at": "2026-10-21T00:42:07Z",
+      "next_update": "After resolving the coordination merge conflict and checking hosted workflow results.",
+      "next_action": "Complete the native Evan rig and trusted adapter integration before production intake. The local bridge is protocol-tested; production render and playable ChatGPT artifact delivery remain unverified. Public-fixture acoustic alignment is tested in an isolated environment; the existing Evan plan still requires word-anchor review. Resolve the branch's coordination conflict and verify hosted checks without accessing personal Macs or Windows desktops.",
       "acceptance": "A real user MP3 traverses ChatGPT file input to a headless Moho Pro 14 render of a disposable Evan project, passes forced-acoustic and render quality gates, then returns as a playable downloadable ChatGPT artifact. Until that run succeeds, record the task as active and report exact blockers.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/13"
       ],
       "evidence": [
+        {
+          "commit": "2b0dd6f31f2eee2d7d344986102cbb1a1509a6ed",
+          "platform": "local macOS / Python 3 standard library",
+          "check": "7 synthetic/mocked transport tests and project_loop.py check",
+          "result": "PASS; real media/Moho/remote runtime unverified",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
+        },
         {
           "commit": "84fadaa7ffa6c1e8b18040567d7a34c84d7e374e",
           "platform": "local macOS",
@@ -415,6 +436,34 @@
           "check": "Native compiler, shared project loop and GitHub-only handoff workflows",
           "result": "PASS; generic tutorial native rendering separately validated on the Mac, not Evan",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39372962573"
+        }
+      ]
+    },
+    {
+      "id": "moho-file-compiler",
+      "title": "Compile observed native Moho JSON channels at 60 fps",
+      "priority": 1,
+      "status": "done",
+      "owner": "Codex / Amar headless compiler session",
+      "branch": "feature/remote-render-job-loop",
+      "scopes": [
+        "tools/moho_compile.py",
+        "tests/test_moho_compile.py",
+        "MOHO-FILE-COMPILER.md",
+        ".github/workflows/moho-file-compiler.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-20T05:00:23.147Z",
+      "next_update": "After schema-preservation tests and native CLI capability check",
+      "next_action": "Next remaining stage is a host-owned adapter that feeds real forced-aligned English phones and the approved Evan rig through the compiler, runs native 1080p60 rendering, verifies narration mux, then exposes it through authenticated ChatGPT upload/return.",
+      "acceptance": "Original archive untouched; frame zero and non-target data preserved; strict schema and collision checks; runtime limits documented.",
+      "evidence": [
+        {
+          "commit": "ffd8f175812e9df33024b4580f605ddb37dc1ded",
+          "platform": "macOS / Moho Pro 14 CLI",
+          "check": "Compile JSON into new 60fps archive; native 60-frame 1920x1080 render plus unpatched baseline control",
+          "result": "PASS; 3.574s, 60 frames, all dimensions correct, 40 distinct frame hashes, injected frame differs from baseline; generic tutorial rig only",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
         }
       ]
     }
