@@ -146,7 +146,7 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
     cues = {"mouthCues": [
         {"start": i / 24, "end": (i + 1) / 24, "value": ("B", "E", "D", "X")[i % 4]}
         for i in range(frames)
-    ]
+    ]}
     memory = MemorySampler()
     memory.start()
     callbacks = []
