@@ -203,5 +203,69 @@ class PackageTests(unittest.TestCase):
                             "\\" not in s for s in paths))
 
 
+    def test_verifier_reconstructs_source_bound_artifacts_after_handoff(self):
+        self.make(92)
+        p.package(self.wav, self.plan, self.chapters, self.destination)
+        check = p.verify_package(self.destination)
+        self.assertTrue(check["verified"])
+        self.assertFalse(check["nativeMohoRendered"])
+        self.assertEqual(check["audioSampleCount"], round(92 * 16000))
+        self.assertEqual(p.main(["--verify-package", str(self.destination)]), 0)
+
+    def test_verifier_rejects_changed_chapter_wav_after_package(self):
+        self.make()
+        p.package(self.wav, self.plan, self.chapters, self.destination)
+        audio = self.destination / "chapter-000" / "narration.wav"
+        blob = bytearray(audio.read_bytes())
+        blob[100] ^= 1
+        audio.write_bytes(blob)
+        with self.assertRaisesRegex(ValueError, "checksum changed"):
+            p.verify_package(self.destination)
+
+    def test_verifier_rejects_changed_local_phone_metadata(self):
+        self.make()
+        p.package(self.wav, self.plan, self.chapters, self.destination)
+        speech = self.destination / "chapter-000" / "acoustic-plan.json"
+        data = json.loads(speech.read_text())
+        data["phonemes"][0]["value"] = "A"
+        speech.write_text(json.dumps(data))
+        with self.assertRaisesRegex(ValueError, "checksum changed"):
+            p.verify_package(self.destination)
+
+    def test_verifier_rejects_malformed_or_missing_chapter_evidence(self):
+        self.make()
+        p.package(self.wav, self.plan, self.chapters, self.destination)
+        proof = self.destination / "chapter-000" / "chapter.json"
+        proof.unlink()
+        with self.assertRaisesRegex(ValueError, "Incomplete or unexpected"):
+            p.verify_package(self.destination)
+
+    def test_verifier_rejects_invented_approval(self):
+        self.make()
+        p.package(self.wav, self.plan, self.chapters, self.destination)
+        bundle = self.destination / "bundle.json"
+        status = json.loads(bundle.read_text())
+        status["artisticApproval"] = True
+        bundle.write_text(json.dumps(status))
+        with self.assertRaisesRegex(ValueError, "invented production approval"):
+            p.verify_package(self.destination)
+
+    def test_verifier_rejects_hidden_chapter_frameshift(self):
+        self.make()
+        p.package(self.wav, self.plan, self.chapters, self.destination)
+        path = self.destination / "chapter-001" / "chapter.json"
+        evidence = json.loads(path.read_text())
+        evidence["chapterPlan"]["startFrame"] += 1
+        path.write_text(json.dumps(evidence))
+        with self.assertRaisesRegex(ValueError, "frame/sample bounds changed"):
+            p.verify_package(self.destination)
+
+    def test_cli_verifier_refuses_conflicting_source_args(self):
+        self.make()
+        p.package(self.wav, self.plan, self.chapters, self.destination)
+        self.assertEqual(p.main(["--verify-package", str(self.destination),
+                                 "--wav", str(self.wav)]), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
