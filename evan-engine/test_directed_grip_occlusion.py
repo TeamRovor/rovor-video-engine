@@ -84,7 +84,7 @@ class OriginalHandOverPropTests(unittest.TestCase):
                 self.assertEqual(normal.size,scene.size)
 
     def test_original_hand_artwork_and_manifest_bytes_remain_intact(self):
-        path=Path(self.body.head.root).parent/"hand-source"/"relaxed-right-v1.png" if hasattr(self.body.head,"root") else Path(__file__).parent.parent/"evan-character/cartoon-v1/hand-source/relaxed-right-v1.png"
+        path=Path(__file__).parent.parent/"evan-character/cartoon-v1/hand-source/relaxed-right-v1.png"
         first=hashlib.sha256(path.read_bytes()).hexdigest()
         image=self.shot["gripHandRaster"].image_at(
             self.frame_number,self.shot["gripControls"][self.frame_number],
