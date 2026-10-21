@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 import platform
 import shutil
+import statistics
 import subprocess
 import sys
 import tempfile
@@ -306,25 +307,53 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
 
 def _compare(args) -> dict:
     script = Path(__file__).resolve()
-    reports = {}
+    reports = {"baseline": [], "after": []}
     with tempfile.TemporaryDirectory(prefix="rovor-engine-benchmark-") as temporary:
         root = Path(temporary)
-        for label, engine_root in (("baseline", args.baseline_root), ("after", args.after_root)):
-            output = root / label
-            command = [sys.executable, str(script), "--single", "--engine-root", str(engine_root),
-                       "--frames", str(args.frames), "--output-root", str(output)]
-            result = subprocess.run(command, capture_output=True, text=True, check=False)
-            if result.returncode:
-                raise RuntimeError(f"{label} benchmark failed:\n{result.stdout}\n{result.stderr}")
-            reports[label] = json.loads(result.stdout)
+        roots = {"baseline": args.baseline_root, "after": args.after_root}
+        for repeat in range(args.repeats):
+            order = ("baseline", "after") if repeat % 2 == 0 else ("after", "baseline")
+            for label in order:
+                output = root / f"{label}-{repeat + 1}"
+                command = [sys.executable, str(script), "--single", "--engine-root", str(roots[label]),
+                           "--frames", str(args.frames), "--output-root", str(output)]
+                result = subprocess.run(command, capture_output=True, text=True, check=False)
+                if result.returncode:
+                    raise RuntimeError(f"{label} benchmark repeat {repeat + 1} failed:\n"
+                                       f"{result.stdout}\n{result.stderr}")
+                reports[label].append(json.loads(result.stdout))
 
-    baseline = reports["baseline"]
-    after = reports["after"]
-    same_output = baseline["frame_bytes_sha256"] == after["frame_bytes_sha256"]
+    numeric_fields = (
+        "cold_wall_seconds", "cold_frame_renderer_invocations", "warm_resume_wall_seconds",
+        "warm_frame_cache_reuse_count", "warm_frame_renderer_invocations",
+        "failure_attempt_wall_seconds", "recovery_wall_seconds",
+        "recovery_existing_valid_frames", "recovery_frame_renderer_invocations",
+        "recovery_overhead_seconds", "peak_rss_bytes_python_plus_renderer",
+    )
+
+    def summarize(samples):
+        result = dict(samples[0])
+        result["runs"] = samples
+        for field in numeric_fields:
+            result[field] = round(statistics.median(sample[field] for sample in samples), 4)
+        stage_names = set().union(*(sample["cold_stage_seconds"] for sample in samples))
+        result["cold_stage_seconds"] = {
+            stage: round(statistics.median(sample["cold_stage_seconds"].get(stage, 0.0)
+                                           for sample in samples), 4)
+            for stage in sorted(stage_names)
+        }
+        result["frame_bytes_sha256"] = samples[0]["frame_bytes_sha256"]
+        return result
+
+    baseline = summarize(reports["baseline"])
+    after = summarize(reports["after"])
+    frame_hashes = {sample["frame_bytes_sha256"] for samples in reports.values() for sample in samples}
+    same_output = len(frame_hashes) == 1
     before = baseline["cold_wall_seconds"]
     now = after["cold_wall_seconds"]
     return {
         "schema_version": 1,
+        "repeat_count": args.repeats,
         "baseline_ref": os.environ.get("ROVOR_BASELINE_REF", "local baseline"),
         "after_ref": os.environ.get("GITHUB_SHA", "local working tree"),
         "frame_output_identical": same_output,
@@ -340,12 +369,16 @@ def main() -> int:
     parser.add_argument("--engine-root", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--output-root", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--frames", type=int, default=96, help="Synthetic frames to render per cold run (default: 96).")
+    parser.add_argument("--repeats", type=int, default=3,
+                        help="Cold/warm/failure samples per version; medians are reported (default: 3).")
     parser.add_argument("--baseline-root", type=Path, help="Engine tree at the baseline commit.")
     parser.add_argument("--after-root", type=Path, help="Engine tree after the change.")
     parser.add_argument("--output", type=Path, help="Write the comparison report as JSON.")
     args = parser.parse_args()
     if args.frames < 24:
         parser.error("--frames must be at least 24 to measure restart and recovery behavior.")
+    if args.repeats < 3:
+        parser.error("--repeats must be at least 3 to reduce runner noise.")
     if args.single:
         if not args.engine_root or not args.output_root:
             parser.error("Internal benchmark mode requires engine and output paths.")
