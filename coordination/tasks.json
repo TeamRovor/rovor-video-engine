@@ -566,6 +566,28 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/16"
         }
       ]
+    },
+    {
+      "id": "native-chapter-switch-compiler",
+      "title": "Compile source-verified chapter phones into native Moho switch channels",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar native-chapter-switch integration session",
+      "branch": "feature/native-chapter-switch-compiler-v1",
+      "scopes": [
+        "tools/native_chapter_switch.py",
+        "tests/test_native_chapter_switch.py",
+        ".github/workflows/native-chapter-switch.yml",
+        "NATIVE-CHAPTER-SWITCH-HANDOFF.md"
+      ],
+      "depends_on": [
+        "moho-file-compiler",
+        "longform-native-chapter-packaging"
+      ],
+      "updated_at": "2026-10-21T03:38:37.644Z",
+      "next_update": "Draft PR with hosted native archive regression results; original Evan rig and Moho rendering pending",
+      "next_action": "Use verified PR #16 chapter package plus PR #13 Moho compiler to compile exact phoneme switch keys into a NEW disposable existing-60fps Moho archive, requiring verified rig-layer UUID, exact original rig and template hashes, source key setup, correct per-chapter frame count; never invent rig names or reconfigure a 24fps project.",
+      "acceptance": "A source-free native schema 1038/1045 ZIP fixture shows exact frame-zero preservation, entire source archive preserved, frame-count match and acoustically derived switch keys; fail closed on unknown child mapping, wrong template duration, tampering, unsafe source; no media/render/studio approval claim."
     }
   ]
 }
