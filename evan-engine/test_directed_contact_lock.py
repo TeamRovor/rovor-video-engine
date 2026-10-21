@@ -162,6 +162,32 @@ class LockedAnimationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Overlapping contact locks"):
             self.prepare()
 
+    def test_chained_tool_locks_are_explicitly_disallowed(self):
+        second = {
+            "startFrame": 0, "endFrameExclusive": 480,
+            "tool": {"assetId": "desk", "uv": [.5, .5]},
+            "target": {"assetId": "globe", "uv": [.5, .5]},
+            "maxGapPx": 2,
+            "maxCorrectionPx": 255,
+            "lockToolToTarget": True,
+        }
+        self.shot["contactConstraints"].append(second)
+        with self.assertRaisesRegex(ValueError, "Chained contact locks"):
+            self.prepare()
+
+    def test_attached_tool_cannot_teleport_along_the_surface(self):
+        self.contact["target"]["segment"] = [[.5, .15], [.5, .85]]
+        for view in ("landscape", "portrait"):
+            tool = self.shot["compositions"][view]["elements"][-1]
+            tool["keys"] = [
+                key(0, .5, .49, scale=.5),
+                key(238, .619, .43, scale=.5),
+                key(239, .6195, .57, scale=.5),
+                key(240, .62, .5, scale=.5),
+                key(480, .5, .51, scale=.5)]
+        with self.assertRaisesRegex(ValueError, "attached tool teleports"):
+            self.prepare()
+
     def test_legacy_unlocked_scene_no_behavior_change(self):
         self.shot.pop("contactConstraints")
         self.shot.pop("requirePhysicalContacts")
