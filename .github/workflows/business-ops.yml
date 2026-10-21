@@ -1,0 +1,87 @@
+name: Rovor business operations
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'business/**'
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+      - 'tools/ops_worker.py'
+      - 'tools/work_brief.py'
+      - 'tools/project_loop.py'
+      - 'tests/test_ops_worker.py'
+      - 'tests/test_work_brief.py'
+      - '.github/workflows/business-ops.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'business/**'
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+      - 'tools/ops_worker.py'
+      - 'tools/work_brief.py'
+      - 'tools/project_loop.py'
+      - 'tests/test_ops_worker.py'
+      - 'tests/test_work_brief.py'
+      - '.github/workflows/business-ops.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: business-ops-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Operations worker (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check queue and routing
+        run: |
+          python tools/project_loop.py check
+          python -m unittest discover -s tests -p test_work_brief.py -v
+          python -m unittest discover -s tests -p test_ops_worker.py -v
+  report:
+    name: Business operations report (no task execution)
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Generate bounded report
+        shell: bash
+        run: |
+          python tools/ops_worker.py --out "$RUNNER_TEMP/rovor-ops-state" --revision "$GITHUB_SHA" > "$RUNNER_TEMP/ops-result.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          result = json.loads((Path(os.environ['RUNNER_TEMP']) / 'ops-result.json').read_text())
+          report = Path(result['directory']) / 'report.md'
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write(report.read_text(encoding='utf-8'))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rovor-business-operations
+          path: ${{ runner.temp }}/rovor-ops-state
+          retention-days: 7
+          if-no-files-found: warn

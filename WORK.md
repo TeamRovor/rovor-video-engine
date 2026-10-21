@@ -95,3 +95,17 @@ next action and linked PR description/checkpoint (do not create another owner ta
 Refresh main before the handoff write. Never declare a PR integrated merely because it is pushed or green.
 Do not claim chats, private inputs, installations or computer state synchronize through GitHub. The next
 session reads the handoff and resumes from evidence instead of repeating setup or guessing what happened.
+
+## Business outcomes and unattended groundwork
+
+For business-efficiency work, read `business/OPERATING-SYSTEM.md` and `business/operating-plan.json`.
+Use sales, delivery or operations lanes as appropriate; Evan's existing efficiency default remains intact.
+Prefer a concrete accepted deliverable or removal of a real bottleneck over more speculative infrastructure.
+Use the existing queue for business tasks too. Templates under `business/templates/` make intake and handoffs
+consistent; they are not filled client records or permission to send/publish anything.
+
+The read-only operations worker and `Rovor business operations` GitHub workflow produce a report on relevant
+repository changes. They can run while people are away, but do not perform the recommended tasks or start
+ChatGPT on either computer. Reports identify input/code hashes and observation time; refresh live state
+before claiming. For actual unattended rendering, extend the existing reviewed PR #13 worker path only after
+its host/adapter/rig prerequisites are verified. See the operating system document for the staged rollout.

@@ -763,23 +763,23 @@
       "depends_on": [
         "nonmoho-right-wrist-tool-ik"
       ],
-      "updated_at": "2026-10-21T21:32:00Z",
-      "next_action": "Check final macOS job in GitHub Actions run #39679181796 and dependent PR checks on final head 92f7750; fix any failures. Then close task if all green. Original real painter+roller art, validated natural finger grip and 30s+ output remain separate blockers.",
+      "updated_at": "2026-10-21T21:46:00Z",
+      "next_action": "Draft PR #21 includes actual encoded-frame-loop blank Evan wrist test, 103 synthetic/actual source-art tests passing Linux and Windows on final SHA 76b3f5b; macOS workflow run #39681169031 queued. Verify macOS and dependent PR runs when GitHub runner is scheduled; fix any failure then mark done. Original private painting source/audio, real expressive closed-grip finger art, full 30-second visual render and artist approval remain unverified.",
       "acceptance": "Actual source art wrist alpha passes hosted CI in native pose; deliberate synthetic blank and truncated wrist fail; no-grip legacy unchanged; fast per-frame check in renderer avoids extra image renders; source-free actual CartoonBody raster test and 1080p dual-view checks pass three OS; no artistic approval claim.",
-      "next_update": "Draft PR #21 source-raster wrist occupancy integration created and green on Linux/Windows (102 tests), macOS final head is queued; do not mark complete or claim 3-OS success until final check.",
+      "next_update": "CI on latest PR head 76b3f5b: Linux 103/103 green, Windows 103/103 green; macOS runner queued. No merge.",
       "evidence": [
         {
-          "commit": "92f7750e762b4e3d8fa8f660d024996778271071",
-          "platform": "GitHub Actions Linux + Windows Python 3.11, actual original Evan artwork",
-          "check": "Real 1464x1536 CartoonBody rendered frames at grip vs transparent erased wrist, wrong hand pose, unadjusted FK, missing art and all 60fps painting/scene/contact tests",
-          "result": "PASS 102/102 Linux and Windows on final PR head; macOS job queued; visual gripping-fingers approval and full MP4 not claimed.",
-          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39679181796"
+          "commit": "76b3f5b3729e4340c402d369eaeadd98d2eb0e42",
+          "platform": "GitHub Actions Windows and Linux 3.11 with real source-painted Evan rig",
+          "check": "103 tests including actual render_chunk FFmpeg-entry gate mock; transparent wrist prevents any rawvideo bytes entering encoder, independent original FK/actor/paint/contact visual regressions",
+          "result": "PASS 103/103 on Linux + Windows, macOS job queued at same head. No production full film nor closed finger visual approval.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39681169031"
         },
         {
-          "commit": "92f7750e762b4e3d8fa8f660d024996778271071",
-          "platform": "Draft stacked code review",
-          "check": "Minimal source-alpha wrist occupancy gate before FFmpeg plus original-art tests; duplicate full-frame alpha allocation eliminated",
-          "result": "Open DRAFT PR #21 unmerged, preserving existing rigs, other developers' work and user audio.",
+          "commit": "76b3f5b3729e4340c402d369eaeadd98d2eb0e42",
+          "platform": "GitHub draft PR",
+          "check": "Stacked on original non-Moho FK PR #20; rendered original RGBA wrist QA before FFmpeg",
+          "result": "Open DRAFT PR #21, unmerged and isolated to its claimed files",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/21"
         }
       ]
@@ -866,6 +866,60 @@
       "next_update": "After worker replay/failure tests and GitHub report validation",
       "next_action": "Add business outcome routing and single-shot read-only operations worker, preserving existing render transport and all active owners.",
       "acceptance": "One queue; actionable business task packets; deterministic replay/tamper checks and bounded report worker; hosted artifact verified; no remote laptop, messaging, billing or production approval claim."
+    },
+    {
+      "id": "business-service-delivery-playbook",
+      "title": "Create reusable website and landing-page delivery playbook",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "scopes": [
+        "business/playbooks/website-delivery.md"
+      ],
+      "depends_on": [],
+      "next_action": "Use business/templates/client-intake.md and delivery-review.md to write a concrete website/landing-page process: required inputs, scope exclusions, acceptance checks, review handoff, revision boundaries and maintenance handoff. Reuse current Rovor services; mark prices, deadlines and client facts as not agreed. Work on a focused branch from main.",
+      "acceptance": "Playbook has a usable intake-to-delivery checklist, explicit unknown-input handling, client-facing acceptance checks and a concrete review packet; no invented contract/pricing or deployment. Validate that every stage names its output and owner.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/OPERATING-SYSTEM.md"
+      ]
+    },
+    {
+      "id": "business-proof-catalog",
+      "title": "Separate real portfolio evidence from concepts and unfinished demos",
+      "priority": 2,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "scopes": [
+        "business/proof-catalog.md"
+      ],
+      "depends_on": [],
+      "next_action": "Inspect current project/PR evidence and source references; create a compact catalog distinguishing implemented code, technically tested demo, available preview, approved portfolio piece and actual client result. Cite exact commits/links and flag unavailable private artifacts. Do not claim a client outcome or polished film without evidence. Use a focused branch from main.",
+      "acceptance": "Every catalog item has a source, truthful status, missing approval/input and allowed description; no fabricated metrics, testimonials, client names or visual approval.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/5",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/7"
+      ]
+    },
+    {
+      "id": "business-offer-brief",
+      "title": "Create one evidence-backed Rovor offer draft",
+      "priority": 2,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "scopes": [
+        "business/offers/first-offer-draft.md"
+      ],
+      "depends_on": [
+        "business-proof-catalog"
+      ],
+      "next_action": "Use verified proof-catalog evidence and opportunity-brief template to draft one scoped Rovor service offer for a clearly labeled target business type. Explain customer problem, deliverable, acceptance and missing pricing/client inputs. Avoid inventing a specific prospect or its problems; research a named public prospect only when appropriate access exists. Prepare a draft; do not send.",
+      "acceptance": "One review-ready offer draft with source-backed proof, explicit scope/exclusions and unagreed price/deadline marked; unsupported sales claims removed; no outreach sent.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/templates/opportunity-brief.md"
+      ]
     }
   ]
 }
