@@ -992,7 +992,7 @@
       "id": "rovor-ai-master-plan",
       "title": "Establish ChatGPT-first multi-capability Rovor AI roadmap with later local migration",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar Rovor AI planning 2026-10-21",
       "branch": "coordination/rovor-ai-master-plan",
       "scopes": [
@@ -1003,10 +1003,22 @@
         "coordination/work-routing.json"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-21T22:07:28.004Z",
-      "next_update": "After roadmap, capability map and executable task dependencies are checked and published",
-      "next_action": "Plan ChatGPT-first operations across business capabilities and preserve local-PC migration path; connect all sessions to same roadmap without replacing existing engines or active owners.",
-      "acceptance": "One versioned master plan, capability/status map, phased dependency tasks and ChatGPT session playbook; queue/routing valid, current runtime limits explicit, published on main."
+      "updated_at": "2026-10-21T22:12:50.250Z",
+      "next_update": "Next ChatGPT work session",
+      "next_action": "Follow ROVOR-AI-PLAN.md and architecture/CHATGPT-WORKFLOWS.md from main after PR #25 integration. ChatGPT-first is current; curate source knowledge and complete eligible business/technical deliverables now. Evaluate reusable workflows before packet schemas; hardware/model/unattended execution remain later gates. Current hosted Actions startup blocker is separately queued.",
+      "acceptance": "One versioned master plan, capability/status map, phased dependency tasks and ChatGPT session playbook; queue/routing valid, current runtime limits explicit, published on main.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/25"
+      ],
+      "evidence": [
+        {
+          "commit": "776f9e0359874b959e14e3351b9f7c4278f4a03c",
+          "platform": "Local Python / repository planning validation",
+          "check": "project_loop.py check; capability ID/reference/task/lane validation; work_brief eligibility check for unfinished evaluation/contract dependencies",
+          "result": "PASS: 12 unique capabilities, valid source/task links and routing, future work correctly dependency-blocked. Documentation/config only; no runtime change. Hosted CI startup still unresolved.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/25"
+        }
+      ]
     },
     {
       "status": "ready",
