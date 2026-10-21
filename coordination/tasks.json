@@ -728,13 +728,23 @@
         "subsystem:render-cache-file-identity"
       ],
       "depends_on": [],
-      "next_action": "Add low-cost file identity metadata to local dependency fingerprints so a replacement at the same path with the same size and modification time cannot reuse stale render outputs; review platform behavior and limitations.",
+      "next_action": "Obtain and inspect a hosted regression run for commit e8ef17c0c5c3f06224d6cc87b587385cf244d3ec; then close the task only after checks or runtime evidence are available.",
       "acceptance": "A replaced tool/model file with matching path, size, and modification time produces a different resume fingerprint where filesystem identity metadata is supported; unrelated resume invalidation remains unchanged. Record static review and any hosted workflow results without claiming a render on Keona's laptop.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/7"
       ],
-      "updated_at": "2026-10-21T11:00:42Z",
-      "next_update": "After the cache fingerprint change is published and the PR branch head is rechecked."
+      "updated_at": "2026-10-21T11:02:55Z",
+      "next_update": "When a hosted regression result is available for commit e8ef17c0c5c3f06224d6cc87b587385cf244d3ec.",
+      "blocker": "No GitHub commit status or workflow run is attached to the connector-authored commits yet. No automated tests or local render were run in this session.",
+      "evidence": [
+        {
+          "commit": "e8ef17c0c5c3f06224d6cc87b587385cf244d3ec",
+          "platform": "GitHub branch review",
+          "check": "Read back animate_evan.py at blob c2643cf5571676fe74e329d0c39c939e493847e0; reviewed file identity fields and fingerprint version 5; inspected PR status and associated workflow runs",
+          "result": "Static review confirms device/file identity plus platform timestamps are fingerprinted without hashing tool/model contents. No commit statuses or workflow runs were attached; no tests or local render run.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/e8ef17c0c5c3f06224d6cc87b587385cf244d3ec"
+        }
+      ]
     }
   ]
 }
