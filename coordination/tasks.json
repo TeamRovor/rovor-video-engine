@@ -534,7 +534,7 @@
       "id": "longform-native-chapter-packaging",
       "title": "Package exact PCM chapters and native-local phone timelines",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar longform package integration session",
       "branch": "feature/native-chapter-package-v1",
       "scopes": [
@@ -547,10 +547,25 @@
         "longform-acoustic-chapter-plan",
         "moho-file-compiler"
       ],
-      "updated_at": "2026-10-21T03:25:01.144Z",
-      "next_update": "After hosted 4m23 and 8m30 artifact-packaging tests; native Moho rig and renderer still unverified",
-      "next_action": "Read PR #15 manifest, verify original 16k PCM and original speech plan hashes, package each <=60-second chapter as source-byte-exact WAV plus localized phoneme plan, verify reassembled PCM payloads and no end/start drift; stay out of PR #13 worker and source rig paths.",
-      "acceptance": "Create private no-overwrite chapter directory with immutable source-bound hashes, chapter-local typed phonemes, exact PCM coverage and independent cross-platform tests for 4:23, 8:30, tamper/overlap/missing-key cases. No paid service/native Moho claim."
+      "updated_at": "2026-10-21T03:33:32.704Z",
+      "next_action": "Draft PR #16 includes verified package creation/reverification; integrate with actual authorized Mac native Moho worker only after approving the real production Evan rig, testing chunk-local phone-to-switch keys, media frame timestamp seams, original whole MP3 mux and large output transfer. Maintain existing 60-second PR #13 worker limit; do not call synthetic audio tests a rendered real film.",
+      "acceptance": "Create private no-overwrite chapter directory with immutable source-bound hashes, chapter-local typed phonemes, exact PCM coverage and independent cross-platform tests for 4:23, 8:30, tamper/overlap/missing-key cases. No paid service/native Moho claim.",
+      "evidence": [
+        {
+          "commit": "cf3584ecec6588e6747c446a4a86060432df894f",
+          "platform": "GitHub-hosted macOS/Windows/Linux Python 3.11",
+          "check": "22 new native chapter WAV/speech package + verifier tests, 15 source chapter-planning tests and 13 acoustic-gate tests; synthetic 4:23 and 8:30 WAV payloads, tamper/overwrite/modified-during-read cases",
+          "result": "PASS 52/52 each OS. Actual user MP3, native Moho rendering, visual review NOT done.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39539146966"
+        },
+        {
+          "commit": "cf3584ecec6588e6747c446a4a86060432df894f",
+          "platform": "GitHub draft review",
+          "check": "No-overlap isolated payload authoring stacked on PR #15",
+          "result": "Open DRAFT PR #16, unmerged; 4 new files; original narration and Mac/Windows runners untouched",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/16"
+        }
+      ]
     }
   ]
 }
