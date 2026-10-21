@@ -1157,6 +1157,25 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/29"
         }
       ]
+    },
+    {
+      "id": "blender-mcp-codex-local-bridge",
+      "title": "Configure safe local Blender MCP adapter for trusted ROVOR Codex projects",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar GitHub Blender MCP integration session",
+      "branch": "feature/blender-mcp-local-codex-v1",
+      "scopes": [
+        ".codex/config.toml",
+        "integrations/blender-mcp/",
+        "tools/blender_mcp_preflight.py",
+        "tests/test_blender_mcp_preflight.py"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-21T23:21:47.851Z",
+      "next_update": "After project TOML and portable MCP JSON, install/connection walkthrough, and offline validation merged or reviewable; never claim Mac/Windows runtime connected absent local host evidence",
+      "next_action": "Use renamed official ahujasid/mcp-for-blender package, add trusted project-level Codex MCP config and JSON example with safe mode and loopback, no copied upstream code or secrets. Provide macOS/Windows install and real Blender addon activation/connection checks, include a standalone no-side-effects config/port preflight, validate JSON/TOML locally. GitHub-only scope cannot install the add-on, change this ChatGPT harness, or open user's Blender.",
+      "acceptance": "Committed exact Codex project TOML and Claude/Cursor-style MCP JSON example for maintained package, verified file parsers and local no-side-effects checks; auditable Mac and Windows installation instructions with bounded first test and security/permissions, user activation remaining explicit; no false live Blender session claim."
     }
   ]
 }
