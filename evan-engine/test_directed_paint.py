@@ -82,7 +82,7 @@ class VisiblePaintTests(unittest.TestCase):
                                       portrait=portrait, prepared=prepared)
                 before = scene.frame(0, self.actor)
                 after = scene.frame(479, self.actor)
-                pos0 = self.pixel_on_wall(prepared, view, 0)
+                pos0 = self.pixel_on_wall(prepared, view, 0, (.5, .8))
                 pos1 = self.pixel_on_wall(prepared, view, 479)
                 self.assertEqual(before.size, SIZES[view])
                 self.assertEqual(after.size, SIZES[view])
@@ -99,7 +99,7 @@ class VisiblePaintTests(unittest.TestCase):
         mid = scene.frame(300, self.actor)
         late_again = scene.frame(479, self.actor)
         site = self.pixel_on_wall(prepared, "landscape", 479)
-        self.assertEqual(early.getpixel(self.pixel_on_wall(prepared, "landscape", 0)), WALL)
+        self.assertEqual(early.getpixel(self.pixel_on_wall(prepared, "landscape", 0, (.5, .8))), WALL)
         self.assertEqual(late.getpixel(site), PAINT)
         self.assertEqual(late_again.getpixel(site), PAINT)
         self.assertEqual(hashlib.sha256(late.tobytes()).digest(),
@@ -183,7 +183,7 @@ class VisiblePaintTests(unittest.TestCase):
 
     def test_cannot_paint_invisible_png_padding(self):
         self.rule["target"]["segment"] = [[.01, .1], [.01, .8]]
-        with self.assertRaisesRegex(ValueError, "transparent artwork|transparent source-wall"):
+        with self.assertRaisesRegex(ValueError, "transparent artwork|transparent source-wall|no visible artwork"):
             self.prepared()
 
     def test_target_layer_must_render_before_roller(self):
@@ -196,7 +196,7 @@ class VisiblePaintTests(unittest.TestCase):
     def test_no_progressive_paint_in_stationary_roller_shot(self):
         for view in SIZES:
             roller = self.shot["compositions"][view]["elements"][-1]
-            roller["keys"] = [key(0, .5, .5, scale=.5), key(480, .5, .5, scale=.5)]
+            roller["keys"] = [key(0,.5,.5,scale=.5), key(60,.5,.5,scale=.5), key(240,.6,.5,scale=.5), key(420,.5,.5,scale=.5), key(480,.5,.5,scale=.5)]
         with self.assertRaisesRegex(ValueError, "no progressive stroke"):
             self.prepared()
 
