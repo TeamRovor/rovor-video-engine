@@ -294,19 +294,21 @@
         }
       ]
     },
-    {
+        {
       "id": "engine-efficiency-benchmarks",
       "title": "Benchmark and reduce the MP3-to-video pipeline cost without compromising quality",
       "priority": 1,
-      "status": "ready",
-      "owner": null,
+      "status": "active",
+      "owner": "Codex / Keona Windows desktop session",
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
         "subsystem:engine-throughput-benchmark"
       ],
       "depends_on": [],
-      "next_action": "Evan's GitHub-connected ChatGPT should fetch main and PR #7, claim this task if free, build a CPU/RAM/time/cache-hit benchmark on hosted Windows/macOS/Linux using synthetic permitted data; measure before changing caching or render logic. Do not require laptop access or reimplement phoneme/acting work. Coordinate stage/cache keys with Amar's acoustic gate.",
-      "acceptance": "Reproducible hosted benchmark with wall time, peak memory, stage timings, frame cache reuse, failure/resume overhead, and explicit baseline vs after results; no invented performance percentages or changed output settings."
+      "next_action": "Add an isolated synthetic-data benchmark on PR #7 that records wall time, process CPU, peak memory, stage timings, frame-cache reuse, and failure/resume overhead on hosted Windows/macOS/Linux. Establish the baseline before changing cache or render logic, preserve output settings, and document the synthetic benchmark's limits.",
+      "acceptance": "Reproducible hosted benchmark with wall time, peak memory, stage timings, frame cache reuse, failure/resume overhead, and explicit baseline vs after results; no invented performance percentages or changed output settings.",
+      "updated_at": "2026-10-20T19:23:28-05:00",
+      "next_update": "After the first hosted Windows/macOS/Linux benchmark run completes."
     },
     {
       "id": "acting-acoustic-preflight",
