@@ -117,6 +117,26 @@ class RealWristGripTests(unittest.TestCase):
             frame = scene.frame(120, self.actor)
             self.assertEqual(frame.size, canvas)
 
+    def test_real_original_rig_arm_raster_changes_from_solved_joint_controls(self):
+        # The source actor geometry is not a cartoon stick figure. Exercise
+        # the actual CartoonBody arm/hand plates with the corrected FK values
+        # and verify the source-painted arm pixels move, not just JSON keys.
+        from cartoon_body import CartoonBody
+        from PIL import ImageChops
+        ready = self.prepared()
+        body = CartoonBody()
+        pose = self.performance.at_frame(150)
+        solved = dict(pose, right=ready["scenes"][0]["gripControls"][150])
+        # Silence-stage pronunciation uses the existing acoustic rest pose.
+        # No synthetic audio is presented as real source transcription.
+        speech = {"alignment": {"status": "acoustic"},
+                  "phonemes": [], "fallbackCues": [],
+                  "audio": {"energy": [0.], "step": .1}}
+        baseline_arm = body.layers(2.5, speech, pose)["arm-right"]
+        gripping_arm = body.layers(2.5, speech, solved)["arm-right"]
+        self.assertEqual(baseline_arm.size, (1464, 1536))
+        self.assertIsNotNone(ImageChops.difference(baseline_arm, gripping_arm).getbbox())
+
     def test_missing_rig_or_performance_refused_before_render(self):
         with self.assertRaisesRegex(ValueError, "original FK performance"):
             check(self.scene, self.assets, self.root)
