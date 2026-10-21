@@ -116,11 +116,16 @@ def _solve(meta, hand_meta, authored, wanted, previous=None):
         radians = math.pi / 180
         j11, j21 = -(point[1] - shoulder[1]) * radians, (point[0] - shoulder[0]) * radians
         j12, j22 = -(point[1] - elbow[1]) * radians, (point[0] - elbow[0]) * radians
-        damp = .80
+        # Penalize divergence from the authored original neutral joint
+        # configuration. Otherwise, a near-straight elbow can still hold
+        # a compensating shoulder/elbow pair after the roller comes home,
+        # causing an abrupt release snap despite perfect wrist position.
+        damp = 1.2
         aa = j11*j11 + j21*j21 + damp
         ab = j11*j12 + j21*j22
         bb = j12*j12 + j22*j22 + damp
-        v1, v2 = j11*ex + j21*ey, j12*ex + j22*ey
+        v1 = j11*ex + j21*ey - damp*(a-base[0])
+        v2 = j12*ex + j22*ey - damp*(b-base[1])
         det = aa*bb - ab*ab
         if det <= 0:
             raise ValueError("Original FK arm singularity")
@@ -156,6 +161,17 @@ def solve_grips(shot, compositions, images, canvases, actor_id,
         raise ValueError("Unexpected hand-source approval metadata; inspect actual rig")
     if "relaxed-right" not in hand_meta or "arms" not in rig_meta:
         raise ValueError("Missing original relaxed-right source plate and FK arm geometry")
+    # Reject ambiguous multiple independent masters of one wrist before
+    # solving any shot. A single real arm has one FK pose per video frame.
+    bounds = []
+    for rule in entries:
+        if isinstance(rule, dict):
+            start, end = rule.get("startFrame"), rule.get("endFrameExclusive")
+            if type(start) is int and type(end) is int:
+                bounds.append((start,end))
+    for a,b in zip(sorted(bounds),sorted(bounds)[1:]):
+        if a[1] > b[0]:
+            raise ValueError("Overlapping grip constraints on the same real original right wrist")
     controls = {}
     evidence = []
     for n, rule in enumerate(entries, 1):
