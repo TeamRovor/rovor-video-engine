@@ -497,7 +497,7 @@
       "id": "longform-acoustic-chapter-plan",
       "title": "Plan acoustic word-safe 60fps chapters for long narration",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar longform audio continuity session",
       "branch": "feature/acoustic-longform-chapters-v1",
       "scopes": [
@@ -510,10 +510,25 @@
         "acoustic-production-gate",
         "moho-file-compiler"
       ],
-      "updated_at": "2026-10-21T03:16:50.805Z",
-      "next_update": "After hosted CI on isolated chapter planning branch; preserve PR #13 existing 60-second intake limit",
-      "next_action": "Implement bounded source-WAV chapter manifest from previously reviewed acoustic speech plans, prove exact sample/frame coverage and no cut through aligned words or phones. No native Moho render or media transport capability implied.",
-      "acceptance": "Validate original 16k PCM WAV and source plan hashes; require full acoustic QA; choose exact 60fps boundaries between words/phonemes; refuse unsupported/no-safe-cut cases; sample-accurate contiguous chapters up to 60s for up-to-15min inputs; 30+ sec preferred where safe; source-free 4:23 and 8-9min tests in hosted CI."
+      "updated_at": "2026-10-21T03:23:05.941Z",
+      "next_action": "Review draft PR #15 against real author-approved speech-plan timing and original 4:23 source; separately scope a trusted Mac host adapter to create native <=60s Moho projects per chapter, verify audio/video seam invariants, assemble 1080p60 full-length landscape/portrait videos, and deliver authenticated large artifacts. PR #13 intake limit remains 60s; no production-Evan rig approval.",
+      "acceptance": "Validate original 16k PCM WAV and source plan hashes; require full acoustic QA; choose exact 60fps boundaries between words/phonemes; refuse unsupported/no-safe-cut cases; sample-accurate contiguous chapters up to 60s for up-to-15min inputs; 30+ sec preferred where safe; source-free 4:23 and 8-9min tests in hosted CI.",
+      "evidence": [
+        {
+          "commit": "a31fd0d093f1e88f9d378a70779d063f037fa4e9",
+          "platform": "GitHub-hosted Linux/Windows/macOS Python 3.11",
+          "check": "15 new source-free longform tests plus 13 existing speech-gate tests; 4:23 and 8:30 PCM/frame continuity; refusal tests",
+          "result": "PASS 28/28 on all three OS; no private MP3, phoneme listening, or native Moho render",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39538096129"
+        },
+        {
+          "commit": "a31fd0d093f1e88f9d378a70779d063f037fa4e9",
+          "platform": "GitHub draft pull request",
+          "check": "Isolated no-overlap future integration scoped to existing PR #13 transport",
+          "result": "Open DRAFT PR #15, unmerged, four isolated files; end-to-end 4:23 Moho rendering and large delivery remain blocked",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/15"
+        }
+      ]
     }
   ]
 }
