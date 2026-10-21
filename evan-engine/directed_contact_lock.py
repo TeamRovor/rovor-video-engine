@@ -174,7 +174,7 @@ def apply_locked_contacts(shot, compositions, artwork, canvases,
                 artwork[element["assetId"]].size, interpolate)[0]
             # Include shot-end as the original stage key; cuts are the scene
             # boundary and any new shot owns its own first setup key.
-            for f in range(shot["startFrame"], shot["endFrame"] + 1):
+            for f in range(shot["startFrame"], shot["endFrameExclusive"] + 1):
                 base = interpolate(old_keys, f)
                 active = next((r for r in rs if r["start"] <= f < r["end"]), None)
                 new = (_locked_key(active, base, f, comp, artwork, canvas, interpolate)
@@ -193,7 +193,7 @@ def apply_locked_contacts(shot, compositions, artwork, canvases,
                     if _distance(before, locked_at) > BOUNDARY_JUMP_PIXELS:
                         raise ValueError("Contact %d: abrupt lock entrance in %s at frame %d"
                                          % (rule["n"], view, start))
-                if end < shot["endFrame"]:
+                if end < shot["endFrameExclusive"]:
                     last = _screen_xy(new_layer, rule["tool_uv"], end - 1,
                                       comp["camera"], canvas,
                                       artwork[rule["tool_id"]].size, interpolate)[0]
