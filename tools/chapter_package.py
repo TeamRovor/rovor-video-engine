@@ -252,14 +252,130 @@ def package(wav_path, plan_path, manifest_path, destination):
         raise
 
 
+def verify_package(destination):
+    """Read back a finished private bundle, rejecting altered/missing payloads.
+
+    Does not require the original WAV to be recopied to the native render host.
+    The bundle itself is NOT signed; keep its source hashes in a trusted session.
+    """
+    destination = Path(destination)
+    if destination.is_symlink() or not destination.is_dir():
+        raise ValueError("Missing or symlinked chapter package")
+    ledger = load_json(destination / "bundle.json")
+    if (ledger.get("schemaVersion") != 1 or
+            ledger.get("status") != "private_chapter_payloads_created_pending_native_render" or
+            any(ledger.get(key) is not False for key in
+                ("nativeMohoRendered", "audioMuxed", "artisticApproval", "publishable"))):
+        raise ValueError("Malformed chapter package ledger or invented production approval")
+    chapters = ledger.get("chapters")
+    if not isinstance(chapters, list) or not 1 <= len(chapters) <= 60:
+        raise ValueError("Invalid package chapter count")
+    if type(ledger.get("chapterCount")) is not int or ledger["chapterCount"] != len(chapters):
+        raise ValueError("Package chapter count changed")
+    running_pcm = hashlib.sha256()
+    frames, samples = 0, 0
+    for i, row in enumerate(chapters):
+        name = "chapter-%03d" % i
+        if not isinstance(row, dict) or row.get("chapterIndex") != i or row.get("directory") != name:
+            raise ValueError("Unrecognized or reordered chapter path")
+        folder = destination / name
+        if folder.is_symlink() or not folder.is_dir():
+            raise ValueError("Missing or symlinked chapter directory")
+        filenames = {"narration.wav", "acoustic-plan.json", "chapter.json"}
+        if {x.name for x in folder.iterdir()} != filenames:
+            raise ValueError("Incomplete or unexpected native chapter files")
+        audio_path = folder / "narration.wav"
+        speech_path = folder / "acoustic-plan.json"
+        evidence_path = folder / "chapter.json"
+        if any(x.is_symlink() for x in (audio_path, speech_path, evidence_path)):
+            raise ValueError("Symlinked package evidence is not allowed")
+        for source, evidence_key in (
+                (audio_path, "narrationWavSha256"),
+                (speech_path, "speechPlanSha256")):
+            if hashlib.sha256(source.read_bytes()).hexdigest() != row.get(evidence_key):
+                raise ValueError("Chapter artifact checksum changed: " + source.name)
+        evidence = load_json(evidence_path)
+        if (evidence.get("schemaVersion") != 1 or evidence.get("chapterIndex") != i or
+                evidence.get("sourceWavSha256") != ledger.get("sourceWavSha256") or
+                evidence.get("sourceSpeechPlanSha256") != ledger.get("sourceSpeechPlanSha256") or
+                any(evidence.get(k) is not False for k in ("nativeMohoRendered", "visualApproval")) or
+                any(evidence.get(k) != row.get(k) for k in
+                    ("narrationPcmSha256", "narrationWavSha256", "speechPlanSha256"))):
+            raise ValueError("Chapter source binding or creative status changed")
+        plan = evidence.get("chapterPlan")
+        if (not isinstance(plan, dict) or plan.get("index") != i or
+                plan.get("startFrame") != frames or plan.get("startSample") != samples or
+                type(plan.get("frameCount")) is not int or
+                not 0 < plan["frameCount"] <= 3600 or
+                type(plan.get("sampleCount")) is not int or
+                plan["sampleCount"] <= 0 or
+                plan["endFrameExclusive"] != frames + plan["frameCount"] or
+                plan["endSampleExclusive"] != samples + plan["sampleCount"] or
+                plan["frameCount"] != row.get("frameCount") or
+                plan["sampleCount"] != row.get("sampleCount") or
+                evidence.get("localMohoFirstFrame") != 1 or
+                evidence.get("localMohoLastFrame") != plan["frameCount"]):
+            raise ValueError("Chapter local frame/sample bounds changed")
+        chapter_pcm = hashlib.sha256()
+        with wave.open(str(audio_path), "rb") as stream:
+            if (stream.getnchannels(), stream.getsampwidth(), stream.getframerate(),
+                    stream.getcomptype()) != (1, PCM_WIDTH, SAMPLE_RATE, "NONE"):
+                raise ValueError("Chapter WAV PCM audio format changed")
+            if stream.getnframes() != plan["sampleCount"]:
+                raise ValueError("Chapter WAV sample count changed")
+            remaining = plan["sampleCount"]
+            while remaining:
+                n = min(65536, remaining)
+                raw = stream.readframes(n)
+                if len(raw) != n * PCM_WIDTH:
+                    raise ValueError("Chapter WAV payload truncated")
+                chapter_pcm.update(raw)
+                running_pcm.update(raw)
+                remaining -= n
+        if chapter_pcm.hexdigest() != row["narrationPcmSha256"]:
+            raise ValueError("Chapter raw PCM checksum changed")
+        local = load_json(speech_path)
+        qa = acoustic_audit(local, plan["sampleCount"] / SAMPLE_RATE,
+                            FPS, wav_header_checked=True)
+        if qa["status"] != "technical_pass_pending_visual_review":
+            raise ValueError("Chapter acoustic metadata no longer passes")
+        frames += plan["frameCount"]
+        samples += plan["sampleCount"]
+    if (frames != ledger.get("totalVideoFrames") or
+            samples != ledger.get("audioSampleCount") or
+            running_pcm.hexdigest() != ledger.get("originalPcmSha256") or
+            running_pcm.hexdigest() != ledger.get("reassembledChapterPcmSha256")):
+        raise ValueError("Package combined source PCM/frame integrity failed")
+    return {
+        "verified": True,
+        "chapterCount": len(chapters),
+        "totalVideoFrames": frames,
+        "audioSampleCount": samples,
+        "combinedPcmSha256": running_pcm.hexdigest(),
+        "nativeMohoRendered": False,
+        "artisticApproval": False
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--wav", type=Path, required=True)
-    parser.add_argument("--plan", type=Path, required=True)
-    parser.add_argument("--chapters", type=Path, required=True)
-    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--wav", type=Path)
+    parser.add_argument("--plan", type=Path)
+    parser.add_argument("--chapters", type=Path)
+    parser.add_argument("--out", type=Path)
+    parser.add_argument("--verify-package", type=Path,
+                        help="Verify an existing private chapter payload bundle")
     args = parser.parse_args(argv)
     try:
+        if args.verify_package:
+            if any(getattr(args, field) is not None
+                   for field in ("wav", "plan", "chapters", "out")):
+                raise ValueError("Verification takes only --verify-package")
+            result = verify_package(args.verify_package)
+            print(json.dumps(result, indent=2))
+            return 0
+        if any(getattr(args, field) is None for field in ("wav", "plan", "chapters", "out")):
+            raise ValueError("Package creation needs --wav, --plan, --chapters and --out")
         result = package(args.wav, args.plan, args.chapters, args.out)
         print(json.dumps({key: result[key] for key in
                           ("status", "chapterCount", "audioSampleCount", "totalVideoFrames")},
