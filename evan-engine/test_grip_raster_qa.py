@@ -4,6 +4,11 @@ Actual original cartoon body art is loaded and rasterized from this repo;
 source-free synthetic variants deliberately erase the wrist and must fail.
 """
 import unittest
+import json
+import io
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 from PIL import Image, ImageDraw
 from cartoon_body import CartoonBody
 from grip_raster_qa import check_frame, _sample_coverage
@@ -82,6 +87,50 @@ class RasterGripQATests(unittest.TestCase):
         wrong=dict(self.solved, right_hand="point")
         with self.assertRaisesRegex(ValueError,"relaxed-right"):
             self.check(controls=wrong)
+
+    def test_actual_ffmpeg_frame_loop_refuses_blank_wrist_before_encoding(self):
+        # Exercise the *real render_chunk integration* rather than invoking
+        # only the QA helper. Fake encoder pipes receive no bytes when the
+        # missing wrist is detected. No MP3, FFmpeg, Moho or cloud files.
+        from render_acting_video import render_chunk
+        from directed_scene import DirectedScene
+        root=self.test.root
+        plan=root/"fake-speech.json"
+        plan.write_text(json.dumps(self.speech))
+        scenes=[
+            DirectedScene(self.test.scene,self.test.assets,root,
+                          portrait=portrait,prepared=self.prepared)
+            for portrait in (False,True)
+        ]
+        body=SimpleNamespace(
+            render=lambda *_args:Image.new("RGBA",(1464,1536)),
+            meta=self.test.meta,
+            _raster_grip_hand_meta=self.test.hand,
+        )
+        pipes=[]
+        class FakeEncoder:
+            def __init__(self):
+                self.stdin=io.BytesIO()
+                self.stderr=io.BytesIO()
+                pipes.append(self)
+            def poll(self):return None
+            def kill(self):pass
+            def wait(self):return 0
+        job=(plan,root,"no-real-encoder",0,self.sample_frame,
+             self.sample_frame+1,60,root/"cache","directed",
+             root/"performance.json",root/"director.json",
+             root/"registry.json",False)
+        with patch("render_acting_video._directed_worker_runtime",
+                   return_value=(scenes,body)),patch(
+                   "render_acting_video._authored_performance",
+                   return_value=self.test.performance),patch(
+                   "render_acting_video.subprocess.Popen",
+                   side_effect=lambda *a,**k:FakeEncoder()):
+            with self.assertRaisesRegex(ValueError,"visually missing"):
+                render_chunk(job)
+        self.assertEqual(len(pipes),2)
+        self.assertTrue(all(len(p.stdin.getvalue())==0 for p in pipes))
+        self.assertFalse((root/"landscape-000.mp4").exists())
 
     def test_unsafe_missing_original_hand_manifest_is_blocked(self):
         altered=dict(self.test.hand)
