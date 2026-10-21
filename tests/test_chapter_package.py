@@ -260,6 +260,40 @@ class PackageTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "frame/sample bounds changed"):
             p.verify_package(self.destination)
 
+    def test_midpackage_speech_plan_change_is_refused_and_cleaned(self):
+        self.make()
+        original_write = p.write_new
+        changed = [False]
+
+        def change_at_first_write(path, data):
+            if not changed[0]:
+                changed[0] = True
+                self.plan.write_bytes(self.plan.read_bytes() + b" ")
+            return original_write(path, data)
+
+        with patch.object(p, "write_new", side_effect=change_at_first_write):
+            with self.assertRaisesRegex(ValueError, "Reviewed speech plan mutated"):
+                p.package(self.wav, self.plan, self.chapters, self.destination)
+        self.assertFalse(self.destination.exists())
+
+    def test_midpackage_manifest_change_is_refused_and_cleaned(self):
+        self.make()
+        original_write = p.write_new
+        changed = [False]
+
+        def change_at_first_write(path, data):
+            if not changed[0]:
+                changed[0] = True
+                edited = json.loads(self.chapters.read_text())
+                edited["chapters"][0]["sampleCount"] -= 1
+                self.chapters.write_text(json.dumps(edited))
+            return original_write(path, data)
+
+        with patch.object(p, "write_new", side_effect=change_at_first_write):
+            with self.assertRaisesRegex(ValueError, "Chapter manifest mutated"):
+                p.package(self.wav, self.plan, self.chapters, self.destination)
+        self.assertFalse(self.destination.exists())
+
     def test_cli_verifier_refuses_conflicting_source_args(self):
         self.make()
         p.package(self.wav, self.plan, self.chapters, self.destination)
