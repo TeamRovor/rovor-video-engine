@@ -464,7 +464,7 @@
       "id": "directed-contact-anchors",
       "title": "Validate animated prop-to-surface contact in directed 60fps scenes",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar physical scene QA session",
       "branch": "feature/director-contact-geometry-v1",
       "scopes": [
@@ -473,10 +473,25 @@
         "evan-engine/test_directed_contact.py"
       ],
       "depends_on": [],
-      "next_action": "Implement opt-in contact anchors for source-art props and camera-independent geometry validation in existing directed scene preflight, add unit tests; do not claim actor hand/rig contact verified.",
+      "next_action": "Review draft PR #14 against actual approved source-art assets and calibrated UV anchor positions, then run an original narration scene and inspect 60fps rendered contact frame-by-frame; native Evan hand bone-to-prop contact still requires approved Moho master rig. Do not merge or claim visual approval on synthetic tests.",
       "acceptance": "Per-view frame-by-frame prop-to-prop/prop-to-edge contact check before render; malformed/unregistered/hidden anchors and detached motion fail with frame evidence; existing scenes unchanged without opt-in; hosted or local unit verification recorded; no visual approval implied.",
-      "updated_at": "2026-10-20T21:57:00-05:00",
-      "next_update": "After new PR tests and evidence, mark done or report test blocker"
+      "updated_at": "2026-10-20T22:09:00-05:00",
+      "evidence": [
+        {
+          "commit": "3535a67e2c86313ddd8d968be4f8723b919f95c4",
+          "platform": "GitHub-hosted Ubuntu Linux / Python 3.11",
+          "check": "30 unit regressions across directed scene and contact geometry plus Python syntax compilation",
+          "result": "PASS; opt-in both-orientation frame-by-frame prop point/segment contact preflight; no private media or original Evan visual approval",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39536742296"
+        },
+        {
+          "commit": "3535a67e2c86313ddd8d968be4f8723b919f95c4",
+          "platform": "GitHub PR review",
+          "check": "Isolated feature review against original acting branch",
+          "result": "DRAFT PR #14; unmerged; real source-art/render verification pending",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/14"
+        }
+      ]
     }
   ]
 }
