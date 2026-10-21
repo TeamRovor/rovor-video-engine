@@ -39,10 +39,13 @@ class ContinuousFVCartoonHead(ApertureResponseCartoonHead):
         source_w=np.asarray(w).copy();source_w[7]=0
         return PaintedContourCartoonHead.cavity_surface(self,source_w,oral,shape_weights)
 
+    def painted_oral_group(self,cavity,teeth,tongue,contact,closed,aperture,w):
+        return PaintedContourCartoonHead.composite_oral(self,np.zeros_like(cavity),cavity,teeth,tongue,contact,closed,aperture,w)
+
     def composite_oral(self,face,cavity,teeth,tongue,contact,closed,aperture,w):
         fv=float(w[7])
         if fv>=1:return super().composite_oral(face,cavity,teeth,tongue,contact,closed,aperture,w)
-        group=PaintedContourCartoonHead.composite_oral(self,np.zeros_like(face),cavity,teeth,tongue,contact,closed,aperture,w)
+        group=self.painted_oral_group(cavity,teeth,tongue,contact,closed,aperture,w)
         if fv<=0:return over(face,group)
         before_group,before_contact=group,contact
         try:
