@@ -492,6 +492,28 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/14"
         }
       ]
+    },
+    {
+      "id": "longform-acoustic-chapter-plan",
+      "title": "Plan acoustic word-safe 60fps chapters for long narration",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar longform audio continuity session",
+      "branch": "feature/acoustic-longform-chapters-v1",
+      "scopes": [
+        "tools/longform_chapters.py",
+        "tests/test_longform_chapters.py",
+        ".github/workflows/longform-chapters.yml",
+        "LONGFORM-CHAPTER-PLAN.md"
+      ],
+      "depends_on": [
+        "acoustic-production-gate",
+        "moho-file-compiler"
+      ],
+      "updated_at": "2026-10-21T03:16:50.805Z",
+      "next_update": "After hosted CI on isolated chapter planning branch; preserve PR #13 existing 60-second intake limit",
+      "next_action": "Implement bounded source-WAV chapter manifest from previously reviewed acoustic speech plans, prove exact sample/frame coverage and no cut through aligned words or phones. No native Moho render or media transport capability implied.",
+      "acceptance": "Validate original 16k PCM WAV and source plan hashes; require full acoustic QA; choose exact 60fps boundaries between words/phonemes; refuse unsupported/no-safe-cut cases; sample-accurate contiguous chapters up to 60s for up-to-15min inputs; 30+ sec preferred where safe; source-free 4:23 and 8-9min tests in hosted CI."
     }
   ]
 }
