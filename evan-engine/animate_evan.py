@@ -224,8 +224,16 @@ def file_stamp(value):
     path = Path(value)
     try:
         metadata = path.stat()
-        return {'path': str(path.resolve()), 'size': metadata.st_size,
-                'modified_ns': metadata.st_mtime_ns}
+        stamp = {'path': str(path.resolve()), 'size': metadata.st_size,
+                 'modified_ns': metadata.st_mtime_ns}
+        # File identity catches ordinary replacements without hashing large models.
+        # POSIX ctime is a change time; Windows reports creation time here.
+        for key, attribute in (('device', 'st_dev'), ('file_id', 'st_ino'),
+                               ('changed_ns', 'st_ctime_ns')):
+            identity = getattr(metadata, attribute, None)
+            if isinstance(identity, int) and (key != 'file_id' or identity != 0):
+                stamp[key] = identity
+        return stamp
     except OSError:
         return {'path': str(path)}
 
@@ -372,7 +380,7 @@ def main():
         parser.error('Missing local tools: ' + ', '.join(missing))
     audio = args.mp3.resolve()
     renderer_sha = renderer_fingerprint()
-    fingerprint = {'fingerprint_version': 4, 'mp3': str(audio), 'size': audio.stat().st_size,
+    fingerprint = {'fingerprint_version': 5, 'mp3': str(audio), 'size': audio.stat().st_size,
                    'modified_ns': audio.stat().st_mtime_ns,
                    'input_sha256': sha256_file(audio),
                    'plan': str(args.plan.resolve()) if args.plan else None,
