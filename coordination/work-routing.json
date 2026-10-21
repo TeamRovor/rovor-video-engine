@@ -58,6 +58,33 @@
       "lane": "sales",
       "requires": [],
       "objective": "win-qualified-clients"
+    },
+    "rovor-ai-master-plan": {
+      "lane": "coordination",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "rovor-knowledge-pack": {
+      "lane": "operations",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "rovor-capability-evaluation-pack": {
+      "lane": "integration",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "rovor-work-packet-contract": {
+      "lane": "integration",
+      "requires": [
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "rovor-hosted-runner-diagnosis": {
+      "lane": "operations",
+      "requires": [],
+      "objective": "reduce-repeat-work"
     }
   }
 }

@@ -1,6 +1,6 @@
 # “Work” session entrypoint
 
-When the user says **work**, follow [WORK.md](WORK.md) from latest main. It defines capability-aware selection, shared claims, efficient execution and evidence-based handoffs. Read `coordination/work-routing.json` alongside the canonical task queue; the routing file does not assign ownership.
+When the user says **work**, read [ROVOR-AI-PLAN.md](ROVOR-AI-PLAN.md) and follow [WORK.md](WORK.md) from latest main. **ChatGPT-first is the current strategy; local-PC execution is a later phase.** Video is one capability of the broader Rovor Digital AI. Use `architecture/CHATGPT-WORKFLOWS.md` for present tool selection; do not restart the project as a video-only engine or prematurely build a replacement local assistant. It defines capability-aware selection, shared claims, efficient execution and evidence-based handoffs. Read `coordination/work-routing.json` alongside the canonical task queue; the routing file does not assign ownership.
 
 # Repository collaboration instructions
 
