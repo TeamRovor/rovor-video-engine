@@ -21,7 +21,11 @@ permissions:
 jobs:
   geometry-and-real-raster:
     name: Source-art contact and actual raster frames
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
