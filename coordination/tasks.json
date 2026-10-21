@@ -1115,9 +1115,9 @@
       "acceptance": "Schema validates representative accepted and rejected cases, preserves unknown/unrun states and separates technical completion from approval/publication. No opaque shell commands or self-granted permissions. Test against the actual evaluated examples."
     },
     {
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "ChatGPT / Amar hosted Actions pre-start failure diagnosis 2026-10-21",
+      "branch": "coordination/hosted-runner-diagnosis",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
       ],
@@ -1129,8 +1129,10 @@
         "subsystem:hosted-runner-startup-diagnosis"
       ],
       "depends_on": [],
-      "next_action": "Inspect current GitHub Actions annotations and repository/account runner evidence for failed run 39682872758 and latest equivalent. Jobs had no assigned runner or executed steps. Record the actual cause and least-cost remedy; do not guess quota/billing, change account settings, buy minutes or repeatedly rerun. If annotation access is unavailable, state exactly what evidence is needed and continue independent local work.",
-      "acceptance": "Evidence identifies the actual startup failure or a precise access blocker, distinguishes runner/account failure from code failure, and gives a concrete next action. A fixed status requires a real succeeding run; no fabricated healthy CI."
+      "next_action": "Compare recent Linux/Windows/macOS failure job steps/log availability and historical successes, attempt supported GitHub annotations/status retrieval without assuming a billing issue; provide exact administrator-visible UI evidence needed and cost-neutral fallback testing. Do not alter renderer/workflow or account payment settings.",
+      "acceptance": "Document one reproducible cross-workflow pre-job failure evidence matrix with links and exact observables, distinguish suspected causes from verified ones, provide owner-friendly check steps and zero-cost/no-rerun recovery plan; leave claims intact.",
+      "updated_at": "2026-10-21T22:44:15.485Z",
+      "next_update": "After grounded pre-start failure evidence and observable, minimal unblock guide committed. Do not rerun until runner/account status resolved."
     }
   ]
 }
