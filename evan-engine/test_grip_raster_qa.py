@@ -15,7 +15,7 @@ class RasterGripQATests(unittest.TestCase):
     def setUp(self):
         self.test = RealWristGripTests("test_real_source_joint_original_manifest_binding_and_motion")
         self.test.setUp()
-        self.addCleanup(self.test.tearDown)
+        self.addCleanup(self.test.doCleanups)
         self.prepared = self.test.prepared()
         self.shot = self.prepared["scenes"][0]
         self.body = CartoonBody()
@@ -77,6 +77,11 @@ class RasterGripQATests(unittest.TestCase):
         result=self.check()
         self.assertGreater(result["totalSamples"],result["opaqueSamples"]-1)
         self.assertFalse(result["studioApproved"])
+
+    def test_switching_to_pointing_pose_does_not_fake_a_grip(self):
+        wrong=dict(self.solved, right_hand="point")
+        with self.assertRaisesRegex(ValueError,"relaxed-right"):
+            self.check(controls=wrong)
 
     def test_unsafe_missing_original_hand_manifest_is_blocked(self):
         altered=dict(self.test.hand)
