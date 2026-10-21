@@ -1,7 +1,7 @@
 name: Render job transport checks
 on:
   pull_request:
-    paths: ['tools/render_jobs.py', 'tests/test_render_jobs.py', '.github/workflows/render-job-loop.yml']
+    paths: ['tools/render_jobs.py', 'tests/test_render_jobs.py', 'tools/speech_plan_gate.py', 'tests/test_speech_plan_gate.py', 'tests/test_silence_backed_gaps.py', '.github/workflows/render-job-loop.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,3 +20,5 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m unittest discover -s tests -p test_render_jobs.py -v
+      - run: python -m unittest discover -s tests -p test_speech_plan_gate.py -v
+      - run: python -m unittest discover -s tests -p test_silence_backed_gaps.py -v
