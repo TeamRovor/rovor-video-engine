@@ -121,7 +121,13 @@ def verify(path, request, runtime_root=None):
     v = video[0]
     if (v.get('width'), v.get('height'), v.get('avg_frame_rate')) != (1920, 1080, '60/1'):
         raise ValueError('Artifact must be native 1920x1080 at 60 fps')
-    if abs(float(m['format']['duration']) - request['duration']) > .15:
+    artifact_duration = float(m['format']['duration'])
+    source_duration = request['duration']
+    if (isinstance(source_duration, bool) or not isinstance(source_duration, (int, float))
+            or not math.isfinite(source_duration) or source_duration <= 0
+            or not math.isfinite(artifact_duration) or artifact_duration <= 0):
+        raise ValueError('Invalid source or artifact duration')
+    if abs(artifact_duration - source_duration) > .15:
         raise ValueError('Narration duration changed')
     quality = video_quality(media, runtime_root)
     if (type(quality.get('sampleCount')) is not int or quality['sampleCount'] != 12
