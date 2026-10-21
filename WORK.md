@@ -1,13 +1,13 @@
 # When Amar or Evan says “work”
 
 Use GitHub as shared project memory. Start from **latest main**, even when your code branch is older.
-The goal is useful MP3-to-cartoon output now, with native Moho Ghost Employee automation long-term.
-Preserve approved source art and original narration. Final previews target 1080p60 and at least 30 seconds;
+The goal is a multi-capability Rovor Digital AI, **ChatGPT-first now**, with selected local-PC execution and verified ghost employees later. Read [ROVOR-AI-PLAN.md](ROVOR-AI-PLAN.md) for the canonical architecture/build phases and `architecture/CHATGPT-WORKFLOWS.md` for present tool use. Video is one capability; business delivery, research, websites, design, documents and analysis also advance the mission.
+For video work, preserve approved source art and original narration. Final video previews target 1080p60 and at least 30 seconds;
 technical test success is separate from Amar's visual approval.
 
 ## One-time instruction for Evan's ChatGPT
 
-> Work on TeamRovor/rovor-video-engine. Whenever I say “work”, read the latest main WORK.md and AGENTS.md through GitHub, then follow that startup, claim, verification and handoff workflow. Use the efficiency lane unless I give another priority. Verify your actual access; do not assume you can control this computer. Continue useful non-overlapping work and publish a precise handoff before stopping.
+> Work on TeamRovor/rovor-video-engine. Whenever I say “work”, read the latest main WORK.md and AGENTS.md through GitHub, then follow that startup, claim, verification and handoff workflow. Use the efficiency lane unless I give another priority; when it has no eligible work, inspect other capability-matched tasks under the shared roadmap. Verify your actual access; do not assume you can control this computer. Continue useful non-overlapping work and publish a precise handoff before stopping.
 
 This establishes the instruction in that conversation. A new chat needs this prompt again (or an explicit
 persistent project instruction). Repository files do not automatically configure ChatGPT or wake a computer.
@@ -86,7 +86,7 @@ Publish source changes and update your existing main queue entry. Include this i
 next action and linked PR description/checkpoint (do not create another owner table):
 
 - Task ID, owner, exact branch and commit; PR URL; whether proposed, merged, runtime-verified or visually approved.
-- What changed and which files; why it helps the MP3-to-cartoon goal.
+- What changed and which files; which Rovor capability/business outcome it advances.
 - Exact commands, platform, results, CI run links, and checks NOT run.
 - Current blocker, required input/capability, next executable action and next checkpoint.
 - Status: `active` to continue, `blocked` to retain a blocked claim, `done` with evidence, or `ready` with null

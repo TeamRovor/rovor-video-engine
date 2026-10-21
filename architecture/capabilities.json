@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "mode": "chatgpt-first",
+  "purpose": "Capability map, not an installed tool list, runtime dispatcher or task ownership record.",
+  "task_queue": "coordination/tasks.json",
+  "master_plan": "ROVOR-AI-PLAN.md",
+  "local_model_selected": null,
+  "capabilities": [
+    {
+      "id": "operations",
+      "name": "Operations and coordination",
+      "lane": "operations",
+      "maturity": "implemented-report-main-startup-unverified",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "tools/work_brief.py",
+        "tools/ops_worker.py",
+        "WORK.md"
+      ],
+      "task_ids": [
+        "business-ops-worker"
+      ],
+      "acceptance": "Useful next task with ownership, source revision and blockers",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "research",
+      "name": "Research and strategy",
+      "lane": "sales",
+      "maturity": "chatgpt-assisted-conditional",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "business/templates/opportunity-brief.md"
+      ],
+      "task_ids": [
+        "business-proof-catalog"
+      ],
+      "acceptance": "Dated sources; facts separated from inference and unknowns",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "sales",
+      "name": "Sales preparation",
+      "lane": "sales",
+      "maturity": "chatgpt-assisted-conditional",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "business/templates/opportunity-brief.md"
+      ],
+      "task_ids": [
+        "business-proof-catalog",
+        "business-offer-brief"
+      ],
+      "acceptance": "Credible scoped offer; no invented client claims or unrequested sending",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "delivery",
+      "name": "Client intake and delivery",
+      "lane": "delivery",
+      "maturity": "chatgpt-assisted-conditional",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "business/templates/client-intake.md",
+        "business/templates/delivery-review.md"
+      ],
+      "task_ids": [
+        "business-service-delivery-playbook"
+      ],
+      "acceptance": "Complete requirements, acceptance and versioned review packet",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "websites",
+      "name": "Websites and conversion systems",
+      "lane": "delivery",
+      "maturity": "chatgpt-assisted-conditional",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "architecture/CHATGPT-WORKFLOWS.md"
+      ],
+      "task_ids": [],
+      "acceptance": "Working preview, responsive layout and actual agreed interaction checks",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "design",
+      "name": "Brand and graphic design",
+      "lane": "delivery",
+      "maturity": "chatgpt-assisted-conditional",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "architecture/CHATGPT-WORKFLOWS.md"
+      ],
+      "task_ids": [],
+      "acceptance": "Visual inspection and fidelity to approved brand sources",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "writing",
+      "name": "Writing and content strategy",
+      "lane": "sales",
+      "maturity": "chatgpt-assisted-conditional",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "business/templates/content-brief.md"
+      ],
+      "task_ids": [],
+      "acceptance": "Accurate, useful copy for the stated audience and purpose",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "video",
+      "name": "Video and audio production",
+      "lane": "animation",
+      "maturity": "existing-development-production-unapproved",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "ROVOR-MP3-FIRST-ENGINE.md"
+      ],
+      "task_ids": [
+        "evan-acting-review",
+        "windows-runtime",
+        "scene-moho-contract"
+      ],
+      "acceptance": "Original narration/art, technical quality and separate real artistic acceptance",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "documents",
+      "name": "Documents, proposals and presentations",
+      "lane": "delivery",
+      "maturity": "chatgpt-assisted-conditional",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "architecture/CHATGPT-WORKFLOWS.md"
+      ],
+      "task_ids": [],
+      "acceptance": "Deliverable opens, renders correctly and matches agreed content",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "analytics",
+      "name": "Analytics and business reporting",
+      "lane": "operations",
+      "maturity": "chatgpt-assisted-conditional",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "business/operating-plan.json"
+      ],
+      "task_ids": [],
+      "acceptance": "Authorized source data, correct calculations and explicit unknown metrics",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "engineering",
+      "name": "Engineering and automation",
+      "lane": "efficiency",
+      "maturity": "existing-development",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "WORK.md"
+      ],
+      "task_ids": [
+        "windows-benchmark-protocol",
+        "render-cache-file-identity"
+      ],
+      "acceptance": "Reproducible fix with checks and measured improvement when claimed",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    },
+    {
+      "id": "knowledge",
+      "name": "Knowledge and account support",
+      "lane": "operations",
+      "maturity": "planned-curated-source-pack",
+      "execution": "Use tools actually available in the authorized active session; no unattended execution implied.",
+      "references": [
+        "architecture/CHATGPT-WORKFLOWS.md"
+      ],
+      "task_ids": [
+        "rovor-knowledge-pack"
+      ],
+      "acceptance": "Current sourced facts, permission boundaries and no cross-client leakage",
+      "local_migration": "Deferred until the same workflow passes representative evaluations on the intended host."
+    }
+  ]
+}

@@ -1007,6 +1007,82 @@
       "next_update": "After roadmap, capability map and executable task dependencies are checked and published",
       "next_action": "Plan ChatGPT-first operations across business capabilities and preserve local-PC migration path; connect all sessions to same roadmap without replacing existing engines or active owners.",
       "acceptance": "One versioned master plan, capability/status map, phased dependency tasks and ChatGPT session playbook; queue/routing valid, current runtime limits explicit, published on main."
+    },
+    {
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
+      ],
+      "id": "rovor-knowledge-pack",
+      "title": "Curate the reusable Rovor brand, service and decision source pack",
+      "priority": 1,
+      "scopes": [
+        "business/knowledge"
+      ],
+      "depends_on": [],
+      "next_action": "Create a compact source-backed knowledge pack from current repository instructions and actual approved Rovor references. Record services, brand rules, preserved assets, decision dates, uncertain facts and source links. Store no private client records or credentials; do not duplicate chat histories. Use a focused branch from main.",
+      "acceptance": "A fresh ChatGPT session can retrieve the correct Rovor service/brand constraints with source/version and distinguish unknowns, concepts and approved facts. No invented prices, testimonials, revenue or production approvals."
+    },
+    {
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
+      ],
+      "id": "rovor-capability-evaluation-pack",
+      "title": "Create portable acceptance examples for three proven ChatGPT workflows",
+      "priority": 2,
+      "scopes": [
+        "architecture/evaluations"
+      ],
+      "depends_on": [
+        "rovor-knowledge-pack",
+        "business-service-delivery-playbook",
+        "business-proof-catalog"
+      ],
+      "next_action": "Use completed sourced knowledge, delivery and proof artifacts to create realistic input/output acceptance examples for intake/delivery, source-backed research/sales, and one existing technical workflow. Record provenance, criteria and known bad outputs. Use synthetic or explicitly authorized data. No new local model or training.",
+      "acceptance": "Each workflow has a reproducible case, source-backed expected criteria, failure examples and an independently understandable review rubric; label unexecuted/model-specific evaluations. This reusable pack can compare future local models with current acceptable work."
+    },
+    {
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
+      ],
+      "id": "rovor-work-packet-contract",
+      "title": "Standardize the smallest portable work packet from proven workflows",
+      "priority": 2,
+      "scopes": [
+        "architecture/contracts/work-packet",
+        "tests/test_work_packet_contract.py"
+      ],
+      "depends_on": [
+        "rovor-capability-evaluation-pack"
+      ],
+      "next_action": "Derive a minimal versioned schema and fixtures from the evaluated workflows: capability, source refs/hashes, constraints, acceptance, executor requirements, artifact receipt and approval state. Reuse current queue/handoffs and existing native render transport; do not build a second owner database or runtime service.",
+      "acceptance": "Schema validates representative accepted and rejected cases, preserves unknown/unrun states and separates technical completion from approval/publication. No opaque shell commands or self-granted permissions. Test against the actual evaluated examples."
+    },
+    {
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
+      ],
+      "id": "rovor-hosted-runner-diagnosis",
+      "title": "Identify why hosted GitHub jobs stop before runner startup",
+      "priority": 1,
+      "scopes": [
+        "coordination/hosted-runner-diagnosis.md",
+        "subsystem:hosted-runner-startup-diagnosis"
+      ],
+      "depends_on": [],
+      "next_action": "Inspect current GitHub Actions annotations and repository/account runner evidence for failed run 39682872758 and latest equivalent. Jobs had no assigned runner or executed steps. Record the actual cause and least-cost remedy; do not guess quota/billing, change account settings, buy minutes or repeatedly rerun. If annotation access is unavailable, state exactly what evidence is needed and continue independent local work.",
+      "acceptance": "Evidence identifies the actual startup failure or a precise access blocker, distinguishes runner/account failure from code failure, and gives a concrete next action. A fixed status requires a real succeeding run; no fabricated healthy CI."
     }
   ]
 }
