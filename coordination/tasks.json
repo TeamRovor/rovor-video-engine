@@ -866,6 +866,28 @@
       "next_update": "After worker replay/failure tests and GitHub report validation",
       "next_action": "Add business outcome routing and single-shot read-only operations worker, preserving existing render transport and all active owners.",
       "acceptance": "One queue; actionable business task packets; deterministic replay/tamper checks and bounded report worker; hosted artifact verified; no remote laptop, messaging, billing or production approval claim."
+    },
+    {
+      "id": "nonmoho-hand-over-prop-occlusion",
+      "title": "Composite authentic original Evan hand over held tool without replacing art",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar foreground grip layering session",
+      "branch": "feature/nonmoho-hand-over-prop-occlusion-v1",
+      "scopes": [
+        "evan-engine/directed_grip_occlusion.py",
+        "evan-engine/directed_scene.py",
+        "evan-engine/test_directed_grip_occlusion.py",
+        ".github/workflows/grip-occlusion.yml",
+        "GRIP-OCCLUSION.md"
+      ],
+      "depends_on": [
+        "nonmoho-right-wrist-tool-ik",
+        "nonmoho-grip-raster-visibility"
+      ],
+      "updated_at": "2026-10-21T21:53:38.595Z",
+      "next_action": "Add physically correct source-art hand plate above roller while remaining body is behind prop, using identical per-frame solved FK and body roll in both 1080p60 views; no new hand generation or source media edits. Guard layer identity and source artwork hash, check alpha and real pixel overlap, verify no change legacy path.",
+      "acceptance": "Visual alpha hand overlay demonstrably renders in front of original registered roller at actual wrist contact, verified actual original-art hand source; both 1080p frame pixel occlusion regressions pass, wrong hand or absent tool refused, shots not opted in unchanged, no claims of finger curl or complete movie."
     }
   ]
 }
