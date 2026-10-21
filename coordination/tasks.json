@@ -294,21 +294,44 @@
         }
       ]
     },
-        {
+    {
       "id": "engine-efficiency-benchmarks",
       "title": "Benchmark and reduce the MP3-to-video pipeline cost without compromising quality",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Keona Windows desktop session",
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
         "subsystem:engine-throughput-benchmark"
       ],
       "depends_on": [],
-      "next_action": "Add an isolated synthetic-data benchmark on PR #7 that records wall time, process CPU, peak memory, stage timings, frame-cache reuse, and failure/resume overhead on hosted Windows/macOS/Linux. Establish the baseline before changing cache or render logic, preserve output settings, and document the synthetic benchmark's limits.",
+      "next_action": "Use docs/engine-throughput-benchmark.md on PR #7 as the hosted baseline; future renderer changes must retain byte-hash checks and report wall time, process CPU, peak RSS, cache reuse, and recovery overhead.",
       "acceptance": "Reproducible hosted benchmark with wall time, peak memory, stage timings, frame cache reuse, failure/resume overhead, and explicit baseline vs after results; no invented performance percentages or changed output settings.",
-      "updated_at": "2026-10-20T19:23:28-05:00",
-      "next_update": "After the first hosted Windows/macOS/Linux benchmark run completes."
+      "updated_at": "2026-10-21T00:48:01Z",
+      "next_update": "After a material renderer change or a new baseline is requested.",
+      "evidence": [
+        {
+          "commit": "da7c412206ec20b74aa642a16cfb31fc6bd78df5",
+          "platform": "ubuntu-latest",
+          "check": "Three-run median synthetic reference renderer comparison against 4e1ef65135aaea8f09bf432e8768e380a8bf0d90",
+          "result": "PASS; cold wall 4.1766s→3.4398s (17.64% faster), process CPU 4.8422s→6.4113s, peak RSS 216.2→256.9 MiB; frame hashes identical.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39522990095"
+        },
+        {
+          "commit": "da7c412206ec20b74aa642a16cfb31fc6bd78df5",
+          "platform": "macos-latest",
+          "check": "Three-run median synthetic reference renderer comparison against 4e1ef65135aaea8f09bf432e8768e380a8bf0d90",
+          "result": "PASS; cold wall 2.2608s→1.6359s (27.64% faster), process CPU 3.7258s→4.1049s, peak RSS 193.0→245.6 MiB; frame hashes identical.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39522990095"
+        },
+        {
+          "commit": "da7c412206ec20b74aa642a16cfb31fc6bd78df5",
+          "platform": "windows-latest",
+          "check": "Three-run median synthetic reference renderer comparison against 4e1ef65135aaea8f09bf432e8768e380a8bf0d90",
+          "result": "PASS; cold wall 7.0930s→4.9840s (29.73% faster), process CPU 8.2346s→8.6724s, peak RSS 118.1→138.5 MiB; frame hashes identical.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39522990095"
+        }
+      ]
     },
     {
       "id": "acting-acoustic-preflight",
