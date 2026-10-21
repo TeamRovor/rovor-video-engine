@@ -18,6 +18,7 @@ from directed_contact import (_part, _screen_xy, _source_visible,
 MAX_LOCKED_RULES = 12
 MAX_CORRECTION_PIXELS = 260.
 BOUNDARY_JUMP_PIXELS = 28.
+MAX_CONTACT_STEP_PIXELS = 48.
 
 
 def _distance(a, b):
@@ -103,10 +104,12 @@ def _lock_rules(shot, comp, view, artwork, actor_id):
     for r in locks:
         by_tool.setdefault(r["tool_id"], []).append(r)
     for tool, entries in by_tool.items():
-        for earlier, later in zip(sorted(entries, key=lambda z: z["start"]),
-                                  sorted(entries, key=lambda z: z["start"])[1:]):
+        ordered = sorted(entries, key=lambda z: z["start"])
+        for earlier, later in zip(ordered, ordered[1:]):
             if earlier["end"] > later["start"]:
                 raise ValueError("Overlapping contact locks for tool " + tool)
+    if any(rule["target_id"] in by_tool for rule in locks):
+        raise ValueError("Chained contact locks need a verified parent-child rig, not independent sprite tracks")
     return locks
 
 
@@ -181,6 +184,19 @@ def apply_locked_contacts(shot, compositions, artwork, canvases,
                        if active else base)
                 new_keys.append((f, new, "linear"))
             new_layer = dict(element, keys=new_keys)
+            # A single attached prop still needs continuous acting; surface
+            # contact is not permission to teleport between adjacent samples.
+            for rule in rs:
+                for f in range(rule["start"] + 1, rule["end"]):
+                    earlier = _screen_xy(new_layer, rule["tool_uv"], f - 1,
+                                         comp["camera"], canvas,
+                                         artwork[rule["tool_id"]].size, interpolate)[0]
+                    later = _screen_xy(new_layer, rule["tool_uv"], f,
+                                       comp["camera"], canvas,
+                                       artwork[rule["tool_id"]].size, interpolate)[0]
+                    if _distance(earlier, later) > MAX_CONTACT_STEP_PIXELS:
+                        raise ValueError("Contact %d: attached tool teleports in %s at frame %d"
+                                         % (rule["n"], view, f))
             # Smooth approach and release must already be storyboarded.
             # Never hide a one-frame teleport with a silent auto-snap.
             for rule in rs:
