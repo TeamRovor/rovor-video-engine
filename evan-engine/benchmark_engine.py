@@ -141,6 +141,13 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
     audio.write_bytes(b"SYNTHETIC BENCHMARK AUDIO\0" * 512)
     config_path = fixture_root / "local_tools.json"
     config_path.write_text("{}", encoding="utf-8")
+    cpu_preload = fixture_root / "benchmark_cpu.cjs"
+    cpu_preload.write_text(
+        "const fs=require('node:fs');const started=process.cpuUsage();"
+        "const dest=process.env.ROVOR_BENCHMARK_CPU_FILE;"
+        "if(dest)process.on('exit',()=>fs.writeFileSync(dest,JSON.stringify(process.cpuUsage(started))));\n",
+        encoding="utf-8",
+    )
     cfg = {name: "synthetic-" + name for name in local_tools.REQUIRED}
     cfg.update({"node": node, "sharp": str(sharp.resolve())})
     transcript = _synthetic_transcript(duration)
@@ -151,8 +158,13 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
     memory = MemorySampler()
     memory.start()
     callbacks = []
-    runner = {"phase": "cold", "frame_calls": 0, "failure_after_calls": None,
-              "max_frames_per_call": None, "cold_invocations": 0, "recovery_invocations": 0}
+    phases = ("cold", "warm", "failure", "recovery")
+    runner = {
+        "phase": "cold", "frame_calls": 0, "failure_after_calls": None,
+        "max_frames_per_call": None, "cold_invocations": 0, "recovery_invocations": 0,
+        "stage_cpu": {phase: {} for phase in phases},
+        "renderer_cpu": {phase: {"user": 0, "system": 0} for phase in phases},
+    }
 
     def perform_stage(args, env=None, timeout=180, stage="local step"):
         args = [str(arg) for arg in args]
@@ -189,22 +201,37 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
         if runner["max_frames_per_call"] is not None:
             start, end = int(render_args[-2]), int(render_args[-1])
             render_args[-1] = str(min(end, start + runner["max_frames_per_call"]))
+        cpu_file = fixture_root / f"cpu-{runner['phase']}-{runner['frame_calls']}.json"
+        child_env = dict(env or os.environ)
+        child_env["ROVOR_BENCHMARK_CPU_FILE"] = str(cpu_file)
+        render_args[1:1] = ["--require", str(cpu_preload)]
         process = subprocess.Popen(
-            render_args, cwd=engine.HERE, env=env, stdout=subprocess.PIPE,
+            render_args, cwd=engine.HERE, env=child_env, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE, text=True,
         )
         with memory.track(process.pid):
             stdout, stderr = process.communicate(timeout=timeout)
         if process.returncode:
             raise RuntimeError("Frame renderer failed: " + stderr[-2000:])
+        usage = json.loads(cpu_file.read_text(encoding="utf-8"))
+        cpu = runner["renderer_cpu"][runner["phase"]]
+        cpu["user"] += usage.get("user", 0)
+        cpu["system"] += usage.get("system", 0)
+        stage_cpu = runner["stage_cpu"][runner["phase"]]
+        stage_cpu["Frame rendering"] = stage_cpu.get("Frame rendering", 0.0) + (
+            usage.get("user", 0) + usage.get("system", 0)
+        ) / 1_000_000
         return stdout.strip()
 
     def synthetic_run(args, env=None, timeout=180, stage="local step"):
         started = time.monotonic()
+        cpu_started = time.process_time()
         try:
             return perform_stage(args, env=env, timeout=timeout, stage=stage)
         finally:
             engine.STAGE_SECONDS[stage] = engine.STAGE_SECONDS.get(stage, 0.0) + time.monotonic() - started
+            phase_cpu = runner["stage_cpu"][runner["phase"]]
+            phase_cpu[stage] = phase_cpu.get(stage, 0.0) + time.process_time() - cpu_started
 
     def invoke(args):
         start_index = len(callbacks)
@@ -226,14 +253,18 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
     render = ["animate_evan.py", str(audio), "--output", str(output_root / "render"),
               "--config", str(config_path)]
     started = time.monotonic()
+    cold_python_cpu = time.process_time()
     invoke(render)
+    cold_python_cpu = time.process_time() - cold_python_cpu
     cold_wall = time.monotonic() - started
     cold_metrics = json.loads((output_root / "render" / "render_metrics.json").read_text(encoding="utf-8"))
     cold_stages = dict(cold_metrics.get("stage_seconds", {}))
 
     runner.update({"phase": "warm", "frame_calls": 0})
     started = time.monotonic()
+    warm_python_cpu = time.process_time()
     invoke(render + ["--resume"])
+    warm_python_cpu = time.process_time() - warm_python_cpu
     warm_wall = time.monotonic() - started
     warm_reused = sum(1 for path in (output_root / "render" / "frames").glob("*.jpg")
                       if engine.valid_frame(path))
@@ -254,6 +285,7 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
     runner.update({"phase": "failure", "frame_calls": 0, "failure_after_calls": 1,
                    "max_frames_per_call": max(1, recovery_chunk // 3)})
     started = time.monotonic()
+    failure_python_cpu = time.process_time()
     try:
         invoke(render + ["--resume"])
     except RuntimeError as error:
@@ -261,13 +293,16 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
             raise
     else:
         raise RuntimeError("The injected renderer interruption did not occur.")
+    failure_python_cpu = time.process_time() - failure_python_cpu
     failure_wall = time.monotonic() - started
     before_recovery = sum(1 for path in (render_dir / "frames").glob("*.jpg") if engine.valid_frame(path))
 
     runner.update({"phase": "recovery", "frame_calls": 0, "failure_after_calls": None,
                    "max_frames_per_call": None})
     started = time.monotonic()
+    recovery_python_cpu = time.process_time()
     invoke(render + ["--resume"])
+    recovery_python_cpu = time.process_time() - recovery_python_cpu
     recovery_wall = time.monotonic() - started
     final = json.loads((render_dir / "render_result.json").read_text(encoding="utf-8"))
     digest = hashlib.sha256()
@@ -289,12 +324,24 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
         "synthetic_audio_only": True,
         "cold_wall_seconds": round(cold_wall, 4),
         "cold_stage_seconds": {key: round(value, 4) for key, value in cold_stages.items()},
+        "cold_stage_cpu_seconds": {key: round(value, 4) for key, value in runner["stage_cpu"]["cold"].items()},
+        "cold_python_cpu_seconds": round(cold_python_cpu, 4),
+        "cold_renderer_user_cpu_seconds": round(runner["renderer_cpu"]["cold"]["user"] / 1_000_000, 4),
+        "cold_renderer_system_cpu_seconds": round(runner["renderer_cpu"]["cold"]["system"] / 1_000_000, 4),
+        "cold_total_process_cpu_seconds": round(
+            cold_python_cpu + sum(runner["renderer_cpu"]["cold"].values()) / 1_000_000, 4),
         "cold_frame_renderer_invocations": runner["cold_invocations"],
         "warm_resume_wall_seconds": round(warm_wall, 4),
+        "warm_total_process_cpu_seconds": round(
+            warm_python_cpu + sum(runner["renderer_cpu"]["warm"].values()) / 1_000_000, 4),
         "warm_frame_cache_reuse_count": warm_reused,
         "warm_frame_renderer_invocations": warm_invocations,
         "failure_attempt_wall_seconds": round(failure_wall, 4),
+        "failure_attempt_process_cpu_seconds": round(
+            failure_python_cpu + sum(runner["renderer_cpu"]["failure"].values()) / 1_000_000, 4),
         "recovery_wall_seconds": round(recovery_wall, 4),
+        "recovery_process_cpu_seconds": round(
+            recovery_python_cpu + sum(runner["renderer_cpu"]["recovery"].values()) / 1_000_000, 4),
         "recovery_existing_valid_frames": before_recovery,
         "recovery_frame_renderer_invocations": runner["recovery_invocations"],
         "recovery_overhead_seconds": round(failure_wall + recovery_wall, 4),
@@ -302,6 +349,7 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
         "frame_bytes_sha256": digest.hexdigest(),
         "video_bytes": final["video_bytes"],
         "stage_timing_note": "Only Frame rendering invokes production work; other stages are deterministic synthetic fixtures.",
+        "process_cpu_note": "Cold CPU sums the Python engine and child Node renderer; synthetic external stages do not represent FFmpeg, Whisper, Rhubarb, or encoding CPU.",
     }
 
 
@@ -324,7 +372,11 @@ def _compare(args) -> dict:
                 reports[label].append(json.loads(result.stdout))
 
     numeric_fields = (
-        "cold_wall_seconds", "cold_frame_renderer_invocations", "warm_resume_wall_seconds",
+        "cold_wall_seconds", "cold_frame_renderer_invocations", "cold_python_cpu_seconds",
+        "cold_renderer_user_cpu_seconds", "cold_renderer_system_cpu_seconds",
+        "cold_total_process_cpu_seconds", "warm_resume_wall_seconds",
+        "warm_total_process_cpu_seconds", "failure_attempt_process_cpu_seconds",
+        "recovery_process_cpu_seconds",
         "warm_frame_cache_reuse_count", "warm_frame_renderer_invocations",
         "failure_attempt_wall_seconds", "recovery_wall_seconds",
         "recovery_existing_valid_frames", "recovery_frame_renderer_invocations",
@@ -341,6 +393,12 @@ def _compare(args) -> dict:
             stage: round(statistics.median(sample["cold_stage_seconds"].get(stage, 0.0)
                                            for sample in samples), 4)
             for stage in sorted(stage_names)
+        }
+        cpu_stage_names = set().union(*(sample["cold_stage_cpu_seconds"] for sample in samples))
+        result["cold_stage_cpu_seconds"] = {
+            stage: round(statistics.median(sample["cold_stage_cpu_seconds"].get(stage, 0.0)
+                                           for sample in samples), 4)
+            for stage in sorted(cpu_stage_names)
         }
         result["frame_bytes_sha256"] = samples[0]["frame_bytes_sha256"]
         return result
