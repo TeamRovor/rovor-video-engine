@@ -608,7 +608,7 @@
       "id": "nonmoho-contact-lock-render",
       "title": "Keep original-art animated tools physically attached to rendered surfaces",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar non-Moho cartoon physical animation",
       "branch": "feature/nonmoho-physical-contact-lock-v1",
       "scopes": [
@@ -621,10 +621,25 @@
       "depends_on": [
         "directed-contact-anchors"
       ],
-      "updated_at": "2026-10-21T04:33:43.068Z",
-      "next_update": "After full directed-scene CI and visual geometry test; source art untouched",
-      "next_action": "Integrate optional per-frame physically constrained prop-to-prop locking in existing non-Moho portrait/landscape renderer, using exact authored source-alpha UVs and wall segments; reject first-frame snap, endpoint snap and unsafe corrections; verify true rendered frames not just a scene metadata audit.",
-      "acceptance": "For both 1920x1080 landscape and 1080x1920 portrait, detached authored moving roller locks its opaque tool UV to genuine target surface in frames; existing contact audit passes every frame; uncorrected and legacy modes unchanged; edge/alpha/unknown actor/release/teleport failures caught; PNG pixel/frame checks in CI."
+      "updated_at": "2026-10-21T04:43:07.408Z",
+      "next_action": "Review draft PR #18 stacked on contact audit PR #14 against the real 4:23 painting scene source PNGs and authentic Evan body rig, calibrate opaque wall/roller UVs per view, stage visually continuous approach and release, render at least 30s of original narration in dual 1080p60, verify lip sync/actor hand contact and actual accumulating paint before Amar visual approval. Synthetic real-pixel fixture and geometric prop contact alone do not certify full film quality.",
+      "acceptance": "For both 1920x1080 landscape and 1080x1920 portrait, detached authored moving roller locks its opaque tool UV to genuine target surface in frames; existing contact audit passes every frame; uncorrected and legacy modes unchanged; edge/alpha/unknown actor/release/teleport failures caught; PNG pixel/frame checks in CI.",
+      "evidence": [
+        {
+          "commit": "6d62966c806d6f4579c4d42590659b094d84b84e",
+          "platform": "GitHub Actions Ubuntu/Windows/macOS, Python 3.11 Pillow 10.4 NumPy 1.26",
+          "check": "15 new (17 final) render-side contact lock tests plus 33 existing contact/director tests; compare raster pixel at exact target 1920x1080 and 1080x1920 frame 240, alpha/contact/teleport/legacy rejection",
+          "result": "PASS 50/50 on all 3 OS. Demonstrates real source-fixture prop alignment and visible pixel change, not original painting movie or artistic approval.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39545468696"
+        },
+        {
+          "commit": "6d62966c806d6f4579c4d42590659b094d84b84e",
+          "platform": "GitHub PR review",
+          "check": "Isolated non-Moho original-art motion layer atop PR #14",
+          "result": "Draft PR #18 open and unmerged; 5 scoped files, original source art/audio and Windows/Moho owners unchanged.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/18"
+        }
+      ]
     }
   ]
 }
