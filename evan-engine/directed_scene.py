@@ -17,6 +17,7 @@ from PIL import Image,ImageColor
 from directed_contact import audit as audit_contact_geometry
 from directed_contact_lock import apply_locked_contacts
 from directed_paint import prepare_paint_tracks
+from right_hand_grip import solve_grips
 
 SIZES={"landscape":(1920,1080),"portrait":(1080,1920)}
 FPS=60
@@ -103,7 +104,7 @@ def open_artwork(registry,root):
     return opened
 
 
-def check(config,registry,root):
+def check(config,registry,root,performance=None,rig_meta=None,hand_meta=None):
     if not isinstance(config,dict) or config.get("schemaVersion")!=1:
         raise ValueError("Directed scene file required")
     duration=finite(config.get("durationSec"),"durationSec",30,900)
@@ -185,17 +186,22 @@ def check(config,registry,root):
         compositions,lock_evidence = apply_locked_contacts(shot,compositions,images,SIZES,ACTOR_ID,interpolate)
         contact_evidence = audit_contact_geometry(shot,compositions,images,SIZES,ACTOR_ID,interpolate)
         paint_tracks,paint_evidence = prepare_paint_tracks(shot,compositions,images,SIZES,ACTOR_ID,interpolate)
+        grip_controls,grip_evidence = solve_grips(
+            shot,compositions,images,SIZES,ACTOR_ID,interpolate,
+            performance,rig_meta,hand_meta)
         ready.append({"startFrame":begin,"endFrameExclusive":end,
                       "kind":shot.get("kind"),"visualPurpose":shot["visualPurpose"],
                       "actionPayoff":shot["actionPayoff"],"compositions":compositions,
                       "contactEvidence":contact_evidence,"lockEvidence":lock_evidence,
-                      "paintTracks":paint_tracks,"paintEvidence":paint_evidence})
+                      "paintTracks":paint_tracks,"paintEvidence":paint_evidence,
+                      "gripControls":grip_controls,"gripEvidence":grip_evidence})
     if cursor!=total:
         raise ValueError("Directed scenes do not cover full original narration")
     return {"durationSec":duration,"totalFrames":total,"scenes":ready,
             "contactConstraintsChecked":sum(s["contactEvidence"]["constraintsChecked"] for s in ready),
             "contactLocksRendered":sum(sum(v["lockedConstraints"] for v in s["lockEvidence"].values()) for s in ready),
             "paintStrokesRendered":sum(len(s["paintEvidence"]) for s in ready),
+            "wristGripsSolved":sum(s["gripEvidence"]["gripsChecked"] for s in ready),
             "artwork":images,"distinctAssetIds":len(seen),"creativeApproved":False}
 
 
@@ -207,6 +213,16 @@ class DirectedScene:
         self.view="portrait" if portrait else "landscape"
         self.size=SIZES[self.view]
         self.ends=[shot["endFrameExclusive"] for shot in self.scenes]
+
+    def grip_at(self,index,controls):
+        """Actual original rig FK overrides shared by both output compositions."""
+        i=bisect_right(self.ends,index)
+        if i>=len(self.scenes):raise ValueError("Frame beyond narrated scene")
+        override=self.scenes[i]["gripControls"].get(index)
+        if override is None:return controls
+        result=dict(controls)
+        result["right"]=override
+        return result
 
     def frame(self,index,evan=None):
         i=bisect_right(self.ends,index)
