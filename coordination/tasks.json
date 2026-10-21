@@ -603,6 +603,28 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/17"
         }
       ]
+    },
+    {
+      "id": "nonmoho-contact-lock-render",
+      "title": "Keep original-art animated tools physically attached to rendered surfaces",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar non-Moho cartoon physical animation",
+      "branch": "feature/nonmoho-physical-contact-lock-v1",
+      "scopes": [
+        "evan-engine/directed_contact_lock.py",
+        "evan-engine/directed_scene.py",
+        "evan-engine/test_directed_contact_lock.py",
+        ".github/workflows/nonmoho-contact-lock.yml",
+        "NONMOHO-CONTACT-LOCK.md"
+      ],
+      "depends_on": [
+        "directed-contact-anchors"
+      ],
+      "updated_at": "2026-10-21T04:33:43.068Z",
+      "next_update": "After full directed-scene CI and visual geometry test; source art untouched",
+      "next_action": "Integrate optional per-frame physically constrained prop-to-prop locking in existing non-Moho portrait/landscape renderer, using exact authored source-alpha UVs and wall segments; reject first-frame snap, endpoint snap and unsafe corrections; verify true rendered frames not just a scene metadata audit.",
+      "acceptance": "For both 1920x1080 landscape and 1080x1920 portrait, detached authored moving roller locks its opaque tool UV to genuine target surface in frames; existing contact audit passes every frame; uncorrected and legacy modes unchanged; edge/alpha/unknown actor/release/teleport failures caught; PNG pixel/frame checks in CI."
     }
   ]
 }
