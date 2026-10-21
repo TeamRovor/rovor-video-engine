@@ -88,13 +88,19 @@ def _directed_worker_runtime(director_path,registry_path,performance_path):
     from cartoon_body import CartoonBody,REVIEW_BODY_OPTIONS
     director=json.loads(Path(director_path).read_text())
     registry=json.loads(Path(registry_path).read_text())
+    rig_root=Path(__file__).parent.parent/'evan-character/cartoon-v1'
+    rig_meta=json.loads((rig_root/'body-rig/manifest.json').read_text())
+    hand_meta=json.loads((rig_root/'hand-source/manifest.json').read_text())
     prepared=check(director,registry,Path(registry_path).parent,
                    performance=_authored_performance(performance_path),
-                   rig_meta=json.loads((Path(__file__).parent.parent/'evan-character/cartoon-v1/body-rig/manifest.json').read_text()),
-                   hand_meta=json.loads((Path(__file__).parent.parent/'evan-character/cartoon-v1/hand-source/manifest.json').read_text()))
+                   rig_meta=rig_meta,hand_meta=hand_meta)
+    body=CartoonBody(**REVIEW_BODY_OPTIONS)
+    if prepared["wristGripsSolved"] and "relaxed" not in body.hand_plates:
+        raise ValueError("Required authentic Evan relaxed-hand plate missing from original rig")
+    # Runtime source-alpha wrist QA reuses metadata already verified once.
+    body._raster_grip_hand_meta=hand_meta
     return ([DirectedScene(director,registry,Path(registry_path).parent,False,prepared=prepared),
-             DirectedScene(director,registry,Path(registry_path).parent,True,prepared=prepared)],
-            CartoonBody(**REVIEW_BODY_OPTIONS))
+             DirectedScene(director,registry,Path(registry_path).parent,True,prepared=prepared)],body)
 
 
 @lru_cache(maxsize=4)
@@ -119,7 +125,7 @@ def render_chunk(job):
     cv2.setNumThreads(1)
     plan_path,root,ffmpeg,index,start,end,fps,cache,visual_mode,performance_path,director_path,registry_path,cache_frames=job
     root=Path(root);plan=json.loads(Path(plan_path).read_text())
-    cache=Path(cache);hits=0
+    cache=Path(cache);hits=0;raster_grip_frames=0
     if visual_mode=='storyboard':
         from storyboard_favicon import StoryboardFaviconScene
         factory=StoryboardFaviconScene
@@ -171,6 +177,17 @@ def render_chunk(job):
                 if cache_frames:
                     temporary=cached.with_suffix('.partial.png')
                     figure.save(temporary,compress_level=1);temporary.replace(cached)
+            if visual_mode=='directed':
+                from bisect import bisect_right
+                active_shot=scenes[0].scenes[bisect_right(scenes[0].ends,i)]
+                if i in active_shot['gripControls']:
+                    from grip_raster_qa import check_frame as check_grip_raster
+                    if custom is None:
+                        raise ValueError('Original FK acting controls required for grip raster QA')
+                    corrected=scenes[0].grip_at(i,custom.at_frame(i))
+                    check_grip_raster(figure,i,active_shot,corrected,
+                                      body.meta,body._raster_grip_hand_meta)
+                    raster_grip_frames+=1
             for scene,proc in zip(scenes,processes):
                 frame=scene.frame(i,figure) if visual_mode=='directed' else scene.render(t,figure)
                 proc.stdin.write(frame.tobytes())
@@ -190,7 +207,10 @@ def render_chunk(job):
     finally:
         for proc in processes:
             if proc.poll() is None:proc.kill();proc.wait()
-    (root/f'progress-{index:03}.json').write_text(json.dumps({'complete':True,'frames':end-start,'bodyCacheHits':hits}))
+    (root/f'progress-{index:03}.json').write_text(json.dumps({
+        'complete':True,'frames':end-start,'bodyCacheHits':hits,
+        'realOriginalWristRasterFramesChecked':raster_grip_frames,
+        'fingerCurlArtistApproved':False}))
     return index
 
 
