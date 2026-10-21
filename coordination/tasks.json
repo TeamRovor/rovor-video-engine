@@ -745,6 +745,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/e8ef17c0c5c3f06224d6cc87b587385cf244d3ec"
         }
       ]
+    },
+    {
+      "id": "nonmoho-grip-raster-visibility",
+      "title": "Verify actual alpha artwork at Evan wrist-to-tool grip per rendered frame",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar non-Moho grip visual QA",
+      "branch": "feature/nonmoho-grip-raster-qa-v1",
+      "scopes": [
+        "evan-engine/grip_raster_qa.py",
+        "evan-engine/test_grip_raster_qa.py",
+        "evan-engine/render_acting_video.py",
+        ".github/workflows/grip-raster-qa.yml",
+        "GRIP-RASTER-QA.md"
+      ],
+      "depends_on": [
+        "nonmoho-right-wrist-tool-ik"
+      ],
+      "updated_at": "2026-10-21T21:20:00Z",
+      "next_action": "Check rendered original Evan character silhouette at physically solved wrist attachment each 60fps frame before video encoder writes bytes, require sufficient opaque pixels in validated local footprint, separate from geometric wrist-to-handle QA; reject absent hand, cached wrong art or transparent source without changing original recording/art.",
+      "acceptance": "Actual source art wrist alpha passes hosted CI in native pose; deliberate synthetic blank and truncated wrist fail; no-grip legacy unchanged; fast per-frame check in renderer avoids extra image renders; source-free actual CartoonBody raster test and 1080p dual-view checks pass three OS; no artistic approval claim."
     }
   ]
 }
