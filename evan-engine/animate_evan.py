@@ -227,14 +227,25 @@ def file_stamp(value):
         stamp = {'path': str(path.resolve()), 'size': metadata.st_size,
                  'modified_ns': metadata.st_mtime_ns}
         # File identity catches ordinary replacements without hashing large models.
-        # Prefer Windows' birth time; ctime is a POSIX change time and a legacy
-        # Windows creation-time fallback.
-        for key, attribute in (('device', 'st_dev'), ('file_id', 'st_ino'),
-                               ('changed_ns', 'st_ctime_ns'),
-                               ('created_ns', 'st_birthtime_ns')):
+        for key, attribute in (('device', 'st_dev'), ('file_id', 'st_ino')):
             identity = getattr(metadata, attribute, None)
             if isinstance(identity, int) and (key != 'file_id' or identity != 0):
                 stamp[key] = identity
+        if os.name == 'nt':
+            # Python 3.12+ exposes Windows creation time separately; older
+            # versions report it through st_ctime_ns.
+            created = getattr(metadata, 'st_birthtime_ns', None)
+            if not isinstance(created, int):
+                created = getattr(metadata, 'st_ctime_ns', None)
+            if isinstance(created, int):
+                stamp['created_ns'] = created
+        else:
+            changed = getattr(metadata, 'st_ctime_ns', None)
+            if isinstance(changed, int):
+                stamp['changed_ns'] = changed
+            created = getattr(metadata, 'st_birthtime_ns', None)
+            if isinstance(created, int):
+                stamp['created_ns'] = created
         return stamp
     except OSError:
         return {'path': str(path)}
