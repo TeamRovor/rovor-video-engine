@@ -967,19 +967,21 @@
       "id": "business-proof-catalog",
       "title": "Separate real portfolio evidence from concepts and unfinished demos",
       "priority": 2,
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "ChatGPT / Amar verifiable delivery proof catalog 2026-10-21",
+      "branch": "business/verified-proof-catalog-v1",
       "scopes": [
         "business/proof-catalog.md"
       ],
       "depends_on": [],
-      "next_action": "Inspect current project/PR evidence and source references; create a compact catalog distinguishing implemented code, technically tested demo, available preview, approved portfolio piece and actual client result. Cite exact commits/links and flag unavailable private artifacts. Do not claim a client outcome or polished film without evidence. Use a focused branch from main.",
-      "acceptance": "Every catalog item has a source, truthful status, missing approval/input and allowed description; no fabricated metrics, testimonials, client names or visual approval.",
+      "next_action": "Write business/proof-catalog.md with exact verified GitHub accomplishment evidence, clear non-achievements, no fictional customer/revenue results, and next deliverable acceptance gates tied to original video and agency outcomes. Publish branch PR. Preserve existing queue owners; no merge without checking.",
+      "acceptance": "One usable source-linked business/engineering proof catalog with test/merged/draft/runtime/creative/revenue distinctions and measurable near-term actual-output goals, self-contained handoff, no invented real video/client/revenue/ghost employee.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/5",
         "https://github.com/TeamRovor/rovor-video-engine/pull/7"
-      ]
+      ],
+      "updated_at": "2026-10-21T22:31:42.514Z",
+      "next_update": "After the repository proof catalog and evidence-first goals are published and source links independently read back"
     },
     {
       "id": "business-offer-brief",
