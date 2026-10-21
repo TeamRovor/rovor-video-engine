@@ -1,0 +1,39 @@
+name: ROVOR physical contact non-Moho renderer
+
+on:
+  push:
+    branches: [feature/nonmoho-physical-contact-lock-v1]
+    paths:
+      - 'evan-engine/directed_contact_lock.py'
+      - 'evan-engine/directed_scene.py'
+      - 'evan-engine/test_directed_contact_lock.py'
+      - '.github/workflows/nonmoho-contact-lock.yml'
+  pull_request:
+    paths:
+      - 'evan-engine/directed_contact_lock.py'
+      - 'evan-engine/directed_scene.py'
+      - 'evan-engine/test_directed_contact_lock.py'
+      - '.github/workflows/nonmoho-contact-lock.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  geometry-and-real-raster:
+    name: Source-art contact and actual raster frames
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Pillow and NumPy for actual directed scene pixels
+        run: python -m pip install pillow==10.4.0 numpy==1.26.4
+      - name: Test real 1080p frames, contact geometry and legacy playback
+        working-directory: evan-engine
+        run: |
+          python -m py_compile directed_contact_lock.py directed_scene.py test_directed_contact_lock.py
+          python -m unittest -v test_directed_contact_lock test_directed_contact test_directed_scene
