@@ -209,8 +209,23 @@ class RealWristGripTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"composite in front"):
             self.prepared()
 
-    def test_releasing_roller_mid_gesture_cannot_snap_original_arm(self):
+    def test_authored_abrupt_release_cannot_snap_original_arm(self):
         self.grip["endFrameExclusive"] = 200
+        # Original right shoulder stays at 0 until frame 200, where a
+        # different author abruptly changes it to +12 degrees. The
+        # solver must detect the discontinuity before video rendering.
+        self.performance = EvanPerformance({
+            "schemaVersion": 1, "sourceRig": "original-evan-layered",
+            "durationSec": 40,
+            "channels": {
+                "right.shoulder": [
+                    {"frame": 0, "degrees": 0, "interpolation": "hold"},
+                    {"frame": 200, "degrees": 12},
+                    {"frame": 2400, "degrees": 12},
+                ]
+            },
+            "rightHandKeys": [{"frame": 0, "pose": "relaxed"}],
+        })
         with self.assertRaisesRegex(ValueError, "release snaps original arm"):
             self.prepared()
 
