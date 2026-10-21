@@ -1,0 +1,38 @@
+name: Native Moho chapter switch compiler
+
+on:
+  push:
+    branches: [feature/native-chapter-switch-compiler-v1]
+    paths:
+      - 'tools/native_chapter_switch.py'
+      - 'tests/test_native_chapter_switch.py'
+      - '.github/workflows/native-chapter-switch.yml'
+  pull_request:
+    paths:
+      - 'tools/native_chapter_switch.py'
+      - 'tests/test_native_chapter_switch.py'
+      - '.github/workflows/native-chapter-switch.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  compile-source-fixtures:
+    name: Source-only Moho native ZIP proof
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test native ZIP switches, chapter packages, and English acoustic QA
+        run: |
+          python -m py_compile tools/native_chapter_switch.py tests/test_native_chapter_switch.py
+          python -m unittest -v tests.test_native_chapter_switch tests.test_moho_compile tests.test_chapter_package tests.test_longform_chapters tests.test_speech_plan_gate
