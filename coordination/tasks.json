@@ -788,7 +788,7 @@
       "id": "work-session-routing",
       "title": "Add capability-aware work entrypoint and handoff protocol",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar work-session coordination 2026-10-21",
       "branch": "coordination/work-session-routing",
       "scopes": [
@@ -801,10 +801,29 @@
         ".github/workflows/remote-handoff.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-21T21:35:28.284Z",
-      "next_update": "After targeted routing tests and published review branch",
-      "next_action": "Implement read-only work briefing using existing queue, capability routing, explicit handoff and fresh claim checks.",
-      "acceptance": "Tests reject invalid queues and avoid blocked/dependent/overlapping/incapable tasks; publish startup instructions and reproducible validation."
+      "updated_at": "2026-10-21T21:38:05.240Z",
+      "next_update": "Evan's next work session",
+      "next_action": "PR #22 merged into main at 7c19263c7205250c844337e3933a32da54aa282e. Use latest main WORK.md; Evan can select windows-benchmark-protocol if still eligible. Existing cache/runtime owners remain reserved. Verify actual laptop capability separately; macOS PR coordination job was queued at handoff.",
+      "acceptance": "Tests reject invalid queues and avoid blocked/dependent/overlapping/incapable tasks; publish startup instructions and reproducible validation.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/22"
+      ],
+      "evidence": [
+        {
+          "commit": "7ea51a2e0b26cc580c003b60bb640e0f9b4d74b3",
+          "platform": "Linux / Python 3.12.14",
+          "check": "python -m unittest discover -s tests -v; python tools/project_loop.py check; GitHub-only Evan work_brief smoke check",
+          "result": "PASS: 30 tests (14 coordination, 4 handoff, 12 routing), valid queue, recommends independent benchmark protocol; no laptop or render verification",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/22"
+        },
+        {
+          "commit": "7ea51a2e0b26cc580c003b60bb640e0f9b4d74b3",
+          "platform": "GitHub-hosted Ubuntu / Python 3.11",
+          "check": "Remote handoff workflow: queue validation, 4 report tests, 12 routing tests, publish report and work brief",
+          "result": "PASS; existing coordination passed Ubuntu and Windows; macOS job still queued at handoff",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39680137433"
+        }
+      ]
     },
     {
       "id": "windows-benchmark-protocol",
