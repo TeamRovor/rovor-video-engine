@@ -967,21 +967,31 @@
       "id": "business-proof-catalog",
       "title": "Separate real portfolio evidence from concepts and unfinished demos",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar verifiable delivery proof catalog 2026-10-21",
       "branch": "business/verified-proof-catalog-v1",
       "scopes": [
         "business/proof-catalog.md"
       ],
       "depends_on": [],
-      "next_action": "Write business/proof-catalog.md with exact verified GitHub accomplishment evidence, clear non-achievements, no fictional customer/revenue results, and next deliverable acceptance gates tied to original video and agency outcomes. Publish branch PR. Preserve existing queue owners; no merge without checking.",
+      "next_action": "Business proof catalog merged in PR #28. Both user sessions can read business/proof-catalog.md on main. It distinguishes source-linked technical and business progress from unverified video/revenue/unattended operation and gives ten objective acceptance gates. Next real target is repairing animation CI blockers and producing approved original >=30-second dual 1080p60 MP4 outputs; separate business goal is working site client acceptance. Keep queue as ownership source.",
       "acceptance": "One usable source-linked business/engineering proof catalog with test/merged/draft/runtime/creative/revenue distinctions and measurable near-term actual-output goals, self-contained handoff, no invented real video/client/revenue/ghost employee.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/5",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/7"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/7",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/28",
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/proof-catalog.md"
       ],
-      "updated_at": "2026-10-21T22:31:42.514Z",
-      "next_update": "After the repository proof catalog and evidence-first goals are published and source links independently read back"
+      "updated_at": "2026-10-21T22:35:47.614Z",
+      "evidence": [
+        {
+          "commit": "7f4019fd8d171e03b941e5cd4f8d5516026f0d41",
+          "platform": "GitHub connected repository, main read-back",
+          "check": "One new source-linked Markdown proof catalog of real completed/merged, tested synthetic, experimental draft, blocked CI and unverified production; 26 GitHub evidence links, ten numbered deliverable-oriented milestones, reference path and file blob verified on main.",
+          "result": "PASS; PR #28 successfully squash merged, source file visible and read back from main with 10 unique numbered milestones. Documentation only, not live original film/site, client revenue, or autonomous AI execution; hosted CI not claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/28"
+        }
+      ]
     },
     {
       "id": "business-offer-brief",
