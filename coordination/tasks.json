@@ -640,6 +640,28 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/18"
         }
       ]
+    },
+    {
+      "id": "nonmoho-persistent-paint-trail",
+      "title": "Persist real wall paint under locked non-Moho roller at 60fps",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar visible-paint-cartoon pass",
+      "branch": "feature/nonmoho-visible-paint-trail-v1",
+      "scopes": [
+        "evan-engine/directed_paint.py",
+        "evan-engine/directed_scene.py",
+        "evan-engine/test_directed_paint.py",
+        ".github/workflows/nonmoho-paint-trail.yml",
+        "NONMOHO-PAINT-TRAIL.md"
+      ],
+      "depends_on": [
+        "nonmoho-contact-lock-render"
+      ],
+      "updated_at": "2026-10-21T05:26:52.934Z",
+      "next_update": "After source-free rendered-pixel CI tests, verify real Evan painting footage remains pending",
+      "next_action": "Implement opt-in persistent original-art wall paint based on per-frame source-verified roller contact; transform each contact tip into target local UV, clip stroke to target alpha and author region, layer paint behind original roller, maintain correct repaint across random-access frames and both 1080p60 formats; fail closed on no real stroke or invalid paint specs.",
+      "acceptance": "Existing PNGs/audio unmodified, actual rendered wall changed only where roller traversed, paint persists after tool moves, no future frames leak paint, portrait/landscape independently animated, moving/rotating wall stores paint in wall coordinates, source alpha protected, invalid contact/tools/region rejected, legacy contact scenes unchanged."
     }
   ]
 }
