@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import wave
 import zipfile
 
@@ -180,6 +181,18 @@ class NativeChapterSwitchTests(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             self.compile()
         self.assertEqual(self.result.read_bytes(), b"someone else's project")
+
+    def test_interrupted_archive_copy_removes_only_partial_new_output(self):
+        self.choose(0)
+        preserved = self.original.read_bytes()
+        def partial_copy(src, dst, *args, **kwargs):
+            dst.write(b"partial-archive")
+            raise OSError("synthetic interrupted copy")
+        with patch.object(subject.shutil, "copyfileobj", side_effect=partial_copy):
+            with self.assertRaisesRegex(OSError, "synthetic interrupted copy"):
+                self.compile()
+        self.assertFalse(self.result.exists())
+        self.assertEqual(self.original.read_bytes(), preserved)
 
     def test_reject_private_package_mutation(self):
         self.choose(0)
