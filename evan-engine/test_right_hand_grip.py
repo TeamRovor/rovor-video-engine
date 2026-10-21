@@ -137,11 +137,15 @@ class RealWristGripTests(unittest.TestCase):
             self.prepared()
 
     def test_tool_more_than_source_arms_can_reach_is_not_teleported(self):
-        for view in SIZES:
-            prop = next(i for i in self.scene["shots"][0]["compositions"][view]["elements"]
-                        if i["assetId"] == "globe")
+        for view, canvas in SIZES.items():
+            comp = self.scene["shots"][0]["compositions"][view]
+            prop = next(i for i in comp["elements"] if i["assetId"] == "globe")
+            actor = next(i for i in comp["elements"] if i["assetId"] == "original-evan-rig")
+            # Move by the same *actor-source-space* distance in both views,
+            # not the same stage UV (which would create conflicting targets).
+            dx = 120 * actor["keys"][0]["scale"] / canvas[0]
             for k in prop["keys"]:
-                k["x"] += .08
+                k["x"] += dx
         with self.assertRaisesRegex(ValueError, "cannot reach tool handle"):
             self.prepared()
 
