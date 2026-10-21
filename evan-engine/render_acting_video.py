@@ -95,6 +95,8 @@ def _directed_worker_runtime(director_path,registry_path,performance_path):
                    performance=_authored_performance(performance_path),
                    rig_meta=rig_meta,hand_meta=hand_meta)
     body=CartoonBody(**REVIEW_BODY_OPTIONS)
+    if prepared["wristGripsSolved"] and "relaxed" not in body.hand_plates:
+        raise ValueError("Required authentic Evan relaxed-hand plate missing from original rig")
     # Runtime source-alpha wrist QA reuses metadata already verified once.
     body._raster_grip_hand_meta=hand_meta
     return ([DirectedScene(director,registry,Path(registry_path).parent,False,prepared=prepared),
