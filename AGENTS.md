@@ -1,6 +1,10 @@
+# “Work” session entrypoint
+
+When the user says **work**, follow [WORK.md](WORK.md) from latest main. It defines capability-aware selection, shared claims, efficient execution and evidence-based handoffs. Read `coordination/work-routing.json` alongside the canonical task queue; the routing file does not assign ownership.
+
 # Repository collaboration instructions
 
-**Parallel development boundary:** Read [ROVOR-MP3-FIRST-ENGINE.md](ROVOR-MP3-FIRST-ENGINE.md). Evan's GitHub-connected session may claim the *currently unclaimed* `engine-efficiency-benchmarks` task for hosted cross-platform profiling and cache/restart efficiency; do not assume he has actually claimed it or that his laptop is remotely controllable. Amar's animation-intelligence track owns phoneme/viseme accuracy and acting QA through the existing art workstreams and `tools/speech_plan_gate.py`; do not duplicate its files. A green QA report remains **not** a finished/approved MP3-to-cartoon film.
+**Parallel development boundary:** Read [ROVOR-MP3-FIRST-ENGINE.md](ROVOR-MP3-FIRST-ENGINE.md). Evan's GitHub-connected session should use the efficiency lane in WORK.md and select a currently eligible task from the live queue; never assume an old task suggestion is still available; do not assume he has actually claimed it or that his laptop is remotely controllable. Amar's animation-intelligence track owns phoneme/viseme accuracy and acting QA through the existing art workstreams and `tools/speech_plan_gate.py`; do not duplicate its files. A green QA report remains **not** a finished/approved MP3-to-cartoon film.
 
 **GitHub-only Evan/Windows handoff:** When the only confirmed access is Evan's ChatGPT GitHub connector, read [REMOTE-EVAN-GITHUB.md](REMOTE-EVAN-GITHUB.md) before choosing work. The [remote handoff workflow](https://github.com/TeamRovor/rovor-video-engine/actions/workflows/remote-handoff.yml) publishes a read-only task/owner/blocker summary from the shared queue. It does not access Evan's laptop. Never assume terminal, installer, narration, or runtime access merely because the GitHub connector works.
 

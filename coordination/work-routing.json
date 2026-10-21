@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "tasks": {
+    "windows-runtime": {"lane": "efficiency", "requires": ["local-exec", "original-assets"]},
+    "render-cache-file-identity": {"lane": "efficiency", "requires": ["hosted-ci"]},
+    "windows-benchmark-protocol": {"lane": "efficiency", "requires": []},
+    "evan-acting-review": {"lane": "animation", "requires": ["original-assets", "visual-review"]},
+    "scene-moho-contract": {"lane": "integration", "requires": []},
+    "work-session-routing": {"lane": "coordination", "requires": ["local-exec"]}
+  }
+}

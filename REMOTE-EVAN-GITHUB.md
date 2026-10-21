@@ -1,8 +1,10 @@
 # Evan / ROVOR — GitHub-only start here
 
+**For the one-time prompt and every subsequent “work” session, start with [WORK.md](WORK.md).** Use the current queue and capability routing rather than a task name copied from an old chat.
+
 ## Two independent ROVOR improvements
 
-[ROVOR-MP3-FIRST-ENGINE.md](ROVOR-MP3-FIRST-ENGINE.md) describes the single-MP3 goal and split responsibilities. Evan's ChatGPT should check the live `coordination/tasks.json` queue, then claim `engine-efficiency-benchmarks` **only if it is still available**. Work on measurement-driven pipeline cost, caching and reliability using hosted CI on the existing Windows branch; leave phoneme articulation and creative quality to Amar's animation-intelligence track. The speech track has added a read-only acoustic plan QA gate (`tools/speech_plan_gate.py`); it does not itself provide a finished video. GitHub access alone cannot run or install tools on Evan's laptop.
+[ROVOR-MP3-FIRST-ENGINE.md](ROVOR-MP3-FIRST-ENGINE.md) describes the single-MP3 goal and split responsibilities. Evan's ChatGPT should check the live `coordination/tasks.json` queue and `coordination/work-routing.json`, then claim a currently eligible efficiency task. No fixed task ID is guaranteed available. Work on measurement-driven pipeline cost, caching and reliability using hosted CI on the existing Windows branch; leave phoneme articulation and creative quality to Amar's animation-intelligence track. The speech track has added a read-only acoustic plan QA gate (`tools/speech_plan_gate.py`); it does not itself provide a finished video. GitHub access alone cannot run or install tools on Evan's laptop.
 
 **Use this even if nobody can visit Evan's laptop.** The only connection we can currently rely on is the existing GitHub access from Evan's ChatGPT. That access shares repository contents, not his Windows desktop, terminal, installed programs, MP3 library, or ChatGPT conversation.
 
