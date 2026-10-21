@@ -50,7 +50,7 @@ class RealWristGripTests(unittest.TestCase):
         })
         shot = self.scene["shots"][0]
         self.grip = {
-            "startFrame": 60, "endFrameExclusive": 200,
+            "startFrame": 60, "endFrameExclusive": 420,
             "toolAssetId": "globe", "toolHandleUV": [.5, .5],
             "hand": "relaxed-right", "maxGripGapPx": 4,
         }
@@ -87,7 +87,7 @@ class RealWristGripTests(unittest.TestCase):
         ready = self.prepared()
         self.assertEqual(ready["wristGripsSolved"], 1)
         shot = ready["scenes"][0]
-        self.assertEqual(len(shot["gripControls"]), 140)
+        self.assertEqual(len(shot["gripControls"]), 360)
         self.assertFalse(shot["gripEvidence"]["realGripFingersValidated"])
         moved = [angles for angles in shot["gripControls"].values()
                  if abs(angles[0]) > .08 or abs(angles[1]) > .08]
@@ -104,7 +104,7 @@ class RealWristGripTests(unittest.TestCase):
             tool = next(i for i in comp["elements"] if i["assetId"] == "globe")
             scene = DirectedScene(self.scene, self.assets, self.root,
                                   portrait=view == "portrait", prepared=ready)
-            for f in range(60, 200):
+            for f in range(60, 420):
                 angles = scene.grip_at(f, self.performance.at_frame(f))["right"]
                 self.assertLessEqual(abs(angles[0]), 12)
                 self.assertLessEqual(abs(angles[1]), 30)
