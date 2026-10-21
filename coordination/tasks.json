@@ -938,18 +938,20 @@
       "id": "business-service-delivery-playbook",
       "title": "Create reusable website and landing-page delivery playbook",
       "priority": 1,
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "ChatGPT / Amar business delivery 2026-10-21",
+      "branch": "business/website-delivery-playbook",
       "scopes": [
         "business/playbooks/website-delivery.md"
       ],
       "depends_on": [],
-      "next_action": "Use business/templates/client-intake.md and delivery-review.md to write a concrete website/landing-page process: required inputs, scope exclusions, acceptance checks, review handoff, revision boundaries and maintenance handoff. Reuse current Rovor services; mark prices, deadlines and client facts as not agreed. Work on a focused branch from main.",
+      "next_action": "Create scoped website delivery playbook; verify every stage has owner, output and exit criteria.",
       "acceptance": "Playbook has a usable intake-to-delivery checklist, explicit unknown-input handling, client-facing acceptance checks and a concrete review packet; no invented contract/pricing or deployment. Validate that every stage names its output and owner.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/OPERATING-SYSTEM.md"
-      ]
+      ],
+      "updated_at": "2026-10-21T22:15:49.164Z",
+      "next_update": "After playbook walkthrough and source/link validation"
     },
     {
       "id": "business-proof-catalog",
