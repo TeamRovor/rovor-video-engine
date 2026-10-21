@@ -862,9 +862,9 @@
         ".github/workflows/business-ops.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-21T21:57:04.748Z",
-      "next_update": "First main-branch operations report after PR #23 integration",
-      "next_action": "Implementation and hosted artifact verified in PR #23. After integration, use business/OPERATING-SYSTEM.md and the Rovor business operations workflow. Claim eligible delivery playbook or source-backed proof catalog from the live queue; do not assume any general AI employee, client messaging or native rendering is running.",
+      "updated_at": "2026-10-21T21:58:42.731Z",
+      "next_update": "After hosted runner startup diagnosis; code task is complete, operational activation remains separately unverified.",
+      "next_action": "Merged PR #23 at db0555b7e9dc33483cddadfafc1cc17a338e46a1. Source verified locally and PR report artifact verified; first main event run 39682872758 failed before either hosted runner started (empty steps/no runner), report skipped. Inspect GitHub run annotations for the actual service/account cause before rerunning; connector could not read annotations. Do not call main unattended reporting healthy yet. Eligible delivery/proof tasks can proceed in authorized sessions.",
       "acceptance": "One queue; actionable business task packets; deterministic replay/tamper checks and bounded report worker; hosted artifact verified; no remote laptop, messaging, billing or production approval claim.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/23"
@@ -883,6 +883,13 @@
           "check": "12 routing + 22 worker tests on both OS; report job and artifact 12383199370; downloaded and verified both report hashes against receipt",
           "result": "PASS. Existing macOS coordination job remained queued, not claimed passed. Report only; no recommended task executed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39681542268"
+        },
+        {
+          "commit": "db0555b7e9dc33483cddadfafc1cc17a338e46a1",
+          "platform": "GitHub Actions main push",
+          "check": "First main business-ops event run; inspect job metadata for Ubuntu and Windows",
+          "result": "NOT RUN: both jobs failed with empty steps and no assigned runner; report skipped. Failure cause unavailable through connector; not a test failure or proof of healthy unattended operation.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39682872758"
         }
       ]
     },
