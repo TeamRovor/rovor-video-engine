@@ -124,6 +124,11 @@ class VisiblePaintTests(unittest.TestCase):
             wall = next(x for x in comp["elements"] if x["assetId"] == "desk")
             wall["keys"] = [key(0, .5, .5, scale=.7, rotation=0.),
                             key(480, .54, .5, scale=.7, rotation=10.)]
+            # Author the roller's release near the moved wall, so a real
+            # contact lock cannot hide a teleport when the brush lifts off.
+            tool = next(x for x in comp["elements"] if x["assetId"] == "globe")
+            tool["keys"][3]["x"] = .535
+            tool["keys"][4]["x"] = .54
         prepared = self.prepared()
         for portrait, view in ((False, "landscape"), (True, "portrait")):
             scene = DirectedScene(self.config, self.registry, self.root,
@@ -196,7 +201,7 @@ class VisiblePaintTests(unittest.TestCase):
             self.prepared()
 
     def test_never_accept_duplicate_paint_on_same_wall(self):
-        second = dict(self.rule, startFrame=420, endFrameExclusive=480)
+        second = dict(self.rule, startFrame=420, endFrameExclusive=425)
         self.shot["contactConstraints"].append(second)
         with self.assertRaisesRegex(ValueError, "Multiple independent paint strokes|abrupt"):
             self.prepared()
