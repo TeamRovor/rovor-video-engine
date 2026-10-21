@@ -209,6 +209,11 @@ class RealWristGripTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"composite in front"):
             self.prepared()
 
+    def test_releasing_roller_mid_gesture_cannot_snap_original_arm(self):
+        self.grip["endFrameExclusive"] = 200
+        with self.assertRaisesRegex(ValueError, "release snaps original arm"):
+            self.prepared()
+
     def test_no_overlap_of_distinct_wrist_targets(self):
         clone=dict(self.grip,startFrame=100,endFrameExclusive=120)
         self.scene["shots"][0]["handGripConstraints"].append(clone)
