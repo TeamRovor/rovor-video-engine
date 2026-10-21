@@ -1086,9 +1086,9 @@
       ]
     },
     {
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "ChatGPT / Amar deterministic AI quality benchmark 2026-10-21",
+      "branch": "integration/rovor-evaluation-pack-v1",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
       ],
@@ -1103,8 +1103,10 @@
         "business-service-delivery-playbook",
         "business-proof-catalog"
       ],
-      "next_action": "Use completed sourced knowledge, delivery and proof artifacts to create realistic input/output acceptance examples for intake/delivery, source-backed research/sales, and one existing technical workflow. Record provenance, criteria and known bad outputs. Use synthetic or explicitly authorized data. No new local model or training.",
-      "acceptance": "Each workflow has a reproducible case, source-backed expected criteria, failure examples and an independently understandable review rubric; label unexecuted/model-specific evaluations. This reusable pack can compare future local models with current acceptable work."
+      "next_action": "Build runnable stdlib evaluator with three realistic, no-private-data case families and known-bad candidate outputs. Distinguish expected facts from predictions, require sourced client statements and exact technical evidence, make false-approval claims fail, run actual Python tests offline, publish narrow files in architecture/evaluations only.",
+      "acceptance": "One executable offline pack with structured input/gold outputs plus deliberately invalid candidate examples for intake/delivery, sourced research/sales and technical GitHub-run assessment, strict reproducible evaluations and tests; pass reference cases, fail fabrication/inference-as-observation and CI pre-job-as-test errors; no model runtime or client outcome claimed.",
+      "updated_at": "2026-10-21T23:09:59.658Z",
+      "next_update": "After strict source-grounded JSON cases and local stdlib evaluator tests verified, produce PR, record head hash and actual execution evidence"
     },
     {
       "status": "ready",
