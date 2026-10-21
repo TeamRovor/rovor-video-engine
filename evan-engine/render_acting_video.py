@@ -76,7 +76,7 @@ def actor_controls_fingerprint(source_text):
 
 
 @lru_cache(maxsize=2)
-def _directed_worker_runtime(director_path,registry_path):
+def _directed_worker_runtime(director_path,registry_path,performance_path):
     """Reuse decoded original illustrations and Evan body across worker chunks.
 
     Previously the same images and 1464x1536 source rig were decoded twice per
@@ -88,7 +88,10 @@ def _directed_worker_runtime(director_path,registry_path):
     from cartoon_body import CartoonBody,REVIEW_BODY_OPTIONS
     director=json.loads(Path(director_path).read_text())
     registry=json.loads(Path(registry_path).read_text())
-    prepared=check(director,registry,Path(registry_path).parent)
+    prepared=check(director,registry,Path(registry_path).parent,
+                   performance=_authored_performance(performance_path),
+                   rig_meta=json.loads((Path(__file__).parent.parent/'evan-character/cartoon-v1/body-rig/manifest.json').read_text()),
+                   hand_meta=json.loads((Path(__file__).parent.parent/'evan-character/cartoon-v1/hand-source/manifest.json').read_text()))
     return ([DirectedScene(director,registry,Path(registry_path).parent,False,prepared=prepared),
              DirectedScene(director,registry,Path(registry_path).parent,True,prepared=prepared)],
             CartoonBody(**REVIEW_BODY_OPTIONS))
@@ -126,7 +129,11 @@ def render_chunk(job):
     else:
         factory=FaviconScene
     if visual_mode=='directed':
-        scenes,body=_directed_worker_runtime(director_path,registry_path)
+        scenes,body=_directed_worker_runtime(director_path,registry_path,performance_path)
+        if any(shot["gripControls"] for shot in scenes[0].scenes):
+            # A previously cached original actor frame does not include the
+            # new physically solved wrist pose. Keep cache from reusing it.
+            cache_frames=False
     else:
         scenes=[factory(plan,False),factory(plan,True)]
         body=scenes[0].body
@@ -158,6 +165,8 @@ def render_chunk(job):
                     controls=globe_action_controls(t)
                 else:
                     controls=narration_acting(t)
+                if visual_mode=='directed':
+                    controls=scenes[0].grip_at(i,controls)
                 figure=body.render(t,plan,controls)
                 if cache_frames:
                     temporary=cached.with_suffix('.partial.png')
@@ -230,7 +239,13 @@ def main():
         from directed_scene import check
         scenes=json.loads(a.director_json.read_text())
         assets=json.loads(a.art_registry.read_text())
-        planned=check(scenes,assets,a.art_registry.parent)
+        from performance_tracks import EvanPerformance
+        authored=EvanPerformance(json.loads(a.performance_json.read_text()))
+        original_root=Path(__file__).parent.parent/'evan-character/cartoon-v1'
+        planned=check(scenes,assets,a.art_registry.parent,
+                      performance=authored,
+                      rig_meta=json.loads((original_root/'body-rig/manifest.json').read_text()),
+                      hand_meta=json.loads((original_root/'hand-source/manifest.json').read_text()))
         if abs(planned['durationSec']-audio_duration)>.025:
             p.error('Directed scene timeline does not cover entire unchanged audio')
         if a.sound_cues:
@@ -268,6 +283,8 @@ def main():
             report['originalSceneAssetsVerified']=len(planned['artwork'])
             report['sceneCount']=len(planned['scenes'])
             report['originalFKActingTimelineVerified']=True
+            report['realSourceWristGripsSolved']=planned['wristGripsSolved']
+            report['fingerArtGripApproval']=False
             if a.sound_cues:
                 report['physicalSoundEffectCuesVerified']=cue_status['verifiedEffects']
         if speech_qa is not None:report['speechQa']=speech_qa
@@ -322,6 +339,8 @@ def main():
         profile['sourceArtRegistrySha256']=registry_hash
         profile['sourceSceneArtPixelsSha256']=asset_hash.hexdigest()
         profile['soundtrackMixed']=False
+        profile['realSourceWristGripsSolved']=planned['wristGripsSolved']
+        profile['fingerArtGripApproval']=False
         if a.sound_cues:
             profile['physicalCueSheetSha256']=hashlib.sha256(a.sound_cues.read_bytes()).hexdigest()
             profile['physicalCueTimingVerified']=cue_status['verifiedEffects']
