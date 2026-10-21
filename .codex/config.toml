@@ -1,0 +1,19 @@
+# ROVOR Digital project-level Codex configuration.
+# Only trusted local Codex projects load this file. It does NOT configure
+# cloud ChatGPT, reach the Mac/Windows Blender process, or install add-ons.
+#
+# Upstream: https://github.com/ahujasid/mcp-for-blender
+# Previous package "blender-mcp" is an upstream compatibility alias.
+#
+# Keep access local; this server can execute Blender Python code.
+# Safe-mode AST screening is defense in depth, not a sandbox.
+
+[mcp_servers.blender]
+command = "uvx"
+args = ["--python", "3.11", "mcp-for-blender"]
+
+[mcp_servers.blender.env]
+BLENDER_HOST = "127.0.0.1"
+BLENDER_PORT = "9876"
+BLENDER_MCP_SAFE_MODE = "1"
+UV_PYTHON_PREFERENCE = "only-managed"
