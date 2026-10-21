@@ -677,6 +677,29 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/19"
         }
       ]
+    },
+    {
+      "id": "nonmoho-right-wrist-tool-ik",
+      "title": "Bind Evan real FK wrist to roller handle in non-Moho shots",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar non-Moho right-wrist FK contact session",
+      "branch": "feature/nonmoho-fk-wrist-grip-v1",
+      "scopes": [
+        "evan-engine/right_hand_grip.py",
+        "evan-engine/test_right_hand_grip.py",
+        "evan-engine/directed_scene.py",
+        "evan-engine/render_acting_video.py",
+        ".github/workflows/right-hand-grip.yml",
+        "RIGHT-HAND-GRIP.md"
+      ],
+      "depends_on": [
+        "nonmoho-persistent-paint-trail"
+      ],
+      "updated_at": "2026-10-21T05:44:11.303Z",
+      "next_update": "After hosted source-free 1080p60 FK and true frame tests; real Evan art grip approval stays pending",
+      "next_action": "Use genuine original rig manifest and selected original hand wrist attachment for per-frame actor-hand-to-tool calibration. Solve bounded shoulder/elbow movement from the locked prop handle, respecting performance joint limits, actor roll and per-view transforms; require landscape/portrait agree on one source wrist pose; integrate computed controls into actual renderer, preserve existing art/audio, reject unreached contact. Label physical gripping fingers unverified.",
+      "acceptance": "Dual-view 60fps FK solver and real scene integration with per-frame wrist-to-tool handle within visual pixel threshold and original joint limits; incompatible geometry, pose, large jumps, disconnected tool or missing original rig refused; existing unrelated scenes unchanged and caching guarded; cross-OS tests on existing original manifest plus synthetic art."
     }
   ]
 }
