@@ -645,7 +645,7 @@
       "id": "nonmoho-persistent-paint-trail",
       "title": "Persist real wall paint under locked non-Moho roller at 60fps",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar visible-paint-cartoon pass",
       "branch": "feature/nonmoho-visible-paint-trail-v1",
       "scopes": [
@@ -658,10 +658,25 @@
       "depends_on": [
         "nonmoho-contact-lock-render"
       ],
-      "updated_at": "2026-10-21T05:26:52.934Z",
-      "next_update": "After source-free rendered-pixel CI tests, verify real Evan painting footage remains pending",
-      "next_action": "Implement opt-in persistent original-art wall paint based on per-frame source-verified roller contact; transform each contact tip into target local UV, clip stroke to target alpha and author region, layer paint behind original roller, maintain correct repaint across random-access frames and both 1080p60 formats; fail closed on no real stroke or invalid paint specs.",
-      "acceptance": "Existing PNGs/audio unmodified, actual rendered wall changed only where roller traversed, paint persists after tool moves, no future frames leak paint, portrait/landscape independently animated, moving/rotating wall stores paint in wall coordinates, source alpha protected, invalid contact/tools/region rejected, legacy contact scenes unchanged."
+      "updated_at": "2026-10-21T05:37:02.140Z",
+      "next_action": "Review draft PR #19 stacked on non-Moho contact PR #18. Apply calibrated paintStroke source UV to real approved roller and wall PNGs; require actual Evan actor hand/grip and visible paint accumulates in 1080p60 portrait/landscape at natural speed. Then render full original 4:23 scene/audio (at least 30s for previews), verify speech, visual and paint realism. Hosted fixture tests are not native Moho, a real painting film, or artistic approval.",
+      "acceptance": "Existing PNGs/audio unmodified, actual rendered wall changed only where roller traversed, paint persists after tool moves, no future frames leak paint, portrait/landscape independently animated, moving/rotating wall stores paint in wall coordinates, source alpha protected, invalid contact/tools/region rejected, legacy contact scenes unchanged.",
+      "evidence": [
+        {
+          "commit": "f18167aa8c6867cadb02480122f4f181803d1d4d",
+          "platform": "GitHub-hosted Ubuntu/Windows/macOS Python 3.11 Pillow 10.4 NumPy 1.26",
+          "check": "13 new progressive paint tests + 50 existing contact/scene tests; actual 1920x1080 and 1080x1920 RGB paint pixels before and after tool, source alpha clip, paint persistence on rotating/moving wall, seek determinism",
+          "result": "PASS 63/63 each OS; source-free synthetic artwork only; no full film, narration or approved Evan rig",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39550292749"
+        },
+        {
+          "commit": "f18167aa8c6867cadb02480122f4f181803d1d4d",
+          "platform": "GitHub draft PR",
+          "check": "Stacked on non-Moho PR #18; isolated opt-in source-art paint rendering",
+          "result": "Draft PR #19 open, unmerged; five focused files; original user audio/assets unchanged",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/19"
+        }
+      ]
     }
   ]
 }
