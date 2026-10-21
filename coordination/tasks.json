@@ -529,6 +529,28 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/15"
         }
       ]
+    },
+    {
+      "id": "longform-native-chapter-packaging",
+      "title": "Package exact PCM chapters and native-local phone timelines",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar longform package integration session",
+      "branch": "feature/native-chapter-package-v1",
+      "scopes": [
+        "tools/chapter_package.py",
+        "tests/test_chapter_package.py",
+        ".github/workflows/chapter-package.yml",
+        "CHAPTER-PACKAGE-HANDOFF.md"
+      ],
+      "depends_on": [
+        "longform-acoustic-chapter-plan",
+        "moho-file-compiler"
+      ],
+      "updated_at": "2026-10-21T03:25:01.144Z",
+      "next_update": "After hosted 4m23 and 8m30 artifact-packaging tests; native Moho rig and renderer still unverified",
+      "next_action": "Read PR #15 manifest, verify original 16k PCM and original speech plan hashes, package each <=60-second chapter as source-byte-exact WAV plus localized phoneme plan, verify reassembled PCM payloads and no end/start drift; stay out of PR #13 worker and source rig paths.",
+      "acceptance": "Create private no-overwrite chapter directory with immutable source-bound hashes, chapter-local typed phonemes, exact PCM coverage and independent cross-platform tests for 4:23, 8:30, tamper/overlap/missing-key cases. No paid service/native Moho claim."
     }
   ]
 }
