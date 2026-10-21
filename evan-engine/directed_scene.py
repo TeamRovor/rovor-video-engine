@@ -15,6 +15,7 @@ import math
 from pathlib import Path
 from PIL import Image,ImageColor
 from directed_contact import audit as audit_contact_geometry
+from directed_contact_lock import apply_locked_contacts
 
 SIZES={"landscape":(1920,1080),"portrait":(1080,1920)}
 FPS=60
@@ -180,15 +181,17 @@ def check(config,registry,root):
                             raise ValueError("Evan is outside safe portrait/landscape camera framing without editorial justification")
             compositions[view]={"background":fill,"camera":camera,
                                 "elements":processed,"hasActor":has_actor}
+        compositions,lock_evidence = apply_locked_contacts(shot,compositions,images,SIZES,ACTOR_ID,interpolate)
         contact_evidence = audit_contact_geometry(shot,compositions,images,SIZES,ACTOR_ID,interpolate)
         ready.append({"startFrame":begin,"endFrameExclusive":end,
                       "kind":shot.get("kind"),"visualPurpose":shot["visualPurpose"],
                       "actionPayoff":shot["actionPayoff"],"compositions":compositions,
-                      "contactEvidence":contact_evidence})
+                      "contactEvidence":contact_evidence,"lockEvidence":lock_evidence})
     if cursor!=total:
         raise ValueError("Directed scenes do not cover full original narration")
     return {"durationSec":duration,"totalFrames":total,"scenes":ready,
             "contactConstraintsChecked":sum(s["contactEvidence"]["constraintsChecked"] for s in ready),
+            "contactLocksRendered":sum(sum(v["lockedConstraints"] for v in s["lockEvidence"].values()) for s in ready),
             "artwork":images,"distinctAssetIds":len(seen),"creativeApproved":False}
 
 
