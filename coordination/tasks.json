@@ -1162,7 +1162,7 @@
       "id": "blender-mcp-codex-local-bridge",
       "title": "Configure safe local Blender MCP adapter for trusted ROVOR Codex projects",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar GitHub Blender MCP integration session",
       "branch": "feature/blender-mcp-local-codex-v1",
       "scopes": [
@@ -1172,10 +1172,39 @@
         "tests/test_blender_mcp_preflight.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-21T23:21:47.851Z",
-      "next_update": "After project TOML and portable MCP JSON, install/connection walkthrough, and offline validation merged or reviewable; never claim Mac/Windows runtime connected absent local host evidence",
-      "next_action": "Use renamed official ahujasid/mcp-for-blender package, add trusted project-level Codex MCP config and JSON example with safe mode and loopback, no copied upstream code or secrets. Provide macOS/Windows install and real Blender addon activation/connection checks, include a standalone no-side-effects config/port preflight, validate JSON/TOML locally. GitHub-only scope cannot install the add-on, change this ChatGPT harness, or open user's Blender.",
-      "acceptance": "Committed exact Codex project TOML and Claude/Cursor-style MCP JSON example for maintained package, verified file parsers and local no-side-effects checks; auditable Mac and Windows installation instructions with bounded first test and security/permissions, user activation remaining explicit; no false live Blender session claim."
+      "updated_at": "2026-10-21T23:28:38.610Z",
+      "next_action": "PR #31 merged on main. On Mac install/enable maintained upstream MCP for Blender add-on, start local socket 127.0.0.1:9876, open trusted local ROVOR Codex checkout, run preflight, query get_scene_info, create a disposable cube and render still; verify actual tool calls and saved output. Repeat independently on Windows. Do not claim cloud ChatGPT can reach local Blender solely via GitHub. No machine installation attempted from this session.",
+      "acceptance": "Committed exact Codex project TOML and Claude/Cursor-style MCP JSON example for maintained package, verified file parsers and local no-side-effects checks; auditable Mac and Windows installation instructions with bounded first test and security/permissions, user activation remaining explicit; no false live Blender session claim.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/31",
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/integrations/blender-mcp/README.md"
+      ],
+      "evidence": [
+        {
+          "commit": "414cf69ece64261873779b84b766c18345c82b7a",
+          "platform": "GitHub connected main, separate local Python 3.11+ isolated harness",
+          "check": "Five source/config files read back from main; exact original GitHub blob identities matched via local git hash-object for Codex TOML, MCP JSON, preflight script and unittest file; python -m unittest discover -s tests -p test_blender_mcp_preflight.py -v ran 12 checks; read-only preflight returned validated=true and blender_connected=false.",
+          "result": "PASS 12/12 offline configuration/safety tests and source identity match. PR #31 merged. Real Mac/Windows install, Blender addon startup, MCP handshake, Python execution and rendering NOT performed in this session; no hosted CI green claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/31"
+        }
+      ]
+    },
+    {
+      "id": "blender-mcp-real-host-smoke",
+      "title": "Verify authentic local Blender MCP scene edit and still render on Mac",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "scopes": [
+        "subsystem:blender-mcp-runtime-smoke"
+      ],
+      "depends_on": [
+        "blender-mcp-codex-local-bridge"
+      ],
+      "updated_at": "2026-10-21T23:28:38.610Z",
+      "next_action": "Requires access to Amar's Mac host running Blender + local trusted Codex. Follow merged integrations/blender-mcp/README.md: install uvx mcp-for-blender addon, enable it, start local MCP server; run read-only preflight and codex mcp list; inspect via get_scene_info, use disposable .blend to create a cube via allowed bpy code and render an inspectable still. Capture exact versions, real client tool call/response, render artifact path/hash/size and first observed failure; original art and client projects untouched. Evan Windows is separate independently verified endpoint. GitHub-only sessions cannot claim runtime success.",
+      "acceptance": "Authentic local Codex->MCP->Blender scene info and acknowledged harmless scene change in disposable project; verified .blend and preview still actually generated and reviewed with exact version and local host evidence. If unreachable, record actual error and keep blocked rather than marking connected."
     }
   ]
 }
