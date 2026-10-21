@@ -1,0 +1,38 @@
+name: Longform acoustic chapter planning
+
+on:
+  push:
+    branches: [feature/acoustic-longform-chapters-v1]
+    paths:
+      - 'tools/longform_chapters.py'
+      - 'tests/test_longform_chapters.py'
+      - '.github/workflows/longform-chapters.yml'
+  pull_request:
+    paths:
+      - 'tools/longform_chapters.py'
+      - 'tests/test_longform_chapters.py'
+      - '.github/workflows/longform-chapters.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verified-source-plan:
+    name: Chapter accounting (hosted, synthetic only)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run source-free longform chapter regressions and original phone gate
+        run: |
+          python -m py_compile tools/longform_chapters.py tests/test_longform_chapters.py
+          python -m unittest -v tests/test_longform_chapters.py tests/test_speech_plan_gate.py
