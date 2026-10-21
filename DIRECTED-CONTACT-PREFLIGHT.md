@@ -29,8 +29,7 @@ Place the local UV points on the real painted roller tip and target surface,
 accounting for transparent image padding. The gate additionally checks that
 contact points land on actual nontransparent source PNG pixels (alpha >= 8);
 segment contact is tested at the closest source-edge pixel every frame.
-The target can also be a single
-point instead of a segment. The segment type supports rolling along a wall
+The target can also be a single point instead of a segment. The segment type supports rolling along a wall
 edge while remaining in contact.
 
 The gate samples **every frame** from startFrame inclusive to
@@ -56,12 +55,12 @@ surface segments, contact intervals outside the shot, permissive tolerances,
 fully invisible layer opacity, and an apparently matching contact that lies
 on invisible/transparent artwork instead of a drawn prop or surface.
 
-**Important artistic and rig limitations:** UV coordinates are authored on
-source image bounds; this module checks source-pixel alpha, but does not inspect actual rendered image contact
-at the anchor beyond a source-alpha threshold; it cannot prove that the roller
-paints the wall, that a mark follows the roller, or detect anatomy/visual quality. Evan's actor art ID cannot be treated as a real
-skeleton or hand endpoint: native Moho bone/hand control evidence must be
-provided by a distinct future rig adapter. Never claim these prop-only checks
+**Important artistic and rig limitations:** UV anchors are authored in
+source-image coordinates. The gate checks source-pixel alpha and projected
+layer geometry, but does not inspect final rendered image contact, whether
+paint appears where the roller travels, or the anatomical quality of an action.
+Evan's actor art ID cannot be treated as a real skeleton or hand endpoint:
+native Moho bone/hand evidence requires a distinct rig adapter. Never claim these prop-only checks
 certify character-to-tool contact or final animation quality.
 
 ## Tests and continued integration
