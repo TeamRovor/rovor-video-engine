@@ -871,7 +871,7 @@
       "id": "nonmoho-hand-over-prop-occlusion",
       "title": "Composite authentic original Evan hand over held tool without replacing art",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "ChatGPT / Amar foreground grip layering session",
       "branch": "feature/nonmoho-hand-over-prop-occlusion-v1",
       "scopes": [
@@ -885,9 +885,12 @@
         "nonmoho-right-wrist-tool-ik",
         "nonmoho-grip-raster-visibility"
       ],
-      "updated_at": "2026-10-21T21:53:38.595Z",
+      "updated_at": "2026-10-21T21:56:32.608Z",
       "next_action": "Add physically correct source-art hand plate above roller while remaining body is behind prop, using identical per-frame solved FK and body roll in both 1080p60 views; no new hand generation or source media edits. Guard layer identity and source artwork hash, check alpha and real pixel overlap, verify no change legacy path.",
-      "acceptance": "Visual alpha hand overlay demonstrably renders in front of original registered roller at actual wrist contact, verified actual original-art hand source; both 1080p frame pixel occlusion regressions pass, wrong hand or absent tool refused, shots not opted in unchanged, no claims of finger curl or complete movie."
+      "acceptance": "Visual alpha hand overlay demonstrably renders in front of original registered roller at actual wrist contact, verified actual original-art hand source; both 1080p frame pixel occlusion regressions pass, wrong hand or absent tool refused, shots not opted in unchanged, no claims of finger curl or complete movie.",
+      "blocker": "Shared queue validation: declared dependency nonmoho-grip-raster-visibility is not done. Preserve this owner's scope and in-progress source; resume active status when the prerequisite is completed with evidence. No ownership release.",
+      "next_update": "After nonmoho-grip-raster-visibility records completion evidence; owner should refresh queue and resume this claim.",
+      "coordination_note": "2026-10-21: normalized active to blocked solely to enforce the existing declared dependency and add missing checkpoint. Owner, branch, scopes, next_action and acceptance preserved."
     }
   ]
 }
