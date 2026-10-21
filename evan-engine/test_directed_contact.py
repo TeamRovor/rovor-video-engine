@@ -5,7 +5,7 @@ compositions. No private Evan audio, renderer output, or fabricated human approv
 """
 import unittest
 from directed_scene import check
-from test_directed_scene import DirectedSceneTests, fixture  # reuse real fixture geometry
+from test_directed_scene import fixture  # reuse real fixture geometry
 from pathlib import Path
 import tempfile
 
