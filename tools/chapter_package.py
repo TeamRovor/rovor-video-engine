@@ -51,7 +51,7 @@ def json_bytes(data):
             + "\n").encode("utf-8")
 
 
-def _local_rows(rows, indices, source_sample, sample_count, index_map):
+def _local_rows(rows, source_sample, sample_count, index_map):
     """Shift only acoustic times, keeping original phone/viseme metadata."""
     offset = source_sample / SAMPLE_RATE
     duration = sample_count / SAMPLE_RATE
@@ -115,8 +115,8 @@ def local_speech(plan, row, number):
             start + 1e-6 < float(phone["end"]) and
             float(phone["start"]) < end - 1e-6):
             raise ValueError("Cut passes through aligned phone")
-    words = _local_rows(plan["words"], included, off, count, index_map)
-    phones = _local_rows(plan["phonemes"], included, off, count, index_map)
+    words = _local_rows(plan["words"], off, count, index_map)
+    phones = _local_rows(plan["phonemes"], off, count, index_map)
     tokens = re.findall(r"[a-z]+(?:'[a-z]+)?", plan["script"].lower())
     script = " ".join(tokens[w["scriptIndex"]] for w in included)
     local = {
@@ -225,6 +225,10 @@ def package(wav_path, plan_path, manifest_path, destination):
             raise ValueError("Packaged PCM does not reconstruct original sample bytes")
         if verified["sourceWavSha256"] != hashlib.sha256(wav_path.read_bytes()).hexdigest():
             raise ValueError("Original source WAV mutated during package creation")
+        if verified["sourceSpeechPlanSha256"] != hashlib.sha256(plan_path.read_bytes()).hexdigest():
+            raise ValueError("Reviewed speech plan mutated during package creation")
+        if load_json(manifest_path) != verified:
+            raise ValueError("Chapter manifest mutated during package creation")
         report = {
             "schemaVersion": 1,
             "status": "private_chapter_payloads_created_pending_native_render",
