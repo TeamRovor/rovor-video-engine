@@ -682,7 +682,7 @@
       "id": "nonmoho-right-wrist-tool-ik",
       "title": "Bind Evan real FK wrist to roller handle in non-Moho shots",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar non-Moho right-wrist FK contact session",
       "branch": "feature/nonmoho-fk-wrist-grip-v1",
       "scopes": [
@@ -696,10 +696,25 @@
       "depends_on": [
         "nonmoho-persistent-paint-trail"
       ],
-      "updated_at": "2026-10-21T05:44:11.303Z",
-      "next_update": "After hosted source-free 1080p60 FK and true frame tests; real Evan art grip approval stays pending",
-      "next_action": "Use genuine original rig manifest and selected original hand wrist attachment for per-frame actor-hand-to-tool calibration. Solve bounded shoulder/elbow movement from the locked prop handle, respecting performance joint limits, actor roll and per-view transforms; require landscape/portrait agree on one source wrist pose; integrate computed controls into actual renderer, preserve existing art/audio, reject unreached contact. Label physical gripping fingers unverified.",
-      "acceptance": "Dual-view 60fps FK solver and real scene integration with per-frame wrist-to-tool handle within visual pixel threshold and original joint limits; incompatible geometry, pose, large jumps, disconnected tool or missing original rig refused; existing unrelated scenes unchanged and caching guarded; cross-OS tests on existing original manifest plus synthetic art."
+      "updated_at": "2026-10-21T06:04:14.640Z",
+      "next_action": "Draft PR #20 stacked on PR #19 implements opt-in original right-arm FK wrist-to-tool IK in standalone non-Moho renderer, with source rig raster and 60fps two-view tests. Still need real private approved roller/wall art and reviewed 4:23 narration plus finger-curl/grip plate, per-frame actor-to-prop and body anatomy visual QA at natural speed, full dual 1080p60 MP4 renders, and artist approval. No Moho render or original production film is claimed.",
+      "acceptance": "Dual-view 60fps FK solver and real scene integration with per-frame wrist-to-tool handle within visual pixel threshold and original joint limits; incompatible geometry, pose, large jumps, disconnected tool or missing original rig refused; existing unrelated scenes unchanged and caching guarded; cross-OS tests on existing original manifest plus synthetic art.",
+      "evidence": [
+        {
+          "commit": "113e528eee659a791f4fb6ae2c884f1204d6bd17",
+          "platform": "GitHub-hosted Windows/macOS/Linux Python 3.11 Pillow 10.4 NumPy 1.26 OpenCV 4.10",
+          "check": "15 new original source FK wrist tests including real CartoonBody painted arm raster, tool handle 60fps dual-view coincidence, joint bounds, unreachable, invalid grip and abrupt release; plus 63 existing paint/contact/scene regressions",
+          "result": "PASS 78/78 on each OS at final PR head; original private 4:23 video and hand gripping fingers are not artist-approved",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39553000106"
+        },
+        {
+          "commit": "113e528eee659a791f4fb6ae2c884f1204d6bd17",
+          "platform": "GitHub draft pull request",
+          "check": "Isolated original Evan non-Moho wrist-to-tool FK acting integration, stacked on paint PR #19",
+          "result": "Draft PR #20 open, unmerged; original source audio/media and other collaborator work unchanged",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/20"
+        }
+      ]
     }
   ]
 }
