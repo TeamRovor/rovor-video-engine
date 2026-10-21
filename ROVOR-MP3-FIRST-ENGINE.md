@@ -15,7 +15,7 @@ This is the **goal**, not a claim that the current V3/PR #5 pipeline already per
 | **Engine cost, speed and robustness** | Evan's GitHub-connected ChatGPT | Hosted Windows/macOS/Linux tests, stage timings, memory, hash-based cache reuse, restart and resume, duplicate-file handling, setup diagnosis, minimum successful processing per MP3 | No rewriting Evan's artistic rig, no re-authoring acoustic phone curves, no claiming local Windows access without evidence |
 | **Speech and acting intelligence** | Amar's animation-development ChatGPT | Audio-grounded English phoneme and viseme verification, real phoneme contacts, coarticulation, mouth and body acting, shot direction, continuity and creative QA | No rerunning Windows package engineering or restructuring shared media work without coordination |
 
-**Canonical task status:** `coordination/tasks.json`. For Evan, `engine-efficiency-benchmarks` is available to claim, not automatically assigned or running. For our track, `acoustic-production-gate` owns only its dedicated audit, tests and docs. Shared audio import and Windows runtime already have separate owners; do not duplicate their scopes.
+**Canonical task status:** `coordination/tasks.json`. Select current eligible efficiency or animation work using WORK.md. Historical tasks mentioned here may already be complete; the live queue controls availability and ownership. Shared audio import and Windows runtime already have separate owners; do not duplicate their scopes.
 
 ## Audio must win over spelling
 
@@ -70,6 +70,6 @@ This new tool is **not yet integrated into PR #5's render path** and does not re
 
 ## Shared handoff
 
-Evan's ChatGPT should read [REMOTE-EVAN-GITHUB.md](REMOTE-EVAN-GITHUB.md), this page and the fresh [task queue](coordination/tasks.json). Claim `engine-efficiency-benchmarks` if still free. Work in the existing Windows-reliability PR branch; keep the benchmarks as separately named files/tests. GitHub-hosted testing can continue without Evan's laptop, but his machine remains an unverified endpoint until an actual local diagnostic succeeds.
+Evan's ChatGPT should read [REMOTE-EVAN-GITHUB.md](REMOTE-EVAN-GITHUB.md), this page and the fresh [task queue](coordination/tasks.json). Use the live efficiency routing; never re-claim a completed task from an old document. Work in the existing Windows-reliability PR branch; keep the benchmarks as separately named files/tests. GitHub-hosted testing can continue without Evan's laptop, but his machine remains an unverified endpoint until an actual local diagnostic succeeds.
 
 For the speech/acting track, keep the original Evan look and work in the existing art branches PR #4/#5 where appropriate. Verify actual audio and eye-level rendered movement before declaring quality. This specification does not authorize downloading or mutating a private recording or Moho original.

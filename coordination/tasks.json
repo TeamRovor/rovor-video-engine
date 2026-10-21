@@ -846,7 +846,7 @@
       "id": "business-ops-worker",
       "title": "Connect shared work to business outcomes and add bounded operations reporting",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar business efficiency 2026-10-21",
       "branch": "coordination/business-ops-worker",
       "scopes": [
@@ -862,10 +862,29 @@
         ".github/workflows/business-ops.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-21T21:40:52.965Z",
-      "next_update": "After worker replay/failure tests and GitHub report validation",
-      "next_action": "Add business outcome routing and single-shot read-only operations worker, preserving existing render transport and all active owners.",
-      "acceptance": "One queue; actionable business task packets; deterministic replay/tamper checks and bounded report worker; hosted artifact verified; no remote laptop, messaging, billing or production approval claim."
+      "updated_at": "2026-10-21T21:57:04.748Z",
+      "next_update": "First main-branch operations report after PR #23 integration",
+      "next_action": "Implementation and hosted artifact verified in PR #23. After integration, use business/OPERATING-SYSTEM.md and the Rovor business operations workflow. Claim eligible delivery playbook or source-backed proof catalog from the live queue; do not assume any general AI employee, client messaging or native rendering is running.",
+      "acceptance": "One queue; actionable business task packets; deterministic replay/tamper checks and bounded report worker; hosted artifact verified; no remote laptop, messaging, billing or production approval claim.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/23"
+      ],
+      "evidence": [
+        {
+          "commit": "d61cbd479247f8817e57d8e5586df9fb5e513ba6",
+          "platform": "Local Linux / Python 3.12.14",
+          "check": "52 worker/routing/coordination/handoff tests, shared queue check and real operations-report generation",
+          "result": "PASS; no client or laptop actions",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/23"
+        },
+        {
+          "commit": "d61cbd479247f8817e57d8e5586df9fb5e513ba6",
+          "platform": "GitHub-hosted Windows and Ubuntu / Python 3.11",
+          "check": "12 routing + 22 worker tests on both OS; report job and artifact 12383199370; downloaded and verified both report hashes against receipt",
+          "result": "PASS. Existing macOS coordination job remained queued, not claimed passed. Report only; no recommended task executed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39681542268"
+        }
+      ]
     },
     {
       "id": "nonmoho-hand-over-prop-occlusion",
@@ -891,6 +910,60 @@
       "blocker": "Shared queue validation: declared dependency nonmoho-grip-raster-visibility is not done. Preserve this owner's scope and in-progress source; resume active status when the prerequisite is completed with evidence. No ownership release.",
       "next_update": "After nonmoho-grip-raster-visibility records completion evidence; owner should refresh queue and resume this claim.",
       "coordination_note": "2026-10-21: normalized active to blocked solely to enforce the existing declared dependency and add missing checkpoint. Owner, branch, scopes, next_action and acceptance preserved."
+    },
+    {
+      "id": "business-service-delivery-playbook",
+      "title": "Create reusable website and landing-page delivery playbook",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "scopes": [
+        "business/playbooks/website-delivery.md"
+      ],
+      "depends_on": [],
+      "next_action": "Use business/templates/client-intake.md and delivery-review.md to write a concrete website/landing-page process: required inputs, scope exclusions, acceptance checks, review handoff, revision boundaries and maintenance handoff. Reuse current Rovor services; mark prices, deadlines and client facts as not agreed. Work on a focused branch from main.",
+      "acceptance": "Playbook has a usable intake-to-delivery checklist, explicit unknown-input handling, client-facing acceptance checks and a concrete review packet; no invented contract/pricing or deployment. Validate that every stage names its output and owner.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/OPERATING-SYSTEM.md"
+      ]
+    },
+    {
+      "id": "business-proof-catalog",
+      "title": "Separate real portfolio evidence from concepts and unfinished demos",
+      "priority": 2,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "scopes": [
+        "business/proof-catalog.md"
+      ],
+      "depends_on": [],
+      "next_action": "Inspect current project/PR evidence and source references; create a compact catalog distinguishing implemented code, technically tested demo, available preview, approved portfolio piece and actual client result. Cite exact commits/links and flag unavailable private artifacts. Do not claim a client outcome or polished film without evidence. Use a focused branch from main.",
+      "acceptance": "Every catalog item has a source, truthful status, missing approval/input and allowed description; no fabricated metrics, testimonials, client names or visual approval.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/5",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/7"
+      ]
+    },
+    {
+      "id": "business-offer-brief",
+      "title": "Create one evidence-backed Rovor offer draft",
+      "priority": 2,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "scopes": [
+        "business/offers/first-offer-draft.md"
+      ],
+      "depends_on": [
+        "business-proof-catalog"
+      ],
+      "next_action": "Use verified proof-catalog evidence and opportunity-brief template to draft one scoped Rovor service offer for a clearly labeled target business type. Explain customer problem, deliverable, acceptance and missing pricing/client inputs. Avoid inventing a specific prospect or its problems; research a named public prospect only when appropriate access exists. Prepare a draft; do not send.",
+      "acceptance": "One review-ready offer draft with source-backed proof, explicit scope/exclusions and unagreed price/deadline marked; unsupported sales claims removed; no outreach sent.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/templates/opportunity-brief.md"
+      ]
     }
   ]
 }

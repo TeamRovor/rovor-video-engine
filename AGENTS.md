@@ -21,3 +21,8 @@ Record exact commands/checks, OS, commit and evidence. Distinguish implemented, 
 At handoff, push changes and update the shared record with completed work, checks actually run, blockers, exact next action and claim status. Keep machine-specific executable paths, private recordings, secrets and caches out of commits. Do not claim chat histories or local files synchronize automatically.
 
 User-facing final previews target 1080p60 and at least 30 seconds. Internal diagnostic samples may be shorter but must be labeled as diagnostics. Amar's visual review determines production animation acceptance.
+
+**Business efficiency:** For business operations, sales or delivery work, follow `business/OPERATING-SYSTEM.md`.
+Use the same task queue and capability router. Tie new work to a measurable business outcome; distinguish
+proposed measures from actual results. The operations reporter only prepares read-only work packets; it
+has no authority to claim tasks, send messages, publish, spend, or operate a personal computer.

@@ -9,6 +9,7 @@ import sys
 import project_loop
 
 ROUTING = 'coordination/work-routing.json'
+LANES = {'efficiency', 'animation', 'integration', 'coordination', 'sales', 'delivery', 'operations'}
 CAPABILITIES = {'github-read', 'github-write', 'hosted-ci', 'local-exec',
                 'original-assets', 'visual-review', 'moho-runtime'}
 
@@ -17,6 +18,8 @@ def route(data, policy, participant, capabilities, lane='any'):
     errors, warnings = project_loop.validate(data)
     if errors:
         raise ValueError('Invalid shared queue: ' + '; '.join(errors))
+    if lane != 'any' and lane not in LANES:
+        raise ValueError('Unknown work lane: ' + lane)
     if not participant.strip():
         raise ValueError('A stable participant/session identifier is required')
     if not capabilities <= CAPABILITIES:
@@ -25,7 +28,7 @@ def route(data, policy, participant, capabilities, lane='any'):
         raise ValueError('Expected routing version 1 and tasks object')
     rules = policy['tasks']
     for ident, rule in rules.items():
-        if (not isinstance(rule, dict) or not isinstance(rule.get('lane'), str)
+        if (not isinstance(rule, dict) or not isinstance(rule.get('lane'), str) or rule['lane'] not in LANES
                 or not isinstance(rule.get('requires'), list)
                 or any(not isinstance(c, str) or c not in CAPABILITIES for c in rule['requires'])):
             raise ValueError('Invalid capability rule: ' + ident)
@@ -92,7 +95,7 @@ def main(argv=None):
     p.add_argument('--repo', type=Path, default=Path(__file__).resolve().parents[1])
     p.add_argument('--ref', help='Already fetched ref; queue and routing resolve to the SAME commit')
     p.add_argument('--participant', required=True)
-    p.add_argument('--lane', choices=['any', 'efficiency', 'animation', 'integration', 'coordination'], default='any')
+    p.add_argument('--lane', choices=['any'] + sorted(LANES), default='any')
     p.add_argument('--capability', action='append', choices=sorted(CAPABILITIES), default=[])
     p.add_argument('--json', action='store_true')
     args = p.parse_args(argv)
