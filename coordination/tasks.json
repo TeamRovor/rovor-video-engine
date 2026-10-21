@@ -783,6 +783,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/21"
         }
       ]
+    },
+    {
+      "id": "work-session-routing",
+      "title": "Add capability-aware work entrypoint and handoff protocol",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar work-session coordination 2026-10-21",
+      "branch": "coordination/work-session-routing",
+      "scopes": [
+        "tools/work_brief.py",
+        "tests/test_work_brief.py",
+        "WORK.md",
+        "AGENTS.md",
+        "REMOTE-EVAN-GITHUB.md",
+        "coordination/work-routing.json"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-21T21:32:46.723Z",
+      "next_update": "After targeted routing tests and published review branch",
+      "next_action": "Implement read-only work briefing using existing queue, capability routing, explicit handoff and fresh claim checks.",
+      "acceptance": "Tests reject invalid queues and avoid blocked/dependent/overlapping/incapable tasks; publish startup instructions and reproducible validation."
     }
   ]
 }
