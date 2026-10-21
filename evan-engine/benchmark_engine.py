@@ -164,10 +164,10 @@ def _run_engine(engine_root: Path, frames: int, output_root: Path) -> dict:
                 out.writeframes(b"\0\0" * (int(16000 * duration)))
             return ""
         if stage == "Speech transcription":
-            (output_root / "transcript.json").write_text(json.dumps(transcript), encoding="utf-8")
+            Path(args[-1] + ".json").write_text(json.dumps(transcript), encoding="utf-8")
             return ""
         if stage == "Mouth timing":
-            (output_root / "mouth.json").write_text(json.dumps(cues), encoding="utf-8")
+            Path(args[args.index("-o") + 1]).write_text(json.dumps(cues), encoding="utf-8")
             return ""
         if stage == "Video encoding":
             Path(args[-1]).write_bytes(b"SYNTHETIC-MP4\0" * 8192)
