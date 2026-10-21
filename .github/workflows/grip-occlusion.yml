@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   source-original-grip:
@@ -55,3 +56,19 @@ jobs:
           path: evan-engine/grip-regression-errors.txt
           retention-days: 1
           if-no-files-found: error
+
+      - name: Post bounded diagnostic trace to draft PR when original source-art tests fail
+        if: failure() && matrix.os == 'ubuntu-latest' && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        working-directory: evan-engine
+        run: |
+          {
+            echo "Source-hand foreground raster CI diagnostic (synthetic tests only)."
+            echo "Run: ${{ github.run_id }}"
+            echo '~~~'
+            grep -A 14 -E '^(FAIL|ERROR):' grip-regression-errors.txt | head -140 || true
+            echo '~~~'
+          } > grip-pr-diagnostic.md
+          gh pr comment ${{ github.event.pull_request.number }} --body-file grip-pr-diagnostic.md
