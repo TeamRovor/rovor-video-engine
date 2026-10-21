@@ -67,6 +67,8 @@ def check_frame(rendered_actor, frame, shot, controls, rig_meta, hand_meta):
     if (not isinstance(controls, dict) or "right" not in controls
             or "body_roll" not in controls):
         raise ValueError("Original Evan FK applied controls required for wrist raster QA")
+    if controls.get("right_hand") != "relaxed":
+        raise ValueError("Actual relaxed-right original hand plate required for grip frame")
     expected = grips[frame]
     if (len(expected) != 3 or len(controls["right"]) != 3
             or any(type(x) not in (int, float) or not math.isfinite(x)
