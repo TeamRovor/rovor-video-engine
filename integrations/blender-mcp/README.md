@@ -30,7 +30,7 @@ uvx mcp-for-blender addon-paths
 # From the local checkout containing this merged config:
 cd /path/to/rovor-video-engine
 python3 tools/blender_mcp_preflight.py
-python3 -m unittest -v tests.test_blender_mcp_preflight
+python3 -m unittest discover -s tests -p test_blender_mcp_preflight.py -v
 ```
 
 In Blender, open **Edit → Preferences → Add-ons**, enable **Interface: MCP for Blender** (restart Blender if required), then in the **3D Viewport**, press **N**, open the **MCP for Blender** tab and select **Start MCP Server / Connect** (wording depends on add-on version). Keep it on the loopback default port `9876`.
@@ -61,7 +61,7 @@ uvx mcp-for-blender addon-paths
 
 cd C:\path\to\rovor-video-engine
 py -3 tools/blender_mcp_preflight.py
-py -3 -m unittest -v tests.test_blender_mcp_preflight
+py -3 -m unittest discover -s tests -p test_blender_mcp_preflight.py -v
 codex mcp list
 ```
 
