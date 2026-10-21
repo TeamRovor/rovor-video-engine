@@ -841,6 +841,31 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/7"
       ]
+    },
+    {
+      "id": "business-ops-worker",
+      "title": "Connect shared work to business outcomes and add bounded operations reporting",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar business efficiency 2026-10-21",
+      "branch": "coordination/business-ops-worker",
+      "scopes": [
+        "business",
+        "tools/ops_worker.py",
+        "tests/test_ops_worker.py",
+        "tools/work_brief.py",
+        "tests/test_work_brief.py",
+        "coordination/work-routing.json",
+        "WORK.md",
+        "AGENTS.md",
+        "ROVOR-MP3-FIRST-ENGINE.md",
+        ".github/workflows/business-ops.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-21T21:40:52.965Z",
+      "next_update": "After worker replay/failure tests and GitHub report validation",
+      "next_action": "Add business outcome routing and single-shot read-only operations worker, preserving existing render transport and all active owners.",
+      "acceptance": "One queue; actionable business task packets; deterministic replay/tamper checks and bounded report worker; hosted artifact verified; no remote laptop, messaging, billing or production approval claim."
     }
   ]
 }
