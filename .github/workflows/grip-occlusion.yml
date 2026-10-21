@@ -41,3 +41,17 @@ jobs:
         run: |
           python -m py_compile directed_scene.py directed_grip_occlusion.py test_directed_grip_occlusion.py
           python -m unittest -v test_directed_grip_occlusion test_grip_raster_qa test_right_hand_grip test_directed_paint test_directed_contact_lock test_directed_contact test_directed_scene
+
+      - name: Capture source hand regression diagnostics on failure
+        if: failure() && matrix.os == 'ubuntu-latest'
+        working-directory: evan-engine
+        shell: bash
+        run: |
+          python -m unittest -v test_directed_grip_occlusion test_grip_raster_qa test_right_hand_grip test_directed_paint test_directed_contact_lock test_directed_contact test_directed_scene > grip-regression-errors.txt 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: failure() && matrix.os == 'ubuntu-latest'
+        with:
+          name: source-hand-failure-diagnostics
+          path: evan-engine/grip-regression-errors.txt
+          retention-days: 1
+          if-no-files-found: error
