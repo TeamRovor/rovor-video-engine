@@ -997,7 +997,7 @@
       "id": "business-offer-brief",
       "title": "Create one evidence-backed Rovor offer draft",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar first reusable conversion-site offer 2026-10-21",
       "branch": "business/first-conversion-site-offer-v1",
       "scopes": [
@@ -1006,13 +1006,23 @@
       "depends_on": [
         "business-proof-catalog"
       ],
-      "next_action": "Produce one reusable internal sales offer for local home-service business websites/inquiry systems using merged delivery playbook, brand knowledge and proof catalog. Give actual deliverable, qualifications, exclusions, test criteria, draft customer wording, and unspecified commercial terms; avoid inventing paid clients or live deployment.",
+      "next_action": "Use merged business/offers/first-offer-draft.md with one actually researched and qualified home-service business; verify its current public site/problem and authorized recipient, gather intake and real commercial terms, then get owner approval before sending a tailored offer. No prospect contact, deployment, signed agreement, leads or revenue claimed.",
       "acceptance": "Versioned source-grounded single offer for a named service category, actual customer problem phrased as discovery hypothesis, explicit smallest useful deliverable, client inputs, acceptance tests, exclusions, truthful proof and unsent outreach draft. Branch PR reviewable and ideally merged.",
       "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/templates/opportunity-brief.md"
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/templates/opportunity-brief.md",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/30",
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/business/offers/first-offer-draft.md"
       ],
-      "updated_at": "2026-10-21T22:47:59.418Z",
-      "next_update": "After concrete scoped, no-fiction draft is published and proof links verified on the actual branch"
+      "updated_at": "2026-10-21T22:49:52.076Z",
+      "evidence": [
+        {
+          "commit": "68be146891238d5ee3034faf809ebda3f08b01ac",
+          "platform": "GitHub connected main read-back and PR #30 merge",
+          "check": "One scoped home-service lead-capture page offer with explicit six-part acceptance matrix, true test inquiry receipt requirement, brand/client input and permission gaps, unsent discovery opener, exclusions and unquoted commercial terms; sources business/knowledge and proof catalog.",
+          "result": "PASS as a reusable internal sales draft, PR #30 merged and file read back on main. No actual customer/prospect verified, message sent, site deployed, client accepted or payment received. Hosted workflow execution not claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/30"
+        }
+      ]
     },
     {
       "id": "rovor-ai-master-plan",
