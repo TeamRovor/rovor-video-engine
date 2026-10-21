@@ -805,6 +805,23 @@
       "next_update": "After targeted routing tests and published review branch",
       "next_action": "Implement read-only work briefing using existing queue, capability routing, explicit handoff and fresh claim checks.",
       "acceptance": "Tests reject invalid queues and avoid blocked/dependent/overlapping/incapable tasks; publish startup instructions and reproducible validation."
+    },
+    {
+      "id": "windows-benchmark-protocol",
+      "title": "Define reproducible cache and resume benchmarks from existing Windows diagnostics",
+      "priority": 2,
+      "status": "ready",
+      "owner": null,
+      "branch": "codex/windows-reliability-v3-1",
+      "scopes": [
+        "coordination/windows-benchmark-protocol.md"
+      ],
+      "depends_on": [],
+      "next_action": "Read PR #7 current diagnostics, tests and active render-cache-file-identity claim. Document exact existing cold/warm/resume benchmark commands, required inputs, measurements and correctness checks in coordination/windows-benchmark-protocol.md. Do not modify owned renderer files or claim measured performance without executed evidence.",
+      "acceptance": "Protocol cites exact inspected source commit and existing commands/report fields; covers same-input cold/warm run, interruption/resume, changed audio/art/captions invalidation, elapsed time/cache hits/output equivalence; clearly labels unavailable commands or runtime evidence. A later separately claimed task may execute it.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/7"
+      ]
     }
   ]
 }
