@@ -1,0 +1,39 @@
+name: Directed scene contact preflight
+
+on:
+  pull_request:
+    paths:
+      - 'evan-engine/directed_contact.py'
+      - 'evan-engine/directed_scene.py'
+      - 'evan-engine/test_directed_contact.py'
+      - '.github/workflows/director-contact-preflight.yml'
+  push:
+    branches:
+      - feature/director-contact-geometry-v1
+    paths:
+      - 'evan-engine/directed_contact.py'
+      - 'evan-engine/directed_scene.py'
+      - 'evan-engine/test_directed_contact.py'
+      - '.github/workflows/director-contact-preflight.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-free-contact-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install image-fixture test dependencies
+        run: python -m pip install numpy==1.26.4 Pillow==10.4.0
+      - name: Verify contact and unchanged original director behavior
+        working-directory: evan-engine
+        run: |
+          python -m py_compile directed_contact.py directed_scene.py test_directed_contact.py
+          python -m unittest -v test_directed_contact test_directed_scene
