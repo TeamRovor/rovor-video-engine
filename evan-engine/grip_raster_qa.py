@@ -28,7 +28,8 @@ def _sample_coverage(image, center):
         raise ValueError("Nonfinite rendered wrist location")
     if not (0 <= cx < image.width and 0 <= cy < image.height):
         raise ValueError("Real rendered wrist outside actor canvas")
-    alpha = image.getchannel("A")
+    # Read only a tiny local disk. Avoid copying the entire 1464x1536
+    # alpha channel on every frame of an eight-minute source narration.
     covered = 0
     total = 0
     radius = SAMPLE_RADIUS_SOURCE_PX
@@ -40,7 +41,7 @@ def _sample_coverage(image, center):
             if not (0 <= x < image.width and 0 <= y < image.height):
                 raise ValueError("Real wrist artwork clipped outside original actor canvas")
             total += 1
-            if alpha.getpixel((x, y)) >= MIN_OPAQUE_ALPHA:
+            if image.getpixel((x, y))[3] >= MIN_OPAQUE_ALPHA:
                 covered += 1
     if covered < MIN_OPAQUE_SAMPLES:
         raise ValueError(
