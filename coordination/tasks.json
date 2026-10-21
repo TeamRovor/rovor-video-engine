@@ -1115,11 +1115,13 @@
       "acceptance": "Schema validates representative accepted and rejected cases, preserves unknown/unrun states and separates technical completion from approval/publication. No opaque shell commands or self-granted permissions. Test against the actual evaluated examples."
     },
     {
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar hosted Actions pre-start failure diagnosis 2026-10-21",
       "branch": "coordination/hosted-runner-diagnosis",
       "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/29",
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/coordination/hosted-runner-diagnosis.md"
       ],
       "id": "rovor-hosted-runner-diagnosis",
       "title": "Identify why hosted GitHub jobs stop before runner startup",
@@ -1129,10 +1131,18 @@
         "subsystem:hosted-runner-startup-diagnosis"
       ],
       "depends_on": [],
-      "next_action": "Compare recent Linux/Windows/macOS failure job steps/log availability and historical successes, attempt supported GitHub annotations/status retrieval without assuming a billing issue; provide exact administrator-visible UI evidence needed and cost-neutral fallback testing. Do not alter renderer/workflow or account payment settings.",
+      "next_action": "Diagnosis report merged on main. Actual CI restoration is NOT done: GitHub Actions main and PR failures expose no steps and lost logs. A repository owner should inspect exact Actions run warning/annotation and account-owner permissions and usage, compare official incident/recovery; do not infer quota or buy minutes. After root cause resolved, prove one small existing job starts with real Set up job, then retest PR #21/#24 exact head. No account changes were made.",
       "acceptance": "Document one reproducible cross-workflow pre-job failure evidence matrix with links and exact observables, distinguish suspected causes from verified ones, provide owner-friendly check steps and zero-cost/no-rerun recovery plan; leave claims intact.",
-      "updated_at": "2026-10-21T22:44:15.485Z",
-      "next_update": "After grounded pre-start failure evidence and observable, minimal unblock guide committed. Do not rerun until runner/account status resolved."
+      "updated_at": "2026-10-21T22:47:13.027Z",
+      "evidence": [
+        {
+          "commit": "be58dc448af76c0ddcd64da2b28e1c3ab1b77c3d",
+          "platform": "GitHub connected repo, verified main read-back and job metadata",
+          "check": "Three unrelated main workflows + PR #24 had failure with null steps; prior PR #21 Linux/Windows success with recorded steps, macOS failure with no steps. Public GitHub Status Oct 21 reports Actions degradation; latest repo failures occurred after reported recovery. Root cause unavailable through connector; zero reruns/paid changes.",
+          "result": "PASS for evidence-first diagnostic documentation, PR #29 merged and source checked on main. Hosted runner actual restoration, account billing state, and PR #21/#24 verification remain unresolved.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/29"
+        }
+      ]
     }
   ]
 }
