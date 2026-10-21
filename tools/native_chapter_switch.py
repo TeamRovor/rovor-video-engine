@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import sys
@@ -158,10 +159,28 @@ def compile_chapter(bundle_root, chapter_index, native_template, calibration,
         if _sha_file(native_template) != actual_native_hash:
             raise ValueError("Native source Moho template changed during compilation")
         output_hash = _sha_file(candidate)
-        with destination.open("xb") as out, candidate.open("rb") as src:
-            shutil.copyfileobj(src, out)
-        if _sha_file(destination) != output_hash:
-            raise ValueError("Native output archive copy verification failed")
+        # File publication is exclusive. On an I/O failure remove *only* our
+        # newly created inode; never touch a pre-existing or swapped file.
+        created_identity = None
+        try:
+            with destination.open("xb") as out, candidate.open("rb") as src:
+                created_identity = os.fstat(out.fileno())
+                shutil.copyfileobj(src, out)
+                out.flush()
+                os.fsync(out.fileno())
+            if _sha_file(destination) != output_hash:
+                raise ValueError("Native output archive copy verification failed")
+        except BaseException:
+            if created_identity is not None:
+                try:
+                    current = destination.lstat()
+                    if ((current.st_dev, current.st_ino) ==
+                        (created_identity.st_dev, created_identity.st_ino)
+                            and not destination.is_symlink()):
+                        destination.unlink()
+                except FileNotFoundError:
+                    pass
+            raise
     return {
         "status": "compiled_pending_native_moho_render_and_artistic_review",
         "chapterIndex": chapter_index,
