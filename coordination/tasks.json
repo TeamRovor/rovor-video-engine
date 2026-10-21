@@ -763,23 +763,23 @@
       "depends_on": [
         "nonmoho-right-wrist-tool-ik"
       ],
-      "updated_at": "2026-10-21T21:32:00Z",
-      "next_action": "Check final macOS job in GitHub Actions run #39679181796 and dependent PR checks on final head 92f7750; fix any failures. Then close task if all green. Original real painter+roller art, validated natural finger grip and 30s+ output remain separate blockers.",
+      "updated_at": "2026-10-21T21:46:00Z",
+      "next_action": "Draft PR #21 includes actual encoded-frame-loop blank Evan wrist test, 103 synthetic/actual source-art tests passing Linux and Windows on final SHA 76b3f5b; macOS workflow run #39681169031 queued. Verify macOS and dependent PR runs when GitHub runner is scheduled; fix any failure then mark done. Original private painting source/audio, real expressive closed-grip finger art, full 30-second visual render and artist approval remain unverified.",
       "acceptance": "Actual source art wrist alpha passes hosted CI in native pose; deliberate synthetic blank and truncated wrist fail; no-grip legacy unchanged; fast per-frame check in renderer avoids extra image renders; source-free actual CartoonBody raster test and 1080p dual-view checks pass three OS; no artistic approval claim.",
-      "next_update": "Draft PR #21 source-raster wrist occupancy integration created and green on Linux/Windows (102 tests), macOS final head is queued; do not mark complete or claim 3-OS success until final check.",
+      "next_update": "CI on latest PR head 76b3f5b: Linux 103/103 green, Windows 103/103 green; macOS runner queued. No merge.",
       "evidence": [
         {
-          "commit": "92f7750e762b4e3d8fa8f660d024996778271071",
-          "platform": "GitHub Actions Linux + Windows Python 3.11, actual original Evan artwork",
-          "check": "Real 1464x1536 CartoonBody rendered frames at grip vs transparent erased wrist, wrong hand pose, unadjusted FK, missing art and all 60fps painting/scene/contact tests",
-          "result": "PASS 102/102 Linux and Windows on final PR head; macOS job queued; visual gripping-fingers approval and full MP4 not claimed.",
-          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39679181796"
+          "commit": "76b3f5b3729e4340c402d369eaeadd98d2eb0e42",
+          "platform": "GitHub Actions Windows and Linux 3.11 with real source-painted Evan rig",
+          "check": "103 tests including actual render_chunk FFmpeg-entry gate mock; transparent wrist prevents any rawvideo bytes entering encoder, independent original FK/actor/paint/contact visual regressions",
+          "result": "PASS 103/103 on Linux + Windows, macOS job queued at same head. No production full film nor closed finger visual approval.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39681169031"
         },
         {
-          "commit": "92f7750e762b4e3d8fa8f660d024996778271071",
-          "platform": "Draft stacked code review",
-          "check": "Minimal source-alpha wrist occupancy gate before FFmpeg plus original-art tests; duplicate full-frame alpha allocation eliminated",
-          "result": "Open DRAFT PR #21 unmerged, preserving existing rigs, other developers' work and user audio.",
+          "commit": "76b3f5b3729e4340c402d369eaeadd98d2eb0e42",
+          "platform": "GitHub draft PR",
+          "check": "Stacked on original non-Moho FK PR #20; rendered original RGBA wrist QA before FFmpeg",
+          "result": "Open DRAFT PR #21, unmerged and isolated to its claimed files",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/21"
         }
       ]
