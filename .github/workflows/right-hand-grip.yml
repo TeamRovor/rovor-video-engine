@@ -1,0 +1,45 @@
+name: Original Evan FK wrist-to-tool contact
+
+on:
+  push:
+    branches: [feature/nonmoho-fk-wrist-grip-v1]
+    paths:
+      - 'evan-engine/right_hand_grip.py'
+      - 'evan-engine/test_right_hand_grip.py'
+      - 'evan-engine/directed_scene.py'
+      - 'evan-engine/render_acting_video.py'
+      - '.github/workflows/right-hand-grip.yml'
+  pull_request:
+    paths:
+      - 'evan-engine/right_hand_grip.py'
+      - 'evan-engine/test_right_hand_grip.py'
+      - 'evan-engine/directed_scene.py'
+      - 'evan-engine/render_acting_video.py'
+      - '.github/workflows/right-hand-grip.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-wrist-rig:
+    name: FK wrist / 60fps actor and tool geometry
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install image test dependencies
+        run: python -m pip install pillow==10.4.0 numpy==1.26.4
+      - name: Check native original-art FK wrist, scene and paint regression
+        working-directory: evan-engine
+        run: |
+          python -m py_compile right_hand_grip.py directed_scene.py render_acting_video.py test_right_hand_grip.py
+          python -m unittest -v test_right_hand_grip test_directed_paint test_directed_contact_lock test_directed_contact test_directed_scene
