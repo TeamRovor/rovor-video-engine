@@ -7,6 +7,13 @@ on:
       - 'evan-engine/**'
       - 'evan-character/v3-assets/**'
       - '.github/workflows/engine-throughput-benchmark.yml'
+  workflow_dispatch:
+    inputs:
+      baseline_ref:
+        description: Optional commit or ref to compare against
+        required: false
+        default: 4e1ef65135aaea8f09bf432e8768e380a8bf0d90
+        type: string
 
 permissions:
   contents: read
@@ -23,6 +30,8 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    env:
+      ROVOR_BASELINE_REF: ${{ github.event.inputs.baseline_ref || '4e1ef65135aaea8f09bf432e8768e380a8bf0d90' }}
     steps:
       - name: Check out the updated engine
         uses: actions/checkout@v4
@@ -32,7 +41,7 @@ jobs:
       - name: Check out the parent commit for the baseline
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.before }}
+          ref: ${{ env.ROVOR_BASELINE_REF }}
           path: benchmark-baseline
           persist-credentials: false
 
@@ -51,8 +60,6 @@ jobs:
           npm install --no-audit --no-fund --package-lock=false --prefix evan-engine
 
       - name: Compare cold, cached, and interrupted runs
-        env:
-          ROVOR_BASELINE_REF: ${{ github.event.before }}
         run: >-
           python evan-engine/benchmark_engine.py
           --frames 96
