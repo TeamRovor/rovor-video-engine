@@ -93,6 +93,28 @@ class DirectedContactTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "invalid contact frame interval"):
             check(self.plan, self.registry, self.root)
 
+    def test_contact_point_cannot_lie_in_transparent_tool_padding(self):
+        self.contact["tool"]["uv"] = [.01, .01]
+        with self.assertRaisesRegex(ValueError, "transparent artwork anchor on tool plate"):
+            check(self.plan, self.registry, self.root)
+
+    def test_contact_point_cannot_lie_in_transparent_target_padding(self):
+        self.contact["target"]["uv"] = [.99, .99]
+        with self.assertRaisesRegex(ValueError, "transparent artwork anchor on target plate"):
+            check(self.plan, self.registry, self.root)
+
+    def test_contact_to_transparent_wall_edge_is_rejected(self):
+        # Move the real tool center to the *transparent* margin of the desk.
+        # Pure geometric distance is near zero but there's no drawn wall here.
+        self.contact["target"] = {"assetId": "desk", "segment": [[.01, .25], [.01, .75]]}
+        for view, (width, _) in (("portrait", (1080, 1920)), ("landscape", (1920, 1080))):
+            globe = self.shot["compositions"][view]["elements"][-1]
+            x = .5 + ((.01 - .5) * 140 * .7) / width
+            for k in globe["keys"]:
+                k["x"] = x
+        with self.assertRaisesRegex(ValueError, "transparent artwork anchor on target edge"):
+            check(self.plan, self.registry, self.root)
+
     def test_overly_permissive_contact_not_allowed(self):
         self.contact["maxGapPx"] = 500
         with self.assertRaisesRegex(ValueError, "maxGapPx"):
