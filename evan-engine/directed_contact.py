@@ -3,7 +3,8 @@
 The same keyed layer transforms and camera model used by directed_scene.frame()
 are sampled at every contact frame in *both* orientations. The source-art UV
 anchors are explicitly authored; they are not inferred from a prompt or image
-pixels. This is a geometric safeguard, not proof of a hand bone, lip-sync,
+pixels. Their chosen source pixels must have actual nontransparent artwork.
+This is a geometric safeguard, not proof of a hand bone, lip-sync,
 physical simulation, rendered pixels, or artistic approval.
 """
 import math
@@ -61,14 +62,21 @@ def _screen_xy(item, uv, frame, camera, canvas, size, interpolate):
     return (center_x + dx * c - dy * s, center_y + dx * s + dy * c), k["opacity"]
 
 
+def _source_visible(image, uv):
+    """Check the actual registered RGBA plate rather than an invented anchor."""
+    w, h = image.size
+    x, y = round(uv[0] * (w - 1)), round(uv[1] * (h - 1))
+    return image.getpixel((x, y))[3] >= 8
+
+
 def _point_segment_distance(point, a, b):
     vx, vy = b[0] - a[0], b[1] - a[1]
     length2 = vx * vx + vy * vy
     if length2 < 1e-9:
-        return math.hypot(point[0] - a[0], point[1] - a[1])
+        return math.hypot(point[0] - a[0], point[1] - a[1]), 0.
     t = max(0., min(1., ((point[0] - a[0]) * vx + (point[1] - a[1]) * vy) / length2))
     return math.hypot(point[0] - a[0] - t * vx,
-                      point[1] - a[1] - t * vy)
+                      point[1] - a[1] - t * vy), t
 
 
 def audit(shot, compositions, artwork, canvases, actor_id, interpolate):
@@ -109,6 +117,10 @@ def audit(shot, compositions, artwork, canvases, actor_id, interpolate):
             raise ValueError(label + ": use distinct registered original prop layers; actor rig anchors are not supported")
         if tool_id not in artwork or target_id not in artwork:
             raise ValueError(label + ": both contact art assets must be registered")
+        if not _source_visible(artwork[tool_id], tool_uvs[0]):
+            raise ValueError(label + ": transparent artwork anchor on tool plate")
+        if target_kind == "point" and not _source_visible(artwork[target_id], target_uvs[0]):
+            raise ValueError(label + ": transparent artwork anchor on target plate")
         tested = {}
         for view, canvas in canvases.items():
             comp = compositions[view]
@@ -132,9 +144,14 @@ def audit(shot, compositions, artwork, canvases, actor_id, interpolate):
                 if visible_a <= 0 or visible_b <= 0:
                     raise ValueError(label + ": invisible contact asset in " +
                                      view + " at frame " + str(frame))
-                distance = (math.hypot(tip[0] - target[0][0], tip[1] - target[0][1])
-                            if target_kind == "point" else
-                            _point_segment_distance(tip, target[0], target[1]))
+                if target_kind == "point":
+                    distance = math.hypot(tip[0] - target[0][0], tip[1] - target[0][1])
+                else:
+                    distance, t = _point_segment_distance(tip, target[0], target[1])
+                    source_uv = tuple(p + t * (q - p) for p, q in zip(target_uvs[0], target_uvs[1]))
+                    if not _source_visible(artwork[target_id], source_uv):
+                        raise ValueError(label + ": transparent artwork anchor on target edge in " +
+                                         view + " at frame " + str(frame))
                 if distance > worst_gap:
                     worst_gap, worst_frame = distance, frame
                 if distance > gap + 1e-9:
