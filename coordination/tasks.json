@@ -1205,6 +1205,26 @@
       "updated_at": "2026-10-21T23:28:38.610Z",
       "next_action": "Requires access to Amar's Mac host running Blender + local trusted Codex. Follow merged integrations/blender-mcp/README.md: install uvx mcp-for-blender addon, enable it, start local MCP server; run read-only preflight and codex mcp list; inspect via get_scene_info, use disposable .blend to create a cube via allowed bpy code and render an inspectable still. Capture exact versions, real client tool call/response, render artifact path/hash/size and first observed failure; original art and client projects untouched. Evan Windows is separate independently verified endpoint. GitHub-only sessions cannot claim runtime success.",
       "acceptance": "Authentic local Codex->MCP->Blender scene info and acknowledged harmless scene change in disposable project; verified .blend and preview still actually generated and reviewed with exact version and local host evidence. If unreachable, record actual error and keep blocked rather than marking connected."
+    },
+    {
+      "id": "rovor-ghost-worker-readonly-v1",
+      "title": "Prototype persistent read-only Mac ghost worker with durable job recovery",
+      "priority": 2,
+      "status": "active",
+      "owner": "ChatGPT / Amar GitHub-connected ghost worker session 2026-10-21",
+      "branch": "feature/rovor-ghost-worker-readonly-v1",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tests/test_ghost_worker.py",
+        "GHOST-WORKER.md"
+      ],
+      "depends_on": [
+        "business-ops-worker"
+      ],
+      "updated_at": "2026-10-22T01:44:37.796Z",
+      "next_update": "After isolated implementation, deterministic tests and draft PR; do not claim host deployment",
+      "next_action": "Implement a separate local SQLite job runtime for allowlisted read-only jobs with deduplication, lease recovery, receipts and audit records. Start with workspace-bounded file inventory. Keep email, social posting, Blender/Moho/Final Cut as disabled adapters with explicit permission contracts. No credentials, live accounts or render modifications.",
+      "acceptance": "Runnable stdlib worker that survives restart, deduplicates jobs, safely inventories sandboxed workspace without content reads or writes, rejects unsupported side effects, records structured receipts, safely retries expired read-only leases, and has executable tests. No hosted/actual Mac runtime claim. Single GitHub development task queue remains canonical."
     }
   ]
 }
