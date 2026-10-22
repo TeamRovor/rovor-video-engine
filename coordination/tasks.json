@@ -1569,6 +1569,29 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
         }
       ]
+    },
+    {
+      "id": "interpreter-research-macos-path-alias-fix",
+      "title": "Repair macOS temporary path alias errors in research adapter",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar Mac pasted-terminal diagnostic 2026-10-22",
+      "branch": "feature/interpreter-research-job-v1",
+      "scopes": [
+        "tools/interpreter_research_job.py",
+        "tests/test_interpreter_research_job.py",
+        "integrations/open-interpreter/RESEARCH-JOB-ADAPTER.md"
+      ],
+      "depends_on": [
+        "interpreter-research-preflight-command"
+      ],
+      "updated_at": "2026-10-22T18:56:04.634Z",
+      "next_update": "After regression tests and Mac recheck instructions",
+      "next_action": "User's real macOS preflight reached 26 tests, 20 errors at _inside_file. Canonicalize validated workspace root before comparing resolved file, preserving direct symlink and traversal refusals. Add macOS /var↔/private/var-style parent-alias regression and run exact committed code/test suite before updating PR #38.",
+      "acceptance": "Demonstrate reproduced alias mismatch before fix, post-fix at least 27 exact-source tests and example dry-run; user-host Mac recheck remains separate. No model invocation.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+      ]
     }
   ]
 }
