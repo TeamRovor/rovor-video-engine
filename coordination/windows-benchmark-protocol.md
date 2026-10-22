@@ -7,7 +7,7 @@
 - Inspected development branch: [codex/windows-reliability-v3-1](https://github.com/TeamRovor/rovor-video-engine/tree/codex/windows-reliability-v3-1), HEAD **e8ef17c0c5c3f06224d6cc87b587385cf244d3ec** at documentation time.
 - Existing runner: evan-engine/benchmark_engine.py (blob **ea9abe86cb8309bc85d7f3c55db83a58fe3610a9**); hosted workflow: .github/workflows/engine-throughput-benchmark.yml (blob **cca31531308f40839358c373a46e90942f9591f1**).
 - Existing engine script: evan-engine/animate_evan.py (blob **c2643cf5571676fe74e329d0c39c939e493847e0**); existing Windows reliability tests: evan-engine/test_windows_reliability.py (blob **33e0dfb238ac7339984302b6b9dc40d17b76e34d**).
-- Baseline used by the existing workflow: **4e1ef65135aaea8f09bf432e8768e380a8bf0d90**. Prior, separately verified results and trade-offs are in [docs/engine-throughput-benchmark.md](../docs/engine-throughput-benchmark.md) on the Windows branch, with [Actions run 39522990095](https://github.com/TeamRovor/rovor-video-engine/actions/runs/39522990095). Those historical measurements are not fresh laptop benchmarks.
+- Baseline used by the existing workflow: **4e1ef65135aaea8f09bf432e8768e380a8bf0d90**. Prior, separately verified results and trade-offs are in [docs/engine-throughput-benchmark.md](https://github.com/TeamRovor/rovor-video-engine/blob/codex/windows-reliability-v3-1/docs/engine-throughput-benchmark.md) on the Windows branch, with [Actions run 39522990095](https://github.com/TeamRovor/rovor-video-engine/actions/runs/39522990095). Those historical measurements are not fresh laptop benchmarks.
 - Active separate ownership: render-cache-file-identity; this document must **not** be used to modify evan-engine/animate_evan.py, tests, frame generation or its active PR without coordination.
 
 ## What the current benchmark actually measures
@@ -20,7 +20,7 @@ Machine preflight: record OS/build, CPU/RAM, git revision(s), Python 3.11 (CI's 
 
 ## Existing GitHub Actions path (preferred if runners resume)
 
-The existing workflow is [engine-throughput-benchmark.yml](../.github/workflows/engine-throughput-benchmark.yml). At GitHub Actions, select **Engine throughput benchmark → Run workflow**, branch **codex/windows-reliability-v3-1**, optional baseline_ref **4e1ef65135aaea8f09bf432e8768e380a8bf0d90**. The workflow runs the Linux, Windows and macOS matrix with Python 3.11 and Node 24, installing the pinned renderer in both trees and saving an engine-throughput-*OS*.json artifact. Its effective comparison command is:
+The existing workflow is [engine-throughput-benchmark.yml](https://github.com/TeamRovor/rovor-video-engine/blob/codex/windows-reliability-v3-1/.github/workflows/engine-throughput-benchmark.yml). At GitHub Actions, select **Engine throughput benchmark → Run workflow**, branch **codex/windows-reliability-v3-1**, optional baseline_ref **4e1ef65135aaea8f09bf432e8768e380a8bf0d90**. The workflow runs the Linux, Windows and macOS matrix with Python 3.11 and Node 24, installing the pinned renderer in both trees and saving an engine-throughput-*OS*.json artifact. Its effective comparison command is:
 
 ~~~sh
 python evan-engine/benchmark_engine.py --frames 96 --baseline-root benchmark-baseline/evan-engine --after-root evan-engine --output engine-throughput-report.json
