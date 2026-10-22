@@ -17,19 +17,24 @@ from audit_face_art_psd import audit
 def guides(pose):
     spec=POSES[pose];im=Image.new('RGBA',SIZE);d=ImageDraw.Draw(im)
     # Guide lines mark interfaces/registration, not final painted lip shapes.
-    upper=spec['upper'];lower=spec['lower'];left=CORNERS['left'];right=CORNERS['right']
+    upper=spec['upper'];lower=spec['lower'];corners=spec.get('corners',CORNERS);left=corners['left'];right=corners['right']
     d.line([tuple(left),tuple(upper),tuple(right)],fill='#007d80',width=1)
     d.line([tuple(left),tuple(lower),tuple(right)],fill='#cb3959',width=1)
     d.line([(181,375),tuple(spec['chin']),(278,spec['chin'][1]-22),(328,355)],fill='#8960aa',width=1)
-    anchors={**IDENTITY,**{k+'Corner':v for k,v in CORNERS.items()},'upperLipCenter':upper,'lowerLipCenter':lower,'chin':spec['chin']}
+    anchors={**IDENTITY,**{k+'Corner':v for k,v in corners.items()},'upperLipCenter':upper,'lowerLipCenter':lower,'chin':spec['chin']}
+    if 'toothTips' in spec:
+        a,b=spec['toothTips'];d.rectangle((a[0],spec['toothTop'],b[0],a[1]),outline='#a86e00',width=1)
+        d.line(((a[0]+b[0])/2,spec['toothTop'],(a[0]+b[0])/2,a[1]),fill='#a86e00',width=1)
+        anchors.update(incisorLeftTip=a,incisorRightTip=b,incisorTopCenter=[(a[0]+b[0])/2,spec['toothTop']])
     for name,(x,y) in anchors.items():
         d.line((x-2,y,x+2,y),fill='#066c85',width=1);d.line((x,y-2,x,y+2),fill='#066c85',width=1)
     return im,anchors
 
 
 def build(plan_path,output):
-    output.mkdir(parents=True,exist_ok=True);plan=json.loads(plan_path.read_text());head=MaxillaryCartoonHead();rows=[];overview=Image.new('RGB',(1600,920),'#f3eee2');d=ImageDraw.Draw(overview)
+    output.mkdir(parents=True,exist_ok=True);plan=json.loads(plan_path.read_text());head=MaxillaryCartoonHead();rows=[];overview=Image.new('RGB',(1600,900*((len(POSES)+2)//3)+20),'#f3eee2');d=ImageDraw.Draw(overview)
     for i,(pose,spec) in enumerate(POSES.items()):
+        column=i%3;offset=(i//3)*900
         reference=head.at(spec['referenceFrame']/48,plan);guide,anchors=guides(pose)
         psd=PSDImage.frompil(Image.new('RGBA',SIZE))
         ref=psd.create_pixel_layer(reference,name='REFERENCE__Current experimental head - not target mouth');ref.visible=False
@@ -47,14 +52,14 @@ def build(plan_path,output):
         report=audit(path,pose);assert not report['structuralPass'];assert not report['animationReady']
         (output/f'{pose}-Blank-Import-Check.json').write_text(json.dumps(report,indent=2)+'\n')
         reference.save(output/f'{pose}-Reference.png');guide.save(output/f'{pose}-Guides.png')
-        view=Image.new('RGBA',SIZE,'#f3eee2');view.alpha_composite(reference);view.alpha_composite(guide);overview.paste(view.convert('RGB'),(10+i*530,95));d.text((25+i*530,30),f'{pose} / blank artwork template',font=font(23),fill='#253c49')
+        view=Image.new('RGBA',SIZE,'#f3eee2');view.alpha_composite(reference);view.alpha_composite(guide);overview.paste(view.convert('RGB'),(10+column*530,95+offset));d.text((25+column*530,30+offset),f'{pose} / blank artwork template',font=font(23),fill='#253c49')
         # Magnified guide interface for precise drawing at the small mouth.
-        close=view.crop((170,302,310,407)).resize((280,210),Image.Resampling.NEAREST);overview.paste(close,(145+i*530,650))
+        close=view.crop((170,302,310,407)).resize((280,210),Image.Resampling.NEAREST);overview.paste(close,(145+column*530,650+offset))
         rows.append(dict(pose=pose,psd=path.name,sha256=hashlib.sha256(path.read_bytes()).hexdigest(),referenceFrame=spec['referenceFrame'],referenceTime=spec['referenceFrame']/48,anchors=anchors,guideType='manually authored design proposals, not measured anatomy or approved motion',requiredArtworkStillBlank=True,blankImportRejected=True,referencePixelsReloadExact=True,registrationGuidePixelsReloadExact=True,paintPlaneCount=len(PLANES)))
-    d.text((25,620),'Proposed interfaces over CURRENT flawed references. Lines are construction guides, not painted lips.',font=font(23),fill='#253c49')
-    d.text((25,885),'All paint layers blank. Contact compression, lip roll and anatomy still require drawing and animator review.',font=font(23),fill='#253c49')
+    d.text((25,900*((len(POSES)+2)//3)-280),'Proposed interfaces over CURRENT flawed references. Lines are construction guides, not painted lips.',font=font(23),fill='#253c49')
+    d.text((25,900*((len(POSES)+2)//3)-15),'All paint layers blank. Contact compression, lip roll and anatomy still require drawing and animator review.',font=font(23),fill='#253c49')
     overview.save(output/'Drawing-Guide-Review.png')
-    metadata=dict(size=list(SIZE),planesBackToFront=list(PLANES),drawingEnvelopes=PLANES,poses=rows,source='existing opt-in MaxillaryCartoonHead; source art not changed',planSha256=hashlib.sha256(plan_path.read_bytes()).hexdigest(),templatesOnly=True,animationReady=False,runtimeLoaded=False,limits=['All ART layers deliberately blank; not a layered working rig','References are current flawed renderer, not the approved mouth design','Guide anchors proposed for coordinated drawing; artist can revise with metadata','References 738/741/554 are discontinuous snapshots, not a performance or timing test','No phone boundary edits, no speech movie or independent listening this pass'])
+    metadata=dict(size=list(SIZE),planesBackToFront=list(PLANES),drawingEnvelopes=PLANES,poses=rows,source='existing opt-in MaxillaryCartoonHead; source art not changed',planSha256=hashlib.sha256(plan_path.read_bytes()).hexdigest(),templatesOnly=True,animationReady=False,runtimeLoaded=False,limits=['All ART layers deliberately blank; not a layered working rig','References are current flawed renderer, not the approved mouth design','Guide anchors proposed for coordinated drawing; artist can revise with metadata','Reference frames are discontinuous snapshots, not a performance or timing test','No phone boundary edits, no speech movie or independent listening this pass'])
     (output/'Template-Manifest.json').write_text(json.dumps(metadata,indent=2)+'\n');return metadata
 
 

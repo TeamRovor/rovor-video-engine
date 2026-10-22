@@ -8,7 +8,15 @@ Repo work/engine; development/evan-painted-rig (legacy name), draft PR#4 https:/
 
 Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful review milestones/failure/completion/required action only; disable when actually ready. Routine decisions need no question.
 
-## Latest: measured contact-incisor ownership, unapproved ablation
+## Latest: separate labiodental contract and upper-lip candidate
+
+Read CARTOON-EVAN-LABIODENTAL-GUIDE.md. Added Labiodental/LabiodentalRelease to face_art_contract.py, keeping existing3poses unchanged. Upperlip235,319 and incisor tips225/245,325 stay fixed; lowerlip235,325→235,332 on release. Artist-authored proposal, NOT measured anatomy. New family requires upper-teeth paint (old bilabial Contact can omit it). Five import/guide tests pass. Builder overview now supports5poses/2rows. All5PSDs reopened with exact reference/guide pixels;9ARTplanes remain BLANK and imports reject them. Templates are scaffolds, not new artwork/rigs.
+
+Built-in image_gen generated isolated upperlip/philtrum cap V1 and targetedV2. Source originals/alpha/prompts preserved under labiodental-guide-v1/source. Genuine upperlip-only paint, no lowerlip/teeth/head. V1's triangle/hooked corners too strong; V2 shadow softer but hooks remain. V1 uniform2corner fit:held-outcenter residual.868px. Preferred Upper-Lip-Candidate-v2.png inherits same parent; V2 center NOT independently measured. Bothnativebounds pass. No alpha cleanup. V2 faint source-alpha bounds wider but zero native outside-envelope alpha after normal projection; do not call it failed validation. No cap loaded into runtime or approvedART, no new voiced film until pairedjaw/incisor occlusion review. Ghost placement image is NOT assembled output. outputs/evan-cartoon-labiodental-guide has all templates, sources/prompts and registration. No pending jobs.
+
+Primary phonetics references (MIT lecture5 slides3–4; Glasgow Seeing Speech IPA chart) support bilabial vs labiodental distinction only. Pixel guides/shape/front-back order remain authored proposals requiring artist judgment. Sources linked in doc/review; no copied diagnostic movies or scientific anatomy claims.
+
+## Retained: measured contact-incisor ownership, unapproved ablation
 
 Read CARTOON-EVAN-CROWN-OWNERSHIP.md. Existing fv-rig-v3 already has lip-contact and upper-teeth planes. Current four-plane jaw stack bakes them into the upper-face carrier before the ownership cut. New contact_crown_audit.py captures actual rigid/windowed crown material; render remains byte-exact. Three tests pass: fractional coverage, complementary source partition, unchanged mixed/full rendering. No new artwork/alpha cleanup/phone timing/default changes.
 
@@ -30,9 +38,9 @@ Retained relaxed hand/forearm, wrist-axis articulation, authored detail/finished
 
 ## Next concrete work
 
-1. Design a native contact guide with explicit upper-lip edge, stable incisor tips and rolled lower-lip edge, plus matching release. Review actual front/back order before generating another asset. Existing contact already has separate teeth; preserve material and distinguish intended lip occlusion from carrier loss. Do not promote the crown-restoration ablation.
+1. Native Labiodental/contact-release proposals and isolated upper-lip candidate now exist. Next assemble candidate upperlip, independent stable incisors and fitted lowerlip/jaw in a controlled native construction with explicit front/back ownership. Review actual pressure/wrap and release before narration integration; V2 corner hooks/philtrum still need artist judgment. Do not repeat full-head generation, promote blank templates or restore all crown pixels blindly.
 2. Retain original voice/alignment uncertainty, source pixels/alpha and regression films. No numeric seam cleanup, full-thought integration, default promotion or unattended Moho use.
 
 ## Runtime/history
 
-Python /Users/amarhavic/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3; from repo PYTHONPATH=../painted/deps:evan-engine, OPENBLAS_NUM_THREADS=1, cv2.setNumThreads(1).8GiB/8logicalCPU, CPU raster. Temporary caffeinate scoped to render/encode only. FFmpeg and16k narration in sibling referenced-chatgpt-conversation-this-is-an/work/{media-tools/ffmpeg,evan-narration.wav}. No scipy; acoustic plots use numpy/matplotlib. User artifacts outputs/; latest scratch work/cartoon-crown-ownership. No pending jobs. Detailed prior checkpoint archived PAINTED-EVAN-HISTORY-2026-10-22-G.md; F/E/D and earlier archives preserve all source failures, geometry, anatomy and render evidence.
+Python /Users/amarhavic/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3; from repo PYTHONPATH=../painted/deps:evan-engine, OPENBLAS_NUM_THREADS=1, cv2.setNumThreads(1).8GiB/8logicalCPU, CPU raster. Temporary caffeinate scoped to render/encode only. FFmpeg and16k narration in sibling referenced-chatgpt-conversation-this-is-an/work/{media-tools/ffmpeg,evan-narration.wav}. No scipy; acoustic plots use numpy/matplotlib. User artifacts outputs/; latest source/guide artifacts outputs/evan-cartoon-labiodental-guide; prior scratch work/cartoon-crown-ownership. No pending jobs. Detailed prior checkpoint archived PAINTED-EVAN-HISTORY-2026-10-22-H.md; G/ F/E/D and earlier archives preserve all source failures, geometry, anatomy and render evidence.

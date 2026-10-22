@@ -1,0 +1,31 @@
+{
+  "mode": "built-in image_gen",
+  "sourceFile": "upper-cap-v1.png",
+  "sourceSha256": "cb57341e0a4a20d76cba761f21bbeb600943452a4acd5ad1f9197d35cbad8515",
+  "prompt": "upper-cap-v1-prompt.txt",
+  "references": [
+    "Labiodental-Reference.png",
+    "Labiodental-Guides.png"
+  ],
+  "sourceAlphaModified": false,
+  "registeredCandidateOnly": true,
+  "limits": [
+    "Philtrum shadow softened only modestly; corner hooks remain prominent",
+    "V2 inherits V1 registration; center fit not independently checked",
+    "Unpaired with approved lower-lip/release artwork",
+    "No posed assembly or speech render uses this candidate"
+  ],
+  "preferredCandidate": "Upper-Lip-Candidate-v2.png",
+  "assets": [
+    {
+      "file": "upper-cap-v1.png",
+      "sha256": "cb57341e0a4a20d76cba761f21bbeb600943452a4acd5ad1f9197d35cbad8515",
+      "prompt": "upper-cap-v1-prompt.txt"
+    },
+    {
+      "file": "upper-cap-v2.png",
+      "sha256": "13564cbada2c7ece2138bcee34c38bd06dc23fcb2c61d49f0969dd8699fc3280",
+      "prompt": "upper-cap-v2-prompt.txt"
+    }
+  ]
+}

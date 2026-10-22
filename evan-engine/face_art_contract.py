@@ -21,9 +21,13 @@ POSES={
  'Contact':dict(referenceFrame=738,upper=[228.5,324.7],lower=[228.5,325.2],chin=[220,393],cavityOptional=True),
  'Release':dict(referenceFrame=741,upper=[228.5,324.5],lower=[228.5,328.5],chin=[220,394],cavityOptional=False),
  'Open':dict(referenceFrame=554,upper=[228.5,323.8],lower=[228.5,338],chin=[220,398],cavityOptional=False),
+ # F/V contact uses upper incisors and lower lip, unlike the bilabial Contact.
+ # Coordinates are authored drawing proposals, not observed speaker anatomy.
+ 'Labiodental':dict(referenceFrame=851,upper=[235,319],lower=[235,325],chin=[220,393],cavityOptional=False,corners={'left':[198,321],'right':[274,320.5]},toothTop=319,toothTips=[[225,325],[245,325]],requiredPlanes={'upper-teeth'}),
+ 'LabiodentalRelease':dict(referenceFrame=855,upper=[235,319],lower=[235,332],chin=[220,394],cavityOptional=False,corners={'left':[198,321],'right':[274,320.5]},toothTop=319,toothTips=[[225,325],[245,325]],requiredPlanes={'upper-teeth'}),
 }
 CORNERS={'left':[194,325],'right':[263,325]}
 IDENTITY={'noseGuard':[225,301],'leftFace':[150,280],'rightFace':[350,280]}
 
 def required(pose):
-    return set(PLANES)-OPTIONAL-({'cavity'} if POSES[pose]['cavityOptional'] else set())
+    return (set(PLANES)-OPTIONAL-({'cavity'} if POSES[pose]['cavityOptional'] else set())) | POSES[pose].get('requiredPlanes',set())

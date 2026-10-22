@@ -1,0 +1,21 @@
+# Separate F/V construction and upper-lip source component
+
+The previous Contact/Release/Open drawing contract only described a bilabial closure. It did not specify an incisor/lower-lip relationship or require tooth paint. New Labiodental and LabiodentalRelease poses retain a fixed upper-lip and incisor guide while the lower-lip guide moves away on release. Their importer requires a real upper-teeth plane; a blank tooth layer may remain optional in the existing bilabial Contact pose. Five focused import/guide tests pass, including rejection of missing teeth specifically for the new family.
+
+MIT's phonetics course distinguishes bilabial sounds, using both lips, from F/V labiodental sounds involving the upper teeth and lower lip: https://ocw.mit.edu/courses/24-900-introduction-to-linguistics-spring-2022/mit24_900s22_lec5.pdf (slides3–4). The University of Glasgow Seeing Speech chart likewise places F/V in the labiodental fricative column: https://www.seeingspeech.ac.uk/ipa-charts/. These sources support the articulation family, NOT the pixel coordinates or cartoon shape. A shared construction is an artistic starting point, not a claim that every F/V token looks identical.
+
+## Native guide and validation
+
+The authored proposal uses upper-lip center235,319, incisor tips225/245,325, lower-lip center235,325 at contact and235,332 on release. Upper lip and incisor anchors remain fixed; corner anchors198,321 and274,320.5. Coordinates are drawing proposals, not measured speaker anatomy. Existing Contact/Release/Open poses are unchanged. The overview now accommodates all five poses without clipping the extra row.
+
+outputs/evan-cartoon-labiodental-guide contains five editable PSDs with separate reference, registration/envelope guides and nine BLANK ART planes. All five PSDs were reopened; reference and guide pixels match exactly, and every blank template is rejected by the importer. These are drawing scaffolds, not new painted rigs, Moho projects, or performance proofs.
+
+## Separately generated upper-lip cap
+
+Built-in image_gen produced upper-cap-v1 and a targeted v2 refinement. Genuine alpha originals and exact prompts/provenance are under evan-character/cartoon-v1/labiodental-guide-v1/source. This is actual upper-lip/philtrum paint with no lower lip, teeth, jaw or full head. Native light composites were inspected. V1's triangular philtrum shadow and hooked corners are heavy. V2 softens the shadow modestly; corner hooks remain prominent. It is a source candidate, not an approved lip design.
+
+V1 uses a uniform width/rotation fit from two manually annotated corners; a held-out central point is0.868px from the proposed native center. V2 inherits this parent from the requested same-canvas/silhouette edit; its central point was NOT independently fitted or measured. Both native projections stay within the upper-lip envelope. Original alpha is unchanged: no color key, threshold cleanup, skin fill or output touchup. V2's wider faint source-alpha bounds do not produce out-of-envelope alpha after normal 8-bit native projection; no validation failure is claimed from that observation.
+
+Upper-Lip-Candidate-v2.png is the preferred registered candidate only. The V1 placement review uses a ghost head for location, NOT an assembled face. Neither cap is loaded by a head profile, inserted as approved ART paint, or animated. A whole-mouth/whole-head swap is not used. No new voiced film this pass: the cap has not passed paired-jaw/teeth occlusion review, so the previous normal/slow crown experiment remains the unchanged regression reference.
+
+Next: assemble a controlled native contact/release construction using the candidate cap, stable independent incisors and the fitted lower-lip/jaw, with deliberate front/back ownership. Evaluate actual lip pressure and release before narration integration. Strong corner styling and philtrum shading still need artist/animator judgment. The local CPU can render proofs; source consistency and appealing anatomy remain the limits. Script timings,18flagged boundary uncertainties, main/V3/V4, approval updater and native Moho projects remain unchanged. Polished milestone incomplete; automation active.

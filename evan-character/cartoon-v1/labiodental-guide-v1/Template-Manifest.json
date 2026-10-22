@@ -1,0 +1,346 @@
+{
+  "size": [
+    512,
+    512
+  ],
+  "planesBackToFront": [
+    "neck-back",
+    "jaw-skin",
+    "cheek-left",
+    "cheek-right",
+    "cavity",
+    "upper-teeth",
+    "tongue",
+    "lower-lip",
+    "upper-lip"
+  ],
+  "drawingEnvelopes": {
+    "neck-back": [
+      175,
+      340,
+      355,
+      490
+    ],
+    "jaw-skin": [
+      145,
+      305,
+      355,
+      435
+    ],
+    "cheek-left": [
+      145,
+      290,
+      220,
+      395
+    ],
+    "cheek-right": [
+      265,
+      290,
+      355,
+      395
+    ],
+    "cavity": [
+      175,
+      300,
+      305,
+      395
+    ],
+    "upper-teeth": [
+      175,
+      300,
+      305,
+      360
+    ],
+    "tongue": [
+      175,
+      310,
+      305,
+      395
+    ],
+    "lower-lip": [
+      175,
+      310,
+      305,
+      395
+    ],
+    "upper-lip": [
+      175,
+      300,
+      305,
+      360
+    ]
+  },
+  "poses": [
+    {
+      "pose": "Contact",
+      "psd": "Contact-Drawing-Template.psd",
+      "sha256": "24f92badaa4b44c3056f643a3ce14881a79f5cf16ab7e6a11856984656476be5",
+      "referenceFrame": 738,
+      "referenceTime": 15.375,
+      "anchors": {
+        "noseGuard": [
+          225,
+          301
+        ],
+        "leftFace": [
+          150,
+          280
+        ],
+        "rightFace": [
+          350,
+          280
+        ],
+        "leftCorner": [
+          194,
+          325
+        ],
+        "rightCorner": [
+          263,
+          325
+        ],
+        "upperLipCenter": [
+          228.5,
+          324.7
+        ],
+        "lowerLipCenter": [
+          228.5,
+          325.2
+        ],
+        "chin": [
+          220,
+          393
+        ]
+      },
+      "guideType": "manually authored design proposals, not measured anatomy or approved motion",
+      "requiredArtworkStillBlank": true,
+      "blankImportRejected": true,
+      "referencePixelsReloadExact": true,
+      "registrationGuidePixelsReloadExact": true,
+      "paintPlaneCount": 9
+    },
+    {
+      "pose": "Release",
+      "psd": "Release-Drawing-Template.psd",
+      "sha256": "0bb2ebfcd2bedda2eec3881f821f168a3ab23aee5e76b33af08343e8d2d1d3ec",
+      "referenceFrame": 741,
+      "referenceTime": 15.4375,
+      "anchors": {
+        "noseGuard": [
+          225,
+          301
+        ],
+        "leftFace": [
+          150,
+          280
+        ],
+        "rightFace": [
+          350,
+          280
+        ],
+        "leftCorner": [
+          194,
+          325
+        ],
+        "rightCorner": [
+          263,
+          325
+        ],
+        "upperLipCenter": [
+          228.5,
+          324.5
+        ],
+        "lowerLipCenter": [
+          228.5,
+          328.5
+        ],
+        "chin": [
+          220,
+          394
+        ]
+      },
+      "guideType": "manually authored design proposals, not measured anatomy or approved motion",
+      "requiredArtworkStillBlank": true,
+      "blankImportRejected": true,
+      "referencePixelsReloadExact": true,
+      "registrationGuidePixelsReloadExact": true,
+      "paintPlaneCount": 9
+    },
+    {
+      "pose": "Open",
+      "psd": "Open-Drawing-Template.psd",
+      "sha256": "04a7e8a901bf9a4e4bd52c2187e00e51f11f03337cc4b4f4a5687482117b848b",
+      "referenceFrame": 554,
+      "referenceTime": 11.541666666666666,
+      "anchors": {
+        "noseGuard": [
+          225,
+          301
+        ],
+        "leftFace": [
+          150,
+          280
+        ],
+        "rightFace": [
+          350,
+          280
+        ],
+        "leftCorner": [
+          194,
+          325
+        ],
+        "rightCorner": [
+          263,
+          325
+        ],
+        "upperLipCenter": [
+          228.5,
+          323.8
+        ],
+        "lowerLipCenter": [
+          228.5,
+          338
+        ],
+        "chin": [
+          220,
+          398
+        ]
+      },
+      "guideType": "manually authored design proposals, not measured anatomy or approved motion",
+      "requiredArtworkStillBlank": true,
+      "blankImportRejected": true,
+      "referencePixelsReloadExact": true,
+      "registrationGuidePixelsReloadExact": true,
+      "paintPlaneCount": 9
+    },
+    {
+      "pose": "Labiodental",
+      "psd": "Labiodental-Drawing-Template.psd",
+      "sha256": "738f96634d0e306634518ccf44e28afd3a6332ecda40f2e42b8ab83a0923f53a",
+      "referenceFrame": 851,
+      "referenceTime": 17.729166666666668,
+      "anchors": {
+        "noseGuard": [
+          225,
+          301
+        ],
+        "leftFace": [
+          150,
+          280
+        ],
+        "rightFace": [
+          350,
+          280
+        ],
+        "leftCorner": [
+          198,
+          321
+        ],
+        "rightCorner": [
+          274,
+          320.5
+        ],
+        "upperLipCenter": [
+          235,
+          319
+        ],
+        "lowerLipCenter": [
+          235,
+          325
+        ],
+        "chin": [
+          220,
+          393
+        ],
+        "incisorLeftTip": [
+          225,
+          325
+        ],
+        "incisorRightTip": [
+          245,
+          325
+        ],
+        "incisorTopCenter": [
+          235.0,
+          319
+        ]
+      },
+      "guideType": "manually authored design proposals, not measured anatomy or approved motion",
+      "requiredArtworkStillBlank": true,
+      "blankImportRejected": true,
+      "referencePixelsReloadExact": true,
+      "registrationGuidePixelsReloadExact": true,
+      "paintPlaneCount": 9
+    },
+    {
+      "pose": "LabiodentalRelease",
+      "psd": "LabiodentalRelease-Drawing-Template.psd",
+      "sha256": "9a476c03a262ba83499e846b1177920e75b1bcc39f2b3604cfaa988956ad61ae",
+      "referenceFrame": 855,
+      "referenceTime": 17.8125,
+      "anchors": {
+        "noseGuard": [
+          225,
+          301
+        ],
+        "leftFace": [
+          150,
+          280
+        ],
+        "rightFace": [
+          350,
+          280
+        ],
+        "leftCorner": [
+          198,
+          321
+        ],
+        "rightCorner": [
+          274,
+          320.5
+        ],
+        "upperLipCenter": [
+          235,
+          319
+        ],
+        "lowerLipCenter": [
+          235,
+          332
+        ],
+        "chin": [
+          220,
+          394
+        ],
+        "incisorLeftTip": [
+          225,
+          325
+        ],
+        "incisorRightTip": [
+          245,
+          325
+        ],
+        "incisorTopCenter": [
+          235.0,
+          319
+        ]
+      },
+      "guideType": "manually authored design proposals, not measured anatomy or approved motion",
+      "requiredArtworkStillBlank": true,
+      "blankImportRejected": true,
+      "referencePixelsReloadExact": true,
+      "registrationGuidePixelsReloadExact": true,
+      "paintPlaneCount": 9
+    }
+  ],
+  "source": "existing opt-in MaxillaryCartoonHead; source art not changed",
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "templatesOnly": true,
+  "animationReady": false,
+  "runtimeLoaded": false,
+  "limits": [
+    "All ART layers deliberately blank; not a layered working rig",
+    "References are current flawed renderer, not the approved mouth design",
+    "Guide anchors proposed for coordinated drawing; artist can revise with metadata",
+    "Reference frames are discontinuous snapshots, not a performance or timing test",
+    "No phone boundary edits, no speech movie or independent listening this pass"
+  ]
+}
