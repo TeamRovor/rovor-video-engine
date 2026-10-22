@@ -1,0 +1,33 @@
+name: Final Cut MCP diagnostic unit tests
+
+on:
+  pull_request:
+    paths:
+      - 'tools/fcp_host_smoke.py'
+      - 'tests/test_fcp_host_smoke.py'
+      - '.github/workflows/fcp-mcp-smoke-unit.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/fcp_host_smoke.py'
+      - 'tests/test_fcp_host_smoke.py'
+      - '.github/workflows/fcp-mcp-smoke-unit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-mcp-transport:
+    name: Fake MCP and failure-receipt regressions (no FCP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate smoke tester with isolated local fakes
+        run: python -m unittest discover -s tests -p test_fcp_host_smoke.py -v
