@@ -95,7 +95,7 @@ class AutoImportTests(unittest.TestCase):
             if len(sent) == 1:
                 target.mkdir()
             return subprocess.CompletedProcess(command, 0, stdout='', stderr='')
-        with mock.patch.object(jane.APP, 'is_dir', return_value=True):
+        with mock.patch.object(jane, 'APP', self.base):
             result = jane.dispatch(self.output, state, run=native_fake,
                                    clock=lambda: 1, sleep=lambda n: None)
         self.assertEqual(result['status'], 'apple_events_sent_timeline_unverified')
@@ -113,7 +113,7 @@ class AutoImportTests(unittest.TestCase):
             sent.append(command)
             return subprocess.CompletedProcess(command, 1,
                                                stdout='', stderr='Not authorized')
-        with mock.patch.object(jane.APP, 'is_dir', return_value=True):
+        with mock.patch.object(jane, 'APP', self.base):
             result = jane.dispatch(self.output, state, run=native_fake)
         self.assertEqual(result['status'], 'apple_event_failed')
         self.assertIn('Not authorized', result['error'])
@@ -126,7 +126,7 @@ class AutoImportTests(unittest.TestCase):
         def fake(command, **kw):
             sent.append(command)
             return subprocess.CompletedProcess(command, 0, stdout='', stderr='')
-        with mock.patch.object(jane.APP, 'is_dir', return_value=True):
+        with mock.patch.object(jane, 'APP', self.base):
             result = jane.dispatch(self.output, state, run=fake,
                                    clock=lambda: 10, wait_seconds=0)
         self.assertEqual(result['status'], 'native_library_not_observed')
@@ -158,6 +158,36 @@ class AutoImportTests(unittest.TestCase):
         state['status'] = 'apple_events_sent_timeline_unverified'
         with self.assertRaisesRegex(ValueError, 'duplicate'):
             jane.dispatch(self.output, state)
+
+    def test_crash_reserves_attempt_and_blocks_stale_caller(self):
+        state = self.prepare()
+        stale = json.loads(json.dumps(state))
+        def crash(command, **kw):
+            on_disk = json.loads((self.output / 'native-auto-import-receipt.json').read_text())
+            self.assertEqual(on_disk['status'], 'dispatch_started_needs_review')
+            self.assertTrue((self.output / 'dispatch-started.json').is_file())
+            raise KeyboardInterrupt()
+        with mock.patch.object(jane, 'APP', self.base):
+            with self.assertRaises(KeyboardInterrupt):
+                jane.dispatch(self.output, state, run=crash)
+            with self.assertRaisesRegex(ValueError, 'stale or replayed'):
+                jane.dispatch(self.output, stale, run=crash)
+
+    def test_tampered_prepared_xml_is_not_dispatched(self):
+        state = self.prepare()
+        (self.output / 'landscape-auto.fcpxml').write_text('tampered')
+        with mock.patch.object(jane, 'APP', self.base):
+            result = jane.dispatch(self.output, state,
+                                   run=mock.Mock(side_effect=AssertionError('must not launch')))
+        self.assertEqual(result['status'], 'apple_event_failed')
+        self.assertIn('changed before dispatch', result['error'])
+
+    def test_existing_reservation_blocks_dispatch(self):
+        state = self.prepare()
+        (self.output / 'dispatch-started.json').write_text('{}')
+        with mock.patch.object(jane, 'APP', self.base):
+            with self.assertRaises(FileExistsError):
+                jane.dispatch(self.output, state)
 
 
 if __name__ == '__main__':
