@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'tools/fcp_native_import_candidate.py'
+      - 'tools/fcp_native_auto_import.py'
       - '.github/workflows/fcp-native-dtd-validation.yml'
   push:
     branches: [main]
@@ -84,5 +85,25 @@ jobs:
           assert len(receipt['fcpxml_sha256']) == 2
           assert len(list(output.glob('*.fcpxml')))==2
           print('PASS: actual full native candidate preparation and installed-equivalent DTD validation.')
+          import fcp_native_auto_import as automatic
+          # Python home must point into this isolated CI root: no app launched,
+          # no personal user data and no native Final Cut presence assumed.
+          fake_home = root/'sandbox-home'
+          rovor_dir = fake_home/'Documents'/'Rovor'
+          rovor_dir.mkdir(parents=True)
+          candidate_copy = rovor_dir/'candidates'
+          import shutil
+          shutil.copytree(output,candidate_copy)
+          auto_output = rovor_dir/'automated'
+          with mock.patch.object(automatic.Path,'home',return_value=fake_home):
+              auto_receipt=automatic.prepare(candidate_copy,auto_output,
+                                             Path(os.environ['ROVOR_NATIVE_CI_DTD']))
+          assert auto_receipt['status']=='ready_to_dispatch_not_launched',auto_receipt
+          assert not Path(auto_receipt['target_library']).exists()
+          assert auto_receipt['native_timeline_verified'] is False
+          assert auto_receipt['apple_event_sent'] is False
+          for label in ('landscape','portrait'):
+              assert (auto_output/(label+'-auto.fcpxml')).exists()
+          print('PASS: real installed-identical DTD accepts BOTH Apple event auto-targeted XML files; no app launched.')
           PY
           echo 'This does NOT yet prove equivalence with the user-installed Apple DTD, or native app import.'
