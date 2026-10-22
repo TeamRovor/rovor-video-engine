@@ -107,9 +107,18 @@ def nearby_libraries(root, job, home, limit=SCAN_LIMIT):
                     return {'scan_status': 'bounded_scan_limit',
                             'matches': results, 'inspected': limit}
                 if (child.suffix.lower() == '.fcpbundle'
-                        and child.name.startswith(('ROVOR-', 'Rovor-', 'Jane-'))
                         and not child.is_symlink() and child.is_dir()):
-                    results.append({'scope': scope, 'name': child.name})
+                    # Apple may choose "Untitled.fcpbundle" if it resolves a
+                    # location as a directory. Note ONLY ROVOR-specific
+                    # names, or the generic default's presence; do not expose
+                    # unrelated user's library filenames.
+                    if child.name.startswith(('ROVOR-', 'Rovor-', 'Jane-')):
+                        results.append({'scope': scope, 'name': child.name})
+                    elif child.name.lower() in ('untitled.fcpbundle',
+                                                  'untitled library.fcpbundle'):
+                        results.append({'scope': scope,
+                                        'name': 'default_untitled_library_present',
+                                        'attribution': 'unverified_existing_or_new'})
         except (OSError, PermissionError):
             continue
     return {'scan_status': 'limited_3_directories', 'matches': results,
