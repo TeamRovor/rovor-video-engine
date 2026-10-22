@@ -1382,8 +1382,8 @@
       "depends_on": [
         "fcp-specialist-research-and-mcp-pilot"
       ],
-      "next_action": "Use the source-verified PR #37 guide in a separate clean Mac worktree. Run read-only host preflight, inspect upstream package release/version, approve narrowly scoped installation, replace both FCP sandbox root placeholders locally, enable only inspect/diagnose/view, test one synthetic .fcpxml and outside-root refusal. Do not edit production libraries or claim unattended execution.",
-      "acceptance": "Capture actual FCP version/install path (or absence), uvx and Codex versions, MCP tool handshake, successful synthetic project read, rejected outside-root read, exact timestamps and reversible disable proof. No real client media, native edit or upload required.",
+      "next_action": "On Amar's actual Mac, prioritize Open Interpreter native MCP from reviewed PR #37 and integrations/final-cut-pro/OPEN-INTERPRETER.md. Run host preflight and interpreter mcp list/get; prove foreground /mcp and /agent. After package review and explicit approval, enable disabled fcpxml with both sandbox roots set to same new disposable folder, read one synthetic FCPXML, prove outside-root refusal and disable. Only use Codex as a labeled fallback if Interpreter is demonstrably blocked; do not access original libraries.",
+      "acceptance": "Verified local Interpreter version/foreground, effective project config, native MCP tool call and outside-root refusal with exact time/output; app version/permission status separately captured, rollback confirmed. A Codex-only result is not Interpreter proof. No real client media, FCP edits, posting or all-day background agent required.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/37"
       ]
@@ -1392,7 +1392,7 @@
       "id": "fcp-interpreter-native-mcp-bridge",
       "title": "Connect Jane's FCP MCP through native Open Interpreter as primary local executor",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar Open Interpreter integration correction 2026-10-22",
       "branch": "integration/fcp-specialist-mcp-pilot-20261022",
       "scopes": [
@@ -1403,13 +1403,22 @@
       "depends_on": [
         "fcp-specialist-research-and-mcp-pilot"
       ],
-      "updated_at": "2026-10-22T10:12:21.586Z",
-      "next_update": "After source-checked Interpreter MCP configuration update in PR #37",
-      "next_action": "Prioritize native Open Interpreter MCP in project .openinterpreter/config.toml with disabled safe FCP adapter, inspect correct CLI and daemon-independent workflow, retain Codex fallback, verify docs and hand off exact Mac smoke test. Do not activate app or claim remote access.",
+      "updated_at": "2026-10-22T10:17:48.848Z",
+      "next_update": "PR #37 updated; await optional host smoke via primary Interpreter CLI",
+      "next_action": "Review source-checked PR #37 changes to .openinterpreter/config.toml, AGENTS.md, and OPEN-INTERPRETER.md. On Mac pull reviewed changes in isolated worktree, run interpreter --version, interpreter mcp list, foreground /mcp and /agent; only after explicit approval enable limited FCP XML server on disposable root and prove read and root refusal. No host execution yet.",
       "acceptance": "Documented Open Interpreter-first route using officially documented project MCP schema, disabled/read-only scoped FCPXML config, installer/host verification instructions, clarification that daemon startup failure does not necessarily block foreground; no invented Mac/test successes.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/37",
         "https://github.com/openinterpreter/openinterpreter/blob/main/docs/mcp.md"
+      ],
+      "evidence": [
+        {
+          "commit": "7539cfd70f2c28fd5f4ea5c330de4924408db675",
+          "platform": "GitHub connector code/source inspection only, no Mac runtime",
+          "check": "16 targeted readback/static checks: native Open Interpreter FCP MCP declaration disabled, root restrictions/placeholders, read-tool list, approval prompting, no auto-push, all existing specialists, Blender preservation, handoff documentation and foreground/daemon distinction",
+          "result": "PASS for GitHub source/config only; no local interpreter invocation, MCP handshake, paid provider, FCP project import, video render or unattended process",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/37"
+        }
       ]
     }
   ]
