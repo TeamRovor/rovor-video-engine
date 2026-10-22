@@ -2,6 +2,19 @@
 
 **Primary local executor: Open Interpreter.** Codex is an optional fallback client, not the ROVOR workforce's primary runtime. Walter coordinates Jane and other existing specialist roles, Open Interpreter supplies local agent sessions/MCP/tool permissions, and GitHub holds source/version/task evidence. None of this alone starts an always-on process or tunnels cloud ChatGPT to the Mac.
 
+## Mac proof: Native import candidate PREPARED, native FCP import NOT YET TESTED — 2026-10-22
+
+The operator executed the corrected `tools/fcp_native_import_candidate.py` (commit `3c8da2c4f72eaaed571105df7ba487812ad2ddba`) on their Intel Mac with the existing, confirmed stage. **Actual Mac stdout passed:**
+
+- status `candidate_prepared_native_not_imported`;
+- private output `~/Documents/Rovor/fcp-native-import-20261022-172131`;
+- Apple DTD checksum `5afbc7ca1001bbc2190fb3b21d4d440ce061d94f5a5f583074e982b4745cd04d` (same installed DTD as prior passing MCP smoke and verified Intel CI);
+- 30s at 60fps, *no media*; `native_final_cut_import_verified=false`, `native_final_cut_operated=false`, `model_turn_started=false`, `media_modified=false`;
+- landscape `ROVOR-NATIVE-IMPORT-landscape-30s-60fps.fcpxml` SHA-256 `d64e2ae8f19909996fa85ed2e439e7803407bd266f5e6cd35cbe187fc5532c72`;
+- portrait `ROVOR-NATIVE-IMPORT-portrait-30s-60fps.fcpxml` SHA-256 `46b743638de34254a8c57bb647709c1a82a477ecc7ed0984053e2acc3e001833`.
+
+**Do NOT rerun any setup, MCP registration, MCP connection, or XML generator on this Mac.** Both original candidate files now exist. The next gate is a **user-authorized native Final Cut import into a brand new empty, throwaway library**. Apple documents `File > Import > XML` ([support](https://support.apple.com/en-is/guide/final-cut-pro/verdbd66ae/mac)) and also documents `Open Document` Apple event delivery ([developer](https://developer.apple.com/documentation/professional-video-applications/sending-data-programmatically-to-final-cut-pro)). For now, choose the manual GUI import into a known disposable library; do not silently select an existing library. Document actual FCP UI, project presence, timeline duration, frame rate/resolution and any warnings. Successful DTD validation is **NOT** proof of native import. These are blank test timelines, not media/video deliverables.
+
 ## Mac proof: Open Interpreter MCP CONNECTED — 2026-10-22
 
 **Do not repeat setup, wheel repair, FCP DTD validation, stage generation, CLI registration, or app-server connection tests on this Mac. These gates passed.** The owner supplied the final Mac stdout from `tools/fcp_interpreter_appserver_smoke.py`, using the existing disposable `~/Documents/Rovor/fcp-interpreter-stage-20261022-160459`. The complete end-to-end, **locally executed** Open Interpreter app-server → third-party FCP MCP test returned:
