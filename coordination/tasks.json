@@ -1283,6 +1283,26 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/33"
         }
       ]
+    },
+    {
+      "id": "rovor-ghost-launchd-v1",
+      "title": "Generate opt-in bounded macOS LaunchAgent for ROVOR ghost worker",
+      "priority": 2,
+      "status": "active",
+      "owner": "ChatGPT / Amar Mac ghost-host scheduling session",
+      "branch": "feature/rovor-ghost-launchd-v1",
+      "scopes": [
+        "tools/ghost_launchd.py",
+        "tests/test_ghost_launchd.py",
+        "docs/ghost-launchd.md"
+      ],
+      "depends_on": [
+        "rovor-ghost-loop-v1"
+      ],
+      "updated_at": "2026-10-22T02:50:25.131Z",
+      "next_update": "After isolated tests, draft stacked PR and host-verification instructions",
+      "next_action": "Create standard-library-only LaunchAgent plist generator with strict path checks and bounded schedules; no automatic installation or login activation. Add no-side-effect preflight and deterministic tests. State host execution remains unverified.",
+      "acceptance": "Unit tests verify safe correct plist, absolute authorized paths, no shell interpolation, minimum polling interval, stop-marker cooperation, no launchctl activation, and no scheduling of side-effecting capabilities. Native macOS job test remains separately gated."
     }
   ]
 }
