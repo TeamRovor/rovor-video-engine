@@ -12,6 +12,14 @@
 
 **Repository state:** this PR adds an explicitly disabled FCPXML entry to .openinterpreter/config.toml (primary), beside a separately disabled .codex/config.toml entry (fallback). Neither file authorizes private media reads or installs the server.
 
+## Observed first direct MCP smoke attempt — 2026-10-22
+
+Amar ran the pinned `tools/fcp_host_smoke.py` on the Intel Mac. The installed Final Cut Pro FCPXML 1.13 DTD was found and both 60 fps synthetic fixtures passed `xmllint` before `uvx` was started. The attempted MCP handshake **FAILED** at stage `verify_mcp`: `MCP exited before replying`. No direct MCP tool reply, Interpreter MCP registration/handshake, or native Final Cut control was verified. The relevant stdout report stores `status=failed`, `native_final_cut_operated=false`, and `interpreter_mcp_client_verified=false`.
+
+**Do not retry with new model calls or loosen the sandbox yet.** Read the PRIVATE `server-error.txt` from that failed run's output directory on the Mac to identify the exit cause. The stderr is not in GitHub or this chat and its contents have not been reviewed; avoid copying provider keys or private paths into public issues. The original private receipt and stderr should not be deleted. The next host action is to inspect that existing log, not repeat the whole installation.
+
+A subsequent diagnostic improvement on this branch saves the **pre-cleanup child exit code**, retained stderr length and SHA-256 in `receipt.json` without printing raw stderr. The GitHub-only diagnostic unit test suite passed **9/9** on commit `d9ba5f7`; that is a synthetic transport test, **not** a Mac MCP pass. Do not claim that Final Cut has been connected until an actual inspect response and rejected out-of-root read have been captured.
+
 ## First read-only host checks (normal macOS Terminal)
 
 Use a clean local checkout/worktree containing PR #37; preserve changes in the existing interpreter pilot and do not update dirty branches blindly.
