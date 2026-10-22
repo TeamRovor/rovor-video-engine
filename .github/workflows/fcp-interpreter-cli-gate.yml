@@ -1,0 +1,75 @@
+name: Interpreter real CLI MCP registration gate
+
+on:
+  pull_request:
+    paths:
+      - 'tools/fcp_interpreter_registration.py'
+      - '.github/workflows/fcp-interpreter-cli-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/fcp_interpreter_registration.py'
+      - '.github/workflows/fcp-interpreter-cli-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-interpreter-config-loader:
+    runs-on: macos-15-intel
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run actual Open Interpreter v0.0.56 configuration-only MCP list
+        shell: bash
+        env:
+          RELEASE_URL: https://github.com/openinterpreter/openinterpreter/releases/download/rust-v0.0.56/open-interpreter-package-x86_64-apple-darwin.tar.gz
+        run: |
+          set -euo pipefail
+          if [ "$(uname -m)" != "x86_64" ]; then
+            echo 'FAIL: this test requires an actual Intel Mac'
+            exit 1
+          fi
+          WORK="$(mktemp -d)"
+          trap 'rm -rf "$WORK"' EXIT
+          mkdir -p "$WORK/release" "$WORK/home" "$WORK/project/.openinterpreter" "$WORK/project/fixtures"
+          curl --fail --location --silent --show-error --retry 2 \
+            --max-time 240 "$RELEASE_URL" -o "$WORK/interpreter-release.tar.gz"
+          tar -xzf "$WORK/interpreter-release.tar.gz" -C "$WORK/release"
+          INTERPRETER="$(find "$WORK/release" -type f -name interpreter -perm -u+x -print -quit)"
+          if [ -z "$INTERPRETER" ]; then
+            echo 'FAIL: pinned 0.0.56 release had no executable named interpreter'
+            find "$WORK/release" -maxdepth 4 -type f -print | head -30
+            exit 1
+          fi
+          echo 'Testing in an untrusted project directory with isolated HOME; no server starts.'
+          export HOME="$WORK/home"
+          ALLOWED="$WORK/project/fixtures"
+          OVERRIDE="$(PYTHONPATH="$PWD/tools" python -c 'import sys; from pathlib import Path; from fcp_interpreter_registration import override_for; print(override_for(Path(sys.argv[1])))' "$ALLOWED")"
+          cd "$WORK/project"
+          "$INTERPRETER" -c "$OVERRIDE" -c 'sandbox_mode="read-only"' \
+            -c 'approval_policy="on-request"' mcp list --json > "$WORK/list.json"
+          python - "$WORK/list.json" "$ALLOWED" <<'PY'
+          import json,sys
+          entries = json.load(open(sys.argv[1]))
+          assert isinstance(entries,list),type(entries)
+          hits = [item for item in entries if item.get('name') == 'fcpxml']
+          assert len(hits)==1, entries
+          entry=hits[0]
+          transport=entry['transport']
+          assert entry['enabled'] is True, entry
+          assert transport['type']=='stdio',transport
+          assert transport['command']=='uvx',transport
+          assert transport['env']['FCP_PROJECTS_DIRS']==sys.argv[2],transport
+          assert transport['args']==['--no-build','--python','3.11','--with',
+                                    'cryptography==46.0.5','--from',
+                                    'fcp-mcp-server==0.27.2','fcp-mcp-server']
+          print('PASS: actual Open Interpreter v0.0.56 discovered ephemeral -c fcpxml.')
+          print('No model, paid inference, MCP transport or native Final Cut was started.')
+          PY
