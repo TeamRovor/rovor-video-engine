@@ -70,3 +70,29 @@ class HostJobTests(unittest.TestCase):
             self.assertEqual(receipt['status'], 'failed')
             self.assertEqual(receipt['exit_code'], 7)
             self.assertIn('SYNTHETIC STARTUP FAILURE', (root / 'result/receipts/jane-finalcut-host-001.answer.txt').read_text())
+
+    def test_shared_stop_cancels_active_subprocess(self):
+        import threading
+        import time
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            binary = root / 'interpreter'
+            binary.write_text('#!' + sys.executable + '\nimport sys,time\nif "--help" in sys.argv:\n print("--ask-for-approval on-request --search --sandbox --ephemeral --ignore-user-config --skip-git-repo-check")\nelse:\n sys.stdin.read()\n time.sleep(10)\n')
+            binary.chmod(0o700)
+            stop = root / 'STOP'
+            def request_stop():
+                while not (root / 'result/receipts/jane-finalcut-host-001.reserved').exists():
+                    time.sleep(0.01)
+                time.sleep(0.1)
+                stop.touch()
+            thread = threading.Thread(target=request_stop, daemon=True)
+            thread.start()
+            started = time.monotonic()
+            with mock.patch.dict(os.environ, {'PATH': str(root) + os.pathsep + os.environ['PATH']}), contextlib.redirect_stdout(io.StringIO()):
+                rc = host.main(['--run', '--approve-model-use', '--output', str(root / 'result'), '--stop-file', str(stop)])
+            thread.join(timeout=1)
+            self.assertEqual(rc, 2)
+            self.assertLess(time.monotonic() - started, 5)
+            import json
+            receipt = json.loads((root / 'result/receipts/jane-finalcut-host-001.receipt.json').read_text())
+            self.assertEqual(receipt['status'], 'cancelled')
