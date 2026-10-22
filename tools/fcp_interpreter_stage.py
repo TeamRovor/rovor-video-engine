@@ -17,7 +17,7 @@ from fcp_host_smoke import fixture
 
 def plain_file(path):
     """Reject symlinks and non-regular source files, including symlink parents."""
-    if path.is_symlink() or not path.is_file():
+    if path.parent.is_symlink() or path.is_symlink() or not path.is_file():
         raise ValueError('Missing or unsafe evidence file: ' + str(path))
     if not stat.S_ISREG(path.stat().st_mode):
         raise ValueError('Not a regular evidence file: ' + str(path))
@@ -108,8 +108,11 @@ def make_stage(evidence, output):
         fixture(allowed / (name + '.fcpxml'), width, height)
     sentinel = project / 'sentinel.fcpxml'
     sentinel.write_text('<fcpxml version="1.13"><event name="OUTSIDE_ROOT_SENTINEL"/></fcpxml>\n')
-    config_dir.joinpath('config.toml').write_text(config_xml(allowed))
-    project.joinpath('AGENTS.md').write_text(
+    staged_config = config_dir / 'config.toml'
+    staged_config.write_text(config_xml(allowed))
+    staged_config.chmod(0o600)
+    agent_doc = project / 'AGENTS.md'
+    agent_doc.write_text(
         '# Jane: one-time FCP MCP read-only verification\n\n'
         'Use the fcpxml inspect tool only, with manual approval for each invocation.\n'
         'First verify the MCP server is connected, not merely listed in config.\n'
@@ -121,6 +124,7 @@ def make_stage(evidence, output):
         'model request without operator consent. No client files or original libraries.\n'
         'Report actual tool output and errors; a registration list is not an MCP handshake.\n'
     )
+    agent_doc.chmod(0o600)
     manifest = {
         'schema_version': 1,
         'status': 'staged_not_interpreter_verified',
@@ -137,7 +141,9 @@ def make_stage(evidence, output):
         'native_final_cut_operated': False,
         'allowed_mcp_tools': ['inspect']
     }
-    (output / 'stage-receipt.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    manifest_path = output / 'stage-receipt.json'
+    manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+    manifest_path.chmod(0o600)
     print(json.dumps(manifest, indent=2))
     print('\nNext: run from Mac Terminal (not from GitHub):')
     print('cd ' + json.dumps(str(project)) + ' && interpreter mcp list && interpreter mcp get fcpxml')
