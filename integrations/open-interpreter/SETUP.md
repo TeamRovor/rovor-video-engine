@@ -2,6 +2,10 @@
 
 This profile is for the current Codex-based Open Interpreter CLI, supporting AGENTS.md, project-level .openinterpreter/config.toml and [agents.*] subagents. It does not install software, connect a Mac, or automatically run an all-day employee.
 
+## Efficient coding with Ponytail
+
+The pilot includes an instruction-only, MIT-licensed [Ponytail coding skill](../../.agents/skills/ponytail/SKILL.md), with [configuration and provenance](PONYTAIL.md). It encourages reuse and small, complete, tested edits. The upstream plugin commands and hooks are **not** installed; Open Interpreter's native skill discovery must still be verified locally. This does not bypass subscription usage limits or provide AI inference credits.
+
 ## First-name-only roles
 
 Walter — primary visible coordinator; delegate bounded tasks, review evidence, manage continuity.
