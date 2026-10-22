@@ -1345,12 +1345,14 @@
         "integrations/final-cut-pro",
         ".agents/skills/software-integration-research",
         ".openinterpreter/config.toml",
-        "AGENTS.md"
+        "AGENTS.md",
+        ".codex/config.toml",
+        "coordination/work-routing.json"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-22T09:59:13.251Z",
+      "updated_at": "2026-10-22T10:03:55.672Z",
       "next_update": "After primary-source research, GitHub readback and draft integration PR",
-      "next_action": "Inspect existing Jane/Open Interpreter role, verify official FCPXML/Apple event control paths and third-party FCP MCP source. Add reusable specialist research SOP, Jane connection/YouTube/reels plan, disabled-by-default Codex MCP example and documented Mac host smoke. No third-party installation, client project edits, paid services, social publishing or daemon implied.",
+      "next_action": "Extend Jane's role instructions and disabled-by-default scoped Codex MCP settings, then publish source-linked specialist research guide and PR. Keep paths local and verify actual host separately.",
       "acceptance": "GitHub files contain source-linked research, correct tool boundary and exact upstream version, scoped disabled-by-default MCP config, manual Mac verification and stop/rollback, and preserve all current ROVOR tasks and approved artwork; validated source/document consistency with explicit host-unverified status.",
       "links": [
         "https://github.com/DareDev256/fcp-mcp-server",
