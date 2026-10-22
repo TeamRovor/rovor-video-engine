@@ -1468,7 +1468,7 @@
       "depends_on": [
         "interpreter-research-job-runner"
       ],
-      "next_action": "Run tested tools/interpreter_host_job.py --run --approve-model-use --output <new-private-output-directory> from normal Mac Terminal. Source/tests committed 4d8a5d4 on PR #38; six compatibility tests + existing 32 adapter tests pass on actual Mac. Launcher uses supported top-level on-request approval, read-only sandbox, isolated workspace, ignore-user-config and existing bounded adapter. Inspect answer/receipt; do not repeat an existing output directory or activate scheduler before successful model and MCP proof. Shared adapter remains unchanged under its existing owner.",
+      "next_action": "Run corrected host launcher from normal Terminal with new output directory jane-research-002. c534812 contains --skip-git-repo-check and bounded private startup diagnostics merged into captured answer; 7 host compatibility/error tests and 32 existing adapter tests pass. Do not reuse jane-research-001 or claim successful inference. Inspect new private answer/receipt before further attempts.",
       "acceptance": "Exact Mac interpreter --version/exec help, tested branch commit, dry-run output, actual supervised synthetic model execution or precise blocker, private receipt with hashes, provider/permission evidence and rollback. No FCP native edit, scheduler, real media, unapproved model charges.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38",
@@ -1488,11 +1488,18 @@
           "check": "6 new host compatibility tests, 32 existing adapter tests, corrected CLI help acceptance, ChatGPT login status, real foreground attempt through shim with private receipt; GitHub readback matches both local files exactly",
           "result": "38/38 tests PASS; CLI parser PASS; login ChatGPT. Real invocation FAILED exit 1 before answer: readonly state DB and app-server EPERM. No model response, live FCP/MCP handshake or background worker verified. Queue checker also flags pre-existing trailing-slash scope in blender-mcp-codex-local-bridge; not silently fixed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+        },
+        {
+          "commit": "c534812d939e44297d0a93400cbcd437a2cf6936",
+          "platform": "Amar Mac / Python 3.9 / Interpreter 0.0.56",
+          "check": "Terminal supplied receipt failed exit1; corrected non-Git workspace CLI flag; new real subprocess fake failure retains stderr with failed receipt; 7 focused tests pass; exact real CLI help accepted",
+          "result": "Compatibility and error capture verified; real normal-Terminal rerun outstanding. No completed research or FCP control.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
         }
       ],
-      "updated_at": "2026-10-22T20:06:18.372Z",
+      "updated_at": "2026-10-22T20:09:41.185Z",
       "next_update": "After one Terminal launch outside Work Mode's restricted process environment",
-      "blocker": "Actual Mac Interpreter is ChatGPT-authenticated, but Work Mode cannot write ~/.openinterpreter/state_5.sqlite and app-server startup fails Operation not permitted. Corrected host launcher attempted real execution and wrote failed receipt (exit 1, empty answer); no completed model research or MCP/app control."
+      "blocker": "Amar's normal Terminal invocation also failed exit 1 in 0.281s with empty answer; original adapter discarded stderr, so actual Terminal cause not retained. Found launcher omitted --skip-git-repo-check for its disposable non-Git workspace; patched and tested. Work Mode also independently remains state/app-server permission restricted."
     },
     {
       "id": "interpreter-research-process-bounds",
