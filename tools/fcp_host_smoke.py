@@ -70,7 +70,7 @@ class Client:
                 else:
                     self.errors.extend(chunk[:max(0, 16384 - len(self.errors))])
             if self.child.poll() is not None and not self.selector.get_map():
-                raise ValueError('MCP exited before replying; inspect private server-error.txt')
+                raise ValueError(f'MCP exited before replying (exit code {self.child.returncode}); inspect private server-error.txt')
         raise TimeoutError('MCP startup/test exceeded 180 seconds')
 
     def close(self):
@@ -167,6 +167,10 @@ def main(argv=None):
         report['error'] = f'{type(exc).__name__}: {exc}'
     finally:
         if client is not None:
+            # Snapshot exit status BEFORE cleanup could terminate a healthy server.
+            report['mcp_exit_code_before_cleanup'] = client.child.poll()
+            report['server_stderr_bytes_retained'] = len(client.errors)
+            report['server_stderr_sha256'] = hashlib.sha256(client.errors).hexdigest()
             try:
                 client.close()
             except Exception as exc:
