@@ -84,7 +84,13 @@ def prepare(stage, output, dtd=DEFAULT_DTD, run=subprocess.run):
             except subprocess.TimeoutExpired as exc:
                 raise ValueError('Installed Apple DTD validation timed out') from exc
             if result.returncode != 0:
-                raise ValueError('Installed Apple DTD rejected 30s ' + label + ' FCPXML')
+                diagnostic = ((result.stderr or '') + '\\n' + (result.stdout or '')).strip()
+                diagnostic = diagnostic.replace('\\r', ' ').replace('\\n', ' | ')
+                if not diagnostic:
+                    diagnostic = '(xmllint returned no diagnostic output)'
+                raise ValueError('Installed Apple DTD rejected 30s ' + label +
+                                 ' FCPXML; xmllint exit=' + str(result.returncode) +
+                                 '; diagnostic=' + diagnostic[:1800])
             hashes[name] = hashlib.sha256(source.read_bytes()).hexdigest()
         text = (
             'ROVOR FINAL CUT NATIVE IMPORT GATE — technical test ONLY\n\n'
