@@ -11,6 +11,8 @@ on:
       - 'tools/fcp_interpreter_appserver_smoke.py'
       - 'tests/test_fcp_interpreter_appserver_smoke.py'
       - 'tools/fcp_native_import_candidate.py'
+      - 'tools/fcp_native_auto_import.py'
+      - 'tests/test_fcp_native_auto_import.py'
       - 'tests/test_fcp_native_import_candidate.py'
       - 'tests/test_fcp_host_smoke.py'
       - '.github/workflows/fcp-mcp-smoke-unit.yml'
@@ -25,6 +27,8 @@ on:
       - 'tools/fcp_interpreter_appserver_smoke.py'
       - 'tests/test_fcp_interpreter_appserver_smoke.py'
       - 'tools/fcp_native_import_candidate.py'
+      - 'tools/fcp_native_auto_import.py'
+      - 'tests/test_fcp_native_auto_import.py'
       - 'tests/test_fcp_native_import_candidate.py'
       - 'tests/test_fcp_host_smoke.py'
       - '.github/workflows/fcp-mcp-smoke-unit.yml'
@@ -52,3 +56,4 @@ jobs:
           python -m unittest discover -s tests -p test_fcp_interpreter_registration.py -v
           python -m unittest discover -s tests -p test_fcp_interpreter_appserver_smoke.py -v
           python -m unittest discover -s tests -p test_fcp_native_import_candidate.py -v
+          python -m unittest discover -s tests -p test_fcp_native_auto_import.py -v
