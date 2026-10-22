@@ -19,6 +19,17 @@ Purpose: consolidate **separately eligible** third-party AI provider accounts be
    npm install -g omniroute
    ```
    The upstream docs note that npm 11 may block install scripts required for some components. Review any script permission prompts; don't blanket-disable protections or auto-approve unknown scripts.
+   **Intel Mac installation issue observed Oct 22, 2026:** npm 11.19.1 / Node 24.22.0 reached dependency warnings, but `npm install -g omniroute` failed with `EACCES: permission denied, mkdir '/usr/local/lib/node_modules/omniroute'`. This is a global npm prefix permission failure, not an AI-provider issue. **Do not use sudo or change ownership of /usr/local**. Instead try a per-user global prefix, with the npm 11 approved script list documented upstream (review scripts before approving):
+
+   ```sh
+   npm install -g --prefix "$HOME/.local" --allow-scripts=omniroute,keytar,onnxruntime-node,@parcel/watcher,@swc/core,protobufjs,esbuild omniroute
+   rehash
+   command -v omniroute
+   omniroute --version
+   ```
+
+   On the user's Mac `$HOME/.local/bin` is already on PATH. The install-with-prefix workaround is **proposed, not yet verified** by a follow-up Terminal log. `ERESOLVE overriding peer dependency` warnings were not the fatal cause. If installation succeeds, run `omniroute`, then verify service health and provider eligibility before trying any model route. A browser tab at localhost:20128 is not proof that the server is running.
+
 2. Start the gateway in a separate Terminal window:
    ```sh
    omniroute
@@ -38,4 +49,4 @@ Purpose: consolidate **separately eligible** third-party AI provider accounts be
 - No provider keys in CLI arguments, logs, Git commits or screenshots.
 - Never assume an OmniRoute model preserves an OpenAI ChatGPT subscription's tool access, usage quota, or privileges.
 
-**Status in PR #35:** discovery and runbook added. No OmniRoute package, service, provider account, API key, model switch or Mac integration was installed from GitHub. 
+**Status:** the runbook was merged to `main` in PR #35. GitHub does not install local software; Mac installation initially failed with EACCES and is pending per-user-prefix retest. No provider account, API key, model switch or runtime integration is verified. 
