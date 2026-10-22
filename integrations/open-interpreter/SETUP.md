@@ -2,6 +2,8 @@
 
 This profile is for the current Codex-based Open Interpreter CLI, supporting AGENTS.md, project-level .openinterpreter/config.toml and [agents.*] subagents. It does not install software, connect a Mac, or automatically run an all-day employee.
 
+**Newest consolidated installation sequence:** [ONE_PASS_MAC_SETUP.md](ONE_PASS_MAC_SETUP.md). Use that guide to authenticate Terminal GitHub, clone the project safely, run preflight, test Walter, and optionally add [Graphify](GRAPHIFY.md), [OmniRoute](OMNIROUTE.md), and the selected [Agent Skills](AGENT-SKILLS.md). All optional integrations require local installation/verification; GitHub files alone do not activate them.
+
 ## Efficient coding with Ponytail
 
 The pilot includes an instruction-only, MIT-licensed [Ponytail coding skill](../../.agents/skills/ponytail/SKILL.md), with [configuration and provenance](PONYTAIL.md). It encourages reuse and small, complete, tested edits. The upstream plugin commands and hooks are **not** installed; Open Interpreter's native skill discovery must still be verified locally. This does not bypass subscription usage limits or provide AI inference credits.
