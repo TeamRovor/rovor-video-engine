@@ -1585,12 +1585,21 @@
       "depends_on": [
         "interpreter-research-preflight-command"
       ],
-      "updated_at": "2026-10-22T19:41:12.151Z",
-      "next_update": "Investigate actual Mac 29-test output: PermissionError EPERM on killpg after child exit; branch change, focused regression verification then Mac rerun",
-      "next_action": "In same scope as the current Mac-host validation fix, handle os.killpg PermissionError without uncaught exception or false completion; fallback to direct-child kill when alive, persist needs_review receipt if process group cannot be stopped, add simulated EPERM tests and update native Mac descendant test. Then ask Amar to fetch fresh PR #38 and run no-model preflight. Do not request sudo/security changes.",
+      "updated_at": "2026-10-22T19:46:10.676Z",
+      "next_update": "Await the actual Mac 32-test suite and interpreter version/help readout from refreshed PR #38 worktree; branch EPERM fix remains unverified on Mac",
+      "next_action": "Amar's latest Mac b5d4685 run fixed /var path alias (28/29 tests passed) but os.killpg failed EPERM after an exited fake parent. PR #38 now has source commits 284d5e8, b1efc7e and d69ecc2 for fail-closed private needs_review receipt + direct-child fallback + three regressions. Github source checks 15/15, no exact Mac rerun yet. Amar: cd ~/Documents/Rovor/rovor-pr38-check, git status --short, git fetch origin pull/38/head, git switch --detach FETCH_HEAD, bash integrations/open-interpreter/research-preflight.sh. Inspect full 32-test summary and interpreter version/help; do not grant sudo or paid model use.",
       "acceptance": "Demonstrate reproduced alias mismatch before fix, post-fix at least 27 exact-source tests and example dry-run; user-host Mac recheck remains separate. No model invocation. Mac rerun of b5d4685 had 28/29 passing and EPERM at _stop_group in successful-parent descendant test. Require no silent success if group termination denied; preserve bounded direct-child cleanup and private receipt; add regression evidence; Mac full suite still needed.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+      ],
+      "evidence": [
+        {
+          "commit": "d69ecc2e69d5117bdda7f9210f058b8b77b8a64d",
+          "platform": "Mac supplied terminal log (b5d4685); updated GitHub connector source review only",
+          "check": "Mac 29-test preflight: 28 pass, one EPERM in process-group cleanup; subsequent branch has 32 test cases, simulates 3 denied-group scenarios; GitHub static source/readback 15/15",
+          "result": "Original Mac test FAILED one scenario. Branch follow-up source/static PASS only, real Mac rerun NOT YET executed; no inference or FCP access.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+        }
       ]
     }
   ]
