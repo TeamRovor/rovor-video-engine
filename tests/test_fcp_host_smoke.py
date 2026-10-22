@@ -21,7 +21,7 @@ class FakeClient:
             return {'tools': [{'name': 'inspect'}]}
         path = params['arguments']['args']['filepath']
         if path.endswith('sentinel.fcpxml'):
-            text = 'Validation error: File outside allowed roots. FCP_PROJECTS_DIRS' if self.deny else 'OUTSIDE_ROOT_SENTINEL'
+            text = 'Validation error: File path escapes the allowed roots: not under any of /fixture. Add its directory to FCP_PROJECTS_DIRS to allow it.' if self.deny else 'OUTSIDE_ROOT_SENTINEL'
         else:
             text = ('1920x1080' if 'landscape' in path else '1080x1920') + (' @ 60fps' if self.geometry else ' @ 59.94fps')
         return {'content': [{'type': 'text', 'text': text}]}
