@@ -48,14 +48,14 @@ Expect `AGENTS.md`, the project TOML, Ponytail, context-engineering, debugging, 
 
 The user successfully cloned the ROVOR pilot into `$HOME/Documents/Rovor/rovor-interpreter-pilot`. The read-only preflight confirmed all planned instruction/skill files, and `interpreter` v0.0.56 loaded the project's `.openinterpreter/config.toml`, reporting `max_concurrent_threads_per_session = 2`.
 
-**Observed runtime issue:** normal `interpreter` startup displayed `Failed to start the background server: Error: the CLI package does not match this platform or executable` even though interactive startup/config inspection had worked. The following invocation **did start the interactive prompt without repeating that error**:
+**Observed runtime issue:** normal `interpreter` startup displayed `Failed to start the background server: Error: the CLI package does not match this platform or executable` even though interactive startup/config inspection had worked. The following invocation **opens the interactive prompt, but the user later confirmed the background-server error still appears**:
 
 ```sh
 cd "$HOME/Documents/Rovor/rovor-interpreter-pilot"
 interpreter --no-daemon
 ```
 
-Use this for the Mac pilot until the native background-server packaging mismatch has been diagnosed. It is not a permanent daemon repair, not an unattended worker, and not proof any named subagent, Moho integration, local graph or OmniRoute backend works. If the error resurfaces, capture exact CLI version and architecture before attempting any reinstall.
+`--no-daemon` is **not a verified fix** for this Mac installation. Upstream Open Interpreter docs say a daemon is optional for foreground-only use, so the CLI may remain interactive despite the background-server warning, but agent command functionality must be tested. First issue `/agent` (built-in, no model request) while the prompt is open. In a separate Terminal, inspect OS architecture and the installed command path: `uname -m`, `sw_vers -productVersion`, `ls -l "$(command -v interpreter)"`, `file "$(command -v interpreter)"`, `interpreter --version`, and `interpreter app-server daemon version`. Avoid assuming a Windows-specific Codex packaging report proves the Mac root cause. Before reinstalling/updating, consult the official managed-install documentation (https://github.com/openinterpreter/openinterpreter/blob/main/docs/install.md). Preserve user configuration and sessions under `~/.openinterpreter`; do not delete them. A foreground prompt is not proof that subagents, the daemon, or unattended workflows work.
 
 **Next zero/low-model-cost verification inside interpreter:** `/agent` to check specialist discoverability, then `/debug-config` if needed. A `project` config layer means the TOML loaded, **not** that individual agents are executing. Avoid spawning all agents while the weekly model quota is low.
 
