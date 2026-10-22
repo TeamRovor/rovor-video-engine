@@ -64,7 +64,7 @@ sandbox_mode = "read-only"
 enabled = false
 required = false
 command = "uvx"
-args = ["--python", "3.11", "--from", "fcp-mcp-server==0.27.2", "fcp-mcp-server"]
+args = ["--no-build", "--python", "3.11", "--with", "cryptography==46.0.5", "--from", "fcp-mcp-server==0.27.2", "fcp-mcp-server"]
 enabled_tools = ["inspect", "diagnose", "view"]
 default_tools_approval_mode = "prompt"
 startup_timeout_sec = 20
