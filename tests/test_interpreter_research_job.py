@@ -261,9 +261,47 @@ class ResearchAdapterTests(unittest.TestCase):
         result = mod.execute(self.work, self.state, packet, sha, prompt,
                              interpreter_binary=self.fake_interpreter(
                                  body=self.descendant_body(marker, 0.5, 0)), timeout=5)
-        self.assertEqual(result["status"], "completed_unverified")
-        time.sleep(0.7)
-        self.assertFalse(marker.exists())
+        # macOS can refuse killpg after its session leader has exited.
+        # The only safe alternative to proven cleanup is a private review receipt,
+        # never a success claim or an uncaught PermissionError.
+        self.assertIn(result["status"], {"completed_unverified", "needs_review"})
+        if result["status"] == "needs_review":
+            self.assertIn("cleanup", result["error"])
+            receipt = json.loads((self.state / "fcp-intro-001.receipt.json").read_text())
+            self.assertEqual(receipt["status"], "needs_review")
+        else:
+            time.sleep(0.7)
+            self.assertFalse(marker.exists())
+
+    def test_group_cleanup_eperm_after_exit_fails_closed_with_receipt(self):
+        packet, sha, prompt = self.prepare()
+        with mock.patch.object(mod.os, "killpg", side_effect=PermissionError(1, "Operation not permitted")):
+            result = mod.execute(self.work, self.state, packet, sha, prompt,
+                                 interpreter_binary=self.fake_interpreter(), timeout=5)
+        self.assertEqual(result["status"], "needs_review")
+        self.assertIn("cleanup", result["error"])
+        self.assertIsNotNone(result["exit_code"])
+        receipt = json.loads((self.state / "fcp-intro-001.receipt.json").read_text())
+        self.assertEqual(receipt["status"], "needs_review")
+        self.assertFalse(receipt["source_or_native_app_verified"])
+
+    def test_group_cleanup_eperm_while_running_kills_direct_child(self):
+        packet, sha, prompt = self.prepare()
+        with mock.patch.object(mod.os, "killpg", side_effect=PermissionError(1, "Operation not permitted")):
+            result = mod.execute(self.work, self.state, packet, sha, prompt,
+                                 interpreter_binary=self.fake_interpreter(body="import time; time.sleep(10)"),
+                                 timeout=1)
+        self.assertEqual(result["status"], "needs_review")
+        self.assertLess(result["elapsed_seconds"], 3)
+        self.assertIsNotNone(result["exit_code"])
+
+    def test_group_cleanup_eperm_calls_direct_child_fallback(self):
+        child = mock.Mock()
+        child.pid = 1234
+        child.poll.return_value = None
+        with mock.patch.object(mod.os, "killpg", side_effect=PermissionError(1, "Operation not permitted")):
+            self.assertFalse(mod._stop_group(child))
+        child.kill.assert_called_once()
 
     def test_unsupported_platform_refused_before_reservation(self):
         packet, sha, prompt = self.prepare()
