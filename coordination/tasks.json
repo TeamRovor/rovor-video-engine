@@ -1468,7 +1468,7 @@
       "depends_on": [
         "interpreter-research-job-runner"
       ],
-      "next_action": "After reviewing PR #38 and without overwriting other pilot checkouts, use a clean Mac worktree to run exact-head offline tests and no-model dry-run. Only after separately approving the configured model/provider and reviewing local enabled MCPs/permissions, execute one synthetic Jane research job, capture receipt/stop behavior and verify no side effects. Resolve daemon/CLI error before inference if needed.",
+      "next_action": "Actual Mac PR #38 preflight at 800f1de failed before CLI due to /var vs /private/var canonical source root issue (20/26 errors); a correction plus three regression tests is committed on PR #38. First rerun 29-test no-model preflight on refreshed head; only if passing proceed to CLI/MCP/provider checks. Do not enable paid model or real FCP access without explicit authorization.",
       "acceptance": "Exact Mac interpreter --version/exec help, tested branch commit, dry-run output, actual supervised synthetic model execution or precise blocker, private receipt with hashes, provider/permission evidence and rollback. No FCP native edit, scheduler, real media, unapproved model charges.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38",
@@ -1585,9 +1585,9 @@
       "depends_on": [
         "interpreter-research-preflight-command"
       ],
-      "updated_at": "2026-10-22T18:56:04.634Z",
-      "next_update": "After regression tests and Mac recheck instructions",
-      "next_action": "User's real macOS preflight reached 26 tests, 20 errors at _inside_file. Canonicalize validated workspace root before comparing resolved file, preserving direct symlink and traversal refusals. Add macOS /var↔/private/var-style parent-alias regression and run exact committed code/test suite before updating PR #38.",
+      "updated_at": "2026-10-22T19:02:01.868Z",
+      "next_update": "Wait for exact 29-test run on refreshed PR #38 Mac worktree",
+      "next_action": "GitHub PR #38 source fixes were committed (2876c4d, 251b11c) and 3 alias safety regression tests added; GitHub readback 10/10 and isolated Linux focused reproducer 5/5 pass, but real Mac 29-test rerun remains unverified. Amar: cd ~/Documents/Rovor/rovor-pr38-check; ensure git status clean; git fetch origin pull/38/head; git switch --detach FETCH_HEAD; bash integrations/open-interpreter/research-preflight.sh. If full suite passes collect CLI version/help output, else first traceback and summary. Never claim model or app connection.",
       "acceptance": "Demonstrate reproduced alias mismatch before fix, post-fix at least 27 exact-source tests and example dry-run; user-host Mac recheck remains separate. No model invocation.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38"
