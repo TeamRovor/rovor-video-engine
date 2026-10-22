@@ -108,7 +108,11 @@ def verify(client, allowed, outside):
         results[name] = result
     refused = client.request('tools/call', {'name': 'inspect', 'arguments': {'action': 'analyze_timeline', 'args': {'filepath': str(outside)}}})
     denial = text_result(refused)
-    if 'outside' not in denial.lower() or 'FCP_PROJECTS_DIRS' not in denial or 'OUTSIDE_ROOT_SENTINEL' in denial:
+    refusal_wording = ('escapes the allowed roots', 'outside allowed roots')
+    if (not denial.startswith('Validation error: ') or
+            not any(phrase in denial.lower() for phrase in refusal_wording) or
+            'FCP_PROJECTS_DIRS' not in denial or
+            'OUTSIDE_ROOT_SENTINEL' in denial):
         raise ValueError('Outside-root read did not produce the expected authorization refusal')
     return {'server': init['serverInfo'], 'available_tool_names': [t['name'] for t in tools['tools']], 'fixture_results': results, 'outside_root_refusal': refused, 'native_final_cut_operated': False, 'interpreter_mcp_client_verified': False}
 
