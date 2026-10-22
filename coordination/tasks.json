@@ -1468,11 +1468,20 @@
       "depends_on": [
         "interpreter-research-job-runner"
       ],
-      "next_action": "Actual Mac PR #38 preflight at 800f1de failed before CLI due to /var vs /private/var canonical source root issue (20/26 errors); a correction plus three regression tests is committed on PR #38. First rerun 29-test no-model preflight on refreshed head; only if passing proceed to CLI/MCP/provider checks. Do not enable paid model or real FCP access without explicit authorization.",
+      "next_action": "Actual Mac verification on 2026-10-22: clean PR #38 d69ecc2 passes all 32 offline tests (5.490s) and 1188-byte packet dry-run. Preflight exits 2: installed Interpreter 0.0.56 rejects --ask-for-approval after exec. Exact launcher argv plus --help exits 2, unexpected argument. Top-level --ask-for-approval never before exec parses help (exit 0), but that is parser-only evidence, not permission/runtime proof. Coordinate with the active macos-path-alias-fix owner before editing shared adapter/tests; claim a bounded CLI compatibility fix and update preflight using actual CLI semantics. Then rerun Mac preflight and verify provider/MCP before real model use.",
       "acceptance": "Exact Mac interpreter --version/exec help, tested branch commit, dry-run output, actual supervised synthetic model execution or precise blocker, private receipt with hashes, provider/permission evidence and rollback. No FCP native edit, scheduler, real media, unapproved model charges.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38",
         "https://github.com/TeamRovor/rovor-video-engine/pull/37"
+      ],
+      "evidence": [
+        {
+          "commit": "d69ecc2e69d5117bdda7f9210f058b8b77b8a64d",
+          "platform": "Actual Amar Mac, Darwin x86_64; Work Mode exec; Interpreter 0.0.56",
+          "check": "bash integrations/open-interpreter/research-preflight.sh; interpreter exec --help; help-only parser checks for exact launcher arguments and top-level approval placement",
+          "result": "32/32 offline tests PASS in 5.490s; packet dry-run PASS (1188 bytes). Full preflight BLOCKED exit 2: exec lacks --ask-for-approval. Existing launcher arguments rejected exit 2. Top-level --ask-for-approval never ... --help parses exit 0 only. No model invocation, app edits, paid usage, effective permission verification or unattended worker.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+        }
       ]
     },
     {
