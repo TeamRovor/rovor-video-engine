@@ -8,7 +8,7 @@
 - [Configuration](https://github.com/openinterpreter/openinterpreter/blob/main/docs/config.md): trusted project settings in .openinterpreter/config.toml, a DIFFERENT file from .codex/config.toml; /debug-config shows loaded layers.
 - [CLI reference](https://github.com/openinterpreter/openinterpreter/blob/main/docs/cli-reference.md): interpreter foreground, interpreter exec for one-off noninteractive tasks, interpreter mcp, interpreter mcp-server, and interactive sessions. Do not assume local command works before running it.
 - [Daemon documentation](https://www.openinterpreter.com/docs/terminal/daemon): normal foreground operation does not require a daemon; shared background daemon is optional. But the user's Intel Mac v0.0.56 had a persistent package/platform mismatch on daemon start. Foreground agent/skills/MCP still need separate proof.
-- [Third-party FCPXML MCP](https://github.com/DareDev256/fcp-mcp-server): source-inspected v0.27.2, not installed or ROVOR host-verified. FCP_PROJECTS_DIRS restricts file reads; legacy FCP_PROJECTS_DIR only controls listing. These environment variables must BOTH point to a disposable root.
+- [Third-party FCPXML MCP](https://github.com/DareDev256/fcp-mcp-server): source-inspected v0.27.2 and now **direct-MCP host-verified** on the user's Intel Mac against synthetic timelines, but **not yet Open Interpreter client-verified or native Final Cut GUI-verified**. FCP_PROJECTS_DIRS restricts reads through the server API; legacy FCP_PROJECTS_DIR only controls listing. These variables must BOTH point to a disposable root; an MCP tool allowlist is not a full OS sandbox.
 
 **Repository state:** this PR adds an explicitly disabled FCPXML entry to .openinterpreter/config.toml (primary), beside a separately disabled .codex/config.toml entry (fallback). Neither file authorizes private media reads or installs the server.
 
@@ -18,7 +18,29 @@ Amar ran the pinned `tools/fcp_host_smoke.py` on the Intel Mac. The installed Fi
 
 **2026-10-22 root cause confirmed from the Mac's private stderr:** `uvx` resolved `cryptography==50.0.2` and attempted to build its source distribution, but `openssl-sys` could not locate development OpenSSL. `cryptography` 49.0.0 removed Intel macOS wheels, so this is a dependency compatibility issue, **not** a Final Cut app failure or an MCP protocol failure. `cryptography==46.0.5` still ships a CPython 3.11 `macosx_10_9_universal2` wheel. The FCP pilot now adds `--with cryptography==46.0.5` and `--no-build` to the `uvx` command in `tools/fcp_host_smoke.py`, `.openinterpreter/config.toml` (primary) and `.codex/config.toml` (fallback). The `--no-build` flag fails closed rather than compiling unknown source packages. Sources: [cryptography changelog](https://cryptography.io/en/50.0.2/changelog/), [cryptography 46.0.5 wheels](https://pypi.org/project/cryptography/46.0.5/) and [uv tool guide](https://docs.astral.sh/uv/concepts/tools/).
 
-A subsequent diagnostic improvement on this branch saves the **pre-cleanup child exit code**, retained stderr length and SHA-256 in `receipt.json` without printing raw stderr. A dedicated `macos-15-intel` GitHub Actions [run 39852393294](https://github.com/TeamRovor/rovor-video-engine/actions/runs/39852393294) **PASSED** on a genuine Intel x86_64 GitHub runner (2026-10-22). It installed wheels without source compilation, started MCP server v0.27.2, inspected synthetic 1080p60 landscape/portrait timelines, and refused a synthetic outside-root path. The CI result deliberately reports `final_cut_operated=false` and `interpreter_connected=false`. **The user's own Mac has not yet rerun the patched smoke tester, so local host status remains unverified.** The GitHub-only diagnostic unit test suite passed **9/9** on commit `d9ba5f7`; that is a synthetic transport test, **not** a Mac MCP pass. Do not claim that Final Cut has been connected until an actual inspect response and rejected out-of-root read have been captured.
+A subsequent diagnostic improvement on this branch saves the **pre-cleanup child exit code**, retained stderr length and SHA-256 in `receipt.json` without printing raw stderr. A dedicated `macos-15-intel` GitHub Actions [run 39852393294](https://github.com/TeamRovor/rovor-video-engine/actions/runs/39852393294) **PASSED** on a genuine Intel x86_64 GitHub runner (2026-10-22). It installed wheels without source compilation, started MCP server v0.27.2, inspected synthetic 1080p60 landscape/portrait timelines, and refused a synthetic outside-root path. The CI result deliberately reports `final_cut_operated=false` and `interpreter_connected=false`. **The user's own Mac subsequently passed the patched tester (see local direct-MCP proof below).** The GitHub-only diagnostic unit test suite passed **9/9** on commit `d9ba5f7`; that is a synthetic transport test, **not** a Mac MCP pass. Do not claim that Final Cut has been connected until an actual inspect response and rejected out-of-root read have been captured.
+
+## Proven on user's Intel Mac — 2026-10-22 (local direct MCP)
+
+The operator executed the **patched** pinned smoke script and provided the full stdout receipt. Latest PRIVATE Mac evidence folder: `~/Documents/Rovor/fcp-mcp-check-20261022-155558`.
+
+- Status: `passed_direct_mcp`, stage `complete`; MCP server name `fcp-mcp-server`, version `0.27.2`
+- Installed Apple FCPXML 1.13 DTD copied and synthetic fixtures validated locally
+- Real MCP initialize, tools/list and `inspect:analyze_timeline` succeeded for `1920x1080 @ 60fps` landscape and `1080x1920 @ 60fps` portrait
+- An explicit synthetic sentinel outside `FCP_PROJECTS_DIRS` was refused with `Validation error: File path escapes the allowed roots`
+- `native_final_cut_operated=false` and `interpreter_mcp_client_verified=false`; both are STILL pending
+
+**Next stage is prepared in code, NOT executed on the user's Mac:** `tools/fcp_interpreter_stage.py` validates the prior passing receipt and its two real fixture files, then generates a NEW private one-use Open Interpreter project. Only `inspect` is enabled; the sandbox/approval mode is read-only/on-request and MCP is marked required. The new root has its own synthetic files and outside-root sentinel; it contains no private media or provider settings. No model process or Final Cut app is invoked during staging.
+
+Use a fresh new output path and the actual proof directory:
+
+~~~sh
+python3 tools/fcp_interpreter_stage.py \
+  --evidence "$HOME/Documents/Rovor/fcp-mcp-check-20261022-155558" \
+  --output "$HOME/Documents/Rovor/fcp-interpreter-stage-$(date +%Y%m%d-%H%M%S)"
+~~~
+
+The CLI will print the path of its private project and exact commands to run. In that project, `interpreter mcp list` and `interpreter mcp get fcpxml` only verify loaded **registration**, NOT a handshake. Operator can then opt into a single foreground `interpreter` session, inspect `/debug-config` and `/mcp`, approve one real `inspect` call for each synthetic file and a rejected outside-root sentinel. Preserve local reports as private evidence. The stage does not invoke a model or authorize spending automatically.
 
 ## First read-only host checks (normal macOS Terminal)
 
@@ -56,7 +78,7 @@ Codex can be used as a fallback for the SAME scoped read-only experiment only if
 
 ## Turning Jane into an actual ghost employee
 
-The current ghost worker PRs #32-34 implement SQLite receipts, bounded polling and optional launch scheduling, but ONLY read-only system.ping and files.inventory job adapters. They do not yet run Interpreter research, Final Cut, Mac GUI or live publishing.
+The ghost workforce has demonstrated a separate **read-only Jane research** queue job on the user's Mac (one executed, one succeeded, with a receipt and source work). That research job does NOT demonstrate Final Cut MCP use, native editing, GUI control, email/social publishing, or continuous unattended employment. The registry has no enabled Final Cut edit adapter, and all durable local execution must remain approval-gated.
 
 After a verified foreground connection, add a separately claimed **Interpreter research adapter** that runs ONE authorized read-only task via the documented interpreter exec interface and returns a file/receipt with sources, exact tool/model/version, time/budget, input and output hashes. Validate cancellation, crash restart, duplicate submissions, unattended approval behavior and quota exhaustion before connecting to a scheduler. Next add a supervised FCP read/analysis adapter; later add reversible timeline edits with explicit approvals and normal-speed video QA. Keep software install, personal file access, social posting, emails, spending and original project mutation approval-gated.
 
