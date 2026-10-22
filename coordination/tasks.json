@@ -1373,8 +1373,8 @@
       "id": "fcp-mcp-real-host-smoke",
       "title": "Verify Jane's Final Cut MCP on Amar's Mac using a disposable FCPXML test",
       "priority": 1,
-      "status": "ready",
-      "owner": null,
+      "status": "active",
+      "owner": "ChatGPT / Amar continuous host setup 2026-10-22",
       "branch": "integration/fcp-specialist-mcp-pilot-20261022",
       "scopes": [
         "subsystem:final-cut-mcp-mac-host-test"
@@ -1382,11 +1382,13 @@
       "depends_on": [
         "fcp-specialist-research-and-mcp-pilot"
       ],
-      "next_action": "On Amar's actual Mac, prioritize Open Interpreter native MCP from reviewed PR #37 and integrations/final-cut-pro/OPEN-INTERPRETER.md. Run host preflight and interpreter mcp list/get; prove foreground /mcp and /agent. After package review and explicit approval, enable disabled fcpxml with both sandbox roots set to same new disposable folder, read one synthetic FCPXML, prove outside-root refusal and disable. Only use Codex as a labeled fallback if Interpreter is demonstrably blocked; do not access original libraries.",
+      "next_action": "Installed FCP11.1.1 contains DTDs through1.13. Validate synthetic fixture against installed schema; inspect pinned FCP MCP package and prepare only disposable-root reads. User authorized ghost setup and Open Interpreter use; no personal libraries or app edits.",
       "acceptance": "Verified local Interpreter version/foreground, effective project config, native MCP tool call and outside-root refusal with exact time/output; app version/permission status separately captured, rollback confirmed. A Codex-only result is not Interpreter proof. No real client media, FCP edits, posting or all-day background agent required.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/37"
-      ]
+      ],
+      "updated_at": "2026-10-22T20:19:55.137Z",
+      "next_update": "After installed DTD fixture validation, package review and real MCP test or precise blocker"
     },
     {
       "id": "fcp-interpreter-native-mcp-bridge",
