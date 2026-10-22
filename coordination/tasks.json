@@ -1425,7 +1425,7 @@
       "id": "interpreter-research-job-runner",
       "title": "Implement a bounded Open Interpreter research job wrapper with private receipts",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar Open Interpreter research adapter session 2026-10-22",
       "branch": "feature/interpreter-research-job-v1",
       "scopes": [
@@ -1436,14 +1436,43 @@
       "depends_on": [
         "fcp-interpreter-native-mcp-bridge"
       ],
-      "updated_at": "2026-10-22T10:20:41.615Z",
-      "next_update": "After offline tests, connector readback, and a draft PR",
-      "next_action": "Implement a standard-library Open Interpreter exec adapter for explicit, narrowly scoped Final Cut/software research tasks: validated work packets, dry-run default, limited subprocess execution, stop/timeout and atomic private receipts; test with a fake interpreter. No Mac host, network/model credits, FCP editing, scheduling or worker database wiring presumed.",
+      "updated_at": "2026-10-22T10:31:48.362Z",
+      "next_update": "PR #38 review and Mac-local validation",
+      "next_action": "Review PR #38, run exact committed tests and dry-run on a clean Mac worktree. Validate actual Open Interpreter exec v0.0.56, provider/tool sandbox, and one explicitly authorized synthetic job with a private receipt; no background scheduling until process-tree and output hardening. Integrate with existing SQLite worker only after separate task claim.",
       "acceptance": "At least 10 deterministic offline tests including malformed packets, path/symlink escapes, prompt limits, dry-run zero side effects, explicit execution confirmation, timeout, missing binary, nonzero exit, output limit, atomic receipts and preserved source; all source hashes checked. Document approval/billing/runtime boundaries and exact local test commands.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/37",
         "https://github.com/openinterpreter/openinterpreter/blob/main/docs/exec.md",
         "https://github.com/TeamRovor/rovor-video-engine/pull/32"
+      ],
+      "evidence": [
+        {
+          "commit": "0547e2586b46cc9677463597f1efbaa98137d75a",
+          "platform": "isolated Linux Python local fixture plus GitHub connector readback (not Mac)",
+          "check": "17 offline fake-Interpreter tests and py_compile of local reproduced code; example dry-run; 13 GitHub branch source/contract static checks; test copy and committed branch not byte-identity-verified",
+          "result": "Offline 17/17 passed on local analogous code; GitHub static 13/13 passed. Exact committed runtime tests, host Interpreter tool/costs and production integration NOT run.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+        }
+      ]
+    },
+    {
+      "id": "interpreter-research-mac-host-smoke",
+      "title": "Prove one safe Interpreter research job on Amar's actual Mac",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "feature/interpreter-research-job-v1",
+      "scopes": [
+        "subsystem:interpreter-research-runtime-validation"
+      ],
+      "depends_on": [
+        "interpreter-research-job-runner"
+      ],
+      "next_action": "After reviewing PR #38 and without overwriting other pilot checkouts, use a clean Mac worktree to run exact-head offline tests and no-model dry-run. Only after separately approving the configured model/provider and reviewing local enabled MCPs/permissions, execute one synthetic Jane research job, capture receipt/stop behavior and verify no side effects. Resolve daemon/CLI error before inference if needed.",
+      "acceptance": "Exact Mac interpreter --version/exec help, tested branch commit, dry-run output, actual supervised synthetic model execution or precise blocker, private receipt with hashes, provider/permission evidence and rollback. No FCP native edit, scheduler, real media, unapproved model charges.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/38",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/37"
       ]
     }
   ]
