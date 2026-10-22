@@ -115,10 +115,13 @@ sys.exit(7)
                 Path(dest).write_text('test dtd')
             with mock.patch.object(smoke.shutil, 'copyfile', side_effect=fake_copy), \
                  mock.patch.object(smoke.subprocess, 'run'), \
-                 mock.patch.object(smoke, 'Client', side_effect=FileNotFoundError('uvx missing')):
+                 mock.patch.object(smoke, 'Client', side_effect=FileNotFoundError('uvx missing')) as client_ctor:
                 with contextlib.redirect_stdout(io.StringIO()):
                     code = smoke.main(['--output', str(target)])
             self.assertEqual(code, 2)
+            command = client_ctor.call_args.args[0]
+            self.assertEqual(command[:6], ['uvx', '--no-build', '--python', '3.11', '--with', 'cryptography==46.0.5'])
+            self.assertEqual(command[-3:], ['--from', 'fcp-mcp-server==0.27.2', 'fcp-mcp-server'])
             report = json.loads((target / 'receipt.json').read_text())
             self.assertEqual(report['status'], 'failed')
             self.assertEqual(report['stage'], 'start_mcp')
