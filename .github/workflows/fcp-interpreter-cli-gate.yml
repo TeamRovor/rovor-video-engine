@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
       - name: Run actual Open Interpreter v0.0.56 configuration-only MCP list
         shell: bash
         env:
@@ -107,4 +108,19 @@ jobs:
           assert (staged / 'project' / 'run-interpreter-fcp.sh').exists()
           assert not result['interpreter_mcp_client_verified']
           print('PASS: real Open Interpreter 0.0.56 loaded the full stage->CLI ephemeral MCP registration.')
+          PY
+          # Separate real app-server RPC trial. No API/model turn; only staged synthetic XML.
+          export UV_CACHE_DIR="$WORK/uv-cache"
+          PYTHONPATH="$GITHUB_WORKSPACE/tools" python - <<'PY'
+          import os, json
+          from pathlib import Path
+          import fcp_interpreter_appserver_smoke as probe
+          report = probe.verify(Path(os.environ['ROVOR_STAGE_ROOT']),
+                                interpreter=os.environ['ROVOR_INTERPRETER_BIN'])
+          assert report['status'] == 'passed_interpreter_appserver_mcp_tool_call', report
+          assert report['outside_root_refused']
+          assert report['model_turn_started'] is False
+          assert report['native_final_cut_operated'] is False
+          print(json.dumps(report, indent=2))
+          print('PASS: Interpreter app-server actually called pinned FCP MCP inspect, no model.')
           PY
