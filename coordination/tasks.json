@@ -1210,7 +1210,7 @@
       "id": "rovor-ghost-worker-readonly-v1",
       "title": "Prototype persistent read-only Mac ghost worker with durable job recovery",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar GitHub-connected ghost worker session 2026-10-21",
       "branch": "feature/rovor-ghost-worker-readonly-v1",
       "scopes": [
@@ -1221,10 +1221,29 @@
       "depends_on": [
         "business-ops-worker"
       ],
-      "updated_at": "2026-10-22T01:44:37.796Z",
-      "next_update": "After isolated implementation, deterministic tests and draft PR; do not claim host deployment",
-      "next_action": "Implement a separate local SQLite job runtime for allowlisted read-only jobs with deduplication, lease recovery, receipts and audit records. Start with workspace-bounded file inventory. Keep email, social posting, Blender/Moho/Final Cut as disabled adapters with explicit permission contracts. No credentials, live accounts or render modifications.",
-      "acceptance": "Runnable stdlib worker that survives restart, deduplicates jobs, safely inventories sandboxed workspace without content reads or writes, rejects unsupported side effects, records structured receipts, safely retries expired read-only leases, and has executable tests. No hosted/actual Mac runtime claim. Single GitHub development task queue remains canonical."
+      "updated_at": "2026-10-22T01:52:33.340Z",
+      "next_update": "After real Mac host smoke and approved safe adapter design; code prototype complete, PR remains draft",
+      "next_action": "Review draft PR #32 and run read-only local smoke on a disposable directory on Amar's Mac. Confirm SQLite receipt and restart recovery on actual host. The current code has no all-day scheduler, model reasoning, GUI, email, social or file mutation access; do not claim those integrations work. Build next separately with permission and approval gates.",
+      "acceptance": "Runnable stdlib worker that survives restart, deduplicates jobs, safely inventories sandboxed workspace without content reads or writes, rejects unsupported side effects, records structured receipts, safely retries expired read-only leases, and has executable tests. No hosted/actual Mac runtime claim. Single GitHub development task queue remains canonical.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/32"
+      ],
+      "evidence": [
+        {
+          "commit": "43f55eea0ae3af7ac90b15353c4aa9cbc1ce8c70",
+          "platform": "Isolated Linux container / Python 3",
+          "check": "13 unittest cases against GitHub blob-identical source + read-only CLI file inventory demonstration",
+          "result": "PASS; GitHub source/test blob SHA verified; no Mac installation or network applications exercised",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/32"
+        },
+        {
+          "commit": "43f55eea0ae3af7ac90b15353c4aa9cbc1ce8c70",
+          "platform": "GitHub pull request (draft)",
+          "check": "Host process / Blender/Moho/Final Cut / email / social integration",
+          "result": "NOT RUN; explicitly disabled by prototype; hosted CI/full repo check not run",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/32"
+        }
+      ]
     }
   ]
 }
