@@ -146,6 +146,9 @@ def execute(
         raise ValueError("Execution requires POSIX process groups; Windows execution is not supported")
     if type(timeout) is not int or not 1 <= timeout <= MAX_SECONDS:
         raise ValueError("Timeout must be an integer from 1 to 300 seconds")
+    stop = root / "STOP"
+    if os.path.lexists(stop):
+        raise ValueError("STOP is present in private state; no task was run")
     if os.path.sep in interpreter_binary or (os.path.altsep and os.path.altsep in interpreter_binary):
         binary = Path(interpreter_binary)
     else:
@@ -180,6 +183,10 @@ def execute(
                 streams.register(stream, selectors.EVENT_READ)
             sizes = {child.stdout: 0, child.stderr: 0}
             while streams.get_map() or child.poll() is None:
+                if os.path.lexists(stop):
+                    status = "cancelled"
+                    error = "STOP detected; process group was stopped"
+                    break
                 remaining = timeout - (time.monotonic() - started)
                 if remaining <= 0:
                     status = "timeout"
@@ -205,17 +212,21 @@ def execute(
             _stop_group(child)
             child.wait()
             exit_code = child.returncode
-            if status not in {"timeout", "needs_review"}:
+            if status not in {"timeout", "needs_review", "cancelled"}:
                 if exit_code != 0:
                     error = "Interpreter exited nonzero; inspect local private logs"
                 else:
                     status = "completed_unverified"
+        except KeyboardInterrupt:
+            status = "cancelled"
+            error = "Operator interrupted the job; process group was stopped"
         except (OSError, ValueError) as exc:
             error = f"Unable to launch interpreter: {type(exc).__name__}"
         finally:
             if child is not None:
                 _stop_group(child)
                 child.wait()
+                exit_code = child.returncode
                 for stream in (child.stdout, child.stderr):
                     if stream is not None:
                         stream.close()
