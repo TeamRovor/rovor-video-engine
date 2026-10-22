@@ -1506,6 +1506,29 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
         }
       ]
+    },
+    {
+      "id": "interpreter-research-stop-control",
+      "title": "Add STOP and interrupt cancellation to bounded Interpreter research jobs",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar research-stop-20261022",
+      "branch": "feature/interpreter-research-job-v1",
+      "scopes": [
+        "tools/interpreter_research_job.py",
+        "tests/test_interpreter_research_job.py",
+        "integrations/open-interpreter/RESEARCH-JOB-ADAPTER.md"
+      ],
+      "depends_on": [
+        "interpreter-research-process-bounds"
+      ],
+      "updated_at": "2026-10-22T18:21:33.791Z",
+      "next_update": "After cancellation regressions and shared PR handoff",
+      "next_action": "Add private-state STOP check before dispatch and during polling; preserve cancellation receipts and no-replay reservation. Test without model calls.",
+      "acceptance": "STOP before dispatch starts no process and creates no reservation; STOP during execution kills ordinary process group and records cancelled receipt; interruption also cleans up; dry-run remains inert.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+      ]
     }
   ]
 }
