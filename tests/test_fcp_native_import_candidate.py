@@ -83,7 +83,7 @@ class NativeCandidateTests(unittest.TestCase):
     def test_dtd_rejection_fails_without_output(self):
         def reject(argv, **kwargs):
             return subprocess.CompletedProcess(argv, 1, stdout='', stderr='schema invalid')
-        with self.assertRaisesRegex(ValueError, 'DTD rejected'):
+        with self.assertRaisesRegex(ValueError, 'xmllint exit=1; diagnostic=schema invalid'):
             self.prepare(validator=reject)
         self.assertFalse(self.output.exists())
 
