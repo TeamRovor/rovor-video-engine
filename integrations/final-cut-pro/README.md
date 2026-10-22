@@ -31,7 +31,7 @@ The existing Open Interpreter CLI v0.0.56 on the Intel Mac loaded project agent 
 
 ## Local configuration (Interpreter primary; Codex fallback)
 
-The separate Codex project configuration in .codex/config.toml will have an **explicitly disabled** fcpxml entry after this branch is integrated, with only read-oriented inspect/diagnose/view tools enabled and intentionally invalid placeholder root paths. It must be manually configured on the host and explicitly enabled. This does not install the package, authenticate any provider, load tool permissions into cloud ChatGPT or enable Open Interpreter automatically.
+The **primary Open Interpreter project config** (.openinterpreter/config.toml) has an **explicitly disabled** fcpxml MCP entry with only inspect/diagnose/view tools, approval prompts and deliberately invalid sandbox paths. .codex/config.toml separately carries a disabled fallback. Neither installs the package, authorizes client data access, supplies paid inference or makes a native app connection; follow OPEN-INTERPRETER.md before enabling locally.
 
 Jane's Open Interpreter role points to this guide. Open Interpreter's **foreground** native MCP support is the first connection target, without requiring the optional background daemon. Its Mac runtime/MCP behavior remains to be verified; only if it fails should trusted local Codex serve as a clearly labeled fallback. See OPEN-INTERPRETER.md.
 
@@ -59,14 +59,14 @@ Do not pull into a dirty feature branch; preserve the current pilot. Use a clean
 
 After checking the third-party source/release and approving its installation:
 
-1. In the clean local ROVOR clone, edit the fcpxml entry in .codex/config.toml. Replace both **/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH** values with the exact same absolute disposable directory. Never commit the machine-specific paths.
-2. Confirm FCP_PROJECTS_DIRS and FCP_PROJECTS_DIR match; keep FCP_MCP_AUTOPUSH=0 and the initial enabled_tools limited to inspect, diagnose, view. Only then change enabled to true and start a **trusted local** Codex from that checkout.
+1. In the clean local ROVOR clone, edit the fcpxml entry in **.openinterpreter/config.toml** (primary). Replace both **/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH** values with the same absolute disposable directory. Never commit the machine-specific paths.
+2. Confirm FCP_PROJECTS_DIRS and FCP_PROJECTS_DIR match; keep FCP_MCP_AUTOPUSH=0, the initial enabled_tools limited to inspect/diagnose/view and default_tools_approval_mode=prompt. Only after approval change enabled to true and start **trusted local Open Interpreter in foreground** from that checkout.
 3. Confirm **interpreter mcp list** shows fcpxml, and query actual in-session tool availability. Pin to the reviewed upstream version v0.27.2 using uvx --python 3.11 --from fcp-mcp-server==0.27.2 fcp-mcp-server in the config. Version, runtime and dependency behavior remain untested on this Mac.
 4. Run a single read-only **inspect** action on a separately created synthetic/demo FCPXML *inside* the directory. Capture exact output, active version and timestamps. Verify an outside-root read is rejected. Stop if reads escape.
 5. Later, **only after explicit permission**, extend one operation at a time to generate/edit/deliver and operate only on copies of demo XML. Import a generated FCPXML into a new disposable Final Cut library; observe the app and permission prompts. Third-party pushing an XML is not proof of editing an existing live timeline.
 6. Test a small local demo export, inspect actual decoded video using ffprobe, then view it at normal speed. No real MP3/character media should be used until these gates succeed.
 
-**Rollback:** stop Codex/MCP, set enabled=false, restart Codex and confirm fcpxml is disabled; remove only the newly created demo folder after auditing its contents. Keep original application libraries unchanged.
+**Rollback:** stop Interpreter/MCP, set enabled=false in the local .openinterpreter/config.toml, restart Interpreter and confirm fcpxml is disabled. Audit any disposable demo folder before removal; keep original Final Cut libraries unchanged.
 
 ## ROVOR YouTube and Reels workflow for Jane to learn
 
