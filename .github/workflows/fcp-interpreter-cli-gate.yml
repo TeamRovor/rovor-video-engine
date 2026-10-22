@@ -73,3 +73,38 @@ jobs:
           print('PASS: actual Open Interpreter v0.0.56 discovered ephemeral -c fcpxml.')
           print('No model, paid inference, MCP transport or native Final Cut was started.')
           PY
+          export ROVOR_STAGE_ROOT="$WORK/staged"
+          export ROVOR_FAKE_PROOF="$WORK/fake-mac-proof"
+          export ROVOR_INTERPRETER_BIN="$INTERPRETER"
+          PYTHONPATH="$GITHUB_WORKSPACE/tools" python - <<'PY'
+          import json, os
+          from pathlib import Path
+          import fcp_host_smoke as smoke
+          import fcp_interpreter_stage as stage
+          import fcp_interpreter_registration as reg
+
+          root = Path(os.environ['ROVOR_FAKE_PROOF'])
+          root.mkdir()
+          (root / 'fixtures').mkdir()
+          replies = {}
+          for name, w, h in [('landscape',1920,1080),('portrait',1080,1920)]:
+              smoke.fixture(root / 'fixtures' / (name + '.fcpxml'), w, h)
+              replies[name] = {'content': [{'type':'text', 'text':f'{w}x{h} @ 60fps'}], 'isError':False}
+          receipt = {
+              'status':'passed_direct_mcp', 'stage':'complete',
+              'server':{'name':'fcp-mcp-server','version':'0.27.2'},
+              'native_final_cut_operated':False,
+              'interpreter_mcp_client_verified':False,
+              'available_tool_names':['inspect'],
+              'fixture_results':replies,
+              'outside_root_refusal':{'content':[{'text':'Validation error: File path escapes the allowed roots'}]}
+          }
+          (root / 'receipt.json').write_text(json.dumps(receipt))
+          staged = Path(os.environ['ROVOR_STAGE_ROOT'])
+          stage.make_stage(root, staged)
+          result = reg.verify_cli(staged, interpreter=os.environ['ROVOR_INTERPRETER_BIN'])
+          assert result['status']=='passed_interpreter_registration_only', result
+          assert (staged / 'project' / 'run-interpreter-fcp.sh').exists()
+          assert not result['interpreter_mcp_client_verified']
+          print('PASS: real Open Interpreter 0.0.56 loaded the full stage->CLI ephemeral MCP registration.')
+          PY
