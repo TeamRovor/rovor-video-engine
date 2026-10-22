@@ -69,6 +69,16 @@ def prepare(stage, output, dtd=DEFAULT_DTD, run=subprocess.run):
     # No Final Cut application, third-party MCP tool or paid provider is launched.
     with tempfile.TemporaryDirectory(prefix='.rovor-native-candidate-', dir=output.parent) as temp:
         staging = Path(temp)
+        # Mirror the already-PASSED Mac direct-MCP smoke: copy the installed
+        # Apple DTD into a private local validation directory, rather than
+        # asking xmllint to resolve a resource inside the .app bundle.
+        # The copy exists only for the duration of this validation.
+        local_dtd = staging / 'installed-1.13.dtd'
+        shutil.copyfile(dtd, local_dtd)
+        local_dtd.chmod(0o600)
+        dtd_hash = hashlib.sha256(local_dtd.read_bytes()).hexdigest()
+        if dtd_hash != hashlib.sha256(dtd.read_bytes()).hexdigest():
+            raise ValueError('Installed Apple DTD local copy did not match source')
         hashes = {}
         for label, width, height in (
             ('landscape', 1920, 1080), ('portrait', 1080, 1920)
@@ -79,7 +89,7 @@ def prepare(stage, output, dtd=DEFAULT_DTD, run=subprocess.run):
             try:
                 result = run(
                     [executable, '--nonet', '--noout', '--dtdvalid',
-                     str(dtd), str(source)],
+                     str(local_dtd), str(source)],
                     check=False, capture_output=True, text=True, timeout=30)
             except subprocess.TimeoutExpired as exc:
                 raise ValueError('Installed Apple DTD validation timed out') from exc
@@ -116,7 +126,7 @@ def prepare(stage, output, dtd=DEFAULT_DTD, run=subprocess.run):
             'fcpxml_version': '1.13',
             'duration_seconds': 30,
             'frame_rate': 60,
-            'apple_dtd_sha256': hashlib.sha256(dtd.read_bytes()).hexdigest(),
+            'apple_dtd_sha256': dtd_hash,
             'fcpxml_sha256': hashes,
             'referenced_media_files': 0,
             'native_final_cut_import_verified': False,
@@ -128,6 +138,8 @@ def prepare(stage, output, dtd=DEFAULT_DTD, run=subprocess.run):
             json.dumps(data, indent=2) + '\n')
         output.mkdir(mode=0o700)
         for source in staging.iterdir():
+            if source == local_dtd:
+                continue
             dest = output / source.name
             shutil.copyfile(source, dest)
             dest.chmod(0o600)
