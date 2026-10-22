@@ -59,6 +59,8 @@ interpreter --no-daemon
 
 **Next zero/low-model-cost verification inside interpreter:** `/agent` to check specialist discoverability, then `/debug-config` if needed. A `project` config layer means the TOML loaded, **not** that individual agents are executing. Avoid spawning all agents while the weekly model quota is low.
 
+**Update attempted, mismatch persists (2026-10-21):** The user ran `interpreter update`. The official standalone installer detected macOS Intel, resolved version `0.0.56` (unchanged) and reported success. Subsequent `interpreter app-server daemon start` still returned `Error: the CLI package does not match this platform or executable`; `interpreter app-server daemon version` still could not connect to the missing control socket. Do **not** claim the updater repaired this; avoid repeated reinstalls without inspecting package layout and official issue reports. Standard TUI may still be usable; `/agent` remains unverified.
+
 **Other preflight notes:** On this Intel Mac `gh` and `brew` are absent; the repository was cloned over public HTTPS without either command. `uv`, `node`, `npm` are present; `graphify` and `omniroute` were not yet installed. The `tomllib` syntax check emitted a warning because the macOS `/usr/bin/python3` is older, but the interpreter runtime separately confirmed the TOML project layer. The clone succeeded while the repository was public; future private clone/pull will require credentials.
 
 ## Phase B — test Walter's project instructions
