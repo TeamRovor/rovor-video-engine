@@ -51,4 +51,34 @@ jobs:
             xmllint --nonet --noout --dtdvalid "$WORK/FCPXMLv1_13.dtd" "$WORK/$kind.fcpxml"
           done
           echo 'PASS: real public Apple v1.13 DTD mirror accepted BOTH generated 30s 60fps FCPXML files.'
+          echo 'Verifying DTD byte identity with the user Mac-installed DTD hash...'
+          echo '5afbc7ca1001bbc2190fb3b21d4d440ce061d94f5a5f583074e982b4745cd04d' \
+            | diff -u - <(shasum -a 256 "$WORK/FCPXMLv1_13.dtd" | awk '{print $1}')
+          export ROVOR_NATIVE_CI_DTD="$WORK/FCPXMLv1_13.dtd"
+          export ROVOR_NATIVE_CI_ROOT="$WORK"
+          python3 - <<'PY'
+          import json,os,sys
+          from pathlib import Path
+          from unittest import mock
+          sys.path.insert(0,'tools')
+          import fcp_native_import_candidate as native
+          root=Path(os.environ['ROVOR_NATIVE_CI_ROOT'])
+          stage=root/'verified-stage'
+          stage.mkdir()
+          project=stage/'project'
+          project.mkdir()
+          fixtures=project/'fixtures'
+          fixtures.mkdir()
+          output=root/'native-output'
+          with mock.patch.object(native,'validate_stage',
+                                 return_value=(stage,project,fixtures)):
+              receipt=native.prepare(stage,output,Path(os.environ['ROVOR_NATIVE_CI_DTD']))
+          assert receipt['status']=='candidate_prepared_native_not_imported',receipt
+          assert receipt['native_final_cut_operated'] is False
+          assert receipt['native_final_cut_import_verified'] is False
+          assert receipt['referenced_media_files'] == 0
+          assert len(receipt['fcpxml_sha256']) == 2
+          assert len(list(output.glob('*.fcpxml')))==2
+          print('PASS: actual full native candidate preparation and installed-equivalent DTD validation.')
+          PY
           echo 'This does NOT yet prove equivalence with the user-installed Apple DTD, or native app import.'
