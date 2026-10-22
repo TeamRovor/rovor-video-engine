@@ -133,6 +133,43 @@ class AutoImportTests(unittest.TestCase):
         self.assertEqual(len(sent), 1)
         self.assertFalse(result['native_timeline_verified'])
 
+    def test_dispatch_checkpoint_exists_before_blocking_apple_event(self):
+        state = self.prepare()
+        seen = []
+        def check_live_receipt(command, **kw):
+            current = json.loads(
+                (self.output / 'native-auto-import-receipt.json').read_text())
+            seen.append(current)
+            self.assertEqual(current['status'],
+                             'sending_landscape_apple_event')
+            self.assertTrue(current['apple_event_dispatch_attempted'])
+            self.assertFalse(current['apple_event_sent'])
+            # Simulate a blocked/denied Automation event, without running FCP.
+            return subprocess.CompletedProcess(command, 1,
+                                               stdout='', stderr='Denied by macOS')
+        with mock.patch.object(jane, 'APP', self.base):
+            result = jane.dispatch(self.output, state, run=check_live_receipt)
+        self.assertEqual(len(seen), 1)
+        self.assertEqual(result['status'], 'apple_event_failed')
+        final = json.loads(
+            (self.output / 'native-auto-import-receipt.json').read_text())
+        self.assertEqual(final['status'], 'apple_event_failed')
+        self.assertFalse(final['native_timeline_verified'])
+
+    def test_crash_leftover_old_receipt_tmp_cannot_block_final_state(self):
+        state = self.prepare()
+        stale = self.output / 'receipt.tmp'
+        stale.write_text('simulated prior interrupted write')
+        with mock.patch.object(jane, 'APP', self.base):
+            result = jane.dispatch(self.output, state,
+                                   run=lambda *a, **kw: subprocess.CompletedProcess(
+                                       a[0], 1, stdout='', stderr='Denied'))
+        self.assertEqual(result['status'], 'apple_event_failed')
+        self.assertTrue(stale.exists())
+        self.assertEqual(
+            json.loads((self.output / 'native-auto-import-receipt.json').read_text())['status'],
+            'apple_event_failed')
+
     def test_already_existing_output_rejected(self):
         self.output.mkdir()
         with self.assertRaisesRegex(ValueError, 'must be a new path'):
