@@ -1459,8 +1459,8 @@
       "id": "interpreter-research-mac-host-smoke",
       "title": "Prove one safe Interpreter research job on Amar's actual Mac",
       "priority": 1,
-      "status": "ready",
-      "owner": null,
+      "status": "active",
+      "owner": "ChatGPT / Amar continuous host setup 2026-10-22",
       "branch": "feature/interpreter-research-job-v1",
       "scopes": [
         "subsystem:interpreter-research-runtime-validation"
@@ -1468,7 +1468,7 @@
       "depends_on": [
         "interpreter-research-job-runner"
       ],
-      "next_action": "Actual Mac verification on 2026-10-22: clean PR #38 d69ecc2 passes all 32 offline tests (5.490s) and 1188-byte packet dry-run. Preflight exits 2: installed Interpreter 0.0.56 rejects --ask-for-approval after exec. Exact launcher argv plus --help exits 2, unexpected argument. Top-level --ask-for-approval never before exec parses help (exit 0), but that is parser-only evidence, not permission/runtime proof. Coordinate with the active macos-path-alias-fix owner before editing shared adapter/tests; claim a bounded CLI compatibility fix and update preflight using actual CLI semantics. Then rerun Mac preflight and verify provider/MCP before real model use.",
+      "next_action": "Verify ChatGPT-authenticated Interpreter 0.0.56 using isolated writable checkout; test supported top-level approval configuration, actual model foreground execution and private output. Preserve active shared adapter owner; keep compatibility experiments isolated until coordinated.",
       "acceptance": "Exact Mac interpreter --version/exec help, tested branch commit, dry-run output, actual supervised synthetic model execution or precise blocker, private receipt with hashes, provider/permission evidence and rollback. No FCP native edit, scheduler, real media, unapproved model charges.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38",
@@ -1482,7 +1482,9 @@
           "result": "32/32 offline tests PASS in 5.490s; packet dry-run PASS (1188 bytes). Full preflight BLOCKED exit 2: exec lacks --ask-for-approval. Existing launcher arguments rejected exit 2. Top-level --ask-for-approval never ... --help parses exit 0 only. No model invocation, app edits, paid usage, effective permission verification or unattended worker.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
         }
-      ]
+      ],
+      "updated_at": "2026-10-22T20:03:28.248Z",
+      "next_update": "After actual CLI config and foreground research runtime, or exact runtime blocker"
     },
     {
       "id": "interpreter-research-process-bounds",
