@@ -157,8 +157,8 @@ def main(argv=None):
                    UV_PYTHON_INSTALL_DIR=str(output / 'uv-python'))
         report['stage'] = 'start_mcp'
         # No optional AI/transcription extras and no provider credentials configured.
-        client = Client(['uvx', '--python', '3.11', '--from', 'fcp-mcp-server==0.27.2',
-                         'fcp-mcp-server'], env, cwd=output)
+        client = Client(['uvx', '--no-build', '--python', '3.11', '--with', 'cryptography==46.0.5',
+                         '--from', 'fcp-mcp-server==0.27.2', 'fcp-mcp-server'], env, cwd=output)
         report['stage'] = 'verify_mcp'
         report.update(verify(client, allowed, outside))
         report['status'] = 'passed_direct_mcp'
