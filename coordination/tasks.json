@@ -1479,7 +1479,7 @@
       "id": "interpreter-research-process-bounds",
       "title": "Bound Interpreter research output and clean up POSIX process groups",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar research-runner-hardening-20261022",
       "branch": "feature/interpreter-research-job-v1",
       "scopes": [
@@ -1490,12 +1490,21 @@
       "depends_on": [
         "interpreter-research-job-runner"
       ],
-      "updated_at": "2026-10-22T18:16:22.485Z",
-      "next_update": "After exact committed tests and bounded-process regression checks",
-      "next_action": "Run PR #38 exact source tests, replace unbounded output spooling and direct-child-only timeout on POSIX; record Windows/Mac limitations.",
+      "updated_at": "2026-10-22T18:18:40.614Z",
+      "next_update": "Review PR #38 and execute the existing Mac host-smoke task",
+      "next_action": "Review fd759582c77b31285e7c772c3ce6adb6ae61d81b. Continue interpreter-research-mac-host-smoke on actual Mac with exact offline tests and dry-run, then one supervised synthetic Open Interpreter job after provider/permissions verification. No scheduler activation.",
       "acceptance": "Exact checkout offline tests pass; regressions prove output overflow stops promptly and ordinary POSIX descendants stop after timeout or parent exit; dry-run invokes no model. No Mac runtime claim.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+      ],
+      "evidence": [
+        {
+          "commit": "fd759582c77b31285e7c772c3ce6adb6ae61d81b",
+          "platform": "Linux scratch checkout, Python stdlib, fake Interpreter subprocesses",
+          "check": "22 offline unittests; example dry-run; py_compile; git diff --check; published three file blob hashes identical to tested files",
+          "result": "PASS. Original exact 0547e25 revision also passed 17 tests. POSIX timeout/normal-exit descendant cleanup and continuous stdout/stderr overflow verified. No real Mac, model, FCP, MCP, CI or scheduling. Deliberately detached processes/external services outside process-group boundary.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+        }
       ]
     }
   ]
