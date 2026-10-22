@@ -32,7 +32,10 @@ class NativeCandidateTests(unittest.TestCase):
     def validator(self, argv, **kwargs):
         self.called.append(argv)
         self.assertEqual(argv[1:4], ['--nonet', '--noout', '--dtdvalid'])
-        self.assertEqual(argv[4], str(self.dtd))
+        # Regression: the first Mac smoke test succeeded using a private DTD
+        # COPY, while the failed candidate referenced the app-bundle DTD.
+        self.assertNotEqual(argv[4], str(self.dtd))
+        self.assertEqual(Path(argv[4]).read_bytes(), self.dtd.read_bytes())
         self.assertEqual(kwargs['timeout'], 30)
         self.assertTrue(Path(argv[5]).is_file())
         return subprocess.CompletedProcess(argv, 0, stdout='', stderr='')
@@ -53,6 +56,7 @@ class NativeCandidateTests(unittest.TestCase):
         self.assertFalse(report['model_turn_started'])
         self.assertFalse(report['media_modified'])
         self.assertEqual(len(self.called), 2)
+        self.assertFalse((self.output / 'installed-1.13.dtd').exists())
         self.assertEqual(self.output.stat().st_mode & 0o777, 0o700)
         self.assertTrue((self.output / 'READ_ME_FIRST.txt').exists())
         self.assertIn('create a new EMPTY library',
