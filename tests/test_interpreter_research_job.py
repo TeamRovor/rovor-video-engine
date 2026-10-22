@@ -9,6 +9,7 @@ import tempfile
 import unittest
 import sys
 import time
+import threading
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
@@ -234,6 +235,69 @@ class ResearchAdapterTests(unittest.TestCase):
             mod.execute(self.work, self.state, packet, sha, prompt,
                         interpreter_binary="unused", timeout=1)
         self.assertEqual(list(self.state.iterdir()), [])
+
+    def test_stop_before_dispatch_does_not_launch_or_reserve(self):
+        (self.state / "STOP").touch()
+        packet, sha, prompt = self.prepare()
+        with mock.patch.object(mod.subprocess, "Popen") as launch:
+            with self.assertRaisesRegex(ValueError, "STOP"):
+                mod.execute(self.work, self.state, packet, sha, prompt,
+                            interpreter_binary=self.fake_interpreter(), timeout=5)
+            launch.assert_not_called()
+        self.assertEqual([p.name for p in self.state.iterdir()], ["STOP"])
+
+    def test_broken_stop_symlink_also_blocks_dispatch(self):
+        (self.state / "STOP").symlink_to(self.root / "missing")
+        packet, sha, prompt = self.prepare()
+        with self.assertRaisesRegex(ValueError, "STOP"):
+            mod.execute(self.work, self.state, packet, sha, prompt,
+                        interpreter_binary=self.fake_interpreter(), timeout=5)
+        self.assertFalse(list(self.state.glob("*.reserved")))
+
+    def test_stop_during_job_cancels_and_prevents_replay(self):
+        packet, sha, prompt = self.prepare()
+        marker = self.root / "cancelled-descendant-survived"
+        ready = self.root / "started"
+        body = (f'from pathlib import Path\nPath({str(ready)!r}).touch()\n'
+                + self.descendant_body(marker, 0.8, 10))
+        binary = self.fake_interpreter(body=body)
+        def request_stop():
+            deadline = time.monotonic() + 3
+            while not ready.exists() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            (self.state / "STOP").touch()
+        request = threading.Thread(target=request_stop)
+        request.start()
+        try:
+            result = mod.execute(self.work, self.state, packet, sha, prompt,
+                                 interpreter_binary=binary, timeout=5)
+        finally:
+            request.join(timeout=4)
+        self.assertEqual(result["status"], "cancelled")
+        self.assertLess(result["elapsed_seconds"], 3)
+        receipt = json.loads((self.state / "fcp-intro-001.receipt.json").read_text())
+        self.assertEqual(receipt["status"], "cancelled")
+        self.assertIsNotNone(receipt["exit_code"])
+        time.sleep(1)
+        self.assertFalse(marker.exists())
+        (self.state / "STOP").unlink()
+        with self.assertRaises(FileExistsError):
+            mod.execute(self.work, self.state, packet, sha, prompt,
+                        interpreter_binary=binary, timeout=5)
+
+    def test_keyboard_interrupt_writes_cancelled_receipt(self):
+        packet, sha, prompt = self.prepare()
+        selector = mod.selectors.DefaultSelector
+        class InterruptedSelector(selector):
+            def select(self, timeout=None):
+                raise KeyboardInterrupt
+        with mock.patch.object(mod.selectors, "DefaultSelector", InterruptedSelector):
+            result = mod.execute(self.work, self.state, packet, sha, prompt,
+                                 interpreter_binary=self.fake_interpreter(body='import time; time.sleep(10)'),
+                                 timeout=5)
+        self.assertEqual(result["status"], "cancelled")
+        self.assertIsNotNone(result["exit_code"])
+        self.assertTrue((self.state / "fcp-intro-001.receipt.json").exists())
 
 
 if __name__ == "__main__":
