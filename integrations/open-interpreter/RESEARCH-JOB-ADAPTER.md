@@ -12,6 +12,20 @@ The current [Open Interpreter exec documentation](https://github.com/openinterpr
 
 Actual behavior on the user's Intel Mac remains unverified. Open Interpreter is the primary local ROVOR runtime; this does not substitute Codex. The repo's project-configured Jane and disabled FCPXML MCP are in [PR #37](https://github.com/TeamRovor/rovor-video-engine/pull/37), separate from this branch.
 
+## One-command local diagnostic
+
+From this reviewed branch checkout, run:
+
+~~~sh
+bash integrations/open-interpreter/research-preflight.sh
+~~~
+
+This prints the checkout commit, tracked-file cleanliness and tested source blob identities; runs the offline fake-Interpreter tests and example packet dry-run; then inspects the host and runs only `interpreter --version` and `interpreter exec --help`. Each CLI probe has a 10-second timeout and POSIX process-group cleanup. Raw CLI diagnostics and config contents are omitted. No installs, provider selection, inference, MCP calls or persistent report files are requested. Tests use temporary fixtures; Python bytecode writes are disabled.
+
+Exit 0 means these prerequisite checks passed on a Mac. It does **not** verify effective project settings, provider budget, foreground `/agent`, `/mcp`, FCP access or a real research job. Exit 2 reports a non-Mac host, missing/incompatible CLI, missing project config or failed CLI probe; test/packet failures stop earlier with their own nonzero status. Modified tracked files are prominently labeled rather than represented as an exact committed checkout. Inspect untracked config locally as well; it is not assessed by the cleanliness check.
+
+Use an isolated checkout/worktree containing PR #38; do not paste this command into the Interpreter conversational prompt or reset another working directory to obtain it. Share the diagnostic text if host checks are blocked; it contains no requested account/config dump. Real CLI startup may still create its own caches or contact its update service: the diagnostic does not override third-party startup behavior.
+
 ## Safe no-model dry run
 
 From the repository checkout containing this branch:
