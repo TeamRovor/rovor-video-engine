@@ -84,8 +84,8 @@ def prepare(stage, output, dtd=DEFAULT_DTD, run=subprocess.run):
             except subprocess.TimeoutExpired as exc:
                 raise ValueError('Installed Apple DTD validation timed out') from exc
             if result.returncode != 0:
-                diagnostic = ((result.stderr or '') + '\\n' + (result.stdout or '')).strip()
-                diagnostic = diagnostic.replace('\\r', ' ').replace('\\n', ' | ')
+                diagnostic = ((result.stderr or '') + '\n' + (result.stdout or '')).strip()
+                diagnostic = diagnostic.replace('\r', ' ').replace('\n', ' | ')
                 if not diagnostic:
                     diagnostic = '(xmllint returned no diagnostic output)'
                 raise ValueError('Installed Apple DTD rejected 30s ' + label +
