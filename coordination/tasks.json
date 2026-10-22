@@ -1288,7 +1288,7 @@
       "id": "rovor-ghost-launchd-v1",
       "title": "Generate opt-in bounded macOS LaunchAgent for ROVOR ghost worker",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar Mac ghost-host scheduling session",
       "branch": "feature/rovor-ghost-launchd-v1",
       "scopes": [
@@ -1299,10 +1299,29 @@
       "depends_on": [
         "rovor-ghost-loop-v1"
       ],
-      "updated_at": "2026-10-22T02:50:25.131Z",
-      "next_update": "After isolated tests, draft stacked PR and host-verification instructions",
-      "next_action": "Create standard-library-only LaunchAgent plist generator with strict path checks and bounded schedules; no automatic installation or login activation. Add no-side-effect preflight and deterministic tests. State host execution remains unverified.",
-      "acceptance": "Unit tests verify safe correct plist, absolute authorized paths, no shell interpolation, minimum polling interval, stop-marker cooperation, no launchctl activation, and no scheduling of side-effecting capabilities. Native macOS job test remains separately gated."
+      "updated_at": "2026-10-22T02:56:20.255Z",
+      "next_update": "After parent draft PRs #32/#33 integrated and a real Mac disposable-directory smoke test is performed",
+      "next_action": "Review stacked PR #34 after merging #32 and #33, then on Amar's actual Mac test plist generation, plutil validation, manually opted-in launchctl bootstrap and bootout, SQLite success receipt, stop marker, and login/sleep behavior. No host deployment or side-effect access has occurred.",
+      "acceptance": "Unit tests verify safe correct plist, absolute authorized paths, no shell interpolation, minimum polling interval, stop-marker cooperation, no launchctl activation, and no scheduling of side-effecting capabilities. Native macOS job test remains separately gated.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/34"
+      ],
+      "evidence": [
+        {
+          "commit": "51c278fa72da86ce8b95523c699bda42eaae6d57",
+          "platform": "Isolated Linux container / Python 3",
+          "check": "13 focused stdlib LaunchAgent generator tests; Python compilation; three GitHub blob SHA comparisons to exact tested files",
+          "result": "PASS: 13/13; code/test/docs GitHub hashes match; no subprocess/service activation in tests",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/34"
+        },
+        {
+          "commit": "51c278fa72da86ce8b95523c699bda42eaae6d57",
+          "platform": "Amar's Mac / GitHub Actions",
+          "check": "Real Mac launchctl and background execution; hosted CI/full repo regression",
+          "result": "NOT RUN. No Mac host access; GitHub Actions CI not verified. Generated plist only, intentionally not installed or activated.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/34"
+        }
+      ]
     }
   ]
 }
