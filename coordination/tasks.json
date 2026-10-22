@@ -1511,7 +1511,7 @@
       "id": "interpreter-research-stop-control",
       "title": "Add STOP and interrupt cancellation to bounded Interpreter research jobs",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar research-stop-20261022",
       "branch": "feature/interpreter-research-job-v1",
       "scopes": [
@@ -1522,12 +1522,21 @@
       "depends_on": [
         "interpreter-research-process-bounds"
       ],
-      "updated_at": "2026-10-22T18:21:33.791Z",
-      "next_update": "After cancellation regressions and shared PR handoff",
-      "next_action": "Add private-state STOP check before dispatch and during polling; preserve cancellation receipts and no-replay reservation. Test without model calls.",
+      "updated_at": "2026-10-22T18:23:03.292Z",
+      "next_update": "Review PR #38; supervised Mac host-smoke task remains next",
+      "next_action": "Review 7e65aef36a641502be38bfdc0b7768a4cab1230a and continue interpreter-research-mac-host-smoke on actual Mac: offline tests/dry-run, inspect provider/MCP permissions, then one supervised synthetic job including STOP. No Mac access or scheduler established.",
       "acceptance": "STOP before dispatch starts no process and creates no reservation; STOP during execution kills ordinary process group and records cancelled receipt; interruption also cleans up; dry-run remains inert.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+      ],
+      "evidence": [
+        {
+          "commit": "7e65aef36a641502be38bfdc0b7768a4cab1230a",
+          "platform": "Linux Python stdlib, fake Interpreter processes; no inference",
+          "check": "26/26 offline unittests; example no-model dry-run; py_compile; git diff --check; three published blob hashes match tested files",
+          "result": "PASS. STOP before dispatch creates no reservation/process; during job kills ordinary group and preserves cancelled receipt; removal still refuses same job ID; broken symlink STOP blocks; Ctrl-C writes cancellation receipt. No Mac, FCP/MCP, real model, hosted CI or unattended run tested.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+        }
       ]
     }
   ]
