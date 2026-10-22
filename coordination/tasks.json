@@ -1333,6 +1333,30 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/34"
         }
       ]
+    },
+    {
+      "id": "fcp-specialist-research-and-mcp-pilot",
+      "title": "Equip Jane with researched Final Cut Pro workflows and a safe opt-in MCP pilot",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar Final Cut specialist setup 2026-10-22",
+      "branch": "integration/fcp-specialist-mcp-pilot-20261022",
+      "scopes": [
+        "integrations/final-cut-pro",
+        ".agents/skills/software-integration-research",
+        ".openinterpreter/config.toml",
+        "AGENTS.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-22T09:59:13.251Z",
+      "next_update": "After primary-source research, GitHub readback and draft integration PR",
+      "next_action": "Inspect existing Jane/Open Interpreter role, verify official FCPXML/Apple event control paths and third-party FCP MCP source. Add reusable specialist research SOP, Jane connection/YouTube/reels plan, disabled-by-default Codex MCP example and documented Mac host smoke. No third-party installation, client project edits, paid services, social publishing or daemon implied.",
+      "acceptance": "GitHub files contain source-linked research, correct tool boundary and exact upstream version, scoped disabled-by-default MCP config, manual Mac verification and stop/rollback, and preserve all current ROVOR tasks and approved artwork; validated source/document consistency with explicit host-unverified status.",
+      "links": [
+        "https://github.com/DareDev256/fcp-mcp-server",
+        "https://developer.apple.com/documentation/professional-video-applications/fcpxml-reference",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/35"
+      ]
     }
   ]
 }
