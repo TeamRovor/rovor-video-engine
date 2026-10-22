@@ -118,6 +118,9 @@ def _validated_workspace(workspace: Path) -> Path:
 
 
 def _validated_state(state: Path, workspace: Path) -> Path:
+    # Compare canonical roots; macOS may spell the same directory as /var
+    # versus /private/var. An aliased path must not bypass state isolation.
+    workspace = _validated_workspace(Path(workspace))
     p = state.expanduser()
     if p.is_symlink() or not p.is_dir():
         raise ValueError("State must be an existing non-symlink directory")
