@@ -85,6 +85,14 @@
       "lane": "operations",
       "requires": [],
       "objective": "reduce-repeat-work"
+    },
+    "fcp-specialist-research-and-mcp-pilot": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write"
+      ],
+      "objective": "develop-content-engine"
     }
   }
 }
