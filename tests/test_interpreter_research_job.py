@@ -63,6 +63,18 @@ class ResearchAdapterTests(unittest.TestCase):
         self.assertEqual(len(packet_sha), 64)
         self.assertIn("Which official XML", mod.make_prompt(alias_work, packet))
 
+    def test_state_overlap_cannot_hide_behind_parent_alias(self):
+        physical = self.root / "real-state-parent"
+        physical.mkdir()
+        workspace = physical / "workspace"
+        workspace.mkdir()
+        alias = self.root / "state-parent-alias"
+        alias.symlink_to(physical, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "disjoint"):
+            mod._validated_state(alias / "workspace", workspace)
+        with self.assertRaisesRegex(ValueError, "disjoint"):
+            mod._validated_state(workspace, alias / "workspace")
+
     def test_symlink_at_workspace_root_is_still_rejected(self):
         alias = self.root / "workspace-shortcut"
         alias.symlink_to(self.work, target_is_directory=True)
