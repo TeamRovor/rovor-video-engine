@@ -1,8 +1,11 @@
+import contextlib
+import io
 import json
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 import fcp_host_smoke as smoke
 
@@ -70,3 +73,36 @@ class SmokeTests(unittest.TestCase):
             finally:
                 client.close()
             self.assertIsNotNone(client.child.poll())
+
+    def test_missing_installed_dtd_still_writes_failure_receipt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / 'diagnostics'
+            with mock.patch.object(smoke.shutil, 'copyfile', side_effect=FileNotFoundError('FCP schema not installed')):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = smoke.main(['--output', str(target)])
+            self.assertEqual(code, 2)
+            report = json.loads((target / 'receipt.json').read_text())
+            self.assertEqual(report['status'], 'failed')
+            self.assertEqual(report['stage'], 'prepare_fixtures')
+            self.assertIn('FileNotFoundError', report['error'])
+            self.assertFalse(report['native_final_cut_operated'])
+            self.assertFalse(report['interpreter_mcp_client_verified'])
+            self.assertEqual((target / 'server-error.txt').read_bytes(), b'')
+
+    def test_missing_uvx_after_fixture_validation_still_writes_receipt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / 'diagnostics'
+            def fake_copy(_source, dest):
+                Path(dest).write_text('test dtd')
+            with mock.patch.object(smoke.shutil, 'copyfile', side_effect=fake_copy), \
+                 mock.patch.object(smoke.subprocess, 'run'), \
+                 mock.patch.object(smoke, 'Client', side_effect=FileNotFoundError('uvx missing')):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = smoke.main(['--output', str(target)])
+            self.assertEqual(code, 2)
+            report = json.loads((target / 'receipt.json').read_text())
+            self.assertEqual(report['status'], 'failed')
+            self.assertEqual(report['stage'], 'start_mcp')
+            self.assertIn('FileNotFoundError', report['error'])
+            self.assertIn('installed_dtd_sha256', report)
+            self.assertEqual((target / 'server-error.txt').read_bytes(), b'')
