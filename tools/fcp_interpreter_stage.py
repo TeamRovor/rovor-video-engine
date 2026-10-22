@@ -145,11 +145,10 @@ def make_stage(evidence, output):
     manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
     manifest_path.chmod(0o600)
     print(json.dumps(manifest, indent=2))
-    print('\nNext: run from Mac Terminal (not from GitHub):')
-    print('cd ' + json.dumps(str(project)) + ' && interpreter mcp list && interpreter mcp get fcpxml')
-    print('Then, only if effective config is correct and you opt in to a model call:')
-    print('cd ' + json.dumps(str(project)) + ' && interpreter')
-    print('In the TUI, check /debug-config and /mcp before manually asking Jane to inspect.')
+    print('\nNEXT GATE: run fcp_interpreter_registration.py --stage ' + json.dumps(str(output)))
+    print('Project-local .openinterpreter/config.toml is ignored unless a project is trusted.')
+    print('The registration probe uses isolated runtime -c overrides and performs a CLI list-only verification.')
+    print('DO NOT run bare interpreter mcp list/get here and treat those as evidence of a connected server.')
     print('Nothing has invoked Open Interpreter, a model, Final Cut or the MCP server.')
     return manifest
 
