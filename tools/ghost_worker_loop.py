@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded, foreground poller for ROVOR's read-only SQLite ghost worker.
+"""Bounded foreground poller for ROVOR's SQLite ghost worker.
 
 This is not a daemon, AI model, login agent, shell executor, or publishing tool.
 Only the adapters currently permitted by ghost_worker.py can execute.
@@ -86,8 +86,8 @@ def clear_stop(state: Path) -> bool:
 def poll(conn, workspace: Path, state: Path, *, worker_id: str,
          max_jobs: int = 100, max_seconds: float = 900,
          poll_seconds: float = 1.0, monotonic=time.monotonic,
-         sleeper=time.sleep, allow_model_use=False) -> dict:
-    """Poll bounded read-only jobs, observing STOP between operations.
+         sleeper=time.sleep, allow_model_use=False, allow_native_import=False) -> dict:
+    """Poll bounded jobs with explicit opt-ins, observing STOP between operations.
 
     Limits are cooperative: a synchronous adapter cannot be interrupted mid-call.
     The underlying SQLite claim transaction prevents duplicate claimed jobs.
@@ -110,7 +110,10 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
         if elapsed >= max_seconds:
             reason = "max_seconds"
             break
-        if allow_model_use:
+        if allow_native_import:
+            receipt = ghost_worker.run_once(conn, workspace, owner=worker_id,
+                                           allow_model_use=allow_model_use, allow_native_import=True)
+        elif allow_model_use:
             receipt = ghost_worker.run_once(conn, workspace, owner=worker_id, allow_model_use=True)
         else:
             receipt = ghost_worker.run_once(conn, workspace, owner=worker_id)
@@ -128,7 +131,9 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
     return {"stop_reason": reason, "executed": executed, "succeeded": succeeded,
             "failed": failed, "idle_polls": idle_polls,
             "elapsed_seconds": round(max(0, monotonic() - start), 3),
-            "read_only": True, "model_use_enabled": allow_model_use, "worker_id": worker_id}
+            "read_only": not (allow_native_import or allow_model_use),
+            "native_import_enabled": allow_native_import,
+            "model_use_enabled": allow_model_use, "worker_id": worker_id}
 
 
 def main() -> None:
@@ -136,9 +141,10 @@ def main() -> None:
     parser.add_argument("--state", required=True, type=Path, help="Private existing worker state directory")
     parser.add_argument("--workspace", required=True, type=Path, help="Explicitly authorized workspace")
     sub = parser.add_subparsers(dest="command", required=True)
-    run = sub.add_parser("run", help="Poll read-only jobs in foreground with hard count and cooperative time limits")
+    run = sub.add_parser("run", help="Poll jobs with hard count and cooperative time limits")
     run.add_argument("--worker-id", default="rovor-local-worker")
     run.add_argument("--approve-model-use", action="store_true")
+    run.add_argument("--allow-native-import", action="store_true")
     run.add_argument("--max-jobs", type=int, default=100)
     run.add_argument("--max-seconds", type=float, default=900)
     run.add_argument("--poll-seconds", type=float, default=1.0)
@@ -150,7 +156,8 @@ def main() -> None:
         with closing(ghost_worker.connect(args.state)) as conn:
             result = poll(conn, args.workspace, args.state, worker_id=args.worker_id,
                           max_jobs=args.max_jobs, max_seconds=args.max_seconds,
-                          poll_seconds=args.poll_seconds, allow_model_use=args.approve_model_use)
+                          poll_seconds=args.poll_seconds, allow_model_use=args.approve_model_use,
+                          allow_native_import=args.allow_native_import)
     elif args.command == "stop":
         result = {"stop_requested": True, "marker_created": request_stop(args.state)}
     else:
