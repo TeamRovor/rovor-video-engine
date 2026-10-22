@@ -1644,7 +1644,9 @@
       "scopes": [
         "tools/ghost_worker.py",
         "tools/interpreter_host_job.py",
-        "tests/test_ghost_research_queue.py"
+        "tests/test_ghost_research_queue.py",
+        "tools/ghost_worker_loop.py",
+        "integrations/open-interpreter/start-jane-worker.sh"
       ],
       "depends_on": [
         "interpreter-research-mac-host-smoke",
@@ -1652,7 +1654,7 @@
       ],
       "updated_at": "2026-10-22T20:12:47.287Z",
       "next_update": "After focused deterministic queue/recovery tests and Mac disposable smoke",
-      "next_action": "Add one opt-in Final Cut research job to existing SQLite worker. Preserve no-model defaults; require explicit research dispatch opt-in, no automatic replay after model dispatch, durable receipts, bounded subprocess and STOP handling. No FCP app edit or service installation.",
+      "next_action": "Extend existing SQLite worker and foreground poller with explicit --approve-model-use; one fixed Final Cut job, no automatic replay of expired research claims, STOP forwarding and bounded first host script. No scheduler installation or app edits.",
       "acceptance": "Queue dedupe, default no-model behavior, explicit model optin, at-most-once dispatch after crash/lease, existing read-only adapters preserved, cancellation and actual Mac deterministic test evidence."
     }
   ]
