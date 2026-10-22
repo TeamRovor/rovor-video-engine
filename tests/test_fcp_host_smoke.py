@@ -93,6 +93,24 @@ sys.exit(7)
             finally:
                 client.close()
 
+
+    def test_interpreter_and_codex_fcp_configs_match_wheel_only_pin(self):
+        import tomllib
+        repo_root = Path(__file__).resolve().parents[1]
+        expected = ['--no-build', '--python', '3.11', '--with', 'cryptography==46.0.5',
+                    '--from', 'fcp-mcp-server==0.27.2', 'fcp-mcp-server']
+        for config_path in ('.openinterpreter/config.toml', '.codex/config.toml'):
+            with self.subTest(config=config_path):
+                with (repo_root / config_path).open('rb') as file:
+                    config = tomllib.load(file)
+                mcp = config['mcp_servers']['fcpxml']
+                self.assertFalse(mcp['enabled'])
+                self.assertEqual(mcp['args'], expected)
+                self.assertEqual(mcp['command'], 'uvx')
+                self.assertEqual(mcp['env']['FCP_MCP_AUTOPUSH'], '0')
+                self.assertEqual(mcp['env']['FCP_PROJECTS_DIR'], mcp['env']['FCP_PROJECTS_DIRS'])
+                self.assertEqual(mcp['env']['FCP_PROJECTS_DIRS'], '/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH')
+
     def test_missing_installed_dtd_still_writes_failure_receipt(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / 'diagnostics'
