@@ -1,0 +1,54 @@
+name: Real FCPXML 1.13 DTD validation for native import
+
+on:
+  pull_request:
+    paths:
+      - 'tools/fcp_native_import_candidate.py'
+      - '.github/workflows/fcp-native-dtd-validation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/fcp_native_import_candidate.py'
+      - '.github/workflows/fcp-native-dtd-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  external-mirror-dtd:
+    runs-on: macos-15-intel
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate real generated 30-second XML against Apple FCPXML 1.13 DTD mirror
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK="$(mktemp -d)"
+          trap 'rm -rf "$WORK"' EXIT
+          command -v xmllint
+          curl -fL --retry 2 --max-time 120 \
+            'https://raw.githubusercontent.com/andrewarrow/cutlass/main/FCPXMLv1_13.dtd' \
+            -o "$WORK/FCPXMLv1_13.dtd"
+          shasum -a 256 "$WORK/FCPXMLv1_13.dtd"
+          python3 - "$WORK" <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, 'tools')
+          from fcp_native_import_candidate import create_candidate
+          p = Path(sys.argv[1])
+          for label,w,h in [('landscape',1920,1080),('portrait',1080,1920)]:
+              create_candidate(p / (label + '.fcpxml'),w,h,label)
+          PY
+          for kind in landscape portrait; do
+            echo "Real 1.13 DTD validating $kind..."
+            xmllint --nonet --noout --dtdvalid "$WORK/FCPXMLv1_13.dtd" "$WORK/$kind.fcpxml"
+          done
+          echo 'PASS: real public Apple v1.13 DTD mirror accepted BOTH generated 30s 60fps FCPXML files.'
+          echo 'This does NOT yet prove equivalence with the user-installed Apple DTD, or native app import.'
