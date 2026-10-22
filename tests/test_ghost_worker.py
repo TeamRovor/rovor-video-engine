@@ -26,6 +26,12 @@ class GhostWorkerTests(unittest.TestCase):
         self.assertTrue((self.state / "jobs.sqlite3").exists())
         self.assertEqual(self.conn.execute("SELECT count(*) FROM jobs").fetchone()[0], 0)
 
+    def test_symlink_state_directory_rejected(self):
+        redirect = Path(self.tmp.name) / "redirect"
+        redirect.symlink_to(self.state, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "symlink"):
+            ghost.connect(redirect)
+
     def test_ping_job_succeeds(self):
         job = ghost.enqueue(self.conn, "system.ping", {}, "ping-1", now=100)
         result = ghost.run_once(self.conn, self.workspace, now=101)
