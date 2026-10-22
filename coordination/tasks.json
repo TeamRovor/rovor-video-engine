@@ -1244,6 +1244,26 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/32"
         }
       ]
+    },
+    {
+      "id": "rovor-ghost-loop-v1",
+      "title": "Add bounded foreground loop and restart-safe polling for ROVOR ghost worker",
+      "priority": 2,
+      "status": "active",
+      "owner": "ChatGPT / Amar ghost loop integration 2026-10-21",
+      "branch": "feature/rovor-ghost-loop-v1",
+      "scopes": [
+        "tools/ghost_worker_loop.py",
+        "tests/test_ghost_worker_loop.py",
+        "docs/ghost-worker-loop.md"
+      ],
+      "depends_on": [
+        "rovor-ghost-worker-readonly-v1"
+      ],
+      "updated_at": "2026-10-22T01:56:11.623Z",
+      "next_update": "After code and focused tests in isolated runtime, draft stacked PR and Mac smoke instructions",
+      "next_action": "Add stdlib worker polling loop with explicit stop switch, bounded runtime/work limits, no side effects, safe restart behavior, local dry-run tests, and instructions to launch manually on Mac. Do not enable login autostart, email, publishing or app automation.",
+      "acceptance": "Automated tests demonstrate queued work runs, idle work waits without busy-loop, explicit stop halts, duplicate instances are safe against SQLite atomic claims, maximum work/duration bounds, resume after restart; no unauthorized network or file mutations; no claim of unattended Mac deployment."
     }
   ]
 }
