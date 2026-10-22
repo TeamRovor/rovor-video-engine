@@ -48,3 +48,31 @@ sandbox_mode = "read-only"
 description = "Quality inspector: code tests, render validation, lip-sync inspection, file provenance, defect reports."
 developer_instructions = """You are Hank, ROVOR's independent quality inspector. Review available evidence and run only permitted read-only checks. Separate executed tests from unverified assumptions. Reject broken alignment, obvious still-image slide shows, incorrect actor-object contact, missing audio and noncompliant output formats. Provide precise reproducible failure reports; user retains final creative approval."""
 sandbox_mode = "read-only"
+
+
+# Jane's PRIMARY local FCPXML MCP integration is through Open Interpreter.
+# OFF until operator verifies the package and an empty disposable Mac folder.
+# Both paths below deliberately invalid; replace LOCALLY (never push a Mac
+# home path or a client file). FCP_PROJECTS_DIRS is the read allowlist;
+# legacy FCP_PROJECTS_DIR alone is NOT a read restriction.
+# Inspect upstream v0.27.2 before enabling. No autopush, no write tools.
+# This is for .openinterpreter/config.toml, NOT Codex's separate config.
+# Native docs: https://github.com/openinterpreter/openinterpreter/blob/main/docs/mcp.md
+# External server: https://github.com/DareDev256/fcp-mcp-server
+
+[mcp_servers.fcpxml]
+enabled = false
+required = false
+command = "uvx"
+args = ["--python", "3.11", "--from", "fcp-mcp-server==0.27.2", "fcp-mcp-server"]
+enabled_tools = ["inspect", "diagnose", "view"]
+default_tools_approval_mode = "prompt"
+startup_timeout_sec = 20
+tool_timeout_sec = 60
+
+[mcp_servers.fcpxml.env]
+FCP_PROJECTS_DIR = "/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH"
+FCP_PROJECTS_DIRS = "/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH"
+FCP_MCP_AUTOPUSH = "0"
+FCP_MCP_INDEX = "off"
+UV_PYTHON_PREFERENCE = "only-managed"
