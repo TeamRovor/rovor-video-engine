@@ -20,12 +20,13 @@ def command(binary):
     # on-request keeps approval available; noninteractive requests can fail.
     return [binary, '--ask-for-approval', 'on-request', '--search', 'exec',
             '--sandbox', 'read-only', '--ephemeral', '--ignore-user-config',
+            '--skip-git-repo-check',
             '-c', 'features.multi_agent=false', '-']
 
 
 def check(binary):
     for args, required in [(['--help'], ['--ask-for-approval', 'on-request', '--search']),
-                           (['exec', '--help'], ['--sandbox', '--ephemeral', '--ignore-user-config'])]:
+                           (['exec', '--help'], ['--sandbox', '--ephemeral', '--ignore-user-config', '--skip-git-repo-check'])]:
         result = subprocess.run([binary] + args, capture_output=True, text=True, timeout=10)
         if result.returncode or any(flag not in result.stdout for flag in required):
             raise ValueError('Installed Interpreter lacks required compatibility options')
@@ -42,6 +43,8 @@ def main(argv=None):
         raise ValueError('Interpreter is not on PATH')
     if args == LEGACY:
         # This shim accepts only the adapter's fixed read-only argument list.
+        # Keep bounded startup diagnostics in the PRIVATE answer on failure.
+        os.dup2(sys.stdout.fileno(), sys.stderr.fileno())
         os.execv(binary, command(binary))
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true')
