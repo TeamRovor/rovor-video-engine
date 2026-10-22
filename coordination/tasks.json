@@ -1638,7 +1638,7 @@
       "id": "ghost-interpreter-research-queue",
       "title": "Connect verified Interpreter research to the existing durable ghost worker",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "ChatGPT / Amar continuous host setup 2026-10-22",
       "branch": "feature/ghost-interpreter-research-queue",
       "scopes": [
@@ -1652,10 +1652,23 @@
         "interpreter-research-mac-host-smoke",
         "rovor-ghost-worker-readonly-v1"
       ],
-      "updated_at": "2026-10-22T20:12:47.287Z",
-      "next_update": "After focused deterministic queue/recovery tests and Mac disposable smoke",
-      "next_action": "Extend existing SQLite worker and foreground poller with explicit --approve-model-use; one fixed Final Cut job, no automatic replay of expired research claims, STOP forwarding and bounded first host script. No scheduler installation or app edits.",
-      "acceptance": "Queue dedupe, default no-model behavior, explicit model optin, at-most-once dispatch after crash/lease, existing read-only adapters preserved, cancellation and actual Mac deterministic test evidence."
+      "updated_at": "2026-10-22T20:17:39.248Z",
+      "next_update": "After normal-Terminal queued model job and SQLite receipt review",
+      "next_action": "Run bash integrations/open-interpreter/start-jane-worker.sh in the prepared local release from normal Terminal. It enqueues one deduplicated version-specific FCPXML/MCP follow-up, processes at most one job, and saves private SQLite and research receipts. Inspect status and answer before FCP MCP activation or service installation. Do not automatically retry failed/needs_review research claims.",
+      "acceptance": "Queue dedupe, default no-model behavior, explicit model optin, at-most-once dispatch after crash/lease, existing read-only adapters preserved, cancellation and actual Mac deterministic test evidence.",
+      "blocker": "Work Mode cannot start Interpreter app-server; real queued model job requires normal Terminal. Foreground model research already succeeded independently. PR #39 remains draft, not integrated or scheduled.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/39"
+      ],
+      "evidence": [
+        {
+          "commit": "f4ff1c281c0e25b7a5a7075e473351814f98bfe6",
+          "platform": "Actual Amar Intel Mac / Python 3.9 / Work Mode",
+          "check": "40 interpreter+host tests and 33 worker+loop+research tests; shell syntax; native SQLite restart smoke; full startup shell with fake Interpreter invoked twice; remote code readback identical",
+          "result": "73/73 PASS. Fake full-script job succeeded once with attempts1 and second startup dispatched zero. Shared STOP cancelled active fake Interpreter. Default worker left model job queued. Real foreground research previously completed40.902s; real queued model, app MCP, native editing, launchd and hosted CI remain unverified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/39"
+        }
+      ]
     }
   ]
 }
