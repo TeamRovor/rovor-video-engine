@@ -35,6 +35,10 @@ def _under(path: Path, root: Path) -> bool:
 
 
 def _inside_file(root: Path, name: str, *, max_bytes: int) -> Path:
+    # macOS's /var/... temp paths resolve to /private/var/... . Canonicalize
+    # the validated workspace root before comparing it with the canonical
+    # candidate. Reject a symlink directly at the workspace root as before.
+    root = _validated_workspace(Path(root))
     if not isinstance(name, str) or not name or "\\" in name or "\0" in name:
         raise ValueError("Invalid relative source path")
     rel = Path(name)
