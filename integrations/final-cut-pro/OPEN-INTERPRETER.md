@@ -40,7 +40,17 @@ python3 tools/fcp_interpreter_stage.py \
   --output "$HOME/Documents/Rovor/fcp-interpreter-stage-$(date +%Y%m%d-%H%M%S)"
 ~~~
 
-The CLI will print the path of its private project and exact commands to run. In that project, `interpreter mcp list` and `interpreter mcp get fcpxml` only verify loaded **registration**, NOT a handshake. Operator can then opt into a single foreground `interpreter` session, inspect `/debug-config` and `/mcp`, approve one real `inspect` call for each synthetic file and a rejected outside-root sentinel. Preserve local reports as private evidence. The stage does not invoke a model or authorize spending automatically.
+The stage script prints its PRIVATE project path, but **do not run bare `interpreter mcp list`** in an untrusted stage; that was the observed failure. Run `tools/fcp_interpreter_registration.py --stage <existing-stage-root>` to prove the ephemeral CLI registration and get the generated wrapper. Invoking the wrapper's `mcp list` or `mcp get` still verifies **registration only**, NOT an MCP handshake. Operator can then opt into a single foreground `interpreter` session, inspect `/debug-config` and `/mcp`, approve one real `inspect` call for each synthetic file and a rejected outside-root sentinel. Preserve local reports as private evidence. The stage does not invoke a model or authorize spending automatically.
+
+## Observed failure: project-local MCP config was ignored (2026-10-22)
+
+The user's first staged project completed successfully, then **bare** `interpreter mcp list` printed `No MCP servers configured yet` and `interpreter mcp get fcpxml` printed `No MCP server named 'fcpxml' found`. No model was invoked. This is a **failed Open Interpreter registration**, NOT failure of the already confirmed direct FCP MCP transport.
+
+**Actual root cause in pinned Open Interpreter v0.0.56's loader:** project-local `.openinterpreter/config.toml` is loaded as a *disabled* layer for an untrusted project. This one-use folder is outside an explicitly trusted project. The CLI source `codex-rs/config/src/loader/mod.rs` says project-local configs are disabled if untrusted; `codex-rs/cli/src/mcp_cmd.rs` obtains the effective config, not all disabled layers. The old script wrongly assumed the directory alone was sufficient.
+
+**Corrected no-global-change gate:** `tools/fcp_interpreter_registration.py --stage <existing-stage-root>` validates the previous stage, supplies the exact restricted FCP MCP entry using Open Interpreter's global per-run `-c` TOML inline-table override, and checks the actual `interpreter mcp list --json` response. It refuses empty/mismatched entries, wrong paths, changed stage files, disabled servers and failed CLI responses. It creates an owner-only `run-interpreter-fcp.sh` ONLY after successful registration. This neither writes `~/.openinterpreter/config.toml` nor adds any permanent trust or starts a model. The wrapper must be used for subsequent TUI registration, because bare `interpreter` still won't consume the project-local layer when untrusted.
+
+**Do not mistake registration for a handshake:** `mcp list` reads effective configuration but does not initialize the third-party server. Only an actual Interpreter-enabled MCP tool response proves the subsequent gate. Running the wrapper in foreground and invoking a model/tool remains explicitly opt-in. The registered tool list is restricted to `inspect`, with individual approval prompts, on a new synthetic folder. This is application-level scoping, not proof of OS-level filesystem confinement.
 
 ## First read-only host checks (normal macOS Terminal)
 
