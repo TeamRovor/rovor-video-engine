@@ -90,6 +90,15 @@ class NativeProbeTests(unittest.TestCase):
         self.assertEqual(matches[0]['scope'],'movies')
         self.assertNotIn('Private',str(result))
 
+    def test_default_untitled_library_is_detected_without_attribution(self):
+        (self.home/'Movies'/'Untitled.fcpbundle').mkdir()
+        result=probe.inspect(self.root,self.job,home=self.home)
+        self.assertIn({'scope':'movies',
+                       'name':'default_untitled_library_present',
+                       'attribution':'unverified_existing_or_new'},
+                      result['discovery']['matches'])
+        self.assertFalse(result['native_timeline_verified'])
+
     def test_malformed_receipt_rejected_without_mutating(self):
         r=self.job/probe.RECEIPT_NAME
         orig=r.read_text()
