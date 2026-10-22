@@ -1,6 +1,6 @@
 # Jane — Final Cut Pro research and MCP pilot
 
-**State (2026-10-22):** Research references and connection instructions prepared, not installed or verified on Amar's Mac. Walter/Jane are project agent roles, not persistent independently running employees. Final Cut Pro process, version, tool handshake, timeline editing, exports and unattended execution are all **unverified on the Mac**. This connection must not alter the existing Blender MCP, original Evan rig or private narration.
+**Current state (2026-10-22):** **CONNECTED — actual Open Interpreter v0.0.56 app-server on the user's Intel Mac successfully called pinned Final Cut FCPXML MCP v0.27.2 `inspect`** on synthetic 1920×1080/60 and 1080×1920/60 FCPXML, and refused outside-root access. Source: owner's latest Terminal output; details and response digests in [OPEN-INTERPRETER.md](OPEN-INTERPRETER.md). No model turn or personal media modification. **Native Final Cut import, app UI operation, editing, export and autonomous Jane worker are NOT yet verified.** Walter/Jane are project roles, not persistent employees. Do not repeat earlier direct MCP / registration / app-server setup on this host; advance only to a brand-new disposable native import library with explicit approval. This connection must not alter Blender MCP, original Evan rig or private narration.
 
 ## Jane's job and self-study contract
 
