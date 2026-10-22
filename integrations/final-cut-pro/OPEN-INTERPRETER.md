@@ -10,7 +10,7 @@
 
 **Code action committed:** `tools/fcp_jane_native_probe.py` reads only that exact existing disposable job and selected read-only process names and library file-system metadata in bounded scopes; no `osascript`, app launch, UI controls, network or secondary import. Tests: `tests/test_fcp_jane_native_probe.py`, in FCP smoke CI. This preserves both cases: first import returned success, yet no output; false positive "project created" remains explicitly impossible. The PR's later native adapter has per-step crash-safe receipt checkpoints but was not the version invoked in the already-completed Mac run.
 
-## Native auto-import was INVOKED on Mac, result NOT captured — 2026-10-22
+## Historical note: earlier Mac paste ended before result — superseded by verified failure above
 
 The user's latest full Terminal paste ends after invoking **exactly once** the original `tools/fcp_native_auto_import.py` at commit `0aee0cd30e4c4715611f54917943d0317cbbebab` with `--dispatch`, `--candidates ~/Documents/Rovor/fcp-native-import-20261022-172131` and a newly time-stamped `--output ~/Documents/Rovor/fcp-jane-auto-<timestamp>`. There was **no subsequent stdout/stderr or terminal prompt** in the paste. It does NOT establish success, failure, an active process, actual native FCP import, or a new library; the process may have been waiting on AppleScript or may simply have been copied before completion.
 
