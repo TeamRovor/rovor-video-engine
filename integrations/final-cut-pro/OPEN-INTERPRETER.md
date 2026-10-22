@@ -2,6 +2,16 @@
 
 **Primary local executor: Open Interpreter.** Codex is an optional fallback client, not the ROVOR workforce's primary runtime. Walter coordinates Jane and other existing specialist roles, Open Interpreter supplies local agent sessions/MCP/tool permissions, and GitHub holds source/version/task evidence. None of this alone starts an always-on process or tunnels cloud ChatGPT to the Mac.
 
+## Native auto-import was INVOKED on Mac, result NOT captured — 2026-10-22
+
+The user's latest full Terminal paste ends after invoking **exactly once** the original `tools/fcp_native_auto_import.py` at commit `0aee0cd30e4c4715611f54917943d0317cbbebab` with `--dispatch`, `--candidates ~/Documents/Rovor/fcp-native-import-20261022-172131` and a newly time-stamped `--output ~/Documents/Rovor/fcp-jane-auto-<timestamp>`. There was **no subsequent stdout/stderr or terminal prompt** in the paste. It does NOT establish success, failure, an active process, actual native FCP import, or a new library; the process may have been waiting on AppleScript or may simply have been copied before completion.
+
+**Do NOT ask the user to run the import a second time.** Inspect the existing private `native-auto-import-receipt.json` and `.fcpbundle` presence first using `tools/fcp_jane_status.py` (read-only); it selects the most recent `fcp-jane-auto-*` folder, never launches/edits/retries Final Cut, and never claims native timeline verification from a directory alone. `no_receipt_yet_preparing_or_interrupted` means unknown, not failed.
+
+**Observed bug in original script and fix:** The command produced no incremental visible output and wrote its completion receipt only once `osascript` returned; an Automation permission dialog or blocked app could appear hung. New GitHub code records crash-safe atomic checkpoints BEFORE subprocess dispatch (`sending_landscape_apple_event`, etc.), flushes progress to Terminal, separates `apple_event_dispatch_attempted` from actual `apple_event_sent`, and preserves a final receipt on subprocess denial or timeout. Regression tests include an explicitly blocked Apple event and stale receipt temporary file; CI passed. These improvements apply to **future** invocations; they cannot retroactively instrument the already running `0aee...` script. A separate status inspector can read its prior result without dispatching again.
+
+No manual Final Cut library creation or XML menu walkthrough is appropriate; those operations belong to the Jane automation. Actual native app and timeline verification still await Mac evidence.
+
 ## Jane's NEW automatic native Final Cut integration (no manual library/XML import)
 
 **Why:** The operator explicitly rejected the previous manual File → New → Library and File → Import → XML directions. Those defeat the ghost-employee design; do not direct the operator through them again as the default workflow. Native Final Cut operation should be the **automation's job**, not the user's job.
