@@ -1420,6 +1420,31 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/37"
         }
       ]
+    },
+    {
+      "id": "interpreter-research-job-runner",
+      "title": "Implement a bounded Open Interpreter research job wrapper with private receipts",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar Open Interpreter research adapter session 2026-10-22",
+      "branch": "feature/interpreter-research-job-v1",
+      "scopes": [
+        "tools/interpreter_research_job.py",
+        "tests/test_interpreter_research_job.py",
+        "integrations/open-interpreter/RESEARCH-JOB-ADAPTER.md"
+      ],
+      "depends_on": [
+        "fcp-interpreter-native-mcp-bridge"
+      ],
+      "updated_at": "2026-10-22T10:20:41.615Z",
+      "next_update": "After offline tests, connector readback, and a draft PR",
+      "next_action": "Implement a standard-library Open Interpreter exec adapter for explicit, narrowly scoped Final Cut/software research tasks: validated work packets, dry-run default, limited subprocess execution, stop/timeout and atomic private receipts; test with a fake interpreter. No Mac host, network/model credits, FCP editing, scheduling or worker database wiring presumed.",
+      "acceptance": "At least 10 deterministic offline tests including malformed packets, path/symlink escapes, prompt limits, dry-run zero side effects, explicit execution confirmation, timeout, missing binary, nonzero exit, output limit, atomic receipts and preserved source; all source hashes checked. Document approval/billing/runtime boundaries and exact local test commands.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/37",
+        "https://github.com/openinterpreter/openinterpreter/blob/main/docs/exec.md",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/32"
+      ]
     }
   ]
 }
