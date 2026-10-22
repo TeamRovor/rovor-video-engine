@@ -17,3 +17,26 @@ BLENDER_HOST = "127.0.0.1"
 BLENDER_PORT = "9876"
 BLENDER_MCP_SAFE_MODE = "1"
 UV_PYTHON_PREFERENCE = "only-managed"
+
+
+# Jane's optional Final Cut Pro XML MCP.
+# DISABLED: source-reviewed but not installed, no localhost/native FCP proof.
+# Before enabling locally, approve the third-party package, create a disposable
+# project folder, replace BOTH invalid placeholder absolute roots with its
+# real Mac path, and explicitly set enabled=true only in that local checkout.
+# Never commit an individual machine's project paths or private footage.
+# Upstream: https://github.com/DareDev256/fcp-mcp-server (inspected v0.27.2).
+# Not a direct live editing/export integration. No auto-push or write tools.
+
+[mcp_servers.fcpxml]
+enabled = false
+command = "uvx"
+args = ["--python", "3.11", "--from", "fcp-mcp-server==0.27.2", "fcp-mcp-server"]
+enabled_tools = ["inspect", "diagnose", "view"]
+
+[mcp_servers.fcpxml.env]
+FCP_PROJECTS_DIR = "/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH"
+FCP_PROJECTS_DIRS = "/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH"
+FCP_MCP_AUTOPUSH = "0"
+FCP_MCP_INDEX = "off"
+UV_PYTHON_PREFERENCE = "only-managed"
