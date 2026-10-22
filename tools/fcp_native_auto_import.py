@@ -157,12 +157,29 @@ def dispatch(output, report, run=subprocess.run, clock=time.monotonic,
              sleep=time.sleep, wait_seconds=65):
     if report['status'] != 'ready_to_dispatch_not_launched':
         raise ValueError('Refusing duplicate dispatch')
+    persisted = json.loads((output / 'native-auto-import-receipt.json').read_text())
+    if persisted != report:
+        raise ValueError('Dispatch receipt changed; refusing stale or replayed request')
     if not APP.is_dir():
         raise ValueError('Final Cut Pro application not installed')
     target = Path(report['target_library'])
+    if target != output / 'ROVOR-Jane-Test.fcpbundle' or target.exists() or target.is_symlink():
+        raise ValueError('Native destination must be the new isolated library')
+    # Exclusive reservation survives crashes and stops concurrent/stale callers.
+    reservation = output / 'dispatch-started.json'
+    with reservation.open('x') as reserved:
+        json.dump({'status': 'attempt_reserved_import_unverified'}, reserved)
+        reserved.flush()
+        os.fsync(reserved.fileno())
+    report['status'] = 'dispatch_started_needs_review'
+    receipt_write(output, report)
     try:
         for label, _, _ in LABELS:
             xml = output / (label + '-auto.fcpxml')
+            if xml.is_symlink() or sha(xml) != report['xml_hashes'][label]:
+                raise ValueError('Prepared XML changed before dispatch: ' + label)
+            report['last_attempted'] = label
+            receipt_write(output, report)
             # AppleScript argument separate from source: no path interpolation.
             result = run(['osascript', '-e', OPEN_XML_SCRIPT, str(xml)],
                          check=False, capture_output=True, text=True, timeout=90)
