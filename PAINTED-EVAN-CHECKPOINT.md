@@ -8,7 +8,15 @@ Repo work/engine; development/evan-painted-rig (legacy name), draft PR#4 https:/
 
 Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful review milestones/failure/completion/required action only; disable when actually ready. Routine decisions need no question.
 
-## Latest: separate labiodental contract and upper-lip candidate
+## Latest: actual six-plane controlled contact/release assembly
+
+Read CARTOON-EVAN-SIX-PLANE-CONSTRUCTION.md. New review-only labiodental_construction.py uses six actual painted planes:neck,cavity,fixedFVincisors,combinedjaw/lowerlip,upperlipcapV2,cleanupperface/cheeks. No wholehead frame swaps, guide paint substitution, new generated art or default profile changes. Actual V2 cap now consumed by standalone construction; earlier source metadata updated to distinguish that from approved runtime. Nine ART layers in drawing templates remain BLANK, not auto-promoted.
+
+First cap-on-top pilot showed a philtrum skin patch and was rejected. Final cap UNDERLAPS cleanface; central carrier boundary uses upperlip guide. Crown behind lowerjaw/lip, not blanket crown restoration. Native guide lowerlip325→332/chin393→394, upperlip/teethfixed. Artist-authored, not measured speech anatomy. Sourcepixels/alpha unchanged. Silent authored48normal/192mutedquarter frames1280x720/48fps fullydecode; held/quintic contact-release-contact, NOT narration/phoneme alignment. All48native mouth details, contact/release heads and selected design sheet inspected. No continuous-playback acceptance claim.
+
+outputs/evan-cartoon-contact-construction includes films and two SIX-ACTUAL-PLANE posed PSDs; reloadmean .022726/.023745 per255, notnativebones. Two focused tests pass for fixedincisors/cap with movingjaw, endpoint positive meshes/identity, capunderlap/source immutability. Native six samples retain ONE lowalpha pixel at198,321 (alpha228–237): faint corner joint, no cleanup. Staticeyes/brows, straightupperlip/dark wedge-shaped release/heavyfold lack concept appeal; contact pressure NOT accepted. Combinedjaw/lowerlip limits independent roll. This is construction tooling, NOT polished actor or release candidate. CPU adequate; art/animation design still limiting. No pending jobs. Prior checkpoint HISTORY-2026-10-22-I.
+
+## Retained: separate labiodental contract and upper-lip candidate
 
 Read CARTOON-EVAN-LABIODENTAL-GUIDE.md. Added Labiodental/LabiodentalRelease to face_art_contract.py, keeping existing3poses unchanged. Upperlip235,319 and incisor tips225/245,325 stay fixed; lowerlip235,325→235,332 on release. Artist-authored proposal, NOT measured anatomy. New family requires upper-teeth paint (old bilabial Contact can omit it). Five import/guide tests pass. Builder overview now supports5poses/2rows. All5PSDs reopened with exact reference/guide pixels;9ARTplanes remain BLANK and imports reject them. Templates are scaffolds, not new artwork/rigs.
 
@@ -38,7 +46,7 @@ Retained relaxed hand/forearm, wrist-axis articulation, authored detail/finished
 
 ## Next concrete work
 
-1. Native Labiodental/contact-release proposals and isolated upper-lip candidate now exist. Next assemble candidate upperlip, independent stable incisors and fitted lowerlip/jaw in a controlled native construction with explicit front/back ownership. Review actual pressure/wrap and release before narration integration; V2 corner hooks/philtrum still need artist judgment. Do not repeat full-head generation, promote blank templates or restore all crown pixels blindly.
+1. Six-plane native assembly now exists. Next artist-review/redraw leftcorner interface, upperlip curvature, lowerlip pressure/roll and curved release aperture; combinedjaw/lip still restricts acting. Then test a controlled voiced transition using unchanged alignment, without treating this two-pose study as a full narration profile. No full-head generation, blank-template promotion or blanket crown restoration.
 2. Retain original voice/alignment uncertainty, source pixels/alpha and regression films. No numeric seam cleanup, full-thought integration, default promotion or unattended Moho use.
 
 ## Runtime/history

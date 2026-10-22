@@ -13,7 +13,7 @@
     "Philtrum shadow softened only modestly; corner hooks remain prominent",
     "V2 inherits V1 registration; center fit not independently checked",
     "Unpaired with approved lower-lip/release artwork",
-    "No posed assembly or speech render uses this candidate"
+    "V2 is sampled only by the standalone six-plane silent construction, not a default/narration head profile"
   ],
   "preferredCandidate": "Upper-Lip-Candidate-v2.png",
   "assets": [
@@ -27,5 +27,7 @@
       "sha256": "13564cbada2c7ece2138bcee34c38bd06dc23fcb2c61d49f0969dd8699fc3280",
       "prompt": "upper-cap-v2-prompt.txt"
     }
-  ]
+  ],
+  "reviewConstructionUsesV2": true,
+  "defaultProfileLoadsCandidate": false
 }
