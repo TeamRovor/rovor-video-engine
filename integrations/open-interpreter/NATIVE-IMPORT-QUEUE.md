@@ -18,8 +18,23 @@ with only model use enabled both skip native jobs. Open Interpreter can invoke
 this same deterministic launcher as its native action; it is not replaced by
 another model. No automatic Interpreter tool registration is claimed.
 
+To inspect a pending request without launching or retrying it:
+
+```sh
+python3 tools/jane_native_worker.py --status
+```
+
+Status uses a read-only SQLite connection and also reads checkpoints from the
+existing `fcp-jane-auto-*` manual attempts. It works before queue initialization.
+The import action now prints and persists progress before each blocking Apple
+event, while waiting for the library, and at completion/failure. A checkpoint
+shows the latest recorded stage; it does not prove the process is still alive.
+If a manual attempt already exists and no matching queued job is recorded,
+execution stops for inspection instead of starting another uncertain import.
+
 The launcher creates private state under `~/Documents/Rovor/jane-native-worker-state`.
-It uses a key derived from the canonical candidate directory and receipt.
+It uses a key derived from the validated source XML hashes, independent of the
+candidate directory name, timestamp or formatting of its receipt.
 Repeating the command reports the existing terminal result without reimporting.
 Native failures and expired 420-second leases go to `needs_review`, never
 automatic replay. Each attempt gets its own new output directory inside the
@@ -37,14 +52,20 @@ app, or an edited/exported video exists. macOS may require its first Automation
 permission prompt, which this code does not bypass.
 
 Validation in Linux/Python: `python3 -m unittest discover -s tests -p 'test_ghost*.py' -v`
-passed 45 tests; py_compile and git diff --check passed. App calls in tests are
-simulated. Existing worker/research/loop checks remain green. Native dispatch,
-installed Apple DTD, actual Interpreter invocation of this launcher, host
+passed 49 tests; 16 additional current importer/candidate tests passed in an
+isolated source harness. py_compile and git diff --check passed. App calls in
+tests are simulated. The two generated library-targeted XML files also passed
+real lxml/libxml2 DTD validation against FCPXML 1.13 with SHA256
+`5afbc7ca1001bbc2190fb3b21d4d440ce061d94f5a5f583074e982b4745cd04d`, matching
+the user's installed Mac DTD receipt. This is Linux schema validation, not an
+xmllint or app run on this Mac. Existing worker/research/loop checks remain green.
+Native dispatch, actual Interpreter invocation of this launcher, host
 permissions and all-day operation have not been tested in this session.
 
-Importer provenance: reused `tools/fcp_native_auto_import.py` from PR #40,
-blob `6659a787deea531ec9c66b909b6656558a8c36c7`, adding only cooperative STOP
-checks. This branch stacks on PR #39's existing queue; it copies the required
+Importer provenance: preserves the current pilot's live checkpoint and atomic
+receipt changes through commit `9863ebc`, combines PR #40's exclusive reservation,
+stale-receipt and prepared-XML checks, and adds cooperative STOP checks.
+This branch stacks on PR #39's existing queue; it copies the required
 import action instead of merging unrelated animation workstreams.
 
 Proposed isolated scope: the worker, poller, importer, launcher, this guide and

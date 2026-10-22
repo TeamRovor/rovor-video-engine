@@ -7,9 +7,11 @@ edits, existing library paths or arbitrary XML. A one-time macOS Automation
 permission prompt may appear. Native timeline verification still unproven.
 """
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
+import secrets
 from pathlib import Path
 import shutil
 import subprocess
@@ -86,11 +88,31 @@ def candidates_from_receipt(folder):
 
 
 def receipt_write(folder, report):
-    tmp = folder / 'receipt.tmp'
-    with tmp.open('x') as out:
-        json.dump(report, out, indent=2)
-        out.write('\n')
-    os.replace(tmp, folder / 'native-auto-import-receipt.json')
+    # Atomic snapshots, including after interruption; never leave a fixed
+    # 'receipt.tmp' that can block all future diagnostic writes after a crash.
+    tmp = folder / ('receipt-' + secrets.token_hex(12) + '.tmp')
+    try:
+        with tmp.open('x') as out:
+            json.dump(report, out, indent=2)
+            out.write('\n')
+        os.replace(tmp, folder / 'native-auto-import-receipt.json')
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+
+
+def checkpoint(folder, report, status, **details):
+    report.update(details)
+    report['status'] = status
+    report['updated_at_utc'] = datetime.now(timezone.utc).isoformat()
+    receipt_write(folder, report)
+    print('JANE CHECKPOINT ' + json.dumps({
+        'status': status,
+        'target_library': report.get('target_library'),
+        'last_dispatched': report.get('last_dispatched'),
+        'apple_event_sent': report.get('apple_event_sent', False),
+        'library_creation_observed': report.get('library_creation_observed', False),
+    }, sort_keys=True), flush=True)
 
 
 def prepare(candidates, output, dtd=DTD, run=subprocess.run):
@@ -164,49 +186,53 @@ def dispatch(output, report, run=subprocess.run, clock=time.monotonic,
         raise ValueError('Final Cut Pro application not installed')
     target = Path(report['target_library'])
     if target != output / 'ROVOR-Jane-Test.fcpbundle' or target.exists() or target.is_symlink():
-        raise ValueError('Native destination must be the new isolated library')
-    # Exclusive reservation survives crashes and stops concurrent/stale callers.
-    reservation = output / 'dispatch-started.json'
-    with reservation.open('x') as reserved:
+        raise ValueError('Disposable test library already exists; refusing to reuse it')
+    with (output / 'dispatch-started.json').open('x') as reserved:
         json.dump({'status': 'attempt_reserved_import_unverified'}, reserved)
         reserved.flush()
         os.fsync(reserved.fileno())
-    report['status'] = 'dispatch_started_needs_review'
-    receipt_write(output, report)
+    checkpoint(output, report, 'dispatch_starting_no_app_result', apple_event_dispatch_attempted=False)
     try:
         for label, _, _ in LABELS:
             if stop_file is not None and os.path.lexists(stop_file):
-                report['status'] = 'cancelled_before_next_event'
+                checkpoint(output, report, 'cancelled_before_next_event')
                 break
             xml = output / (label + '-auto.fcpxml')
             if xml.is_symlink() or sha(xml) != report['xml_hashes'][label]:
                 raise ValueError('Prepared XML changed before dispatch: ' + label)
-            report['last_attempted'] = label
-            receipt_write(output, report)
+            # Record the attempted action BEFORE a potentially-blocking
+            # AppleScript subprocess. The receipt is readable while it waits.
+            checkpoint(output, report, 'sending_' + label + '_apple_event',
+                       apple_event_dispatch_attempted=True,
+                       last_dispatched=label)
             # AppleScript argument separate from source: no path interpolation.
             result = run(['osascript', '-e', OPEN_XML_SCRIPT, str(xml)],
                          check=False, capture_output=True, text=True, timeout=90)
             report['apple_event_sent'] = True
-            report['last_dispatched'] = label
             if result.returncode:
                 report['status'] = 'apple_event_failed'
                 report['error'] = ('osascript exit=' + str(result.returncode) + ' ' +
                                    (result.stderr or '').strip()[:1200])
+                checkpoint(output, report, 'apple_event_failed')
                 break
+            checkpoint(output, report, label + '_event_acknowledged_timeline_unverified')
             if label == 'landscape':
+                checkpoint(output, report, 'waiting_for_disposable_library')
                 deadline = clock() + wait_seconds
                 while not target.is_dir() and clock() < deadline:
                     if stop_file is not None and os.path.lexists(stop_file):
-                        report['status'] = 'cancelled_before_next_event'
+                        checkpoint(output, report, 'cancelled_before_next_event')
                         return report
                     sleep(1)
                 if not target.is_dir():
                     report['status'] = 'native_library_not_observed'
                     report['error'] = 'Target library was not created; portrait NOT sent'
+                    checkpoint(output, report, 'native_library_not_observed')
                     break
-                report['library_creation_observed'] = True
+                checkpoint(output, report, 'disposable_library_path_observed_timeline_unverified',
+                           library_creation_observed=True)
         else:
-            report['status'] = 'apple_events_sent_timeline_unverified'
+            checkpoint(output, report, 'apple_events_sent_timeline_unverified')
     except subprocess.TimeoutExpired:
         report['status'] = 'apple_event_timeout'
         report['error'] = 'Possible macOS Automation permission prompt or modal'
@@ -215,7 +241,7 @@ def dispatch(output, report, run=subprocess.run, clock=time.monotonic,
         report['error'] = type(exc).__name__ + ': ' + str(exc)[:600]
     finally:
         report['native_timeline_verified'] = False
-        receipt_write(output, report)
+        checkpoint(output, report, report['status'])
     return report
 
 

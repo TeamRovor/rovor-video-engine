@@ -132,13 +132,15 @@ class NativeQueueTests(unittest.TestCase):
 
     def test_launcher_preview_does_not_create_state(self):
         with mock.patch.object(launcher, 'candidate_folder', return_value=self.workspace / 'candidates'):
-            (self.workspace / 'candidates/native-candidate-receipt.json').write_text('{}')
+            (self.workspace / 'candidates/native-candidate-receipt.json').write_text(
+                json.dumps({'fcpxml_sha256': {'landscape': 'a'*64, 'portrait': 'b'*64}}))
             result = launcher.run(self.workspace)
         self.assertFalse(result['execute'])
         self.assertFalse((self.workspace / 'jane-native-worker-state').exists())
 
     def test_launcher_restart_never_redispatches_terminal_job(self):
-        (self.workspace / 'candidates/native-candidate-receipt.json').write_text('{}')
+        (self.workspace / 'candidates/native-candidate-receipt.json').write_text(
+            json.dumps({'fcpxml_sha256': {'landscape': 'a'*64, 'portrait': 'b'*64}}))
         def local_dispatch(output, report, **kwargs):
             report['status'] = 'apple_events_sent_timeline_unverified'
             (output / 'native-auto-import-receipt.json').write_text(json.dumps(report))
@@ -152,6 +154,53 @@ class NativeQueueTests(unittest.TestCase):
         self.assertEqual(second['job']['attempts'], 1)
         self.assertEqual(second['job']['status'], 'succeeded')
         dispatched.assert_called_once()
+
+    def test_identical_candidates_in_new_folder_do_not_import_twice(self):
+        receipt = json.dumps({'fcpxml_sha256': {'landscape': 'a'*64, 'portrait': 'b'*64}})
+        first = self.workspace / 'candidates'
+        second = self.workspace / 'recreated'
+        second.mkdir()
+        for folder in (first, second):
+            (folder / 'native-candidate-receipt.json').write_text(receipt)
+        def dispatch(output, report, **kwargs):
+            return {'status': 'apple_events_sent_timeline_unverified'}
+        with mock.patch.object(launcher, 'candidate_folder', side_effect=[first, second]), \
+             mock.patch.object(native, 'prepare', side_effect=self.prepare), \
+             mock.patch.object(native, 'dispatch', side_effect=dispatch) as called:
+            one = launcher.run(self.workspace, True)
+            two = launcher.run(self.workspace, True)
+        self.assertEqual(one['job_id'], two['job_id'])
+        self.assertEqual(two['job']['attempts'], 1)
+        called.assert_called_once()
+
+    def test_status_does_not_initialize_or_dispatch(self):
+        with mock.patch.object(native, 'dispatch') as called:
+            result = launcher.status(self.workspace)
+        self.assertEqual(result['status'], 'not_initialized')
+        self.assertFalse((self.workspace / 'jane-native-worker-state').exists())
+        called.assert_not_called()
+
+    def test_status_includes_existing_manual_checkpoint(self):
+        folder = self.workspace / 'fcp-jane-auto-20261022-183000'
+        folder.mkdir()
+        (folder / 'native-auto-import-receipt.json').write_text(json.dumps({
+            'status': 'sending_landscape_apple_event', 'native_timeline_verified': False}))
+        result = launcher.status(self.workspace)
+        self.assertEqual(result['receipts'][0]['receipt']['status'], 'sending_landscape_apple_event')
+        self.assertFalse(result['native_timeline_verified'])
+
+    def test_existing_manual_attempt_prevents_new_queue_dispatch(self):
+        folder = self.workspace / 'fcp-jane-auto-20261022-183000'
+        folder.mkdir()
+        (folder / 'native-auto-import-receipt.json').write_text(json.dumps({
+            'status': 'ready_to_dispatch_not_launched'}))
+        (self.workspace / 'candidates/native-candidate-receipt.json').write_text(
+            json.dumps({'fcpxml_sha256': {'landscape': 'a'*64, 'portrait': 'b'*64}}))
+        with mock.patch.object(launcher, 'candidate_folder', return_value=self.workspace / 'candidates'), \
+             mock.patch.object(native, 'dispatch') as dispatch:
+            with self.assertRaisesRegex(ValueError, 'earlier manual native import'):
+                launcher.run(self.workspace, True)
+            dispatch.assert_not_called()
 
     def test_discovery_skips_invalid_newer_directory(self):
         valid = self.workspace / 'fcp-native-import-20261022-100000'
