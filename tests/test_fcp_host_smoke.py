@@ -78,13 +78,12 @@ class SmokeTests(unittest.TestCase):
         import os
         with tempfile.TemporaryDirectory() as root:
             script = Path(root) / 'early_exit.py'
-            script.write_text(
-                'import sys\\n'
-                'sys.stdin.readline()\\n'
-                'sys.stderr.write("FATAL_STARTUP_TEST\\\\n")\\n'
-                'sys.stderr.flush()\\n'
-                'sys.exit(7)\\n'
-            )
+            script.write_text(r"""import sys
+sys.stdin.readline()
+sys.stderr.write("FATAL_STARTUP_TEST\n")
+sys.stderr.flush()
+sys.exit(7)
+""")
             client = smoke.Client([sys.executable, str(script)], dict(os.environ))
             try:
                 with self.assertRaisesRegex(ValueError, 'exit code 7'):
