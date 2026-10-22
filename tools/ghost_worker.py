@@ -28,10 +28,11 @@ MAX_ATTEMPTS = 2
 
 def connect(state: Path) -> sqlite3.Connection:
     """Initialize one state database. Run from a trusted local user account."""
-    state = Path(state).expanduser().resolve()
-    state.mkdir(parents=True, exist_ok=True, mode=0o700)
-    if state.is_symlink():
+    raw_state = Path(state).expanduser()
+    if raw_state.is_symlink():
         raise ValueError("state directory may not be a symlink")
+    state = raw_state.resolve()
+    state.mkdir(parents=True, exist_ok=True, mode=0o700)
     db = state / "jobs.sqlite3"
     conn = sqlite3.connect(str(db), timeout=20, isolation_level=None)
     conn.row_factory = sqlite3.Row
