@@ -8,7 +8,15 @@ Repo work/engine; development/evan-painted-rig (legacy name), draft PR#4 https:/
 
 Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful review milestones/failure/completion/required action only; disable when actually ready. Routine decisions need no question.
 
-## Latest: actual six-plane controlled contact/release assembly
+## Latest: simpler jaw source; voiced two-pose integration rejected
+
+Read CARTOON-EVAN-JAW-SIMPLIFICATION.md. Built-in image_gen edited isolated jaw twice:V1 retained heavy crescent,V2 removed it. Original1254square PNGs/alpha/prompts/input hashes saved jaw-simplification-v1/source. Uniform2corner registration gives held-out chin2.4634px residual:FAIL proposed2px tolerance; placementAccepted=false. Do not fit/clean the discrepancy away. Candidate only, defaults unchanged.
+
+Restricted voiced comparison source840..887,original17.5–18.5s, uses SAME original continuous lower-oral driver and six-plane assembly with only jaw art/sourceUVs changed. Actual audio waveform visible. Two-pose release mapping clamps36/48frames and cannot represent IY/W/EY width/rounding: REJECT as speech profile. New chin cleaner but lip volume/pressure lost; dark wedge, static expressions/neck art remain below concept. No timing changes. All48native mouth crops/eight head pairs and source composites inspected; no independent listening/playback acceptance.
+
+outputs/evan-cartoon-jaw-simplification:48normal voiced/192mutedquarter frames1280x720/48fps fullydecode;16000original/decoded voice samples280000:296000. SixACTUALpaintedplane PSD851 reloadmean .0246103/255, notbones. Existing2ownership/source tests pass, no quality inference. Source/edit provenance and registration copied to artifacts. No pending jobs. Full polished milestone NOT READY, automation ACTIVE. Prior checkpoint HISTORY-2026-10-22-J.
+
+## Retained: actual six-plane controlled contact/release assembly
 
 Read CARTOON-EVAN-SIX-PLANE-CONSTRUCTION.md. New review-only labiodental_construction.py uses six actual painted planes:neck,cavity,fixedFVincisors,combinedjaw/lowerlip,upperlipcapV2,cleanupperface/cheeks. No wholehead frame swaps, guide paint substitution, new generated art or default profile changes. Actual V2 cap now consumed by standalone construction; earlier source metadata updated to distinguish that from approved runtime. Nine ART layers in drawing templates remain BLANK, not auto-promoted.
 
@@ -46,8 +54,8 @@ Retained relaxed hand/forearm, wrist-axis articulation, authored detail/finished
 
 ## Next concrete work
 
-1. Six-plane native assembly now exists. Next artist-review/redraw leftcorner interface, upperlip curvature, lowerlip pressure/roll and curved release aperture; combinedjaw/lip still restricts acting. Then test a controlled voiced transition using unchanged alignment, without treating this two-pose study as a full narration profile. No full-head generation, blank-template promotion or blanket crown restoration.
-2. Retain original voice/alignment uncertainty, source pixels/alpha and regression films. No numeric seam cleanup, full-thought integration, default promotion or unattended Moho use.
+1. Keep simpler jaw as unapproved underpaint candidate. Need independent thin lower-lip pressure paint, curved lower-edge/width correspondence and full continuous oral controls. The two-pose clamp fails36/48frames; do not promote it or broaden staging. No more whole-head generation or seam cleanup.
+2. Preserve all original voice/alignment uncertainty and failed studies. Artist redraw/review is needed for appealing pressure and vowel shapes. No default promotion or unattended Moho operation.
 
 ## Runtime/history
 
