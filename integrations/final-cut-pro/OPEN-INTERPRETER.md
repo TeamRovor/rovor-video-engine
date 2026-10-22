@@ -2,6 +2,24 @@
 
 **Primary local executor: Open Interpreter.** Codex is an optional fallback client, not the ROVOR workforce's primary runtime. Walter coordinates Jane and other existing specialist roles, Open Interpreter supplies local agent sessions/MCP/tool permissions, and GitHub holds source/version/task evidence. None of this alone starts an always-on process or tunnels cloud ChatGPT to the Mac.
 
+## Mac proof: Open Interpreter MCP CONNECTED — 2026-10-22
+
+**Do not repeat setup, wheel repair, FCP DTD validation, stage generation, CLI registration, or app-server connection tests on this Mac. These gates passed.** The owner supplied the final Mac stdout from `tools/fcp_interpreter_appserver_smoke.py`, using the existing disposable `~/Documents/Rovor/fcp-interpreter-stage-20261022-160459`. The complete end-to-end, **locally executed** Open Interpreter app-server → third-party FCP MCP test returned:
+
+- `status=passed_interpreter_appserver_mcp_tool_call`, `open_interpreter_connected=true`, `server=fcpxml`;
+- **actual tool invocations** `mcpServer/tool/call` of `inspect` succeeded on synthetic `1920x1080 @ 60fps` and `1080x1920 @ 60fps`;
+- `outside_root_refused=true` on synthetic sentinel outside `FCP_PROJECTS_DIRS`;
+- response digest landscape `917fa862ee2bf2da8fcfa882caf2fa4a322d239ae2e8f69db0a07799148ceb05`; portrait `c27ce12aa10bb336dd916c5f59520f1c0da8e787b86820af1a58a5b874ee1f3b`;
+- `native_final_cut_operated=false`, `model_turn_started=false`, `media_modified=false`.
+
+**Established:** Open Interpreter v0.0.56 talks to pinned FCP MCP v0.27.2 on the user's Intel Mac through its own app-server, with a real read-only tool response and denied unsafe test path. This is more than just registering an MCP server; it is **host-verified client MCP communication**. It does NOT show control of the native Final Cut Pro application, FCPXML GUI import, interactive editing, export, background service or agent execution of a model-originated tool call.
+
+**Current actionable next gate:** native Final Cut Pro integration with a **brand-new, isolated, empty test library** and a DTD-validated synthetic FCPXML import candidate. Do not open any existing media, projects, libraries or original ROVOR recordings; do not enable edit/generate/publish tools yet. For the initial import gate, use a controlled operator-approved GUI import into the new test library; separately observe native app effects and save a result record. Do not claim native editing from FCPXML inspection alone.
+
+**Related independently executed Intel CI:** [run 39858034351](https://github.com/TeamRovor/rovor-video-engine/actions/runs/39858034351) passed equivalent app-server real MCP calls without inference. Source: `tools/fcp_interpreter_appserver_smoke.py`.
+
+> **Legacy procedures below are retained as history of earlier setup gates.** "Not verified" statements about the local MCP connection in these historical sections were accurate *at that earlier stage* but are superseded by the Mac proof above. Do not direct anyone to rerun those gates unless a new Mac, changed installed versions or regression failure requires it.
+
 ## Sources and supported commands (reviewed 2026-10-22)
 
 - [Open Interpreter MCP](https://github.com/openinterpreter/openinterpreter/blob/main/docs/mcp.md): project or user configurations under [mcp_servers.*], CLI commands interpreter mcp list/get/add/remove, in-TUI /mcp and /mcp verbose. Supports enabled_tools, default_tools_approval_mode, enabled and required. A registered server is NOT a connected server.
