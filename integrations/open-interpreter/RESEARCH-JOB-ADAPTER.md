@@ -26,6 +26,24 @@ Exit 0 means these prerequisite checks passed on a Mac. It does **not** verify e
 
 Use an isolated checkout/worktree containing PR #38; do not paste this command into the Interpreter conversational prompt or reset another working directory to obtain it. Share the diagnostic text if host checks are blocked; it contains no requested account/config dump. Real CLI startup may still create its own caches or contact its update service: the diagnostic does not override third-party startup behavior.
 
+## Real Mac test failure and correction (2026-10-22)
+
+Amar ran the exact PR #38 preflight on his Mac from a clean detached worktree at commit 800f1de. The script and source retrieval **worked**, but the 26-test suite stopped before CLI probes: **20 tests errored with** `Source must be an existing regular file inside the authorized workspace`. Affected tests called `read_packet` directly with a macOS temporary-directory spelling (commonly `/var/...`); `Path.resolve()` canonicalizes the child as `/private/var/...`, while the original root remained unresolved. This was **not evidence that Interpreter was missing or unable to start**.
+
+The follow-up branch normalizes the validated workspace before candidate comparison and before private state/workspace overlap checks. Added regression tests for a symlink alias in an *ancestor* (allowed after canonicalization), a symlink at the workspace root (still denied), and disjoint-state checks across alias spellings. **The full 29-test suite and the Mac's actual Interpreter CLI still require re-execution on the corrected branch.** Never treat the earlier Linux 26/26 report as a passing Mac result.
+
+From the already-created **rovor-pr38-check** worktree, first inspect any local edits, then fetch the refreshed PR head and switch the detached test worktree only if it is clean:
+
+~~~sh
+cd "$HOME/Documents/Rovor/rovor-pr38-check" || exit 1
+git status --short
+git fetch origin pull/38/head
+git switch --detach FETCH_HEAD
+bash integrations/open-interpreter/research-preflight.sh
+~~~
+
+This still does **not request inference or enable FCP MCP**. If the tests pass, the diagnostic will proceed to version/help-only probes of the installed `interpreter`. If errors persist, report their **first traceback and final test summary**, rather than retrying installations.
+
 ## Safe no-model dry run
 
 From the repository checkout containing this branch:
