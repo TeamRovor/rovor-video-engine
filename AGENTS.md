@@ -34,3 +34,10 @@ When this repository is opened with a compatible Open Interpreter CLI, the prima
 ## Ponytail coding-efficiency policy (pilot)
 
 For code-writing, bug-fixing, refactoring and technical review, use the local [Ponytail skill](.agents/skills/ponytail/SKILL.md) as optional implementation guidance: examine callers and existing helpers first, make the smallest *complete* change, reuse dependencies, and leave a focused test for nontrivial logic. Preserve ROVOR's existing task claims, asset protections, tests, QA and explicit user requirements; efficiency never excuses unfinished work. Walter should handle small tasks directly rather than spawning several personas solely to restate the same context. Ponytail is a coding skill, **not** a local model or a substitute for inference credits. Installation and provenance: [PONYTAIL.md](integrations/open-interpreter/PONYTAIL.md).
+
+## Optional research, routing and context tools (Mac pilot only)
+
+- [Graphify](integrations/open-interpreter/GRAPHIFY.md): prefer a narrow query of an **existing, current, locally generated** code graph over repeatedly reading the full codebase. Indexing is opt-in and **code-only with GRAPHIFY_BACKEND=none** unless user explicitly authorizes other processing. A generated graph is not the source of truth or shared team memory.
+- [OmniRoute](integrations/open-interpreter/OMNIROUTE.md): optional third-party AI gateway. Never switch model/provider, spend money, distribute files to external services or assume an available free tier without verified configuration and authorization. Keep the existing Open Interpreter provider until tested.
+- [Context Engineering](.agents/skills/context-engineering/SKILL.md) and [Debugging and Error Recovery](.agents/skills/debugging-and-error-recovery/SKILL.md): consult **on demand**, not on every request. Do not load all third-party skills or spawn agents indiscriminately. [Integration details](integrations/open-interpreter/AGENT-SKILLS.md).
+- For Mac setup, read [the consolidated one-pass guide](integrations/open-interpreter/ONE_PASS_MAC_SETUP.md) and run its read-only preflight before claiming integrations are active.
