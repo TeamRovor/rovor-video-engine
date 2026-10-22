@@ -178,6 +178,7 @@ def execute(
     error = None
     captured = bytearray()
     child = None
+    cleanup_ok = True
     # A bounded prompt file avoids blocking on stdin while the child fills stdout.
     with tempfile.TemporaryFile(mode="w+b", dir=root) as stdin, selectors.DefaultSelector() as streams:
         stdin.write(prompt.encode("utf-8"))
@@ -199,8 +200,11 @@ def execute(
                     status = "timeout"
                     error = "Job exceeded the runtime limit; process group was stopped"
                     break
-                if child.poll() is not None:
-                    _stop_group(child)
+                if child.poll() is not None and not _stop_group(child):
+                    cleanup_ok = False
+                    status = "needs_review"
+                    error = "OS denied process-group cleanup; descendants may remain"
+                    break
                 for key, _ in streams.select(min(remaining, 0.05)):
                     stream = key.fileobj
                     data = os.read(stream.fileno(), 8192)
@@ -216,8 +220,12 @@ def execute(
                         break
                 if status == "needs_review":
                     break
-            _stop_group(child)
-            child.wait()
+            if not _stop_group(child):
+                cleanup_ok = False
+            try:
+                child.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                cleanup_ok = False
             exit_code = child.returncode
             if status not in {"timeout", "needs_review", "cancelled"}:
                 if exit_code != 0:
@@ -231,13 +239,21 @@ def execute(
             error = f"Unable to launch interpreter: {type(exc).__name__}"
         finally:
             if child is not None:
-                _stop_group(child)
-                child.wait()
+                if not _stop_group(child):
+                    cleanup_ok = False
+                try:
+                    child.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    cleanup_ok = False
                 exit_code = child.returncode
                 for stream in (child.stdout, child.stderr):
                     if stream is not None:
                         stream.close()
         # stderr is drained but never retained: it may include provider secrets.
+    if not cleanup_ok:
+        # Fail closed: an OS-rejected group signal cannot certify descendant cleanup.
+        status = "needs_review"
+        error = "Process-group cleanup was denied or incomplete; descendants may remain. Inspect the Mac before reuse."
     captured = bytes(captured)
     elapsed = round(time.monotonic() - started, 3)
     answer = captured.decode("utf-8", errors="replace")
@@ -257,12 +273,26 @@ def execute(
     return report
 
 
-def _stop_group(child: subprocess.Popen) -> None:
-    # Descendants in this session are stopped even if the direct child has exited.
+def _stop_group(child: subprocess.Popen) -> bool:
+    """Best-effort POSIX group cleanup; False means cleanup is not proven.
+
+    macOS may return EPERM after the session leader exits. Never turn this
+    into a success claim or an unhandled exception; if the direct child is
+    still running, make one bounded attempt to stop it by its Popen handle.
+    Descendants must be reviewed by the operator when group signalling fails.
+    """
     try:
         os.killpg(child.pid, signal.SIGKILL)
     except ProcessLookupError:
-        pass
+        return True  # Group no longer exists.
+    except PermissionError:
+        if child.poll() is None:
+            try:
+                child.kill()
+            except (ProcessLookupError, PermissionError):
+                pass
+        return False
+    return True
 
 
 def main(argv: list[str] | None = None) -> int:
