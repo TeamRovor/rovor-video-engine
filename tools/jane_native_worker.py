@@ -9,6 +9,7 @@ import hashlib
 import json
 from pathlib import Path
 import sqlite3
+import sys
 import xml.etree.ElementTree as ET
 
 import fcp_native_auto_import as native
@@ -97,16 +98,27 @@ def status(root):
     return result
 
 
+def diagnose(root):
+    if sys.platform != 'darwin':
+        raise ValueError('Native diagnosis must run on the Mac; no app state inferred here')
+    import fcp_jane_status
+    import fcp_jane_native_probe
+    existing = fcp_jane_status.status(Path(root))
+    if 'job_dir' not in existing:
+        return existing
+    return fcp_jane_native_probe.inspect(Path(root), Path(existing['job_dir']))
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--execute', action='store_true')
-    parser.add_argument('--status', action='store_true', help='Read queue and import checkpoints; never dispatch')
+    actions = parser.add_mutually_exclusive_group()
+    actions.add_argument('--execute', action='store_true')
+    actions.add_argument('--status', action='store_true', help='Read queue and import checkpoints; never dispatch')
+    actions.add_argument('--diagnose', action='store_true', help='Read-only Mac diagnosis of the existing manual attempt')
     args = parser.parse_args(argv)
     try:
-        if args.execute and args.status:
-            raise ValueError('Use --status alone; status never executes')
         root = Path.home() / 'Documents' / 'Rovor'
-        result = status(root) if args.status else run(root, args.execute)
+        result = diagnose(root) if args.diagnose else status(root) if args.status else run(root, args.execute)
         print(json.dumps(result, indent=2))
         return 0 if not args.execute or result['job']['status'] == 'succeeded' else 2
     except (ValueError, OSError, sqlite3.Error) as exc:

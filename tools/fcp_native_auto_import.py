@@ -208,6 +208,7 @@ def dispatch(output, report, run=subprocess.run, clock=time.monotonic,
             # AppleScript argument separate from source: no path interpolation.
             result = run(['osascript', '-e', OPEN_XML_SCRIPT, str(xml)],
                          check=False, capture_output=True, text=True, timeout=90)
+            report['last_apple_event_returncode'] = result.returncode
             report['apple_event_sent'] = True
             if result.returncode:
                 report['status'] = 'apple_event_failed'

@@ -1,5 +1,10 @@
 # Jane native diagnostic worker
 
+**Current Mac blocker:** the existing native attempt returned
+`native_library_not_observed`; landscape was sent, the requested library was
+absent, and portrait was not sent. Start with the read-only `--diagnose` action,
+not another import. See [the current integration checkpoint](WORKFORCE-CHECKPOINT.md).
+
 The durable SQLite worker can now dispatch the existing automatic blank Final
 Cut import. This connects the previously separate importer and queue; it does
 not install a service, export a video, or certify a native timeline.
@@ -51,16 +56,15 @@ It does not mean projects imported correctly, dimensions were checked in the
 app, or an edited/exported video exists. macOS may require its first Automation
 permission prompt, which this code does not bypass.
 
-Validation in Linux/Python: `python3 -m unittest discover -s tests -p 'test_ghost*.py' -v`
-passed 49 tests; 16 additional current importer/candidate tests passed in an
-isolated source harness. py_compile and git diff --check passed. App calls in
-tests are simulated. The two generated library-targeted XML files also passed
-real lxml/libxml2 DTD validation against FCPXML 1.13 with SHA256
-`5afbc7ca1001bbc2190fb3b21d4d440ce061d94f5a5f583074e982b4745cd04d`, matching
-the user's installed Mac DTD receipt. This is Linux schema validation, not an
-xmllint or app run on this Mac. Existing worker/research/loop checks remain green.
-Native dispatch, actual Interpreter invocation of this launcher, host
-permissions and all-day operation have not been tested in this session.
+Validation: the integrated `python3 tools/check_workforce.py` command ran
+148 tests successfully on Linux/Python 3.12.14, including worker, loop,
+Interpreter, native importer, MCP and diagnosis families. Source compilation,
+Python 3.9 syntax parsing, workflow YAML checks and git diff --check passed.
+CI is configured for Python 3.9 and 3.11; hosted execution is recorded separately
+from local success. Python 3.9 test configuration parsing uses test-only tomli.
+Earlier two-file lxml/libxml2 validation matched the Mac DTD hash; no XML
+construction changed in this integration. No native app call, Interpreter model,
+installation, scheduler activation or live GUI operation was performed here.
 
 Importer provenance: preserves the current pilot's live checkpoint and atomic
 receipt changes through commit `9863ebc`, combines PR #40's exclusive reservation,
@@ -73,7 +77,3 @@ Proposed isolated scope: the worker, poller, importer, launcher, this guide and
 queue 2026-10-22. The main task-claim update was rejected by automatic approval
 review in the preceding session; this proposed branch does not replace shared
 main ownership. Review and native host verification remain the next steps.
-
-## Integration work in progress
-
-Authorized continuation: consolidate required existing FCP diagnostic modules/tests into this worker branch, add one no-model regression entrypoint and a path-filtered Python 3.9/3.11 CI workflow. Reuse the existing native status/probe helpers through the launcher; preserve their source and test provenance. No new worker architecture, task database, model provider, main merge or native replay. Source pilot revision: 5ade85f. The latest Mac receipt is native_library_not_observed, with apple_event_sent=true, library_creation_observed=false, and portrait not dispatched. Treat the current host blocker as native observation/diagnosis, not missing research/MCP registration.

@@ -12,6 +12,8 @@ import ghost_worker as worker
 import ghost_worker_loop as loop
 import fcp_native_auto_import as native
 import jane_native_worker as launcher
+import fcp_jane_native_probe as probe
+import fcp_jane_status as manual_status
 
 
 class NativeQueueTests(unittest.TestCase):
@@ -201,6 +203,24 @@ class NativeQueueTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'earlier manual native import'):
                 launcher.run(self.workspace, True)
             dispatch.assert_not_called()
+
+    def test_diagnosis_reuses_existing_probe_without_native_dispatch(self):
+        job = self.workspace / 'fcp-jane-auto-20261022-183007'
+        with mock.patch.object(launcher.sys, 'platform', 'darwin'), \
+             mock.patch.object(manual_status, 'status', return_value={'job_dir': str(job)}), \
+             mock.patch.object(probe, 'inspect', return_value={'native_timeline_verified': False}) as inspect, \
+             mock.patch.object(native, 'dispatch') as dispatch:
+            result = launcher.diagnose(self.workspace)
+        inspect.assert_called_once_with(self.workspace, job)
+        dispatch.assert_not_called()
+        self.assertFalse(result['native_timeline_verified'])
+
+    def test_diagnosis_does_not_infer_native_state_on_linux(self):
+        with mock.patch.object(launcher.sys, 'platform', 'linux'), \
+             mock.patch.object(probe, 'inspect') as inspect:
+            with self.assertRaisesRegex(ValueError, 'must run on the Mac'):
+                launcher.diagnose(self.workspace)
+            inspect.assert_not_called()
 
     def test_discovery_skips_invalid_newer_directory(self):
         valid = self.workspace / 'fcp-native-import-20261022-100000'
