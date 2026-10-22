@@ -8,6 +8,13 @@ Jane is ROVOR's video editor and Final Cut Pro research specialist. While assign
 
 Her long-term outcome: take an authorized MP3, existing source-faithful Moho/Blender animation, genuine B-roll, music/SFX and captions; assemble an excellent 60fps video, render both suitable formats and preserve a reversible/editable project. This does not replace proper character animation with still slides.
 
+
+## Primary executor: Open Interpreter (not Codex)
+
+**Use [OPEN-INTERPRETER.md](OPEN-INTERPRETER.md) first.** The main local specialist system is Walter/Jane through trusted Open Interpreter and its own .openinterpreter/config.toml. This same PR also includes an intentionally disabled FCPXML MCP entry in that configuration. The parallel .codex/config.toml entry is an optional fallback for diagnosing host compatibility only; **do not assume the Codex config is consumed by Interpreter**. Source: [official Open Interpreter MCP](https://github.com/openinterpreter/openinterpreter/blob/main/docs/mcp.md) and [project config](https://github.com/openinterpreter/openinterpreter/blob/main/docs/config.md).
+
+The existing Open Interpreter CLI v0.0.56 on the Intel Mac loaded project agent configuration, but its *background daemon* continued to report a package-platform error. [Official documentation](https://www.openinterpreter.com/docs/terminal/daemon) says foreground operation does not require a daemon; test actual foreground /agent and /mcp with the Mac owner before claiming it works. Use Interpreter for the first FCP read-only experiment; fall back to local Codex only if actual testing proves Interpreter is blocked. No cloud ChatGPT-to-localhost bridge is implied.
+
 ## Current, inspected connection surfaces
 
 | Path | Evidence | What it can and cannot do |
@@ -22,13 +29,13 @@ Her long-term outcome: take an authorized MP3, existing source-faithful Moho/Ble
 
 **Security:** The inspected upstream server.py uses FCP_PROJECTS_DIR for legacy project *listing*, which does **not** by itself restrict file reads. FCP_PROJECTS_DIRS is the additional **read root** allowlist. A pilot must set BOTH to the same disposable absolute folder. The upstream path guards are not a macOS security sandbox. Do not grant broad home/Documents/Desktop access. Never install binary-patching plugins for the first pilot.
 
-## What is registered in the ROVOR codebase
+## Local configuration (Interpreter primary; Codex fallback)
 
 The separate Codex project configuration in .codex/config.toml will have an **explicitly disabled** fcpxml entry after this branch is integrated, with only read-oriented inspect/diagnose/view tools enabled and intentionally invalid placeholder root paths. It must be manually configured on the host and explicitly enabled. This does not install the package, authenticate any provider, load tool permissions into cloud ChatGPT or enable Open Interpreter automatically.
 
-Jane's Open Interpreter role points to this guide. The local interpreter background server on the Intel Mac remains unverified/broken in the last documented check. Use a supported, genuinely running local MCP client such as trusted Codex for the initial test, not an assumed Open Interpreter daemon.
+Jane's Open Interpreter role points to this guide. Open Interpreter's **foreground** native MCP support is the first connection target, without requiring the optional background daemon. Its Mac runtime/MCP behavior remains to be verified; only if it fails should trusted local Codex serve as a clearly labeled fallback. See OPEN-INTERPRETER.md.
 
-## First Mac research and connection procedure
+## First Mac research and connection procedure (prefer Interpreter)
 
 Run only in the **normal Mac Terminal**, not the in-app ChatGPT text box. This stage reads host facts and makes no software changes:
 
@@ -54,7 +61,7 @@ After checking the third-party source/release and approving its installation:
 
 1. In the clean local ROVOR clone, edit the fcpxml entry in .codex/config.toml. Replace both **/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH** values with the exact same absolute disposable directory. Never commit the machine-specific paths.
 2. Confirm FCP_PROJECTS_DIRS and FCP_PROJECTS_DIR match; keep FCP_MCP_AUTOPUSH=0 and the initial enabled_tools limited to inspect, diagnose, view. Only then change enabled to true and start a **trusted local** Codex from that checkout.
-3. Confirm **codex mcp list** shows fcpxml, and query actual in-session tool availability. Pin to the reviewed upstream version v0.27.2 using uvx --python 3.11 --from fcp-mcp-server==0.27.2 fcp-mcp-server in the config. Version, runtime and dependency behavior remain untested on this Mac.
+3. Confirm **interpreter mcp list** shows fcpxml, and query actual in-session tool availability. Pin to the reviewed upstream version v0.27.2 using uvx --python 3.11 --from fcp-mcp-server==0.27.2 fcp-mcp-server in the config. Version, runtime and dependency behavior remain untested on this Mac.
 4. Run a single read-only **inspect** action on a separately created synthetic/demo FCPXML *inside* the directory. Capture exact output, active version and timestamps. Verify an outside-root read is rejected. Stop if reads escape.
 5. Later, **only after explicit permission**, extend one operation at a time to generate/edit/deliver and operate only on copies of demo XML. Import a generated FCPXML into a new disposable Final Cut library; observe the app and permission prompts. Third-party pushing an XML is not proof of editing an existing live timeline.
 6. Test a small local demo export, inspect actual decoded video using ffprobe, then view it at normal speed. No real MP3/character media should be used until these gates succeed.
