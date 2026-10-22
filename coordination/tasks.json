@@ -1249,7 +1249,7 @@
       "id": "rovor-ghost-loop-v1",
       "title": "Add bounded foreground loop and restart-safe polling for ROVOR ghost worker",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar ghost loop integration 2026-10-21",
       "branch": "feature/rovor-ghost-loop-v1",
       "scopes": [
@@ -1260,10 +1260,29 @@
       "depends_on": [
         "rovor-ghost-worker-readonly-v1"
       ],
-      "updated_at": "2026-10-22T01:56:11.623Z",
-      "next_update": "After code and focused tests in isolated runtime, draft stacked PR and Mac smoke instructions",
-      "next_action": "Add stdlib worker polling loop with explicit stop switch, bounded runtime/work limits, no side effects, safe restart behavior, local dry-run tests, and instructions to launch manually on Mac. Do not enable login autostart, email, publishing or app automation.",
-      "acceptance": "Automated tests demonstrate queued work runs, idle work waits without busy-loop, explicit stop halts, duplicate instances are safe against SQLite atomic claims, maximum work/duration bounds, resume after restart; no unauthorized network or file mutations; no claim of unattended Mac deployment."
+      "updated_at": "2026-10-22T02:25:03.684Z",
+      "next_update": "After PR #32 base dependency is integrated and Mac smoke test is performed",
+      "next_action": "Stacked draft PR #33 is ready for review; merge base PR #32 first and rebase PR #33 if needed. Then run manual disposable folder host smoke on Amar's Mac, verifying queue result, STOP marker and persistent receipt. No installed daemon, account integrations or application control claimed.",
+      "acceptance": "Automated tests demonstrate queued work runs, idle work waits without busy-loop, explicit stop halts, duplicate instances are safe against SQLite atomic claims, maximum work/duration bounds, resume after restart; no unauthorized network or file mutations; no claim of unattended Mac deployment.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/33"
+      ],
+      "evidence": [
+        {
+          "commit": "8029cab93931f4042d84c3c49b88517a71f81402",
+          "platform": "Isolated Linux container / Python 3.13.5",
+          "check": "26 focused existing+loop unit tests, 13 loop-specific, byte-exact SHA verification of three GitHub files",
+          "result": "PASS: 26/26; exact SHA matched for Python worker, test, documentation",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/33"
+        },
+        {
+          "commit": "8029cab93931f4042d84c3c49b88517a71f81402",
+          "platform": "Isolated Linux container / Python 3.13.5",
+          "check": "Manual CLI init/queue/poll one ping, request STOP, blocked run, resume, persisted status",
+          "result": "PASS in disposable directory; not run on user Mac/Windows; hosted GitHub CI not run",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/33"
+        }
+      ]
     }
   ]
 }
