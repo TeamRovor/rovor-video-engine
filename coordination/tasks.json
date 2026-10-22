@@ -829,20 +829,29 @@
       "id": "windows-benchmark-protocol",
       "title": "Define reproducible cache and resume benchmarks from existing Windows diagnostics",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar GitHub-only benchmark protocol session 2026-10-22",
       "branch": "coordination/windows-benchmark-protocol-v1",
       "scopes": [
         "coordination/windows-benchmark-protocol.md"
       ],
       "depends_on": [],
-      "next_action": "Document and verify exact existing benchmark workflow/commands, required tool versions, median-run metrics, output-hash and resume acceptance; propose an isolated review PR without modifying the owned renderer or asserting a new timed run.",
+      "next_action": "Review open PR #36 for the source-pinned Windows benchmark protocol. Then a separately claimed Windows/local or functioning Actions session should execute actual three-repeat reports, inspect all-run frame hashes, recovery/cache correctness and resource costs. No new live benchmark or Mac/Windows host proof exists in this documentation task.",
       "acceptance": "Protocol cites exact inspected source commit and existing commands/report fields; covers same-input cold/warm run, interruption/resume, changed audio/art/captions invalidation, elapsed time/cache hits/output equivalence; clearly labels unavailable commands or runtime evidence. A later separately claimed task may execute it.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/7"
       ],
-      "updated_at": "2026-10-22T09:48:22.566Z",
-      "next_update": "After protocol draft PR, source readback, and reviewer handoff"
+      "updated_at": "2026-10-22T09:53:00.223Z",
+      "next_update": "Review PR #36 and execute benchmark in a separately eligible runtime session",
+      "evidence": [
+        {
+          "commit": "75cf819bb74573b357a6f9332c02471e78f1151a",
+          "platform": "GitHub connector readback / source-inspection (no host execution)",
+          "check": "Inspected exact source SHAs, CLI options, output/report keys and named unit tests; checked document links, code fences and scope isolation (10 targeted static checks)",
+          "result": "PASS (source/document consistency only; no runtime benchmark or project_loop.py command execution)",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/36"
+        }
+      ]
     },
     {
       "id": "business-ops-worker",
