@@ -31,7 +31,7 @@ UV_PYTHON_PREFERENCE = "only-managed"
 [mcp_servers.fcpxml]
 enabled = false
 command = "uvx"
-args = ["--python", "3.11", "--from", "fcp-mcp-server==0.27.2", "fcp-mcp-server"]
+args = ["--no-build", "--python", "3.11", "--with", "cryptography==46.0.5", "--from", "fcp-mcp-server==0.27.2", "fcp-mcp-server"]
 enabled_tools = ["inspect", "diagnose", "view"]
 
 [mcp_servers.fcpxml.env]
