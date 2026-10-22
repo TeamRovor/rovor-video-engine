@@ -1459,7 +1459,7 @@
       "id": "interpreter-research-mac-host-smoke",
       "title": "Prove one safe Interpreter research job on Amar's actual Mac",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "ChatGPT / Amar continuous host setup 2026-10-22",
       "branch": "feature/interpreter-research-job-v1",
       "scopes": [
@@ -1468,7 +1468,7 @@
       "depends_on": [
         "interpreter-research-job-runner"
       ],
-      "next_action": "Verify ChatGPT-authenticated Interpreter 0.0.56 using isolated writable checkout; test supported top-level approval configuration, actual model foreground execution and private output. Preserve active shared adapter owner; keep compatibility experiments isolated until coordinated.",
+      "next_action": "Run tested tools/interpreter_host_job.py --run --approve-model-use --output <new-private-output-directory> from normal Mac Terminal. Source/tests committed 4d8a5d4 on PR #38; six compatibility tests + existing 32 adapter tests pass on actual Mac. Launcher uses supported top-level on-request approval, read-only sandbox, isolated workspace, ignore-user-config and existing bounded adapter. Inspect answer/receipt; do not repeat an existing output directory or activate scheduler before successful model and MCP proof. Shared adapter remains unchanged under its existing owner.",
       "acceptance": "Exact Mac interpreter --version/exec help, tested branch commit, dry-run output, actual supervised synthetic model execution or precise blocker, private receipt with hashes, provider/permission evidence and rollback. No FCP native edit, scheduler, real media, unapproved model charges.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38",
@@ -1481,10 +1481,18 @@
           "check": "bash integrations/open-interpreter/research-preflight.sh; interpreter exec --help; help-only parser checks for exact launcher arguments and top-level approval placement",
           "result": "32/32 offline tests PASS in 5.490s; packet dry-run PASS (1188 bytes). Full preflight BLOCKED exit 2: exec lacks --ask-for-approval. Existing launcher arguments rejected exit 2. Top-level --ask-for-approval never ... --help parses exit 0 only. No model invocation, app edits, paid usage, effective permission verification or unattended worker.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+        },
+        {
+          "commit": "4d8a5d4a35d2be9d39640f6fff269b8d0b1b5f90",
+          "platform": "Actual Amar Intel Mac / Work Mode restricted exec / Interpreter 0.0.56",
+          "check": "6 new host compatibility tests, 32 existing adapter tests, corrected CLI help acceptance, ChatGPT login status, real foreground attempt through shim with private receipt; GitHub readback matches both local files exactly",
+          "result": "38/38 tests PASS; CLI parser PASS; login ChatGPT. Real invocation FAILED exit 1 before answer: readonly state DB and app-server EPERM. No model response, live FCP/MCP handshake or background worker verified. Queue checker also flags pre-existing trailing-slash scope in blender-mcp-codex-local-bridge; not silently fixed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
         }
       ],
-      "updated_at": "2026-10-22T20:03:28.248Z",
-      "next_update": "After actual CLI config and foreground research runtime, or exact runtime blocker"
+      "updated_at": "2026-10-22T20:06:18.372Z",
+      "next_update": "After one Terminal launch outside Work Mode's restricted process environment",
+      "blocker": "Actual Mac Interpreter is ChatGPT-authenticated, but Work Mode cannot write ~/.openinterpreter/state_5.sqlite and app-server startup fails Operation not permitted. Corrected host launcher attempted real execution and wrote failed receipt (exit 1, empty answer); no completed model research or MCP/app control."
     },
     {
       "id": "interpreter-research-process-bounds",
