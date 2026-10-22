@@ -50,3 +50,26 @@ Purpose: consolidate **separately eligible** third-party AI provider accounts be
 - Never assume an OmniRoute model preserves an OpenAI ChatGPT subscription's tool access, usage quota, or privileges.
 
 **Status:** the runbook was merged to `main` in PR #35. GitHub does not install local software; Mac installation initially failed with EACCES and is pending per-user-prefix retest. No provider account, API key, model switch or runtime integration is verified. 
+
+## Model catalog HTTP 401 after successful `omniroute connect` (Intel Mac, Oct 22 2026)
+
+Observed: `omniroute connect http://127.0.0.1:20128 --scope read` successfully created a **management** context/token, but `omniroute models` continued reporting `Model request failed (HTTP 401)`. This is not evidence the server or upstream provider keys are broken. In OmniRoute's current source, `bin/cli/commands/model-api.mjs` calls `/api/v1/models`, and `src/app/api/v1/models/catalogRequest.ts` accepts a valid **inference endpoint API key** or dashboard session cookie for the catalog. It does not explicitly accept the scoped management token minted by `omniroute connect`. This can cause a management token to be rejected as an invalid inference key even though the management connection succeeded.
+
+Non-destructive verification:
+
+1. In the logged-in dashboard, open **Endpoints** and create a dedicated limited-scope **inference API key** for local ROVOR testing. **Never put the key in GitHub/chat**, a CLI argument, shell history, or screenshots.
+2. In a fresh macOS zsh tab, enter below; paste the key only when the hidden prompt appears. This uses the default local context instead of the active read-token context, without changing saved contexts:
+
+   ```sh
+   printf 'Paste the local OmniRoute ENDPOINT key (hidden): '
+   read -rs OMNIROUTE_API_KEY; echo
+   export OMNIROUTE_API_KEY
+   omniroute models --context default
+   unset OMNIROUTE_API_KEY
+   ```
+
+   No model inference is performed by a model-catalog list. If the key is accepted, capture only the model names and safe metadata. If it still returns HTTP 401, verify the copied **endpoint inference key** and dashboard catalog-auth settings without weakening authentication; test provider connections in the dashboard. `omniroute contexts use default` is also available, but it changes the active context, so prefer per-command `--context default` here.
+3. A `401` on `GET /v1/models` does NOT prove the inference service requires a key; the `REQUIRE_API_KEY` setting separately controls POST inference requests. Never disable auth just to make a model list work, particularly when the server has previously warned about listening on `0.0.0.0` with no key requirement. Bind to `OMNIROUTE_SERVER_HOST=127.0.0.1` on the Mac; enforce authentication before future LAN sharing with the Windows laptop.
+
+**Status:** the CLI workaround is based on reviewed source code and is awaiting the user's Mac verification. Do not claim models/providers pass tool calls yet.
+
