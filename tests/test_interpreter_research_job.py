@@ -45,6 +45,30 @@ class ResearchAdapterTests(unittest.TestCase):
         p.chmod(0o700)
         return str(p)
 
+    def test_parent_path_alias_is_canonicalized_like_macos_var(self):
+        # On macOS, TemporaryDirectory can be spelled /var/... while resolve()
+        # maps the same directory to /private/var/... . The file and root
+        # must be compared in the same canonical namespace.
+        physical = self.root / "real-parent"
+        work = physical / "work"
+        work.mkdir(parents=True)
+        (work / "packet.json").write_text(json.dumps(self.packet), encoding="utf-8")
+        alias = self.root / "alias-parent"
+        alias.symlink_to(physical, target_is_directory=True)
+        alias_work = alias / "work"
+        self.assertFalse(alias_work.is_symlink())
+        self.assertNotEqual(alias_work, alias_work.resolve())
+        packet, packet_sha = mod.read_packet(alias_work, "packet.json")
+        self.assertEqual(packet["job_id"], self.packet["job_id"])
+        self.assertEqual(len(packet_sha), 64)
+        self.assertIn("Which official XML", mod.make_prompt(alias_work, packet))
+
+    def test_symlink_at_workspace_root_is_still_rejected(self):
+        alias = self.root / "workspace-shortcut"
+        alias.symlink_to(self.work, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "Workspace must be an existing non-symlink"):
+            mod.read_packet(alias, "packet.json")
+
     def test_valid_packet_prompt(self):
         packet, sha, prompt = self.prepare()
         self.assertRegex(sha, r"^[a-f0-9]{64}$")
