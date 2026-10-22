@@ -117,3 +117,23 @@ Only after host-successful supervised trials should a new owner claim integratio
 ## Validation recorded
 
 On 2026-10-22, the exact PR #38 base revision 0547e2586b46cc9677463597f1efbaa98137d75a passed all 17 offline tests on Linux. The process-bounds revision passes 26 offline tests, including continuous stdout/stderr floods, descendants after timeout and successful parent exit, unsupported-platform refusal before reservation, STOP before/during dispatch, broken STOP symlink and Ctrl-C cancellation receipts. Tests use a fake executable, with no model calls. The example packet dry-run also passes. No live Mac/Interpreter command, provider spend, MCP or FCP access was run; Mac host checks and unattended scheduling remain unverified.
+
+## Actual macOS process-group denial (2026-10-22)
+
+Amar's clean Mac detached worktree at commit b5d4685 executed the new no-model preflight using the Apple Command Line Tools Python 3.9 runtime. The canonical temporary path repair worked: 28 of the 29 tests passed; **one failed** when `os.killpg(child.pid, SIGKILL)` raised **PermissionError (EPERM)** after the fake Interpreter's direct parent process exited with a descendant still in the session. That is macOS process-control behavior, not evidence of a functioning Interpreter/model or Final Cut connection.
+
+The follow-up branch code now handles a denied process-group signal without uncaught exceptions. If the direct child is still running, it attempts a direct `Popen.kill()` and uses bounded waits. **If signalling the group fails, the result must be `needs_review` with a private receipt**, even if the parent already returned exit 0; a descendant may still be alive. A successful process-group signal or confirmed missing group is required for a normal `completed_unverified` receipt. No `sudo`, security bypass, Accessibility permission change or broad process enumeration is requested. This is a conservative fail-closed response, **not proof of full process-tree cleanup** on the Mac.
+
+Three fake Interpreter regression tests inject `PermissionError` for an exited parent, a still-running child, and the fallback direct-child kill; the existing descendant test accepts `needs_review` only with a recorded cleanup warning, never as success. **Total test methods: 32.** These source edits still need a real Mac rerun. On that Mac, if you see `needs_review` after an authorized task, inspect local process state before any reuse; the CLI exit code is nonzero and duplicate IDs remain blocked.
+
+Run the preflight only in the existing clean PR #38 worktree, after fetching the updated PR head:
+
+~~~sh
+cd "$HOME/Documents/Rovor/rovor-pr38-check" || exit 1
+git status --short
+git fetch origin pull/38/head
+git switch --detach FETCH_HEAD
+bash integrations/open-interpreter/research-preflight.sh
+~~~
+
+Do not run the `--execute` flag, use paid model credits or grant Final Cut permissions for this diagnostic. Capture the final test summary plus the Interpreter version/help section or its first error. If the process group is denied in other scenarios, surface a private `needs_review` receipt and improve native macOS process supervision in a separate bounded task rather than treating the test as evidence of a finished unattended employee.
