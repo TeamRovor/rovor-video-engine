@@ -8,6 +8,8 @@ import stat
 import tempfile
 import unittest
 import sys
+import time
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import interpreter_research_job as mod
@@ -179,6 +181,59 @@ class ResearchAdapterTests(unittest.TestCase):
         _, _, prompt = self.prepare()
         self.assertIn("<<<REFERENCE_DATA>>>", prompt)
         self.assertIn("untrusted reference data", prompt)
+
+    def test_stdout_flood_stops_before_deadline(self):
+        packet, sha, prompt = self.prepare()
+        result = mod.execute(self.work, self.state, packet, sha, prompt,
+                             interpreter_binary=self.fake_interpreter(
+                                 body='import os\nwhile True: os.write(1, b"x" * 8192)'), timeout=5)
+        self.assertEqual(result["status"], "needs_review")
+        self.assertLess(result["elapsed_seconds"], 3)
+        self.assertEqual(result["answer_bytes_retained"], mod.MAX_OUTPUT_BYTES)
+
+    def test_stderr_flood_is_bounded_and_not_retained(self):
+        packet, sha, prompt = self.prepare()
+        result = mod.execute(self.work, self.state, packet, sha, prompt,
+                             interpreter_binary=self.fake_interpreter(
+                                 body='import os\nwhile True: os.write(2, b"PRIVATE" * 2048)'), timeout=5)
+        self.assertEqual(result["status"], "needs_review")
+        self.assertLess(result["elapsed_seconds"], 3)
+        self.assertEqual((self.state / "fcp-intro-001.answer.txt").read_bytes(), b"")
+
+    def descendant_body(self, marker, delay, parent_delay):
+        code = f'import time; from pathlib import Path; time.sleep({delay}); Path({str(marker)!r}).touch()'
+        return (f'import subprocess, time\nsubprocess.Popen([sys.executable, "-c", {code!r}], '
+                'stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)\n'
+                f'print("PARENT ANSWER", flush=True)\ntime.sleep({parent_delay})')
+
+    @unittest.skipUnless(os.name == "posix", "POSIX process group regression")
+    def test_timeout_stops_descendant(self):
+        marker = self.root / "timeout-descendant-survived"
+        packet, sha, prompt = self.prepare()
+        result = mod.execute(self.work, self.state, packet, sha, prompt,
+                             interpreter_binary=self.fake_interpreter(
+                                 body=self.descendant_body(marker, 1.5, 10)), timeout=1)
+        self.assertEqual(result["status"], "timeout")
+        time.sleep(0.7)
+        self.assertFalse(marker.exists())
+
+    @unittest.skipUnless(os.name == "posix", "POSIX process group regression")
+    def test_success_stops_remaining_descendant(self):
+        marker = self.root / "success-descendant-survived"
+        packet, sha, prompt = self.prepare()
+        result = mod.execute(self.work, self.state, packet, sha, prompt,
+                             interpreter_binary=self.fake_interpreter(
+                                 body=self.descendant_body(marker, 0.5, 0)), timeout=5)
+        self.assertEqual(result["status"], "completed_unverified")
+        time.sleep(0.7)
+        self.assertFalse(marker.exists())
+
+    def test_unsupported_platform_refused_before_reservation(self):
+        packet, sha, prompt = self.prepare()
+        with mock.patch.object(mod.os, "name", "unsupported"), self.assertRaisesRegex(ValueError, "POSIX"):
+            mod.execute(self.work, self.state, packet, sha, prompt,
+                        interpreter_binary="unused", timeout=1)
+        self.assertEqual(list(self.state.iterdir()), [])
 
 
 if __name__ == "__main__":
