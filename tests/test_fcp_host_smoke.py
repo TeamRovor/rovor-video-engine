@@ -74,6 +74,26 @@ class SmokeTests(unittest.TestCase):
                 client.close()
             self.assertIsNotNone(client.child.poll())
 
+    def test_mcp_early_exit_captures_exit_status_and_private_error(self):
+        import os
+        with tempfile.TemporaryDirectory() as root:
+            script = Path(root) / 'early_exit.py'
+            script.write_text(
+                'import sys\\n'
+                'sys.stdin.readline()\\n'
+                'sys.stderr.write("FATAL_STARTUP_TEST\\\\n")\\n'
+                'sys.stderr.flush()\\n'
+                'sys.exit(7)\\n'
+            )
+            client = smoke.Client([sys.executable, str(script)], dict(os.environ))
+            try:
+                with self.assertRaisesRegex(ValueError, 'exit code 7'):
+                    client.request('initialize')
+                self.assertEqual(client.child.poll(), 7)
+                self.assertIn(b'FATAL_STARTUP_TEST', client.errors)
+            finally:
+                client.close()
+
     def test_missing_installed_dtd_still_writes_failure_receipt(self):
         with tempfile.TemporaryDirectory() as temp:
             target = Path(temp) / 'diagnostics'
