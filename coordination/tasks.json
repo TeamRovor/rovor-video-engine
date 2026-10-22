@@ -1373,7 +1373,7 @@
       "id": "fcp-mcp-real-host-smoke",
       "title": "Verify Jane's Final Cut MCP on Amar's Mac using a disposable FCPXML test",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "ChatGPT / Amar continuous host setup 2026-10-22",
       "branch": "integration/fcp-specialist-mcp-pilot-20261022",
       "scopes": [
@@ -1382,13 +1382,23 @@
       "depends_on": [
         "fcp-specialist-research-and-mcp-pilot"
       ],
-      "next_action": "Installed FCP11.1.1 contains DTDs through1.13. Validate synthetic fixture against installed schema; inspect pinned FCP MCP package and prepare only disposable-root reads. User authorized ghost setup and Open Interpreter use; no personal libraries or app edits.",
+      "next_action": "Run tools/fcp_host_smoke.py --output <new disposable output> in normal Terminal. It pins package0.27.2 via uvx Python3.11, validates two1-second synthetic exact60fps gap fixtures against installed1.13 DTD, performs direct MCP initialization/tools-list/inspect and existing outside-root sentinel refusal, then terminates server. No model/native app invocation; direct MCP pass must not be labeled Interpreter-client proof. After direct success, test native Interpreter with inspection-only tool allowlist and disable afterward.",
       "acceptance": "Verified local Interpreter version/foreground, effective project config, native MCP tool call and outside-root refusal with exact time/output; app version/permission status separately captured, rollback confirmed. A Codex-only result is not Interpreter proof. No real client media, FCP edits, posting or all-day background agent required.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/37"
       ],
-      "updated_at": "2026-10-22T20:19:55.137Z",
-      "next_update": "After installed DTD fixture validation, package review and real MCP test or precise blocker"
+      "updated_at": "2026-10-22T20:24:08.991Z",
+      "next_update": "After installed DTD fixture validation, package review and real MCP test or precise blocker",
+      "blocker": "Work Mode cannot resolve PyPI to install pinned fcp-mcp-server0.27.2; deterministic direct MCP attempt exited before initialization. Actual model queued research works from normal Terminal; MCP server/Interpreter tool handshake not yet proven.",
+      "evidence": [
+        {
+          "commit": "3d90f1ef200c2f42a8aacc891b0272533bb82351",
+          "platform": "Actual Amar Mac / FCP11.1.1 / xmllint / Python3.9",
+          "check": "Read installed bundle DTD inventory, validate1920x1080 and1080x1920 exact60fps fixtures against installedFCPXML1.13, source audit pinnedserver.py/pyproject via GitHub;6 new smoke tests including real JSONRPC fake transport; remote source readback identical; attempted real pinnedpackage install",
+          "result": "Both installed-DTD validations PASS; DTD SHA2565afbc7ca1001bbc2190fb3b21d4d440ce061d94f5a5f583074e982b4745cd04d.6/6 tests PASS. Live package/network blocked; no real MCP handshake, native import, Interpreter MCP client or app control proved.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/37"
+        }
+      ]
     },
     {
       "id": "fcp-interpreter-native-mcp-bridge",
@@ -1640,7 +1650,7 @@
       "id": "ghost-interpreter-research-queue",
       "title": "Connect verified Interpreter research to the existing durable ghost worker",
       "priority": 1,
-      "status": "blocked",
+      "status": "done",
       "owner": "ChatGPT / Amar continuous host setup 2026-10-22",
       "branch": "feature/ghost-interpreter-research-queue",
       "scopes": [
@@ -1654,11 +1664,10 @@
         "interpreter-research-mac-host-smoke",
         "rovor-ghost-worker-readonly-v1"
       ],
-      "updated_at": "2026-10-22T20:17:39.248Z",
+      "updated_at": "2026-10-22T20:24:08.991Z",
       "next_update": "After normal-Terminal queued model job and SQLite receipt review",
-      "next_action": "Run bash integrations/open-interpreter/start-jane-worker.sh in the prepared local release from normal Terminal. It enqueues one deduplicated version-specific FCPXML/MCP follow-up, processes at most one job, and saves private SQLite and research receipts. Inspect status and answer before FCP MCP activation or service installation. Do not automatically retry failed/needs_review research claims.",
+      "next_action": "Real queued research job succeeded once in64.535s, SQLite status succeeded attempts1; answer SHA2563ee99bf4a74207de42219c8520419ac10949239634386e1fd7bf9ed020326736. Source research surfaced web cache gaps; actual installed DTD and pinned GitHub source were then verified directly. Native MCP and scheduling remain separate tasks.",
       "acceptance": "Queue dedupe, default no-model behavior, explicit model optin, at-most-once dispatch after crash/lease, existing read-only adapters preserved, cancellation and actual Mac deterministic test evidence.",
-      "blocker": "Work Mode cannot start Interpreter app-server; real queued model job requires normal Terminal. Foreground model research already succeeded independently. PR #39 remains draft, not integrated or scheduled.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/39"
       ],
@@ -1668,6 +1677,13 @@
           "platform": "Actual Amar Intel Mac / Python 3.9 / Work Mode",
           "check": "40 interpreter+host tests and 33 worker+loop+research tests; shell syntax; native SQLite restart smoke; full startup shell with fake Interpreter invoked twice; remote code readback identical",
           "result": "73/73 PASS. Fake full-script job succeeded once with attempts1 and second startup dispatched zero. Shared STOP cancelled active fake Interpreter. Default worker left model job queued. Real foreground research previously completed40.902s; real queued model, app MCP, native editing, launchd and hosted CI remain unverified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/39"
+        },
+        {
+          "commit": "f4ff1c281c0e25b7a5a7075e473351814f98bfe6",
+          "platform": "Actual Amar Mac / normal Terminal",
+          "check": "start-jane-worker.sh ran through SQLite enqueue, explicit model dispatch, Interpreter research receipt and loop summary",
+          "result": "PASS one executed,one succeeded,zero failed,attempts1,64.535s model/64.646s loop,12896 bytes retained. App control and autonomous scheduling not established.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/39"
         }
       ]
