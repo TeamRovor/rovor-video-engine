@@ -73,3 +73,7 @@ Proposed isolated scope: the worker, poller, importer, launcher, this guide and
 queue 2026-10-22. The main task-claim update was rejected by automatic approval
 review in the preceding session; this proposed branch does not replace shared
 main ownership. Review and native host verification remain the next steps.
+
+## Integration work in progress
+
+Authorized continuation: consolidate required existing FCP diagnostic modules/tests into this worker branch, add one no-model regression entrypoint and a path-filtered Python 3.9/3.11 CI workflow. Reuse the existing native status/probe helpers through the launcher; preserve their source and test provenance. No new worker architecture, task database, model provider, main merge or native replay. Source pilot revision: 5ade85f. The latest Mac receipt is native_library_not_observed, with apple_event_sent=true, library_creation_observed=false, and portrait not dispatched. Treat the current host blocker as native observation/diagnosis, not missing research/MCP registration.
