@@ -56,6 +56,26 @@ The receipt records packet/prompt/answer hashes, exit code, elapsed time, status
 
 **Keep receipts and research answers local/private, out of GitHub.** Do not publish private client files, API keys or machine paths. This is an adapter experiment, not permission to reach websites, send email, post content or operate Final Cut.
 
+## Stop or cancel a foreground job
+
+Create `STOP` inside the same private state directory used for execution:
+
+~~~sh
+touch "$HOME/.rovor-research-pilot/STOP"
+~~~
+
+If present before dispatch, no process starts and no job reservation is created. While a job runs, the wrapper checks for STOP during its polling loop (normally every 50 ms), stops the POSIX process group, and writes a `cancelled` receipt with the exit code and any partial answer. Any directory entry named STOP, including a broken symlink, blocks execution; its contents are never read. All jobs using that state directory observe the same stop request.
+
+Ctrl-C while the child is running also stops its group and writes a cancelled receipt. Cancellation returns a nonzero CLI status. It does not undo prior external actions, terminate deliberately detached processes, or guarantee interruption of an in-flight provider request or its billing. SIGKILL, machine failure and external SIGTERM are not receipt-preserving shutdown mechanisms. A STOP request is polled, so dispatch and STOP creation are not an atomic transaction.
+
+After inspecting the receipt and any possible external effects, remove only the STOP marker to permit future distinct job IDs:
+
+~~~sh
+rm "$HOME/.rovor-research-pilot/STOP"
+~~~
+
+Keep the cancelled job's reservation and receipt. Removing STOP does not permit replaying that job ID. Dry-run does not inspect private state and remains a no-model validation, even when execution would be stopped.
+
 ## Why this improves ROVOR
 
 The next milestone is one real, bounded Jane research attempt from Open Interpreter with an auditable result and no unauthorized side effects. Dry-run can be verified without inference. A verified local test does not imply an unattended agent.
@@ -64,4 +84,4 @@ Only after host-successful supervised trials should a new owner claim integratio
 
 ## Validation recorded
 
-On 2026-10-22, the exact PR #38 base revision 0547e2586b46cc9677463597f1efbaa98137d75a passed all 17 offline tests on Linux. The process-bounds revision passes 22 offline tests, including continuous stdout/stderr floods, descendants after timeout and successful parent exit, and unsupported-platform refusal before reservation. Tests use a fake executable, with no model calls. The example packet dry-run also passes. No live Mac/Interpreter command, provider spend, MCP or FCP access was run; Mac host checks and unattended scheduling remain unverified.
+On 2026-10-22, the exact PR #38 base revision 0547e2586b46cc9677463597f1efbaa98137d75a passed all 17 offline tests on Linux. The process-bounds revision passes 26 offline tests, including continuous stdout/stderr floods, descendants after timeout and successful parent exit, unsupported-platform refusal before reservation, STOP before/during dispatch, broken STOP symlink and Ctrl-C cancellation receipts. Tests use a fake executable, with no model calls. The example packet dry-run also passes. No live Mac/Interpreter command, provider spend, MCP or FCP access was run; Mac host checks and unattended scheduling remain unverified.
