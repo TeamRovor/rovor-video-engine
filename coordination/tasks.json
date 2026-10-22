@@ -1538,6 +1538,28 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
         }
       ]
+    },
+    {
+      "id": "interpreter-research-preflight-command",
+      "title": "Provide one no-model diagnostic command for the real Mac research pilot",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar research-preflight-20261022",
+      "branch": "feature/interpreter-research-job-v1",
+      "scopes": [
+        "integrations/open-interpreter/research-preflight.sh",
+        "integrations/open-interpreter/RESEARCH-JOB-ADAPTER.md"
+      ],
+      "depends_on": [
+        "interpreter-research-stop-control"
+      ],
+      "updated_at": "2026-10-22T18:25:58.241Z",
+      "next_update": "After syntax, fixture and no-model local diagnostic checks",
+      "next_action": "Create a single read-only diagnostic entry point: revision/source identity, offline tests, packet dry-run, CLI version/help with timeout; no inference or config changes.",
+      "acceptance": "Diagnostic runs exact offline checks, reports missing CLI/platform honestly, limits CLI probes, creates no persistent repo files and starts no model; syntax and synthetic CLI fixtures verified.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+      ]
     }
   ]
 }
