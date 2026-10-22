@@ -95,7 +95,7 @@ class AutoImportTests(unittest.TestCase):
             if len(sent) == 1:
                 target.mkdir()
             return subprocess.CompletedProcess(command, 0, stdout='', stderr='')
-        with mock.patch.object(jane.APP, 'is_dir', return_value=True):
+        with mock.patch.object(jane, 'APP', self.base):
             result = jane.dispatch(self.output, state, run=native_fake,
                                    clock=lambda: 1, sleep=lambda n: None)
         self.assertEqual(result['status'], 'apple_events_sent_timeline_unverified')
@@ -113,7 +113,7 @@ class AutoImportTests(unittest.TestCase):
             sent.append(command)
             return subprocess.CompletedProcess(command, 1,
                                                stdout='', stderr='Not authorized')
-        with mock.patch.object(jane.APP, 'is_dir', return_value=True):
+        with mock.patch.object(jane, 'APP', self.base):
             result = jane.dispatch(self.output, state, run=native_fake)
         self.assertEqual(result['status'], 'apple_event_failed')
         self.assertIn('Not authorized', result['error'])
@@ -126,7 +126,7 @@ class AutoImportTests(unittest.TestCase):
         def fake(command, **kw):
             sent.append(command)
             return subprocess.CompletedProcess(command, 0, stdout='', stderr='')
-        with mock.patch.object(jane.APP, 'is_dir', return_value=True):
+        with mock.patch.object(jane, 'APP', self.base):
             result = jane.dispatch(self.output, state, run=fake,
                                    clock=lambda: 10, wait_seconds=0)
         self.assertEqual(result['status'], 'native_library_not_observed')
