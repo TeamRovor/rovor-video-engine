@@ -1459,7 +1459,7 @@
       "id": "interpreter-research-mac-host-smoke",
       "title": "Prove one safe Interpreter research job on Amar's actual Mac",
       "priority": 1,
-      "status": "blocked",
+      "status": "done",
       "owner": "ChatGPT / Amar continuous host setup 2026-10-22",
       "branch": "feature/interpreter-research-job-v1",
       "scopes": [
@@ -1468,7 +1468,7 @@
       "depends_on": [
         "interpreter-research-job-runner"
       ],
-      "next_action": "Run corrected host launcher from normal Terminal with new output directory jane-research-002. c534812 contains --skip-git-repo-check and bounded private startup diagnostics merged into captured answer; 7 host compatibility/error tests and 32 existing adapter tests pass. Do not reuse jane-research-001 or claim successful inference. Inspect new private answer/receipt before further attempts.",
+      "next_action": "Real normal-Terminal job completed in 40.902 seconds with exit0 and 13693 bytes retained. Preserve answer/receipt. Continue separately claimed durable queue integration; live FCP MCP and app editing remain unverified.",
       "acceptance": "Exact Mac interpreter --version/exec help, tested branch commit, dry-run output, actual supervised synthetic model execution or precise blocker, private receipt with hashes, provider/permission evidence and rollback. No FCP native edit, scheduler, real media, unapproved model charges.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38",
@@ -1495,11 +1495,17 @@
           "check": "Terminal supplied receipt failed exit1; corrected non-Git workspace CLI flag; new real subprocess fake failure retains stderr with failed receipt; 7 focused tests pass; exact real CLI help accepted",
           "result": "Compatibility and error capture verified; real normal-Terminal rerun outstanding. No completed research or FCP control.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+        },
+        {
+          "commit": "c534812d939e44297d0a93400cbcd437a2cf6936",
+          "platform": "Amar actual Intel Mac / normal Terminal / Open Interpreter 0.0.56 ChatGPT authentication",
+          "check": "Corrected interpreter_host_job --run, private receipt and full source-linked answer read from jane-research-002; source Apple links appear in web-search transcript",
+          "result": "PASS foreground model research: completed_unverified, exit0,40.902s,13693 bytes, SHA256 efa94cb863daeda8b83015fdbc37ec768d5fac06aa486bb34193b9507612b3bd. Research answer reviewed for scope; app control and unattended recovery not tested.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
         }
       ],
-      "updated_at": "2026-10-22T20:09:41.185Z",
-      "next_update": "After one Terminal launch outside Work Mode's restricted process environment",
-      "blocker": "Amar's normal Terminal invocation also failed exit 1 in 0.281s with empty answer; original adapter discarded stderr, so actual Terminal cause not retained. Found launcher omitted --skip-git-repo-check for its disposable non-Git workspace; patched and tested. Work Mode also independently remains state/app-server permission restricted."
+      "updated_at": "2026-10-22T20:12:47.287Z",
+      "next_update": "After one Terminal launch outside Work Mode's restricted process environment"
     },
     {
       "id": "interpreter-research-process-bounds",
@@ -1627,6 +1633,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/38"
         }
       ]
+    },
+    {
+      "id": "ghost-interpreter-research-queue",
+      "title": "Connect verified Interpreter research to the existing durable ghost worker",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar continuous host setup 2026-10-22",
+      "branch": "feature/ghost-interpreter-research-queue",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tools/interpreter_host_job.py",
+        "tests/test_ghost_research_queue.py"
+      ],
+      "depends_on": [
+        "interpreter-research-mac-host-smoke",
+        "rovor-ghost-worker-readonly-v1"
+      ],
+      "updated_at": "2026-10-22T20:12:47.287Z",
+      "next_update": "After focused deterministic queue/recovery tests and Mac disposable smoke",
+      "next_action": "Add one opt-in Final Cut research job to existing SQLite worker. Preserve no-model defaults; require explicit research dispatch opt-in, no automatic replay after model dispatch, durable receipts, bounded subprocess and STOP handling. No FCP app edit or service installation.",
+      "acceptance": "Queue dedupe, default no-model behavior, explicit model optin, at-most-once dispatch after crash/lease, existing read-only adapters preserved, cancellation and actual Mac deterministic test evidence."
     }
   ]
 }
