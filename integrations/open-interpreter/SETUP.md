@@ -17,18 +17,28 @@ Role identities do not imply that separate processes are continuously active.
 
 ## Isolated pilot without disturbing existing development
 
-On the Mac, from a local clone of TeamRovor/rovor-video-engine:
+The repository is **private**. An authenticated Open Interpreter GitHub connector does not automatically authenticate command-line `git clone`. Terminal must have its own Git credentials. Never enter slash commands such as `/agent` at Git's username/password prompts; GitHub account passwords do not work for Git HTTPS access.
+
+If GitHub CLI (`gh`) is installed, authenticate with the ROVOR GitHub account:
 
 ```sh
-git fetch origin feat/open-interpreter-workforce-20261021
-git worktree add ../rovor-interpreter-pilot origin/feat/open-interpreter-workforce-20261021
-cd ../rovor-interpreter-pilot
-interpreter --version
-interpreter --help
-interpreter
+gh auth status
+# If not authenticated as an account with access to TeamRovor:
+gh auth login --web --git-protocol https
+gh auth setup-git
 ```
 
-This uses a separate worktree and leaves your existing branch alone. Start from the repository root so its project instructions and config can be discovered.
+If `gh` is missing, install GitHub CLI using the official instructions, or use GitHub Desktop's authenticated clone interface.
+
+From any terminal directory, create a **new** isolated checkout. These conditional commands will not launch Open Interpreter when cloning fails:
+
+```sh
+mkdir -p "$HOME/Documents/Rovor"
+cd "$HOME/Documents/Rovor"
+git clone --depth 1 --single-branch --branch feat/open-interpreter-workforce-20261021 https://github.com/TeamRovor/rovor-video-engine.git rovor-interpreter-pilot && cd rovor-interpreter-pilot && test -f .openinterpreter/config.toml && interpreter
+```
+
+If the checkout already exists, do not clone over it. Inspect its remote, current branch, and local modifications first. Start Open Interpreter **only** from the pilot root. Trust that project only after verifying it is the intended repository. Use `/debug-config` and `/agent` to confirm the project layer and specialist roles are actually loaded.
 
 In the current CLI, choose an available authentication method on first run. ChatGPT sign-in may avoid separate API-key billing within applicable plan limits. Alternatively use a capable local model via a supported local provider. This config intentionally contains no model, API credential or billing setting. Verify the active model and permissions with /model, /permissions and /debug-config. Use /agent to inspect available subagents.
 
