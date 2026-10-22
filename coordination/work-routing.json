@@ -93,6 +93,13 @@
         "github-write"
       ],
       "objective": "develop-content-engine"
+    },
+    "fcp-mcp-real-host-smoke": {
+      "lane": "integration",
+      "requires": [
+        "local-exec"
+      ],
+      "objective": "develop-content-engine"
     }
   }
 }
