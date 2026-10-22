@@ -72,7 +72,8 @@ class StageTests(unittest.TestCase):
         self.assertEqual(mcp['env']['FCP_PROJECTS_DIR'], mcp['env']['FCP_PROJECTS_DIRS'])
         self.assertEqual(mcp['env']['FCP_MCP_AUTOPUSH'], '0')
         self.assertEqual(mcp['env']['UV_NO_BUILD'], '1')
-        self.assertEqual((self.out / 'stage-receipt.json').stat().st_mode & 0o777, 0o644)
+        self.assertEqual((self.out / 'stage-receipt.json').stat().st_mode & 0o777, 0o600)
+        self.assertEqual((self.out / 'project' / '.openinterpreter' / 'config.toml').stat().st_mode & 0o777, 0o600)
         self.assertEqual(self.out.stat().st_mode & 0o777, 0o700)
         self.assertTrue((self.out / 'project' / 'sentinel.fcpxml').is_file())
         self.assertFalse((self.out / 'project' / 'fixtures' / 'sentinel.fcpxml').exists())
@@ -105,6 +106,14 @@ class StageTests(unittest.TestCase):
         sample = self.evidence / 'fixtures' / 'landscape.fcpxml'
         sample.unlink()
         sample.symlink_to(target)
+        with self.assertRaisesRegex(ValueError, 'unsafe evidence file'):
+            stage.make_stage(self.evidence, self.out)
+        self.assertFalse(self.out.exists())
+
+    def test_symlink_fixture_directory_is_rejected_before_stage(self):
+        alternate = self.root / 'alternate'
+        (self.evidence / 'fixtures').rename(alternate)
+        (self.evidence / 'fixtures').symlink_to(alternate, target_is_directory=True)
         with self.assertRaisesRegex(ValueError, 'unsafe evidence file'):
             stage.make_stage(self.evidence, self.out)
         self.assertFalse(self.out.exists())
