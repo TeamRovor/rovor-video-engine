@@ -8,7 +8,15 @@ Repo work/engine; development/evan-painted-rig (legacy name), draft PR #4 https:
 
 Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful milestones/failure/completion/required action only; disable once the agreed polished milestone is actually ready. Routine decisions need no question.
 
-## Latest: fresh current-frame contact controls, experimental F/V support
+## Latest: new drawn lower-lip/jaw candidate; anatomy not accepted
+
+Read CARTOON-EVAN-FV-REDRAW.md. Built-in image_gen produced contact-head-v1/v2 construction sources and an isolated contact-jaw-v1 drawing. Originals + exact prompts/provenance under fv-redraw-v1/source; full heads UNREGISTERED SOURCE ONLY and never used as replacement frames. V1 clenched-row rejected; V2 clearer lip cushion but wrap still questionable. Jaw is genuinely isolated art with lip fold, no teeth/upperlip/head; native light/dark composites inspected, alpha unchanged. Fold/highlight somewhat heavy/glossy.
+
+Old fixed canvas placement rejected (long chin/doubled cheek). Three manually annotated source attachment/chin anchors fit to previous source, then existing canvas normalization/source-edge correspondence. New Contact-Jaw-Candidate.png is a REGISTERED CANDIDATE ONLY, not default runtime. Held-out lower outline y>=345:558samples,median0/p95=1/max1 nativepx. Native assembled851/855/892 inspected. Four actual planes PSD851 reassembly .023247/255; not Moho bones. New fold adds volume but old foreground teeth/contact still narrow smiling seam; release can show second crease. One contact drawing across all vowels is not coordinated pressure/release anatomy. Do not promote or repeat these full-head prompts.
+
+Final comparison104normal/416mutedquarter frames1280x720/48fps fully decoded; source816–919(17–19.1667s), exact34,667original/decoded16k samples272000:306667. No independent listening/continuous-playback acceptance. Native consecutive848–857/889–898 inspected. No pending jobs. Normal/slow comparison in outputs/evan-cartoon-fv-redraw uses scratch work/cartoon-fv-redraw/render.py: same controls/material hierarchy, only actual jaw source changed. New source art is not a flattened head swap. Existing b6b0cca current-contact profile and prior proofs retained. No script/phone timing, source-alpha cleanup, body/staging or default/release changes. Source studies/registration QA do not certify entertaining acting or studio quality. Full polished milestone incomplete; automation ACTIVE. Prior checkpoint HISTORY-2026-10-22-F.
+
+## Retained: fresh current-frame contact controls, experimental F/V support
 
 Read CARTOON-EVAN-CURRENT-CONTACT.md. New optional current_contact_exposure.py captures actual oral geometry on every frame, including pureFV, instead of stale last_painted_target. Original older guarded tools/default profiles unchanged. Four source planes unchanged; no new artwork/alpha cleanup/retiming. Exact fullFV now keeps same painted cavity backing as near-full contact; initial9/255 endpoint material jump reduced to2/255, foreground contact unchanged. Three tests pass: poison stale target/history independence; epsilon endpoints; zeroFV738/741/742 byte-exact to prior source-matched stack.
 
@@ -52,7 +60,7 @@ Speech:66 words/248 phones/39 ARPABET; two-pass acoustic alignment, coarticulati
 
 ## Next concrete work
 
-1. Fresh fullFV geometry/material support now exists ONLY in current_contact_exposure.py; old experiments retain guards. Next establish artist-designed lower-lip tuck/roll against stable incisors and coordinated release art; the current narrow tooth seam is not accepted anatomy. Review native contact/release/vowel strip before full-thought integration. No further staging expansion or numeric seam cleanup.
+1. Fresh fullFV geometry/material support now exists ONLY in current_contact_exposure.py; old experiments retain guards. New fv-redraw-v1 jaw candidate is fitted but not anatomy-approved. Next create a coordinated upper-lip/incisor contact plane plus matching release jaw in the same native guide; current foreground seam and second crease remain unacceptable. Review native contact/release/vowel strip before full-thought integration. No further staging expansion or numeric seam cleanup.
 2. Preserve this source-correspondence/cavity coverage test as a regression reference. Designed bilabial pressure/roll, independently drawn lip/jaw surfaces, chin and cast shadow still need artist redraw/review. Residual partial-alpha edges remain; coverage counts/PSD reload do not certify acting or phoneme accuracy. Keep experiments outside default/release profiles.
 3. Retain complete narration samples,18flagged boundary uncertainty and approval/updater safeguards. No retiming to hide art problems, no staging expansion, no unattended Moho use. Full polished milestone incomplete; automation active.
 
