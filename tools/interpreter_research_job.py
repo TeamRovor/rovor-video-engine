@@ -12,7 +12,9 @@ import json
 import os
 from pathlib import Path
 import re
+import selectors
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -138,8 +140,10 @@ def execute(
     workspace: Path, state: Path, packet: dict, packet_sha: str, prompt: str,
     *, interpreter_binary: str, timeout: int,
 ) -> dict:
-    """Run one opted-in foreground job; no retries, writes outside the private state."""
+    """Run one opted-in POSIX foreground job; wrapper receipts stay private."""
     root = _validated_state(state, workspace)
+    if os.name != "posix":
+        raise ValueError("Execution requires POSIX process groups; Windows execution is not supported")
     if type(timeout) is not int or not 1 <= timeout <= MAX_SECONDS:
         raise ValueError("Timeout must be an integer from 1 to 300 seconds")
     if os.path.sep in interpreter_binary or (os.path.altsep and os.path.altsep in interpreter_binary):
@@ -162,32 +166,61 @@ def execute(
     exit_code = None
     status = "failed"
     error = None
-    captured = b""
-    # Redirect to spool files instead of accumulating process output in RAM.
-    with tempfile.TemporaryFile(mode="w+b", dir=root) as stdout, tempfile.TemporaryFile(mode="w+b", dir=root) as stderr:
+    captured = bytearray()
+    child = None
+    # A bounded prompt file avoids blocking on stdin while the child fills stdout.
+    with tempfile.TemporaryFile(mode="w+b", dir=root) as stdin, selectors.DefaultSelector() as streams:
+        stdin.write(prompt.encode("utf-8"))
+        stdin.seek(0)
         try:
-            child = subprocess.Popen(cmd, cwd=str(workspace), stdin=subprocess.PIPE, stdout=stdout, stderr=stderr)
-            try:
-                child.communicate(input=prompt.encode("utf-8"), timeout=timeout)
-            except subprocess.TimeoutExpired:
-                child.kill()
-                child.communicate()
-                status = "timeout"
-                error = "Child exceeded the bounded runtime and was killed"
+            child = subprocess.Popen(cmd, cwd=str(workspace), stdin=stdin,
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                     start_new_session=True)
+            for stream in (child.stdout, child.stderr):
+                streams.register(stream, selectors.EVENT_READ)
+            sizes = {child.stdout: 0, child.stderr: 0}
+            while streams.get_map() or child.poll() is None:
+                remaining = timeout - (time.monotonic() - started)
+                if remaining <= 0:
+                    status = "timeout"
+                    error = "Job exceeded the runtime limit; process group was stopped"
+                    break
+                if child.poll() is not None:
+                    _stop_group(child)
+                for key, _ in streams.select(min(remaining, 0.05)):
+                    stream = key.fileobj
+                    data = os.read(stream.fileno(), 8192)
+                    if not data:
+                        streams.unregister(stream)
+                        continue
+                    sizes[stream] += len(data)
+                    if stream is child.stdout:
+                        captured.extend(data[:max(0, MAX_OUTPUT_BYTES - len(captured))])
+                    if sizes[stream] > MAX_OUTPUT_BYTES:
+                        status = "needs_review"
+                        error = "Child output exceeds retention limit; process group was stopped"
+                        break
+                if status == "needs_review":
+                    break
+            _stop_group(child)
+            child.wait()
             exit_code = child.returncode
-            if status != "timeout":
-                if stdout.tell() > MAX_OUTPUT_BYTES or stderr.tell() > MAX_OUTPUT_BYTES:
-                    status = "needs_review"
-                    error = "Child output exceeds retention limit"
-                elif exit_code != 0:
+            if status not in {"timeout", "needs_review"}:
+                if exit_code != 0:
                     error = "Interpreter exited nonzero; inspect local private logs"
                 else:
                     status = "completed_unverified"
         except (OSError, ValueError) as exc:
             error = f"Unable to launch interpreter: {type(exc).__name__}"
-        stdout.seek(0)
-        captured = stdout.read(MAX_OUTPUT_BYTES)
-        # stderr intentionally not stored: may include provider secrets/diagnostics.
+        finally:
+            if child is not None:
+                _stop_group(child)
+                child.wait()
+                for stream in (child.stdout, child.stderr):
+                    if stream is not None:
+                        stream.close()
+        # stderr is drained but never retained: it may include provider secrets.
+    captured = bytes(captured)
     elapsed = round(time.monotonic() - started, 3)
     answer = captured.decode("utf-8", errors="replace")
     if status == "completed_unverified" and not answer.strip():
@@ -204,6 +237,14 @@ def execute(
     _write_exclusive(transcript, captured)
     _write_exclusive(receipt, (json.dumps(report, indent=2, sort_keys=True) + "\n").encode("utf-8"))
     return report
+
+
+def _stop_group(child: subprocess.Popen) -> None:
+    # Descendants in this session are stopped even if the direct child has exited.
+    try:
+        os.killpg(child.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
 
 
 def main(argv: list[str] | None = None) -> int:
