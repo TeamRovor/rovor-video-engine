@@ -113,45 +113,67 @@ def verify(client, allowed, outside):
     return {'server': init['serverInfo'], 'available_tool_names': [t['name'] for t in tools['tools']], 'fixture_results': results, 'outside_root_refusal': refused, 'native_final_cut_operated': False, 'interpreter_mcp_client_verified': False}
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     output = args.output.expanduser().absolute()
     if output.exists():
         raise ValueError('Use a new output directory; preserve earlier evidence')
     output.mkdir(mode=0o700)
-    allowed = output / 'fixtures'; allowed.mkdir(mode=0o700)
-    outside = output / 'sentinel.fcpxml'
-    outside.write_text('<fcpxml version="1.13"><event name="OUTSIDE_ROOT_SENTINEL"/></fcpxml>')
-    source = Path('/Applications/Final Cut Pro.app/Contents/Frameworks/Interchange.framework/Versions/A/Resources/FCPXMLv1_13.dtd')
-    dtd = output / 'installed-1.13.dtd'; shutil.copyfile(source, dtd)
-    for name, w, h in [('landscape', 1920, 1080), ('portrait', 1080, 1920)]:
-        path = allowed / (name + '.fcpxml'); fixture(path, w, h)
-        subprocess.run(['xmllint', '--nonet', '--noout', '--dtdvalid', str(dtd), str(path)], check=True)
-    env = dict(os.environ)
-    env.update(FCP_PROJECTS_DIR=str(allowed), FCP_PROJECTS_DIRS=str(allowed), FCP_MCP_AUTOPUSH='0', FCP_MCP_INDEX='off', FCP_WATCH_DIR='',
-               UV_TOOL_DIR=str(output / 'uv-tools'), UV_CACHE_DIR=str(output / 'uv-cache'), UV_PYTHON_INSTALL_DIR=str(output / 'uv-python'))
-    # No optional AI/transcription extras and no provider credentials configured.
-    client = Client(['uvx', '--python', '3.11', '--from', 'fcp-mcp-server==0.27.2', 'fcp-mcp-server'], env, cwd=output)
-    report = {'status': 'failed', 'installed_dtd_sha256': hashlib.sha256(dtd.read_bytes()).hexdigest()}
+
+    # Record failures in early host preparation too (missing DTD, xmllint, uvx).
+    # These errors previously escaped before a receipt could be written.
+    report = {
+        'status': 'failed',
+        'stage': 'prepare_fixtures',
+        'native_final_cut_operated': False,
+        'interpreter_mcp_client_verified': False,
+    }
+    client = None
     try:
+        allowed = output / 'fixtures'
+        allowed.mkdir(mode=0o700)
+        outside = output / 'sentinel.fcpxml'
+        outside.write_text('<fcpxml version="1.13"><event name="OUTSIDE_ROOT_SENTINEL"/></fcpxml>')
+        source = Path('/Applications/Final Cut Pro.app/Contents/Frameworks/Interchange.framework/Versions/A/Resources/FCPXMLv1_13.dtd')
+        dtd = output / 'installed-1.13.dtd'
+        shutil.copyfile(source, dtd)
+        report['installed_dtd_sha256'] = hashlib.sha256(dtd.read_bytes()).hexdigest()
+        report['stage'] = 'validate_fixtures'
+        for name, w, h in [('landscape', 1920, 1080), ('portrait', 1080, 1920)]:
+            path = allowed / (name + '.fcpxml')
+            fixture(path, w, h)
+            subprocess.run(['xmllint', '--nonet', '--noout', '--dtdvalid', str(dtd), str(path)], check=True)
+
+        env = dict(os.environ)
+        env.update(FCP_PROJECTS_DIR=str(allowed), FCP_PROJECTS_DIRS=str(allowed),
+                   FCP_MCP_AUTOPUSH='0', FCP_MCP_INDEX='off', FCP_WATCH_DIR='',
+                   UV_TOOL_DIR=str(output / 'uv-tools'), UV_CACHE_DIR=str(output / 'uv-cache'),
+                   UV_PYTHON_INSTALL_DIR=str(output / 'uv-python'))
+        report['stage'] = 'start_mcp'
+        # No optional AI/transcription extras and no provider credentials configured.
+        client = Client(['uvx', '--python', '3.11', '--from', 'fcp-mcp-server==0.27.2',
+                         'fcp-mcp-server'], env, cwd=output)
+        report['stage'] = 'verify_mcp'
         report.update(verify(client, allowed, outside))
         report['status'] = 'passed_direct_mcp'
+        report['stage'] = 'complete'
     except Exception as exc:
-        report['error'] = str(exc)
+        report['error'] = f'{type(exc).__name__}: {exc}'
     finally:
-        try:
-            client.close()
-        except Exception as exc:
-            report['status'] = 'needs_review'
-            report['cleanup_error'] = str(exc)
-        (output / 'server-error.txt').write_bytes(client.errors)
+        if client is not None:
+            try:
+                client.close()
+            except Exception as exc:
+                report['status'] = 'needs_review'
+                report['cleanup_error'] = f'{type(exc).__name__}: {exc}'
+        # Error logs and evidence are saved under the newly created private root.
+        (output / 'server-error.txt').write_bytes(client.errors if client is not None else b'')
         (output / 'receipt.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))
     print('Private test evidence:', output)
     return 0 if report['status'] == 'passed_direct_mcp' else 2
-
 
 if __name__ == '__main__':
     raise SystemExit(main())
