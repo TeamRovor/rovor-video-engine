@@ -1178,7 +1178,7 @@
       "branch": "feature/blender-mcp-local-codex-v1",
       "scopes": [
         ".codex/config.toml",
-        "integrations/blender-mcp/",
+        "integrations/blender-mcp",
         "tools/blender_mcp_preflight.py",
         "tests/test_blender_mcp_preflight.py"
       ],
@@ -1473,6 +1473,29 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38",
         "https://github.com/TeamRovor/rovor-video-engine/pull/37"
+      ]
+    },
+    {
+      "id": "interpreter-research-process-bounds",
+      "title": "Bound Interpreter research output and clean up POSIX process groups",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar research-runner-hardening-20261022",
+      "branch": "feature/interpreter-research-job-v1",
+      "scopes": [
+        "tools/interpreter_research_job.py",
+        "tests/test_interpreter_research_job.py",
+        "integrations/open-interpreter/RESEARCH-JOB-ADAPTER.md"
+      ],
+      "depends_on": [
+        "interpreter-research-job-runner"
+      ],
+      "updated_at": "2026-10-22T18:16:22.485Z",
+      "next_update": "After exact committed tests and bounded-process regression checks",
+      "next_action": "Run PR #38 exact source tests, replace unbounded output spooling and direct-child-only timeout on POSIX; record Windows/Mac limitations.",
+      "acceptance": "Exact checkout offline tests pass; regressions prove output overflow stops promptly and ordinary POSIX descendants stop after timeout or parent exit; dry-run invokes no model. No Mac runtime claim.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/38"
       ]
     }
   ]
