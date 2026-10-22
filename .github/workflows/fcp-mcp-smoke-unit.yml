@@ -10,6 +10,8 @@ on:
       - 'tests/test_fcp_interpreter_registration.py'
       - 'tools/fcp_interpreter_appserver_smoke.py'
       - 'tests/test_fcp_interpreter_appserver_smoke.py'
+      - 'tools/fcp_native_import_candidate.py'
+      - 'tests/test_fcp_native_import_candidate.py'
       - 'tests/test_fcp_host_smoke.py'
       - '.github/workflows/fcp-mcp-smoke-unit.yml'
   push:
@@ -22,6 +24,8 @@ on:
       - 'tests/test_fcp_interpreter_registration.py'
       - 'tools/fcp_interpreter_appserver_smoke.py'
       - 'tests/test_fcp_interpreter_appserver_smoke.py'
+      - 'tools/fcp_native_import_candidate.py'
+      - 'tests/test_fcp_native_import_candidate.py'
       - 'tests/test_fcp_host_smoke.py'
       - '.github/workflows/fcp-mcp-smoke-unit.yml'
   workflow_dispatch:
@@ -47,3 +51,4 @@ jobs:
           python -m unittest discover -s tests -p test_fcp_interpreter_stage.py -v
           python -m unittest discover -s tests -p test_fcp_interpreter_registration.py -v
           python -m unittest discover -s tests -p test_fcp_interpreter_appserver_smoke.py -v
+          python -m unittest discover -s tests -p test_fcp_native_import_candidate.py -v
