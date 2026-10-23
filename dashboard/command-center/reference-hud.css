@@ -198,9 +198,9 @@ body[data-source-mode="error"] .header-status-led{background:#ff7798}
   align-self:center;width:max-content;max-width:100%;gap:8px;min-height:62px;margin:0;padding:8px 10px;
   border-radius:4px;clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%,0 12px);
 }
-.tab {min-width:86px;display:flex;flex-direction:column;align-items:center;gap:3px;justify-content:center;padding:6px 12px;border:1px solid rgba(87,139,212,.3);border-radius:2px;background:rgba(5,16,31,.74);color:#a9cbe8;font-size:10px;letter-spacing:.07em;line-height:1.2}
+.tab {min-width:86px;clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px),0 10px);display:flex;flex-direction:column;align-items:center;gap:3px;justify-content:center;padding:6px 12px;border:1px solid rgba(87,139,212,.3);border-radius:2px;background:rgba(5,16,31,.74);color:#a9cbe8;font-size:10px;letter-spacing:.07em;line-height:1.2}
 .tab.active {border-color:#82c9ff;box-shadow:0 0 20px rgba(43,137,252,.28),inset 0 0 18px rgba(44,128,238,.16)}
-.nav-symbol {font-size:22px;line-height:1;color:#90caff;min-height:21px}
+.nav-symbol {display:block;flex:0 0 22px;width:22px;height:22px;color:#90caff;filter:drop-shadow(0 0 4px rgba(82,159,255,.3))}
 .tab.active .nav-symbol {color:#d4f1ff;text-shadow:0 0 10px #4bafff}
 main {display:block!important;position:relative;width:100%;flex:1 0 auto;max-height:none!important;min-height:230px;height:auto!important;overflow:visible!important;border:0;padding-bottom:28px}
 .tab-view.active {display:block;min-height:180px}
@@ -281,7 +281,7 @@ main .hud-panel {padding:16px;border-radius:3px}
   .health-topline{grid-template-columns:1fr 1fr}
   .tabbar{position:sticky;bottom:0;align-self:stretch;width:100%;gap:2px;padding:5px;min-height:56px}
   .tab{min-width:0;flex:1;padding:5px 2px;font-size:9px}
-  .nav-symbol{font-size:18px}
+  .nav-symbol{width:18px;height:18px;flex-basis:18px}
   main{min-height:260px}
   .section-grid.two-thirds,.section-grid.triple{grid-template-columns:1fr}
   .system-network{grid-template-columns:1fr}
