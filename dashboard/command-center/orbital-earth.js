@@ -170,7 +170,7 @@ void main() {
       lastTime=time;
       const paused=isStopped();
       if(!paused) {
-        angle+=elapsed*2*Math.PI/(DEFAULT_REVOLUTION_SECONDS/Math.max(speed,0.1));
+        angle=(angle+elapsed*2*Math.PI/(DEFAULT_REVOLUTION_SECONDS/Math.max(speed,0.1)))%(2*Math.PI);
         cloud+=elapsed*.07;
       }
       if((time-lastDraw>41 && (!paused||!lastDraw))||!frame) {
@@ -191,7 +191,7 @@ void main() {
       getSpeed(){return speed;},
       setPaused(next){manualPause=!!next;lastDraw=0;return manualPause;},
       isPaused(){return isStopped();},
-      nudge(degrees){angle+=Number(degrees||0)*Math.PI/180;lastDraw=0;},
+      nudge(degrees){angle=(angle+Number(degrees||0)*Math.PI/180)%(2*Math.PI);lastDraw=0;},
       reset(){angle=0;cloud=0;lastDraw=0;},
       stop(){stopped=true;environment.cancelAnimationFrame?.(frame);gl.deleteTexture(texture);gl.deleteProgram(program);gl.deleteBuffer(buffer);},
     };
@@ -199,8 +199,17 @@ void main() {
   function boot(doc,environment) {
     doc=doc||(typeof document!=='undefined'?document:null);
     const canvas=doc?.getElementById('earthCanvas');
-    const renderer=canvas?createRenderer(canvas,{document:doc,environment:environment||root}):null;
-    if(canvas) canvas.dataset.renderer=renderer?'webgl':'css-fallback';
+    let renderer=null;
+    try {renderer=canvas?createRenderer(canvas,{document:doc,environment:environment||root}):null;}
+    catch (_) { renderer=null; } // Unsupported context must not block the dashboard.
+    if(canvas) {
+      canvas.dataset.renderer=renderer?'webgl':'css-fallback';
+      canvas.addEventListener?.('webglcontextlost',event=>{
+        event.preventDefault();
+        renderer?.stop();
+        canvas.dataset.renderer='css-fallback';
+      },{once:true});
+    }
     return renderer;
   }
   return {createTexture,isLand,createRenderer,boot,DEFAULT_REVOLUTION_SECONDS};
