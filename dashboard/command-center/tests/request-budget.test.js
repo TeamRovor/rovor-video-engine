@@ -11,7 +11,7 @@ const SHA='a'.repeat(40);
 const BASE=Date.parse('2026-10-23T00:00:00Z');
 
 function harness() {
-  let now=BASE, hidden=false;
+  let now=BASE, hidden=false, failNextHead=false;
   const calls=[], elements=new Map(), events=new Map(), intervals=[];
   function el(id) {
     if (!elements.has(id)) {
@@ -34,11 +34,14 @@ function harness() {
     priority:1,owner:'CI test-only owner',depends_on:[],next_action:'Check actual work'};
   const queue={version:1,tasks:[task]};
   const routes={version:1,tasks:{'real-task':{lane:'coordination',requires:['hosted-ci']}}};
-  const response=body=>({ok:true,status:200,json:async()=>body});
+  const response=(body,status=200)=>({ok:status===200,status,json:async()=>body});
   async function fetch(url) {
     calls.push(String(url));
     if(url==='snapshot.json')return {ok:false,status:404};
-    if(url.endsWith('/commits/main'))return response({sha:SHA});
+    if(url.endsWith('/commits/main')) {
+      if(failNextHead){failNextHead=false;return response({},403);}
+      return response({sha:SHA});
+    }
     if(url.includes('/coordination/tasks.json'))return response(queue);
     if(url.includes('/coordination/work-routing.json'))return response(routes);
     if(url.includes('/git/trees/'))return response({tree:[],truncated:false});
@@ -57,6 +60,7 @@ function harness() {
   return {
     calls,el,events,intervals,settle,
     setHidden(value){hidden=value;},
+    failNextHead(){failNextHead=true;},
     async initial(){await settle();assert.equal(intervals.length,1);},
     async elapse(minutes){const ticker=intervals[0];assert.ok(ticker);
       assert.ok(minutes*60000%ticker.delay===0);
@@ -117,4 +121,15 @@ test('manual refresh does not query expensive optional endpoints each time',asyn
 test('main app source cannot send GitHub write commands or embed credentials',()=>{
   assert.doesNotMatch(SCRIPT,/gh[pousr]_[a-zA-Z0-9]{20,}/);
   assert.doesNotMatch(SCRIPT,/method\s*:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/i);
+});
+
+test('failed critical refresh visibly downgrades live data to a stale snapshot',async()=>{
+  const page=harness();await page.initial();
+  assert.equal(page.el('syncState').textContent,'LIVE GITHUB');
+  page.failNextHead();
+  const handler=page.events.get('refreshBtn:click');assert.ok(handler);
+  handler();await page.settle();
+  assert.equal(page.el('syncState').textContent,'OFFLINE SNAPSHOT');
+  assert.match(page.el('syncDetails').textContent,/HTTP 403/);
+  assert.ok(page.el('taskTable').innerHTML.includes('Router proof'));
 });
