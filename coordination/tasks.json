@@ -1760,7 +1760,7 @@
       "id": "jane-queued-native-diagnosis",
       "title": "Make native diagnosis inspect queued jobs as well as manual import attempts",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar continuous workforce repair",
       "branch": "fix/jane-queued-diagnosis",
       "scopes": [
@@ -1772,10 +1772,41 @@
       "depends_on": [
         "jane-diagnostic-xml-integrity"
       ],
-      "updated_at": "2026-10-23T00:42:07.028Z",
-      "next_update": "After failing regression reproduction and repaired integrated offline suite",
-      "next_action": "Reuse existing read-only queue status and probe; report all bounded persisted queued/manual attempts, missing receipts and invalid evidence without dispatch or database initialization.",
+      "updated_at": "2026-10-23T00:44:57.527Z",
+      "next_update": "PR #43 integration review",
+      "next_action": "Review PR #43 stacked on #42, then use the existing host only for unresolved native import investigation. Queue/manual diagnostic coverage is tested source, not host deployment.",
       "acceptance": "Queued native-import UUID folder can be diagnosed; malformed paths refused; manual/queue mixed attempts retained; missing receipts explicit; no model, native dispatch or DB initialization; integrated suite passes.",
+      "evidence": [
+        {
+          "commit": "f084710cd3e9b3068988f3c473dade2f4adb77f2",
+          "platform": "Linux Python 3.12.14",
+          "check": "161 integrated workforce tests; five regression methods fail before fix; Python 3.9 syntax; git diff --check; four published blob hashes match",
+          "result": "PASS 161/161 in6.727s. Native queued/manual attempts and malformed/missing/symlinked evidence covered; no queue initialization or dispatch by diagnosis. No Mac runtime/app control.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/43"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/43"
+      ]
+    },
+    {
+      "id": "ghost-worker-database-path-integrity",
+      "title": "Refuse redirected SQLite database paths before worker initialization",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar continuous workforce repair",
+      "branch": "fix/ghost-database-path-integrity",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tests/test_ghost_worker.py"
+      ],
+      "depends_on": [
+        "jane-queued-native-diagnosis"
+      ],
+      "updated_at": "2026-10-23T00:44:57.527Z",
+      "next_update": "After pre-fix reproduction and integrated regression checks",
+      "next_action": "Test database/SQLite sidecar symlinks and nonregular paths; refuse before SQLite opens anything while preserving ordinary queue restart behavior.",
+      "acceptance": "Deterministic regressions prove no SQLite connection or external target write on redirected paths; regular queues initialize/restart as before; integrated suite passes.",
       "evidence": []
     }
   ]
