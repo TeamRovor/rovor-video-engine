@@ -2412,7 +2412,7 @@
       "id": "private-supervisor-status-after-tamper",
       "title": "Report actual user launchd supervisor state independently of corrupted staged files",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar Mac supervisor status integrity session 2026-10-22",
       "branch": "fix/private-supervisor-status-after-tamper-20261022",
       "scopes": [
@@ -2422,13 +2422,22 @@
       "depends_on": [
         "private-supervisor-emergency-deactivate"
       ],
-      "updated_at": "2026-10-23T04:13:22.201Z",
-      "next_update": "After Python3.9/3.11 hosted CI and exact source readback",
-      "next_action": "Make read-only launchctl status probe independent of damaged/missing on-disk stage; return distinct not-confirmed/unavailable states without leaking output or Keychain; keep all activation checks and STOP behavior unchanged.",
+      "updated_at": "2026-10-23T04:15:52.604Z",
+      "next_update": "After an actual trusted Mac user-session executor can be run; status source checks alone are not host proof.",
+      "next_action": "Merged in PR #41 at 1eff106b2c8b5108608e44c132310b2a997cbbe6; future authorized host validation should compare fixed-label launchctl print evidence to stage_valid, including a damaged or missing stage, without touching existing media or reviving public runner.",
       "acceptance": "When source/plist is corrupted or missing but fixed service still loaded, --status reports launchd_loaded true AND stage_valid false; launchctl failures never pretend definitive unloaded; only constant-label GUI user service inspected; mock tests and hosted CI pass. No Mac-host claims.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/54",
         "https://github.com/TeamRovor/rovor-video-engine/pull/57"
+      ],
+      "evidence": [
+        {
+          "commit": "1eff106b2c8b5108608e44c132310b2a997cbbe6",
+          "platform": "GitHub hosted Ubuntu Linux Python 3.9/3.11 (macOS launchctl mocked)",
+          "check": "PR #59 five synthetic regressions for damaged runtime/deleted plist with service loaded, ambiguous nonzero result, timeout, and non-Mac no-call; exact integrated source readback and existing protected activation/STOP controls",
+          "result": "PASS on PR #59 hosted Python3.9 and 3.11 at workflow 39899283702. Squash merged into PR #41; real Mac not executed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39899283702"
+        }
       ]
     }
   ]
