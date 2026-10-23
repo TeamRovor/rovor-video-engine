@@ -12,7 +12,7 @@ class SeparatedOralTests(unittest.TestCase):
   for pair in [(0,1e-7),(1-1e-7,1)]:
    images=[]
    for fv in pair:
-    self.rig.head.last_painted_target=np.full((48,2),np.nan);im,row=self.pose(fv);images.append(np.array(im).astype(int));self.assertGreater(row['minimumTriangleArea2'],0);self.assertEqual(len(row['planes']),9);self.assertFalse(row['bakedMouthInUpperCarrier'])
+    self.rig.head.last_painted_target=np.full((48,2),np.nan);im,row=self.pose(fv);images.append(np.array(im).astype(int));self.assertGreater(row['minimumTriangleArea2'],0);self.assertEqual(len(row['planes']),10);self.assertFalse(row['bakedMouthInUpperCarrier'])
    self.assertLessEqual(int(abs(images[0]-images[1]).max()),2)
   np.testing.assert_array_equal(source,self.rig.lower.source)
  def test_crown_is_clipped_geometrically_and_upper_identity_preserved(self):
@@ -25,10 +25,20 @@ class SeparatedOralTests(unittest.TestCase):
   from current_contact_exposure import CurrentContactHead
   original=CurrentContactHead();w=np.eye(9)[3]*.6+np.eye(9)[7]*.4
   np.testing.assert_array_equal(np.array(original.weights(w)),np.array(self.rig.head.weights(w)))
- def test_unseparated_dental_overlay_rejects_explicitly(self):
-  self.rig.head.dental_fraction=1
+ def test_dental_tip_is_separate_and_crown_material_is_unchanged(self):
+  w=np.eye(9)[8]*.7+np.eye(9)[3]*.3
+  def pose():return self.rig.assemble(self.rig.head.weights(w))
+  pose();crown=self.rig.head.review_teeth.copy();source=self.rig.head.dental_tip.copy()
   try:
-   with self.assertRaisesRegex(ValueError,'TH/DH'):self.pose(0)
+   images=[]
+   for fraction in [0,1e-7,1-1e-7,1]:
+    self.rig.head.dental_fraction=fraction;im,row=pose();images.append(np.array(im).astype(int))
+    np.testing.assert_array_equal(crown,self.rig.head.review_teeth)
+    self.assertTrue(row['upper288Exact'])
+   self.assertGreater(float(self.rig.last_parts['Front dental tongue tip'][:,:,3].sum()),0)
+   self.assertLessEqual(int(abs(images[0]-images[1]).max()),2)
+   self.assertLessEqual(int(abs(images[2]-images[3]).max()),2)
+   np.testing.assert_array_equal(source,self.rig.head.dental_tip)
   finally:self.rig.head.dental_fraction=0
 
 if __name__=='__main__':unittest.main()

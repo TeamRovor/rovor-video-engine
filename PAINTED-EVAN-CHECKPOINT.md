@@ -8,7 +8,15 @@ Repo work/engine; development/evan-painted-rig (legacy name), draft PR#4 https:/
 
 Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful review milestones/failure/completion/required action only; disable when actually ready. Routine decisions need no question.
 
-## Latest: nine independent oral/face planes driven by original narration
+## Latest: ten actual planes, front dental tongue separated
+
+Read CARTOON-EVAN-DENTAL-SEPARATED-ORAL.md. rigid_teeth_parts exposes unchanged crown and original front1.5px dental-tip overlap; ordinary rigid_teeth_surface recomposites byte-exact by regression. MaterialCapture records separate tip during active phone; no TH/DH rejection. Ten real review planes, default unchanged. Original artwork/alpha/audio/phone plan untouched. Interval renderer now follows supplied voice bounds/waveform/cursor.
+
+outputs/evan-cartoon-dental-separated: TH307..349 normal43/slow172; DH940..997 normal58/slow232 frames,1280x720/48fps, fullydecode. OriginalPCM102333:116667=14334 and313333:332667=19334; AACdecoded exactsamplecounts. All101native mouths/full325983990/designsheet visuallyinspected; no independent listening/playback acceptance. All101upper288exact,nose0, oralROI255,mintri20.93735. Tipactive14frames. Threeactual10planePSDs325955990 reloadmean.026267/.025433/.025916,notbones. Ten focused/regressiontests pass. No pendingjobs; priorcheckpoint HISTORY-2026-10-23-B.
+
+Critical: dentalband/subtleoverlap notconvincingphoneticacting; shallowstraightlips/closedslash, narrowAO981..985 obviouscapcornerwedges, angularjaw/neck/staticexpression belowconcept. Humanart/animation review orredrawncontact/roundedshapes needed. CPUproofrendering adequate. Nextfix actual visible narrowroundedcap wedges with existingindependentcap/contour, thencomplete-recording geometry pluswayonset/silence review. Do not retimehideart.18flags+waystillunverified. Fullpolishedmilestone NOTready,automationACTIVE,main/V3/V4/releases/updater/nativeMoho untouched. NoMoho/merge/deploy.
+
+## Retained: nine independent oral/face planes driven by original narration
 
 Read CARTOON-EVAN-SEPARATED-NARRATED-ORAL.md. New separated_oral_review uses original full oral controls/voice with separate cleanface, cavity, tongue, rigidcrown, jawskin, lowerlip and uppercap plus neck/skinunderlap. No combined-mouth carrier, head swaps, two-pose adapter or newart. Original nonoral blend/browpostpass preserved above310guard. Lowerpressure still thicknessproxy; capprofile authored/notcalibrated.
 

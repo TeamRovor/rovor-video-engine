@@ -32,6 +32,10 @@ class MaxillaryCartoonHead(ContinuousFVCartoonHead):
         return self.rigid_teeth_surface(w,oral)
 
     def rigid_teeth_surface(self,w,oral):
+        teeth,tip=self.rigid_teeth_parts(w,oral)
+        return over(teeth,tip)
+
+    def rigid_teeth_parts(self,w,oral):
         # The source alpha is already isolated teeth. Hidden RGB elsewhere in
         # that PNG must never be mistaken for visible full-face paint.
         source=self.layers['upper-teeth'].astype('float32').copy();source[:,:,:3]*=source[:,:,3:4]/255
@@ -43,9 +47,10 @@ class MaxillaryCartoonHead(ContinuousFVCartoonHead):
         dest-=normal*(3+16*rounded_art_strength(w))
         matrix=np.column_stack([rotation,dest-rotation@anchor]).astype('float32')
         teeth=cv2.warpAffine(source,matrix*3,(SIZE*3,SIZE*3),flags=cv2.INTER_LINEAR,borderMode=cv2.BORDER_CONSTANT);teeth=cv2.resize(teeth,(SIZE,SIZE),interpolation=cv2.INTER_AREA)
+        tip=np.zeros_like(teeth)
         if self.dental_fraction>0:
-            blade,_=self.tongue_parts(w,oral);alpha=teeth[:,:,3];ys=np.arange(SIZE,dtype=np.float32)[:,None];bottom=np.max(np.where(alpha>=127.5,ys,-1000),axis=0);edge=np.clip((ys-(bottom[None,:]-1.5))/1.5,0,1)*(alpha/255);teeth=over(teeth,blade,float(self.dental_fraction)*edge[:,:,None])
-        return teeth
+            blade,_=self.tongue_parts(w,oral);alpha=teeth[:,:,3];ys=np.arange(SIZE,dtype=np.float32)[:,None];bottom=np.max(np.where(alpha>=127.5,ys,-1000),axis=0);edge=np.clip((ys-(bottom[None,:]-1.5))/1.5,0,1)*(alpha/255);tip=blade*(float(self.dental_fraction)*edge[:,:,None])
+        return teeth,tip
 
     def painted_oral_group(self,cavity,teeth,tongue,contact,closed,aperture,w):
         floor=float(ease((aperture-8)/12));lift=tongue_lift(w)*float(ease((aperture-1.2)/4))

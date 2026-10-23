@@ -1,5 +1,7 @@
 # Evan: nine separately rendered oral/face planes on original narration
 
+Historical nine-plane milestone; current ten-plane TH/DH extension is documented in CARTOON-EVAN-DENTAL-SEPARATED-ORAL.md. Its source clips/evidence remain unchanged.
+
 The independent lower lip is now connected to the original continuous narration controls together with separately sampled upper lip, incisors, cavity and tongue. The review upper-face carrier contains clean skin/cheeks and preserved brow output rather than a combined mouth image. This is working component separation on a voiced test, not a polished animation or a full-English production profile.
 
 ## Construction and scope

@@ -1,4 +1,4 @@
-"""Nine actual mouth/face planes driven by the unchanged narration planner.
+"""Ten actual mouth/face planes driven by the unchanged narration planner.
 
 Review construction only: pressure is a thickness proxy, cap coordinates are
 authored, and the existing jaw/cap artwork remains unapproved. No defaults.
@@ -17,11 +17,11 @@ from painted_timing import ease
 
 class MaterialCapture(FaceCapture):
  def composite_oral(self,face,cavity,teeth,tongue,contact,closed,aperture,w):
-  # shortcut: upstream teeth include a TH/DH tip overlay; split it before dental-phone review.
-  if self.dental_fraction>0:raise ValueError('TH/DH needs a separate front dental-tip plane in this review construction')
   # Use the same rigid incisor parent at pure/mixed F/V; no material switch.
   self.review_interior=self.current_backing[:,:,3:4]/255
-  self.review_teeth=self.rigid_teeth_surface(w,self.current_oral)*self.review_interior
+  crown,tip=self.rigid_teeth_parts(w,self.current_oral)
+  self.review_teeth=crown*self.review_interior
+  self.review_dental_tip=tip*self.review_interior
   visibility=max(float(ease((aperture-8)/12)),tongue_lift(w)*float(ease((aperture-1.2)/4)))
   self.review_tongue=tongue.copy()*visibility
   return super().composite_oral(face,cavity,teeth,tongue,contact,closed,aperture,w)
@@ -58,7 +58,7 @@ class SeparatedOralReview:
   # Brow repair/acting is applied after the head's oral composite upstream.
   expression=self.head.repair|(self.head.forehead>0);face[expression]=finished[expression]
   underpaint=np.zeros_like(self.head.clean_face);underpaint[305:365,190:285]=self.head.clean_face[305:365,190:285]
-  parts={'Neck backing':self.neck.copy(),'Drawn skin underlap':underpaint,'Painted cavity':self.head.current_backing.copy(),'Narration tongue':self.head.review_tongue.copy(),'Rigid upper incisors':self.head.review_teeth.copy(),'Drawn jaw skin':jaw,'Independent lower lip':self.lower.pose(lower,self.head.current_fv),'Independent upper-lip cap':arch_surface(self.cap,self.cap_edge,upper),'Upper face and cheeks':face*face_ownership(target,upper)[:,:,None]}
+  parts={'Neck backing':self.neck.copy(),'Drawn skin underlap':underpaint,'Painted cavity':self.head.current_backing.copy(),'Narration tongue':self.head.review_tongue.copy(),'Rigid upper incisors':self.head.review_teeth.copy(),'Front dental tongue tip':self.head.review_dental_tip.copy(),'Drawn jaw skin':jaw,'Independent lower lip':self.lower.pose(lower,self.head.current_fv),'Independent upper-lip cap':arch_surface(self.cap,self.cap_edge,upper),'Upper face and cheeks':face*face_ownership(target,upper)[:,:,None]}
   result=np.zeros_like(jaw)
   for part in parts.values():result=over(result,part)
   image=Image.fromarray(np.rint(straight(result)).astype('uint8'));self.last_parts=parts;self.last_target=target;self.baseline=baseline
