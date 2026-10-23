@@ -1,0 +1,59 @@
+name: Open Interpreter research adapter offline regression
+
+on:
+  push:
+    branches:
+      - test/interpreter-research-hosted-regression-20261022
+      - feature/interpreter-research-job-v1
+    paths:
+      - tools/interpreter_research_job.py
+      - tests/test_interpreter_research_job.py
+      - .github/workflows/interpreter-research-hosted-regression.yml
+  pull_request:
+    paths:
+      - tools/interpreter_research_job.py
+      - tests/test_interpreter_research_job.py
+      - .github/workflows/interpreter-research-hosted-regression.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-research-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.11']
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONUNBUFFERED: '1'
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+    steps:
+      - name: Check out exact PR commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install test Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: ''
+      - name: Compile adapter and test file without executing models
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          for file in (Path("tools/interpreter_research_job.py"),
+                       Path("tests/test_interpreter_research_job.py")):
+              ast.parse(file.read_text(encoding="utf-8"), filename=str(file))
+          print("Python syntax PASS; no model request")
+          PY
+      - name: Run all bounded research adapter offline regressions
+        run: python -B -m unittest discover -s tests -p 'test_interpreter_research_job.py' -v
+      - name: Evidence boundary
+        run: |
+          echo 'Hosted Linux offline tests only.'
+          echo 'No Open Interpreter model, MCP, Mac process, Final Cut UI, or unattended execution was checked.'
