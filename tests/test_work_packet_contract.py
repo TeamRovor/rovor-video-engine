@@ -22,6 +22,23 @@ class WorkPacketContractTests(unittest.TestCase):
                          {"client_intake", "sourced_sales", "ci_triage"})
         self.assertEqual(len(self.valid["packets"]), 3)
 
+    def test_json_schema_is_parseable_and_bounds_match_contract(self):
+        with (CONTRACT / "work-packet.schema.json").open(encoding="utf-8") as f:
+            schema = json.load(f)
+        self.assertEqual(schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
+        self.assertEqual(schema["type"], "object")
+        self.assertFalse(schema["additionalProperties"])
+        self.assertEqual(set(schema["required"]), {
+            "schema_version", "packet_id", "capability", "intent", "source_refs",
+            "constraints", "acceptance", "executor", "authorization",
+            "technical_status", "artifact_receipt", "approval"
+        })
+        self.assertEqual(schema["properties"]["schema_version"]["const"], 1)
+        self.assertEqual(schema["properties"]["source_refs"]["maxItems"], 50)
+        self.assertEqual(schema["properties"]["acceptance"]["maxItems"], 50)
+        self.assertEqual(schema["$defs"]["artifactReceipt"]["properties"]["artifacts"]["maxItems"], 50)
+        self.assertEqual(schema["$defs"]["artifact"]["properties"]["uri"]["maxLength"], 2048)
+
     def test_reference_packets_pass(self):
         self.assertEqual(evaluate(self.valid)["summary"],
                          {"passed": 3, "failed": 0, "total": 3})
