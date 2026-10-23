@@ -1,5 +1,25 @@
 # Workforce integration checkpoint
 
+## Jane library-only durable worker integration (2026-10-22, PR #41)
+
+**Implemented and hosted-tested in source, not yet executed on Amar's Mac.** Source-identical Jane library modules, onepass adapter and offline tests from PR #37 are now included in the existing PR #41 workforce candidate. PR #45 separately owns overlapping bootstrap error handling; reconcile before merging, never overwrite the concurrent branch.
+
+The existing SQLite queue accepts `finalcut.library-create` with only a validated `{ "job_id": "slug" }`. The usual worker, research approval, and legacy `--allow-native-import` cannot select it. An explicit `--approve-jane-library-create` is required, and the action terminates with `needs_review` even if a library folder appears: **native Final Cut application selection is not verified**. Expired, crashed, or interrupted GUI attempts never requeue. STOP is checked before SQLite claim and immediately before native GUI action.
+
+**One supervised Mac command, from a reviewed up-to-date PR #41 checkout:**
+
+```bash
+python3 tools/jane_library_worker.py --job-id jane-isolated-001 --create
+```
+
+Without `--create`, the command is an inert dry run with no DB setup; `python3 tools/jane_library_worker.py --status` inspects an existing queue in SQLite read-only mode. The launcher enqueues a stable deduped job and executes **only that exact SQLite UUID**. Repeating a job ID reports existing state, never GUI-replays. STOP prevents creating a latent queued GUI action. The generic loop, if used, requires `--approve-jane-library-create --jane-queue-job-id <exact-UUID> --max-jobs 1`; it cannot sweep several GUI tasks with broad approval. No model, XML import, existing library mutation, export or social posting is authorized by this queue kind.
+
+**Acceptance gates:** first actual native library creation in a new uniquely named `.fcpbundle`; then separately prove Final Cut has selected that exact library; then and only then implement/approve a new isolated XML editing and export adapter. The old `fcp_native_auto_import.py --dispatch` remains unconditionally disabled following the proven unintended landscape insertion into pre-existing `~/Movies/Untitled.fcpbundle`. Do not retry prior native job IDs, use an old import command, or edit/delete Untitled.
+
+The ROVOR worker still is **not** a continuously running Mac ghost employee. GitHub and hosted tests do not launch Final Cut on the user's Mac; a one-time approved foreground execution and independent app-selection proof are required.
+
+---
+
 ## Current result and next action
 
 **Native import correction:** the latest supplied Mac audit found the landscape
