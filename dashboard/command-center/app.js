@@ -19,6 +19,23 @@ function syncView() {
   when.textContent = state.lastSuccess ? 'Last verified: ' + new Date(state.lastSuccess).toLocaleString() : 'Not yet verified';
   document.getElementById('refreshBtn').disabled = state.busy;
   document.getElementById('refreshBtn').textContent = state.busy ? 'Syncing…' : 'Refresh GitHub';
+  syncReactorStatus();
+}
+
+function syncReactorStatus() {
+  const stage = document.querySelector('.reactor-stage');
+  if (!stage || (stage.dataset.instrumentMode && stage.dataset.instrumentMode !== 'live-telemetry')) return;
+  const label = stage.querySelector('.readout-right strong');
+  const detail = stage.querySelector('.readout-right small');
+  if (!label || !detail) return;
+  const status = {
+    live: ['LIVE GITHUB', 'PUBLIC DATA · VERIFIED'],
+    snapshot: ['OFFLINE SNAPSHOT', 'CACHED DATA · NOT LIVE'],
+    error: ['SYNC FAILED', 'SOURCE NOT VERIFIED'],
+    loading: ['VERIFYING SOURCE', 'WAITING FOR GITHUB']
+  }[state.syncMode] || ['VERIFYING SOURCE', 'WAITING FOR GITHUB'];
+  label.textContent = status[0];
+  detail.textContent = status[1];
 }
 
 async function syncGitHub(forceExtras = false) {
