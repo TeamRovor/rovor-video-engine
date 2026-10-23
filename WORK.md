@@ -71,6 +71,8 @@ If GitHub rejects a stale write, reread and reapply only your task change. Never
 Re-read main after publishing and check for concurrent/overlapping claims. Stop overlapping work if one appears.
 A branch-only claim is proposed, not shared ownership. GitHub updates are not a distributed task lock.
 
+For new tasks, use `tools/task_routing_pair.py` and `coordination/TASK-INTAKE.md` to validate the task and route together. Review both changes and commit both JSON files in one Git commit. A GitHub connector call is not a multi-file transaction; verify routing coverage after any connector-only claim.
+
 ## 4. Implement and verify the smallest useful result
 
 Inspect the current worktree before changing branches; preserve uncommitted work. Use an isolated branch
