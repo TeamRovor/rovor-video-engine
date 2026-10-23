@@ -1,0 +1,221 @@
+{
+  "generated_at": "2026-10-23",
+  "repo": "TeamRovor/rovor-video-engine",
+  "repo_snapshot": {
+    "tasks_total": 82,
+    "tasks_status": {"done": 67, "active": 7, "blocked": 5, "ready": 3},
+    "files_total": 159,
+    "open_prs": 28,
+    "routing_rules": 82,
+    "routing_coverage": "82/82",
+    "commit": "4129bf49c76431653a80fe83b0fd54af15ccba4c"
+  },
+  "workers": [
+    {
+      "name": "Amar / iPhone ChatGPT",
+      "status": "active",
+      "focus": [
+        "ROVOR capability evaluation pack",
+        "Interpreter macOS path alias fix",
+        "Jane bootstrap error details",
+        "OmniRoute receipt containment"
+      ]
+    },
+    {
+      "name": "Codex / Keona Windows session",
+      "status": "mixed",
+      "focus": [
+        "Render cache file identity",
+        "Windows runtime validation (blocked)"
+      ]
+    },
+    {
+      "name": "Mac local executor",
+      "status": "unverified",
+      "focus": [
+        "Local app proof not yet established",
+        "Private control path not verified"
+      ]
+    },
+    {
+      "name": "GitHub control plane",
+      "status": "healthy",
+      "focus": [
+        "Atomic task intake merged",
+        "Route coverage 82/82",
+        "Hosted checks available"
+      ]
+    }
+  ],
+  "file_groups": [
+    {"name": "(root)", "count": 12},
+    {"name": ".agents", "count": 5},
+    {"name": ".codex", "count": 1},
+    {"name": ".github", "count": 22},
+    {"name": ".openinterpreter", "count": 1},
+    {"name": "architecture", "count": 2},
+    {"name": "business", "count": 12},
+    {"name": "coordination", "count": 7},
+    {"name": "evan-character", "count": 51},
+    {"name": "evan-engine", "count": 11},
+    {"name": "integrations", "count": 9},
+    {"name": "reviews", "count": 2},
+    {"name": "rovor-production", "count": 6},
+    {"name": "tests", "count": 9},
+    {"name": "tools", "count": 9}
+  ],
+  "open_tasks": [
+    {
+      "id": "windows-runtime",
+      "status": "blocked",
+      "priority": 1,
+      "owner": "Codex / Keona Windows desktop session",
+      "title": "Validate the existing Windows setup and render workflow",
+      "depends_on": []
+    },
+    {
+      "id": "scene-moho-contract",
+      "status": "ready",
+      "priority": 2,
+      "owner": null,
+      "title": "Document the smallest shared scene-to-Moho contract",
+      "depends_on": ["windows-runtime", "moho-disposable-pose"]
+    },
+    {
+      "id": "shared-audio-import",
+      "status": "active",
+      "priority": 1,
+      "owner": "Codex / Amar audio import session",
+      "title": "Make all accessible uploaded MP3s available in the private GitHub repo",
+      "depends_on": []
+    },
+    {
+      "id": "continuous-english-diphthongs",
+      "status": "blocked",
+      "priority": 1,
+      "owner": "ChatGPT / Amar animation articulation session",
+      "title": "Add opt-in continuous acoustic vowel-glides to Evan painted mouth rig",
+      "depends_on": ["acting-acoustic-preflight"]
+    },
+    {
+      "id": "render-cache-file-identity",
+      "status": "active",
+      "priority": 2,
+      "owner": "Codex / Keona Windows desktop session",
+      "title": "Prevent stale render resume after local dependency replacement",
+      "depends_on": []
+    },
+    {
+      "id": "nonmoho-grip-raster-visibility",
+      "status": "active",
+      "priority": 1,
+      "owner": "ChatGPT / Amar non-Moho grip visual QA",
+      "title": "Verify actual alpha artwork at Evan wrist-to-tool grip per rendered frame",
+      "depends_on": ["nonmoho-right-wrist-tool-ik"]
+    },
+    {
+      "id": "nonmoho-hand-over-prop-occlusion",
+      "status": "blocked",
+      "priority": 1,
+      "owner": "ChatGPT / Amar foreground grip layering session",
+      "title": "Composite authentic original Evan hand over held tool without replacing art",
+      "depends_on": ["nonmoho-right-wrist-tool-ik", "nonmoho-grip-raster-visibility"]
+    },
+    {
+      "id": "rovor-capability-evaluation-pack",
+      "status": "active",
+      "priority": 2,
+      "owner": "ChatGPT / Amar deterministic AI quality benchmark 2026-10-21",
+      "title": "Create portable acceptance examples for three proven ChatGPT workflows",
+      "depends_on": ["rovor-knowledge-pack", "business-service-delivery-playbook", "business-proof-catalog"]
+    },
+    {
+      "id": "rovor-work-packet-contract",
+      "status": "ready",
+      "priority": 2,
+      "owner": null,
+      "title": "Standardize the smallest portable work packet from proven workflows",
+      "depends_on": ["rovor-capability-evaluation-pack"]
+    },
+    {
+      "id": "blender-mcp-real-host-smoke",
+      "status": "ready",
+      "priority": 1,
+      "owner": null,
+      "title": "Verify authentic local Blender MCP scene edit and still render on Mac",
+      "depends_on": ["blender-mcp-codex-local-bridge"]
+    },
+    {
+      "id": "fcp-mcp-real-host-smoke",
+      "status": "blocked",
+      "priority": 1,
+      "owner": "ChatGPT / Amar continuous host setup 2026-10-22",
+      "title": "Verify Jane's Final Cut MCP on Amar's Mac using a disposable FCPXML test",
+      "depends_on": ["fcp-specialist-research-and-mcp-pilot"]
+    },
+    {
+      "id": "interpreter-research-macos-path-alias-fix",
+      "status": "active",
+      "priority": 1,
+      "owner": "ChatGPT / Amar Mac pasted-terminal diagnostic 2026-10-22",
+      "title": "Repair macOS temporary path alias errors in research adapter",
+      "depends_on": ["interpreter-research-preflight-command"]
+    },
+    {
+      "id": "jane-bootstrap-error-details",
+      "status": "active",
+      "priority": 1,
+      "owner": "ChatGPT / Amar bootstrap failure repair",
+      "title": "Preserve actionable stage and error evidence for failed native library bootstrap",
+      "depends_on": []
+    },
+    {
+      "id": "mac-execution-roundtrip",
+      "status": "blocked",
+      "priority": 1,
+      "owner": "ChatGPT / Amar iPhone Mac-link proof session 2026-10-22",
+      "title": "Verify GitHub-to-owned-Mac sandbox write/read round trip",
+      "depends_on": []
+    },
+    {
+      "id": "omniroute-direct-api-receipt-containment",
+      "status": "active",
+      "priority": 1,
+      "owner": "ChatGPT / Amar OmniRoute private receipt hardening",
+      "title": "Guard imported OmniRoute model drafts against public-checkout output paths",
+      "depends_on": ["omniroute-parallel-worker-packets"]
+    }
+  ],
+  "systems": [
+    {
+      "name": "GitHub Control Plane",
+      "state": "verified",
+      "summary": "Atomic task intake, route coverage, hosted CI, PR review"
+    },
+    {
+      "name": "Video Engine",
+      "state": "development",
+      "summary": "Evan art, speech planning, scene staging, render QA"
+    },
+    {
+      "name": "Business Operations",
+      "state": "conditional",
+      "summary": "Offers, intake, production, review, delivery, analytics"
+    },
+    {
+      "name": "Local Executor",
+      "state": "unverified",
+      "summary": "Mac native app control still unverified"
+    },
+    {
+      "name": "OmniRoute Gateway",
+      "state": "development",
+      "summary": "Optional provider gateway, not an executor"
+    }
+  ],
+  "notes": [
+    "Hosted CI passing does not prove Mac or Windows native app execution.",
+    "Whimsical can be deleted after this HUD replaces it.",
+    "This dashboard uses a fixed GitHub snapshot and is structured for future refresh wiring."
+  ]
+}

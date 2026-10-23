@@ -22,11 +22,13 @@ def task(ident='a', **kw):
 
 
 class RoutingTests(unittest.TestCase):
-    def brief(self, tasks, caps=None, rules=None, who='evan', lane='efficiency'):
+    def brief(self, tasks, caps=None, rules=None, who='evan', lane='efficiency',
+              fallback=False):
         if rules is None:
             rules = {t['id']: {'lane': 'efficiency', 'requires': []} for t in tasks}
         return work_brief.route({'version': 1, 'tasks': tasks}, {'version': 1, 'tasks': rules},
-                               who, set(caps if caps is not None else ['github-read', 'github-write']), lane)
+                               who, set(caps if caps is not None else ['github-read', 'github-write']),
+                               lane, fallback_any_lane=fallback)
 
     def test_priority_and_tie_are_deterministic(self):
         b = self.brief([task('z'), task('b'), task('a', priority=2)])
@@ -78,6 +80,155 @@ class RoutingTests(unittest.TestCase):
     def test_invalid_rule_rejected(self):
         with self.assertRaises(ValueError):
             self.brief([task()], rules={'a': {'lane': 'efficiency', 'requires': ['magic']}})
+
+    def test_opt_in_cross_lane_fallback_when_primary_empty(self):
+        rows = [task('animation'), task('operations', priority=2)]
+        rules = {
+            'animation': {'lane': 'animation', 'requires': []},
+            'operations': {'lane': 'operations', 'requires': []}}
+        default = self.brief(rows, rules=rules)
+        self.assertIsNone(default['recommended'])
+        selected = self.brief(rows, rules=rules, fallback=True)
+        self.assertEqual(selected['recommended']['id'], 'animation')
+        self.assertEqual(selected['recommended']['lane'], 'animation')
+        self.assertEqual(selected['selection_mode'], 'fallback_other_lane')
+        self.assertEqual([t['id'] for t in selected['alternatives']], ['operations'])
+
+    def test_primary_lane_takes_precedence_over_fallback(self):
+        rows = [task('other', priority=1), task('primary', priority=9)]
+        rules = {'other': {'lane': 'animation', 'requires': []},
+                 'primary': {'lane': 'efficiency', 'requires': []}}
+        r = self.brief(rows, rules=rules, fallback=True)
+        self.assertEqual(r['recommended']['id'], 'primary')
+        self.assertEqual(r['selection_mode'], 'requested_lane')
+        self.assertEqual(r['alternatives'], [])
+
+    def test_fallback_preserves_owner_dependencies_and_capabilities(self):
+        rows = [
+            task('owned', status='active', owner='another'),
+            task('stopped', status='blocked', owner='another', blocker='host offline'),
+            task('dependent', depends_on=['owned']),
+            task('private', priority=1),
+            task('noaccess'),
+        ]
+        rules = {t['id']: {'lane': 'integration', 'requires': []} for t in rows}
+        rules['private']['requires'] = ['local-exec']
+        rules['noaccess']['requires'] = ['final-cut-runtime']
+        r = self.brief(rows, rules=rules, fallback=True)
+        self.assertIsNone(r['recommended'])
+        reasons = {x['id']:x['reason'] for x in r['excluded']}
+        self.assertIn('reserved by', reasons['owned'])
+        self.assertIn('blocked', reasons['stopped'])
+        self.assertIn('dependency', reasons['dependent'])
+        self.assertIn('local-exec', reasons['private'])
+        self.assertIn('final-cut-runtime', reasons['noaccess'])
+
+    def test_fallback_resumes_only_exact_own_active_task(self):
+        rows = [task('mine', status='active', owner='evan', priority=9),
+                task('available', priority=1)]
+        rules = {t['id']: {'lane':'operations', 'requires':[]} for t in rows}
+        r = self.brief(rows, rules=rules, fallback=True)
+        self.assertEqual(r['recommended']['id'], 'mine')
+        self.assertEqual(r['recommended']['action'], 'resume')
+
+    def test_routing_coverage_exposes_missing_tasks_without_guessing(self):
+        rows = [task('classified'), task('missing')]
+        rules = {'classified': {'lane':'efficiency', 'requires': []}}
+        r = self.brief(rows, rules=rules)
+        self.assertEqual(r['recommended']['id'], 'classified')
+        self.assertEqual(r['routing_coverage']['routed_tasks'], 1)
+        self.assertEqual(r['routing_coverage']['total_tasks'], 2)
+        self.assertEqual(r['routing_coverage']['routed_unfinished'], 1)
+        self.assertEqual(r['routing_coverage']['unclassified_unfinished'], ['missing'])
+        self.assertTrue(any('Unclassified unfinished' in w for w in r['warnings']))
+
+    def test_app_runtime_requires_positive_confirmation(self):
+        rows = [task('blender')]
+        rules = {'blender': {'lane':'integration',
+                             'requires':['local-exec','blender-runtime']}}
+        self.assertIsNone(self.brief(rows, rules=rules, lane='any',
+                                     fallback=True)['recommended'])
+        r=self.brief(rows,rules=rules,lane='any',
+                     caps=['github-read','github-write','local-exec','blender-runtime'])
+        self.assertEqual(r['recommended']['id'],'blender')
+
+    def test_actual_queue_has_explicit_routes_for_every_unfinished_task(self):
+        root = Path(__file__).resolve().parents[1]
+        data = json.loads((root / 'coordination/tasks.json').read_text(encoding='utf-8'))
+        policy = json.loads((root / 'coordination/work-routing.json').read_text(encoding='utf-8'))
+        b = work_brief.route(data, policy, 'CI coverage check',
+                             {'github-read','github-write'}, 'any')
+        self.assertEqual(b['routing_coverage']['unclassified_unfinished'], [])
+        self.assertEqual(b['routing_coverage']['routed_tasks'],
+                         b['routing_coverage']['total_tasks'])
+        self.assertEqual(b['routing_coverage']['total_tasks'], len(data['tasks']))
+        self.assertGreater(b['routing_coverage']['status_counts']['done'], 0)
+        # The real queue may gain eligible work in the future. A new,
+        # correctly routed, unclaimed task must NOT make this test fail.
+        future = copy.deepcopy(data)
+        future['tasks'].append(task('future-eligible-work', priority=1,
+                                    scopes=['future-eligible-work']))
+        future_policy = copy.deepcopy(policy)
+        future_policy['tasks']['future-eligible-work'] = {
+            'lane': 'coordination', 'requires': []}
+        with_new = work_brief.route(future, future_policy, 'CI coverage check',
+                                    {'github-read','github-write'}, 'any')
+        eligible_ids = [t['id'] for t in
+                        ([with_new['recommended']] if with_new['recommended'] else [])
+                        + with_new['alternatives']]
+        self.assertIn('future-eligible-work', eligible_ids)
+
+    def test_explains_exact_unfinished_dependency_with_owner(self):
+        rows = [task('mac', status='blocked', owner='mac-session', blocker='private runner'),
+                task('contract', depends_on=['mac'])]
+        brief = self.brief(rows)
+        self.assertIsNone(brief['recommended'])
+        entry = next(t for t in brief['ready_blockers'] if t['id'] == 'contract')
+        self.assertEqual(entry['dependencies'],
+                         [{'id':'mac','status':'blocked','owner':'mac-session'}])
+        self.assertEqual(entry['reserved_scope_conflicts'], [])
+        rendered=work_brief.render({**brief,'source':'mock SHA'})
+        self.assertIn('mac [blocked, owner=mac-session]', rendered)
+
+    def test_reports_reserved_parent_scope_with_owner(self):
+        rows = [task('owner', status='active', owner='evan',
+                     scopes=['evan-engine']),
+                task('child', scopes=['evan-engine/rig.py'])]
+        brief = self.brief(rows, who='other')
+        entry = next(t for t in brief['ready_blockers'] if t['id'] == 'child')
+        self.assertEqual(entry['reserved_scope_conflicts'], [{
+            'id':'owner','status':'active','owner':'evan',
+            'wanted_scope':'evan-engine/rig.py','reserved_scope':'evan-engine'}])
+        self.assertIsNone(brief['recommended'])
+        self.assertIn('reserved scopes: owner', work_brief.render({**brief,'source':'mock'}))
+
+    def test_reports_mac_capability_gap_without_pretending_access(self):
+        rules={'blender':{'lane':'integration',
+                          'requires':['local-exec','blender-runtime']}}
+        result=self.brief([task('blender')],rules=rules,lane='integration')
+        self.assertEqual(result['ready_blockers'][0]['missing_capabilities'],
+                         ['blender-runtime','local-exec'])
+        self.assertIsNone(result['recommended'])
+        self.assertIn('local-exec',work_brief.render({**result,'source':'mock'}))
+
+    def test_ready_explanations_include_missing_route_but_no_claim(self):
+        result=self.brief([task('unknown')],rules={},fallback=True)
+        self.assertEqual(result['ready_blockers'][0]['id'],'unknown')
+        self.assertTrue(result['ready_blockers'][0]['unclassified'])
+        self.assertIsNone(result['recommended'])
+
+    def test_available_task_not_reported_as_blocked(self):
+        result=self.brief([task('available')])
+        self.assertEqual(result['recommended']['id'],'available')
+        self.assertEqual(result['ready_blockers'],[])
+
+    def test_ready_explanations_leave_inputs_unchanged(self):
+        rows=[task('task-a',status='active',owner='other',scopes=['source']),
+              task('task-b',scopes=['source/subdir/file'])]
+        before=copy.deepcopy(rows)
+        result=self.brief(rows)
+        self.assertEqual(rows,before)
+        self.assertEqual(result['ready_blockers'][0]['id'],'task-b')
 
     def test_ref_uses_committed_pair_not_dirty_files(self):
         with tempfile.TemporaryDirectory() as td:
