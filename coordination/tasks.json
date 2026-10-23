@@ -2168,6 +2168,29 @@
       "next_action": "Implement exact-ID one-shot GitHub private-repo request fetcher, fail closed on public repos, allow only ping and explicitly approved bounded workspace inventory via existing ghost_worker SQLite queue, reject redirected state/files, STOP, preserve dedupe and no replay, post sanitized receipt to fixed private issue. Test in fake HTTP/offline runtime and hosted CI. Do not touch other worker or FCP source files, use model, restart public runner, or claim remote OS access.",
       "acceptance": "GitHub API refuses public repositories and current public repo; exact validated job payload fetched via scoped token; shared ghost_worker engine runs an approved one-shot read-only job under private nonoverlapping state; never runs other queued jobs; safe STOP/dedupe/fail-closed receipts; remote sanitized status; no secrets printed; tests actually pass.",
       "evidence": []
+    },
+    {
+      "id": "omniroute-loopback-egress-guard",
+      "title": "Prevent OmniRoute inference requests escaping localhost via proxy or redirect and tighten draft receipts",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / OmniRoute transport safety 2026-10-22",
+      "branch": "feature/omniroute-parallel-workpacks",
+      "scopes": [
+        "tools/omniroute_workpack_runner.py",
+        "tests/test_omniroute_workpack_runner.py",
+        "integrations/open-interpreter/OMNIROUTE-PARALLEL-WORK.md"
+      ],
+      "depends_on": [
+        "omniroute-parallel-worker-packets"
+      ],
+      "updated_at": "2026-10-23T02:52:20.338Z",
+      "next_update": "After hosted 3.9/3.11 no-network regression and private-transport proof",
+      "next_action": "Harden the local-only OmniRoute client against HTTP_PROXY/HTTPS_PROXY and cross-origin 3xx redirects, validate response and bounded provider usage, preserve mockable inference and disabled shell/GUI. Add tests and update doc. No Mac actions while iPhone owns private control bridge.",
+      "acceptance": "The runner uses a proxy-free, redirect-refusing opener by default; rejects 3xx/malformed/non-200 HTTP and unbounded response/usage metadata without saving private data publicly. No outbound provider calls during CI. All current 16 tests and new transport tests pass Python3.9/3.11, PR kept draft.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+      ]
     }
   ]
 }
