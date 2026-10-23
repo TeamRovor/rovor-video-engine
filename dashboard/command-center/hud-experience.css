@@ -1,0 +1,126 @@
+/* Kinetic Stark-inspired interaction layer; readable data stays above artwork. */
+:root { --spark:#65b9ff; --ink:#030913; }
+.earth-canvas {position:absolute;inset:0;display:block;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.98;filter:saturate(1.23) contrast(1.1);}
+#earthCanvas[data-renderer="webgl"]~.planet-horizon{display:none}
+.reactor-stage {isolation:isolate;contain:paint;perspective:900px;}
+.reactor-stage .reactor-grid {z-index:1;pointer-events:none}
+.reactor-stage .reactor-halo,.reactor-stage .orbit-deck{z-index:3;pointer-events:none}
+.reactor-stage .reactor-core {z-index:5;appearance:none;padding:13px;cursor:pointer;outline-offset:5px;transition:filter .22s,box-shadow .22s;}
+.reactor-stage .reactor-core:hover {filter:brightness(1.2);box-shadow:0 0 45px rgba(89,177,255,.65),inset 0 0 25px rgba(89,177,255,.35)}
+.reactor-stage .reactor-core:focus-visible {outline:2px solid #c7edff;filter:brightness(1.2)}
+.core-action-tip {position:absolute;bottom:-36px;left:50%;transform:translateX(-50%);white-space:nowrap;font:600 9px system-ui,sans-serif;letter-spacing:.22em;color:#a5d6ff;opacity:0;transition:opacity .2s}
+.reactor-core:hover .core-action-tip,.reactor-core:focus-visible .core-action-tip{opacity:1}
+.reactor-stage .reactor-readout,.reactor-stage .core-banner,.reactor-stage .reactor-motto{z-index:4;pointer-events:none}
+.reactor-stage .reactor-tick{z-index:4;pointer-events:none}
+.earth-controls {position:absolute;z-index:7;bottom:18%;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;gap:5px;width:max-content;max-width:96%;pointer-events:auto}
+.hud-earth-btn,.hud-inspect-btn {
+  appearance:none;cursor:pointer;color:#c0e5ff;border:1px solid rgba(117,189,255,.41);
+  border-radius:3px;background:linear-gradient(130deg,rgba(9,33,65,.91),rgba(3,14,28,.88));
+  box-shadow:inset 0 1px rgba(164,208,255,.10),0 0 10px rgba(54,136,245,.09);
+  font-size:10px;font-weight:650;letter-spacing:.06em;padding:8px 9px;white-space:nowrap;
+  transition:color .15s,background .15s,box-shadow .15s,transform .15s}
+.hud-earth-btn:hover,.hud-inspect-btn:hover{background:rgba(25,85,153,.85);box-shadow:0 0 16px rgba(44,129,239,.40);color:white;transform:translateY(-1px)}
+.hud-earth-btn:focus-visible,.hud-inspect-btn:focus-visible{outline:2px solid #b7eaff;outline-offset:2px}
+.hud-inspect-btn {margin-top:-4px;font-size:9px;padding:6px;align-self:start}
+.reference-panel .hud-inspect-btn:active,.hud-earth-btn:active,.hud-btn:active,.tab:active{transform:scale(.96)}
+.hud-scan-overlay {position:absolute;z-index:4;inset:0;pointer-events:none;opacity:0;
+  background:repeating-conic-gradient(from 0deg at 50% 44%,rgba(94,190,255,.12) 0deg,transparent 1deg,transparent 18deg);
+  mask-image:radial-gradient(circle at 50% 44%,transparent 24%,black 26%,black 33%,transparent 40%);}
+.hud-reactor-pulse .hud-scan-overlay {animation:rovor-sweep .7s ease-out 1}
+@keyframes rovor-sweep {0%{opacity:0;transform:rotate(-24deg) scale(.94)}38%{opacity:.95}100%{opacity:0;transform:rotate(26deg) scale(1.07)}}
+.reference-panel {transition:border-color .18s ease,box-shadow .18s ease;}
+.reference-panel:hover {box-shadow:inset 0 1px rgba(224,244,255,.14),0 0 25px rgba(39,131,235,.16);border-color:rgba(143,218,255,.66)}
+.quick-task:active,.hud-command-result:active {transform:scale(.993)}
+.quick-task:focus-visible{outline:2px solid #b7eaff;outline-offset:-2px}
+.system-card[data-system-name],.system-mini[data-system-name] {cursor:pointer;transition:background .15s,border-color .15s}
+.system-card[data-system-name]:hover,.system-mini[data-system-name]:hover {background:rgba(31,99,163,.30);border-color:#66b8ff}
+.system-card[data-system-name]:focus-visible,.system-mini[data-system-name]:focus-visible {outline:2px solid #b7eaff}
+.tabbar .tab {transition:box-shadow .2s,background .2s,color .2s,transform .18s}
+.tabbar .tab:hover:not(.active){color:#ebf7ff;box-shadow:0 0 20px rgba(58,154,255,.24);background:rgba(25,83,151,.35);transform:translateY(-2px)}
+.tabbar .tab[aria-selected="true"] .nav-symbol{animation:nav-illuminate .55s ease-out}
+@keyframes nav-illuminate{0%{filter:drop-shadow(0 0 16px #77c8ff) brightness(2)}100%{filter:drop-shadow(0 0 4px #69baff) brightness(1)}}
+.hud-command-button {font-weight:750;border-color:rgba(128,205,255,.66);box-shadow:0 0 14px rgba(30,133,241,.18)}
+.hud-overlay[hidden] {display:none!important}
+.hud-overlay {position:fixed;z-index:100;inset:0;display:grid;place-items:center;padding:16px;}
+.hud-overlay-backdrop {position:absolute;inset:0;background:rgba(0,3,11,.79);backdrop-filter:blur(13px);cursor:pointer;}
+.hud-overlay-open {overflow:hidden}
+.hud-command-window,.hud-detail-window {
+  position:relative;z-index:101;display:flex;flex-direction:column;color:#e9f6ff;
+  background:linear-gradient(155deg,rgba(8,26,48,.98),rgba(1,8,18,.99) 68%);
+  border:1px solid rgba(133,203,255,.75);
+  box-shadow:inset 0 1px rgba(215,237,255,.12),0 0 40px rgba(18,107,239,.29),0 24px 100px #000;
+  clip-path:polygon(18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px),calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px),0 18px);
+  animation:rovor-panel-in .17s ease-out both;
+}
+@keyframes rovor-panel-in {from{opacity:.45;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+.hud-command-window {width:min(640px,96vw);max-height:min(680px,86svh);padding:24px}
+.hud-detail-overlay {place-items:stretch end;padding:0;}
+.hud-detail-window {width:min(510px,95vw);height:100%;padding:26px 22px 30px;overflow-y:auto;clip-path:none;border-right:none;}
+.hud-dialog-head {display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:0 0 15px;margin-bottom:16px;border-bottom:1px solid rgba(123,190,251,.24)}
+.hud-dialog-head small{font-size:10px;letter-spacing:.21em;color:#72bcf9}
+.hud-dialog-head h2{margin:7px 0 0;font-size:clamp(19px,3vw,26px);font-weight:650;letter-spacing:.04em;line-height:1.2;overflow-wrap:anywhere}
+.hud-close{border:1px solid rgba(133,203,255,.41);color:#d6efff;font-size:28px;line-height:1;width:38px;height:38px;background:rgba(20,65,118,.31);cursor:pointer;border-radius:3px;flex-shrink:0;}
+.hud-close:hover,.hud-close:focus-visible{background:rgba(60,146,232,.42);outline:1px solid #b5e1ff}
+.hud-command-label{color:#9ac6e8;font-size:11px;letter-spacing:.09em;margin-bottom:8px}
+#hudCommandSearch {width:100%;background:#04101f;border:1px solid rgba(119,192,255,.56);outline:none;color:#e2f5ff;border-radius:4px;padding:14px;font-size:15px}
+#hudCommandSearch:focus{box-shadow:0 0 0 2px rgba(99,176,255,.3),0 0 15px rgba(79,152,245,.22)}
+.hud-command-results {display:grid;gap:5px;overflow:auto;min-height:80px;max-height:54svh;padding:8px 0;scrollbar-color:rgba(105,171,249,.52) transparent}
+.hud-command-result {display:flex;align-items:center;justify-content:space-between;gap:15px;width:100%;min-height:49px;padding:11px 13px;text-align:left;color:#e1f3ff;background:rgba(6,19,39,.74);border:1px solid transparent;border-radius:4px;cursor:pointer}
+.hud-command-result small{color:#80abd0;text-align:right;font-size:10px;line-height:1.4}
+.hud-command-result.selected,.hud-command-result:hover,.hud-command-result:focus-visible{border-color:rgba(125,199,255,.73);background:rgba(20,73,126,.62);outline:none;box-shadow:inset 2px 0 #62baff}
+.hud-command-window footer{border-top:1px solid rgba(115,185,255,.2);color:#83aac8;margin-top:12px;padding-top:12px;font-size:10px;line-height:1.5}
+.hud-drawer-body {display:flex;flex-direction:column;gap:11px;padding-bottom:24px}
+.hud-detail-row {display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(124,192,250,.17);padding:12px 0;font-size:12px;line-height:1.5}
+.hud-detail-row span{color:#84b5dc}
+.hud-detail-row strong{font-size:12px;text-align:right;max-width:66%;color:#e3f2ff;overflow-wrap:anywhere;font-weight:600}
+.hud-detail-warning{font-size:12px;line-height:1.65;color:#f1c6a3;background:rgba(117,66,17,.17);border-left:2px solid #dba161;padding:12px;margin:12px 0}
+.hud-detail-description{font-size:13px;line-height:1.6;color:#a9d0ed}
+.hud-drawer-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+.hud-help-fab {position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:12;
+  width:31px;height:31px;border:1px solid rgba(121,187,251,.44);border-radius:50%;background:rgba(4,20,42,.87);color:#abd9fc;cursor:pointer;font-weight:750}
+.hud-help-fab:hover,.hud-help-fab:focus-visible{border-color:#d2efff;box-shadow:0 0 17px rgba(76,156,255,.5)}
+@media (min-width:760px) and (max-width:1180px){
+  .earth-controls {bottom:18%;gap:3px}
+  .hud-earth-btn{font-size:9px;padding:6px}
+  .top-actions {max-width:100%}
+  .hud-command-button{order:0}
+}
+@media (max-width:759px) {
+  .earth-controls{bottom:17%;gap:4px}
+  .hud-earth-btn{font-size:9px;padding:6px 7px}
+  .core-action-tip{display:none}
+  .hud-command-window{padding:18px 13px;max-height:80svh;}
+  .hud-command-result{align-items:flex-start}
+  .hud-command-result small{max-width:45%}
+  .hud-detail-window{padding:21px 14px}
+  .hud-help-fab {bottom:76px}
+}
+@media (hover:none) {
+  .reactor-core,.hud-earth-btn,.hud-inspect-btn,.hud-btn,.tab,.hud-command-result{touch-action:manipulation}
+}
+@media (prefers-reduced-motion:reduce) {
+  .hud-reactor-pulse .hud-scan-overlay,.tabbar .tab[aria-selected="true"] .nav-symbol{animation:none!important}
+  .hud-command-window,.hud-detail-window{animation:none}
+  .hud-btn,.hud-earth-btn,.reference-panel,.reactor-core,.tab{transition:none!important}
+}
+.motion-paused .hud-reactor-pulse .hud-scan-overlay,
+.motion-paused .tabbar .tab[aria-selected="true"] .nav-symbol{animation:none!important}
+
+/* Direct interaction for data bars and the rotating globe. */
+.workload-row {appearance:none;width:100%;padding:4px 6px;margin:-4px -6px;border:1px solid transparent;border-radius:3px;background:transparent;color:inherit;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}
+.workload-row:hover,.workload-row:focus-visible{background:rgba(35,97,166,.3);border-color:rgba(113,185,255,.45);outline:none}
+.workload-row:active{transform:scale(.985)}
+.reactor-stage{touch-action:pan-y;cursor:grab}
+.reactor-stage.earth-dragging{cursor:grabbing}
+.reactor-stage .earth-canvas{transition:opacity .25s}
+.earth-canvas[data-renderer="css-fallback"]{opacity:0}
+.reactor-stage:has(.earth-canvas[data-renderer="css-fallback"]) .planet-horizon::after {
+ content:"";position:absolute;inset:0;
+ border-radius:50%;
+ background:repeating-linear-gradient(106deg,transparent 0 16%,rgba(98,176,255,.12) 17%,transparent 18% 29%);
+ background-size:220% 100%;animation:horizon-drift 85s linear infinite;opacity:.7;
+}
+@keyframes horizon-drift{to{background-position:-200% 0}}
+.motion-paused .planet-horizon::after{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.planet-horizon::after{animation:none!important}}

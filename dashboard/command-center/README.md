@@ -2,6 +2,14 @@
 
 This is an actual static browser dashboard, not a static mockup. It reads **public** source data from `TeamRovor/rovor-video-engine` and requires no secrets, extensions or server-side access.
 
+## Cinematic interactive HUD (orbital Earth build)
+
+This build adds a **real, slowly rotating procedural Earth** and a second Earth horizon rendered using WebGL, directly in the shipped page—not a static screenshot or a remote video. The planet texture is created locally and moves across a spherical shader projection; this is a visualization, **not** a live Earth satellite feed. The canvas is bounded in resolution, frame-capped (~24 fps), and pauses animation on reduced-motion preference, tab suspension or the existing Motion: Off toggle. Without WebGL, the established static horizon remains as a fallback.
+
+The central ROVOR logo is an actual **Command** button. Press it, or press **⌘/Ctrl+K**, to search tasks, switch views, refresh GitHub or export a JSON snapshot. Use **1–5** for dashboard navigation, **?** for keyboard help, or Esc to close. Task and system cards open source-grounded inspectors; queue status bars are clickable filters. The orbit can be **dragged horizontally** or controlled using **Earth · Slow/Normal/Fast**, **Pause Earth**, and **Reset**. Fullscreen is exposed where the browser permits it.
+
+These are browser-only controls, never Mac remote execution. Task owners remain *claims*, and system categories remain *GitHub-sourced descriptions*, not live pings. Earth animation requires no paid server, credentials or third-party asset CDN. GitHub polling and the existing data integrity boundaries remain unchanged.
+
 ## Reference-style interactive command deck (October 23, 2026)
 
 The command deck is **real HTML/CSS/JS**, not a generated screenshot. Its top screen follows the supplied blue orbital HUD reference: left task/evidence rails, a central animated ROVOR reactor, right routing/repository telemetry rails, and a five-view dock. All panels re-render from the same GitHub source state as the existing detailed workspace.

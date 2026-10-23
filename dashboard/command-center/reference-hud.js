@@ -49,9 +49,9 @@
     if (bars) bars.innerHTML = STATUS_ORDER.map(status => {
       const count = v.counts[status] || 0;
       const width = v.total ? Math.min(100, 100 * count / v.total) : 0;
-      return '<div class="workload-row"><span>' + STATUS_LABELS[status] + '</span>' +
+      return '<button type="button" class="workload-row" data-filter-status="' + status + '" aria-label="Show ' + status + ' tasks"><span>' + STATUS_LABELS[status] + '</span>' +
         '<div class="workload-track"><div class="workload-fill ' + status + '" style="width:' + width + '%"></div></div>' +
-        '<strong>' + count + '</strong></div>';
+        '<strong>' + count + '</strong></button>';
     }).join('');
     const facts = document.getElementById('healthFacts');
     if (facts) facts.innerHTML =
@@ -109,6 +109,7 @@
     document.addEventListener('click', event => {
       const target = event.target.closest('[data-open-view], [data-task-id]');
       if (!target) return;
+      if (target.dataset.taskId && root.RovorExperience) return; // Inspector handles task clicks.
       const view = target.dataset.openView || 'tasks';
       openView(view, target.dataset.taskId || '');
     });

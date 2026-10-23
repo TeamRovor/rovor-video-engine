@@ -13,6 +13,7 @@
   <link rel="icon" href="./hud-icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="reference-hud.css" />
+  <link rel="stylesheet" href="hud-experience.css" />
 </head>
 <body>
   <div class="scanlines"></div>
@@ -30,6 +31,8 @@
       </div>
       <div class="header-status"><span class="header-status-led"></span><span id="headerConnection">VERIFYING SOURCE</span><span class="header-clock"><strong id="hudClock">--:--</strong><small id="hudDate">—</small></span></div>
       <div class="top-actions">
+        <button id="hudCommandBtn" class="hud-btn hud-command-button" type="button" aria-haspopup="dialog" aria-controls="hudCommandDialog">⌘ Command</button>
+        <button id="hudFullscreenBtn" class="hud-btn alt" type="button">Fullscreen</button>
         <button id="motionBtn" class="hud-btn alt" type="button" aria-pressed="true">Motion: On</button>
         <button id="focusBtn" class="hud-btn alt" type="button" aria-pressed="false">Focus View</button>
         <button id="refreshBtn" class="hud-btn">Refresh GitHub</button>
@@ -63,23 +66,26 @@
       </div>
 
       <div class="console-center">
-        <div class="reactor-stage" aria-label="ROVOR GitHub operations hub, decorative animated rings">
+        <div class="reactor-stage" id="reactorStage" aria-label="ROVOR orbital Earth command center">
+          <canvas id="earthCanvas" class="earth-canvas" aria-hidden="true"></canvas>
+          <div class="hud-scan-overlay" aria-hidden="true"></div>
           <div class="core-banner">R O V O R &nbsp; D I G I T A L</div>
           <div class="reactor-grid"></div>
           <div class="reactor-halo halo-outer"></div><div class="reactor-halo halo-mid"></div><div class="reactor-halo halo-inner"></div>
           <div class="orbit-deck orbit-deck-outer" aria-hidden="true"></div><div class="orbit-deck orbit-deck-inner" aria-hidden="true"></div>
-          <div class="reactor-core"><span class="core-crosshair"></span><img src="./rovor-mark.svg" alt="ROVOR emblem" /></div>
+          <button class="reactor-core" id="coreAction" type="button" aria-label="Open ROVOR command console" aria-haspopup="dialog" aria-controls="hudCommandDialog"><span class="core-crosshair" aria-hidden="true"></span><img src="./rovor-mark.svg" alt="" /><span class="core-action-tip">COMMAND CORE</span></button>
           <div class="reactor-readout readout-left"><span>OPERATIONS LINK</span><strong id="coreSyncMode">VERIFYING GITHUB</strong><small id="coreCommit">Source SHA unavailable</small></div>
           <div class="reactor-readout readout-right"><span class="telemetry-dot" aria-hidden="true"></span><strong id="coreTaskSummary">QUEUE / PENDING VERIFICATION</strong><small>Claimed ≠ executing</small></div>
           <div class="reactor-tick tick-a"></div><div class="reactor-tick tick-b"></div><div class="reactor-tick tick-c"></div>
           <div class="planet-horizon" aria-hidden="true"></div>
           <div class="reactor-motto">REAL TOOLS. VERIFIED RESULTS.</div>
+          <div class="earth-controls" role="group" aria-label="Interactive Earth controls"><button type="button" id="earthSpeedBtn" class="hud-earth-btn">Earth · Slow</button><button type="button" id="earthPauseBtn" class="hud-earth-btn" aria-pressed="false">Pause Earth</button><button type="button" id="earthResetBtn" class="hud-earth-btn" title="Return Earth to starting orientation">↺ Reset</button></div>
         </div>
       </div>
 
       <div class="console-rail console-right">
         <section class="hud-panel reference-panel ring-panel">
-          <h2 class="panel-title">ROUTING HEALTH</h2>
+          <div class="reference-panel-head"><h2 class="panel-title">ROUTING HEALTH</h2><button id="routingInspectBtn" class="hud-inspect-btn" type="button" title="Inspect routing coverage" aria-haspopup="dialog" aria-controls="hudDrawer">Details ↗</button></div>
           <div class="health-topline">
             <div class="ring-wrap">
               <svg viewBox="0 0 220 220" class="status-ring" role="img" aria-label="Percent of queued tasks with routing rules">
@@ -222,10 +228,30 @@
         </div>
       </section>
     </main>
+    <div id="hudCommandDialog" class="hud-overlay" role="dialog" aria-modal="true" aria-labelledby="hudCommandTitle" hidden>
+      <div class="hud-overlay-backdrop" data-hud-close></div>
+      <div class="hud-command-window">
+        <header class="hud-dialog-head"><div><small>ROVOR DIGITAL // CONTROL DECK</small><h2 id="hudCommandTitle">Command console</h2></div><button type="button" class="hud-close" data-hud-close aria-label="Close command console">×</button></header>
+        <label class="hud-command-label" for="hudCommandSearch">Search views, tasks and actions</label>
+        <input id="hudCommandSearch" autocomplete="off" spellcheck="false" placeholder="Try: active tasks, GitHub, refresh…" />
+        <div id="hudCommandResults" class="hud-command-results" role="list"></div>
+        <footer>⌘ / Ctrl + K to open · ↑ ↓ to select · Enter to run · Esc to close</footer>
+      </div>
+    </div>
+    <div id="hudDrawer" class="hud-overlay hud-detail-overlay" role="dialog" aria-modal="true" aria-labelledby="hudDrawerTitle" hidden>
+      <div class="hud-overlay-backdrop" data-hud-close></div>
+      <aside class="hud-detail-window">
+        <header class="hud-dialog-head"><div><small>ROVOR DIGITAL // INSPECTOR</small><h2 id="hudDrawerTitle">Details</h2></div><button type="button" class="hud-close" data-hud-close aria-label="Close detail panel">×</button></header>
+        <div id="hudDrawerBody" class="hud-drawer-body"></div>
+      </aside>
+    </div>
+    <button id="hudHelpBtn" class="hud-help-fab" type="button" aria-haspopup="dialog" aria-controls="hudDrawer" title="Keyboard shortcuts">?</button>
   </div>
 
   <script src="live-data.js"></script>
   <script src="reference-hud.js"></script>
+  <script src="orbital-earth.js"></script>
+  <script src="hud-experience.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
