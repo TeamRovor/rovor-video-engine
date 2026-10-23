@@ -208,6 +208,20 @@ class AutoImportTests(unittest.TestCase):
                 jane.prepare(self.candidates, self.output, self.dtd, run=fail)
         self.assertFalse(self.output.exists())
 
+    def test_legacy_cli_dispatch_disabled_before_any_fs_or_app_action(self):
+        unused = self.base/'never-used-output'
+        with mock.patch.object(jane, 'prepare',
+                               side_effect=AssertionError('prepare must not run')):
+            with mock.patch.object(jane, 'dispatch',
+                                   side_effect=AssertionError('no native import')):
+                code = jane.main([
+                    '--candidates',str(self.candidates),
+                    '--output',str(unused),
+                    '--dispatch'
+                ])
+        self.assertEqual(code,2)
+        self.assertFalse(unused.exists())
+
     def test_dispatch_can_not_replay(self):
         state = self.prepare()
         state['status'] = 'apple_events_sent_timeline_unverified'
