@@ -491,6 +491,12 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "routing-intake-work-entrypoint-adoption": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }
