@@ -56,7 +56,7 @@ def validate_packet(packet):
                 "acceptance","executor","authorization","technical_status","artifact_receipt","approval"}
     if set(packet) != required:
         issue(out, "top_level_keys", "$", "Packet must contain exactly the schema-v1 fields")
-    if packet.get("schema_version") != 1:
+    if type(packet.get("schema_version")) is not int or packet.get("schema_version") != 1:
         issue(out, "schema_version", "$.schema_version", "Only version 1 is supported")
     pid = packet.get("packet_id")
     if not isinstance(pid, str) or not PACKET_ID.fullmatch(pid):
@@ -71,6 +71,8 @@ def validate_packet(packet):
     if not isinstance(sources, list) or not sources:
         issue(out, "source_refs", "$.source_refs", "At least one source reference is required")
         sources = []
+    if len(sources) > 50:
+        issue(out, "source_limit", "$.source_refs", "At most 50 source references are allowed")
     for i, src in enumerate(sources):
         p = "$.source_refs[" + str(i) + "]"
         if not isinstance(src, dict):
@@ -125,6 +127,8 @@ def validate_packet(packet):
     if not isinstance(artifacts, list):
         issue(out, "artifact_list", "$.artifact_receipt.artifacts", "Artifacts must be a list")
         artifacts = []
+    elif len(artifacts) > 50:
+        issue(out, "artifact_limit", "$.artifact_receipt.artifacts", "At most 50 artifacts are allowed")
     for i, a in enumerate(artifacts):
         p = "$.artifact_receipt.artifacts[" + str(i) + "]"
         if not isinstance(a, dict):
@@ -139,8 +143,8 @@ def validate_packet(packet):
             issue(out, "duplicate_artifact", p, "Artifact IDs must be unique")
         else:
             artifact_ids.add(aid)
-        if not nonblank(uri):
-            issue(out, "artifact_uri", p, "Artifact URI is required")
+        if not nonblank(uri) or len(uri) > 2048:
+            issue(out, "artifact_uri", p, "Artifact URI must be a bounded non-empty string")
         if not isinstance(state,str) or state not in SOURCE_STATES:
             issue(out, "artifact_status", p, "Invalid artifact verification state")
         if digest is not None and not valid_hash(digest):
@@ -160,6 +164,8 @@ def validate_packet(packet):
         issue(out, "acceptance_shape", "$.acceptance", "At least one acceptance criterion is required")
         criteria = []
     criterion_ids = set()
+    if len(criteria) > 50:
+        issue(out, "acceptance_limit", "$.acceptance", "At most 50 acceptance criteria are allowed")
     for i, c in enumerate(criteria):
         p = "$.acceptance[" + str(i) + "]"
         if not isinstance(c,dict):
