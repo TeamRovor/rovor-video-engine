@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+"""Jane: import existing synthetic FCPXML into NEW native Final Cut library.
+
+Uses Apple's documented FCPXML 'library location' option plus Open Document
+Apple event, NOT GUI menu clicks. No model inference, real media, user-project
+edits, existing library paths or arbitrary XML. A one-time macOS Automation
+permission prompt may appear. Native timeline verification still unproven.
+"""
+import argparse
+from datetime import datetime, timezone
+import hashlib
+import json
+import os
+import secrets
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import xml.etree.ElementTree as ET
+
+DTD = Path('/Applications/Final Cut Pro.app/Contents/Frameworks/Interchange.framework/Versions/A/Resources/FCPXMLv1_13.dtd')
+APP = Path('/Applications/Final Cut Pro.app')
+LABELS = (('landscape', '1920', '1080'), ('portrait', '1080', '1920'))
+OPEN_XML_SCRIPT = """
+on run argv
+    if (count of argv) is not 1 then error "Expected one FCPXML"
+    tell application "Final Cut Pro"
+        activate
+        open POSIX file (item 1 of argv)
+    end tell
+end run
+"""
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def in_root(base, path):
+    return path == base or base in path.parents
+
+
+def candidates_from_receipt(folder):
+    folder = folder.expanduser().absolute()
+    root = Path.home() / 'Documents' / 'Rovor'
+    if not in_root(root, folder) or folder.is_symlink() or not folder.is_dir():
+        raise ValueError('Candidates must be within ~/Documents/Rovor')
+    manifest = folder / 'native-candidate-receipt.json'
+    if not manifest.is_file() or manifest.is_symlink():
+        raise ValueError('Missing trusted candidate receipt')
+    receipt = json.loads(manifest.read_text())
+    if (receipt.get('status') != 'candidate_prepared_native_not_imported'
+            or receipt.get('duration_seconds') != 30
+            or receipt.get('frame_rate') != 60
+            or receipt.get('referenced_media_files') != 0
+            or receipt.get('native_final_cut_operated') is not False):
+        raise ValueError('Unsafe candidate receipt')
+    hashes = receipt.get('fcpxml_sha256')
+    if not isinstance(hashes, dict) or len(hashes) != 2:
+        raise ValueError('Expected exactly two source XML hashes')
+    inputs = {}
+    for label, width, height in LABELS:
+        filename = f'ROVOR-NATIVE-IMPORT-{label}-30s-60fps.fcpxml'
+        source = folder / filename
+        if (not source.is_file() or source.is_symlink()
+                or source.stat().st_size > 100000 or sha(source) != hashes.get(filename)):
+            raise ValueError('Candidate changed or missing: ' + label)
+        root_xml = ET.parse(source).getroot()
+        fmts = root_xml.findall('./resources/format')
+        sequences = root_xml.findall('./library/event/project/sequence')
+        gaps = root_xml.findall('./library/event/project/sequence/spine/gap')
+        if (root_xml.tag != 'fcpxml' or root_xml.get('version') != '1.13'
+                or len(fmts) != 1 or len(sequences) != 1 or len(gaps) != 1
+                or fmts[0].get('width') != width
+                or fmts[0].get('height') != height
+                or fmts[0].get('frameDuration') != '1/60s'
+                or sequences[0].get('duration') != '30s'
+                or gaps[0].get('duration') != '30s'
+                or root_xml.find('import-options') is not None
+                or any('src' in node.attrib for node in root_xml.iter())
+                or list(root_xml.findall('.//asset'))
+                or list(root_xml.findall('.//asset-clip'))):
+            raise ValueError('Source is not exact media-free 30s test format')
+        inputs[label] = source
+    return inputs
+
+
+def receipt_write(folder, report):
+    # Atomic snapshots, including after interruption; never leave a fixed
+    # 'receipt.tmp' that can block all future diagnostic writes after a crash.
+    tmp = folder / ('receipt-' + secrets.token_hex(12) + '.tmp')
+    try:
+        with tmp.open('x') as out:
+            json.dump(report, out, indent=2)
+            out.write('\n')
+        os.replace(tmp, folder / 'native-auto-import-receipt.json')
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+
+
+def checkpoint(folder, report, status, **details):
+    report.update(details)
+    report['status'] = status
+    report['updated_at_utc'] = datetime.now(timezone.utc).isoformat()
+    receipt_write(folder, report)
+    print('JANE CHECKPOINT ' + json.dumps({
+        'status': status,
+        'target_library': report.get('target_library'),
+        'last_dispatched': report.get('last_dispatched'),
+        'apple_event_sent': report.get('apple_event_sent', False),
+        'library_creation_observed': report.get('library_creation_observed', False),
+    }, sort_keys=True), flush=True)
+
+
+def prepare(candidates, output, dtd=DTD, run=subprocess.run):
+    files = candidates_from_receipt(candidates)
+    base = Path.home() / 'Documents' / 'Rovor'
+    output = output.expanduser().absolute()
+    if (not in_root(base, output) or output == base or output.is_symlink()
+            or output.exists() or not output.parent.is_dir()
+            or output.parent.is_symlink()):
+        raise ValueError('Output must be a new path under ~/Documents/Rovor')
+    if in_root(output, Path(candidates).expanduser().absolute()):
+        raise ValueError('Output overlaps source candidates')
+    if not dtd.is_file() or dtd.is_symlink():
+        raise ValueError('Apple 1.13 DTD is missing')
+    xmllint = shutil.which('xmllint')
+    if not xmllint:
+        raise ValueError('xmllint is required for safe import preparation')
+    target_library = output / 'ROVOR-Jane-Test.fcpbundle'
+    with tempfile.TemporaryDirectory(prefix='.rovor-jane-import-', dir=output.parent) as tmpname:
+        tmp = Path(tmpname)
+        local_dtd = tmp / 'FCPXMLv1_13.dtd'
+        shutil.copyfile(dtd, local_dtd)
+        if sha(local_dtd) != sha(dtd):
+            raise ValueError('Apple DTD copy differs from installed DTD')
+        xmlhashes = {}
+        for label, _, _ in LABELS:
+            root = ET.parse(files[label]).getroot()
+            opts = ET.Element('import-options')
+            ET.SubElement(opts, 'option', key='library location', value=target_library.as_uri())
+            ET.SubElement(opts, 'option', key='copy assets', value='0')
+            ET.SubElement(opts, 'option', key='suppress warnings', value='0')
+            root.insert(0, opts)
+            dest = tmp / (label + '-auto.fcpxml')
+            ET.ElementTree(root).write(dest, xml_declaration=True, encoding='utf-8')
+            process = run(
+                [xmllint, '--nonet', '--noout', '--dtdvalid', str(local_dtd), str(dest)],
+                check=False, capture_output=True, text=True, timeout=30)
+            if process.returncode:
+                error = (process.stderr or process.stdout or '').replace('\n', ' ')[:500]
+                raise ValueError('DTD rejected automated ' + label + ': ' + error)
+            xmlhashes[label] = sha(dest)
+        output.mkdir(mode=0o700)
+        for label, _, _ in LABELS:
+            src = tmp / (label + '-auto.fcpxml')
+            dst = output / src.name
+            shutil.copyfile(src, dst)
+            dst.chmod(0o600)
+    report = {
+        'status': 'ready_to_dispatch_not_launched',
+        'target_library': str(target_library),
+        'xml_hashes': xmlhashes,
+        'apple_dtd_sha256': sha(dtd),
+        'apple_event_sent': False,
+        'library_creation_observed': False,
+        'native_timeline_verified': False,
+        'model_turn_started': False,
+        # The adapter does not write source media. However, Final Cut may
+        # still modify open libraries when it receives an Apple event.
+        'original_media_modified': 'not_assessed',
+        'preexisting_fcp_library_writes': 'not_assessed',
+    }
+    receipt_write(output, report)
+    return report
+
+
+def dispatch(output, report, run=subprocess.run, clock=time.monotonic,
+             sleep=time.sleep, wait_seconds=65):
+    if report['status'] != 'ready_to_dispatch_not_launched':
+        raise ValueError('Refusing duplicate dispatch')
+    if not APP.is_dir():
+        raise ValueError('Final Cut Pro application not installed')
+    target = Path(report['target_library'])
+    if target.exists() or target.is_symlink():
+        raise ValueError('Disposable test library already exists; refusing to reuse it')
+    # The first live host trial returned AppleScript success but unexpectedly
+    # changed the timestamp of an existing ~/Movies/Untitled.fcpbundle.
+    # The attempted import may have landed in that library. DO NOT run any
+    # future disposable import while this ambiguity is unresolved.
+    legacy_library = Path.home() / 'Movies' / 'Untitled.fcpbundle'
+    if legacy_library.exists() or legacy_library.is_symlink():
+        raise ValueError(
+            'UNSAFE: Pre-existing ~/Movies/Untitled.fcpbundle detected; '
+            'refusing to risk another XML import into an existing library. '
+            'Use the read-only Jane import audit and build isolated native '
+            'library creation before any new import attempt.')
+    checkpoint(output, report, 'dispatch_starting_no_app_result', apple_event_dispatch_attempted=False)
+    try:
+        for label, _, _ in LABELS:
+            xml = output / (label + '-auto.fcpxml')
+            # Record the attempted action BEFORE a potentially-blocking
+            # AppleScript subprocess. The receipt is readable while it waits.
+            checkpoint(output, report, 'sending_' + label + '_apple_event',
+                       apple_event_dispatch_attempted=True,
+                       last_dispatched=label)
+            # AppleScript argument separate from source: no path interpolation.
+            result = run(['osascript', '-e', OPEN_XML_SCRIPT, str(xml)],
+                         check=False, capture_output=True, text=True, timeout=90)
+            report['apple_event_sent'] = True
+            if result.returncode:
+                report['status'] = 'apple_event_failed'
+                report['error'] = ('osascript exit=' + str(result.returncode) + ' ' +
+                                   (result.stderr or '').strip()[:1200])
+                checkpoint(output, report, 'apple_event_failed')
+                break
+            checkpoint(output, report, label + '_event_acknowledged_timeline_unverified')
+            if label == 'landscape':
+                checkpoint(output, report, 'waiting_for_disposable_library')
+                deadline = clock() + wait_seconds
+                while not target.is_dir() and clock() < deadline:
+                    sleep(1)
+                if not target.is_dir():
+                    report['status'] = 'native_library_not_observed'
+                    report['error'] = 'Target library was not created; portrait NOT sent'
+                    checkpoint(output, report, 'native_library_not_observed')
+                    break
+                checkpoint(output, report, 'disposable_library_path_observed_timeline_unverified',
+                           library_creation_observed=True)
+        else:
+            checkpoint(output, report, 'apple_events_sent_timeline_unverified')
+    except subprocess.TimeoutExpired:
+        report['status'] = 'apple_event_timeout'
+        report['error'] = 'Possible macOS Automation permission prompt or modal'
+    except Exception as exc:
+        report['status'] = 'apple_event_failed'
+        report['error'] = type(exc).__name__ + ': ' + str(exc)[:600]
+    finally:
+        report['native_timeline_verified'] = False
+        checkpoint(output, report, report['status'])
+    return report
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--candidates', type=Path, required=True)
+    p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--dispatch', action='store_true',
+                   help='Allow actual Apple event to create new test library')
+    args = p.parse_args(argv)
+    if args.dispatch:
+        # A REAL Mac host test proved this legacy Open Document Apple event
+        # deposited an FCPXML project into the user's pre-existing
+        # ~/Movies/Untitled.fcpbundle instead of its requested new library.
+        # Disable the user-facing dangerous execution path irrespective of
+        # whether that specific Untitled library currently exists.
+        print('Jane legacy XML dispatch DISABLED: confirmed wrong-library ' +
+              'import into a pre-existing library. First create and verify ' +
+              'an isolated native FCP library using fcp_jane_library_bootstrap.py. ' +
+              'No XML import was sent.', file=sys.stderr)
+        return 2
+    try:
+        output = args.output.expanduser().absolute()
+        state = prepare(args.candidates, output)
+        if args.dispatch:
+            state = dispatch(output, state)
+        print(json.dumps(state, indent=2))
+        return 0 if state['status'] in (
+            'ready_to_dispatch_not_launched', 'apple_events_sent_timeline_unverified') else 2
+    except Exception as exc:
+        print('Jane native import stopped safely: ' + type(exc).__name__ + ': ' +
+              str(exc), file=sys.stderr)
+        return 2
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

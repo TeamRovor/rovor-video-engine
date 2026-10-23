@@ -1,0 +1,90 @@
+name: Final Cut MCP Intel dependency and handshake smoke
+
+on:
+  pull_request:
+    paths:
+      - 'tools/fcp_host_smoke.py'
+      - '.openinterpreter/config.toml'
+      - '.codex/config.toml'
+      - '.github/workflows/fcp-mcp-intel-package-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/fcp_host_smoke.py'
+      - '.openinterpreter/config.toml'
+      - '.codex/config.toml'
+      - '.github/workflows/fcp-mcp-intel-package-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  intel-wheel-and-protocol:
+    runs-on: macos-15-intel
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+      - name: Verify Intel-specific wheel install, real MCP protocol, synthetic root denial
+        shell: bash
+        env:
+          UV_NO_BUILD: "1"
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, platform, sys, tempfile
+          from pathlib import Path
+          sys.path.insert(0, str(Path.cwd() / "tools"))
+          from fcp_host_smoke import Client, fixture, verify
+
+          if platform.system() != "Darwin" or platform.machine() != "x86_64":
+              raise RuntimeError("This host must be a real macOS Intel runner")
+          with tempfile.TemporaryDirectory(prefix="rovor-intel-mcp-") as temp:
+              root = Path(temp)
+              allowed = root / "fixtures"
+              allowed.mkdir()
+              for name, width, height in (("landscape", 1920, 1080), ("portrait", 1080, 1920)):
+                  fixture(allowed / (name + ".fcpxml"), width, height)
+              outside = root / "outside.fcpxml"
+              outside.write_text('<fcpxml version="1.13"><event name="OUTSIDE_ROOT_SENTINEL"/></fcpxml>')
+              # verify() asks for an outside-root filename ending in sentinel.fcpxml.
+              outside = root / "sentinel.fcpxml"
+              outside.write_text('<fcpxml version="1.13"><event name="OUTSIDE_ROOT_SENTINEL"/></fcpxml>')
+              env = dict(os.environ)
+              env.update(FCP_PROJECTS_DIR=str(allowed), FCP_PROJECTS_DIRS=str(allowed),
+                         FCP_MCP_AUTOPUSH="0", FCP_MCP_INDEX="off", FCP_WATCH_DIR="",
+                         UV_CACHE_DIR=str(root / "uv-cache"),
+                         UV_TOOL_DIR=str(root / "uv-tools"),
+                         UV_PYTHON_INSTALL_DIR=str(root / "uv-python"))
+              command = ["uvx", "--no-build", "--python", "3.11",
+                         "--with", "cryptography==46.0.5",
+                         "--from", "fcp-mcp-server==0.27.2", "fcp-mcp-server"]
+              client = None
+              try:
+                  client = Client(command, env, cwd=root)
+                  report = verify(client, allowed, outside)
+                  if report["native_final_cut_operated"] or report["interpreter_mcp_client_verified"]:
+                      raise RuntimeError("Synthetic smoke must not claim application operation")
+                  print(json.dumps({
+                      "outcome": "passed_intel_direct_mcp_only",
+                      "architecture": platform.machine(),
+                      "server_version": report["server"].get("version"),
+                      "tool_names": report["available_tool_names"],
+                      "out_of_root_refused": True,
+                      "final_cut_operated": False,
+                      "interpreter_connected": False
+                  }, indent=2))
+              except Exception:
+                  if client is not None:
+                      print("MCP stderr on synthetic CI run follows:")
+                      print(client.errors.decode("utf-8", errors="replace")[-12000:])
+                  raise
+              finally:
+                  if client is not None:
+                      client.close()
+          PY

@@ -36,7 +36,7 @@ sandbox_mode = "workspace-write"
 
 [agents.jane]
 description = "Video editor: Final Cut Pro, FCPXML, FFmpeg, audio mixing, shot continuity and exports."
-developer_instructions = """You are Jane, ROVOR's video editor. Inspect source media and available Final Cut Pro/FFmpeg tools before editing. Use reversible timelines and deterministic exports, not unverified GUI automation. Produce coherent pacing, real animation, music/SFX and verified 1080p60 review outputs when requested. Keep source audio intact."""
+developer_instructions = """You are Jane, ROVOR's video editing and Final Cut Pro specialist. Before using unfamiliar software read .agents/skills/software-integration-research/SKILL.md, integrations/final-cut-pro/README.md and integrations/final-cut-pro/RESEARCH-PACKET.md. Research official current Apple docs and third-party MCP code first; record dated source, tested host version, verified capability and remaining unknowns. Study how to turn original Evan animation plus exact narration, music/SFX and titles into YouTube landscape and portrait Reels. Follow shared GitHub WORK.md task claims and publish scoped evidence handoffs. Treat MCP registration as configuration only, never proof of Mac/FCP access, autonomy or working edits. Do not install software or ask for broad permissions, change original media, open client libraries, post online, spend money or edit outside disposable test directories without approval. MCP inspect and restricted-root refusal have already been verified on the Mac; do not restart this setup. WARNING: actual Oct 22 FCPXML Open Document imported the landscape marker into pre-existing ~/Movies/Untitled.fcpbundle despite an intended separate destination. NEVER use legacy fcp_native_auto_import.py --dispatch; it is disabled. Do not import XML or edit any native library until a unique native library is created AND its FCP application selection is independently verified. For one approved native-library creation-only task, use tools/fcp_jane_library_onepass.py with a stable one-time job ID and explicit --create; do not retry IDs or issue loose osascript commands. This adapter never imports XML or claims selected-library verification. Preserve other users' media, projects and libraries. Save status receipts and report exact executed Mac evidence, never infer live app access from CI. Preserve original art and speech; final review targets 1080p60 and at least 30 seconds with visible genuine animation and user approval."""
 sandbox_mode = "workspace-write"
 
 [agents.saul]
@@ -48,3 +48,31 @@ sandbox_mode = "read-only"
 description = "Quality inspector: code tests, render validation, lip-sync inspection, file provenance, defect reports."
 developer_instructions = """You are Hank, ROVOR's independent quality inspector. Review available evidence and run only permitted read-only checks. Separate executed tests from unverified assumptions. Reject broken alignment, obvious still-image slide shows, incorrect actor-object contact, missing audio and noncompliant output formats. Provide precise reproducible failure reports; user retains final creative approval."""
 sandbox_mode = "read-only"
+
+
+# Jane's PRIMARY local FCPXML MCP integration is through Open Interpreter.
+# OFF until operator verifies the package and an empty disposable Mac folder.
+# Both paths below deliberately invalid; replace LOCALLY (never push a Mac
+# home path or a client file). FCP_PROJECTS_DIRS is the read allowlist;
+# legacy FCP_PROJECTS_DIR alone is NOT a read restriction.
+# Inspect upstream v0.27.2 before enabling. No autopush, no write tools.
+# This is for .openinterpreter/config.toml, NOT Codex's separate config.
+# Native docs: https://github.com/openinterpreter/openinterpreter/blob/main/docs/mcp.md
+# External server: https://github.com/DareDev256/fcp-mcp-server
+
+[mcp_servers.fcpxml]
+enabled = false
+required = false
+command = "uvx"
+args = ["--no-build", "--python", "3.11", "--with", "cryptography==46.0.5", "--from", "fcp-mcp-server==0.27.2", "fcp-mcp-server"]
+enabled_tools = ["inspect", "diagnose", "view"]
+default_tools_approval_mode = "prompt"
+startup_timeout_sec = 20
+tool_timeout_sec = 60
+
+[mcp_servers.fcpxml.env]
+FCP_PROJECTS_DIR = "/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH"
+FCP_PROJECTS_DIRS = "/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH"
+FCP_MCP_AUTOPUSH = "0"
+FCP_MCP_INDEX = "off"
+UV_PYTHON_PREFERENCE = "only-managed"

@@ -1,0 +1,126 @@
+name: Interpreter real CLI MCP registration gate
+
+on:
+  pull_request:
+    paths:
+      - 'tools/fcp_interpreter_registration.py'
+      - '.github/workflows/fcp-interpreter-cli-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/fcp_interpreter_registration.py'
+      - '.github/workflows/fcp-interpreter-cli-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-interpreter-config-loader:
+    runs-on: macos-15-intel
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v6
+      - name: Run actual Open Interpreter v0.0.56 configuration-only MCP list
+        shell: bash
+        env:
+          RELEASE_URL: https://github.com/openinterpreter/openinterpreter/releases/download/rust-v0.0.56/open-interpreter-package-x86_64-apple-darwin.tar.gz
+        run: |
+          set -euo pipefail
+          if [ "$(uname -m)" != "x86_64" ]; then
+            echo 'FAIL: this test requires an actual Intel Mac'
+            exit 1
+          fi
+          WORK="$(mktemp -d)"
+          trap 'rm -rf "$WORK"' EXIT
+          mkdir -p "$WORK/release" "$WORK/home" "$WORK/project/.openinterpreter" "$WORK/project/fixtures"
+          curl --fail --location --silent --show-error --retry 2 \
+            --max-time 240 "$RELEASE_URL" -o "$WORK/interpreter-release.tar.gz"
+          tar -xzf "$WORK/interpreter-release.tar.gz" -C "$WORK/release"
+          INTERPRETER="$(find "$WORK/release" -type f -name interpreter -perm -u+x -print -quit)"
+          if [ -z "$INTERPRETER" ]; then
+            echo 'FAIL: pinned 0.0.56 release had no executable named interpreter'
+            find "$WORK/release" -maxdepth 4 -type f -print | head -30
+            exit 1
+          fi
+          echo 'Testing in an untrusted project directory with isolated HOME; no server starts.'
+          export HOME="$WORK/home"
+          ALLOWED="$WORK/project/fixtures"
+          OVERRIDE="$(PYTHONPATH="$PWD/tools" python -c 'import sys; from pathlib import Path; from fcp_interpreter_registration import override_for; print(override_for(Path(sys.argv[1])))' "$ALLOWED")"
+          cd "$WORK/project"
+          "$INTERPRETER" -c "$OVERRIDE" -c 'sandbox_mode="read-only"' \
+            -c 'approval_policy="on-request"' mcp list --json > "$WORK/list.json"
+          python - "$WORK/list.json" "$ALLOWED" <<'PY'
+          import json,sys
+          entries = json.load(open(sys.argv[1]))
+          assert isinstance(entries,list),type(entries)
+          hits = [item for item in entries if item.get('name') == 'fcpxml']
+          assert len(hits)==1, entries
+          entry=hits[0]
+          transport=entry['transport']
+          assert entry['enabled'] is True, entry
+          assert transport['type']=='stdio',transport
+          assert transport['command']=='uvx',transport
+          assert transport['env']['FCP_PROJECTS_DIRS']==sys.argv[2],transport
+          assert transport['args']==['--no-build','--python','3.11','--with',
+                                    'cryptography==46.0.5','--from',
+                                    'fcp-mcp-server==0.27.2','fcp-mcp-server']
+          print('PASS: actual Open Interpreter v0.0.56 discovered ephemeral -c fcpxml.')
+          print('No model, paid inference, MCP transport or native Final Cut was started.')
+          PY
+          export ROVOR_STAGE_ROOT="$WORK/staged"
+          export ROVOR_FAKE_PROOF="$WORK/fake-mac-proof"
+          export ROVOR_INTERPRETER_BIN="$INTERPRETER"
+          PYTHONPATH="$GITHUB_WORKSPACE/tools" python - <<'PY'
+          import json, os
+          from pathlib import Path
+          import fcp_host_smoke as smoke
+          import fcp_interpreter_stage as stage
+          import fcp_interpreter_registration as reg
+
+          root = Path(os.environ['ROVOR_FAKE_PROOF'])
+          root.mkdir()
+          (root / 'fixtures').mkdir()
+          replies = {}
+          for name, w, h in [('landscape',1920,1080),('portrait',1080,1920)]:
+              smoke.fixture(root / 'fixtures' / (name + '.fcpxml'), w, h)
+              replies[name] = {'content': [{'type':'text', 'text':f'{w}x{h} @ 60fps'}], 'isError':False}
+          receipt = {
+              'status':'passed_direct_mcp', 'stage':'complete',
+              'server':{'name':'fcp-mcp-server','version':'0.27.2'},
+              'native_final_cut_operated':False,
+              'interpreter_mcp_client_verified':False,
+              'available_tool_names':['inspect'],
+              'fixture_results':replies,
+              'outside_root_refusal':{'content':[{'text':'Validation error: File path escapes the allowed roots'}]}
+          }
+          (root / 'receipt.json').write_text(json.dumps(receipt))
+          staged = Path(os.environ['ROVOR_STAGE_ROOT'])
+          stage.make_stage(root, staged)
+          result = reg.verify_cli(staged, interpreter=os.environ['ROVOR_INTERPRETER_BIN'])
+          assert result['status']=='passed_interpreter_registration_only', result
+          assert (staged / 'project' / 'run-interpreter-fcp.sh').exists()
+          assert not result['interpreter_mcp_client_verified']
+          print('PASS: real Open Interpreter 0.0.56 loaded the full stage->CLI ephemeral MCP registration.')
+          PY
+          # Separate real app-server RPC trial. No API/model turn; only staged synthetic XML.
+          export UV_CACHE_DIR="$WORK/uv-cache"
+          PYTHONPATH="$GITHUB_WORKSPACE/tools" python - <<'PY'
+          import os, json
+          from pathlib import Path
+          import fcp_interpreter_appserver_smoke as probe
+          report = probe.verify(Path(os.environ['ROVOR_STAGE_ROOT']),
+                                interpreter=os.environ['ROVOR_INTERPRETER_BIN'])
+          assert report['status'] == 'passed_interpreter_appserver_mcp_tool_call', report
+          assert report['outside_root_refused']
+          assert report['model_turn_started'] is False
+          assert report['native_final_cut_operated'] is False
+          print(json.dumps(report, indent=2))
+          print('PASS: Interpreter app-server actually called pinned FCP MCP inspect, no model.')
+          PY

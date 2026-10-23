@@ -1,0 +1,94 @@
+name: Final Cut MCP diagnostic unit tests
+
+on:
+  pull_request:
+    paths:
+      - 'tools/fcp_host_smoke.py'
+      - 'tools/fcp_interpreter_stage.py'
+      - 'tests/test_fcp_interpreter_stage.py'
+      - 'tools/fcp_interpreter_registration.py'
+      - 'tests/test_fcp_interpreter_registration.py'
+      - 'tools/fcp_interpreter_appserver_smoke.py'
+      - 'tests/test_fcp_interpreter_appserver_smoke.py'
+      - 'tools/fcp_native_import_candidate.py'
+      - 'tools/fcp_native_auto_import.py'
+      - 'tests/test_fcp_native_auto_import.py'
+      - 'tools/fcp_jane_status.py'
+      - 'tests/test_fcp_jane_status.py'
+      - 'tools/fcp_jane_native_probe.py'
+      - 'tests/test_fcp_jane_native_probe.py'
+      - 'tools/fcp_jane_ui_probe.py'
+      - 'tests/test_fcp_jane_ui_probe.py'
+      - 'tools/fcp_jane_import_audit.py'
+      - 'tests/test_fcp_jane_import_audit.py'
+      - 'tools/fcp_jane_library_bootstrap.py'
+      - 'tools/fcp_jane_library_onepass.py'
+      - 'tests/test_fcp_jane_library_bootstrap.py'
+      - 'tests/test_fcp_jane_library_onepass.py'
+      - 'tools/fcp_jane_library_failure_probe.py'
+      - 'tests/test_fcp_jane_library_failure_probe.py'
+      - 'tests/test_fcp_native_import_candidate.py'
+      - 'tests/test_fcp_host_smoke.py'
+      - '.github/workflows/fcp-mcp-smoke-unit.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/fcp_host_smoke.py'
+      - 'tools/fcp_interpreter_stage.py'
+      - 'tests/test_fcp_interpreter_stage.py'
+      - 'tools/fcp_interpreter_registration.py'
+      - 'tests/test_fcp_interpreter_registration.py'
+      - 'tools/fcp_interpreter_appserver_smoke.py'
+      - 'tests/test_fcp_interpreter_appserver_smoke.py'
+      - 'tools/fcp_native_import_candidate.py'
+      - 'tools/fcp_native_auto_import.py'
+      - 'tests/test_fcp_native_auto_import.py'
+      - 'tools/fcp_jane_status.py'
+      - 'tests/test_fcp_jane_status.py'
+      - 'tools/fcp_jane_native_probe.py'
+      - 'tests/test_fcp_jane_native_probe.py'
+      - 'tools/fcp_jane_ui_probe.py'
+      - 'tests/test_fcp_jane_ui_probe.py'
+      - 'tools/fcp_jane_import_audit.py'
+      - 'tests/test_fcp_jane_import_audit.py'
+      - 'tools/fcp_jane_library_bootstrap.py'
+      - 'tools/fcp_jane_library_onepass.py'
+      - 'tests/test_fcp_jane_library_bootstrap.py'
+      - 'tests/test_fcp_jane_library_onepass.py'
+      - 'tools/fcp_jane_library_failure_probe.py'
+      - 'tests/test_fcp_jane_library_failure_probe.py'
+      - 'tests/test_fcp_native_import_candidate.py'
+      - 'tests/test_fcp_host_smoke.py'
+      - '.github/workflows/fcp-mcp-smoke-unit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-mcp-transport:
+    name: Fake MCP and failure-receipt regressions (no FCP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate smoke tester with isolated local fakes
+        run: |
+          python -m unittest discover -s tests -p test_fcp_host_smoke.py -v
+          python -m unittest discover -s tests -p test_fcp_interpreter_stage.py -v
+          python -m unittest discover -s tests -p test_fcp_interpreter_registration.py -v
+          python -m unittest discover -s tests -p test_fcp_interpreter_appserver_smoke.py -v
+          python -m unittest discover -s tests -p test_fcp_native_import_candidate.py -v
+          python -m unittest discover -s tests -p test_fcp_native_auto_import.py -v
+          python -m unittest discover -s tests -p test_fcp_jane_status.py -v
+          python -m unittest discover -s tests -p test_fcp_jane_native_probe.py -v
+          python -m unittest discover -s tests -p test_fcp_jane_ui_probe.py -v
+          python -m unittest discover -s tests -p test_fcp_jane_import_audit.py -v
+          python -m unittest discover -s tests -p test_fcp_jane_library_bootstrap.py -v
+          python -m unittest discover -s tests -p test_fcp_jane_library_onepass.py -v
+          python -m unittest discover -s tests -p test_fcp_jane_library_failure_probe.py -v
