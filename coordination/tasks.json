@@ -3214,7 +3214,7 @@
       "id": "omniroute-workforce-composite-20261023",
       "title": "Combine the tested OmniRoute workpacks and ghost queue into one isolated source candidate",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar Mac composite repair 2026-10-23",
       "branch": "feature/ghost-native-import-queue",
       "scopes": [
@@ -3233,9 +3233,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-23T23:44:32.614Z",
-      "next_update": "After actual Mac focused tests and private runtime audit",
-      "next_action": "Fix identical demonstrated macOS temp-alias issue in receipt reviewer test fixture, then finish Mac evidence; PR66 integration blocked by externally redirected receipt-path bypass.",
+      "updated_at": "2026-10-23T23:46:17.049Z",
+      "next_update": "After PR66 owner repairs raw-path symlink rejection and Mac regression passes",
+      "next_action": "Review PR66 comment 6376995379. Preserve raw-path symlink checks separately from resolved checkout containment; add external-private symlink regression on owner branch; rerun focused Mac tests before integrating PR66/71. Then verify free-only account/fallback configuration, approve one fresh bounded foreground job in existing queue, review private receipt; preserve existing queued Final Cut jobs and STOP until safe. No recurring inference scheduled.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -3257,8 +3257,16 @@
           "check": "Source-only integration of all OmniRoute files and queue adapter into one branch",
           "result": "MERGED into PR41 candidate; not merged into main, not deployed to user's Mac",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/103"
+        },
+        {
+          "commit": "bace85f0206c2a5b362dcb0906cac4ef2b03e299",
+          "platform": "Actual Mac macOS15.8.1 build24H32; Python3.9.6 and installed LaunchAgent Python3.12",
+          "check": "python3 -m unittest discover -s tests -p test_omniroute_workforce_composite.py -v (6); same composite under installed python3.12 (6); test_ghost_omniroute_job.py (8), test_omniroute_draft_review.py (17), test_ghost_worker_loop.py (13). All inference mocked. launchctl print; plist read; SQLite mode=ro&immutable=1 inventory.",
+          "result": "PASS after test-only temporary-root canonicalization at fae4fde and bace85f; production unchanged. Existing LaunchAgent idle, interval300s/max1 job/240s, STOP present, no OmniRoute runtime modules/jobs. Independent PR66 bypass reproduced despite PR71 22-test suite passing; not integrated. No live calls, deployment, replay or schedule changes.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/66#issuecomment-6376995379"
         }
-      ]
+      ],
+      "blocker": "PR66 direct API resolves away external symlink ancestry before security check (Mac mock reproducer calls completion and writes receipt). Installed pinned research runtime lacks OmniRoute modules; STOP remains present; no live model job authorized/executed in this checkpoint."
     }
   ]
 }
