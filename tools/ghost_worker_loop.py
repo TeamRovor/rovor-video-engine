@@ -131,8 +131,9 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
     return {"stop_reason": reason, "executed": executed, "succeeded": succeeded,
             "failed": failed, "idle_polls": idle_polls,
             "elapsed_seconds": round(max(0, monotonic() - start), 3),
-            "read_only": not (allow_native_import or allow_model_use),
-            "native_import_enabled": allow_native_import,
+            "read_only": not allow_model_use,
+            "native_import_requested": allow_native_import,
+            "native_import_enabled": False,
             "model_use_enabled": allow_model_use, "worker_id": worker_id}
 
 
