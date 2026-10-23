@@ -193,6 +193,40 @@ class OmniRouteWorkpackTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'Invalid'):
                 worker.access_key()
 
+    def test_per_packet_routes_are_selected_without_fallback(self):
+        records={}
+        def completion(model,prompt,key):
+            for slug in worker.PACKETS:
+                if slug.replace('-','') in prompt.replace('-',''):
+                    pass
+            records[model]=records.get(model,0)+1
+            return ('No executed Mac action; draft only',None)
+        with mock.patch.object(worker,'http_completion',side_effect=completion):
+            with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':'fake'}):
+                with redirect_stdout(io.StringIO()) as out:
+                    rc=worker.main(['--repo',str(self.repo),'--all',
+                         '--out',str(self.out),'--approve-model-use',
+                         '--confirm-no-paid-fallback',
+                         '--route','runner-blocker=groq/verified-fast',
+                         '--route','supervisor-resilience=mistral/verified-code',
+                         '--route','provider-efficiency=gemini/verified-reason'])
+        self.assertEqual(rc,0)
+        self.assertEqual(set(records),{'groq/verified-fast',
+                                      'mistral/verified-code',
+                                      'gemini/verified-reason'})
+        self.assertEqual(sum(records.values()),3)
+        self.assertFalse(json.loads(out.getvalue())['paid_fallback_attempted'])
+
+    def test_reject_missing_role_routing_or_untrusted_model(self):
+        with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':'fake'}):
+            with redirect_stderr(io.StringIO()):
+                rc=worker.main(['--repo',str(self.repo),'--all',
+                                '--approve-model-use',
+                                '--confirm-no-paid-fallback',
+                                '--route','runner-blocker=fast/only'])
+        self.assertEqual(rc,2)
+        self.assertFalse(self.out.exists())
+
     def test_all_three_model_draft_jobs_via_mock_no_gui_or_github_write(self):
         with mock.patch.object(worker,'http_completion',
                                side_effect=lambda m,p,k:('Audit only',None)) as llm:
