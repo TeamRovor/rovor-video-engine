@@ -90,6 +90,47 @@ class NativeLibraryBootstrapTests(unittest.TestCase):
         persisted = json.loads((output / gate.REPORT).read_text())
         self.assertEqual(persisted['status'],'ui_create_failed_unverified')
 
+    def test_menu_navigation_expands_lazy_submenu_after_file(self):
+        # This reproduces our real Mac diagnosis: on an unopened submenu
+        # the read-only AX probe reported library_menu=false.
+        source=gate.APPLE_SCRIPT
+        file_click=source.index('click menu bar item "File"')
+        submenu_click=source.index('click menu item "New"')
+        library_check=source.index('if not (exists menu item "Library"')
+        library_click=source.index('click menu item "Library"')
+        self.assertLess(file_click,submenu_click)
+        self.assertLess(submenu_click,library_check)
+        self.assertLess(library_check,library_click)
+        self.assertIn('repeat with attempt from 1 to 15',source)
+        self.assertIn('Save destination could not be verified; NO SAVE',source)
+        self.assertNotIn('open POSIX file',source)
+
+    def test_stage_receipt_survives_native_failed_save_without_leak(self):
+        output, receipt = self.prepared()
+        secret='Private Person 1723'
+        def fake(command, **kwargs):
+            return subprocess.CompletedProcess(command,1,stdout='',stderr=(
+                '(*JANE_STAGE|activating_final_cut*)\\n'
+                '(*JANE_STAGE|opening_file_menu*)\\n'
+                '(*JANE_STAGE|opening_new_submenu*)\\n'
+                'execution error: No File/New/Library command after expanding submenu '
+                + secret + ' (-2700)'
+            ))
+        with mock.patch.object(gate,'APP',self.root):
+            result=gate.create_library(output,receipt,run=fake)
+        self.assertEqual(result['status'],'ui_create_failed_unverified')
+        self.assertEqual(result['last_ui_stage'],'opening_new_submenu')
+        self.assertEqual(result['error_class'],'menu_preflight')
+        self.assertNotIn(secret,json.dumps(result))
+        self.assertFalse(result['xml_import_attempted'])
+
+    def test_untrusted_stage_names_not_returned_in_receipt(self):
+        self.assertEqual(gate.last_safe_ui_stage(
+            '(*JANE_STAGE|MY_PERSONAL_PROJECT_NAME*)\\n'
+            '(*JANE_STAGE|frontmost_confirmed*)'),
+            'frontmost_confirmed')
+        self.assertIsNone(gate.last_safe_ui_stage('no stage info'))
+
     def test_native_automation_permission_error_is_sanitized(self):
         output, report = self.prepared()
         private = 'Confidential Project 74828'
