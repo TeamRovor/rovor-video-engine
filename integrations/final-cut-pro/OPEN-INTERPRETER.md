@@ -1,5 +1,15 @@
 # Open Interpreter-first Final Cut Pro connection (Jane)
 
+## Current Jane native blocker and fix (2026-10-22, latest)
+
+**Latest actual Mac host evidence** (read-only probe for the 20:08:46 CDT bootstrap attempt): FCP process RUNNING; two windows, zero sheets; Final Cut was not frontmost *at the later diagnostic*, File menu exists, New menu exists, nested Library command reported false while not expanded; the intended new library does not exist. Do **not** conclude Accessibility was denied or Library is unavailable. The prior bootstrap preserved only the generic exit code 1, so the exact failing stage is unproven.
+
+**Causal code fix implemented and macOS-compiled in PR #37:** the old native bootstrap checked `File > New > Library` before opening lazy macOS Accessibility menus and checked frontmost immediately after `activate`. Revised `tools/fcp_jane_library_bootstrap.py` now waits a bounded interval for foreground activation; checks for existing sheets; explicitly clicks File, then New, and only then checks and clicks Library. It logs restricted `JANE_STAGE|` progress markers and preserves the last valid step in its atomic failure receipt; raw stderr/project names never get copied. It still verifies the exact unique Save destination before any Save action. This is a *hypothesis-driven correction*, not yet a proved successful native host run. CI unit regression and native macOS osacompile pass.
+
+**Milestone gate / do not claim completion:** (1) isolated native library *created* in a fresh ROVOR folder; (2) app-level proof that FCP has that library selected, not `~/Movies/Untitled.fcpbundle`; (3) ONLY THEN enable 30s landscape XML import and prove correct project properties in the isolated native library; (4) portrait; (5) actual FCP edit and export. Until gates 1-2 pass, legacy `tools/fcp_native_auto_import.py --dispatch` stays unconditionally DISABLED and no other code should issue `open POSIX file` on FCPXML. Original `Untitled` contains unintended landscape test markers and must not be deleted/edited or used as a destination.
+
+**Efficiency requirement:** Stop asking the user to perform manual FCP workflows, stop promoting each tiny diagnostic to a completed integration, and avoid replaying failed jobs. A single safe host launch must record all actionable stages. Without a persistent connected local Mac executor, GitHub code changes and CI tests alone do not operate the user's Final Cut app.
+
 **Primary local executor: Open Interpreter.** Codex is an optional fallback client, not the ROVOR workforce's primary runtime. Walter coordinates Jane and other existing specialist roles, Open Interpreter supplies local agent sessions/MCP/tool permissions, and GitHub holds source/version/task evidence. None of this alone starts an always-on process or tunnels cloud ChatGPT to the Mac.
 
 ## Real Mac isolated library bootstrap FAILED — 2026-10-22 20:08 CDT
