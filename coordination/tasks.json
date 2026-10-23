@@ -2625,6 +2625,29 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/51"
       ]
+    },
+    {
+      "id": "paired-task-routing-intake",
+      "title": "Prepare validated paired task and routing entries in one local change",
+      "status": "active",
+      "priority": 1,
+      "owner": "ChatGPT / Amar system routing paired intake 2026-10-22",
+      "branch": "feature/rovor-paired-task-routing-intake",
+      "scopes": [
+        "tools/task_routing_pair.py",
+        "tests/test_task_routing_pair.py",
+        "coordination/TASK-INTAKE.md",
+        ".github/workflows/task-routing-pair-check.yml",
+        "coordination/work-routing.json"
+      ],
+      "depends_on": [
+        "session-routing-coverage-and-idle-triage"
+      ],
+      "updated_at": "2026-10-23T05:05:04.615Z",
+      "next_update": "After full shared queue validation and GitHub-hosted Python 3.9/3.11 tests",
+      "next_action": "Implement stdlib helper to validate one new task and its explicit route against latest local queue, check duplicate IDs, reserved scope and dependencies, emit both updated files as a paired preview or guarded apply. No task auto-claim, GitHub push or remote execution.",
+      "acceptance": "New entries cannot be prepared without valid paired route and queue; no owner takeover; refuses dirty source files and mismatched mappings; tests cover duplicate/invalid/blocked scopes and clean valid output; hosted CI pass. Preserve existing read-only work_brief and canonical queue.",
+      "evidence": []
     }
   ]
 }
