@@ -1,0 +1,32 @@
+name: OmniRoute SQLite ghost worker safety (offline)
+
+on:
+  pull_request:
+    paths:
+      - tools/ghost_worker.py
+      - tools/ghost_worker_loop.py
+      - tools/ghost_omniroute_job.py
+      - tests/test_ghost_omniroute_job.py
+      - .github/workflows/ghost-omniroute-queue.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.version }}
+      - name: Offline isolated SQLite and mock-inference tests
+        run: python -m unittest discover -s tests -p 'test_ghost_omniroute_job.py' -v
