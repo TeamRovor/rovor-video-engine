@@ -848,3 +848,61 @@ body.motion-paused .reactor-stage::after {
 @media (prefers-reduced-motion: reduce) {
   .reactor-stage.mode-orbit .reactor-halo { animation: none !important; }
 }
+
+
+/* Landscape-first refinement for iPad-sized touch displays. */
+@media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) {
+  .app-shell {
+    max-width: none;
+    padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    gap: 8px;
+  }
+  .topbar { padding: 10px 14px; gap: 12px; margin-bottom: 8px; }
+  .topbar h1 { font-size: clamp(16px, 2vw, 24px); }
+  .eyebrow { font-size: 9px; letter-spacing: .22em; }
+  .header-subtitle { font-size: 9px; }
+  .top-actions { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .hud-btn { min-height: 38px; padding: 8px 10px; font-size: 11px; }
+  .reactor-stage {
+    height: clamp(160px, 27vh, 240px);
+    min-height: 160px;
+    margin-bottom: 4px;
+  }
+  .reactor-core { width: clamp(82px, 11vh, 120px); }
+  .reactor-halo.halo-outer { width: min(64%, 390px); height: auto; aspect-ratio: 1; }
+  .reactor-halo.halo-mid { width: min(52%, 310px); height: auto; aspect-ratio: 1; }
+  .reactor-halo.halo-inner { width: min(39%, 230px); height: auto; aspect-ratio: 1; }
+  .reactor-readout { max-width: 28%; font-size: 8px; letter-spacing: .12em; }
+  .reactor-readout strong { font-size: 10px; overflow-wrap: anywhere; }
+  .reactor-readout small { font-size: 7px; letter-spacing: .09em; }
+  .syncbar { padding: 8px 12px; margin-bottom: 8px; }
+  .hero-grid { gap: 8px; margin-bottom: 8px; }
+  .hero-grid > .hud-panel { padding: 10px; min-width: 0; }
+  .panel-title { font-size: 10px; letter-spacing: .16em; margin-bottom: 9px; }
+  .ring-wrap { min-height: 120px; }
+  .status-ring { width: min(140px, 18vh); height: auto; }
+  .ring-center span { font-size: 28px; }
+  .metrics { gap: 7px; }
+  .metric { padding: 10px; }
+  .metric .value { font-size: clamp(19px, 2.4vw, 27px); }
+  .tabbar { gap: 5px; padding: 5px; margin-bottom: 8px; }
+  .tab { min-height: 38px; padding: 8px 12px; font-size: 11px; }
+  .tab-view > .section-grid, .tab-view > .hud-panel { min-width: 0; }
+  .section-grid > .hud-panel { padding: 10px; min-width: 0; }
+}
+@media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) and (max-height: 620px) {
+  .reactor-stage { height: clamp(135px, 24vh, 170px); min-height: 135px; }
+  .reactor-readout small { display: none; }
+  .syncbar { gap: 8px; }
+  .hero-grid > .hud-panel { padding: 8px; }
+}
+@media (hover: none) and (pointer: coarse) {
+  .hud-btn, .tab { min-height: 42px; }
+  .reactor-core[role="button"] { -webkit-tap-highlight-color: transparent; }
+  .hud-btn:active, .tab:active { background-color: rgba(54,142,255,.22); }
+}
+/* Every newly introduced animation obeys the same global motion switch. */
+body.motion-paused .reactor-stage.mode-orbit .reactor-halo,
+body.motion-paused .reactor-stage.mode-signal .reactor-halo {
+  animation-play-state: paused !important;
+}
