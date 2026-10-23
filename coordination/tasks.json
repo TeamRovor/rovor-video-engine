@@ -2551,7 +2551,7 @@
       "id": "routing-future-ready-queue-regression",
       "title": "Prevent routing CI from rejecting a legitimately ready future task",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar routing future-queue regression 2026-10-22",
       "branch": "fix/rovor-routing-future-ready-tasks",
       "scopes": [
@@ -2561,11 +2561,19 @@
       "depends_on": [
         "session-routing-coverage-and-idle-triage"
       ],
-      "updated_at": "2026-10-23T04:51:30.932Z",
-      "next_update": "After hosted routing tests and merge; no local/host execution",
-      "next_action": "Replace inappropriate static assumption that GitHub-only sessions must always have zero eligible tasks with a real-queue test that verifies coverage and truthfully permits future eligible work. Add the new task's routing rule, validate and merge tested fix.",
+      "updated_at": "2026-10-23T04:54:34.253Z",
+      "next_update": "When new coordination tasks are added, run the existing route+queue CI",
+      "next_action": "PR #64 merged at d2ba3d5ebd1077d630802d63591e225668705a70. Current task-route mapping is complete and real-queue test now permits legitimately eligible future GitHub-only work. A concurrently added Interpreter-hosted task received an explicit integration/hosted-ci rule; new tasks must still add corresponding rules. Python3.9 and3.11 19/19 tests and queue check passed, no computer execution.",
       "acceptance": "CI allows correctly classified new ready GitHub-only tasks, still rejects unclassified tasks and protects owners/capabilities. Queue and routing coverage full; Python3.9/3.11 checks pass.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "d2ba3d5ebd1077d630802d63591e225668705a70",
+          "platform": "GitHub-hosted Ubuntu Python3.9 and Python3.11",
+          "check": "Queue validated; 19 work_brief tests per interpreter incl new correct ready task and exact classification of contemporaneous queue",
+          "result": "PASS both; no local Mac/Windows operations",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39902753557"
+        }
+      ]
     }
   ]
 }
