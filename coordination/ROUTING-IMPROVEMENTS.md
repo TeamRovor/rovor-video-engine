@@ -45,6 +45,10 @@ A truly idle session should **not** invent a completion claim, take over a stale
 
 If `routing_coverage.unclassified_unfinished` contains IDs, classify those **before** selecting them; do not run an unnamed fallback. The CI route test detects missing mappings.
 
+## Queue timestamp integrity
+
+The initial routing CI identified two existing `done` task records with date-only timestamps. Their `updated_at` values were repaired on latest main using the exact associated GitHub completion commit times, not current time or a made-up hour. Do not disable the queue validator for historical task errors, or rewrite the owners of already completed work.
+
 ## Test commands (offline, no laptop runtime)
 
 ```sh
