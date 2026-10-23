@@ -184,7 +184,7 @@ class OmniRouteDraftReviewTests(unittest.TestCase):
 
     def test_fail_closed_when_public_source_missing(self):
         self.make()
-        (self.repo/'WORK.md').unlink()
+        (self.repo/'.github'/'workflows'/'rovor-mac-exec-proof.yml').unlink()
         with self.assertRaisesRegex(ValueError,'Missing'):
             gate.inspect(self.repo,self.receipts,'runner-blocker')
 
