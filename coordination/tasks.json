@@ -1113,11 +1113,13 @@
       ]
     },
     {
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar deterministic AI quality benchmark 2026-10-21",
-      "branch": "integration/rovor-evaluation-pack-v1",
+      "branch": "feature/rovor-evaluation-pack-ci-20261023",
       "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/74",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911163641"
       ],
       "id": "rovor-capability-evaluation-pack",
       "title": "Create portable acceptance examples for three proven ChatGPT workflows",
@@ -1130,10 +1132,19 @@
         "business-service-delivery-playbook",
         "business-proof-catalog"
       ],
-      "next_action": "Build runnable stdlib evaluator with three realistic, no-private-data case families and known-bad candidate outputs. Distinguish expected facts from predictions, require sourced client statements and exact technical evidence, make false-approval claims fail, run actual Python tests offline, publish narrow files in architecture/evaluations only.",
+      "next_action": "PR #74 adds the deterministic stdlib evaluator, three source-grounded case families, good/bad answer fixtures, 21 regression tests, and runs the evaluator on the existing Ubuntu/Windows business-operations matrix. Hosted run 39911163641 passed both matrix jobs and the bounded report job. PR remains draft/open and is not merged; no model performance or real client outcome is claimed.",
       "acceptance": "One executable offline pack with structured input/gold outputs plus deliberately invalid candidate examples for intake/delivery, sourced research/sales and technical GitHub-run assessment, strict reproducible evaluations and tests; pass reference cases, fail fabrication/inference-as-observation and CI pre-job-as-test errors; no model runtime or client outcome claimed.",
-      "updated_at": "2026-10-21T23:09:59.658Z",
-      "next_update": "After strict source-grounded JSON cases and local stdlib evaluator tests verified, produce PR, record head hash and actual execution evidence"
+      "updated_at": "2026-10-23T06:24:00Z",
+      "next_update": "After PR #74 review/merge; next dependent task rovor-work-packet-contract can reuse cases/evaluator formats.",
+      "evidence": [
+        {
+          "commit": "3a5520da17bb1373193bb552673f8abdeba484b9",
+          "platform": "GitHub-hosted Python 3.11 on ubuntu-latest and windows-latest",
+          "check": "21 stdlib evaluator regression tests; positive good-answers CLI; negative bad-answers CLI with --expect fail; business operations report.",
+          "result": "PASS both OS matrix jobs and report workflow; run 39911163641. The evaluator is deterministic exact-match/provenance checking, not semantic truth verification or real-world capability proof.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911163641"
+        }
+      ]
     },
     {
       "status": "ready",
