@@ -19,3 +19,11 @@ The test `tests/test_hud_live_polling_budget.js` runs the **actual inline dashbo
 - Re-run the independent simulated full-hour test and verify a real browser refresh before merging as a finished, automatically updated HUD.
 
 **Scope limitations:** A mocked-browser test is evidence for client request scheduling and error display, not proof of production hosting, private Mac control, or actual overnight unattended synchronization while the tab is closed. The owner of PR #73 retains responsibility for fixing the dashboard code.
+
+## Observed hosted baseline — 2026-10-23
+
+- Run: [39912037508](https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912037508), tested the PR #73 merge ref at HUD head `166c1c23f17188a97a53359470d10c62ae277a50`.
+- Result: **3/4 tests passed; the budget acceptance failed** with `HUD used 194 unauthenticated REST calls in 60 min`, against the 60/hour ceiling. The immutable-SHA test passed. The injected-403 test passed and confirmed the UI changes to `STALE / ERROR` with a visible sync-failure notice. The no-token/no-mutation scan passed.
+- This is a deterministic mocked-browser CI run, not a measurement from a deployed browser or real public API.
+- The initial static estimate is approximately 192 requests/hour; the actual simulated count of 194 is the controlling test result and reflects timer scheduling at the test boundary. The fix must be validated against the executable test, not the estimate.
+- An actionable release-blocker comment was posted on PR #73 (comment ID `6358993663`) with the result and a lower-call strategy. Dashboard implementation remains the PR owner's responsibility.
