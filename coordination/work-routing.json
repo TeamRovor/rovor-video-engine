@@ -485,6 +485,12 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "paired-task-routing-intake": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }
