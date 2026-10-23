@@ -178,6 +178,58 @@ class RoutingTests(unittest.TestCase):
                         + with_new['alternatives']]
         self.assertIn('future-eligible-work', eligible_ids)
 
+    def test_explains_exact_unfinished_dependency_with_owner(self):
+        rows = [task('mac', status='blocked', owner='mac-session', blocker='private runner'),
+                task('contract', depends_on=['mac'])]
+        brief = self.brief(rows)
+        self.assertIsNone(brief['recommended'])
+        entry = next(t for t in brief['ready_blockers'] if t['id'] == 'contract')
+        self.assertEqual(entry['dependencies'],
+                         [{'id':'mac','status':'blocked','owner':'mac-session'}])
+        self.assertEqual(entry['reserved_scope_conflicts'], [])
+        rendered=work_brief.render({**brief,'source':'mock SHA'})
+        self.assertIn('mac [blocked, owner=mac-session]', rendered)
+
+    def test_reports_reserved_parent_scope_with_owner(self):
+        rows = [task('owner', status='active', owner='evan',
+                     scopes=['evan-engine']),
+                task('child', scopes=['evan-engine/rig.py'])]
+        brief = self.brief(rows, who='other')
+        entry = next(t for t in brief['ready_blockers'] if t['id'] == 'child')
+        self.assertEqual(entry['reserved_scope_conflicts'], [{
+            'id':'owner','status':'active','owner':'evan',
+            'wanted_scope':'evan-engine/rig.py','reserved_scope':'evan-engine'}])
+        self.assertIsNone(brief['recommended'])
+        self.assertIn('reserved scopes: owner', work_brief.render({**brief,'source':'mock'}))
+
+    def test_reports_mac_capability_gap_without_pretending_access(self):
+        rules={'blender':{'lane':'integration',
+                          'requires':['local-exec','blender-runtime']}}
+        result=self.brief([task('blender')],rules=rules,lane='integration')
+        self.assertEqual(result['ready_blockers'][0]['missing_capabilities'],
+                         ['blender-runtime','local-exec'])
+        self.assertIsNone(result['recommended'])
+        self.assertIn('local-exec',work_brief.render({**result,'source':'mock'}))
+
+    def test_ready_explanations_include_missing_route_but_no_claim(self):
+        result=self.brief([task('unknown')],rules={},fallback=True)
+        self.assertEqual(result['ready_blockers'][0]['id'],'unknown')
+        self.assertTrue(result['ready_blockers'][0]['unclassified'])
+        self.assertIsNone(result['recommended'])
+
+    def test_available_task_not_reported_as_blocked(self):
+        result=self.brief([task('available')])
+        self.assertEqual(result['recommended']['id'],'available')
+        self.assertEqual(result['ready_blockers'],[])
+
+    def test_ready_explanations_leave_inputs_unchanged(self):
+        rows=[task('task-a',status='active',owner='other',scopes=['source']),
+              task('task-b',scopes=['source/subdir/file'])]
+        before=copy.deepcopy(rows)
+        result=self.brief(rows)
+        self.assertEqual(rows,before)
+        self.assertEqual(result['ready_blockers'][0]['id'],'task-b')
+
     def test_ref_uses_committed_pair_not_dirty_files(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
