@@ -44,9 +44,23 @@ class FinishedCartoonHead(DetailCartoonHead):
         return c
 
 
+class SeparatedFinishedHead:
+    """Adapt the review face to the existing body/head/neck contract."""
+    def __init__(self,original):
+        from separated_oral_review import SeparatedOralReview
+        self.rig=SeparatedOralReview();self.geometry=original.geometry
+        self.expression_control=original.expression_control
+        self.rig.head.expression_control=original.expression_control
+    def at(self,t,plan):
+        image,self.last_audit=self.rig.at(t,plan)
+        return image
+
+
 class FinishedCartoonSceneBody(RelaxedCartoonSceneBody):
     def __init__(self,root=ROOT):
         super().__init__(root);self.head=FinishedCartoonHead(root)
+    def enable_separated_face(self):
+        if not isinstance(self.head,SeparatedFinishedHead):self.head=SeparatedFinishedHead(self.head)
     def layers(self,t,plan,controls=None):
         return super().layers(t,plan,finished_controls(t,plan) if controls is None else controls)
     def render(self,t,plan,controls=None):

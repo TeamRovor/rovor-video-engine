@@ -1,5 +1,5 @@
 """Narrative cue isolation and hierarchy safeguards, not performance approval."""
-import copy,json,unittest
+import copy,json,unittest,cv2
 from pathlib import Path
 import numpy as np
 from finished_cartoon_scene import finish_event,finished_controls,favicon_progress,favicon_weights,FinishedCartoonHead,FinishedCartoonSceneBody
@@ -30,6 +30,16 @@ class FinishedTests(unittest.TestCase):
         new=FinishedCartoonHead.__new__(FinishedCartoonHead);old=DetailCartoonHead.__new__(DetailCartoonHead)
         for t in [0.,15.5,17.,20.,22.]:self.assertEqual(new.expression_control(t,self.plan),old.expression_control(t,self.plan))
         self.assertGreater(new.expression_control(18.8,self.plan)['rightRaise'],2.)
+    def test_separated_face_keeps_body_layers_and_finished_brow_acting(self):
+        cv2.setNumThreads(1);body=FinishedCartoonSceneBody();t=18.5
+        before=body.layers(t,self.plan);expression=body.head.expression_control(t,self.plan)
+        body.enable_separated_face();head=body.head;body.enable_separated_face();self.assertIs(head,body.head)
+        after=body.layers(t,self.plan)
+        self.assertEqual(list(before),list(after));self.assertEqual(body.head.expression_control(t,self.plan),expression)
+        for name in before:
+            if name not in ('head','neck'):np.testing.assert_array_equal(np.array(before[name]),np.array(after[name]))
+        self.assertFalse(np.array_equal(np.array(before['head']),np.array(after['head'])))
+        self.assertEqual(len(body.head.rig.last_parts),10);self.assertTrue(body.head.last_audit['upper288Exact'])
     def test_arm_meshes_through_reference(self):
         body=FinishedCartoonSceneBody()
         for i in range(1059):
