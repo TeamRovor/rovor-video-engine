@@ -70,6 +70,22 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         self.assertFalse(self.out.exists())
         self.assertNotIn('non-secret',output.getvalue())
 
+    def test_direct_api_refuses_receipts_in_ancestor_checkout(self):
+        outer=self.base/'outer-checkout'
+        outer.mkdir()
+        (outer/'.git').mkdir()
+        nested=outer/'tools'/'nested-rovor'
+        nested.parent.mkdir()
+        shutil.copytree(self.repo,nested)
+        out=outer/'private-receipts'
+        called=[]
+        with self.assertRaisesRegex(ValueError,'inside Git checkout'):
+            worker.run_packet(nested,out,'runner-blocker',
+                'groq/openai/gpt-oss-120b','private-key',
+                completion=lambda *args:called.append(args))
+        self.assertEqual(called,[])
+        self.assertFalse(out.exists())
+
     def test_complete_private_receipt_once_no_replay(self):
         called=[]
         def completion(model,prompt,key):
