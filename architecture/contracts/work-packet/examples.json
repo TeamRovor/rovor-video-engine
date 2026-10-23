@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "packets": [
+    {
+      "schema_version": 1,
+      "packet_id": "evaluation-intake-fictional-home-service",
+      "capability": "client_intake",
+      "intent": "Draft a bounded estimate-inquiry scope while preserving all unknowns.",
+      "source_refs": [
+        {
+          "id": "demo-intake-v1",
+          "uri": "https://github.com/TeamRovor/rovor-video-engine/blob/3a5520da17bb1373193bb552673f8abdeba484b9/architecture/evaluations/cases.json",
+          "status": "unverified",
+          "sha256": null
+        }
+      ],
+      "constraints": {
+        "data_classification": "synthetic",
+        "allowed_effects": [],
+        "prohibited_effects": [
+          "contact_external",
+          "spend_money",
+          "publish",
+          "deploy",
+          "modify_local_project"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "source-grounding",
+          "statement": "Keep price, deadline, reviewer, approved logo, form destination and deployment permission unknown.",
+          "status": "not_run",
+          "evidence_refs": [
+            "demo-intake-v1"
+          ]
+        }
+      ],
+      "executor": {
+        "kind": "human",
+        "requires": [
+          "human_approval"
+        ],
+        "mode": "draft_only"
+      },
+      "authorization": {
+        "state": "not_requested",
+        "effects": [],
+        "source_refs": []
+      },
+      "technical_status": "not_run",
+      "artifact_receipt": {
+        "state": "not_created",
+        "artifacts": []
+      },
+      "approval": {
+        "state": "draft",
+        "source_refs": []
+      }
+    },
+    {
+      "schema_version": 1,
+      "packet_id": "evaluation-sales-fictional-mobile-observation",
+      "capability": "sourced_sales",
+      "intent": "Turn a synthetic mobile-site observation into a sourced, non-exaggerated offer hypothesis.",
+      "source_refs": [
+        {
+          "id": "fictional-mobile-snapshot",
+          "uri": "https://github.com/TeamRovor/rovor-video-engine/blob/3a5520da17bb1373193bb552673f8abdeba484b9/architecture/evaluations/cases.json",
+          "status": "unverified",
+          "sha256": null
+        },
+        {
+          "id": "rovor-proposed-offer",
+          "uri": "https://github.com/TeamRovor/rovor-video-engine/blob/3a5520da17bb1373193bb552673f8abdeba484b9/architecture/evaluations/cases.json",
+          "status": "unverified",
+          "sha256": null
+        }
+      ],
+      "constraints": {
+        "data_classification": "synthetic",
+        "allowed_effects": [],
+        "prohibited_effects": [
+          "contact_external",
+          "spend_money",
+          "publish",
+          "deploy",
+          "modify_local_project"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "source-grounding",
+          "statement": "Do not infer conversion loss or authorize prospect outreach from a synthetic screenshot.",
+          "status": "not_run",
+          "evidence_refs": [
+            "fictional-mobile-snapshot",
+            "rovor-proposed-offer"
+          ]
+        }
+      ],
+      "executor": {
+        "kind": "human",
+        "requires": [
+          "repository_read",
+          "human_approval"
+        ],
+        "mode": "bounded_read_only"
+      },
+      "authorization": {
+        "state": "not_requested",
+        "effects": [],
+        "source_refs": []
+      },
+      "technical_status": "not_run",
+      "artifact_receipt": {
+        "state": "not_created",
+        "artifacts": []
+      },
+      "approval": {
+        "state": "draft",
+        "source_refs": []
+      }
+    },
+    {
+      "schema_version": 1,
+      "packet_id": "evaluation-ci-prestep-failure",
+      "capability": "ci_triage",
+      "intent": "Assess a historical Actions failure without claiming tests ran when step evidence is missing.",
+      "source_refs": [
+        {
+          "id": "github-actions-39683961823",
+          "uri": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39683961823",
+          "status": "unverified",
+          "sha256": null
+        }
+      ],
+      "constraints": {
+        "data_classification": "synthetic",
+        "allowed_effects": [],
+        "prohibited_effects": [
+          "contact_external",
+          "spend_money",
+          "publish",
+          "deploy",
+          "modify_local_project"
+        ]
+      },
+      "acceptance": [
+        {
+          "id": "source-grounding",
+          "statement": "Keep test execution and root cause unknown until exact job-step evidence exists.",
+          "status": "not_run",
+          "evidence_refs": [
+            "github-actions-39683961823"
+          ]
+        }
+      ],
+      "executor": {
+        "kind": "hosted_ci",
+        "requires": [
+          "repository_read",
+          "hosted_ci"
+        ],
+        "mode": "bounded_read_only"
+      },
+      "authorization": {
+        "state": "not_requested",
+        "effects": [],
+        "source_refs": []
+      },
+      "technical_status": "not_run",
+      "artifact_receipt": {
+        "state": "not_created",
+        "artifacts": []
+      },
+      "approval": {
+        "state": "draft",
+        "source_refs": []
+      }
+    }
+  ]
+}
