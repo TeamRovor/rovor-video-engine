@@ -2294,6 +2294,25 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41"
       ]
+    },
+    {
+      "id": "private-control-verified-receipt-fix-20261022",
+      "title": "Correct private bridge receipt acknowledgment and execution flags",
+      "status": "active",
+      "owner": "ChatGPT iPhone private bridge receipt verification session",
+      "branch": "fix/private-control-verified-receipt-v1",
+      "priority": 1,
+      "scopes": [
+        "tools/ghost_private_control.py",
+        "tests/test_ghost_private_control.py"
+      ],
+      "depends_on": [
+        "private-mac-control-bridge-v1"
+      ],
+      "next_action": "Verify and integrate narrowly scoped receipt fix into existing PR41 workforce candidate with hosted full worker regression tests, without enabling any Mac execution or public runner.",
+      "acceptance": "Malformed GitHub receipt response never writes receipt marker; post retry does not replay the worker job; return flag executed only for current invocation; malformed encoded packet is refused; Python 3.9 and 3.11 hosted checks pass.",
+      "updated_at": "2026-10-22",
+      "evidence": []
     }
   ]
 }
