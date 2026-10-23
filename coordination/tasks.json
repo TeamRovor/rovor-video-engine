@@ -2242,7 +2242,7 @@
       "id": "omniroute-private-draft-receipt-review",
       "title": "Validate OmniRoute draft receipts against current workpack source before reuse",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / OmniRoute private draft review session 2026-10-22",
       "branch": "feature/omniroute-parallel-workpacks",
       "scopes": [
@@ -2254,12 +2254,21 @@
       "depends_on": [
         "omniroute-parallel-worker-packets"
       ],
-      "updated_at": "2026-10-23T03:02:04.103Z",
-      "next_update": "After hosted Python 3.9/3.11 tests and GitHub coordination validation",
-      "next_action": "Build read-only private receipt checker with exact packet fingerprint/source checks and strict human-review-only outcomes. No model calls, no control bridge files, no GitHub task approval, no upload of private draft content.",
+      "updated_at": "2026-10-23T03:06:23.795Z",
+      "next_update": "When the Mac-side executor actually invokes OmniRoute once and returns a private receipt, run tools/omniroute_draft_review.py on that same Mac; do not claim inference/host execution from hosted tests.",
+      "next_action": "Review PR #51 and the new local-only receipt reviewer. Once privately connected Mac operator has actually generated one draft receipt, run python3 tools/omniroute_draft_review.py --packet runner-blocker (or --all); review underlying private text locally if fresh. Do not post raw model output to public GitHub or autoapprove code/tasks. Phone private Mac bridge owns all control-channel code.",
       "acceptance": "A private Mac-side verifier reports only status/packet id without revealing model content; validates receipt identity, source digest, model and status, fails on tampering/staleness/unrecognized fields/secret-like output, never approves code or execution. Regression tests cover valid/stale/tampered/no receipt/secret and symlink cases; CI Python 3.9 and 3.11 pass.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+      ],
+      "evidence": [
+        {
+          "commit": "ea8320e87aaad5a2fc7a71eda17314c5e00af9cf",
+          "platform": "GitHub-hosted Ubuntu Python 3.9 and 3.11, zero model/API/Mac calls",
+          "check": "Private OmniRoute draft receipt reviewer: exact packet identity, strict receipt field schema, current packet and public source SHA256, suspicious execution-claim and token pattern flags, symlink/malformed files, no autoapprove or output of private model text.",
+          "result": "PASS 14/14 offline tests Python3.9 and PASS 14/14 Python3.11; existing OmniRoute workpack CI also passed. No actual Mac inference receipt reviewed yet.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39893071195"
+        }
       ]
     }
   ]
