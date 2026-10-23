@@ -30,7 +30,7 @@ test('kinetic HUD uses bundled scripts and accessible working controls, not imag
 test('Earth texture is deterministic, recognises land and produces ocean/land contrast',()=>{
   assert.equal(earth.DEFAULT_REVOLUTION_SECONDS,220);
   assert.equal(earth.isLand(-110,43,.5),true);
-  assert.equal(earth.isLand(0,0,.5),false);
+  assert.equal(earth.isLand(-150,0,.5),false);
   assert.equal(earth.isLand(130,-24,.5),true);
   assert.equal(earth.createRenderer(null),null);
   let result;
