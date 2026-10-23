@@ -706,3 +706,111 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .hud-btn:hover { transform: none; }
 }
+
+
+/* ROVOR reference-match pass: monochrome chrome, electric-blue instrumentation,
+   and restrained continuous motion. Existing layout and controls remain intact. */
+:root {
+  --bg: #02050b;
+  --bg2: #050c18;
+  --panel: rgba(2, 7, 15, .88);
+  --border: rgba(111, 194, 255, .38);
+  --text: #eaf5ff;
+  --muted: #8da9c4;
+  --cyan: #a9dcff;
+  --cyan2: #368eff;
+  --orange: #a9dcff;
+  --orange2: #d8efff;
+  --green: #42f6bd;
+  --yellow: #a9dcff;
+  --shadow: 0 0 0 1px rgba(100,174,255,.08), 0 0 26px rgba(36,120,255,.10);
+}
+body {
+  background:
+    radial-gradient(ellipse at 50% 48%, rgba(22,76,145,.19), transparent 35%),
+    radial-gradient(ellipse at 50% 100%, rgba(22,105,196,.20), transparent 42%),
+    linear-gradient(180deg,#010308 0%,#030813 52%,#01040a 100%);
+}
+.scanlines { opacity: .09; }
+.glow-orbit { border-color: rgba(111,194,255,.13); box-shadow: inset 0 0 48px rgba(48,130,255,.045), 0 0 36px rgba(48,130,255,.055); }
+.topbar, .hud-panel, .tabbar {
+  background: linear-gradient(145deg,rgba(8,17,31,.94),rgba(1,5,12,.92) 72%);
+  border-color: rgba(112,192,255,.36);
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(220,242,255,.07), 0 0 0 1px rgba(58,135,255,.045), 0 0 22px rgba(30,102,230,.09);
+  backdrop-filter: blur(12px);
+}
+.hud-panel { clip-path: none; }
+.hud-panel::before {
+  content: "";
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: linear-gradient(110deg,transparent 0%,rgba(91,177,255,.035) 48%,transparent 53%);
+  background-size: 220% 100%;
+  animation: rovor-panel-scan 12s linear infinite;
+}
+.hud-panel > * { position: relative; z-index: 1; }
+.panel-title, .eyebrow { color: #a9dcff; text-shadow: 0 0 12px rgba(63,155,255,.24); }
+.metric, .tiny-grid div, .task-row, .system-card, .worker-card {
+  border-radius: 3px;
+  background: linear-gradient(135deg,rgba(10,24,43,.68),rgba(2,8,17,.72));
+}
+.hud-btn {
+  border-radius: 2px;
+  border-color: rgba(114,194,255,.48);
+  background: linear-gradient(135deg,rgba(60,142,255,.20),rgba(12,38,75,.28));
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.hud-btn.alt { border-color: rgba(114,194,255,.34); background: rgba(4,12,24,.78); }
+.hud-btn:hover, .tab:hover, .tab:focus-visible {
+  border-color: rgba(190,228,255,.88);
+  box-shadow: 0 0 18px rgba(53,137,255,.19), inset 0 0 14px rgba(53,137,255,.07);
+}
+.ring-fg { filter: drop-shadow(0 0 5px rgba(70,161,255,.6)); }
+.status-ring { filter: drop-shadow(0 0 14px rgba(48,137,255,.30)); }
+.reactor-stage {
+  isolation: isolate;
+  background: radial-gradient(ellipse at 50% 57%,rgba(16,77,151,.23),transparent 48%);
+}
+.reactor-stage::before, .reactor-stage::after {
+  content: ""; position: absolute; pointer-events: none; border-radius: 50%;
+  left: 50%; top: 48%; aspect-ratio: 1; transform: translate(-50%,-50%);
+}
+.reactor-stage::before {
+  width: min(82%, 680px);
+  border: 1px solid rgba(109,190,255,.20);
+  box-shadow: 0 0 0 12px rgba(72,149,255,.025), 0 0 0 30px rgba(72,149,255,.018), inset 0 0 45px rgba(40,124,255,.055);
+  animation: rovor-reactor-breathe 7s ease-in-out infinite;
+}
+.reactor-stage::after {
+  width: min(72%, 590px);
+  border: 1px dashed rgba(135,204,255,.28);
+  animation: rovor-orbit-spin 65s linear infinite;
+}
+.reactor-stage .reactor-readout { text-shadow: 0 0 22px rgba(73,155,255,.45); }
+.tabbar { border-radius: 3px; }
+.tab { border-radius: 2px; }
+input, select, textarea {
+  color: var(--text);
+  background: rgba(1,6,14,.88);
+  border-color: rgba(111,194,255,.35);
+  border-radius: 2px;
+}
+:focus-visible { outline: 2px solid #a9dcff; outline-offset: 3px; }
+@keyframes rovor-panel-scan {
+  0% { background-position: 120% 0; opacity: .15; }
+  45% { opacity: .65; }
+  100% { background-position: -120% 0; opacity: .15; }
+}
+@keyframes rovor-orbit-spin { to { rotate: 360deg; } }
+@keyframes rovor-reactor-breathe {
+  0%,100% { opacity: .58; scale: .985; }
+  50% { opacity: 1; scale: 1.015; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-panel::before, .reactor-stage::before, .reactor-stage::after { animation: none !important; }
+  *, *::before, *::after { scroll-behavior: auto !important; }
+}
+@media (max-width: 759px) {
+  .reactor-stage::before { width: min(88%, 440px); }
+  .reactor-stage::after { width: min(76%, 380px); }
+}
