@@ -1153,7 +1153,7 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md",
         "https://github.com/TeamRovor/rovor-video-engine/pull/75",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911598094"
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911789806"
       ],
       "id": "rovor-work-packet-contract",
       "title": "Standardize the smallest portable work packet from proven workflows",
@@ -1166,9 +1166,9 @@
       "depends_on": [
         "rovor-capability-evaluation-pack"
       ],
-      "next_action": "PR #75 adds JSON Schema v1, a stdlib validator, three evaluation-derived synthetic packet examples, invalid fixtures and 15 regression tests. Hosted business-operations matrix passed on Ubuntu and Windows, including positive and negative CLI acceptance checks. PR remains draft/open and unmerged; fixtures cite evaluation case IDs on PR #74 branch until that dependency lands. Contract validates structure/cross-field consistency, not source truth or identity.",
+      "next_action": "PR #75 head bf46d082f8da93b7042229387eea6681819a2c42 adds JSON Schema v1, a stdlib validator, three evaluation-derived synthetic examples, invalid fixtures and 16 regression tests. Hosted run 39911789806 passed both Ubuntu and Windows jobs plus the bounded report job. PR remains draft/open and unmerged; fixture source URIs cite evaluation case IDs on PR #74 branch until that dependency lands. Validator is structural/cross-field only, not proof of source truth or reviewer identity.",
       "acceptance": "Schema validates representative accepted and rejected cases, preserves unknown/unrun states and separates technical completion from approval/publication. No opaque shell commands or self-granted permissions. Test against the actual evaluated examples.",
-      "updated_at": "2026-10-23T06:29:00Z",
+      "updated_at": "2026-10-23T06:30:00Z",
       "next_update": "After PR #75 review/merge and after PR #74 evaluation-pack dependency is integrated.",
       "evidence": [
         {
@@ -1177,6 +1177,13 @@
           "check": "15 work packet contract regression tests; positive validator CLI; negative fixture CLI with expected failure; business operations report.",
           "result": "PASS both OS matrix jobs and report job. PR #75 remains draft/open and unmerged. Examples cite evaluation-pack case source URIs from PR #74; they are synthetic and the validator is not semantic truth verification.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911598094"
+        },
+        {
+          "commit": "bf46d082f8da93b7042229387eea6681819a2c42",
+          "platform": "GitHub-hosted Python 3.11; ubuntu-latest and windows-latest",
+          "check": "16 work packet contract regression tests, including malformed input handling; positive validator CLI; negative fixture CLI with expected failure; bounded business operations report.",
+          "result": "PASS both OS matrix jobs and report job. PR #75 remains draft/open and unmerged; source URIs point to evaluation-pack case IDs in PR #74. Validator is not semantic truth verification.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911789806"
         }
       ]
     },
