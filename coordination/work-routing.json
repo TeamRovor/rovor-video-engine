@@ -519,6 +519,12 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "hud-live-rate-limit-qa-20261023": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }

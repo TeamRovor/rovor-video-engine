@@ -2818,6 +2818,27 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/73"
       ]
+    },
+    {
+      "id": "hud-live-rate-limit-qa-20261023",
+      "title": "Independently verify live HUD polling respects unauthenticated GitHub API limits",
+      "status": "active",
+      "priority": 1,
+      "owner": "ChatGPT / Amar GitHub HUD independent QA 2026-10-23",
+      "branch": "review/hud-live-rate-limit-qa-20261023",
+      "scopes": [
+        "tests/test_hud_live_polling_budget.js",
+        ".github/workflows/hud-live-polling-qa.yml",
+        "reviews/hud-live-polling-qa-20261023.md"
+      ],
+      "depends_on": [
+        "github-atomic-paired-task-commit"
+      ],
+      "updated_at": "2026-10-23T06:28:13.834Z",
+      "next_update": "After simulated browser polling review and CI evidence",
+      "next_action": "Independently test PR #73's draft dashboard in a Node simulated browser for live refresh correctness, pinned revision identity, and unauthenticated GitHub REST request budget. Fail QA when automatic requests exceed an ordinary 60/hour unauthenticated allowance. Publish evidence to PR #73 without modifying another owner's dashboard code. Stacked PR only for tests/QA.",
+      "acceptance": "Independent deterministic tests prove 1-hour refresh API request count and replayable rate-limit failure; baseline failure is explicitly recorded; owner must lower REST API calls or use raw pinned files and re-run QA before live deployment.",
+      "evidence": []
     }
   ]
 }
