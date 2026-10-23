@@ -852,13 +852,13 @@
         "coordination/windows-benchmark-protocol.md"
       ],
       "depends_on": [],
-      "next_action": "Review open PR #36 for the source-pinned Windows benchmark protocol. Then a separately claimed Windows/local or functioning Actions session should execute actual three-repeat reports, inspect all-run frame hashes, recovery/cache correctness and resource costs. No new live benchmark or Mac/Windows host proof exists in this documentation task.",
+      "next_action": "Merged PR #36 establishes the source-pinned benchmark acceptance protocol. An eligible Windows/local or supported Actions session must run actual three-repeat synthetic benchmark plus cache/caption invalidation tests, record cross-run frame hashes and metrics, and separately verify real media/render QA. Do not interpret the protocol or green coordination CI as engine performance measurement.",
       "acceptance": "Protocol cites exact inspected source commit and existing commands/report fields; covers same-input cold/warm run, interruption/resume, changed audio/art/captions invalidation, elapsed time/cache hits/output equivalence; clearly labels unavailable commands or runtime evidence. A later separately claimed task may execute it.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/7"
       ],
-      "updated_at": "2026-10-22T09:53:00.223Z",
-      "next_update": "Review PR #36 and execute benchmark in a separately eligible runtime session",
+      "updated_at": "2026-10-23T07:08:36.663Z",
+      "next_update": "When an independently owned Windows or hosted benchmark executes the protocol",
       "evidence": [
         {
           "commit": "75cf819bb74573b357a6f9332c02471e78f1151a",
@@ -866,6 +866,13 @@
           "check": "Inspected exact source SHAs, CLI options, output/report keys and named unit tests; checked document links, code fences and scope isolation (10 targeted static checks)",
           "result": "PASS (source/document consistency only; no runtime benchmark or project_loop.py command execution)",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/36"
+        },
+        {
+          "commit": "98e03c16726d40bf7efbc3a0f1aaefc9b09f6061",
+          "platform": "GitHub Actions hosted Windows, macOS, Ubuntu",
+          "check": "PR #36 refreshed against current main: shared project loop tests on all 3 hosted platforms",
+          "result": "PASS; PR merged into main. No native Windows laptop benchmark or source-art runtime test performed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39915773135"
         }
       ]
     },
