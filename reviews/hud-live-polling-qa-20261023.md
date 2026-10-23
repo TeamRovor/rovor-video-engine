@@ -37,3 +37,13 @@ The QA mock now distinguishes `api.github.com` REST calls from pinned `raw.githu
 PR #73 now points to HUD head `138d1713a504ef72a8cf57deb8ae1d059df509ec`, which switches queue/routing reads to raw content pinned to the immutable commit SHA and polls the REST commit endpoint every three minutes. The independent test suite is being rerun against this new base; the result from the old 194-call implementation is not a verdict on the revised head.
 
 One discrepancy to verify in the actual measured result: the latest `dashboard/index.html` still uses `300000` ms for PR refresh (five minutes), while the owner's PR comment says fifteen minutes. The test's request count is authoritative; keep the source/docs/comment aligned after the run.
+
+## Revised lightweight HUD retest — hosted pass
+
+- Revised dashboard head: `138d1713a504ef72a8cf57deb8ae1d059df509ec`.
+- Run: [39913411350](https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913411350).
+- **Observed: 32 GitHub REST requests in 60 simulated minutes**, down from 194 on the original implementation and below the 60/hour ceiling.
+- All four tests passed: immutable SHA consistency, full-hour budget, explicit stale/error on injected REST 403, and no-token/no-mutation scan.
+- The current source uses `300000` ms for PR refresh (5 minutes), although the owner comment described 15 minutes. The observed 32-call result remains under the quota; align docs/comment with the actual intended cadence.
+- A release-blocker result and follow-up pass were posted to PR #73. No dashboard source was edited by this QA branch.
+- Command Center QA has been split into [PR #80](https://github.com/TeamRovor/rovor-video-engine/pull/80) because the merged Command Center source is on main and is not present on PR #73's stacked base.
