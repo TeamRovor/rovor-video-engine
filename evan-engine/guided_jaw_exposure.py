@@ -54,7 +54,9 @@ def contour_target_mesh(oral,skin):
  arch=np.asarray(oral[:9][::-1],dtype=np.float32)
  if arch.shape!=(9,2) or not np.isfinite(arch).all() or np.any(np.diff(arch[:,0])<=0):raise ValueError('Lower oral arch must be finite and ordered left to right')
  target,_=target_mesh(oral,skin);x,y=SOURCE.T
- horizontal=smooth((x-164)/30)*smooth((329-x)/66);upper=1-smooth((y-335)/59)
+ horizontal=smooth((x-164)/30)*smooth((329-x)/66)
+ # Linear depth falloff preserves ordering under deep openings; cubic can fold.
+ upper=1-np.clip((y-335)/59,0,1)
  guide=np.interp(x,POLYGON[:11,0],POLYGON[:11,1])
  edge=np.interp(target[:,0],arch[:,0],arch[:,1])
  target[:,1]=y+(edge-guide)*horizontal*upper+(skin[46,1]-394)*(1-upper)

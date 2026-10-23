@@ -17,7 +17,7 @@ class ContourJawTests(unittest.TestCase):
   np.testing.assert_array_equal(a[SOURCE[:,1]>=394],b[SOURCE[:,1]>=394])
  def test_actual_center_is_not_clipped_to_two_pose_release_range(self):
   center=np.flatnonzero((SOURCE[:,0]==228.5)&(SOURCE[:,1]==328.5))[0]
-  for lower in [323,332,340]:
+  for lower in [323,332,340,368,374]:
    oral=self.oral.copy();oral[:9,1]=325+(lower-325)*np.sin(np.arange(9)*np.pi/8)
    target,minimum=contour_target_mesh(oral,self.skin)
    self.assertAlmostEqual(float(target[center,1]),lower,places=4);self.assertGreater(minimum,0)

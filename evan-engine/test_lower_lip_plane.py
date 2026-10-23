@@ -17,6 +17,12 @@ class LowerLipTests(unittest.TestCase):
    y,x=np.where(part[:,:,3]>127.5);self.assertGreaterEqual(x.min(),197);self.assertLessEqual(x.max(),275);self.assertGreaterEqual(y.min(),319)
    values=part[:,236,3];top=np.flatnonzero(values>=127.5)[0];contacts.append(float(top-1+(127.5-values[top-1])/(values[top]-values[top-1])))
   self.assertLess(abs(contacts[0]-contacts[1]),.5)
+ def test_jaw_edge_underlaps_lip_without_target_frame_quantization(self):
+  arch=self.arch();source=self.lip.source.copy();a=self.lip.jaw_arch(arch,0);b=self.lip.jaw_arch(arch,1)
+  np.testing.assert_array_equal(a[:,0],arch[:,0]);np.testing.assert_array_equal(a[[0,-1]],arch[[0,-1]])
+  self.assertTrue(np.all(a[:,1]>=b[:,1]));self.assertTrue(np.all(b[:,1]>=arch[:,1]))
+  delta=np.array([.0001,.0002],np.float32);shift=self.lip.jaw_arch(arch+delta,0)
+  np.testing.assert_allclose(shift,a+delta,atol=.00004);np.testing.assert_array_equal(source,self.lip.source)
  def test_bad_pressure_and_arch_reject_without_nan_render(self):
   for p in [-1,1.1,float('nan')]:
    with self.assertRaises(ValueError):self.lip.pose(self.arch(),p)

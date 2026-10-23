@@ -8,7 +8,17 @@ Repo work/engine; development/evan-painted-rig (legacy name), draft PR#4 https:/
 
 Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful review milestones/failure/completion/required action only; disable when actually ready. Routine decisions need no question.
 
-## Latest: ten actual planes, front dental tongue separated
+## Latest: jaw edge underlaps actual lower-lip paint
+
+Read CARTOON-EVAN-JAW-LIP-UNDERLAP.md. Corrected previous cap diagnosis: actual983material ablations locate duplicate lowercorner strokes in lowerlip+alreadyinkedjawedge. LowerLipPlane measures original source outerhalfalpha boundary once (registrationonly, pixels/alphaunchanged); jawedge follows lipouterpaint with authored.8px underlap, zero endpointdepth, continuous sourcecoordinates+pressure. No per-frame threshold snapping. Independent lips/teeth/tongue/cavity/timing retained.
+
+Rejected closest-normal ribbon pilot produced983diagonalstreak, retainedoutput/script. First deeperunderlap failedmesh -1.4338; shared reviewcontour cubicdepthfalloff folded atdeepopening. Replaced with lineardepthfalloff335..394, chincontrols retained/defaultheadunchanged. Tests extendcenter374px;18focused+existingregressionspass. No clamps/artcleanup/newgeneration.
+
+outputs/evan-cartoon-jaw-lip-underlap:48normalvoiced/192mutedquarter1280x720/48fps fullydecode,source960..1007=20..21s,originalPCM320000:336000,16000AACdecodedsamples. All48native mouths/full983/prior851983990 visuallyinspected; no independentlistening/playback acceptance. All48upper288exact,nose0,mintri25.48849,sampledoralalpha255. Larger315:380centerROI255at851983990. Twoactual10planePSDs983990 reloadmean.021921/.026039; inactiveAOteethlegitimate,notbones. Movie comparescombinedcarrier/currentmaterial withsameNEWjawtarget; historicalmatchedstills separate. No pendingjobs,priorcheckpoint HISTORY-2026-10-23-C.
+
+Doubleloweroutlinesreduced,deepjawfoldfixed; AOstilltriangular,cornerhooks/closedslash/pressureproxy/angularjoins/staticacting belowconcept. .8pxunderlap authorednotanatomy. Humanart/animator orredrawnrounded/contactshapesneeded;CPUproofrenderingadequate. Next: wayonset/lowenergy waveform+spectrogram review, thenboundedcomplete-recordinggeometryaudit beforemoremouthdrawings; avoidprofile sprawl/retiminghideart.18flags+waystillunverified. Fullpolishedmilestone NOTready,automationACTIVE; noMoho/merge/deploy/main/V3/V4/releases/updaterchanges.
+
+## Retained: ten actual planes, front dental tongue separated
 
 Read CARTOON-EVAN-DENTAL-SEPARATED-ORAL.md. rigid_teeth_parts exposes unchanged crown and original front1.5px dental-tip overlap; ordinary rigid_teeth_surface recomposites byte-exact by regression. MaterialCapture records separate tip during active phone; no TH/DH rejection. Ten real review planes, default unchanged. Original artwork/alpha/audio/phone plan untouched. Interval renderer now follows supplied voice bounds/waveform/cursor.
 
