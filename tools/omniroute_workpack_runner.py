@@ -138,7 +138,36 @@ def access_key(lookup=subprocess.run):
     return key
 
 
-def http_completion(model, prompt, key, opener=request.urlopen):
+class RefuseRedirects(request.HTTPRedirectHandler):
+    """Do not let local inference HTTP escape to an external URL."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise ValueError('OmniRoute localhost redirect refused')
+
+
+def safe_local_open(req, timeout):
+    """No environment proxy and no HTTP redirect; no global opener changes."""
+    opener=request.build_opener(request.ProxyHandler({}), RefuseRedirects())
+    return opener.open(req,timeout=timeout)
+
+
+def sanitized_usage(usage):
+    """Persist only integer token counts, never provider-supplied metadata."""
+    if not isinstance(usage,dict):
+        return None
+    counts={}
+    for key in ('prompt_tokens','completion_tokens','total_tokens'):
+        value=usage.get(key)
+        if type(value) is int and 0 <= value <= 100000000:
+            counts[key]=value
+    return counts or None
+
+
+def http_completion(model, prompt, key, opener=None):
+    if not isinstance(model,str) or not MODEL.fullmatch(model):
+        raise ValueError('Unsafe or unspecified OmniRoute model')
+    if opener is None:
+        opener=safe_local_open
     body=json.dumps({'model':model,'messages':[
         {'role':'system','content':SYSTEM},
         {'role':'user','content':prompt}],
@@ -149,6 +178,11 @@ def http_completion(model, prompt, key, opener=request.urlopen):
         'Accept':'application/json'}, method='POST')
     try:
         with opener(req,timeout=55) as response:
+            status=getattr(response,'status',None)
+            if status is None and callable(getattr(response,'getcode',None)):
+                status=response.getcode()
+            if status != 200:
+                raise ValueError('OmniRoute response was not HTTP 200')
             raw=response.read(MAX_RESPONSE+1)
     except (OSError,error.URLError,TimeoutError) as exc:
         raise ValueError('Local inference failed or timed out: '+type(exc).__name__)
@@ -161,11 +195,13 @@ def http_completion(model, prompt, key, opener=request.urlopen):
         raise ValueError('Unexpected chat completion response shape')
     if not isinstance(answer,str) or not answer.strip() or len(answer)>MAX_OUTPUT:
         raise ValueError('Blank or oversized model output')
-    usage=obj.get('usage')
-    return answer, usage if isinstance(usage,dict) else None
+    return answer, sanitized_usage(obj.get('usage'))
 
 
 def safe_private_root(root):
+    # Refuse paths redirected through a symlinked parent, not just the leaf.
+    if any(parent.is_symlink() for parent in root.parents):
+        raise ValueError('Unsafe redirected parent of private receipts folder')
     if root.is_symlink() or (root.exists() and not root.is_dir()):
         raise ValueError('Unsafe redirected local receipts folder')
     root.mkdir(mode=0o700,parents=True,exist_ok=True)
@@ -269,6 +305,11 @@ def main(argv=None):
             raise ValueError('Each packet needs an explicitly chosen OmniRoute route/model')
         if any(slug not in slugs for slug in routes):
             raise ValueError('Unused model override not allowed')
+        # Never persist responses under a public Git checkout, even if an
+        # accidental --out option points into the source tree.
+        destination=args.out.expanduser().absolute()
+        if destination == root or root in destination.parents:
+            raise ValueError('Private model receipts cannot be inside Git checkout')
         key=access_key()
         # Small bounded parallelism. Each packet writes its reservation BEFORE
         # making a request, so crash recovery is NEVER automatic for model jobs.
