@@ -39,18 +39,22 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   const path = url.pathname;
-  const isShellAsset = /\/(index\.html|styles\.css|live-data\.js|app\.js|manifest\.webmanifest|hud-icon\.svg|snapshot\.json|)$/.test(path);
+  const isShellAsset = /\\/(index\\.html|styles\\.css|live-data\\.js|app\\.js|manifest\\.webmanifest|hud-icon\\.svg|snapshot\\.json|)$/.test(path);
   if (!isShellAsset) return;
 
   event.respondWith(
     fetch(request).then(response => {
       if (response && response.ok) {
         const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+        // Normalize the cache key: snapshot.json is fetched with cache:'no-store'.
+        // A no-store Request can be rejected by Cache.put, so cache by its URL instead.
+        caches.open(CACHE_NAME)
+          .then(cache => cache.put(new Request(request.url), copy))
+          .catch(() => {});
       }
       return response;
     }).catch(async () => {
-      const cached = await caches.match(request);
+      const cached = await caches.match(new Request(request.url));
       if (cached) return cached;
       if (request.mode === 'navigate') {
         return (await caches.match('./index.html')) || Response.error();
