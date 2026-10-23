@@ -9,11 +9,11 @@ Open `index.html` in a modern browser, or serve the `dashboard/` folder from any
 ## Data integrity and behavior
 
 - Resolves the latest `main` commit, then fetches `coordination/tasks.json` and `coordination/work-routing.json` by that **same immutable commit SHA**. Queue and routing therefore cannot silently mix revisions.
-- Polls queue/routing every 60 seconds while the page is open; “Refresh now” also refreshes pull requests.
-- Refreshes open pull requests no more than every five minutes, unless manually refreshed.
+- Polls queue/routing every 3 minutes while the page is open; “Refresh now” also refreshes pull requests.
+- Refreshes open pull requests no more than every 15 minutes, unless manually refreshed.
 - Shows network/API rate-limit failures and labels previously displayed data as potentially stale.
 - Displays queue ownership separately from host status. GitHub queue entries do not prove a worker claimed work, a laptop is online, a local process is running, or a job executed.
-- Contains no token or credential. Requests use GitHub's unauthenticated public API and are subject to rate limits.
+- Contains no token or credential. Only the main-commit lookup and pull-request list use GitHub's unauthenticated REST API; the two JSON files use `raw.githubusercontent.com` pinned to that same immutable commit SHA. Automatic polling is designed below 60 REST calls/hour, though manual refreshes and other apps sharing the IP can consume the shared allowance.
 
 ## Limits and packaging
 
