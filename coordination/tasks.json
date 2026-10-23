@@ -1716,6 +1716,22 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/42"
       ]
+    },
+    {
+      "id": "workforce-host-evidence-reconciliation",
+      "title": "Reconcile completed Mac MCP and diagnostic evidence with the shared next action",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar workforce evidence reconciliation",
+      "branch": "main",
+      "scopes": [
+        "subsystem:workforce-host-evidence-reconciliation"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T00:38:46.919Z",
+      "next_update": "After queue validation and evidence publication",
+      "next_action": "Append latest supplied Mac results to the FCP host record without changing ownership; replace obsolete setup instructions with native UI observation blocker.",
+      "acceptance": "Current queue passes project_loop validation; supplied MCP/diagnosis facts retain runtime limits; no owners released and no native success inferred."
     }
   ]
 }
