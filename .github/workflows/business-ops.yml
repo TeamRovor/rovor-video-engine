@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'business/**'
+      - 'architecture/evaluations/**'
       - 'coordination/tasks.json'
       - 'coordination/work-routing.json'
       - 'tools/ops_worker.py'
@@ -17,6 +18,7 @@ on:
     branches: [main]
     paths:
       - 'business/**'
+      - 'architecture/evaluations/**'
       - 'coordination/tasks.json'
       - 'coordination/work-routing.json'
       - 'tools/ops_worker.py'
@@ -54,6 +56,9 @@ jobs:
           python tools/project_loop.py check
           python -m unittest discover -s tests -p test_work_brief.py -v
           python -m unittest discover -s tests -p test_ops_worker.py -v
+          python -m unittest discover -s architecture/evaluations -p test_evaluate.py -v
+          python architecture/evaluations/evaluate.py --answers architecture/evaluations/good-answers.json
+          python architecture/evaluations/evaluate.py --answers architecture/evaluations/bad-answers.json --expect fail
   report:
     name: Business operations report (no task execution)
     needs: test
