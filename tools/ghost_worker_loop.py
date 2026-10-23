@@ -87,13 +87,17 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
          max_jobs: int = 100, max_seconds: float = 900,
          poll_seconds: float = 1.0, monotonic=time.monotonic,
          sleeper=time.sleep, allow_model_use=False, allow_native_import=False,
-         allow_jane_library_create=False) -> dict:
+         allow_jane_library_create=False, jane_queue_job_id=None) -> dict:
     """Poll bounded jobs with explicit opt-ins, observing STOP between operations.
 
     Limits are cooperative: a synchronous adapter cannot be interrupted mid-call.
     The underlying SQLite claim transaction prevents duplicate claimed jobs.
     """
     validate_limits(max_jobs=max_jobs, max_seconds=max_seconds, poll_seconds=poll_seconds)
+    if allow_jane_library_create and (not jane_queue_job_id or max_jobs != 1):
+        raise ValueError('Jane native creation requires one exact queue job ID and max-jobs=1')
+    if jane_queue_job_id and not allow_jane_library_create:
+        raise ValueError('Jane native queue job ID needs explicit approval')
     if not isinstance(worker_id, str) or not (1 <= len(worker_id) <= 128):
         raise ValueError("A worker-id of 1 to 128 characters is required")
     # Resolve/check before executing any work. Never create a state directory here.
@@ -116,7 +120,9 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
                 conn, workspace, owner=worker_id,
                 allow_model_use=allow_model_use,
                 allow_native_import=allow_native_import,
-                allow_jane_library_create=True)
+                allow_jane_library_create=True,
+                jane_library_only=True,
+                jane_queue_job_id=jane_queue_job_id)
         elif allow_native_import:
             receipt = ghost_worker.run_once(conn, workspace, owner=worker_id,
                                            allow_model_use=allow_model_use, allow_native_import=True)
@@ -156,7 +162,8 @@ def main() -> None:
     run.add_argument("--approve-model-use", action="store_true")
     run.add_argument("--allow-native-import", action="store_true")
     run.add_argument("--approve-jane-library-create", action="store_true",
-                     help="One explicit native Library creation job; no XML import")
+                     help="One exact approved native library job; no XML import")
+    run.add_argument("--jane-queue-job-id", help="Exact queued Jane UUID; requires --max-jobs=1")
     run.add_argument("--max-jobs", type=int, default=100)
     run.add_argument("--max-seconds", type=float, default=900)
     run.add_argument("--poll-seconds", type=float, default=1.0)
@@ -170,7 +177,8 @@ def main() -> None:
                           max_jobs=args.max_jobs, max_seconds=args.max_seconds,
                           poll_seconds=args.poll_seconds, allow_model_use=args.approve_model_use,
                           allow_native_import=args.allow_native_import,
-                          allow_jane_library_create=args.approve_jane_library_create)
+                          allow_jane_library_create=args.approve_jane_library_create,
+                          jane_queue_job_id=args.jane_queue_job_id)
     elif args.command == "stop":
         result = {"stop_requested": True, "marker_created": request_stop(args.state)}
     else:
