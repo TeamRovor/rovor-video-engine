@@ -146,6 +146,18 @@ test('service worker serves same-origin shell from cache offline and leaves cros
   assert.equal(fetchCalls,1);
 });
 
+test('service worker precache list points only to existing local shell assets',()=>{
+  const worker=fs.readFileSync(path.join(shellDir,'service-worker.js'),'utf8');
+  const match=worker.match(/const SHELL = \[([\s\S]*?)\];/);
+  assert.ok(match,'service worker shell list should exist');
+  const assets=[...match[1].matchAll(/'([^']+)'/g)].map(item=>item[1]);
+  assert.ok(assets.length>=7,'shell should include core app files and install metadata');
+  for(const asset of assets){
+    assert.ok(!/^https?:\/\//i.test(asset),asset+' must remain same-origin');
+    assert.ok(fs.existsSync(path.join(shellDir,asset)),asset+' must exist or install-time cache.addAll will fail');
+  }
+});
+
 test('HUD registers its shell service worker without requiring it for live operation',()=>{
   const app=fs.readFileSync(path.join(shellDir,'app.js'),'utf8');
   const html=fs.readFileSync(path.join(shellDir,'index.html'),'utf8');
