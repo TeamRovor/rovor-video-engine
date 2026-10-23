@@ -2052,14 +2052,23 @@
       "branch": "main",
       "scopes": [
         ".github/workflows/rovor-mac-exec-proof.yml",
-        "rovor-production/mac-queue/exec-smoke-20261022-01.json"
+        "rovor-production/mac-queue/exec-smoke-20261022-01.json",
+        "rovor-production/mac-queue/exec-smoke-20261022-02.json"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T02:19:00.269Z",
-      "next_update": "When first triggered self-hosted job completes or fails with evidence",
-      "next_action": "Submit one allowlisted write-and-readback task through existing self-hosted Rovor-Mac runner. Touch only a new disposable Documents/Rovor/ChatGPT-Link-Proof file, fail closed on existing file or unsupported request, confirm exact GitHub Actions job and host receipt. No unrestricted shell, models, FCP, other personal files, credentials, paid tools or looping.",
+      "updated_at": "2026-10-23T02:25:11.101Z",
+      "next_update": "After genuine Issue #48 Mac-host receipt or independently visible Actions job diagnostics",
+      "next_action": "GitHub accepted restricted workflow commit fbca6cb and fixed request commits 66418e2 (write/readback) and 855a6bc (read-only inspect). The report destination is Issue #48. No host result comment observed yet; verify a genuine Mac-runner receipt from Issue #48 or associated Actions logs before calling this done. If no receipt, diagnose actual runner/workflow failure without asking user to repeat installations.",
       "acceptance": "An authenticated main-branch GitHub request runs once on the existing rovor-video Mac runner, creates exactly one new benign private sandbox file using O_EXCL, verifies SHA256 readback, and reports a trustworthy host result; if runner offline then record blocked with exact observed evidence.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "855a6bc0cd0642da9edb0bf75219ac969a07541e",
+          "platform": "GitHub main / remote job submitted, NOT host verified",
+          "check": "Restricted sandbox-write request and read-only receipt request committed to fixed self-hosted Mac workflow",
+          "result": "SUBMITTED; no authenticated Rovor-Mac execution receipt observed in Issue #48 yet",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/issues/48"
+        }
+      ]
     }
   ]
 }
