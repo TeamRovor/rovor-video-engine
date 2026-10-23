@@ -106,7 +106,7 @@ class JaneOnepassTests(unittest.TestCase):
         protected = self.home/'private'
         protected.mkdir()
         self.dir.symlink_to(protected,target_is_directory=True)
-        with self.assertRaisesRegex(ValueError,'unsafe'):
+        with self.assertRaisesRegex(ValueError,'Unsafe job path'):
             worker.path_for(self.base,self.ident)
 
     def test_existing_library_mtime_not_attributed_to_job(self):
