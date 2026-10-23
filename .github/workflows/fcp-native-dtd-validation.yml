@@ -7,6 +7,7 @@ on:
       - 'tools/fcp_native_auto_import.py'
       - 'tools/fcp_jane_ui_probe.py'
       - 'tools/fcp_jane_library_bootstrap.py'
+      - 'tools/fcp_jane_library_failure_probe.py'
       - '.github/workflows/fcp-native-dtd-validation.yml'
   push:
     branches: [main]
@@ -55,6 +56,15 @@ jobs:
           Path(sys.argv[1], 'jane-library.applescript').write_text(APPLE_SCRIPT)
           PY
           osacompile -o "$WORK/jane-library.scpt" "$WORK/jane-library.applescript"
+          python3 - "$WORK" <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,'tools')
+          from fcp_jane_library_failure_probe import UI_SCRIPT
+          Path(sys.argv[1], 'jane-library-failure.applescript').write_text(UI_SCRIPT)
+          PY
+          osacompile -o "$WORK/jane-library-failure.scpt" "$WORK/jane-library-failure.applescript"
+          echo 'PASS: Jane read-only menu diagnosis compiled on macOS; nothing executed.'
           echo 'PASS: native library bootstrap compiled on macOS; nothing executed.'
           echo 'PASS: Jane GUI inspection AppleScript compiled on macOS, NOT executed.'
       - name: Validate real generated 30-second XML against Apple FCPXML 1.13 DTD mirror
