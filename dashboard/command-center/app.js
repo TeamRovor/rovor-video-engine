@@ -200,6 +200,24 @@ function filterTasks(render=true) {
   if(render) renderTasks();
 }
 function wireControls() {
+  const motionBtn = document.getElementById('motionBtn');
+  const focusBtn = document.getElementById('focusBtn');
+  const motionPref = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (motionPref) {
+    document.body.classList.add('motion-paused');
+    motionBtn.textContent = 'Motion: Off';
+    motionBtn.setAttribute('aria-pressed', 'false');
+  }
+  motionBtn.addEventListener('click', () => {
+    const paused = document.body.classList.toggle('motion-paused');
+    motionBtn.textContent = paused ? 'Motion: Off' : 'Motion: On';
+    motionBtn.setAttribute('aria-pressed', String(!paused));
+  });
+  focusBtn.addEventListener('click', () => {
+    const focused = document.body.classList.toggle('focus-mode');
+    focusBtn.textContent = focused ? 'Exit Focus' : 'Focus View';
+    focusBtn.setAttribute('aria-pressed', String(focused));
+  });
   document.getElementById('taskSearch').addEventListener('input',()=>filterTasks());
   document.getElementById('statusFilter').addEventListener('change',()=>filterTasks());
   document.getElementById('refreshBtn').addEventListener('click',()=>syncGitHub(false));
