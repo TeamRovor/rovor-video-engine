@@ -2579,7 +2579,7 @@
       "id": "routing-explain-dependency-and-scope-blockers",
       "title": "Explain exact dependency and scope blockers in ROVOR work briefs",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar iPhone routing blocker diagnostics 2026-10-22",
       "branch": "feature/rovor-routing-blocker-explanations",
       "scopes": [
@@ -2590,11 +2590,19 @@
       "depends_on": [
         "session-routing-coverage-and-idle-triage"
       ],
-      "updated_at": "2026-10-23T04:59:04.719Z",
-      "next_update": "After real-queue and synthetic GitHub-hosted routing checks on Python 3.9/3.11",
-      "next_action": "Enhance existing read-only work_brief to report structured status and ownership for unmet task dependencies, classify scope conflicts separately, and summarize which ready jobs are blocked on a host versus another session; no task takeover or new worker executor.",
+      "updated_at": "2026-10-23T05:03:18.173Z",
+      "next_update": "When new host or evaluation task status changes, refresh main and re-run router",
+      "next_action": "PR #65 merged to main at 53e69d22d1d4c43321ba69da83536d778a37b843. The existing read-only work_brief now exposes ready_blockers with dependency ID/status/owner, reserved scope holder and required but missing confirmed capabilities. If no eligible task exists, text brief shows up to five precise blockers. No eligibility or ownership semantics changed; blocked jobs remain blocked. Tests on Python3.9 and3.11 passed 25 each. Next review actual host issues and only claim new independent work through canonical queue.",
       "acceptance": "For all ineligible ready tasks, router returns exact unmet dependency IDs/status/owners and conflicting reserved scopes/owners, keeps existing eligibility/priority/ownership behavior, and adds concise idle routing summary. Synthetic and real-queue tests pass on hosted Python 3.9/3.11. No Mac or app access claimed.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "53e69d22d1d4c43321ba69da83536d778a37b843",
+          "platform": "GitHub-hosted Ubuntu Python 3.9 and 3.11",
+          "check": "Queue validation and 25 route tests per Python, including six new detailed blocker cases, no task mutation, host capability refusal and real-queue coverage",
+          "result": "PASS both; source merged; no Mac/Windows host execution claimed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39903487073"
+        }
+      ]
     },
     {
       "id": "omniroute-direct-api-receipt-containment",
