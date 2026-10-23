@@ -1153,7 +1153,7 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md",
         "https://github.com/TeamRovor/rovor-video-engine/pull/75",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912806232"
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913983606"
       ],
       "id": "rovor-work-packet-contract",
       "title": "Standardize the smallest portable work packet from proven workflows",
@@ -1166,9 +1166,9 @@
       "depends_on": [
         "rovor-capability-evaluation-pack"
       ],
-      "next_action": "PR #75 latest head 626ce7380b29dbc1866092350f44b4885de18bd4 documents the validator's 18-test boundary coverage. Hosted run 39912806232 passed Ubuntu, Windows and bounded report job on that head. Implementation task is complete; PR remains draft/open and unmerged. Example source URIs reference evaluation case IDs in PR #74 branch pending that dependency's integration. Structural validation does not prove source truth or reviewer identity.",
+      "next_action": "PR #75 latest head 8c52f8dd8002cbef769527a5d6afbad0a19ab80a has 19 regression tests, including schema JSON parse/required-field/collection-bound checks, and immutable permalink source refs to evaluation commit 3a5520da17bb1373193bb552673f8abdeba484b9. Hosted run 39913983606 passed Ubuntu, Windows and report job. PR remains draft/open and unmerged; validator is structural/cross-field only and does not prove source truth or reviewer identity.",
       "acceptance": "Schema validates representative accepted and rejected cases, preserves unknown/unrun states and separates technical completion from approval/publication. No opaque shell commands or self-granted permissions. Test against the actual evaluated examples.",
-      "updated_at": "2026-10-23T06:40:00Z",
+      "updated_at": "2026-10-23T06:50:00Z",
       "next_update": "After PR #75 review/merge and after PR #74 evaluation-pack dependency is integrated.",
       "evidence": [
         {
@@ -1198,6 +1198,13 @@
           "check": "Latest PR head including validator-boundary README, 18 regression tests, positive/negative CLI acceptance and bounded report job.",
           "result": "PASS all worker matrix jobs and report. PR #75 remains draft/open and unmerged; no merge or external action performed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912806232"
+        },
+        {
+          "commit": "8c52f8dd8002cbef769527a5d6afbad0a19ab80a",
+          "platform": "GitHub-hosted Python 3.11; Ubuntu and Windows business-operations matrix",
+          "check": "19 regression tests including parseable JSON Schema, required-field and bound assertions; validator positive/negative CLI acceptance; bounded report job.",
+          "result": "PASS all worker jobs and report. Evaluation source URLs are immutable commit permalinks. PR #75 remains draft/open and unmerged.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913983606"
         }
       ]
     },
