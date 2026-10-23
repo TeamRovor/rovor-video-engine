@@ -1,6 +1,10 @@
 'use strict';
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const shellDir = path.join(__dirname, '..');
 const {deriveSnapshot,fetchGitHubSnapshot,escapeHtml,fileGroups} = require('../live-data.js');
 const sha = 'a'.repeat(40);
 const base = {
@@ -85,4 +89,114 @@ test('disabled extras avoid unnecessary rate-limit calls',async()=>{
   requests.length=0;
   await fetchGitHubSnapshot({fetchImpl:fakeFetch,includeExtras:false});
   assert.equal(requests.length,3);
+});
+
+test('iPad install manifest is standalone and scoped to the HUD directory',()=>{
+  const manifest=JSON.parse(fs.readFileSync(path.join(shellDir,'manifest.webmanifest'),'utf8'));
+  assert.equal(manifest.name,'ROVOR Command Center');
+  assert.equal(manifest.display,'standalone');
+  assert.equal(manifest.start_url,'./index.html');
+  assert.equal(manifest.scope,'./');
+  assert.ok(manifest.icons.some(icon=>icon.src==='./hud-icon.svg'));
+});
+
+test('service worker syntax is valid and excludes cross-origin live data from caching',()=>{
+  const worker=fs.readFileSync(path.join(shellDir,'service-worker.js'),'utf8');
+  assert.doesNotThrow(()=>new vm.Script(worker));
+  assert.match(worker,/if \(url\.origin !== self\.location\.origin\) return;/);
+  assert.match(worker,/Never cache GitHub API\/raw data/);
+  assert.match(worker,/fetch\(request\)/);
+  assert.match(worker,/cache\.put\(new Request\(request\.url\), copy\)/);
+  assert.match(worker,/caches\.match\(new Request\(request\.url\)\)/);
+});
+
+test('service worker serves same-origin shell from cache offline and leaves cross-origin data untouched',async()=>{
+  const worker=fs.readFileSync(path.join(shellDir,'service-worker.js'),'utf8');
+  const origin='https://hud.example.test';
+  const stored=new Map();
+  let fetchCalls=0;
+  let fetchHandler;
+  const requestUrl=request=>typeof request==='string'?request:request.url;
+  const cache={
+    addAll:async()=>{},
+    put:async(request,response)=>{stored.set(requestUrl(request),response);},
+    match:async request=>stored.get(requestUrl(request))
+  };
+  const cacheApi={
+    open:async()=>cache,
+    keys:async()=>['rovor-command-center-shell-v1'],
+    match:async request=>stored.get(requestUrl(request))
+  };
+  const self={
+    location:{origin},
+    clients:{claim:async()=>{}},
+    skipWaiting:async()=>{},
+    addEventListener:(name,handler)=>{if(name==='fetch')fetchHandler=handler;}
+  };
+  vm.runInNewContext(worker,{self,caches:cacheApi,URL,Request,Response,fetch:async()=>{fetchCalls++;throw Error('offline');}});
+  const shellUrl=origin+'/dashboard/command-center/styles.css';
+  stored.set(shellUrl,new Response('cached shell'));
+  let shellResponse;
+  fetchHandler({request:new Request(shellUrl),respondWith:promise=>{shellResponse=promise;}});
+  assert.equal(await (await shellResponse).text(),'cached shell');
+  assert.equal(fetchCalls,1);
+  let crossOriginHandled=false;
+  fetchHandler({request:new Request('https://raw.githubusercontent.com/TeamRovor/rovor-video-engine/main/snapshot.json'),respondWith:()=>{crossOriginHandled=true;}});
+  assert.equal(crossOriginHandled,false);
+  assert.equal(fetchCalls,1);
+});
+
+test('service worker precache list points only to existing local shell assets',()=>{
+  const worker=fs.readFileSync(path.join(shellDir,'service-worker.js'),'utf8');
+  const match=worker.match(/const SHELL = \[([\s\S]*?)\];/);
+  assert.ok(match,'service worker shell list should exist');
+  const assets=[...match[1].matchAll(/'([^']+)'/g)].map(item=>item[1]);
+  assert.ok(assets.length>=7,'shell should include core app files and install metadata');
+  for(const asset of assets){
+    assert.ok(!/^https?:\/\//i.test(asset),asset+' must remain same-origin');
+    assert.ok(fs.existsSync(path.join(shellDir,asset)),asset+' must exist or install-time cache.addAll will fail');
+  }
+});
+
+test('service worker install precaches the shell and activation removes only obsolete HUD caches',async()=>{
+  const worker=fs.readFileSync(path.join(shellDir,'service-worker.js'),'utf8');
+  const handlers={};
+  let precached=[];
+  let skipped=false;
+  let claimed=false;
+  const deleted=[];
+  const cache={addAll:async assets=>{precached=assets.slice();}};
+  const self={
+    location:{origin:'https://hud.example.test'},
+    clients:{claim:async()=>{claimed=true;}},
+    skipWaiting:async()=>{skipped=true;},
+    addEventListener:(name,handler)=>{handlers[name]=handler;}
+  };
+  const cacheApi={
+    open:async()=>cache,
+    keys:async()=>['rovor-command-center-shell-v0','unrelated-cache','rovor-command-center-shell-v1'],
+    delete:async key=>{deleted.push(key);return true;}
+  };
+  vm.runInNewContext(worker,{self,caches:cacheApi,URL,Request,Response,fetch});
+  let installPromise;
+  handlers.install({waitUntil:promise=>{installPromise=promise;}});
+  await installPromise;
+  assert.ok(skipped,'install should activate the new worker promptly');
+  assert.ok(precached.includes('./index.html'));
+  assert.ok(precached.includes('./app.js'));
+  assert.ok(precached.includes('./manifest.webmanifest'));
+  let activatePromise;
+  handlers.activate({waitUntil:promise=>{activatePromise=promise;}});
+  await activatePromise;
+  assert.deepEqual(deleted,['rovor-command-center-shell-v0']);
+  assert.ok(claimed,'activation should claim existing HUD clients');
+});
+test('HUD registers its shell service worker without requiring it for live operation',()=>{
+  const app=fs.readFileSync(path.join(shellDir,'app.js'),'utf8');
+  const html=fs.readFileSync(path.join(shellDir,'index.html'),'utf8');
+  assert.match(app,/navigator\.serviceWorker\.register\('\.\/service-worker\.js'/);
+  assert.match(app,/addEventListener\('offline'/);
+  assert.match(app,/Device is offline; displayed data is not live/);
+  assert.match(html,/rel="manifest" href="\.\/manifest\.webmanifest"/);
+  assert.match(html,/apple-mobile-web-app-capable/);
 });

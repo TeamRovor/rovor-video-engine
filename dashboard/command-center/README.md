@@ -17,11 +17,24 @@ When GitHub cannot be reached or a critical file fails to load, the dashboard di
 
 Whimsical is a separate visual architecture board, **not automatically synchronized** by this HUD. Native Mac, Windows, Moho, Blender, Final Cut, local job execution and social posting are likewise **not enabled** by this dashboard. A merged test is not evidence that an actual worker is online.
 
-## Open the dashboard
+## Install on an iPad
 
-- If the ROVOR repo has GitHub Pages configured to serve the appropriate directory, use the Pages URL. Merely merging these source files does **not** configure GitHub Pages or deploy a live web address.
-- For local development, from the repository root run `python3 -m http.server 8000`, then visit `http://localhost:8000/dashboard/command-center/`. The browser needs normal HTTPS access to GitHub.
-- The same standalone files (`index.html`, `styles.css`, `live-data.js`, `app.js`) can be deployed on any static site host (e.g. Netlify) without a backend. Do not replace the public agency site unexpectedly.
+1. Publish this directory over **HTTPS** on a stable host. The source change alone does not publish it or enable GitHub Pages.
+2. Open the published Command Center URL in **Safari** on the iPad.
+3. Tap **Share** → **Add to Home Screen**. If offered, enable **Open as Web App**, then tap **Add**.
+4. Launch the ROVOR HUD icon from the Home Screen. Rotate to landscape for the full command console; portrait is supported for quick checks.
+
+The web-app manifest and service worker cache only the app shell for faster launch and a limited offline fallback. **Live GitHub API/raw data is never cached by the service worker.** When offline or rate-limited, the HUD must show a stale/error state instead of pretending to be live. iPadOS may suspend a backgrounded or closed web app; this version polls every three minutes while open and syncs when you return. It is not an always-running background agent or push-alert system.
+
+## Free hosting with GitHub Pages
+
+The Command Center is static HTML/CSS/JavaScript, so it does not need a paid server or database. This repository now includes `.github/workflows/deploy-command-center-pages.yml`, which publishes only `dashboard/command-center/` to GitHub Pages after changes to that directory land on `main`, or when manually dispatched.
+
+**One-time repository setup is still required:** open the repository's **Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions**. Then merge the deployment workflow and Command Center changes through the approved PR. The workflow will publish the app and report the Pages URL in its successful deployment run. No paid Vercel plan is required for this approach; GitHub Pages availability and usage are subject to GitHub's current plan and repository limits.
+
+For local development, from the repository root run `python3 -m http.server 8000`, then visit `http://localhost:8000/dashboard/command-center/`. The browser needs normal HTTPS access to GitHub.
+
+The standalone shell (`index.html`, `styles.css`, `live-data.js`, `app.js`, `manifest.webmanifest`, `service-worker.js`, `hud-icon.svg`, and `snapshot.json`) can also be hosted on another static HTTPS host without a backend. Do not replace the public agency site unexpectedly.
 
 ## Offline tests
 
