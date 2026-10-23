@@ -3226,7 +3226,8 @@
         "tests/test_work_brief.py",
         ".github/workflows/omniroute-workpack-check.yml",
         "coordination/tasks.json",
-        "coordination/work-routing.json"
+        "coordination/work-routing.json",
+        "tests/test_omniroute_draft_review.py"
       ],
       "depends_on": [
         "ghost-omniroute-queue-adapter-20261023",
@@ -3234,7 +3235,7 @@
       ],
       "updated_at": "2026-10-23T23:44:32.614Z",
       "next_update": "After actual Mac focused tests and private runtime audit",
-      "next_action": "User-directed continuation: canonicalize composite fixture temporary root; reproduce and verify on real Mac; independently review PR66/71 without changing their owned branches; inspect existing installed runtime, queue and STOP before any bounded free-only model job.",
+      "next_action": "Fix identical demonstrated macOS temp-alias issue in receipt reviewer test fixture, then finish Mac evidence; PR66 integration blocked by externally redirected receipt-path bypass.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
