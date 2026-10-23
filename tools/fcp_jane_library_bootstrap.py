@@ -36,49 +36,76 @@ REPORT = 'native-library-bootstrap-receipt.json'
 # target filename and navigates to a new empty job directory; only then Save.
 # The path is supplied as argv, never interpolated into source statements.
 APPLE_SCRIPT = r'''
+-- No XML import, no existing-library selection, no project changes.
+-- Stages are fixed labels only; never print UI paths or document titles.
 on run argv
     if (count of argv) is not 3 then error "Expected directory, name and folder label"
     set destinationFolder to item 1 of argv
     set targetName to item 2 of argv
     set folderLabel to item 3 of argv
     if targetName is not "ROVOR-Jane-Isolated" then error "Library name not allowlisted"
+    if destinationFolder does not end with ("/" & folderLabel) then error "Destination argument mismatch"
+
+    log "JANE_STAGE|activating_final_cut"
     tell application "Final Cut Pro" to activate
     tell application "System Events"
         if not (exists process "Final Cut Pro") then error "FCP missing"
         tell process "Final Cut Pro"
-            if frontmost is false then error "Final Cut must be frontmost"
+            -- Activation is async on macOS; an immediate frontmost check
+            -- previously caused false failures. A bounded retry is safe.
+            repeat with attempt from 1 to 15
+                if frontmost is true then exit repeat
+                delay 0.25
+            end repeat
+            if frontmost is false then error "Final Cut activation did not reach foreground"
+            log "JANE_STAGE|frontmost_confirmed"
             if (count of windows) < 1 then error "No FCP windows"
             if (count of sheets of front window) > 0 then error "Existing FCP sheet present; do not interfere"
+
+            -- macOS AX submenus are lazy. Checking Library before opening
+            -- File > New can return false even when that command exists.
+            log "JANE_STAGE|opening_file_menu"
             if not (exists menu bar item "File" of menu bar 1) then error "No File menu"
+            click menu bar item "File" of menu bar 1
+            delay 0.3
             if not (exists menu item "New" of menu 1 of menu bar item "File" of menu bar 1) then error "No File/New menu"
-            if not (exists menu item "Library" of menu 1 of menu item "New" of menu 1 of menu bar item "File" of menu bar 1) then error "No File/New/Library command"
+
+            log "JANE_STAGE|opening_new_submenu"
+            click menu item "New" of menu 1 of menu bar item "File" of menu bar 1
+            delay 0.3
+            if not (exists menu item "Library" of menu 1 of menu item "New" of menu 1 of menu bar item "File" of menu bar 1) then error "No File/New/Library command after expanding submenu"
+
+            log "JANE_STAGE|choosing_new_library"
             click menu item "Library" of menu 1 of menu item "New" of menu 1 of menu bar item "File" of menu bar 1
-            delay 0.8
+            delay 0.9
             if (count of sheets of front window) is not 1 then error "New Library Save sheet not identified"
             tell sheet 1 of front window
                 if not (exists button "Save") then error "Expected a native Save sheet"
                 if not (exists text field 1) then error "Expected library name text field"
                 set value of text field 1 to targetName
             end tell
-            -- macOS standard Save-panel Go To Folder. Never uses clipboard.
+
+            log "JANE_STAGE|navigating_isolated_folder"
             keystroke "g" using {command down, shift down}
-            delay 0.7
-            -- Must identify Go To Folder combo box before typing; no blind keystrokes.
+            delay 0.6
             if (count of sheets of sheet 1 of front window) is less than 1 then error "Go To Folder sub-sheet not found"
             tell sheet 1 of sheet 1 of front window
                 if not (exists combo box 1) then error "Go To Folder combo box absent"
                 set value of combo box 1 to destinationFolder
+                if (value of combo box 1 as text) is not destinationFolder then error "Go To Folder path was not set"
                 if not (exists button "Go") then error "Go To Folder Go button absent"
                 click button "Go"
             end tell
-            delay 0.7
+            delay 0.9
+
+            log "JANE_STAGE|verifying_save_destination"
             if (count of sheets of front window) is not 1 then error "Save sheet changed unexpectedly"
             tell sheet 1 of front window
                 if not (exists button "Save") then error "Save button disappeared"
                 if not (exists text field 1) then error "Filename field missing"
                 if (value of text field 1 as text) is not targetName then error "Library name changed unexpectedly"
-                -- Save destination must show the exact freshly created folder.
-                -- A successful "Go" action alone is NOT evidence of location.
+                -- Exact destination verification; do NOT guess based on
+                -- successful keystrokes or assume the default Save location.
                 set locationVerified to false
                 repeat with locationPopUp in every pop up button
                     try
@@ -90,9 +117,10 @@ on run argv
                 end repeat
                 if locationVerified is false then error "Save destination could not be verified; NO SAVE"
             end tell
-            -- Important: the Save target directory is job-unique and empty.
-            -- User/host must verify resulting fcpbundle, not AppleScript exit.
+
+            log "JANE_STAGE|clicking_save_in_isolated_folder"
             click button "Save" of sheet 1 of front window
+            log "JANE_STAGE|save_click_dispatched"
         end tell
     end tell
 end run
