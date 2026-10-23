@@ -1,0 +1,38 @@
+name: ROVOR work routing and queue consistency
+on:
+  pull_request:
+    paths:
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+      - 'tools/work_brief.py'
+      - 'tests/test_work_brief.py'
+      - '.github/workflows/work-brief-routing-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+      - 'tools/work_brief.py'
+      - 'tests/test_work_brief.py'
+      - '.github/workflows/work-brief-routing-check.yml'
+permissions:
+  contents: read
+jobs:
+  routing-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Validate existing owner and dependency queue
+        run: python tools/project_loop.py check
+      - name: Test capability-safe routes, optional fallback and real queue coverage
+        run: python -m unittest discover -s tests -p test_work_brief.py -v
