@@ -2602,7 +2602,7 @@
       "priority": 1,
       "status": "active",
       "owner": "ChatGPT / Amar OmniRoute private receipt hardening",
-      "branch": "fix/omniroute-direct-receipt-containment-20261022",
+      "branch": "fix/omniroute-output-path-v1",
       "scopes": [
         "tools/omniroute_workpack_runner.py",
         "tests/test_omniroute_workpack_runner.py"
