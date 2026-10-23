@@ -1822,3 +1822,28 @@ body {
   .reactor-core { width: clamp(124px, 17vw, 180px); }
   .reactor-stage::after { bottom: -18%; height: 47%; }
 }
+
+
+/* Cinematic art pass: use authored planetary artwork instead of relying on glow gradients alone. */
+.reactor-stage {
+  background-color: #02050a;
+  background-image:
+    linear-gradient(180deg, rgba(1, 5, 11, .18), rgba(1, 5, 11, .08) 48%, rgba(1, 5, 11, .52)),
+    url("./planetary-horizon.svg");
+  background-size: cover;
+  background-position: center 54%;
+  background-repeat: no-repeat;
+}
+.reactor-stage::after {
+  bottom: -20%;
+  height: 52%;
+  border-top-color: rgba(164, 219, 255, .42);
+  background: linear-gradient(180deg, rgba(68, 155, 221, .10), rgba(2, 8, 15, .06) 38%, transparent 75%);
+  box-shadow: 0 -5px 25px rgba(74, 166, 255, .12);
+}
+.reactor-stage::before {
+  background: radial-gradient(ellipse at 50% 52%, transparent 20%, rgba(1, 4, 9, .18) 64%, rgba(1, 4, 9, .7) 100%);
+}
+@media (min-width: 761px) and (max-width: 1180px) and (orientation: landscape) {
+  .reactor-stage { background-position: center 55%; }
+}
