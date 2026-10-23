@@ -33,6 +33,21 @@ This is a navigation guide, not a second roadmap or task tracker. Refresh the li
 4. Run the checks available in the current environment. Record exact commands, revision and results; clearly mark checks that need a real Mac/Windows host or human visual review.
 5. Publish a reviewable PR and update the task's next action/evidence only when the change and checks are real.
 
+## Fast coordination health check
+
+From a fresh checkout, run:
+
+```sh
+git fetch origin
+python tools/project_loop.py status --ref origin/main
+python tools/project_loop.py doctor
+```
+
+- `status` validates the canonical queue, prints warnings/errors, shows next actions and lists tasks whose dependencies and scopes currently permit a claim. It does not claim work or inspect unpushed changes in other sessions.
+- `doctor` reports local environment/working-tree facts only. A tool found on PATH is not proof that the production workflow works.
+- Treat an old-claim warning as a prompt to confirm ownership, not permission to take over. A blocked task keeps its owner; resolve the blocker or coordinate a handoff.
+- If no task is eligible, do not bypass dependencies or create a second queue. Refresh open PRs/issues and routing, then select a genuinely independent existing task or document the concrete blocker.
+
 ## Status vocabulary
 
 - **Implemented:** a code or document change exists.
