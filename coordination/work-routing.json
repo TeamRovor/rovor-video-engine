@@ -473,6 +473,12 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "routing-explain-dependency-and-scope-blockers": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }
