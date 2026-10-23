@@ -119,7 +119,7 @@ function renderMetrics() {
 }
 
 function renderStatusBars() {
-  const colors = {done:'#54f0c7',active:'#62f2ff',blocked:'#ff5c77',ready:'#ffd255'};
+  const colors = {done:'#bfe5ff',active:'#62b2ff',blocked:'#ff8da5',ready:'#8fcaff'};
   const status = state.raw.repo_snapshot.tasks_status || {};
   const entries = Object.entries(status);
   const total = entries.reduce((a,[,v])=>a+v,0)||1;
