@@ -1152,3 +1152,40 @@ body {
 @media (max-width:759px) {
   .syncbar { width:auto;justify-self:auto; }
 }
+
+
+/* Final fit-and-finish pass: safe-area-aware landscape layout and clear focus states. */
+:focus-visible {
+  outline: 2px solid #bdeaff;
+  outline-offset: 3px;
+}
+button:disabled {
+  opacity: .58;
+  cursor: progress;
+}
+@media (min-width:760px) and (orientation:landscape) {
+  html, body { min-height:100%; }
+  body { min-height:100svh; }
+  .app-shell {
+    min-height:100svh;
+    padding-top:max(7px,env(safe-area-inset-top));
+    padding-bottom:max(7px,env(safe-area-inset-bottom));
+  }
+  .reactor-stage { overflow:hidden; }
+  .reactor-core img { width:72%;height:72%;object-fit:contain; }
+  .ring-panel,.metrics-panel,.warning-panel { overflow:auto; scrollbar-width:thin; scrollbar-color:#28618b transparent; }
+  .tabbar { position:relative; }
+}
+@media (min-width:760px) and (max-width:1180px) and (orientation:landscape) and (max-height:560px) {
+  .app-shell { grid-template-rows:46px minmax(140px,1fr) 30px minmax(90px,.55fr); }
+  .topbar { min-height:46px; }
+  .reactor-telemetry { font-size:8px; }
+  .reactor-readout { font-size:9px; }
+  .panel-title { letter-spacing:.12em; }
+  .notes-list { margin-top:5px; }
+}
+@media (hover:none) and (pointer:coarse) {
+  .hud-btn,.tab { -webkit-tap-highlight-color:transparent; }
+  .hud-btn { min-height:36px; }
+  .tab { min-height:34px; }
+}
