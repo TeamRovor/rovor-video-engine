@@ -1739,3 +1739,7 @@ body {
  html { scroll-behavior:auto; }
  *,*::before,*::after { animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important; }
 }
+
+
+/* Focus View hides the command-content destination; keep skip navigation out of its tab order. */
+.focus-mode .skip-link { display: none !important; }
