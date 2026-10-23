@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'rovor-command-center-shell-v1';
+const CACHE_NAME = 'rovor-command-center-shell-v2';
 const SHELL = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const SHELL = [
   './app.js',
   './manifest.webmanifest',
   './hud-icon.svg',
+  './rovor-mark.svg',
   './snapshot.json'
 ];
 
@@ -39,7 +40,7 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   const path = url.pathname;
-  const isShellAsset = /\/(index\.html|styles\.css|live-data\.js|app\.js|manifest\.webmanifest|hud-icon\.svg|snapshot\.json|)$/.test(path);
+  const isShellAsset = /\/(index\.html|styles\.css|live-data\.js|app\.js|manifest\.webmanifest|hud-icon\.svg|rovor-mark\.svg|snapshot\.json|)$/.test(path);
   if (!isShellAsset) return;
 
   event.respondWith(
