@@ -461,6 +461,12 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "routing-future-ready-queue-regression": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }
