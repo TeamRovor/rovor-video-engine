@@ -2237,6 +2237,30 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39892498336"
         }
       ]
+    },
+    {
+      "id": "omniroute-private-draft-receipt-review",
+      "title": "Validate OmniRoute draft receipts against current workpack source before reuse",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / OmniRoute private draft review session 2026-10-22",
+      "branch": "feature/omniroute-parallel-workpacks",
+      "scopes": [
+        "tools/omniroute_draft_review.py",
+        "tests/test_omniroute_draft_review.py",
+        "integrations/open-interpreter/OMNIROUTE-OUTPUT-REVIEW.md",
+        ".github/workflows/omniroute-draft-review.yml"
+      ],
+      "depends_on": [
+        "omniroute-parallel-worker-packets"
+      ],
+      "updated_at": "2026-10-23T03:02:04.103Z",
+      "next_update": "After hosted Python 3.9/3.11 tests and GitHub coordination validation",
+      "next_action": "Build read-only private receipt checker with exact packet fingerprint/source checks and strict human-review-only outcomes. No model calls, no control bridge files, no GitHub task approval, no upload of private draft content.",
+      "acceptance": "A private Mac-side verifier reports only status/packet id without revealing model content; validates receipt identity, source digest, model and status, fails on tampering/staleness/unrecognized fields/secret-like output, never approves code or execution. Regression tests cover valid/stale/tampered/no receipt/secret and symlink cases; CI Python 3.9 and 3.11 pass.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+      ]
     }
   ]
 }
