@@ -501,3 +501,36 @@ main{grid-column:2/4;grid-row:4;min-width:0;max-height:220px;overflow:auto;borde
  .reactor-readout{top:6%}.reactor-readout strong{font-size:9px}.readout-right{top:auto;bottom:5%}
 }
 @media(prefers-reduced-motion:reduce){.halo-outer,.halo-mid,.halo-inner{animation:none!important}}
+
+
+/* Reference fidelity pass: remove the inherited orange cyberpunk palette. */
+:root {
+  --orange: #8fcaff;
+  --orange2: #d8eeff;
+  --cyan: #c8eaff;
+  --cyan2: #4c9dff;
+  --border: rgba(151, 205, 255, .30);
+  --shadow: 0 0 0 1px rgba(180, 222, 255, .045), 0 0 22px rgba(45, 126, 229, .10);
+}
+body {
+  background:
+    radial-gradient(ellipse at 50% 46%, rgba(28, 82, 151, .17), transparent 34%),
+    radial-gradient(ellipse at 50% 100%, rgba(35, 114, 209, .12), transparent 42%),
+    linear-gradient(180deg, #010308 0%, #040914 62%, #010308 100%);
+}
+.hud-panel::after {
+  background: linear-gradient(135deg, rgba(146, 202, 255, .025), transparent 36%, rgba(74, 145, 235, .025));
+}
+.hud-btn.alt {
+  background: rgba(13, 36, 63, .58);
+  border-color: rgba(119, 187, 255, .34);
+}
+.warning-box {
+  border-color: rgba(132, 194, 255, .22);
+  background: rgba(10, 28, 47, .62);
+}
+.warning-led {
+  background: #8fcaff;
+  box-shadow: 0 0 12px rgba(102, 178, 255, .65);
+}
+.warning-head { color: #d9edff; }
