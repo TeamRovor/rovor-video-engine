@@ -17,6 +17,7 @@ import argparse
 from datetime import datetime, timezone
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import subprocess
@@ -30,6 +31,10 @@ APP = Path('/Applications/Final Cut Pro.app')
 LIBRARY_BASENAME = 'ROVOR-Jane-Isolated'
 BOOTSTRAP_PREFIX = 'fcp-jane-library-'
 REPORT = 'native-library-bootstrap-receipt.json'
+STAGES = frozenset({'activate', 'preflight', 'open_new_library',
+                    'identify_save_sheet', 'navigate_destination',
+                    'identify_go_to_folder', 'verify_destination', 'save_library',
+                    'save_requested'})
 
 # Frontmost checks BEFORE UI keystrokes. Only opens Save panel, sets the
 # target filename and navigates to a new empty job directory; only then Save.
@@ -41,7 +46,9 @@ on run argv
     set targetName to item 2 of argv
     set folderLabel to item 3 of argv
     if targetName is not "ROVOR-Jane-Isolated" then error "Library name not allowlisted"
+    log "ROVOR_BOOTSTRAP_STAGE:activate"
     tell application "Final Cut Pro" to activate
+    log "ROVOR_BOOTSTRAP_STAGE:preflight"
     tell application "System Events"
         if not (exists process "Final Cut Pro") then error "FCP missing"
         tell process "Final Cut Pro"
@@ -51,8 +58,10 @@ on run argv
             if not (exists menu bar item "File" of menu bar 1) then error "No File menu"
             if not (exists menu item "New" of menu 1 of menu bar item "File" of menu bar 1) then error "No File/New menu"
             if not (exists menu item "Library" of menu 1 of menu item "New" of menu 1 of menu bar item "File" of menu bar 1) then error "No File/New/Library command"
+            log "ROVOR_BOOTSTRAP_STAGE:open_new_library"
             click menu item "Library" of menu 1 of menu item "New" of menu 1 of menu bar item "File" of menu bar 1
             delay 0.8
+            log "ROVOR_BOOTSTRAP_STAGE:identify_save_sheet"
             if (count of sheets of front window) is not 1 then error "New Library Save sheet not identified"
             tell sheet 1 of front window
                 if not (exists button "Save") then error "Expected a native Save sheet"
@@ -60,8 +69,10 @@ on run argv
                 set value of text field 1 to targetName
             end tell
             -- macOS standard Save-panel Go To Folder. Never uses clipboard.
+            log "ROVOR_BOOTSTRAP_STAGE:navigate_destination"
             keystroke "g" using {command down, shift down}
             delay 0.7
+            log "ROVOR_BOOTSTRAP_STAGE:identify_go_to_folder"
             -- Must identify Go To Folder combo box before typing; no blind keystrokes.
             if (count of sheets of sheet 1 of front window) is less than 1 then error "Go To Folder sub-sheet not found"
             tell sheet 1 of sheet 1 of front window
@@ -71,6 +82,7 @@ on run argv
                 click button "Go"
             end tell
             delay 0.7
+            log "ROVOR_BOOTSTRAP_STAGE:verify_destination"
             if (count of sheets of front window) is not 1 then error "Save sheet changed unexpectedly"
             tell sheet 1 of front window
                 if not (exists button "Save") then error "Save button disappeared"
@@ -91,11 +103,29 @@ on run argv
             end tell
             -- Important: the Save target directory is job-unique and empty.
             -- User/host must verify resulting fcpbundle, not AppleScript exit.
+            log "ROVOR_BOOTSTRAP_STAGE:save_library"
             click button "Save" of sheet 1 of front window
+            log "ROVOR_BOOTSTRAP_STAGE:save_requested"
         end tell
     end tell
 end run
 '''
+
+
+def failure_details(stderr):
+    """Return only fixed stage IDs and numeric errors, never native UI text."""
+    if isinstance(stderr, bytes):
+        stderr = stderr.decode('utf-8', errors='replace')
+    if not isinstance(stderr, str):
+        stderr = ''
+    bounded = stderr[-16384:]
+    stages = [s for s in re.findall(r'ROVOR_BOOTSTRAP_STAGE:([a-z_]+)', bounded)
+              if s in STAGES]
+    numbers = re.findall(r'\((-?\d{1,9})\)\s*$', bounded, re.MULTILINE)
+    return {'last_observed_stage': stages[-1] if stages else None,
+            'applescript_error_number': int(numbers[-1]) if numbers else None,
+            'stderr_present': bool(stderr),
+            'stderr_truncated': len(stderr) > len(bounded)}
 
 
 def atomic_report(folder, info):
@@ -173,7 +203,8 @@ def create_library(output, report, run=subprocess.run, clock=time.monotonic,
         if process.returncode:
             checkpoint(output, report, 'ui_create_failed_unverified',
                        error_code=process.returncode,
-                       error_class='applescript_or_accessibility')
+                       error_class='applescript_or_accessibility',
+                       **failure_details(process.stderr))
             return report
         checkpoint(output, report, 'ui_create_acknowledged_checking_filesystem')
         deadline = clock() + timeout
@@ -187,9 +218,15 @@ def create_library(output, report, run=subprocess.run, clock=time.monotonic,
                    native_library_created=True,
                    native_library_directory_observed=True)
         return report
-    except (OSError, subprocess.TimeoutExpired):
+    except subprocess.TimeoutExpired as exc:
         checkpoint(output, report, 'ui_create_exception_unverified',
-                   note='No retry; a GUI dialog could still be pending.')
+                   note='No retry; a GUI dialog could still be pending.',
+                   failure_kind='timeout', **failure_details(exc.stderr))
+        return report
+    except OSError as exc:
+        checkpoint(output, report, 'ui_create_exception_unverified',
+                   note='No retry; a GUI dialog could still be pending.',
+                   failure_kind='os_error', os_error_number=exc.errno)
         return report
 
 
