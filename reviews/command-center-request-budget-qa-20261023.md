@@ -11,4 +11,11 @@ The new test `dashboard/command-center/tests/request-budget.test.js` runs the **
 
 **Remaining limits:** The anonymous REST limit is per shared IP, not per tab. Two simultaneously visible dashboards on the same external IP could exceed the 60/hour allowance (2 × 31 = 62, before other tools). The existing visibility pause reduces normal exposure; a genuinely multi-device always-on view would need additional shared caching/server-generated public status snapshots or a slower cadence with more headroom. This QA verifies a **single active visible client**, not many simultaneous machines, background execution, native Mac control, or hosted production access.
 
-Keep PR #73's older-view quota regression separate and failing until that draft is corrected or closed by its owner. The tested source lives on main under `dashboard/command-center/`; don't overwrite it with PR #73.
+## Hosted result
+
+- Run: [39913559189](https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913559189).
+- **Observed: 31 GitHub REST requests and 42 pinned raw reads in 60 simulated minutes.**
+- All six tests passed: exact-SHA queue/routing reads, hourly REST budget, hidden-tab pause, manual refresh limits, no credentials/mutating methods, and explicit stale-snapshot downgrade after a failed critical refresh.
+- This validates the current merged Command Center source at the PR merge ref using mocked responses. It is not a live API, deployed browser, or local Mac test.
+
+Keep the lightweight HUD QA for PR #73 separate; its revised head now passes at 32 REST requests/hour. The tested Command Center source lives on main under dashboard/command-center/; don't overwrite it with PR #73.
