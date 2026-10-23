@@ -3060,7 +3060,7 @@
       "id": "command-center-pages-predeploy-quality-gate-20261023",
       "title": "Gate live Command Center Pages deployment on dashboard regressions",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar Pages release gate 2026-10-23",
       "branch": "fix/command-center-pages-predeploy-qa-20261023",
       "scopes": [
@@ -3069,10 +3069,19 @@
       "depends_on": [
         "live-hud-github-autosync"
       ],
-      "updated_at": "2026-10-23T07:51:09.902Z",
-      "next_update": "After hosted predeploy test validation and branch merge",
-      "next_action": "Within the existing Pages deployment job, execute both Command Center test suites and JS syntax checks before configure/upload/deploy, preserve same-ref concurrency and no extra recurring jobs. Verify a deliberately broken regression would block the workflow, then integrate with hosted CI.",
-      "acceptance": "Pages deploy job runs existing Node22 syntax tests and both dashboard regression suites before any GitHub Pages configure/upload/deploy step; on failure no deployment attempt; hosted CI passes; no new scheduled workflow, no Mac activation, no credentials embedded."
+      "updated_at": "2026-10-23T07:55:33.982Z",
+      "next_update": "Recheck if Pages workflow/tests change or if a later deployment reports a failed prepublish gate",
+      "next_action": "PR #94 merged at ec48b8c07a2fe8dba6e4e8d8f565a87cb527a7ff. First run #39920900275 passed the new test, upload and deploy steps, but was cancelled by a newer Pages run under existing concurrency; newer run #39920923934 finished SUCCESS with the same verification, upload and deployment steps. The Pages job now runs both Node test suites before publication; no browser/iPad or Mac host execution claimed.",
+      "acceptance": "Pages deploy job runs existing Node22 syntax tests and both dashboard regression suites before any GitHub Pages configure/upload/deploy step; on failure no deployment attempt; hosted CI passes; no new scheduled workflow, no Mac activation, no credentials embedded.",
+      "evidence": [
+        {
+          "commit": "ec48b8c07a2fe8dba6e4e8d8f565a87cb527a7ff",
+          "platform": "GitHub-hosted Pages ubuntu-latest, Node 22",
+          "check": "Pre-publish Node syntax + live-data and request-budget regression step, before Pages configure/upload/deploy",
+          "result": "PASS, completed successful Pages workflow #39920923934 on subsequent main commit 22d34f93e509da6e6a9cd357ed693f3645150414. Superseded run #39920900275 cancelled after succeeding those steps. Does not verify public URL from physical browser.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39920923934"
+        }
+      ]
     }
   ]
 }
