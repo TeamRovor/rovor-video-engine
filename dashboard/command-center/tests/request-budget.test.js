@@ -38,7 +38,10 @@ function harness() {
   async function fetch(url) {
     calls.push(String(url));
     if(url==='snapshot.json')return {ok:false,status:404};
-    if(url.endsWith('/commits/main')) {\n      if(failNextHead){failNextHead=false;return response({},403);}\n      return response({sha:SHA});\n    }
+    if(url.endsWith('/commits/main')) {
+      if(failNextHead){failNextHead=false;return response({},403);}
+      return response({sha:SHA});
+    }
     if(url.includes('/coordination/tasks.json'))return response(queue);
     if(url.includes('/coordination/work-routing.json'))return response(routes);
     if(url.includes('/git/trees/'))return response({tree:[],truncated:false});
@@ -56,7 +59,8 @@ function harness() {
   async function settle(){for(let k=0;k<35;k++) await Promise.resolve();}
   return {
     calls,el,events,intervals,settle,
-    setHidden(value){hidden=value;},\n    failNextHead(){failNextHead=true;},
+    setHidden(value){hidden=value;},
+    failNextHead(){failNextHead=true;},
     async initial(){await settle();assert.equal(intervals.length,1);},
     async elapse(minutes){const ticker=intervals[0];assert.ok(ticker);
       assert.ok(minutes*60000%ticker.delay===0);
@@ -118,4 +122,15 @@ test('main app source cannot send GitHub write commands or embed credentials',()
   assert.doesNotMatch(SCRIPT,/gh[pousr]_[a-zA-Z0-9]{20,}/);
   assert.doesNotMatch(SCRIPT,/method\s*:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/i);
 });
-\n\ntest('failed critical refresh visibly downgrades live data to a stale snapshot',async()=>{\n  const page=harness();await page.initial();\n  assert.equal(page.el('syncState').textContent,'LIVE GITHUB');\n  page.failNextHead();\n  const handler=page.events.get('refreshBtn:click');assert.ok(handler);\n  handler();await page.settle();\n  assert.equal(page.el('syncState').textContent,'OFFLINE SNAPSHOT');\n  assert.match(page.el('syncDetails').textContent,/HTTP 403/);\n  assert.ok(page.el('taskTable').innerHTML.includes('Router proof'));\n});\n
+
+
+test('failed critical refresh visibly downgrades live data to a stale snapshot',async()=>{
+  const page=harness();await page.initial();
+  assert.equal(page.el('syncState').textContent,'LIVE GITHUB');
+  page.failNextHead();
+  const handler=page.events.get('refreshBtn:click');assert.ok(handler);
+  handler();await page.settle();
+  assert.equal(page.el('syncState').textContent,'OFFLINE SNAPSHOT');
+  assert.match(page.el('syncDetails').textContent,/HTTP 403/);
+  assert.ok(page.el('taskTable').innerHTML.includes('Router proof'));
+});
