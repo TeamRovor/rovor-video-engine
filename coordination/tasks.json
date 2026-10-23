@@ -2816,7 +2816,7 @@
       "id": "live-hud-github-autosync",
       "title": "Replace static ROVOR HUD snapshot with pinned-commit live GitHub synchronization",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar live HUD dashboard 2026-10-23",
       "branch": "feature/rovor-dashboard-live-github",
       "scopes": [
@@ -2827,11 +2827,19 @@
       "depends_on": [
         "github-atomic-paired-task-commit"
       ],
-      "updated_at": "2026-10-23T06:19:00Z",
-      "next_update": "After browser network-failure tests and GitHub-hosted static checks",
-      "next_action": "PR #73 adds a standalone static live-data HUD at dashboard/index.html, pinning tasks.json and work-routing.json to one main commit SHA; PR is draft and browser/live API checks have not run. Legacy Iron Man HUD source was absent from main, queued branch, and searched conversation/library. Actions ZIP workflow could not be added through the available write path, so downloadable artifact remains incomplete. Next: obtain the legacy HUD source (or owner approval to proceed without it), add a supported ZIP distribution path, then validate in a browser and update acceptance evidence.",
+      "updated_at": "2026-10-23T06:31:02.055Z",
+      "next_update": "When the HUD is deployed on an approved public static host and a browser can verify real GitHub HTTP sync; source and mocked browser tests are complete",
+      "next_action": "PR #76 merged main at 835384e54d3a723951db443a350379a287bc7353. Live Iron Man HUD is at dashboard/command-center; checks main every 3 min while open, reads queue+routes from same immutable SHA and optional open PR/tree every 15 min. Visible LIVE vs OFFLINE SNAPSHOT vs SYNC FAILED states, claimed owners distinct from online status, no browser credentials. 10/10 Node tests and hosted workflow #39911781297 passed plus mocked Chromium UI test. User's downloaded ZIP exists in the current conversation. No live hosting configuration or Mac runtime established. Concurrent PR #73 changes only separate dashboard root and remains its owner's scope.",
       "acceptance": "Dashboard visibly updates task counts/routing/owners after GitHub source changes; no fixed-only refresh; network errors cannot silently label stale snapshot as live; tests simulate concurrent refs, HTTP errors, mismatched routes, untrusted task HTML; no app control or credentials.",
-      "evidence": [],
+      "evidence": [
+        {
+          "commit": "835384e54d3a723951db443a350379a287bc7353",
+          "platform": "GitHub-hosted Ubuntu Node22 + local Chromium with mocked public GitHub responses",
+          "check": "10/10 Node tests pinning/main updates, mismatches, API failures, stale partial data, HTML escaping, worker claims; JS syntax; browser mock shows LIVE GITHUB, task filtering, no JS errors",
+          "result": "PASS; public static source merged; deployed hosting and real network browser load unverified; Mac executor remains unverified",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911781297"
+        }
+      ],
       "blocker": "Legacy Iron Man HUD source is not present in main, the queued feature branch, or searchable conversation/library files. The available GitHub write path rejected adding .github/workflows/dashboard-live-data.yml, so ZIP artifact packaging is not yet implemented. Static review only; no browser/live API test.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/73"
