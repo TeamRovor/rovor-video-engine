@@ -891,7 +891,8 @@ body.motion-paused .reactor-stage::after {
   .section-grid > .hud-panel { padding: 10px; min-width: 0; }
 }
 @media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) and (max-height: 620px) {
-  .reactor-stage { height: clamp(135px, 24vh, 170px); min-height: 135px; }
+  .reactor-stage { height: clamp(220px, 34vh, 300px); min-height: 220px; }
+  .reactor-core { width: clamp(116px, 17vh, 170px); }
   .reactor-readout small { display: none; }
   .syncbar { gap: 8px; }
   .hero-grid > .hud-panel { padding: 8px; }
@@ -956,7 +957,28 @@ body.motion-paused .reactor-stage.mode-signal .reactor-halo {
 
 
 /* Reactor telemetry hardware layer — visual instrumentation, not fake data widgets. */
-.reactor-stage { overflow: hidden; }
+.reactor-stage {
+  height: clamp(300px, 43vh, 540px);
+  min-height: 300px;
+  margin: 0 0 14px;
+  border-color: rgba(128,199,255,.32);
+  border-radius: 2px;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(39,136,255,.22), transparent 34%),
+    radial-gradient(ellipse at 50% 48%, rgba(12,42,78,.72), transparent 45%),
+    linear-gradient(180deg, #02050a 0%, #030a14 58%, #02050a 100%);
+  box-shadow: inset 0 0 90px rgba(39,136,255,.10), 0 0 38px rgba(39,136,255,.07);
+}
+.reactor-core {
+  width: clamp(130px, 18vh, 220px);
+  border-color: rgba(215,237,255,.78);
+  background: radial-gradient(circle, rgba(160,208,255,.16), rgba(2,6,12,.98) 70%);
+  box-shadow: 0 0 0 8px rgba(102,174,255,.045), 0 0 56px rgba(73,155,255,.36), inset 0 0 30px rgba(101,175,255,.18);
+}
+.reactor-core img { width: 72%; height: 72%; filter: drop-shadow(0 0 10px rgba(220,239,255,.72)); }
+.reactor-halo.halo-outer { height: 92%; border-style: solid; border-width: 1px; }
+.reactor-halo.halo-mid { height: 70%; border-width: 4px; border-color: rgba(185,225,255,.72); }
+.reactor-halo.halo-inner { height: 52%; border-style: dashed; border-color: rgba(145,205,255,.58); }
 .reactor-cross-ring {
   position: absolute; z-index: 0; left: 50%; top: 48%;
   width: min(57%, 470px); aspect-ratio: 1;
@@ -986,6 +1008,8 @@ body.motion-paused .reactor-stage.mode-signal .reactor-halo {
 .reactor-stage.mode-orbit .reactor-cross-ring { transform: translate(-50%,-50%) rotate(45deg); border-radius: 42%; }
 body.motion-paused .telemetry-pulse { animation-play-state: paused !important; }
 @media (max-width: 759px) {
+  .reactor-stage { height: clamp(250px, 38vh, 360px); min-height: 250px; }
+  .reactor-core { width: clamp(112px, 16vh, 160px); }
   .reactor-telemetry { width: 84%; gap: 7px; font-size: 6px; letter-spacing: .1em; }
   .reactor-cross-ring { width: min(64%, 310px); }
 }
