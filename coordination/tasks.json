@@ -2516,6 +2516,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39902330162"
         }
       ]
+    },
+    {
+      "id": "interpreter-research-hosted-regression-gate",
+      "title": "Run full Open Interpreter research adapter regression on hosted Python 3.9 and 3.11",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar independent interpreter CI lane 2026-10-22",
+      "branch": "test/interpreter-research-hosted-regression-20261022",
+      "scopes": [
+        ".github/workflows/interpreter-research-hosted-regression.yml"
+      ],
+      "depends_on": [
+        "interpreter-research-preflight-command"
+      ],
+      "updated_at": "2026-10-23T04:50:28.889Z",
+      "next_update": "After GitHub-hosted matrix results on PR #38 branch and handoff to PR #38 owner",
+      "next_action": "Add isolated GitHub-hosted CI for all test_interpreter_research_job.py regression methods on feature/interpreter-research-job-v1; no real model/Interpreter/Mac runner; report any failures without changing the original active owner's adapter or tests. Integrate only into PR #38 after both versions pass.",
+      "acceptance": "Matrix Python3.9 and3.11 runs all adapter offline unit tests, no local Mac/proprietary media/private credentials, and publishes passing hosted Actions proof. Does not falsely claim Open Interpreter Mac host control.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+      ]
     }
   ]
 }
