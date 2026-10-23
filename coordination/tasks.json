@@ -1180,10 +1180,10 @@
       "depends_on": [
         "rovor-capability-evaluation-pack"
       ],
-      "next_action": "PR #75 latest head 8c52f8dd8002cbef769527a5d6afbad0a19ab80a has 19 regression tests, including schema JSON parse/required-field/collection-bound checks, and immutable permalink source refs to evaluation commit 3a5520da17bb1373193bb552673f8abdeba484b9. Hosted run 39913983606 passed Ubuntu, Windows and report job. PR remains draft/open and unmerged; validator is structural/cross-field only and does not prove source truth or reviewer identity.",
+      "next_action": "PR #75 merged into main at 280c5bf4556cefb0cc56f6796c03ce3f0da251ce with combined evaluator and contract checks, preserving same-ref workflow cancellation. Source format is ready for reviewed work packets; no computer executor or source-truth verification established.",
       "acceptance": "Schema validates representative accepted and rejected cases, preserves unknown/unrun states and separates technical completion from approval/publication. No opaque shell commands or self-granted permissions. Test against the actual evaluated examples.",
-      "updated_at": "2026-10-23T06:50:00Z",
-      "next_update": "After PR #75 review/merge and after PR #74 evaluation-pack dependency is integrated.",
+      "updated_at": "2026-10-23T07:28:51.943Z",
+      "next_update": "Integrated into main; review only when new employee job types adopt the contract",
       "evidence": [
         {
           "commit": "b5b3e04b96ba36a87f3f9efae1851c48afb3477f",
@@ -1219,6 +1219,13 @@
           "check": "19 regression tests including parseable JSON Schema, required-field and bound assertions; validator positive/negative CLI acceptance; bounded report job.",
           "result": "PASS all worker jobs and report. Evaluation source URLs are immutable commit permalinks. PR #75 remains draft/open and unmerged.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913983606"
+        },
+        {
+          "commit": "280c5bf4556cefb0cc56f6796c03ce3f0da251ce",
+          "platform": "GitHub Actions Ubuntu/Windows Python 3.11",
+          "check": "Integration PR #75: evaluator plus 19 work-packet structural regression tests, positive/negative validator fixtures and business report; cancellation preserved",
+          "result": "MERGED into main; all jobs passed #39917840018. No real Mac or model execution",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39917840018"
         }
       ]
     },
