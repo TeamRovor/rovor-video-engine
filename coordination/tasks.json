@@ -1858,6 +1858,24 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41"
       ]
+    },
+    {
+      "id": "jane-bootstrap-error-details",
+      "title": "Preserve actionable stage and error evidence for failed native library bootstrap",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar bootstrap failure repair",
+      "branch": "fix/jane-bootstrap-error-details",
+      "scopes": [
+        "tools/fcp_jane_library_bootstrap.py",
+        "tests/test_fcp_jane_library_bootstrap.py"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T01:10:52.282Z",
+      "next_update": "After reproducing generic error loss and offline regression checks",
+      "next_action": "Add fixed AppleScript stage markers and bounded redacted failure metadata; preserve no-replay behavior, import prohibition and exact-destination guard.",
+      "acceptance": "Generic exit1 produces useful observed stage/numeric error when present; empty/oversized/unknown stderr handled without leaking text; failed/time-out attempts remain non-replayable and never import XML; exact source tests pass.",
+      "evidence": []
     }
   ]
 }
