@@ -2877,9 +2877,9 @@
       "depends_on": [
         "github-atomic-paired-task-commit"
       ],
-      "updated_at": "2026-10-23T06:31:02.055Z",
-      "next_update": "When the HUD is deployed on an approved public static host and a browser can verify real GitHub HTTP sync; source and mocked browser tests are complete",
-      "next_action": "PR #76 merged main at 835384e54d3a723951db443a350379a287bc7353. Live Iron Man HUD is at dashboard/command-center; checks main every 3 min while open, reads queue+routes from same immutable SHA and optional open PR/tree every 15 min. Visible LIVE vs OFFLINE SNAPSHOT vs SYNC FAILED states, claimed owners distinct from online status, no browser credentials. 10/10 Node tests and hosted workflow #39911781297 passed plus mocked Chromium UI test. User's downloaded ZIP exists in the current conversation. No live hosting configuration or Mac runtime established. Concurrent PR #73 changes only separate dashboard root and remains its owner's scope.",
+      "updated_at": "2026-10-23T07:36:00.462Z",
+      "next_update": "After a real device/browser loads the reported GitHub Pages destination, or when Pages deployment fails",
+      "next_action": "GitHub Pages Actions run 39918584373 successfully uploaded and deployed the Command Center static shell; its deployment log reports https://teamrovor.github.io/rovor-video-engine/ . The URL has not independently loaded in this chat and no physical iPad, live network synchronization, push notifications or Mac worker was verified. On an authorized browser, open that URL and confirm rendered HUD, LIVE vs STALE behavior and install to Home Screen.",
       "acceptance": "Dashboard visibly updates task counts/routing/owners after GitHub source changes; no fixed-only refresh; network errors cannot silently label stale snapshot as live; tests simulate concurrent refs, HTTP errors, mismatched routes, untrusted task HTML; no app control or credentials.",
       "evidence": [
         {
@@ -2888,6 +2888,13 @@
           "check": "10/10 Node tests pinning/main updates, mismatches, API failures, stale partial data, HTML escaping, worker claims; JS syntax; browser mock shows LIVE GITHUB, task filtering, no JS errors",
           "result": "PASS; public static source merged; deployed hosting and real network browser load unverified; Mac executor remains unverified",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911781297"
+        },
+        {
+          "commit": "7336d10c416dafea6cb9bcadb50b8b8857787ebb",
+          "platform": "GitHub-hosted Pages deployment workflow",
+          "check": "Pages workflow #39918584373: successful checkout, Pages configure, artifact upload, deploy-pages action; job log evaluated environment https://teamrovor.github.io/rovor-video-engine/",
+          "result": "HOSTED DEPLOYMENT SUCCESS; independent URL fetch/device UI unverified; no Mac local work",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39918584373"
         }
       ],
       "blocker": "Legacy Iron Man HUD source is not present in main, the queued feature branch, or searchable conversation/library files. The available GitHub write path rejected adding .github/workflows/dashboard-live-data.yml, so ZIP artifact packaging is not yet implemented. Static review only; no browser/live API test.",
