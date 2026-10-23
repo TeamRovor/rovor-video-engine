@@ -1,0 +1,21 @@
+name: ROVOR Command Center one-hour quota regression
+on:
+  pull_request:
+    paths:
+      - 'dashboard/command-center/**'
+      - '.github/workflows/command-center-request-budget.yml'
+permissions:
+  contents: read
+jobs:
+  browser-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test actual browser script with mocked GitHub data for one hour
+        run: node --test dashboard/command-center/tests/request-budget.test.js
