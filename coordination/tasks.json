@@ -2450,6 +2450,31 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39899283702"
         }
       ]
+    },
+    {
+      "id": "private-mac-control-readiness-preflight",
+      "title": "Add one read-only preflight for private GitHub, Keychain, and local launchd readiness",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar read-only Mac control preflight session 2026-10-22",
+      "branch": "feature/private-mac-preflight-readonly-20261022",
+      "scopes": [
+        "tools/rovor_private_supervisor.py",
+        "tests/test_rovor_private_supervisor.py",
+        "integrations/open-interpreter/ROVOR-LAUNCHAGENT-SUPERVISOR.md"
+      ],
+      "depends_on": [
+        "private-mac-supervisor-launchagent",
+        "private-supervisor-status-after-tamper"
+      ],
+      "updated_at": "2026-10-23T04:35:53.872Z",
+      "next_update": "When hosted Python 3.9 and 3.11 tests pass and handoff is recorded",
+      "next_action": "Add local read-only --preflight to existing ROVOR supervisor. Verify staged files, Keychain credential availability, separately private GitHub repo active and exact private issue visibility. Output only non-sensitive gate booleans, no jobs/no activation/no writes, and test errors/tampering/no credential.",
+      "acceptance": "One no-write Mac check distinguishes stage/launchd/keychain/repo/issue readiness without publishing names/tokens; refuses public source repo; observed remote metadata does not claim live job execution; hosted Python3.9+3.11 regression green.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/54"
+      ]
     }
   ]
 }
