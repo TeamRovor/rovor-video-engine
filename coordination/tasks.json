@@ -73,7 +73,7 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/58",
         "https://github.com/TeamRovor/rovor-video-engine/issues/1#issuecomment-6357019320"
       ],
-      "updated_at": "2026-10-22",
+      "updated_at": "2026-10-23T03:58:24Z",
       "evidence": [
         {
           "platform": "User's existing private 156s V11/V12 video files examined in isolated QA container; hosted GitHub Python3.9/3.11 for synthetic tests",
@@ -2344,7 +2344,7 @@
       ],
       "next_action": "PR #55 merged into PR #41 candidate at b8c561fe98436fdc43f7decb151f3866bdabb181. Hosted Linux Python3.9/3.11 260/260 integrated tests PASS. Still requires a private TeamRovor control repository, operator-authenticated local Mac process and private issue roundtrip. Source merge is not Mac deployment.",
       "acceptance": "Malformed GitHub receipt response never writes receipt marker; post retry does not replay the worker job; return flag executed only for current invocation; malformed encoded packet is refused; Python 3.9 and 3.11 hosted checks pass.",
-      "updated_at": "2026-10-22",
+      "updated_at": "2026-10-23T03:31:08Z",
       "evidence": [
         {
           "commit": "b8c561fe98436fdc43f7decb151f3866bdabb181",
