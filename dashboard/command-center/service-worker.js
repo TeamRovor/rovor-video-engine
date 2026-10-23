@@ -1,12 +1,14 @@
 'use strict';
 
-const CACHE_NAME = 'rovor-command-center-shell-v2';
+const CACHE_NAME = 'rovor-command-center-shell-v3';
 const SHELL = [
   './',
   './index.html',
   './styles.css',
+  './reference-hud.css',
   './live-data.js',
   './app.js',
+  './reference-hud.js',
   './manifest.webmanifest',
   './hud-icon.svg',
   './rovor-mark.svg',
