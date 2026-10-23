@@ -2860,9 +2860,9 @@
       "depends_on": [
         "github-atomic-paired-task-commit"
       ],
-      "updated_at": "2026-10-23T06:34:00Z",
+      "updated_at": "2026-10-23T06:37:00Z",
       "next_update": "After dashboard owner lowers API polling volume and the full-hour mocked-browser budget test passes.",
-      "next_action": "Hosted baseline on PR #73 merge ref reproduced 194 unauthenticated REST requests in 60 simulated minutes, exceeding 60/hour. Same-SHA consistency, simulated 403 fail-closed behavior, and no-token/no-mutation scan passed; budget test failed intentionally (3/4 total). Posted release-blocker comment on PR #73 and recorded exact evidence in QA report/PR #77. Do not merge QA PR until owner changes dashboard polling and budget test passes. No dashboard source changed by QA.",
+      "next_action": "Independent hosted QA now supports both Contents API and pinned raw.githubusercontent.com reads while counting only REST API calls against the 60/hour ceiling. Current dashboard baseline remains 194 REST calls/hour. Latest run 39912512115: same-SHA check, injected-403 stale/error behavior, and no-token/no-mutation checks pass; budget test intentionally fails (3/4). Posted evidence and fix direction on PR #73. Do not modify dashboard source or merge QA PR until the owner changes polling and budget test passes.",
       "acceptance": "Independent deterministic tests prove 1-hour refresh API request count and replayable rate-limit failure; baseline failure is explicitly recorded; owner must lower REST API calls or use raw pinned files and re-run QA before live deployment.",
       "evidence": [
         {
@@ -2871,11 +2871,19 @@
           "check": "Actual PR #73 inline script over 60 simulated minutes; pinned SHA, request budget, HTTP 403 fail-closed, no-token/no-mutation checks.",
           "result": "3/4 passed; budget acceptance intentionally failed with 194 unauthenticated REST requests versus 60/hour cap. Fail-closed and immutable SHA checks passed. Dashboard owner remains responsible for source changes.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912037508"
+        },
+        {
+          "commit": "c3b42fcf7b00e737551513057565afc4805ba417",
+          "platform": "GitHub-hosted Node 22; deterministic VM/fake DOM/mocked API",
+          "check": "One-hour HUD polling simulation with REST-vs-raw accounting; immutable SHA pinning; injected REST 403; credential/mutation scan.",
+          "result": "3/4 passed. Baseline used 194 REST calls in 60 minutes, so rate-budget acceptance intentionally failed. Same-SHA, stale/error handling and no-token/no-mutation checks passed. Mock supports pinned raw-content remediation without counting it as REST.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912512115"
         }
       ],
       "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/73#issuecomment-6358993663",
         "https://github.com/TeamRovor/rovor-video-engine/pull/77",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912037508",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912512115",
         "https://github.com/TeamRovor/rovor-video-engine/pull/73#issuecomment-6358993663"
       ]
     }
