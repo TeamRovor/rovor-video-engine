@@ -2870,7 +2870,7 @@
     {
       "id": "hud-live-rate-limit-qa-20261023",
       "title": "Independently verify live HUD polling respects unauthenticated GitHub API limits",
-      "status": "active",
+      "status": "done",
       "priority": 1,
       "owner": "ChatGPT / Amar GitHub HUD independent QA 2026-10-23",
       "branch": "review/hud-live-rate-limit-qa-20261023",
@@ -2885,9 +2885,9 @@
       "depends_on": [
         "github-atomic-paired-task-commit"
       ],
-      "updated_at": "2026-10-23T06:37:00Z",
-      "next_update": "After dashboard owner lowers API polling volume and the full-hour mocked-browser budget test passes.",
-      "next_action": "Independent QA for both HUD implementations: PR #77 deliberately fails old lightweight PR #73 at 194 REST calls/hour. Test the separately merged Iron Man Command Center PR #76 real browser code with a deterministic 60-minute simulated DOM/clock/fetch. Keep status/ownership distinct from actual online Mac. Publish passing regression for supported Command Center; do not edit another owner's HUD source.",
+      "updated_at": "2026-10-23T06:44:06.106Z",
+      "next_update": "Whenever the live HUD refresh cadence or PR/tree API calls change, rerun the existing one-hour Command Center budget CI",
+      "next_action": "QA verified two separate dashboards. PR #77 remains a deliberate FAIL for old PR #73 at 194 unauthenticated GitHub REST calls/hour (do not merge until corrected/closed). PR #76 merged independently as Iron Man Command Center; independent 60-minute simulation CI #39913137266 passed 5/5 tests in merged PR #78 at a1f59911d494c16537469cde4c6803b6882895a2. Command Center uses ~31 REST calls/hour for ONE visible tab, pinned raw same-commit queue+routes, with hidden-tab pause/manual refresh. This does not guarantee >1 simultaneous visible device behind a shared IP or prove production hosting. Need optional future cross-device cache/budget tracking; no Mac execution.",
       "acceptance": "Independent deterministic tests prove 1-hour refresh API request count and replayable rate-limit failure; baseline failure is explicitly recorded; owner must lower REST API calls or use raw pinned files and re-run QA before live deployment.",
       "evidence": [
         {
@@ -2903,6 +2903,13 @@
           "check": "One-hour HUD polling simulation with REST-vs-raw accounting; immutable SHA pinning; injected REST 403; credential/mutation scan.",
           "result": "3/4 passed. Baseline used 194 REST calls in 60 minutes, so rate-budget acceptance intentionally failed. Same-SHA, stale/error handling and no-token/no-mutation checks passed. Mock supports pinned raw-content remediation without counting it as REST.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912512115"
+        },
+        {
+          "commit": "a1f59911d494c16537469cde4c6803b6882895a2",
+          "platform": "GitHub-hosted Ubuntu Node22 deterministic browser VM simulation and unit tests",
+          "check": "Old PR #73 one-hour request budget 194/>60 intentional fail (run39912037508); actual merged Command Center PR #76 test: one-hour API budget, pinned revision, tab pause, manual refresh and no GitHub write credential",
+          "result": "Command Center 5/5 PASS, plus existing dashboard CI PASS; older lightweight PR #73 still FAIL release gate. No live hosting or Mac execution",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913137266"
         }
       ],
       "links": [
