@@ -149,7 +149,9 @@ class OmniRouteDraftReviewTests(unittest.TestCase):
         cases=(
             ('provider-efficiency','**Date:** 2025-01-15 (analysis date)',2400,
              {'report_header_year_mismatch','near_completion_token_cap_truncation_unknown'}),
-            ('supervisor-resilience','**Date:** 2024-XX-XX',2398,
+            ('supervisor-resilience','**Date:** 2024‑XX‑XX',2398,
+             {'report_date_placeholder','near_completion_token_cap_truncation_unknown'}),
+            ('supervisor-resilience','**Date:** 2024–XX–XX',2398,
              {'report_date_placeholder','near_completion_token_cap_truncation_unknown'}),
         )
         for slug,header,used,expected in cases:
