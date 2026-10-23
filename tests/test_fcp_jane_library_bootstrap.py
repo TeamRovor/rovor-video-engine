@@ -60,6 +60,8 @@ class NativeLibraryBootstrapTests(unittest.TestCase):
             self.assertNotIn('import XML', script)
             self.assertEqual(command[3], str(self.output))
             self.assertEqual(command[4], gate.LIBRARY_BASENAME)
+            self.assertEqual(command[5], self.output.name)
+            self.assertIn('locationVerified is false', script)
             # Fake successful native app creation.
             expected.mkdir()
             return subprocess.CompletedProcess(command,0,stdout='',stderr='')
