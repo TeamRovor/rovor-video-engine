@@ -100,7 +100,7 @@ def validate_packet(packet):
     if not isinstance(cons, dict) or set(cons) != {"data_classification","allowed_effects","prohibited_effects"}:
         issue(out, "constraints_shape", "$.constraints", "Explicit classification and allowed/prohibited effects are required")
         cons = {}
-    if cons.get("data_classification") not in {"public_only","synthetic","confidential","restricted"}:
+    if not isinstance(cons.get("data_classification"), str) or cons.get("data_classification") not in {"public_only","synthetic","confidential","restricted"}:
         issue(out, "data_classification", "$.constraints", "Invalid data classification")
     for field, target in (("allowed_effects", allowed), ("prohibited_effects", prohibited)):
         vals = cons.get(field)
@@ -243,7 +243,7 @@ def validate_packet(packet):
         issue(out, "approval_refs", "$.approval", "Approval refs must name declared sources")
     elif len(refs) != len(set(refs)):
         issue(out, "duplicate_approval_ref", "$.approval", "Approval refs must be unique")
-    if state in {"approved","published","delivered"} and not refs:
+    if isinstance(state, str) and state in {"approved","published","delivered"} and not refs:
         issue(out, "approval_without_evidence", "$.approval", "Approval/publishing/delivery requires source references")
     return out
 
@@ -256,9 +256,10 @@ def evaluate(batch):
     for packet in batch["packets"]:
         pid = packet.get("packet_id") if isinstance(packet,dict) else None
         problems = validate_packet(packet)
-        if pid in seen:
-            issue(problems,"duplicate_packet_id","$.packet_id","Packet IDs must be unique in a batch")
-        seen.add(pid)
+        if isinstance(pid, str):
+            if pid in seen:
+                issue(problems,"duplicate_packet_id","$.packet_id","Packet IDs must be unique in a batch")
+            seen.add(pid)
         results.append({"id":pid,"passed":not problems,"issues":problems})
     return {"summary":{"passed":sum(x["passed"] for x in results),
                        "failed":sum(not x["passed"] for x in results),"total":len(results)},
