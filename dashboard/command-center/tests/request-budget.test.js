@@ -179,3 +179,13 @@ test('HUD shell uses local assets and does not require a deployment vendor runti
   assert.match(html,/href="\.\/manifest\.webmanifest"/);
   assert.doesNotMatch(html,/(?:vercel\.app|@vercel\/|vercel\.com\/analytics)/i);
 });
+
+
+test('keyboard users can skip the decorative HUD chrome',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../styles.css'),'utf8');
+  assert.match(html, /<a class="skip-link" href="#main-content">Skip to command content<\\/a>/);
+  assert.match(html, /<main id="main-content" tabindex="-1">/);
+  assert.match(css, /\.skip-link:focus\\s*\\{[^}]*transform:\\s*translateY\\(0\\)/s);
+  assert.match(css, /\.skip-link\\s*\\{[^}]*position:\\s*fixed/);
+});
