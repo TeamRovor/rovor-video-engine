@@ -864,11 +864,11 @@ body.motion-paused .reactor-stage::after {
   .top-actions { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   .hud-btn { min-height: 38px; padding: 8px 10px; font-size: 11px; }
   .reactor-stage {
-    height: clamp(160px, 27vh, 240px);
-    min-height: 160px;
-    margin-bottom: 4px;
+    height: clamp(280px, 42vh, 430px);
+    min-height: 280px;
+    margin-bottom: 8px;
   }
-  .reactor-core { width: clamp(82px, 11vh, 120px); }
+  .reactor-core { width: clamp(145px, 20vh, 205px); }
   .reactor-halo.halo-outer { width: min(64%, 390px); height: auto; aspect-ratio: 1; }
   .reactor-halo.halo-mid { width: min(52%, 310px); height: auto; aspect-ratio: 1; }
   .reactor-halo.halo-inner { width: min(39%, 230px); height: auto; aspect-ratio: 1; }
@@ -891,8 +891,8 @@ body.motion-paused .reactor-stage::after {
   .section-grid > .hud-panel { padding: 10px; min-width: 0; }
 }
 @media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) and (max-height: 620px) {
-  .reactor-stage { height: clamp(220px, 34vh, 300px); min-height: 220px; }
-  .reactor-core { width: clamp(116px, 17vh, 170px); }
+  .reactor-stage { height: clamp(230px, 38vh, 290px); min-height: 230px; }
+  .reactor-core { width: clamp(125px, 19vh, 165px); }
   .reactor-readout small { display: none; }
   .syncbar { gap: 8px; }
   .hero-grid > .hud-panel { padding: 8px; }
