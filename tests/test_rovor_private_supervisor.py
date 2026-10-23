@@ -83,6 +83,100 @@ class PrivateSupervisorTests(unittest.TestCase):
                           script=self.script,python=self.python)
         self.assertEqual(sup._check_stage(self.home)[2]['receipt_issue'],self.issue)
 
+    def test_preflight_valid_private_repository_and_exact_issue_read_only(self):
+        self.staged()
+        calls=[]
+        def fake_run(command,**kwargs):
+            calls.append(("local",command))
+            return subprocess.CompletedProcess(command,0,stdout="PRIVATE LAUNCHD TEXT",stderr="")
+        def fake_http(method,path,token,body=None):
+            self.assertEqual(method,"GET")
+            self.assertIsNone(body)
+            self.assertEqual(token,"private-token")
+            calls.append(("http",path))
+            if path=="/repos/"+self.repo:
+                return {"full_name":self.repo,"private":True,"archived":False,
+                        "disabled":False}
+            if path=="/repos/"+self.repo+"/issues/"+str(self.issue):
+                return {"number":self.issue,"state":"open"}
+            self.fail("Unexpected remote URL")
+        with mock.patch.object(sup.sys,"platform","darwin"):
+            result=sup.preflight(self.home,run=fake_run,
+                                 key_lookup=lambda:"private-token",http=fake_http)
+        self.assertTrue(result["stage_valid"])
+        self.assertEqual(result["launchd_observation"],"loaded")
+        self.assertTrue(result["keychain_credential_available"])
+        self.assertTrue(result["private_repository_read_verified"])
+        self.assertTrue(result["private_receipt_issue_read_verified"])
+        self.assertFalse(result["private_issue_write_verified"])
+        self.assertFalse(result["remote_job_executed"])
+        self.assertFalse(result["unattended_execution_verified"])
+        self.assertNotIn("private-token",json.dumps(result))
+        self.assertNotIn("PRIVATE LAUNCHD",json.dumps(result))
+        self.assertEqual([p for kind,p in calls if kind=="http"],
+                         ["/repos/"+self.repo,
+                          "/repos/"+self.repo+"/issues/"+str(self.issue)])
+
+    def test_preflight_missing_key_does_not_touch_private_github(self):
+        self.staged()
+        def no_http(*args,**kwargs):
+            self.fail("Remote request without a credential")
+        with mock.patch.object(sup.sys,"platform","darwin"):
+            with mock.patch.object(sup,"keychain_token",side_effect=sup.Refused("missing")):
+                result=sup.preflight(self.home,http=no_http)
+        self.assertFalse(result["keychain_credential_available"])
+        self.assertFalse(result["private_repository_read_verified"])
+        self.assertFalse(result["remote_job_executed"])
+
+    def test_preflight_refuses_modified_snapshot_before_private_requests(self):
+        self.staged()
+        service,_,_=sup._check_stage(self.home)
+        (service/sup.RUNTIME_DIR/"ghost_worker.py").write_text("damaged source")
+        with mock.patch.object(sup.sys,"platform","darwin"):
+            with mock.patch.object(sup,"keychain_token") as keychain:
+                with mock.patch.object(sup.control,"_transport") as remote:
+                    result=sup.preflight(self.home)
+            keychain.assert_not_called()
+            remote.assert_not_called()
+        self.assertFalse(result["stage_valid"])
+        self.assertFalse(result["private_repository_read_verified"])
+
+    def test_preflight_refuses_public_or_wrong_repository_metadata(self):
+        self.staged()
+        def fake_http(method,path,token,body=None):
+            return {"full_name":self.repo,"private":False}
+        with mock.patch.object(sup.sys,"platform","darwin"):
+            result=sup.preflight(self.home,key_lookup=lambda:"token",http=fake_http)
+        self.assertTrue(result["keychain_credential_available"])
+        self.assertFalse(result["private_repository_read_verified"])
+        self.assertFalse(result["private_receipt_issue_read_verified"])
+
+    def test_preflight_does_not_claim_issue_write_from_issue_read(self):
+        self.staged()
+        paths=[]
+        def fake_http(method,path,token,body=None):
+            paths.append((method,path))
+            if path=="/repos/"+self.repo:
+                return {"full_name":self.repo,"private":True,
+                        "archived":False,"disabled":False}
+            return {"number":self.issue,"state":"closed"}
+        with mock.patch.object(sup.sys,"platform","darwin"):
+            result=sup.preflight(self.home,key_lookup=lambda:"token",http=fake_http)
+        self.assertTrue(result["private_repository_read_verified"])
+        self.assertFalse(result["private_receipt_issue_read_verified"])
+        self.assertFalse(result["private_issue_write_verified"])
+        self.assertEqual([method for method,path in paths],["GET","GET"])
+
+    def test_preflight_non_mac_refuses_keychain_and_http(self):
+        def forbidden(*args,**kwargs):
+            self.fail("No Mac/remote resource should be touched")
+        with mock.patch.object(sup.sys,"platform","linux"):
+            result=sup.preflight(self.home,run=forbidden,
+                                 key_lookup=forbidden,http=forbidden)
+        self.assertFalse(result["stage_valid"])
+        self.assertEqual(result["launchd_observation"],"not_checked_non_mac")
+        self.assertFalse(result["private_repository_read_verified"])
+
     def test_stage_does_not_allow_public_github_repo(self):
         with mock.patch.object(sup.sys,'platform','darwin'):
             with self.assertRaises(sup.Refused):

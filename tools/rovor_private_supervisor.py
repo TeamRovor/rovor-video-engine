@@ -350,10 +350,56 @@ def status(home,*,run=subprocess.run):
             "token_inspected":False}
 
 
+def preflight(home, *, run=subprocess.run, key_lookup=None, http=control._transport):
+    """Read-only PRIVATE control readiness; never dispatch, write or echo tokens.
+
+    Positive metadata/issue reads cannot prove issue *write* permission, that a
+    Mac job executed, or that a loaded LaunchAgent can run while unattended.
+    """
+    local = status(home, run=run)
+    result = {
+        "status": "read_only_private_control_preflight",
+        "stage_valid": local["stage_valid"],
+        "launchd_observation": local["launchd_observation"],
+        "keychain_credential_available": False,
+        "private_repository_read_verified": False,
+        "private_receipt_issue_read_verified": False,
+        "private_issue_write_verified": False,
+        "remote_job_executed": False,
+        "unattended_execution_verified": False,
+        "token_disclosed": False,
+    }
+    if sys.platform != "darwin" or not local["stage_valid"]:
+        return result
+    try:
+        _service, _plist, config = _check_stage(home)
+        token = keychain_token(run=run) if key_lookup is None else key_lookup()
+        if not isinstance(token, str) or not token:
+            return result
+        result["keychain_credential_available"] = True
+        repo = control.repo_name(config["private_repo"])
+        prefix = "/repos/" + repo
+        control.validate_private(http("GET", prefix, token), repo)
+        result["private_repository_read_verified"] = True
+        issue = http("GET", prefix + "/issues/" + str(config["receipt_issue"]), token)
+        if (isinstance(issue, dict)
+                and type(issue.get("number")) is int
+                and issue["number"] == config["receipt_issue"]
+                and issue.get("state") == "open"
+                and "pull_request" not in issue):
+            result["private_receipt_issue_read_verified"] = True
+    except (Refused, control.Refused, OSError, ValueError, TypeError):
+        # Denied/absent/unreachable credentials and private data fail closed.
+        # Never include remote errors, paths or token in the response.
+        pass
+    return result
+
+
 def main(argv=None):
     a=argparse.ArgumentParser(description=__doc__)
     action=a.add_mutually_exclusive_group(required=True)
     action.add_argument("--status",action="store_true")
+    action.add_argument("--preflight",action="store_true")
     action.add_argument("--stage",action="store_true")
     action.add_argument("--activate",action="store_true")
     action.add_argument("--deactivate",action="store_true")
@@ -367,6 +413,8 @@ def main(argv=None):
         home=Path.home()
         if args.status:
             result=status(home)
+        elif args.preflight:
+            result=preflight(home)
         elif args.stage:
             if not args.approve_stage or not args.repo or not args.receipt_issue:
                 raise Refused("Explicit stage approval, repo and issue required")
