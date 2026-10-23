@@ -99,6 +99,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "private-mac-control-readiness-preflight": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
