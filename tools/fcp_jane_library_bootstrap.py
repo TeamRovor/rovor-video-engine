@@ -214,26 +214,26 @@ def expected_library(output):
     return output / (unique_library_name(output) + '.fcpbundle')
 
 
-def prepare(job, output, home=None):
+def prepare_isolated(output, home=None, prior_job=None):
+    """Prepare one unique Jane-only workspace, no historical test required.
+
+    Creation itself is restricted to this user-owned ROVOR root. A host
+    action is opt-in; preparing never launches or changes Final Cut.
+    """
     home = home or Path.home()
     root = home / 'Documents' / 'Rovor'
-    _, job = constrained_job(root, job)
-    prior, old_target = read_receipt(job)
-    if (prior['status'] != 'native_library_not_observed'
-            or prior.get('last_dispatched') != 'landscape'
-            or old_target.exists() or old_target.is_symlink()):
-        raise ValueError('Expected the confirmed original wrong-library trial')
     output = output.expanduser().absolute()
-    if (output.parent != root or not output.name.startswith(BOOTSTRAP_PREFIX)
-            or output.is_symlink() or output.exists()
-            or root.is_symlink()):
+    if (not root.is_dir() or root.is_symlink()
+            or output.parent != root
+            or not output.name.startswith(BOOTSTRAP_PREFIX)
+            or output.is_symlink() or output.exists()):
         raise ValueError('Output must be a never-used fcp-jane-library-* folder in ROVOR')
     output.mkdir(mode=0o700)
     target = expected_library(output)
     report = {
-        'schema_version': 1,
+        'schema_version': 2,
         'status': 'prepared_no_native_app_action',
-        'prior_job': str(job),
+        'prior_job': str(prior_job) if prior_job else None,
         'target_library': str(target),
         'native_library_created': False,
         'native_library_directory_observed': False,
@@ -244,6 +244,21 @@ def prepare(job, output, home=None):
     }
     atomic_report(output, report)
     return output, report
+
+
+def prepare(job, output, home=None):
+    """Backwards-compatible historical failure audit; no longer a worker dependency."""
+    home = home or Path.home()
+    if job is None:
+        return prepare_isolated(output, home=home)
+    root = home / 'Documents' / 'Rovor'
+    _, job = constrained_job(root, job)
+    prior, old_target = read_receipt(job)
+    if (prior['status'] != 'native_library_not_observed'
+            or prior.get('last_dispatched') != 'landscape'
+            or old_target.exists() or old_target.is_symlink()):
+        raise ValueError('Expected the confirmed original wrong-library trial')
+    return prepare_isolated(output, home=home, prior_job=job)
 
 
 def create_library(output, report, run=subprocess.run, clock=time.monotonic,
@@ -290,7 +305,7 @@ def create_library(output, report, run=subprocess.run, clock=time.monotonic,
 
 def main(argv=None):
     a = argparse.ArgumentParser(description=__doc__)
-    a.add_argument('--job', required=True, type=Path)
+    a.add_argument('--job', type=Path, help='Optional original failure job for audit context')
     a.add_argument('--output', required=True, type=Path)
     a.add_argument('--create', action='store_true',
                    help='Explicitly allow opening ONLY the New Library Save panel')
