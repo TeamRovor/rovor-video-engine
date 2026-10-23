@@ -67,7 +67,8 @@ class AutoImportTests(unittest.TestCase):
         self.assertEqual(len(self.validator_calls), 2)
         self.assertFalse(state['apple_event_sent'])
         self.assertFalse(state['native_timeline_verified'])
-        self.assertFalse(state['original_media_modified'])
+        self.assertEqual(state['original_media_modified'], 'not_assessed')
+        self.assertEqual(state['preexisting_fcp_library_writes'], 'not_assessed')
         self.assertFalse(Path(state['target_library']).exists())
         self.assertEqual(self.output.stat().st_mode & 0o777, 0o700)
         for label, _, _ in jane.LABELS:
@@ -169,6 +170,23 @@ class AutoImportTests(unittest.TestCase):
         self.assertEqual(
             json.loads((self.output / 'native-auto-import-receipt.json').read_text())['status'],
             'apple_event_failed')
+
+    def test_existing_untitled_library_blocks_native_event_before_checkpoint(self):
+        state = self.prepare()
+        prior_lib = self.home/'Movies'/'Untitled.fcpbundle'
+        prior_lib.parent.mkdir()
+        prior_lib.mkdir()
+        calls = []
+        def must_not_dispatch(*args, **kwargs):
+            calls.append(args)
+            raise AssertionError('No Apple event allowed with existing library')
+        with mock.patch.object(jane, 'APP', self.base):
+            with self.assertRaisesRegex(ValueError, 'UNSAFE: Pre-existing'):
+                jane.dispatch(self.output, state, run=must_not_dispatch)
+        self.assertEqual(calls, [])
+        unchanged = json.loads(
+            (self.output/'native-auto-import-receipt.json').read_text())
+        self.assertEqual(unchanged['status'], 'ready_to_dispatch_not_launched')
 
     def test_already_existing_output_rejected(self):
         self.output.mkdir()
