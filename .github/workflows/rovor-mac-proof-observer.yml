@@ -1,0 +1,89 @@
+name: Rovor Mac Proof Hosted Status Observer
+
+# Diagnostic only. Runs on GitHub-hosted Ubuntu, never on the Mac.
+# Queries the published Actions run/job state without opening private files.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/rovor-mac-proof-observer.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  observe-mac-proof-status:
+    if: github.repository == 'TeamRovor/rovor-video-engine'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Inspect actual GitHub Actions run and job states
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import datetime
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+
+          repo = 'TeamRovor/rovor-video-engine'
+          workflow = 'rovor-mac-exec-proof.yml'
+          token = os.environ['GH_TOKEN']
+
+          def get_json(path):
+              url = 'https://api.github.com/repos/' + repo + path
+              req = urllib.request.Request(url, headers={
+                  'Authorization': 'Bearer ' + token,
+                  'Accept': 'application/vnd.github+json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+              })
+              with urllib.request.urlopen(req, timeout=20) as response:
+                  return json.load(response)
+
+          try:
+              results = get_json('/actions/workflows/' + workflow + '/runs?per_page=12')
+              runs = []
+              for item in results.get('workflow_runs', [])[:8]:
+                  run_id = item['id']
+                  jobs = []
+                  jobs_raw = get_json('/actions/runs/' + str(run_id) + '/jobs?per_page=15')
+                  for job in jobs_raw.get('jobs', []):
+                      jobs.append({
+                          'id': job['id'],
+                          'name': job['name'],
+                          'status': job['status'],
+                          'conclusion': job.get('conclusion'),
+                          'runner_name': job.get('runner_name'),
+                          'started_at': job.get('started_at'),
+                      })
+                  runs.append({
+                      'id': run_id,
+                      'head_sha': item.get('head_sha'),
+                      'event': item.get('event'),
+                      'status': item['status'],
+                      'conclusion': item.get('conclusion'),
+                      'created_at': item.get('created_at'),
+                      'url': item.get('html_url'),
+                      'jobs': jobs,
+                  })
+              output = {
+                  'source': 'github-actions-api',
+                  'observer_execution': 'github-hosted-ubuntu',
+                  'observation_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                  'workflow': workflow,
+                  'total_workflow_runs_reported': results.get('total_count'),
+                  'runs': runs,
+                  'saw_write_request_sha': any(x['head_sha']=='66418e2eafb595b7d876b2ad267d3429138b9a0f' for x in runs),
+                  'saw_read_request_sha': any(x['head_sha']=='855a6bc0cd0642da9edb0bf75219ac969a07541e' for x in runs),
+              }
+              print('ROVOR_MAC_OBSERVER_JSON ' + json.dumps(output, sort_keys=True))
+              if not runs:
+                  print('DIAGNOSIS: no runs returned; inspect triggers and workflow indexing')
+          except (urllib.error.HTTPError, urllib.error.URLError, ValueError) as exc:
+              print('ROVOR_MAC_OBSERVER_ERROR '+type(exc).__name__+' '+str(exc))
+              raise SystemExit(2)
+          PY
