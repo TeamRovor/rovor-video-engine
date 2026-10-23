@@ -23,6 +23,7 @@ function syncView() {
 }
 
 function syncReactorStatus() {
+  if (typeof document === 'undefined' || typeof document.querySelector !== 'function') return;
   const stage = document.querySelector('.reactor-stage');
   if (!stage || (stage.dataset.instrumentMode && stage.dataset.instrumentMode !== 'live-telemetry')) return;
   const label = stage.querySelector('.readout-right strong');
