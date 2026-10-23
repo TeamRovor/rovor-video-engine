@@ -1158,7 +1158,8 @@
       "priority": 2,
       "scopes": [
         "architecture/contracts/work-packet",
-        "tests/test_work_packet_contract.py"
+        "tests/test_work_packet_contract.py",
+        ".github/workflows/business-ops.yml"
       ],
       "depends_on": [
         "rovor-capability-evaluation-pack"
