@@ -6,6 +6,7 @@ bounded library discovery. Does not launch Final Cut, call AppleScript, ask
 for access, read personal media, alter projects, or re-dispatch anything.
 """
 import argparse
+import hashlib
 from datetime import datetime, timezone
 import json
 import os
@@ -44,28 +45,51 @@ def read_receipt(job):
     return d, expected
 
 
-def validate_import_xml(job, target):
+def validate_import_xml(job, target, hashes):
     results = {}
-    for label in ('landscape', 'portrait'):
+    for label, width, height in (('landscape', '1920', '1080'),
+                                 ('portrait', '1080', '1920')):
         file = job / (label + '-auto.fcpxml')
         if (file.is_symlink() or not file.is_file()
                 or file.stat().st_size > 256000):
             results[label] = 'missing_or_unsafe'
             continue
         try:
-            top = ET.parse(file).getroot()
+            data = file.read_bytes()
+            expected = hashes.get(label) if isinstance(hashes, dict) else None
+            if not isinstance(expected, str) or len(expected) != 64:
+                results[label] = 'receipt_hash_missing_or_invalid'
+                continue
+            if hashlib.sha256(data).hexdigest() != expected:
+                results[label] = 'changed_since_dispatch_receipt'
+                continue
+            top = ET.fromstring(data)
             options = [e.get('value') for e in
                        top.findall('./import-options/option')
                        if e.get('key') == 'library location']
-            format_elem = top.find('./resources/format')
-            sequence = top.find('./library/event/project/sequence')
+            formats = top.findall('./resources/format')
+            sequences = top.findall('./library/event/project/sequence')
+            format_elem = formats[0] if len(formats) == 1 else None
+            sequence = sequences[0] if len(sequences) == 1 else None
+            spine = sequence.find('spine') if sequence is not None else None
+            gap = spine.find('gap') if spine is not None else None
             if (top.tag == 'fcpxml' and top.get('version') == '1.13'
                     and options == [target.as_uri()]
                     and format_elem is not None
                     and format_elem.get('frameDuration') == '1/60s'
+                    and format_elem.get('width') == width
+                    and format_elem.get('height') == height
+                    and format_elem.get('id')
                     and sequence is not None
+                    and sequence.get('format') == format_elem.get('id')
                     and sequence.get('duration') == '30s'
-                    and not top.findall('.//asset')):
+                    and spine is not None and len(spine) == 1
+                    and gap is not None and len(gap) == 0
+                    and gap.get('duration') == '30s'
+                    and gap.get('offset') == '0s'
+                    and not any('src' in node.attrib for node in top.iter())
+                    and not top.findall('.//asset')
+                    and not top.findall('.//asset-clip')):
                 results[label] = 'import_target_and_empty_30s_sequence_present'
             else:
                 results[label] = 'unexpected_xml_or_target'
@@ -148,7 +172,7 @@ def inspect(root, job, home=None, process_run=subprocess.run):
         'expected_library_created': target.is_dir(),
         'native_timeline_verified': False,
         'portrait_dispatched': receipt.get('last_dispatched') == 'portrait',
-        'xml_files': validate_import_xml(job, target),
+        'xml_files': validate_import_xml(job, target, receipt.get('xml_hashes')),
         'app_installed': Path('/Applications/Final Cut Pro.app').is_dir(),
         'process': proc,
         'discovery': nearby_libraries(root, job, home),
