@@ -156,7 +156,8 @@ class JaneLibraryQueueTests(unittest.TestCase):
             with mock.patch.object(jane,'onepass',return_value=fake_result) as native:
                 stats=loop.poll(self.conn,self.workspace,self.state,worker_id='jane-test',
                                 max_jobs=1,max_seconds=1,poll_seconds=0.1,
-                                allow_jane_library_create=True)
+                                allow_jane_library_create=True,
+                                jane_queue_job_id=jid)
         self.assertEqual(stats['executed'],1)
         self.assertFalse(stats['native_import_enabled'])
         self.assertTrue(stats['jane_library_creation_approved'])
@@ -164,6 +165,43 @@ class JaneLibraryQueueTests(unittest.TestCase):
         self.assertEqual(stats['failed'],1)
         native.assert_called_once()
         self.assertEqual(self.job(jid)['status'],'needs_review')
+
+    def test_broad_native_loop_flag_rejected_before_gui_or_claim(self):
+        jid=self.enqueue()
+        with mock.patch.object(jane,'onepass') as native:
+            with self.assertRaisesRegex(ValueError, 'one exact queue job ID'):
+                loop.poll(self.conn,self.workspace,self.state,
+                          worker_id='unsafe-broad',
+                          max_jobs=1,max_seconds=1,poll_seconds=0.1,
+                          allow_jane_library_create=True)
+            with self.assertRaisesRegex(ValueError, 'max-jobs=1'):
+                loop.poll(self.conn,self.workspace,self.state,
+                          worker_id='unsafe-many',
+                          max_jobs=20,max_seconds=1,poll_seconds=0.1,
+                          allow_jane_library_create=True,
+                          jane_queue_job_id=jid)
+        native.assert_not_called()
+        self.assertEqual(self.job(jid)['attempts'],0)
+
+    def test_stop_appearing_after_claim_prevents_native_ui(self):
+        jid=self.enqueue()
+        def stop_during_claim(*args,**kwargs):
+            (self.state/'STOP').write_text('stop now')
+            return worker.claim(*args,**kwargs)
+        original_claim=worker.claim
+        # Patch using captured original to avoid recursion.
+        def with_stop(*args,**kwargs):
+            result=original_claim(*args,**kwargs)
+            (self.state/'STOP').write_text('stop now')
+            return result
+        with mock.patch.object(worker,'claim',side_effect=with_stop):
+            with mock.patch.object(worker.sys,'platform','darwin'):
+                with mock.patch.object(jane,'onepass') as native:
+                    out=worker.run_once(self.conn,self.workspace,
+                                        allow_jane_library_create=True)
+        self.assertEqual(out['status'],'needs_review')
+        native.assert_not_called()
+        self.assertEqual(self.job(jid)['attempts'],1)
 
     def test_default_loop_does_not_dispatch_native_gui(self):
         jid=self.enqueue()
