@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "slug": "runner-blocker",
+  "id": "omni-runner-blocker",
+  "title": "Diagnose the queued Mac execution proof without running it",
+  "role": "evidence-triage",
+  "inputs": [
+    ".github/workflows/rovor-mac-exec-proof.yml",
+    "coordination/hosted-runner-diagnosis.md"
+  ],
+  "task": "Using ONLY the supplied repository text and these host facts: GitHub Actions run 39889060406 remained queued for self-hosted runner labels [self-hosted,macOS,X64,rovor-video], no job step executed, and GitHub connector cannot inspect installed runner admin endpoint. Rank possible reasons including runner offline/not registered/labels mismatch/organization restriction. For each, state evidence that would confirm or falsify it. Give one minimal, non-destructive read-only diagnostic sequence that a real Mac executor could perform. Do not fabricate live runner status or recommend rerunning the same proof blindly.",
+  "deliverable": "Structured blocker analysis with ranked hypotheses, exact evidence requests, and a safest next action.",
+  "acceptance": [
+    "No assertion that the Mac runner is online or executable",
+    "Cites file paths and exact queued run ID for observations",
+    "Distinguishes workflow syntax from runner availability",
+    "No arbitrary command execution or self-authorized permissions"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}
