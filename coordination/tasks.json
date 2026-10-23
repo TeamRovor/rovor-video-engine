@@ -3055,6 +3055,24 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39916930853"
         }
       ]
+    },
+    {
+      "id": "command-center-pages-predeploy-quality-gate-20261023",
+      "title": "Gate live Command Center Pages deployment on dashboard regressions",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar Pages release gate 2026-10-23",
+      "branch": "fix/command-center-pages-predeploy-qa-20261023",
+      "scopes": [
+        ".github/workflows/deploy-command-center-pages.yml"
+      ],
+      "depends_on": [
+        "live-hud-github-autosync"
+      ],
+      "updated_at": "2026-10-23T07:51:09.902Z",
+      "next_update": "After hosted predeploy test validation and branch merge",
+      "next_action": "Within the existing Pages deployment job, execute both Command Center test suites and JS syntax checks before configure/upload/deploy, preserve same-ref concurrency and no extra recurring jobs. Verify a deliberately broken regression would block the workflow, then integrate with hosted CI.",
+      "acceptance": "Pages deploy job runs existing Node22 syntax tests and both dashboard regression suites before any GitHub Pages configure/upload/deploy step; on failure no deployment attempt; hosted CI passes; no new scheduled workflow, no Mac activation, no credentials embedded."
     }
   ]
 }

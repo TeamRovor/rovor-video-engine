@@ -546,6 +546,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "command-center-pages-predeploy-quality-gate-20261023": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
