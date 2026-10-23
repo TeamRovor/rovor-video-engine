@@ -2947,17 +2947,26 @@
       "id": "business-ops-stale-run-cancellation-20261023",
       "title": "Cancel superseded business operations reports on rapid queue updates",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar GitHub workflow-efficiency 2026-10-23",
       "branch": "fix/business-ops-stale-run-cancel-20261023",
       "scopes": [
         ".github/workflows/business-ops.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T06:52:07.385Z",
-      "next_update": "After workflow change and hosted Actions review",
-      "next_action": "Change only business-ops.yml concurrency from cancel-in-progress false to true so stale tests/reports stop when superseded; review actual hosted run behavior and record evidence.",
-      "acceptance": "Only a newer run of the same ref replaces the previous business operations run; correct report and tests retain their existing steps, triggers and outputs; hosted checks pass."
+      "updated_at": "2026-10-23T06:54:24.426Z",
+      "next_update": "No further source work; review cancellation telemetry only when high-frequency changes occur",
+      "next_action": "On a future real push burst, compare cancelled superseded business-ops runs with successful latest run; no claimed measured savings yet. The merged guard requires no Mac host or model use.",
+      "acceptance": "Only a newer run of the same ref replaces the previous business operations run; correct report and tests retain their existing steps, triggers and outputs; hosted checks pass.",
+      "evidence": [
+        {
+          "commit": "64b8dd80fede71693a699fbe72140c112c4641e4",
+          "platform": "GitHub Actions / Ubuntu and Windows",
+          "check": "PR #82 workflow run #39914220685: test Ubuntu success, Windows success, report success; same-ref concurrency changed false -> true",
+          "result": "MERGED and hosted jobs PASS; supersession cancellation effectiveness unmeasured",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39914220685"
+        }
+      ]
     }
   ]
 }
