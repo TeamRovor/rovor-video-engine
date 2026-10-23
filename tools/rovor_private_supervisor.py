@@ -287,10 +287,18 @@ def tick(home, *, run=subprocess.run, poll=poller.poll, key_lookup=None):
 def launchctl(home,verb,*,run=subprocess.run):
     if sys.platform!="darwin":
         raise Refused("Mac GUI launchd session required")
-    _service,plist,_config=_check_stage(home)
+    if verb not in ("activate", "deactivate"):
+        raise Refused("Unsupported LaunchAgent operation")
     domain="gui/"+str(os.getuid())
-    command=["/bin/launchctl", "bootstrap" if verb=="activate" else "bootout",
-             domain,str(plist)]
+    if verb=="activate":
+        # Starting work requires a complete, untampered frozen runtime.
+        _service,plist,_config=_check_stage(home)
+        command=["/bin/launchctl", "bootstrap", domain, str(plist)]
+    else:
+        # Emergency shutdown must work even when the config, snapshot or
+        # on-disk plist was damaged after launchd loaded the approved service.
+        # Use the single hard-coded user service target, never remote input.
+        command=["/bin/launchctl", "bootout", domain+"/"+LABEL]
     try:
         proc=run(command,capture_output=True,text=True,timeout=15,check=False)
     except (OSError,subprocess.TimeoutExpired):
