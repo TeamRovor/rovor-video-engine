@@ -814,3 +814,10 @@ input, select, textarea {
   .reactor-stage::before { width: min(88%, 440px); }
   .reactor-stage::after { width: min(76%, 380px); }
 }
+
+/* Keep the existing Motion control authoritative for every new effect. */
+body.motion-paused .hud-panel::before,
+body.motion-paused .reactor-stage::before,
+body.motion-paused .reactor-stage::after {
+  animation-play-state: paused !important;
+}
