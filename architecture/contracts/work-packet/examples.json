@@ -9,7 +9,7 @@
       "source_refs": [
         {
           "id": "demo-intake-v1",
-          "uri": "https://github.com/TeamRovor/rovor-video-engine/blob/feature/rovor-evaluation-pack-ci-20261023/architecture/evaluations/cases.json",
+          "uri": "https://github.com/TeamRovor/rovor-video-engine/blob/3a5520da17bb1373193bb552673f8abdeba484b9/architecture/evaluations/cases.json",
           "status": "unverified",
           "sha256": null
         }
@@ -65,13 +65,13 @@
       "source_refs": [
         {
           "id": "fictional-mobile-snapshot",
-          "uri": "https://github.com/TeamRovor/rovor-video-engine/blob/feature/rovor-evaluation-pack-ci-20261023/architecture/evaluations/cases.json",
+          "uri": "https://github.com/TeamRovor/rovor-video-engine/blob/3a5520da17bb1373193bb552673f8abdeba484b9/architecture/evaluations/cases.json",
           "status": "unverified",
           "sha256": null
         },
         {
           "id": "rovor-proposed-offer",
-          "uri": "https://github.com/TeamRovor/rovor-video-engine/blob/feature/rovor-evaluation-pack-ci-20261023/architecture/evaluations/cases.json",
+          "uri": "https://github.com/TeamRovor/rovor-video-engine/blob/3a5520da17bb1373193bb552673f8abdeba484b9/architecture/evaluations/cases.json",
           "status": "unverified",
           "sha256": null
         }
