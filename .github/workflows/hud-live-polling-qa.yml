@@ -1,0 +1,22 @@
+name: ROVOR HUD public GitHub API budget QA
+on:
+  pull_request:
+    paths:
+      - 'dashboard/index.html'
+      - 'tests/test_hud_live_polling_budget.js'
+      - '.github/workflows/hud-live-polling-qa.yml'
+permissions:
+  contents: read
+jobs:
+  static-hud-polling:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reproduce one-hour GitHub polling requests with mocked browser API
+        run: node --test tests/test_hud_live_polling_budget.js
