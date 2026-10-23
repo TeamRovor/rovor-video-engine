@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import sqlite3
 import sys
+import uuid
 import xml.etree.ElementTree as ET
 
 import fcp_native_auto_import as native
@@ -82,11 +83,19 @@ def status(root):
         result['status'] = 'recorded'
     # Include the existing manual attempt so its pending command can be
     # inspected before this queue has been deployed on the Mac.
-    folders = [root / ('native-import-' + row['id']) for row in result['jobs']]
+    folders = []
+    for row in result['jobs']:
+        if str(uuid.UUID(row['id'])) != row['id']:
+            raise ValueError('Invalid native queue job ID')
+        folders.append(root / ('native-import-' + row['id']))
     folders.extend(sorted(root.glob('fcp-jane-auto-*'), reverse=True)[:3])
     for folder in folders:
         file = folder / 'native-auto-import-receipt.json'
-        if folder.is_symlink() or file.is_symlink() or not file.is_file():
+        if folder.is_symlink() or file.is_symlink():
+            result['receipts'].append({'path': str(file), 'error': 'Symlinked native evidence'})
+            continue
+        if not file.is_file():
+            result['receipts'].append({'path': str(file), 'missing': True})
             continue
         try:
             if file.stat().st_size > 128000:
@@ -101,12 +110,33 @@ def status(root):
 def diagnose(root):
     if sys.platform != 'darwin':
         raise ValueError('Native diagnosis must run on the Mac; no app state inferred here')
-    import fcp_jane_status
     import fcp_jane_native_probe
-    existing = fcp_jane_status.status(Path(root))
-    if 'job_dir' not in existing:
-        return existing
-    return fcp_jane_native_probe.inspect(Path(root), Path(existing['job_dir']))
+    root = Path(root).expanduser().resolve(strict=True)
+    existing = status(root)
+    queued = {'native-import-' + row['id']: row for row in existing['jobs']}
+    attempts = []
+    for item in existing['receipts']:
+        folder = Path(item['path']).parent
+        row = queued.get(folder.name)
+        details = {'job_dir': str(folder), 'source': 'queue' if row else 'manual',
+                   'native_timeline_verified': False}
+        if row:
+            details.update(job_id=row['id'], queue_status=row['status'])
+        if 'error' in item:
+            details.update(status='invalid_native_evidence', error=item['error'])
+        elif item.get('missing'):
+            details['status'] = 'no_native_receipt_recorded'
+        else:
+            try:
+                details.update(fcp_jane_native_probe.inspect(root, folder))
+            except (ValueError, OSError) as exc:
+                details.update(status='invalid_native_evidence', error=str(exc))
+        attempts.append(details)
+    if len(attempts) == 1:
+        return attempts[0]
+    return {'status': 'native_attempt_diagnoses' if attempts else 'no_native_attempt_recorded',
+            'attempts': attempts, 'native_timeline_verified': False,
+            'read_only': True, 'no_second_import_started': True}
 
 
 def main(argv=None):
