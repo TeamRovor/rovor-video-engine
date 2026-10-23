@@ -36,6 +36,13 @@ def connect(state: Path) -> sqlite3.Connection:
     state = raw_state.resolve()
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
     db = state / "jobs.sqlite3"
+    # SQLite opens its sidecars too; reject redirected evidence before any open.
+    for name in ("jobs.sqlite3", "jobs.sqlite3-wal", "jobs.sqlite3-shm"):
+        path = state / name
+        if path.is_symlink():
+            raise ValueError("worker database paths may not be symlinks")
+        if path.exists() and not path.is_file():
+            raise ValueError("worker database paths must be regular files")
     conn = sqlite3.connect(str(db), timeout=20, isolation_level=None)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA busy_timeout=20000")
