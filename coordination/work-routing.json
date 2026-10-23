@@ -574,6 +574,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "omniroute-workforce-composite-20261023": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

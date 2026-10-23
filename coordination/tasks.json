@@ -3209,6 +3209,33 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/102"
         }
       ]
+    },
+    {
+      "id": "omniroute-workforce-composite-20261023",
+      "title": "Combine the tested OmniRoute workpacks and ghost queue into one isolated source candidate",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar OmniRoute-workforce composite 2026-10-23",
+      "branch": "integration/ghost-omniroute-composite-20261023",
+      "scopes": [
+        "subsystem:omniroute-workforce-source-composition",
+        "tests/test_omniroute_workforce_composite.py",
+        "integrations/open-interpreter/OMNIROUTE-WORKFORCE-COMPOSITE.md",
+        ".github/workflows/omniroute-workforce-composite.yml"
+      ],
+      "depends_on": [
+        "ghost-omniroute-queue-adapter-20261023",
+        "omniroute-receipt-quality-verification-20261023"
+      ],
+      "updated_at": "2026-10-23T23:33:13.541Z",
+      "next_update": "After GitHub-hosted Python 3.9/3.11 composite CI",
+      "next_action": "Create a separate branch from current PR41 head, copy PR51 fixed OmniRoute source files unchanged and add focused offline integration tests. Explicitly keep runner-blocker packet disabled when its workflow source is absent; do not reintroduce unsafe self-hosted GitHub Actions. Preserve active PR66 source ownership; no Mac installation/inference.",
+      "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/66"
+      ]
     }
   ]
 }
