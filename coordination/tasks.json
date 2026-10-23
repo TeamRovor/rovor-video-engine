@@ -2199,6 +2199,27 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/51"
       ]
+    },
+    {
+      "id": "private-mac-control-bounded-poller-v1",
+      "title": "Bounded foreground private Mac control queue poller",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar iPhone bounded private control polling 2026-10-22",
+      "branch": "feature/private-mac-control-poller-v1",
+      "scopes": [
+        "tools/ghost_private_control_loop.py",
+        "tests/test_ghost_private_control_loop.py",
+        "integrations/open-interpreter/PRIVATE-MAC-CONTROL-POLL.md"
+      ],
+      "depends_on": [
+        "private-mac-control-bridge-v1"
+      ],
+      "updated_at": "2026-10-23T02:55:16.932Z",
+      "next_update": "After offline and hosted 3.9/3.11 suite; no host scheduled/deployed claim",
+      "next_action": "Build private-only, capped queue watcher: list of <=20 exact job IDs, max 1-3 execution approvals per invocation, STOP, dedupe/receipt checks, >=60s bounded poll interval, max 1h session. Reuse ghost_private_control.bridge for each exact job, not a separate native executor or SQLite scheduler. Run actual tests on hosted CI. Do not enable any public-runner process.",
+      "acceptance": "One private queue schema, no arbitrary job type command inputs, no public repo, bounded time/work/fetches; persistent STOP and no replay; no unattended install or Mac actual runtime claimed until verified.",
+      "evidence": []
     }
   ]
 }
