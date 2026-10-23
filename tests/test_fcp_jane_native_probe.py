@@ -1,5 +1,6 @@
 """Read-only Jane macOS native-import probe regressions."""
 import json
+import hashlib
 from pathlib import Path
 import subprocess
 import sys
@@ -41,8 +42,19 @@ class NativeProbeTests(unittest.TestCase):
             lib = ET.SubElement(top,'library')
             ev = ET.SubElement(lib,'event')
             proj = ET.SubElement(ev,'project')
-            ET.SubElement(proj,'sequence', duration='30s')
+            seq = ET.SubElement(proj,'sequence', duration='30s', format='r1')
+            spine = ET.SubElement(seq, 'spine')
+            ET.SubElement(spine, 'gap', duration='30s', offset='0s', start='0s')
             ET.ElementTree(top).write(self.job/(label+'-auto.fcpxml'), encoding='utf-8')
+        self.update_hashes()
+
+    def update_hashes(self):
+        path = self.job / probe.RECEIPT_NAME
+        receipt = json.loads(path.read_text())
+        receipt['xml_hashes'] = {label: hashlib.sha256(
+            (self.job / (label + '-auto.fcpxml')).read_bytes()).hexdigest()
+            for label in ('landscape', 'portrait')}
+        path.write_text(json.dumps(receipt))
 
     @staticmethod
     def processes_good(cmd, **kw):
@@ -70,8 +82,60 @@ class NativeProbeTests(unittest.TestCase):
         tree.getroot().find('./import-options/option').set('value',
                    '/Users/someone/production.fcpbundle')
         tree.write(file)
+        self.update_hashes()
         result=probe.inspect(self.root,self.job,home=self.home)
         self.assertEqual(result['xml_files']['landscape'],'unexpected_xml_or_target')
+
+    def test_changed_xml_is_not_reported_as_original_dispatch(self):
+        file = self.job / 'landscape-auto.fcpxml'
+        file.write_bytes(file.read_bytes() + b'\n')
+        result = probe.inspect(self.root, self.job, home=self.home)
+        self.assertEqual(result['xml_files']['landscape'], 'changed_since_dispatch_receipt')
+        self.assertEqual(result['xml_files']['portrait'],
+                         'import_target_and_empty_30s_sequence_present')
+
+    def test_absent_hash_does_not_certify_original_xml(self):
+        path = self.job / probe.RECEIPT_NAME
+        receipt = json.loads(path.read_text())
+        del receipt['xml_hashes']
+        path.write_text(json.dumps(receipt))
+        result = probe.inspect(self.root, self.job, home=self.home)
+        self.assertEqual(result['xml_files']['landscape'], 'receipt_hash_missing_or_invalid')
+
+    def test_incorrect_timeline_structure_is_not_valid(self):
+        file = self.job / 'landscape-auto.fcpxml'
+        original = file.read_bytes()
+        changes = [
+            ('./resources/format', 'width', '1080'),
+            ('./resources/format', 'height', '1920'),
+            ('./resources/format', 'frameDuration', '1/30s'),
+            ('./library/event/project/sequence', 'format', 'missing'),
+            ('./library/event/project/sequence/spine/gap', 'duration', '1s'),
+            ('./library/event/project/sequence/spine/gap', 'offset', '10s'),
+            ('./library/event/project/sequence/spine/gap', 'src', 'file:///private.mov'),
+        ]
+        for selector, key, value in changes:
+            with self.subTest(key=key, value=value):
+                top = ET.fromstring(original)
+                top.find(selector).set(key, value)
+                ET.ElementTree(top).write(file)
+                self.update_hashes()
+                result = probe.inspect(self.root, self.job, home=self.home)
+                self.assertEqual(result['xml_files']['landscape'], 'unexpected_xml_or_target')
+
+    def test_extra_clips_or_sequences_are_not_empty_diagnostic(self):
+        file = self.job / 'landscape-auto.fcpxml'
+        original = file.read_bytes()
+        for selector, tag in [('./library/event/project/sequence/spine', 'asset-clip'),
+                              ('./library/event/project', 'sequence'),
+                              ('./resources', 'format')]:
+            with self.subTest(tag=tag):
+                top = ET.fromstring(original)
+                ET.SubElement(top.find(selector), tag)
+                ET.ElementTree(top).write(file)
+                self.update_hashes()
+                result = probe.inspect(self.root, self.job, home=self.home)
+                self.assertEqual(result['xml_files']['landscape'], 'unexpected_xml_or_target')
 
     def test_created_library_is_not_timeline_proof(self):
         self.target.mkdir()
