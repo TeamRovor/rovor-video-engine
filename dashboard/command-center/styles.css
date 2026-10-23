@@ -1431,3 +1431,27 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .source-link { transition: none; }
 }
+
+
+/* Focus-mode exit remains reachable on touch-only iPads. */
+.focus-exit-btn {
+  position: absolute;
+  z-index: 8;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid rgba(177, 220, 255, .58);
+  border-radius: 2px;
+  color: #eaf6ff;
+  background: rgba(2, 8, 17, .88);
+  font: 700 10px/1 system-ui, sans-serif;
+  letter-spacing: .14em;
+  box-shadow: 0 0 20px rgba(55, 135, 255, .18);
+  cursor: pointer;
+}
+.focus-exit-btn[hidden] { display: none !important; }
+.focus-exit-btn:focus-visible { outline: 2px solid #e8f6ff; outline-offset: 3px; }
+@media (max-width: 759px) {
+  .focus-exit-btn { top: 8px; right: 8px; min-height: 36px; font-size: 9px; }
+}
