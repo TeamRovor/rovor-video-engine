@@ -101,6 +101,7 @@ function renderAll() {
   renderSystemNetwork(); renderOverviewColumns(); renderTasks();
   renderSystems(); renderRepoBars(); renderRepoMeta(); renderWorkers();
   if (globalThis.RovorReferenceHud) globalThis.RovorReferenceHud.render(state.raw, state);
+  if (globalThis.RovorExperience) globalThis.RovorExperience.render(state.raw, state);
 }
 
 function renderMeta() {
@@ -134,7 +135,7 @@ function renderNotes() {
 }
 function renderSystemNetwork() {
   document.getElementById('systemNetwork').innerHTML = (state.raw.systems || []).map(s =>
-    `<article class="system-card"><span class="pill ${normalizeState(s.state)}">${E(s.state)}</span><h3>${E(s.name)}</h3><p>${E(s.summary)}</p></article>`).join('');
+    `<article class="system-card" tabindex="0" role="button" data-system-name="${E(s.name)}" aria-label="Inspect ${E(s.name)}"><span class="pill ${normalizeState(s.state)}">${E(s.state)}</span><h3>${E(s.name)}</h3><p>${E(s.summary)}</p></article>`).join('');
 }
 function renderOverviewColumns() {
   const tasks = state.raw.open_tasks || [];
@@ -142,13 +143,13 @@ function renderOverviewColumns() {
   document.getElementById('blockedTasks').innerHTML = tasks.filter(t=>t.status==='blocked').map(taskCard).join('') || '<div class="footer-hint">No blocked tasks.</div>';
 }
 function taskCard(t) {
-  return `<div class="task-card"><div class="task-id">${E(t.id)}</div><div class="task-title">${E(t.title)}</div>
+  return `<div class="task-card" tabindex="0" role="button" data-task-id="${E(t.id)}" aria-label="Inspect task ${E(t.id)}"><div class="task-id">${E(t.id)}</div><div class="task-title">${E(t.title)}</div>
     <div class="task-meta">Status: <strong>${E(t.status)}</strong> · P${E(t.priority)}<div>Owner: ${E(t.owner || 'Unclaimed')}</div>
     <div>Dependencies: ${E((t.depends_on || []).join(', ') || 'none')}</div></div></div>`;
 }
 function renderTasks() {
   document.getElementById('taskTable').innerHTML = state.filteredTasks.map(t =>
-    `<div class="table-row"><div class="cell"><div class="col-head">Task ID</div>${E(t.id)}</div>
+    `<div class="table-row" tabindex="0" role="button" data-task-id="${E(t.id)}" aria-label="Inspect task ${E(t.id)}"><div class="cell"><div class="col-head">Task ID</div>${E(t.id)}</div>
     <div class="cell"><div class="col-head">Status</div><span class="pill ${normalizeState(t.status)}">${E(t.status)}</span></div>
     <div class="cell"><div class="col-head">Title</div>${E(t.title)}</div>
     <div class="cell"><div class="col-head">Owner</div>${E(t.owner || 'Unclaimed')}</div>
@@ -156,7 +157,7 @@ function renderTasks() {
 }
 function renderSystems() {
   document.getElementById('systemsGrid').innerHTML = (state.raw.systems || []).map(s =>
-    `<div class="system-mini"><span class="pill ${normalizeState(s.state)}">${E(s.state)}</span><strong>${E(s.name)}</strong><div class="muted">${E(s.summary)}</div></div>`).join('');
+    `<div class="system-mini" tabindex="0" role="button" data-system-name="${E(s.name)}" aria-label="Inspect ${E(s.name)}"><span class="pill ${normalizeState(s.state)}">${E(s.state)}</span><strong>${E(s.name)}</strong><div class="muted">${E(s.summary)}</div></div>`).join('');
 }
 function renderRepoBars() {
   const list = state.raw.file_groups || [];
@@ -241,6 +242,13 @@ function wireControls() {
     const focused = document.body.classList.toggle('focus-mode');
     focusBtn.textContent = focused ? 'Exit Focus' : 'Focus View';
     focusBtn.setAttribute('aria-pressed', String(focused));
+  });
+  document.addEventListener("keydown", event => {
+    const card = event.target.closest?.("[data-task-id], [data-system-name]");
+    if (!card || (event.key !== "Enter" && event.key !== " ")) return;
+    if (card.tagName === "BUTTON") return;
+    event.preventDefault();
+    card.click();
   });
   document.getElementById('taskSearch').addEventListener('input',()=>filterTasks());
   document.getElementById('statusFilter').addEventListener('change',()=>filterTasks());
