@@ -1978,7 +1978,7 @@
       "id": "jane-native-selection-evidence",
       "title": "Add strict read-only proof of which native Final Cut library is selected",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Mac-runtime handoff GitHub-only session 2026-10-22",
       "branch": "feature/ghost-native-import-queue",
       "scopes": [
@@ -1990,13 +1990,29 @@
       "depends_on": [
         "jane-sqlite-isolated-library-creation"
       ],
-      "updated_at": "2026-10-23T02:17:17.326Z",
-      "next_update": "After macOS AppleScript compile and integrated workforce CI on PR41",
-      "next_action": "Add macOS-15-intel osacompile validation for the read-only selection probe, then verify hosted unit tests and publish source-only evidence. Do not run on user's Mac without a connected host executor.",
+      "updated_at": "2026-10-23T02:21:31.898Z",
+      "next_update": "After one verified native library creation on Amar's actual Mac, run the read-only verifier on that exact job ID; host execution remains unverified",
+      "next_action": "Actual Mac executor must inspect current PR41 checkout and existing Jane receipts, then from an explicitly approved single created library run python3 tools/fcp_jane_selected_library_probe.py --job-id <exact-existing-successful-ID>. Do not create a new job to get positive evidence; if unverified do not import XML/edit/export. Current ChatGPT session has GitHub connectors, not a working Mac process/UI executor.",
       "acceptance": "Own-file-only read-only tool and offline tests; refuse missing or symlinked Jane receipts/libraries, avoid private project/title leaks, bound local UI and file-handle inspection, prove positive and negative mock cases; never alter Final Cut, existing Untitled, source media, queue status, or native import gates.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
         "https://github.com/TeamRovor/rovor-video-engine/pull/41#issuecomment-6355619140"
+      ],
+      "evidence": [
+        {
+          "commit": "355006c4e058c560ff2cfc5ed3434548987cdb67",
+          "platform": "GitHub Actions hosted Intel macOS and hosted Ubuntu Python3.9/3.11; NOT Amar's Mac",
+          "check": "Standalone read-only AX+PID native DB exact-target library selection verifier and non-mutating test cases; macos-15-intel osacompile without execute; integrated ghost/Interpreter/FCP tests",
+          "result": "PASS: 12/12 focused simulated tests on Intel macOS; osacompile AppleScript syntax PASS. Integrated 229/229 on Python3.9 (7.458s) and Python3.11 (6.774s). No user's native FCP process inspected; library created/selection unverified, no XML import.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39888978037"
+        },
+        {
+          "commit": "355006c4e058c560ff2cfc5ed3434548987cdb67",
+          "platform": "Connected GitHub ChatGPT + browser availability probe",
+          "check": "Mac-local execution capability assessment against 2026-10-22 parallel handoff",
+          "result": "GitHub read/write available. Browser tab connector refused because originating browser context unavailable. No local Mac shell/Open Interpreter/Final Cut GUI access; real host step remains blocked.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39888978044"
+        }
       ]
     },
     {
