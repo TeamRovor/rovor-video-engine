@@ -91,7 +91,7 @@ test('one hour of unattended HUD polling stays within a 60-request public API bu
   // GitHub's typical unauthenticated REST allowance is 60 requests/hour/IP.
   // Shared public IPs make headroom desirable; 60 is only an upper bound.
   assert.ok(result.restCalls.length<=60,
-    'HUD used '+result.restCalls.length+' unauthenticated REST calls in 60 min; 
+    'HUD used '+result.restCalls.length+' unauthenticated REST calls in 60 min; '
     +'default 60/hour public API budget exhausted. '
     +'Use pinned raw GitHub content or slower REST polling.');
 });
