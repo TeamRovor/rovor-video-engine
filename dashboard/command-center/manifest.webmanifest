@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "ROVOR Command Center",
+  "short_name": "ROVOR HUD",
+  "description": "Live public GitHub operations dashboard for ROVOR systems.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#030c17",
+  "theme_color": "#04111f",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "./hud-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

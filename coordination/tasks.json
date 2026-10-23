@@ -852,13 +852,13 @@
         "coordination/windows-benchmark-protocol.md"
       ],
       "depends_on": [],
-      "next_action": "Review open PR #36 for the source-pinned Windows benchmark protocol. Then a separately claimed Windows/local or functioning Actions session should execute actual three-repeat reports, inspect all-run frame hashes, recovery/cache correctness and resource costs. No new live benchmark or Mac/Windows host proof exists in this documentation task.",
+      "next_action": "Merged PR #36 establishes the source-pinned benchmark acceptance protocol. An eligible Windows/local or supported Actions session must run actual three-repeat synthetic benchmark plus cache/caption invalidation tests, record cross-run frame hashes and metrics, and separately verify real media/render QA. Do not interpret the protocol or green coordination CI as engine performance measurement.",
       "acceptance": "Protocol cites exact inspected source commit and existing commands/report fields; covers same-input cold/warm run, interruption/resume, changed audio/art/captions invalidation, elapsed time/cache hits/output equivalence; clearly labels unavailable commands or runtime evidence. A later separately claimed task may execute it.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/7"
       ],
-      "updated_at": "2026-10-22T09:53:00.223Z",
-      "next_update": "Review PR #36 and execute benchmark in a separately eligible runtime session",
+      "updated_at": "2026-10-23T07:08:36.663Z",
+      "next_update": "When an independently owned Windows or hosted benchmark executes the protocol",
       "evidence": [
         {
           "commit": "75cf819bb74573b357a6f9332c02471e78f1151a",
@@ -866,6 +866,13 @@
           "check": "Inspected exact source SHAs, CLI options, output/report keys and named unit tests; checked document links, code fences and scope isolation (10 targeted static checks)",
           "result": "PASS (source/document consistency only; no runtime benchmark or project_loop.py command execution)",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/36"
+        },
+        {
+          "commit": "98e03c16726d40bf7efbc3a0f1aaefc9b09f6061",
+          "platform": "GitHub Actions hosted Windows, macOS, Ubuntu",
+          "check": "PR #36 refreshed against current main: shared project loop tests on all 3 hosted platforms",
+          "result": "PASS; PR merged into main. No native Windows laptop benchmark or source-art runtime test performed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39915773135"
         }
       ]
     },
@@ -1132,10 +1139,10 @@
         "business-service-delivery-playbook",
         "business-proof-catalog"
       ],
-      "next_action": "PR #74 adds the deterministic stdlib evaluator, three source-grounded case families, good/bad answer fixtures, 21 regression tests, and runs the evaluator on the existing Ubuntu/Windows business-operations matrix. Hosted run 39911163641 passed both matrix jobs and the bounded report job. PR remains draft/open and is not merged; no model performance or real client outcome is claimed.",
+      "next_action": "Merged PR #74 at 65a826f8b1c036e4f2441e41cd6f1cb1ed89b724 with additional malformed AI JSON fail-closed tests. Continue independently with PR #75 portable work-packet integration; preserve both evaluator/contract CI and workflow cancellation.",
       "acceptance": "One executable offline pack with structured input/gold outputs plus deliberately invalid candidate examples for intake/delivery, sourced research/sales and technical GitHub-run assessment, strict reproducible evaluations and tests; pass reference cases, fail fabrication/inference-as-observation and CI pre-job-as-test errors; no model runtime or client outcome claimed.",
-      "updated_at": "2026-10-23T06:24:00Z",
-      "next_update": "After PR #74 review/merge; next dependent task rovor-work-packet-contract can reuse cases/evaluator formats.",
+      "updated_at": "2026-10-23T07:25:28.744Z",
+      "next_update": "On adoption of the evaluation pack by actual bounded agent jobs",
       "evidence": [
         {
           "commit": "3a5520da17bb1373193bb552673f8abdeba484b9",
@@ -1143,6 +1150,13 @@
           "check": "21 stdlib evaluator regression tests; positive good-answers CLI; negative bad-answers CLI with --expect fail; business operations report.",
           "result": "PASS both OS matrix jobs and report workflow; run 39911163641. The evaluator is deterministic exact-match/provenance checking, not semantic truth verification or real-world capability proof.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911163641"
+        },
+        {
+          "commit": "65a826f8b1c036e4f2441e41cd6f1cb1ed89b724",
+          "platform": "GitHub Actions Ubuntu/Windows / main",
+          "check": "Merged capability evaluator PR #74 with malformed candidate handling regression tests; hosted run #39916930853 completed successfully",
+          "result": "MERGED and hosted CI successful; not proof of model accuracy or client outcomes",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/74"
         }
       ]
     },
@@ -1153,7 +1167,7 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md",
         "https://github.com/TeamRovor/rovor-video-engine/pull/75",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912806232"
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913983606"
       ],
       "id": "rovor-work-packet-contract",
       "title": "Standardize the smallest portable work packet from proven workflows",
@@ -1166,10 +1180,10 @@
       "depends_on": [
         "rovor-capability-evaluation-pack"
       ],
-      "next_action": "PR #75 latest head 626ce7380b29dbc1866092350f44b4885de18bd4 documents the validator's 18-test boundary coverage. Hosted run 39912806232 passed Ubuntu, Windows and bounded report job on that head. Implementation task is complete; PR remains draft/open and unmerged. Example source URIs reference evaluation case IDs in PR #74 branch pending that dependency's integration. Structural validation does not prove source truth or reviewer identity.",
+      "next_action": "PR #75 merged into main at 280c5bf4556cefb0cc56f6796c03ce3f0da251ce with combined evaluator and contract checks, preserving same-ref workflow cancellation. Source format is ready for reviewed work packets; no computer executor or source-truth verification established.",
       "acceptance": "Schema validates representative accepted and rejected cases, preserves unknown/unrun states and separates technical completion from approval/publication. No opaque shell commands or self-granted permissions. Test against the actual evaluated examples.",
-      "updated_at": "2026-10-23T06:40:00Z",
-      "next_update": "After PR #75 review/merge and after PR #74 evaluation-pack dependency is integrated.",
+      "updated_at": "2026-10-23T07:28:51.943Z",
+      "next_update": "Integrated into main; review only when new employee job types adopt the contract",
       "evidence": [
         {
           "commit": "b5b3e04b96ba36a87f3f9efae1851c48afb3477f",
@@ -1198,6 +1212,20 @@
           "check": "Latest PR head including validator-boundary README, 18 regression tests, positive/negative CLI acceptance and bounded report job.",
           "result": "PASS all worker matrix jobs and report. PR #75 remains draft/open and unmerged; no merge or external action performed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912806232"
+        },
+        {
+          "commit": "8c52f8dd8002cbef769527a5d6afbad0a19ab80a",
+          "platform": "GitHub-hosted Python 3.11; Ubuntu and Windows business-operations matrix",
+          "check": "19 regression tests including parseable JSON Schema, required-field and bound assertions; validator positive/negative CLI acceptance; bounded report job.",
+          "result": "PASS all worker jobs and report. Evaluation source URLs are immutable commit permalinks. PR #75 remains draft/open and unmerged.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913983606"
+        },
+        {
+          "commit": "280c5bf4556cefb0cc56f6796c03ce3f0da251ce",
+          "platform": "GitHub Actions Ubuntu/Windows Python 3.11",
+          "check": "Integration PR #75: evaluator plus 19 work-packet structural regression tests, positive/negative validator fixtures and business report; cancellation preserved",
+          "result": "MERGED into main; all jobs passed #39917840018. No real Mac or model execution",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39917840018"
         }
       ]
     },
@@ -2870,7 +2898,7 @@
     {
       "id": "hud-live-rate-limit-qa-20261023",
       "title": "Independently verify live HUD polling respects unauthenticated GitHub API limits",
-      "status": "active",
+      "status": "done",
       "priority": 1,
       "owner": "ChatGPT / Amar GitHub HUD independent QA 2026-10-23",
       "branch": "review/hud-live-rate-limit-qa-20261023",
@@ -2885,9 +2913,9 @@
       "depends_on": [
         "github-atomic-paired-task-commit"
       ],
-      "updated_at": "2026-10-23T06:37:00Z",
-      "next_update": "After dashboard owner lowers API polling volume and the full-hour mocked-browser budget test passes.",
-      "next_action": "Independent QA for both HUD implementations: PR #77 deliberately fails old lightweight PR #73 at 194 REST calls/hour. Test the separately merged Iron Man Command Center PR #76 real browser code with a deterministic 60-minute simulated DOM/clock/fetch. Keep status/ownership distinct from actual online Mac. Publish passing regression for supported Command Center; do not edit another owner's HUD source.",
+      "updated_at": "2026-10-23T06:48:00Z",
+      "next_update": "Reopen only if either dashboard changes polling behavior, a regression appears, or multi-device shared-IP usage becomes a release requirement.",
+      "next_action": "Independent hosted QA completed for both live HUDs. Lightweight PR #73 revised head 138d1713a504ef72a8cf57deb8ae1d059df509ec uses 32 REST calls/hour (run 39913411350; 4/4 tests pass), down from 194/hour on the old head (run 39912037508). Merged Iron Man Command Center source on main uses 31 REST calls plus 42 pinned raw reads/hour (run 39913559189; 6/6 tests pass). Tests cover same-SHA reads, fail-closed/stale labeling, hidden-tab pause, manual refresh bounds and no credentials/writes. PR #77 and PR #80 remain draft/open; no merge or deployment performed. Single-tab budget only; two concurrent Command Center tabs sharing one IP could reach about 62 REST calls/hour.",
       "acceptance": "Independent deterministic tests prove 1-hour refresh API request count and replayable rate-limit failure; baseline failure is explicitly recorded; owner must lower REST API calls or use raw pinned files and re-run QA before live deployment.",
       "evidence": [
         {
@@ -2903,13 +2931,115 @@
           "check": "One-hour HUD polling simulation with REST-vs-raw accounting; immutable SHA pinning; injected REST 403; credential/mutation scan.",
           "result": "3/4 passed. Baseline used 194 REST calls in 60 minutes, so rate-budget acceptance intentionally failed. Same-SHA, stale/error handling and no-token/no-mutation checks passed. Mock supports pinned raw-content remediation without counting it as REST.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912512115"
+        },
+        {
+          "commit": "a1f59911d494c16537469cde4c6803b6882895a2",
+          "platform": "GitHub-hosted Ubuntu Node22 deterministic browser VM simulation and unit tests",
+          "check": "Old PR #73 one-hour request budget 194/>60 intentional fail (run39912037508); actual merged Command Center PR #76 test: one-hour API budget, pinned revision, tab pause, manual refresh and no GitHub write credential",
+          "result": "Command Center 5/5 PASS, plus existing dashboard CI PASS; older lightweight PR #73 still FAIL release gate. No live hosting or Mac execution",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913137266"
+        },
+        {
+          "commit": "c056880871f525ef3cf9ba1a4105ac165326ea29",
+          "platform": "GitHub-hosted Node 22; actual lightweight dashboard script in VM with fake DOM/clock/fetch",
+          "check": "60-minute request budget, immutable SHA, injected 403 stale/error, no-token/no-mutation",
+          "result": "PASS 4/4. Measured 32 REST requests/hour on revised PR #73 head; old implementation baseline was 194/hour.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913411350"
+        },
+        {
+          "commit": "9624d3c83c6472d1e26196653d1b281e62a86015",
+          "platform": "GitHub-hosted Node 22; actual merged Command Center app.js in VM with fake DOM/clock/fetch",
+          "check": "60-minute REST budget, pinned SHA, hidden-tab pause, manual refresh, stale downgrade, credential/write scan",
+          "result": "PASS 6/6. Measured 31 REST requests and 42 raw pinned reads per 60 simulated minutes. No deployed-browser or Mac-runtime test claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913559189"
         }
       ],
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/73#issuecomment-6358993663",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/73#issuecomment-6358993663",
         "https://github.com/TeamRovor/rovor-video-engine/pull/77",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912512115",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/73#issuecomment-6358993663"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/80",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912037508",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913411350",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913559189"
+      ]
+    },
+    {
+      "id": "business-ops-stale-run-cancellation-20261023",
+      "title": "Cancel superseded business operations reports on rapid queue updates",
+      "priority": 2,
+      "status": "done",
+      "owner": "ChatGPT / Amar GitHub workflow-efficiency 2026-10-23",
+      "branch": "fix/business-ops-stale-run-cancel-20261023",
+      "scopes": [
+        ".github/workflows/business-ops.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T06:54:24.426Z",
+      "next_update": "No further source work; review cancellation telemetry only when high-frequency changes occur",
+      "next_action": "On a future real push burst, compare cancelled superseded business-ops runs with successful latest run; no claimed measured savings yet. The merged guard requires no Mac host or model use.",
+      "acceptance": "Only a newer run of the same ref replaces the previous business operations run; correct report and tests retain their existing steps, triggers and outputs; hosted checks pass.",
+      "evidence": [
+        {
+          "commit": "64b8dd80fede71693a699fbe72140c112c4641e4",
+          "platform": "GitHub Actions / Ubuntu and Windows",
+          "check": "PR #82 workflow run #39914220685: test Ubuntu success, Windows success, report success; same-ref concurrency changed false -> true",
+          "result": "MERGED and hosted jobs PASS; supersession cancellation effectiveness unmeasured",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39914220685"
+        }
+      ]
+    },
+    {
+      "id": "routing-ci-supersession-cancellation-20261023",
+      "title": "Stop superseded work-routing checks while keeping cross-version validation",
+      "priority": 2,
+      "status": "done",
+      "owner": "ChatGPT / Amar GitHub workflow-efficiency 2026-10-23",
+      "branch": "fix/routing-ci-cancel-stale-20261023",
+      "scopes": [
+        ".github/workflows/work-brief-routing-check.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T06:57:11.679Z",
+      "next_update": "Implementation complete; inspect future superseded-run cancellation only when multiple pushes happen",
+      "next_action": "No remaining source task. A future genuine rapid-push sequence can establish actual runner-minute savings; successful checks establish behavior was preserved, not measured savings.",
+      "acceptance": "Concurrent stale main/PR routing checks may be replaced by the latest same-ref run; current validations and security permissions stay unchanged; hosted checks succeed.",
+      "evidence": [
+        {
+          "commit": "a7a1b1b959b610121abb9cdff6ca826025fabc69",
+          "platform": "GitHub Actions / Python 3.9 and 3.11 / Ubuntu",
+          "check": "PR #83 workflow #39914586466: routing checks on both Python versions",
+          "result": "MERGED and CI PASS; no measured cancellation sample",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39914586466"
+        }
+      ]
+    },
+    {
+      "id": "capability-evaluator-malformed-output-guard-20261023",
+      "title": "Fail closed on malformed AI answers in capability evaluator",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar independent evaluation robustness 2026-10-23",
+      "branch": "feature/rovor-evaluation-pack-ci-20261023",
+      "scopes": [
+        "architecture/evaluations/evaluate.py",
+        "architecture/evaluations/test_evaluate.py"
+      ],
+      "depends_on": [
+        "rovor-capability-evaluation-pack"
+      ],
+      "updated_at": "2026-10-23T07:25:28.744Z",
+      "next_update": "No further source change; consumer model/output evaluation remains separate",
+      "next_action": "Merged into main via PR #74 after hosted workflow success. Future AI workers may use the structural/provenance evaluator; it does not establish live model accuracy, execution permission, source truth or delivered outcomes.",
+      "acceptance": "Malformed `case_id`, `claim.id`, unknown fields, approval and `job_results[*].job_id` never raise TypeError; they fail closed with stable issue codes. Existing good/bad examples and hosted tests pass; no model or Mac execution claimed.",
+      "evidence": [
+        {
+          "commit": "65a826f8b1c036e4f2441e41cd6f1cb1ed89b724",
+          "platform": "GitHub-hosted Ubuntu / Windows (Python 3.11)",
+          "check": "PR #74 contains four new malformed-output regression tests and existing positive/negative evaluator CLI tests; Actions run #39916930853 reported success",
+          "result": "MERGED; evaluator returns structured failures for malformed AI answer IDs, claim IDs, unknown lists, approval and CI-job IDs. No live model calls.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39916930853"
+        }
       ]
     }
   ]
