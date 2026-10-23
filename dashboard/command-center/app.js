@@ -202,7 +202,7 @@ function filterTasks(render=true) {
 function wireControls() {
   const motionBtn = document.getElementById('motionBtn');
   const focusBtn = document.getElementById('focusBtn');
-  const motionPref = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motionPref = typeof globalThis.matchMedia === 'function' && globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (motionPref) {
     document.body.classList.add('motion-paused');
     motionBtn.textContent = 'Motion: Off';
