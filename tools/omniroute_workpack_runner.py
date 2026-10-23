@@ -230,8 +230,15 @@ def write_receipt(path, payload, *, replace=False):
 
 def run_packet(repo_root,receipt_root,slug,model,key,
                completion=None):
-    packet,prompt,provenance=load_packet(repo_root,slug)
-    private=safe_private_root(receipt_root)
+    # The public-checkout boundary applies to every entry point, not merely
+    # main(). Other future workers may import and invoke run_packet directly.
+    # Canonicalize even nonexistent output folders to catch aliased parents.
+    source=Path(repo_root).expanduser().resolve(strict=True)
+    destination=Path(receipt_root).expanduser().resolve(strict=False)
+    if destination==source or source in destination.parents:
+        raise ValueError('Private model receipts cannot be inside Git checkout')
+    packet,prompt,provenance=load_packet(source,slug)
+    private=safe_private_root(destination)
     receipt_file=private/(slug+'.receipt.json')
     if receipt_file.exists() or receipt_file.is_symlink():
         return {'id':packet['id'],'status':'previous_attempt_not_replayed',
