@@ -1,0 +1,38 @@
+name: Jane read-only native library selection AppleScript compile
+
+on:
+  pull_request:
+    paths:
+      - 'tools/fcp_jane_selected_library_probe.py'
+      - 'tests/test_fcp_jane_selected_library_probe.py'
+      - '.github/workflows/jane-selection-ax-compile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile-only:
+    runs-on: macos-15-intel
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile Jane selection script on Intel macOS without executing AppleScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK="$(mktemp -d)"
+          trap 'rm -rf "$WORK"' EXIT
+          python3 - "$WORK" <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,'tools')
+          from fcp_jane_selected_library_probe import UI_SCRIPT
+          Path(sys.argv[1], 'selected-library.applescript').write_text(UI_SCRIPT)
+          PY
+          osacompile -o "$WORK/selected-library.scpt" "$WORK/selected-library.applescript"
+          echo "PASS: AppleScript syntax compiled; did not execute or control Final Cut."
+      - name: Run mocked privacy and false-positive tests; NO GUI execution
+        run: python3 -m unittest discover -s tests -p test_fcp_jane_selected_library_probe.py -v
