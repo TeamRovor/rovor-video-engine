@@ -238,6 +238,6 @@ test('iPad mini landscape art direction keeps three-column telemetry and five-ro
   assert.match(css,/@media \(min-width: 760px\) and \(max-width: 1180px\) and \(orientation: landscape\) \{[\s\S]*?grid-template-columns: minmax\(0, \.88fr\) minmax\(0, 1\.12fr\) minmax\(0, \.98fr\)/);
   assert.match(css,/\.top-actions \.hud-btn\s*\{[^}]*white-space: nowrap/s);
   assert.match(css,/\.status-ring\s*\{[^}]*clamp\(92px, 13vh, 118px\)/s);
-  assert.match(css,/min-height: 142px, \.72fr/);
+  assert.match(css,/grid-template-rows: auto auto minmax\(170px, \.9fr\) auto minmax\(142px, \.72fr\)/);
   assert.match(css,/@media \(hover: none\) and \(pointer: coarse\)/);
 });
