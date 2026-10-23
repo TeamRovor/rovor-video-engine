@@ -45,10 +45,13 @@ class SeparatedOralReview:
   x=np.linspace(198,274,9);self.cap_edge=np.column_stack([x,321-(x-198)*.5/76-1.75*np.sin(np.linspace(0,np.pi,9))]).astype('float32')
  def at(self,t,plan):
   baseline=self.head.at(t,plan);return self.assemble(baseline)
+ def jaw_target(self):
+  oral=self.head.current_oral;lower=inner_arch(oral)
+  jaw_oral=oral.copy();jaw_oral[:9,1]=self.lower.jaw_arch(lower,self.head.current_fv)[::-1,1]
+  return contour_target_mesh(jaw_oral,self.head.exposure_skin)
  def assemble(self,baseline):
   oral=self.head.current_oral;upper=inner_arch(oral,True);lower=inner_arch(oral)
-  jaw_oral=oral.copy();jaw_oral[:9,1]=self.lower.jaw_arch(lower,self.head.current_fv)[::-1,1]
-  target,minimum=contour_target_mesh(jaw_oral,self.head.exposure_skin)
+  target,minimum=self.jaw_target()
   if upper[:,1].min()<310:raise ValueError('Mouth crossed protected upper-face guard')
   jaw=cv2.resize(cv2.remap(self.jaw,*corresponding_fields(self.source_points,target),cv2.INTER_LINEAR,borderMode=cv2.BORDER_CONSTANT),(512,512),interpolation=cv2.INTER_AREA)
   # Match the upstream native8-bit face stage before restoring brow acting.
