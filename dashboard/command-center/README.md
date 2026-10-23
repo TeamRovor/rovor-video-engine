@@ -30,7 +30,7 @@ The web-app manifest and service worker cache only the app shell for faster laun
 
 The Command Center is static HTML/CSS/JavaScript, so it does not need a paid server or database. This repository now includes `.github/workflows/deploy-command-center-pages.yml`, which publishes only `dashboard/command-center/` to GitHub Pages after changes to that directory land on `main`, or when manually dispatched.
 
-**One-time repository setup is still required:** open the repository's **Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions**. Then merge the deployment workflow and Command Center changes through the approved PR. The workflow will publish the app and report the Pages URL in its successful deployment run. No paid Vercel plan is required for this approach; GitHub Pages availability and usage are subject to GitHub's current plan and repository limits.
+**One-time repository setup is required:** open the repository's **Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions**. The workflow attempts to enable Pages automatically, but repository or organization policy can block that API operation; if the first run reports `Resource not accessible by integration`, set this option manually and rerun the deployment. After setup, changes to this directory on `main` trigger publication, and the successful deployment run reports the Pages URL. No paid Vercel plan is required for this approach; GitHub Pages availability and usage are subject to GitHub's current plan and repository limits.
 
 For local development, from the repository root run `python3 -m http.server 8000`, then visit `http://localhost:8000/dashboard/command-center/`. The browser needs normal HTTPS access to GitHub.
 
