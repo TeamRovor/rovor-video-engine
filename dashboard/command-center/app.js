@@ -71,6 +71,7 @@ async function boot() {
   wireNetworkStatus();
   wireTabs();
   wireControls();
+  wireReactor();
   syncView();
   // Fallback is visibly stale, never treated as live or silently refreshed.
   try {
@@ -250,6 +251,50 @@ function wireControls() {
     const uri=URL.createObjectURL(blob);
     anchor.href=uri;anchor.download='rovor-github-hud-'+new Date().toISOString().slice(0,10)+'.json';anchor.click();
     setTimeout(()=>URL.revokeObjectURL(uri),1000);
+  });
+}
+
+
+/* Reactor interaction: cycle instrument overlays without faking live repository data. */
+function wireReactor() {
+  const stage = document.querySelector('.reactor-stage');
+  const core = document.querySelector('.reactor-core');
+  if (!stage || !core) return;
+  const modes = [
+    { name: 'LIVE TELEMETRY', detail: 'MAIN BRANCH · AUTO SYNC', className: 'mode-telemetry' },
+    { name: 'ORBITAL SCAN', detail: 'GEOMETRY / PHASE LOCK', className: 'mode-orbit' },
+    { name: 'SIGNAL ANALYSIS', detail: 'PUBLIC DATA / VERIFIED SOURCE', className: 'mode-signal' }
+  ];
+  let active = 0;
+  core.setAttribute('role', 'button');
+  core.setAttribute('tabindex', '0');
+  core.setAttribute('aria-label', 'Cycle reactor instrument mode');
+  core.setAttribute('aria-describedby', 'reactorHint');
+  const hint = document.createElement('span');
+  hint.id = 'reactorHint';
+  hint.className = 'reactor-interaction-hint';
+  hint.textContent = 'TAP CORE TO CYCLE INSTRUMENTS';
+  stage.appendChild(hint);
+  const label = stage.querySelector('.readout-right strong');
+  const detail = stage.querySelector('.readout-right small');
+  const activate = () => {
+    stage.classList.remove(...modes.map(mode => mode.className));
+    active = (active + 1) % modes.length;
+    const mode = modes[active];
+    stage.classList.add(mode.className);
+    if (label) label.textContent = mode.name;
+    if (detail) detail.textContent = mode.detail;
+    stage.setAttribute('data-instrument-mode', mode.name.toLowerCase().replaceAll(' ', '-'));
+    if (typeof navigator !== 'undefined' && navigator.vibrate && !document.body.classList.contains('motion-paused')) {
+      try { navigator.vibrate(8); } catch (_) { /* Haptics are optional. */ }
+    }
+  };
+  core.addEventListener('click', activate);
+  core.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      activate();
+    }
   });
 }
 
