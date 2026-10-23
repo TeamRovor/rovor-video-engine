@@ -2113,7 +2113,7 @@
       "id": "jane-status-sqlite-sidecar-guard",
       "title": "Reject redirected SQLite database sidecars in Jane read-only status inspection",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar iPhone SQLite status guard session 2026-10-22",
       "branch": "fix/jane-status-sqlite-sidecars-20261022",
       "scopes": [
@@ -2123,11 +2123,19 @@
       "depends_on": [
         "jane-sqlite-isolated-library-creation"
       ],
-      "updated_at": "2026-10-23T02:37:51.090Z",
-      "next_update": "After hosted workforce regression run on exact patch",
-      "next_action": "Patch the existing Jane SQLite status reader to reject symlinked, broken-link or nonregular jobs.sqlite3, jobs.sqlite3-wal and jobs.sqlite3-shm before readonly sqlite3.connect; add focused tests with outside sentinel. Preserve GUI one-shot, STOP, native import disabled and prior CI. Do not alter active PR #45 bootstrap files.",
+      "updated_at": "2026-10-23T02:40:52.322Z",
+      "next_update": "After integrated PR #41 review and approved Mac host status reader run",
+      "next_action": "PR #50 merged into PR #41 at fe921d688dd6f6efd30ed719fd02adfb5571316d. Jane status is blocked before SQLite connect if DB/WAL/SHM is redirected/symlinked/nonregular. Linux Python 3.9 and 3.11 integrated suites passed 234/234 each; test-only, no host/native app verification. Do not confuse source completion with safe Mac deployment.",
       "acceptance": "Read-only Jane status never connects to a redirected or nonregular SQLite DB/WAL/SHM path; outside sentinel unchanged; clean uninitialized status unchanged; Python3.9/3.11 integrated suite passes, with separate host FCP unverified.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "fe921d688dd6f6efd30ed719fd02adfb5571316d",
+          "platform": "GitHub-hosted Linux Python 3.9.25 and 3.11.17",
+          "check": "234 integrated tests including sidecar symlink, dangling link, nonregular object, outside sentinel and read-only state checks",
+          "result": "PASS both; PR #50 merged into PR #41; no macOS host GUI involved",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39890793103"
+        }
+      ]
     }
   ]
 }
