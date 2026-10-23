@@ -15,6 +15,14 @@ from fcp_native_import_candidate import create_candidate
 
 
 class AutoImportTests(unittest.TestCase):
+    def test_legacy_cli_refused_before_prepare_or_dispatch(self):
+        with mock.patch.object(jane, 'prepare') as prepare, \
+             mock.patch.object(jane, 'dispatch') as dispatch:
+            result = jane.main(['--candidates', '/unused', '--output', '/unused-output', '--dispatch'])
+        self.assertEqual(result, 2)
+        prepare.assert_not_called()
+        dispatch.assert_not_called()
+
     def setUp(self):
         td = tempfile.TemporaryDirectory()
         self.addCleanup(td.cleanup)
