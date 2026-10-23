@@ -992,39 +992,6 @@ body.motion-paused .telemetry-pulse { animation-play-state: paused !important; }
 @media (prefers-reduced-motion: reduce) { .telemetry-pulse { animation: none !important; } }
 
 
-/* Interaction and viewport corrections: preserve the full workspace on touch tablets. */
-.reactor-core { cursor:pointer; touch-action:manipulation; }
-.reactor-core:focus-visible { outline:3px solid #d9efff; outline-offset:8px; }
-.reactor-interaction-hint { position:absolute; z-index:3; left:50%; bottom:2px; transform:translateX(-50%); color:#8eb9e4; font-size:8px; line-height:1.4; letter-spacing:.16em; white-space:nowrap; text-align:center; }
-.reactor-telemetry { position:absolute; z-index:2; left:clamp(10px,2vw,24px); right:clamp(10px,2vw,24px); display:flex; align-items:center; gap:9px; color:#8eb7df; font-size:8px; letter-spacing:.16em; pointer-events:none; }
-.telemetry-top { top:8px; }
-.telemetry-bottom { bottom:8px; }
-.telemetry-line { height:1px; flex:1; min-width:8px; background:linear-gradient(90deg,rgba(117,185,255,.05),rgba(117,185,255,.55),rgba(117,185,255,.05)); }
-.telemetry-pulse { width:5px; height:5px; flex:0 0 5px; border-radius:50%; background:#8fcaff; box-shadow:0 0 8px #69b5ff; animation:rovor-signal-pulse 2.4s ease-in-out infinite; }
-.telemetry-bottom b { color:#eaf6ff; font-weight:700; }
-.reactor-cross-ring { position:absolute; z-index:1; left:50%; top:48%; width:min(94%,58vh); aspect-ratio:1; transform:translate(-50%,-50%); border:1px solid rgba(154,207,255,.16); border-radius:50%; pointer-events:none; }
-.reactor-cross-ring::before,.reactor-cross-ring::after { content:""; position:absolute; background:rgba(139,198,255,.24); }
-.reactor-cross-ring::before { left:50%; top:-5%; bottom:-5%; width:1px; }
-.reactor-cross-ring::after { top:50%; left:-5%; right:-5%; height:1px; }
-.mode-orbit .reactor-cross-ring { border-style:dashed; transform:translate(-50%,-50%) rotate(24deg); }
-.mode-signal .reactor-cross-ring { border-color:rgba(205,235,255,.46); box-shadow:0 0 24px rgba(72,151,255,.18); }
-@keyframes rovor-signal-pulse { 0%,100% { opacity:.5; } 50% { opacity:1; } }
-@media (min-width:760px) and (orientation:landscape) {
-  main { max-height:none; overflow:visible; min-height:180px; }
-  .tabbar { min-width:0; flex-wrap:wrap; align-content:center; }
-  .tab { min-width:0; }
-  .top-actions .hud-btn { min-height:40px; }
-  .reactor-stage { min-width:0; }
-}
-@media (max-width:759px) {
-  .reactor-telemetry { font-size:6px; letter-spacing:.09em; gap:5px; left:7px; right:7px; }
-  .telemetry-top { top:5px; }
-  .telemetry-bottom { bottom:5px; }
-  .reactor-cross-ring { width:min(78%,40vh); }
-  .reactor-interaction-hint { font-size:6px; bottom:3px; }
-  .reactor-readout { max-width:44%; letter-spacing:.08em; }
-  .reactor-readout strong { letter-spacing:.06em; }
-}
-@media (prefers-reduced-motion:reduce) {
-  .telemetry-pulse { animation:none !important; }
-}
+/* Make the central instrument reliably operable by touch and keyboard. */
+.reactor-core { cursor: pointer; touch-action: manipulation; }
+.reactor-core:focus-visible { outline: 3px solid #d9efff; outline-offset: 8px; }
