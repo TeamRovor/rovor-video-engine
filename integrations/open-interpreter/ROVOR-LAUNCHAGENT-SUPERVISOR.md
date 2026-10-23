@@ -1,0 +1,39 @@
+# ROVOR private Mac supervisor — opt-in user LaunchAgent
+
+**Status:** source implementation and offline tests only. **NOT installed or activated on Amar's Mac.** It deliberately does not operate Final Cut, Blender, Moho, email, social media, the public repo's self-hosted runner, or OmniRoute models. The first on-Mac acceptance gate remains an actual private-repo round trip, not another GitHub-hosted test.
+
+## What this changes
+
+The existing `tools/ghost_private_control_loop.py` requires a foreground invocation. `tools/rovor_private_supervisor.py` wraps **that same** private poller in a macOS per-user `launchd` LaunchAgent so, **after one explicit owner-approved staging and activation on the real Mac**, `launchd` can schedule a bounded read of the authenticated **separate private TeamRovor control repository every 300 seconds**. It executes up to **one** already-allowlisted safe job per tick and exits. It does not introduce a second job queue or an alternate task schema.
+
+The user-specific LaunchAgent loads at login (`RunAtLoad`), uses `StartInterval=300`, and does not request `KeepAlive`. Each invocation gives the existing poller a 120-second cooperative budget; underlying individual GitHub HTTP calls have their own timeouts, so this is not a hard process-kill guarantee. macOS retains the scheduling/restart responsibility. The Mac must be logged into its user session and awake; power/Wi-Fi alone do not override sleep. UI automation under a locked screen remains a separately unverified capability. At this stage, the existing private bridge approves **`system.ping` only**, and explicitly disables `files.inventory` in scheduled ticks. The supervisor can establish scheduled remote *read-only* jobs, not yet genuine animation ghost employees.
+
+## Secure scope and credentials
+
+- Queue transport: existing `ghost_private_control_loop.poll` with existing `ghost_private_control`. The remote repository must be separately private, active, and under TeamRovor; the *public* `TeamRovor/rovor-video-engine` repository is explicitly forbidden.
+- Local Mac config: `~/Library/Application Support/ROVOR-Private-Supervisor/config.json` (private mode 0600 in a 0700 directory). Contains only the private repo name, fixed receipt-issue number, Python executable, fixed frozen runtime path, and hashes of the four staged Python files. **No GitHub token, password or model credentials**.
+- Token access: runtime reads one Keychain generic password entry named `rovordigital.private-control.github-token` using `security find-generic-password -w`. It never prints or stores the token, and it fails closed if Keychain is unavailable or denies access. This Keychain entry must be configured by the Mac owner with the minimum repository permissions documented in [PRIVATE-MAC-CONTROL.md](PRIVATE-MAC-CONTROL.md): metadata/read contents and write issue comments only for that separate *private* control repository.
+- LaunchAgent: `~/Library/LaunchAgents/com.rovordigital.private-control-supervisor.plist`. Static `ProgramArguments` invoke the **frozen private snapshot** in `~/Library/Application Support/ROVOR-Private-Supervisor/runtime/rovor_private_supervisor.py` with `--tick` (no shell, no input from GitHub). The four required reviewed source files—supervisor, private bridge, private poller and SQLite worker—are copied into this 0700 directory at staging, mode 0600, and their SHA-256 values are pinned in the private schema-2 config. Every subsequent tick checks these files and refuses a changed/missing/symlinked copy. **A later Git pull does not silently change the running agent's code.** Any future upgrade requires a separate reviewed maintenance plan; this version deliberately never overwrites its staged files. Output/error logs stay in the 0700 private configuration directory, and the program logs **only sanitized status**, never remote text, paths or private credentials.
+- Explicit STOP remains `~/Documents/Rovor/Mac-Control-State/STOP` (existing private bridge behavior). The supervisor never removes STOP automatically, and the native bridge refuses unsafe job types, duplicated IDs and unexpected remote task structures.
+- No arbitrary scripts, GitHub Actions workflow execution, automatic code updates or package installs. Staged plist/config are validated for tampering before every tick.
+
+## Local deployment only after secure private control channel exists
+
+This is the target operator workflow, **not** evidence it has run. Do not follow it from a public workflow or shared unattended runner. From an independently verified local checkout of the supervisor PR, with the Keychain item securely created using the macOS Keychain UI and a separate private control repo:
+
+1. Read-only check: `python3 tools/rovor_private_supervisor.py --status`. A false `launchd_loaded` means no service proof.
+2. Explicit one-time stage: `python3 tools/rovor_private_supervisor.py --stage --approve-stage --repo TeamRovor/PRIVATE_REPO --receipt-issue ISSUE_NUMBER`. This writes only the new local plist and private config; it **does not start the service**, touch existing projects or run a job.
+3. Inspect the generated plist/config and the private frozen runtime directory before activating. If an existing plist or config is present, the tool refuses to overwrite it; do not force delete it to bypass uncertainty. Only locally reviewed source is snapshotted; a Git checkout or PR update is never auto-installed.
+4. Explicit activation from the logged-in macOS GUI session: `python3 tools/rovor_private_supervisor.py --activate --approve-activate`. A successful `launchctl bootstrap` response is **not** yet proof a remote job ran.
+5. Read-only status: `python3 tools/rovor_private_supervisor.py --status`. Verify the service is loaded; then separately inspect a private control issue receipt from an actual Mac `system.ping` task, with no raw local paths/credentials printed.
+6. Stop scheduling: `python3 tools/rovor_private_supervisor.py --deactivate`. This requests `launchctl bootout`; use the pre-existing local STOP marker when immediate no-new-task shutdown is required.
+
+The supervisor intentionally refuses to restage or overwrite an existing service. On an unavailable or locked-down Keychain, malformed launchd plist, tampered frozen runtime, wrong checkout, missing private repository, or STOP marker, no uncontrolled alternate execution mode is attempted. File hashes are an accidental-change and tamper-detection measure under the user account, not a defense against an attacker who already has full access to that account and its Keychain. A logged-in, powered and awake session is still necessary.
+
+## Scope and further acceptance gates
+
+For now, **a staged plist is not an installed ghost employee**. Even a loaded supervisor is not a successful native Final Cut edit. After the private GitHub Mac job's real receipt has been verified, separately prove the LaunchAgent can process a new `system.ping` while Amar's phone/chat is closed. Only then consider extending the worker's explicit allowlist to approved **OmniRoute public-source research workpacks**, using PR #51's no-paid-fallback/receipt guards and provider consent. Later, Jane's isolated Final Cut library must pass independent app-selection proof before native XML import or editing is allowed.
+
+This implementation is intentionally separate from the iPhone session's bridge/poller work, which remains in PR #41; it adds no edits to `tools/ghost_private_control.py`, `tools/ghost_private_control_loop.py` or Jane's bootstrap files.
+
+**Verification:** hosted regression tests `tests/test_rovor_private_supervisor.py`, via `.github/workflows/rovor-private-supervisor.yml` (Python 3.9/3.11). They mock Mac-only launchctl, Keychain, launchd and private GitHub calls, and **do not run any of those on the owner's computer**.
