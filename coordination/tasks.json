@@ -3117,6 +3117,29 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40007172062"
         }
       ]
+    },
+    {
+      "id": "omniroute-receipt-quality-verification-20261023",
+      "title": "Prevent stale and possibly truncated OmniRoute reports from passing private draft review",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar OmniRoute receipt QA 2026-10-23",
+      "branch": "fix/omniroute-receipt-quality-20261023",
+      "scopes": [
+        "tools/omniroute_draft_review.py",
+        "tests/test_omniroute_draft_review.py",
+        "integrations/open-interpreter/OMNIROUTE-OUTPUT-REVIEW.md"
+      ],
+      "depends_on": [
+        "omniroute-private-draft-receipt-review"
+      ],
+      "updated_at": "2026-10-23T23:06:00Z",
+      "next_update": "After focused regression tests and hosted CI",
+      "next_action": "Extend existing read-only private receipt review to flag stale report dates, unresolved date placeholders and probable model max-token exhaustion; verify using observed October 23 receipt patterns. Do not modify the actively owned direct-api worker or replay a failed inference.",
+      "acceptance": "A read-only, content-free summary blocks October 2026 receipts labeled 2024/2025 or 2024-XX-XX, flags the 2400-token response-cap heuristic without claiming guaranteed truncation, and leaves ordinary dates in task discussions unflagged. Deterministic tests on Python 3.9/3.11; no model calls, credential leaks, Mac operations, or automatic reruns.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+      ]
     }
   ]
 }
