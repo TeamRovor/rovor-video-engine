@@ -85,6 +85,13 @@
       "lane": "operations",
       "requires": [],
       "objective": "reduce-repeat-work"
+    },
+    "private-supervisor-emergency-deactivate": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
