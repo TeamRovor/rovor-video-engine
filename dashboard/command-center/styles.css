@@ -1581,3 +1581,88 @@ body {
   .reactor-stage::after { width: min(70%, 380px); }
   .reactor-readout small { display: none; }
 }
+
+
+/* Reference pass 02: planetary reactor, hard-edged instrument panels, tablet landscape */
+body {
+  background:
+    radial-gradient(ellipse at 50% 54%, rgba(14,54,98,.24) 0%, transparent 34%),
+    radial-gradient(ellipse at 50% 112%, rgba(31,116,205,.2) 0%, transparent 31%),
+    #010308;
+}
+.scanlines { opacity:.10; }
+.glow-orbit { border-color:rgba(99,169,255,.055); box-shadow:inset 0 0 52px rgba(70,145,255,.025),0 0 34px rgba(70,145,255,.025); }
+.topbar, .hud-panel, .tabbar {
+  border-radius:3px;
+  border-color:rgba(103,177,255,.46);
+  background:linear-gradient(135deg,rgba(5,12,22,.96),rgba(2,7,14,.91) 55%,rgba(5,17,31,.94));
+  box-shadow:inset 0 0 0 1px rgba(205,234,255,.025),0 0 22px rgba(30,117,255,.055);
+}
+.hud-panel::before, .topbar::before, .tabbar::before {
+  content:""; position:absolute; inset:5px; border:1px solid rgba(95,164,239,.08); pointer-events:none;
+}
+.panel-title { letter-spacing:.16em; text-shadow:0 0 12px rgba(99,180,255,.16); }
+.reactor-stage {
+  height:clamp(260px,42vh,470px);
+  margin:0 0 12px;
+  border:0;
+  border-radius:0;
+  background:
+    radial-gradient(ellipse at 50% 61%,rgba(34,111,202,.23),transparent 30%),
+    linear-gradient(180deg,transparent 0%,rgba(1,4,9,.2) 62%,rgba(1,4,9,.92) 100%);
+  box-shadow:none;
+}
+.reactor-stage::before {
+  content:""; position:absolute; z-index:-1; left:-8%; right:-8%; bottom:-54%; height:72%;
+  border-radius:50% 50% 0 0 / 20% 20% 0 0;
+  border-top:1px solid rgba(139,204,255,.95);
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(69,158,255,.34),transparent 9%),
+    radial-gradient(ellipse at 50% 0%,rgba(19,72,132,.26),transparent 44%),
+    repeating-linear-gradient(174deg,transparent 0 14px,rgba(121,184,255,.035) 15px 16px,transparent 17px 25px),
+    linear-gradient(180deg,rgba(7,24,43,.5),rgba(0,2,7,.98));
+  box-shadow:0 -9px 24px rgba(58,147,255,.17),inset 0 15px 30px rgba(67,153,255,.1);
+  transform:perspective(220px) rotateX(9deg);
+}
+.reactor-stage::after {
+  content:""; position:absolute; left:50%; top:50%; width:min(56vw,470px); aspect-ratio:1;
+  transform:translate(-50%,-50%); border:1px solid rgba(118,193,255,.12); border-radius:50%;
+  box-shadow:0 0 0 14px rgba(95,173,255,.018),0 0 0 32px rgba(95,173,255,.022),0 0 42px rgba(33,115,255,.08);
+  pointer-events:none;
+}
+.reactor-grid { opacity:.16; background-size:46px 46px; }
+.halo-outer { height:min(92%,390px); border-style:solid; border-color:rgba(80,158,255,.52); box-shadow:0 0 22px rgba(35,121,255,.12); }
+.halo-mid { height:min(76%,325px); border-width:3px; border-color:rgba(204,235,255,.9); border-left-color:rgba(57,143,255,.12); border-right-color:rgba(71,156,255,.22); box-shadow:0 0 12px rgba(117,190,255,.25),inset 0 0 15px rgba(58,140,255,.08); }
+.halo-inner { height:min(62%,265px); border-style:dashed; border-color:rgba(120,196,255,.54); }
+.reactor-cross-ring { position:absolute; left:50%;top:50%; width:min(68%,360px);aspect-ratio:1;transform:translate(-50%,-50%);border:1px solid rgba(129,197,255,.18);border-radius:50%; }
+.reactor-core {
+  width:clamp(108px,18vh,190px);
+  background:radial-gradient(circle,rgba(31,82,135,.18),rgba(1,5,11,.96) 70%);
+  border:1px solid rgba(162,216,255,.45);
+  box-shadow:0 0 0 8px rgba(101,174,255,.035),0 0 48px rgba(52,135,255,.22),inset 0 0 28px rgba(101,175,255,.12);
+}
+.reactor-core img { width:76%;height:76%;filter:drop-shadow(0 0 10px rgba(221,241,255,.45)); }
+.reactor-readout { z-index:2; padding:10px 12px; border-left:1px solid rgba(97,174,255,.38); background:linear-gradient(90deg,rgba(3,10,19,.82),transparent); }
+.readout-right { border-left:0;border-right:1px solid rgba(97,174,255,.38);background:linear-gradient(270deg,rgba(3,10,19,.82),transparent); }
+.reactor-telemetry { letter-spacing:.2em; color:rgba(173,214,255,.72); }
+.syncbar { border-left:2px solid rgba(71,164,255,.75); }
+.tabbar { justify-content:center; gap:clamp(8px,2vw,24px); }
+.tab { border-radius:2px; letter-spacing:.12em; text-transform:uppercase; font-size:11px; }
+.tab.active { background:linear-gradient(180deg,rgba(54,137,255,.2),rgba(4,15,28,.35)); box-shadow:inset 0 -2px 0 #72baff; }
+.hud-btn { border-radius:2px; text-transform:uppercase; letter-spacing:.08em; }
+@media (min-width:761px) and (orientation:landscape) {
+  .app-shell { max-width:1800px; padding:12px clamp(12px,2vw,30px) 22px; }
+  .reactor-stage { height:clamp(280px,43vh,500px); }
+}
+@media (min-width:761px) and (max-width:1180px) and (orientation:landscape) {
+  .reactor-stage { height:clamp(210px,34vh,310px); }
+  .reactor-core { width:clamp(104px,17vh,145px); }
+  .halo-outer { height:88%; }
+  .halo-mid { height:72%; }
+  .halo-inner { height:56%; }
+  .reactor-readout { font-size:8px; }
+  .reactor-readout strong { font-size:9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reactor-stage *, .reactor-stage::before, .reactor-stage::after { animation:none !important; }
+}
