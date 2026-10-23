@@ -1,6 +1,10 @@
 'use strict';
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const shellDir = path.join(__dirname, '..');
 const {deriveSnapshot,fetchGitHubSnapshot,escapeHtml,fileGroups} = require('../live-data.js');
 const sha = 'a'.repeat(40);
 const base = {
@@ -85,4 +89,29 @@ test('disabled extras avoid unnecessary rate-limit calls',async()=>{
   requests.length=0;
   await fetchGitHubSnapshot({fetchImpl:fakeFetch,includeExtras:false});
   assert.equal(requests.length,3);
+});
+
+test('iPad install manifest is standalone and scoped to the HUD directory',()=>{
+  const manifest=JSON.parse(fs.readFileSync(path.join(shellDir,'manifest.webmanifest'),'utf8'));
+  assert.equal(manifest.name,'ROVOR Command Center');
+  assert.equal(manifest.display,'standalone');
+  assert.equal(manifest.start_url,'./index.html');
+  assert.equal(manifest.scope,'./');
+  assert.ok(manifest.icons.some(icon=>icon.src==='./hud-icon.svg'));
+});
+
+test('service worker syntax is valid and excludes cross-origin live data from caching',()=>{
+  const worker=fs.readFileSync(path.join(shellDir,'service-worker.js'),'utf8');
+  assert.doesNotThrow(()=>new vm.Script(worker));
+  assert.match(worker,/if \(url\.origin !== self\.location\.origin\) return;/);
+  assert.match(worker,/Never cache GitHub API\/raw data/);
+  assert.match(worker,/fetch\(request\)/);
+});
+
+test('HUD registers its shell service worker without requiring it for live operation',()=>{
+  const app=fs.readFileSync(path.join(shellDir,'app.js'),'utf8');
+  const html=fs.readFileSync(path.join(shellDir,'index.html'),'utf8');
+  assert.match(app,/navigator\.serviceWorker\.register\('\.\/service-worker\.js'/);
+  assert.match(html,/rel="manifest" href="\.\/manifest\.webmanifest"/);
+  assert.match(html,/apple-mobile-web-app-capable/);
 });
