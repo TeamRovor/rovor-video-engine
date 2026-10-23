@@ -1997,6 +1997,26 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
         "https://github.com/TeamRovor/rovor-video-engine/pull/41#issuecomment-6355619140"
       ]
+    },
+    {
+      "id": "jane-launcher-outcome-reporting",
+      "title": "Make Jane native library CLI report review-required outcomes without false shell success",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar iPhone GitHub review session 2026-10-22",
+      "branch": "fix/jane-outcome-contract-20261022",
+      "scopes": [
+        "tools/jane_library_worker.py",
+        "tests/test_ghost_jane_library_launcher.py"
+      ],
+      "depends_on": [
+        "jane-sqlite-isolated-library-creation"
+      ],
+      "updated_at": "2026-10-23T02:11:37.354Z",
+      "next_update": "After isolated PR tests and Macbook handoff",
+      "next_action": "Patch only the Jane SQLite launcher output and CLI exit status: native needs_review is not terminal success, even if an .fcpbundle folder appears. Preserve stable job ID, existing retry/STOP enforcement and every existing native file; add no-live-FCP regression tests and an explicit review-required result. Validate through CI without touching Mac applications.",
+      "acceptance": "CLI create attempt never exits 0 merely because enqueue/dispatch was recorded; clearly reports native created/app selection/review outcome; existing same-ID no-replay and status/dry-run unchanged; focused regression tests pass; original FCP libraries untouched.",
+      "evidence": []
     }
   ]
 }
