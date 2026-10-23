@@ -8,7 +8,17 @@ Repo work/engine; development/evan-painted-rig (legacy name), draft PR#4 https:/
 
 Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful review milestones/failure/completion/required action only; disable when actually ready. Routine decisions need no question.
 
-## Latest: simpler jaw source; voiced two-pose integration rejected
+## Latest: continuous lower-arch mapping and actual skin underlap
+
+Read CARTOON-EVAN-CONTINUOUS-JAW-CONTOUR.md. contour_target_mesh samples the full9-point lower oral arch into source jaw correspondence; existing default reconstruction unchanged. Intermediate curve controls now survive; width/independentchin retained. No two-pose normalization/clipping or temporal retiming. Review reuses original multi-control head/voice, not the rejected adapter.
+
+First contour render exposed edge transparency175–202alpha at sampled joints. Retained rejected proof. Fixed with ACTUAL current drawn clean-face skin underlapping cavity/jaw, not source alpha cleanup; same underlap on both A/B sides. Final12native oral regions min255/zero below240; all104upper315head rows pair-exact. This is coverage, NOT anatomy. New exposure has5actual planes; mouth subparts still combined in uppercarrier, not fully separated rig.
+
+outputs/evan-cartoon-contour-jaw:104normal voiced/416mutedquarter frames1280x720/48fps fullydecode, source816..919;34667original/decoded samples272000:306667. All104native mouth crops/heads/fullframes inspected against concept; no independent listening/playback acceptance. Width55.334–86.188px, originalinnerlowerY320.120–348.534; mintriangle45.5,0FVfallback. Fiveactualplane PSD855 reloadmean .0233506/255, notbones. Three contour+one underlap tests and9existing regressions pass. No artgen/sourcechanges this pass; simplifiedjaw2.4634px registration limit remains.
+
+Lips still flat/outlined, closed poses slash-like, F/V toothgrin lacks pressure; angularskinjoins/staticeyes andbrows belowconcept. Artist drawing/animation review remainsneeded. Full polished milestone NOT ready; automationACTIVE. No pending jobs. Prior checkpoint HISTORY-2026-10-22-K.
+
+## Retained: simpler jaw source; voiced two-pose integration rejected
 
 Read CARTOON-EVAN-JAW-SIMPLIFICATION.md. Built-in image_gen edited isolated jaw twice:V1 retained heavy crescent,V2 removed it. Original1254square PNGs/alpha/prompts/input hashes saved jaw-simplification-v1/source. Uniform2corner registration gives held-out chin2.4634px residual:FAIL proposed2px tolerance; placementAccepted=false. Do not fit/clean the discrepancy away. Candidate only, defaults unchanged.
 
@@ -54,8 +64,8 @@ Retained relaxed hand/forearm, wrist-axis articulation, authored detail/finished
 
 ## Next concrete work
 
-1. Keep simpler jaw as unapproved underpaint candidate. Need independent thin lower-lip pressure paint, curved lower-edge/width correspondence and full continuous oral controls. The two-pose clamp fails36/48frames; do not promote it or broaden staging. No more whole-head generation or seam cleanup.
-2. Preserve all original voice/alignment uncertainty and failed studies. Artist redraw/review is needed for appealing pressure and vowel shapes. No default promotion or unattended Moho operation.
+1. Preserve continuous lower-arch mapping and actual skin-underlap tools. Need an independent thin lower-lip pressure/roll drawing and coordinated F/V-to-vowel release, with incisors/lip paint separated from the uppercarrier. Original full oral driver stays; do not reuse two-pose clamp, threshold-clean seams or generate more full heads.
+2. Simplified jaw remains unapproved underpaint candidate;2.4634px registration drift/flat lip and angular paint joins need artist redraw/review. Preserve original voice/alignment uncertainty and all failed proofs. No default promotion, staging expansion or unattended Moho operation.
 
 ## Runtime/history
 

@@ -26,4 +26,14 @@ class CurrentContactTests(unittest.TestCase):
   plan=json.loads(path.read_text());prior=CorrespondingLipExposure()
   for frame in [738,741,742]:
    _,a,_=prior.at(frame/48,plan);_,b,row=self.rig.at(frame/48,plan);self.assertEqual(row['fv'],0);np.testing.assert_array_equal(np.array(a),np.array(b))
+ def test_skin_underlap_uses_actual_paint_behind_cavity_without_changing_sources(self):
+  from labiodental_construction import FaceCapture
+  from guided_jaw_exposure import contour_target_mesh
+  r=CurrentContactExposure();r.head=FaceCapture();baseline=r.head.weights(np.eye(9)[3])
+  skin=r.head.clean_face.copy();underpaint=np.zeros_like(skin);underpaint[305:365,190:285]=skin[305:365,190:285]
+  jaw=r.jaw.copy();_,im,_=r.assemble_target(baseline,*contour_target_mesh(r.head.current_oral,r.head.exposure_skin),underpaint)
+  names=list(r.last_parts);self.assertLess(names.index('Face skin underlap'),names.index('Painted mouth cavity backing'))
+  np.testing.assert_array_equal(skin,r.head.clean_face);np.testing.assert_array_equal(jaw,r.jaw)
+  np.testing.assert_array_equal(r.last_parts['Face skin underlap'],underpaint)
+  self.assertEqual(int(np.array(im)[315:340,195:280,3].min()),255)
 if __name__=='__main__':unittest.main()

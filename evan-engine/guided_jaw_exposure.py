@@ -38,9 +38,27 @@ def target_mesh(oral,skin):
  lip_delta=corner+(oral[20,1]-328.5-(center[1]-325))*mid
  chin_delta=skin[46,1]-394
  target[:,1]+=lip_delta*horizontal*upper+chin_delta*(1-upper)
+ return checked_mesh(target)
+
+def checked_mesh(target):
  triangles=target[TRI];a=triangles[:,1]-triangles[:,0];b=triangles[:,2]-triangles[:,0];areas=a[:,0]*b[:,1]-a[:,1]*b[:,0]
- if areas.min()<=0:raise ValueError(f'Inverted jaw mesh: {areas.min()}')
+ if not np.isfinite(target).all() or areas.min()<=0:raise ValueError(f'Invalid jaw mesh: {areas.min()}')
  return target,float(areas.min())
+
+def contour_target_mesh(oral,skin):
+ """Review-only lower-edge correspondence using all nine oral arch points.
+
+ Unlike the legacy center/corner reconstruction, intermediate curve controls
+ survive. No release normalization, temporal filtering or two-pose clipping.
+ """
+ arch=np.asarray(oral[:9][::-1],dtype=np.float32)
+ if arch.shape!=(9,2) or not np.isfinite(arch).all() or np.any(np.diff(arch[:,0])<=0):raise ValueError('Lower oral arch must be finite and ordered left to right')
+ target,_=target_mesh(oral,skin);x,y=SOURCE.T
+ horizontal=smooth((x-164)/30)*smooth((329-x)/66);upper=1-smooth((y-335)/59)
+ guide=np.interp(x,POLYGON[:11,0],POLYGON[:11,1])
+ edge=np.interp(target[:,0],arch[:,0],arch[:,1])
+ target[:,1]=y+(edge-guide)*horizontal*upper+(skin[46,1]-394)*(1-upper)
+ return checked_mesh(target)
 
 
 def fields(target,scale=3):

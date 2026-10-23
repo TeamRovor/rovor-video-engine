@@ -42,12 +42,16 @@ class CurrentContactExposure(CorrespondingLipExposure):
   return self.assemble(baseline)
  def assemble(self,baseline):
   target,minimum=target_mesh(self.head.current_oral,self.head.exposure_skin)
+  return self.assemble_target(baseline,target,minimum)
+ def assemble_target(self,baseline,target,minimum,underpaint=None):
   maps=corresponding_fields(self.source_points,target)
   jaw=cv2.resize(cv2.remap(self.jaw,*maps,cv2.INTER_LINEAR,borderMode=cv2.BORDER_CONSTANT),(512,512),interpolation=cv2.INTER_AREA)
   owned=upper_ownership(target)
   if not np.all(owned[:315,190:280]==1):raise ValueError('Upper-face/nose ownership lost coverage')
   carrier=np.array(baseline).astype('float32');carrier[:,:,:3]*=carrier[:,:,3:4]/255;carrier*=owned[:,:,None]
-  parts={'Neck backing':self.neck.copy(),'Painted mouth cavity backing':self.head.material_cavity.copy(),'Source-matched jaw and lower lip':jaw,'Upper face with cheek wings':carrier}
+  parts={'Neck backing':self.neck.copy()}
+  if underpaint is not None:parts['Face skin underlap']=underpaint
+  parts.update({'Painted mouth cavity backing':self.head.material_cavity.copy(),'Source-matched jaw and lower lip':jaw,'Upper face with cheek wings':carrier})
   result=np.zeros_like(jaw)
   for part in parts.values():result=over(result,part)
   candidate=Image.fromarray(np.rint(np.clip(straight(result),0,255)).astype('uint8'))
