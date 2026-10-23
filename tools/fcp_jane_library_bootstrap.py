@@ -43,7 +43,7 @@ on run argv
     set destinationFolder to item 1 of argv
     set targetName to item 2 of argv
     set folderLabel to item 3 of argv
-    if targetName is not "ROVOR-Jane-Isolated" then error "Library name not allowlisted"
+    if targetName is not ("ROVOR-Jane-Isolated-" & folderLabel) then error "Library name not unique for this job"
     if destinationFolder does not end with ("/" & folderLabel) then error "Destination argument mismatch"
 
     log "JANE_STAGE|activating_final_cut"
@@ -137,7 +137,7 @@ KNOWN_UI_STAGES = (
 
 def last_safe_ui_stage(stderr):
     """Only report fixed code-owned stage identifiers, never UI strings."""
-    matches = re.findall(r'JANE_STAGE\\|([a-z0-9_]{1,50})', (stderr or '')[:16384])
+    matches = re.findall(r'JANE_STAGE\|([a-z0-9_]{1,50})', (stderr or '')[:16384])
     return next((stage for stage in reversed(matches) if stage in KNOWN_UI_STAGES), None)
 
 
@@ -203,6 +203,17 @@ def checkpoint(folder, report, status, **kwargs):
     }), flush=True)
 
 
+def unique_library_name(output):
+    """Unique per disposable job, not a reused label across FCP libraries."""
+    if not output.name.startswith(BOOTSTRAP_PREFIX):
+        raise ValueError('Expected Jane library job naming')
+    return LIBRARY_BASENAME + '-' + output.name
+
+
+def expected_library(output):
+    return output / (unique_library_name(output) + '.fcpbundle')
+
+
 def prepare(job, output, home=None):
     home = home or Path.home()
     root = home / 'Documents' / 'Rovor'
@@ -218,7 +229,7 @@ def prepare(job, output, home=None):
             or root.is_symlink()):
         raise ValueError('Output must be a never-used fcp-jane-library-* folder in ROVOR')
     output.mkdir(mode=0o700)
-    target = output / (LIBRARY_BASENAME + '.fcpbundle')
+    target = expected_library(output)
     report = {
         'schema_version': 1,
         'status': 'prepared_no_native_app_action',
@@ -248,7 +259,7 @@ def create_library(output, report, run=subprocess.run, clock=time.monotonic,
     try:
         process = run(
             ['/usr/bin/osascript', '-e', APPLE_SCRIPT,
-             str(output), LIBRARY_BASENAME, output.name],
+             str(output), unique_library_name(output), output.name],
             capture_output=True, text=True, timeout=65, check=False)
         if process.returncode:
             category, apple_number = classify_safe_gui_error(process.stderr)
