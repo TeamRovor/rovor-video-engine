@@ -1519,3 +1519,65 @@ body {
     grid-row: 1;
   }
 }
+
+
+/* Reference-led reactor finish: scale the emblem against the actual instrument
+   deck, keep readouts outside the luminous rings, and sharpen ring separation. */
+@media (min-width: 760px) and (orientation: landscape) {
+  .reactor-stage {
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(21,91,171,.2), transparent 42%),
+      radial-gradient(ellipse at 50% 52%, rgba(3,11,22,.12), transparent 70%);
+  }
+  .reactor-stage::before {
+    width: min(88%, 650px);
+    border-color: rgba(137,202,255,.28);
+    box-shadow:
+      0 0 0 8px rgba(72,149,255,.035),
+      0 0 0 22px rgba(72,149,255,.025),
+      0 0 0 42px rgba(72,149,255,.014),
+      inset 0 0 55px rgba(40,124,255,.075);
+  }
+  .reactor-stage::after {
+    width: min(76%, 570px);
+    border-color: rgba(166,216,255,.42);
+    border-style: dashed;
+  }
+  .reactor-core {
+    width: clamp(132px, 17vh, 190px);
+    box-shadow:
+      0 0 0 6px rgba(102,174,255,.06),
+      0 0 36px rgba(73,155,255,.34),
+      0 0 78px rgba(41,115,218,.18),
+      inset 0 0 24px rgba(101,175,255,.24);
+  }
+  .reactor-core img { width: 70%; height: 70%; }
+  .reactor-readout {
+    top: 50%;
+    max-width: 26%;
+    transform: translateY(-50%);
+  }
+  .reactor-readout.readout-left {
+    left: 4%;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .reactor-readout.readout-right {
+    right: 4%;
+    left: auto;
+    align-items: flex-end;
+    text-align: right;
+  }
+  .reactor-readout strong { font-size: clamp(9px, .78vw, 12px); }
+  .reactor-readout small { font-size: clamp(7px, .58vw, 9px); }
+}
+@media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) {
+  .reactor-readout { max-width: 24%; letter-spacing: .1em; }
+  .reactor-readout strong { overflow-wrap: normal; }
+}
+@media (min-width: 760px) and (orientation: landscape) and (max-height: 560px) {
+  .reactor-core { width: clamp(112px, 16vh, 145px); }
+  .reactor-stage::before { width: min(82%, 440px); }
+  .reactor-stage::after { width: min(70%, 380px); }
+  .reactor-readout small { display: none; }
+}
