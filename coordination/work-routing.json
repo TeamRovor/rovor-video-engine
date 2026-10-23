@@ -513,6 +513,12 @@
       "lane": "sales",
       "requires": [],
       "objective": "win-qualified-clients"
+    },
+    "live-hud-github-autosync": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }
