@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#04111f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ROVOR HUD" />
+  <meta name="color-scheme" content="dark" />
+  <title>ROVOR Command Center HUD</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./hud-icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="glow-orbit orbit-a"></div>
+  <div class="glow-orbit orbit-b"></div>
+  <div class="app-shell">
+    <header class="topbar hud-panel">
+      <div>
+        <div class="eyebrow">ROVOR DIGITAL • COMMAND INTERFACE</div>
+        <h1>HUD / LIVE GITHUB / WORKER ROUTING</h1>
+        <p class="header-subtitle"><span class="header-dot"></span> STARK-CLASS OPERATIONS INTERFACE <span class="header-separator">/</span> PUBLIC DATA LINK</p>
+      </div>
+      <div class="top-actions">
+        <button id="refreshBtn" class="hud-btn">Refresh GitHub</button>
+        <button id="exportBtn" class="hud-btn alt">Export JSON</button>
+      </div>
+    </header>
+
+    <div class="syncbar hud-panel" role="status" aria-live="polite"><span class="sync-pill loading" id="syncState">CONNECTING</span><div class="sync-content"><strong id="syncLast">Not yet verified</strong><span id="syncDetails">Checking GitHub…</span></div></div>
+
+    <section class="hero-grid">
+      <div class="hud-panel ring-panel">
+        <div class="panel-title">ROUTING COVERAGE</div>
+        <div class="ring-wrap">
+          <svg viewBox="0 0 220 220" class="status-ring">
+            <defs>
+              <linearGradient id="ringGradient" x1="0%" x2="100%" y1="0%" y2="100%">
+                <stop offset="0%" stop-color="#62f2ff"></stop>
+                <stop offset="100%" stop-color="#ff7a18"></stop>
+              </linearGradient>
+            </defs>
+            <circle cx="110" cy="110" r="86" class="ring-bg"></circle>
+            <circle id="integrityRing" cx="110" cy="110" r="86" class="ring-fg"></circle>
+            <circle cx="110" cy="110" r="56" class="ring-inner"></circle>
+          </svg>
+          <div class="ring-center">
+            <span id="integrityPct">82%</span>
+            <small>tasks routed</small>
+          </div>
+        </div>
+        <div class="tiny-grid" id="snapshotMeta"></div>
+      </div>
+
+      <div class="hud-panel metrics-panel">
+        <div class="panel-title">LIVE REPOSITORY DATA</div>
+        <div class="metrics" id="metrics"></div>
+        <div class="barline">
+          <div class="bar-label">Task distribution</div>
+          <div id="statusBars" class="status-bars"></div>
+        </div>
+      </div>
+
+      <div class="hud-panel warning-panel">
+        <div class="panel-title">MISSION STATUS</div>
+        <div class="warning-box">
+          <div class="warning-led"></div>
+          <div>
+            <div class="warning-head">UNVERIFIED HOST EXECUTION</div>
+            <p>GitHub routing and intake are verified. Native Mac / Final Cut / Blender execution is still permission-gated and not proven from this snapshot.</p>
+          </div>
+        </div>
+        <ul id="notesList" class="notes-list"></ul>
+      </div>
+    </section>
+
+    <nav class="tabbar hud-panel">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="tasks">Tasks</button>
+      <button class="tab" data-tab="systems">Systems</button>
+      <button class="tab" data-tab="repo">Repo Map</button>
+      <button class="tab" data-tab="workers">Workers</button>
+    </nav>
+
+    <main>
+      <section class="tab-view active" id="tab-overview">
+        <div class="section-grid two-thirds">
+          <div class="hud-panel">
+            <div class="panel-title">SYSTEMS LAYOUT</div>
+            <div class="system-network" id="systemNetwork"></div>
+          </div>
+          <div class="hud-panel compact-panel">
+            <div class="panel-title">PRIORITY READY / BLOCKED</div>
+            <div class="overview-columns">
+              <div>
+                <h3>Ready to Claim</h3>
+                <div id="readyTasks" class="task-stack"></div>
+              </div>
+              <div>
+                <h3>Blocked Gates</h3>
+                <div id="blockedTasks" class="task-stack"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-view" id="tab-tasks">
+        <div class="hud-panel">
+          <div class="panel-title">TASK QUEUE</div>
+          <div class="task-toolbar">
+            <input id="taskSearch" type="text" placeholder="Search task id, title, or owner" />
+            <select id="statusFilter">
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="blocked">Blocked</option>
+              <option value="ready">Ready</option>
+            </select>
+          </div>
+          <div id="taskTable" class="task-table"></div>
+        </div>
+      </section>
+
+      <section class="tab-view" id="tab-systems">
+        <div class="section-grid triple">
+          <div class="hud-panel">
+            <div class="panel-title">SYSTEM STATUS</div>
+            <div id="systemsGrid" class="systems-grid"></div>
+          </div>
+          <div class="hud-panel">
+            <div class="panel-title">EXECUTION BOUNDARY</div>
+            <div class="boundary-diagram">
+              <div class="boundary-node ok">Public GitHub</div>
+              <div class="boundary-arrow"></div>
+              <div class="boundary-node warn">Hosted CI</div>
+              <div class="boundary-arrow dashed"></div>
+              <div class="boundary-node danger">Private Mac Executor</div>
+              <div class="boundary-arrow dashed"></div>
+              <div class="boundary-node danger">Native Apps</div>
+            </div>
+            <p class="muted">Green source does not automatically grant orange/red execution. That gap stays visible here.</p>
+          </div>
+          <div class="hud-panel">
+            <div class="panel-title">CONTROL LOOP</div>
+            <ol class="control-loop">
+              <li>Human request enters queue</li>
+              <li>Capability route checked</li>
+              <li>Atomic task intake / PR change</li>
+              <li>Hosted checks validate source</li>
+              <li>Evidence recorded back to queue</li>
+              <li>Human / client approval remains separate</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-view" id="tab-repo">
+        <div class="section-grid two-thirds">
+          <div class="hud-panel">
+            <div class="panel-title">REPOSITORY MODULE MAP</div>
+            <div id="repoBars" class="repo-bars"></div>
+          </div>
+          <div class="hud-panel">
+            <div class="panel-title">SOURCE OF TRUTH</div>
+            <div class="source-list">
+              <div><strong>Repo</strong><span id="repoName"></span></div>
+              <div><strong>Commit</strong><span id="commitSha"></span></div>
+              <div><strong>Routing Coverage</strong><span id="routeCoverage"></span></div>
+              <div><strong>Open PRs</strong><span id="prCount"></span></div>
+            </div>
+            <div class="muted block-top" id="repoDataHelp">Connecting to GitHub for current information…</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-view" id="tab-workers">
+        <div class="hud-panel">
+          <div class="panel-title">WORKER SESSION STATUS</div>
+          <div id="workersGrid" class="workers-grid"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="live-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

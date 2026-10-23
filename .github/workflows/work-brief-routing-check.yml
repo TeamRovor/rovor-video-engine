@@ -17,6 +17,10 @@ on:
       - '.github/workflows/work-brief-routing-check.yml'
 permissions:
   contents: read
+
+concurrency:
+  group: work-brief-routing-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   routing-checks:
     runs-on: ubuntu-latest

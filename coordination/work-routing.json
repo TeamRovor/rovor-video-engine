@@ -77,7 +77,7 @@
     "rovor-work-packet-contract": {
       "lane": "integration",
       "requires": [
-        "local-exec"
+        "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
     },
@@ -519,6 +519,33 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "hud-live-rate-limit-qa-20261023": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "business-ops-stale-run-cancellation-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "routing-ci-supersession-cancellation-20261023": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "capability-evaluator-malformed-output-guard-20261023": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

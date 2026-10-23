@@ -119,6 +119,38 @@ class CapabilityEvaluationTests(unittest.TestCase):
                                '--expect','pass'],capture_output=True,text=True)
         self.assertEqual(fail.returncode,1)
 
+    def test_unhashable_candidate_case_id_is_structured_failure(self):
+        for invalid in ([], {}, {"nested": ["data"]}, None):
+            with self.subTest(invalid=invalid):
+                answers = copy.deepcopy(self.good)
+                answers["answers"][0]["case_id"] = invalid
+                result = evaluate(self.cases, answers)
+                self.assertTrue(result["summary"]["failed"])
+                self.assertIn("invalid_case_id", {x["code"] for row in result["results"]
+                                                   for x in row["issues"]})
+
+    def test_unhashable_claim_id_is_structured_failure(self):
+        for invalid in ([], {}, None):
+            with self.subTest(invalid=invalid):
+                answer = copy.deepcopy(self.good["answers"][0])
+                answer["claims"][0]["id"] = invalid
+                codes = {x["code"] for x in score_case(self.cases["cases"][0], answer)}
+                self.assertIn("invalid_claim_id", codes)
+
+    def test_malformed_unknowns_and_approval_fail_without_crash(self):
+        answer = copy.deepcopy(self.good["answers"][0])
+        answer["unknowns"] = [{"unknown": "value"}]
+        answer["approval"] = []
+        codes = {x["code"] for x in score_case(self.cases["cases"][0], answer)}
+        self.assertIn("missing_or_invented_unknown", codes)
+        self.assertIn("invalid_approval", codes)
+
+    def test_malformed_ci_job_result_id_is_structured_failure(self):
+        answer = copy.deepcopy(self.good["answers"][2])
+        answer["job_results"] = [{"job_id": [], "test_evidence": "verified_pass"}]
+        codes = {x["code"] for x in score_case(self.cases["cases"][2], answer)}
+        self.assertIn("misrepresented_ci", codes)
+
     def test_input_file_size_guard(self):
         with tempfile.TemporaryDirectory() as tmp:
             p=Path(tmp)/'data.json';p.write_bytes(b' '*200_001)
