@@ -154,7 +154,7 @@ test('landscape live status cannot overlap the header action controls',()=>{
 
 test('service worker invalidates the pre-focus-view shell cache',()=>{
   const worker=fs.readFileSync(path.join(__dirname,'../service-worker.js'),'utf8');
-  assert.match(worker, /rovor-command-center-shell-v4/);
+  assert.match(worker, /rovor-command-center-shell-v5/);
   assert.doesNotMatch(worker, /rovor-command-center-shell-v3/);
 });
 
@@ -188,4 +188,12 @@ test('keyboard users can skip the decorative HUD chrome',()=>{
   assert.ok(html.includes('<main id="main-content" tabindex="-1">'));
   assert.match(css, /\.skip-link:focus\s*\{[^}]*transform:\s*translateY\(0\)/s);
   assert.match(css, /\.skip-link\s*\{[^}]*position:\s*fixed/);
+});
+
+
+test('service worker waits for successful shell writes before completing a fetch',()=>{
+  const worker=fs.readFileSync(path.join(__dirname,'../service-worker.js'),'utf8');
+  assert.match(worker, /fetch\(request\)\.then\(async response =>/);
+  assert.match(worker, /await cache\.put\(new Request\(request\.url\), copy\)/);
+  assert.match(worker, /catch \(_\) =>? \{? \/\* A cache write failure must not block the live response\./);
 });
