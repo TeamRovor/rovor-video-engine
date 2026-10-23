@@ -3214,7 +3214,7 @@
       "id": "omniroute-workforce-composite-20261023",
       "title": "Combine the tested OmniRoute workpacks and ghost queue into one isolated source candidate",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar OmniRoute-workforce composite 2026-10-23",
       "branch": "integration/ghost-omniroute-composite-20261023",
       "scopes": [
@@ -3232,14 +3232,31 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-23T23:37:57.023Z",
-      "next_update": "After GitHub-hosted Python 3.9/3.11 composite CI",
-      "next_action": "Complete isolated PR103 composite; refresh PR41 stale metadata; extend work_brief capability enumeration to support existing blender-runtime/final-cut-runtime route names, and adapt copied OmniRoute dry-run CI to fail closed without restoring unsafe self-hosted workflow. Hosted tests only, no Mac service activation.",
+      "updated_at": "2026-10-23T23:39:44.601Z",
+      "next_update": "After private Mac source preflight and separate active PR66 safety review",
+      "next_action": "PR #103 merged into PR #41 source candidate at 718f7cb1925af29e3059a6657f266264ba0d48f5. The ghost queue and complete PR51 OmniRoute runner/reviewer now coexist; 13 GitHub checks passed including Python3.9/3.11 real-module mocked integration and cross-platform coordination. Do not claim installed Mac inference. Active PR #66/#71 direct-API private receipt path hardening still needs independent review/integration. On Mac, inspect existing read-only launchd pinned runtime and STOP, test this exact reviewed checkout offline, confirm free-only account terms, and manually authorize ONE NEW foreground job before any recurring OmniRoute inference. Do not restore public self-hosted Actions workflow or retry October23 receipts.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
         "https://github.com/TeamRovor/rovor-video-engine/pull/51",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/66"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/66",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/103"
+      ],
+      "evidence": [
+        {
+          "commit": "f2fb468f6ad4ceff095d45fb87d376acfa3923e1",
+          "platform": "GitHub hosted CI / Python 3.9, Python 3.11, Windows, macOS and Ubuntu",
+          "check": "Real module queue -> workpack -> private receipt -> reviewer with mocked inference; STOP, at-most-once, missing runner source; existing workpack/reviewer tests; canonical coordination and hosted work handoff/operations",
+          "result": "PASS: all 13 jobs on exact PR103 head; no Mac AI inference, native app access, paid calls or service activation",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/103"
+        },
+        {
+          "commit": "718f7cb1925af29e3059a6657f266264ba0d48f5",
+          "platform": "GitHub PR #41 development branch",
+          "check": "Source-only integration of all OmniRoute files and queue adapter into one branch",
+          "result": "MERGED into PR41 candidate; not merged into main, not deployed to user's Mac",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/103"
+        }
       ]
     }
   ]
