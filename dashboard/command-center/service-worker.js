@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'rovor-command-center-shell-v4';
+const CACHE_NAME = 'rovor-command-center-shell-v5';
 const SHELL = [
   './',
   './index.html',
@@ -44,14 +44,15 @@ self.addEventListener('fetch', event => {
   if (!isShellAsset) return;
 
   event.respondWith(
-    fetch(request).then(response => {
+    fetch(request).then(async response => {
       if (response && response.ok) {
         const copy = response.clone();
         // Normalize the cache key: snapshot.json is fetched with cache:'no-store'.
-        // A no-store Request can be rejected by Cache.put, so cache by its URL instead.
-        caches.open(CACHE_NAME)
-          .then(cache => cache.put(new Request(request.url), copy))
-          .catch(() => {});
+        // Await the write so the service worker cannot be terminated before it finishes.
+        try {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(new Request(request.url), copy);
+        } catch (_) { /* A cache write failure must not block the live response. */ }
       }
       return response;
     }).catch(async () => {
