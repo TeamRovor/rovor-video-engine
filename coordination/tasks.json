@@ -1973,6 +1973,30 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39887002258"
         }
       ]
+    },
+    {
+      "id": "jane-native-selection-evidence",
+      "title": "Add strict read-only proof of which native Final Cut library is selected",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Mac-runtime handoff GitHub-only session 2026-10-22",
+      "branch": "feature/ghost-native-import-queue",
+      "scopes": [
+        "tools/fcp_jane_selected_library_probe.py",
+        "tests/test_fcp_jane_selected_library_probe.py",
+        "integrations/open-interpreter/JANE-SELECTION-EVIDENCE.md"
+      ],
+      "depends_on": [
+        "jane-sqlite-isolated-library-creation"
+      ],
+      "updated_at": "2026-10-23T02:11:11.489Z",
+      "next_update": "After isolated source tests and macOS AppleScript compile CI; native Mac GUI execution separately blocked until browser/host connector established",
+      "next_action": "Implement a read-only app-selection evidence probe for an existing Jane isolated-library job. Require exact selected library UI and native open file descriptor evidence, fail closed and do not enable FCPXML import. Test on hosted CI; publish limitations without claiming Mac runtime execution.",
+      "acceptance": "Own-file-only read-only tool and offline tests; refuse missing or symlinked Jane receipts/libraries, avoid private project/title leaks, bound local UI and file-handle inspection, prove positive and negative mock cases; never alter Final Cut, existing Untitled, source media, queue status, or native import gates.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41#issuecomment-6355619140"
+      ]
     }
   ]
 }
