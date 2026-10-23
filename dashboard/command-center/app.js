@@ -184,12 +184,34 @@ function normalizeState(stateName) {
   return 'development';
 }
 function wireTabs() {
-  document.querySelectorAll('.tab').forEach(button => button.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-view').forEach(view=>view.classList.remove('active'));
-    button.classList.add('active');
-    document.getElementById('tab-'+button.dataset.tab).classList.add('active');
-  }));
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const activate = (button, moveFocus = false) => {
+    tabs.forEach(tab => {
+      const selected = tab === button;
+      tab.classList.toggle('active', selected);
+      tab.setAttribute('aria-selected', String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+      const panel = document.getElementById(tab.getAttribute('aria-controls'));
+      if (panel) {
+        panel.hidden = !selected;
+        panel.classList.toggle('active', selected);
+      }
+    });
+    if (moveFocus) button.focus();
+  };
+  tabs.forEach((button, index) => {
+    button.addEventListener('click', () => activate(button));
+    button.addEventListener('keydown', event => {
+      let next = index;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (index + 1) % tabs.length;
+      else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index - 1 + tabs.length) % tabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabs.length - 1;
+      else return;
+      event.preventDefault();
+      activate(tabs[next], true);
+    });
+  });
 }
 function filterTasks(render=true) {
   const text=(document.getElementById('taskSearch')?.value || '').trim().toLowerCase();
