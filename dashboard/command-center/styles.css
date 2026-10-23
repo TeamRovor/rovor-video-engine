@@ -1211,3 +1211,94 @@ button:disabled {
   .hud-btn { min-height:36px; }
   .tab { min-height:34px; }
 }
+
+
+/* Reference match pass 02: strengthen the central reactor and make panel hierarchy deliberate.
+   These are visual-only rules; live data labels and status semantics remain owned by app.js. */
+.reactor-stage {
+  isolation:isolate;
+  border:0;
+  background:
+    radial-gradient(ellipse at 50% 83%,rgba(64,159,255,.20),transparent 31%),
+    radial-gradient(ellipse at 50% 50%,rgba(9,35,67,.48),transparent 54%),
+    linear-gradient(180deg,rgba(1,4,9,.12),rgba(2,8,17,.72));
+}
+.reactor-stage::before {
+  content:"";
+  position:absolute;
+  inset:5% 8%;
+  z-index:0;
+  pointer-events:none;
+  border:1px solid rgba(134,203,255,.20);
+  clip-path:polygon(10% 0,90% 0,100% 14%,100% 86%,90% 100%,10% 100%,0 86%,0 14%);
+  background:linear-gradient(90deg,transparent,rgba(37,130,255,.04),transparent);
+}
+.reactor-halo.halo-outer {
+  width:min(94%,66vh);
+  height:auto;
+  aspect-ratio:1;
+  border:1px solid rgba(112,192,255,.65);
+  box-shadow:0 0 0 8px rgba(41,131,255,.035),0 0 32px rgba(41,131,255,.12),inset 0 0 26px rgba(41,131,255,.06);
+}
+.reactor-halo.halo-mid {
+  width:min(78%,54vh);
+  height:auto;
+  aspect-ratio:1;
+  border:4px solid transparent;
+  background:conic-gradient(from -12deg,rgba(230,247,255,.95) 0 7deg,transparent 7deg 17deg,rgba(63,157,255,.96) 17deg 48deg,transparent 48deg 65deg,rgba(230,247,255,.92) 65deg 72deg,transparent 72deg 108deg,rgba(80,167,255,.9) 108deg 138deg,transparent 138deg 160deg,rgba(230,247,255,.85) 160deg 167deg,transparent 167deg 205deg,rgba(67,151,255,.92) 205deg 236deg,transparent 236deg 260deg,rgba(230,247,255,.88) 260deg 267deg,transparent 267deg 310deg,rgba(67,151,255,.92) 310deg 342deg,transparent 342deg 360deg) border-box;
+  -webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  box-shadow:0 0 19px rgba(60,150,255,.16);
+}
+.reactor-halo.halo-inner {
+  width:min(62%,42vh);
+  height:auto;
+  aspect-ratio:1;
+  border:1px solid rgba(200,233,255,.62);
+  border-style:solid;
+  box-shadow:0 0 15px rgba(64,151,255,.14),inset 0 0 16px rgba(64,151,255,.08);
+}
+.reactor-core {
+  width:clamp(150px,20vh,250px);
+  aspect-ratio:1;
+  border:1px solid rgba(224,243,255,.92);
+  box-shadow:0 0 0 5px rgba(112,187,255,.08),0 0 38px rgba(55,145,255,.36),0 0 92px rgba(33,116,230,.14),inset 0 0 35px rgba(125,190,255,.22);
+}
+.reactor-core img { width:76%;height:76%;filter:drop-shadow(0 0 8px rgba(220,241,255,.46)); }
+.panel-title {
+  min-height:28px;
+  color:#d8efff;
+  text-shadow:0 0 10px rgba(76,158,255,.16);
+}
+.ring-panel,.metrics-panel,.warning-panel,main>.tab-view>.hud-panel,.tab-view .section-grid>.hud-panel {
+  box-shadow:inset 0 1px rgba(218,242,255,.05),inset 0 0 22px rgba(24,91,157,.035),0 0 18px rgba(27,104,201,.065);
+}
+.metric,.task-card,.system-card,.system-mini,.worker-card,.repo-bar-row {
+  transition:border-color .18s ease,background-color .18s ease,box-shadow .18s ease;
+}
+.metric:hover,.task-card:hover,.system-card:hover,.system-mini:hover,.worker-card:hover,.repo-bar-row:hover {
+  border-color:rgba(139,208,255,.46);
+  background-color:rgba(7,25,45,.82);
+}
+@media (min-width:760px) and (orientation:landscape) {
+  .reactor-core { width:clamp(155px,20vh,255px); }
+  .reactor-halo.halo-outer { width:min(94%,68vh); }
+  .reactor-halo.halo-mid { width:min(78%,55vh); }
+  .reactor-halo.halo-inner { width:min(62%,43vh); }
+}
+@media (min-width:760px) and (max-width:1180px) and (orientation:landscape) {
+  .reactor-core { width:clamp(126px,19vh,205px); }
+  .reactor-halo.halo-outer { width:min(94%,62vh); }
+  .reactor-halo.halo-mid { width:min(78%,49vh); }
+  .reactor-halo.halo-inner { width:min(62%,38vh); }
+}
+@media (max-width:759px) {
+  .reactor-core { width:clamp(116px,21vh,170px); }
+  .reactor-halo.halo-outer { width:min(94%,34vh); }
+  .reactor-halo.halo-mid { width:min(78%,28vh); }
+  .reactor-halo.halo-inner { width:min(62%,23vh); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .metric,.task-card,.system-card,.system-mini,.worker-card,.repo-bar-row { transition:none; }
+}
