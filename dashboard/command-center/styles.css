@@ -1019,3 +1019,78 @@ body.motion-paused .telemetry-pulse { animation-play-state: paused !important; }
 /* Make the central instrument reliably operable by touch and keyboard. */
 .reactor-core { cursor: pointer; touch-action: manipulation; }
 .reactor-core:focus-visible { outline: 3px solid #d9efff; outline-offset: 8px; }
+
+
+/* Reference-alignment pass: hard black glass, precise cyan edges, restrained chrome.
+   Keep the original ROVOR SVG assets and live-data components intact. */
+:root {
+  --bg:#020409; --bg2:#050b14; --panel:rgba(2,7,15,.92);
+  --border:rgba(113,190,255,.58); --text:#e8f5ff; --muted:#8eaac6;
+  --cyan:#b9e6ff; --cyan2:#278dff; --orange:#72c9ff; --orange2:#e5f6ff;
+  --green:#31f2b0; --shadow:0 0 22px rgba(38,133,255,.11);
+}
+html,body { background:#020409; }
+body {
+ background:radial-gradient(ellipse at 50% 53%,rgba(15,62,111,.22),transparent 38%),
+ linear-gradient(180deg,#010307 0%,#030812 65%,#010307 100%);
+}
+.scanlines { opacity:.09; }
+.glow-orbit { opacity:.2; }
+.app-shell { max-width:1800px; gap:10px; }
+.topbar,.hud-panel,.tabbar {
+ border-radius:5px; border-color:rgba(114,191,255,.56);
+ background:linear-gradient(145deg,rgba(3,9,18,.97),rgba(1,5,11,.96));
+ box-shadow:inset 0 1px rgba(218,242,255,.07),0 0 0 1px rgba(71,153,255,.035),0 0 20px rgba(27,104,201,.08);
+}
+.topbar { padding:9px 16px; }
+.brand-emblem {
+ border-radius:4px; background:transparent; border:0; box-shadow:none;
+}
+.brand-emblem img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 0 8px rgba(116,187,255,.42)); }
+.emblem-orbit { display:none; }
+.topbar h1 { letter-spacing:.18em; }
+.eyebrow,.header-subtitle,.panel-title { letter-spacing:.16em; }
+.hud-btn,.tab { border-radius:3px; text-transform:uppercase; letter-spacing:.1em; }
+.hud-btn { background:rgba(5,18,34,.75); border-color:rgba(115,192,255,.52); }
+.hud-btn:hover,.hud-btn:focus-visible,.tab.active { background:rgba(25,88,151,.35); border-color:#a6ddff; box-shadow:0 0 12px rgba(47,146,255,.18); }
+.reactor-stage {
+ background:radial-gradient(ellipse at 50% 50%,rgba(26,82,146,.2),transparent 48%);
+ border-radius:0;
+}
+.reactor-core {
+ background:radial-gradient(circle,rgba(126,190,255,.18),rgba(1,5,12,.97) 69%);
+ border-color:rgba(219,241,255,.82);
+ box-shadow:0 0 0 5px rgba(92,171,255,.08),0 0 44px rgba(47,137,255,.35),inset 0 0 24px rgba(122,190,255,.24);
+}
+.reactor-core img { filter:drop-shadow(0 0 9px rgba(220,241,255,.3)); }
+.reactor-halo,.reactor-cross-ring { border-color:rgba(111,190,255,.55); }
+.reactor-readout { text-shadow:0 0 12px rgba(73,156,255,.22); }
+.syncbar { border-radius:4px; }
+.panel-title::before { width:2px; border-radius:0; }
+.metric,.task-card,.system-card,.system-mini,.worker-card,.repo-bar-row {
+ border-radius:4px; background:rgba(2,10,20,.7); border-color:rgba(107,177,255,.23);
+}
+.tabbar { gap:3px; }
+.tab { border-radius:3px; }
+@media (min-width:760px) and (orientation:landscape) {
+ .app-shell { grid-template-rows:auto minmax(170px, .8fr) auto auto minmax(210px,1fr) auto; }
+ .topbar { min-height:62px; }
+ .reactor-stage { min-height:190px; }
+ .hero-grid { gap:9px; }
+ .hud-panel { min-width:0; }
+}
+@media (min-width:761px) and (max-width:1180px) and (orientation:landscape) {
+ .app-shell { padding:7px max(10px,env(safe-area-inset-right)) 8px max(10px,env(safe-area-inset-left)); gap:7px; }
+ .topbar { padding:7px 10px; }
+ .brand-emblem { width:38px; height:38px; flex-basis:38px; }
+ .topbar h1 { font-size:clamp(13px,1.6vw,19px); }
+ .top-actions { gap:5px; }
+ .hud-btn { min-height:29px; padding:5px 7px; font-size:9px; }
+ .reactor-stage { min-height:155px; }
+ .hero-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+ .panel-title { font-size:10px; }
+ .tabbar { margin-bottom:0; }
+}
+@media (prefers-reduced-motion:reduce) {
+ *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; }
+}
