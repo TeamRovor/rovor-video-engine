@@ -8,7 +8,17 @@ Repo work/engine; development/evan-painted-rig (legacy name), draft PR#4 https:/
 
 Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful review milestones/failure/completion/required action only; disable when actually ready. Routine decisions need no question.
 
-## Latest: continuous lower-arch mapping and actual skin underlap
+## Latest: actual separate lower-lip paint and independent pressure control
+
+Read CARTOON-EVAN-INDEPENDENT-LOWER-LIP.md. Built-in image_gen created isolated lowerlip V1(too plump)→V2(thinner). Original1254square alpha/prompt/inputhashes saved lower-lip-pressure-v1/source. Uniform2corner registration, neutralcenter residual .34552px versus AUTHORED guide; not anatomy calibration. Native actualpaint loaded by LowerLipPlane, separate from jaw.
+
+Lip follows supplied9point arch; pressure0..1 compresses thickness100→60% with near-fixed topedge. This is only a pressure proxy, not actual designed roll/tuck. New review assembly has8ACTUALnonblank planes:neck,skinunderlap,cavity,incisors,jawskin,independentlowerlip,upperlipcap,facecheeks. Same7nonlipplanes exact in all48A/Bpairs. No sourcecleanup/defaultpromotion or head swap.
+
+outputs/evan-cartoon-lower-lip-pressure:48normal/192mutedquarter SILENTauthored pressure-before-release frames1280x720/48fps fullydecode. All48native mouth details/heads/fullframes inspected versus concept; no independent playback acceptance. Loopnative endpoints exact. Two8actualplane PSDs reloadmean .025085/.024889 per255, notbones. Eightnative coverage min255, notanatomy. Two focused tests pass for pressure/source/contactedge/inputguards. No narrated integration or timing edits.
+
+Rim adds subtle volume without oldheavycrease; pressureeffectsmall, releasewedge/straightupperlip/incisorwrap/skinjoins/staticeyes remainbelowconcept. Artist drawing/animation review stillneeded; jawcandidate2.4634px registration caveat persists. Fullpolishedmilestone NOTready; automationACTIVE. No pendingjobs. Prior checkpoint HISTORY-2026-10-22-L.
+
+## Retained: continuous lower-arch mapping and actual skin underlap
 
 Read CARTOON-EVAN-CONTINUOUS-JAW-CONTOUR.md. contour_target_mesh samples the full9-point lower oral arch into source jaw correspondence; existing default reconstruction unchanged. Intermediate curve controls now survive; width/independentchin retained. No two-pose normalization/clipping or temporal retiming. Review reuses original multi-control head/voice, not the rejected adapter.
 
@@ -64,8 +74,8 @@ Retained relaxed hand/forearm, wrist-axis articulation, authored detail/finished
 
 ## Next concrete work
 
-1. Preserve continuous lower-arch mapping and actual skin-underlap tools. Need an independent thin lower-lip pressure/roll drawing and coordinated F/V-to-vowel release, with incisors/lip paint separated from the uppercarrier. Original full oral driver stays; do not reuse two-pose clamp, threshold-clean seams or generate more full heads.
-2. Simplified jaw remains unapproved underpaint candidate;2.4634px registration drift/flat lip and angular paint joins need artist redraw/review. Preserve original voice/alignment uncertainty and all failed proofs. No default promotion, staging expansion or unattended Moho operation.
+1. Independent lower-lip plane now exists in eight-plane authored review. Next integrate it with original FULL continuous oral controls and separate upper-lip/incisor planes from the carrier; coordinate F/V-to-vowel roll/tuck. Do not use the rejected two-pose clamp as narration profile. Pressure thickness proxy is not accepted anatomy.
+2. Preserve original voice/alignment uncertainty, source alpha/prompt provenance and failed proofs. Artist redraw/review still needed for lip wrap, angular skin joins and jawregistration drift2.4634px. No default promotion, staging expansion or unattended Moho operation.
 
 ## Runtime/history
 

@@ -1,0 +1,41 @@
+{
+  "assets": [
+    {
+      "file": "lip-v1.png",
+      "sha256": "4fba3deaf482c22963ff3f86c056c8c57e8bd3e354092b710b2fe8d72e7500d2",
+      "mode": "built-in image_gen",
+      "promptFile": "lip-v1-prompt.txt",
+      "inputFiles": [
+        {
+          "path": "jaw-simplification-v1/Jaw-Candidate.png",
+          "sha256": "f374266c806b4d2e5c1152e70e7c6c197e2dcee0e47dabed73631fd4145eb823"
+        },
+        {
+          "path": "source/design-sheet-v1.png",
+          "sha256": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7"
+        }
+      ],
+      "sourceAlphaModified": false
+    },
+    {
+      "file": "lip-v2.png",
+      "sha256": "9584a0a3b66623ab786989fc8fd96c3bf9226c37329411b9bac95da432b3784b",
+      "mode": "built-in image_gen",
+      "promptFile": "lip-v2-prompt.txt",
+      "inputFiles": [
+        {
+          "path": "lower-lip-pressure-v1/source/lip-v1.png",
+          "sha256": "4fba3deaf482c22963ff3f86c056c8c57e8bd3e354092b710b2fe8d72e7500d2"
+        }
+      ],
+      "sourceAlphaModified": false
+    }
+  ],
+  "firstPassResult": "Separate component but too plump; not selected.",
+  "secondPassResult": "Thinner separate lower-lip ribbon; registered candidate for authored pressure tests only.",
+  "reviewConstructionLoaded": true,
+  "defaultProfileLoaded": false,
+  "fullNarrationIntegrated": false,
+  "anatomyAccepted": false,
+  "animationReady": false
+}
