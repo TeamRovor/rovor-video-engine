@@ -1793,7 +1793,7 @@
       "id": "ghost-worker-database-path-integrity",
       "title": "Refuse redirected SQLite database paths before worker initialization",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar continuous workforce repair",
       "branch": "fix/ghost-database-path-integrity",
       "scopes": [
@@ -1803,10 +1803,42 @@
       "depends_on": [
         "jane-queued-native-diagnosis"
       ],
-      "updated_at": "2026-10-23T00:44:57.527Z",
-      "next_update": "After pre-fix reproduction and integrated regression checks",
-      "next_action": "Test database/SQLite sidecar symlinks and nonregular paths; refuse before SQLite opens anything while preserving ordinary queue restart behavior.",
+      "updated_at": "2026-10-23T00:46:40.914Z",
+      "next_update": "Integration candidate review and hosted CI",
+      "next_action": "Integrate PR #44 with #43/#42 into the existing workforce candidate after hosted checks; retain explicit Mac deployment gate.",
       "acceptance": "Deterministic regressions prove no SQLite connection or external target write on redirected paths; regular queues initialize/restart as before; integrated suite passes.",
+      "evidence": [
+        {
+          "commit": "57da42936b6fb90e45c80b4fb2ae2cced1e7581e",
+          "platform": "Linux Python 3.12.14",
+          "check": "164 integrated tests; seven pre-fix failing assertions; source blob equality; git diff --check",
+          "result": "PASS164/164 in6.705s. Reject pre-existing SQLite database/WAL/SHM symlinks and nonregular paths before connection; existing restart behavior passes. No Mac/model/native app execution.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/44"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/44"
+      ]
+    },
+    {
+      "id": "workforce-repair-candidate-integration",
+      "title": "Consolidate verified worker repairs into the existing integration candidate",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar continuous workforce repair",
+      "branch": "feature/ghost-native-import-queue",
+      "scopes": [
+        "subsystem:workforce-repair-candidate-integration",
+        "integrations/open-interpreter/WORKFORCE-CHECKPOINT.md"
+      ],
+      "depends_on": [
+        "jane-queued-native-diagnosis",
+        "ghost-worker-database-path-integrity"
+      ],
+      "updated_at": "2026-10-23T00:46:40.914Z",
+      "next_update": "After guarded child-PR merges and final source verification",
+      "next_action": "Check hosted CI, then merge narrowly reviewed PRs42-44 into PR41's branch with expected-head guards. Refresh checkpoint with actual latest Mac UI observations and source checks. Do not merge full worker stack into main or activate a host service.",
+      "acceptance": "One existing integration checkout contains all three tested repairs; published code equals tested blobs; hosted checks recorded; checkpoint names exact unresolved native import and latest Mac/UI evidence. No deployment/native success inferred.",
       "evidence": []
     }
   ]
