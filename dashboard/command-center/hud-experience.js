@@ -210,6 +210,23 @@
     document.getElementById('earthSpeedBtn')?.addEventListener('click',()=>setEarthSpeed(speedIndex+1));
     document.getElementById('earthResetBtn')?.addEventListener('click',()=>earth?.reset());
     document.getElementById('routingInspectBtn')?.addEventListener('click',showRouting);
+    const stage=document.getElementById('reactorStage');
+    let dragging=false,lastPointerX=0;
+    stage?.addEventListener('pointerdown',event=>{
+      if(event.target.closest?.('button')||event.button>0)return;
+      dragging=true;lastPointerX=event.clientX;
+      stage.setPointerCapture?.(event.pointerId);
+      stage.classList.add('earth-dragging');
+    });
+    stage?.addEventListener('pointermove',event=>{
+      if(!dragging)return;
+      const dx=event.clientX-lastPointerX;lastPointerX=event.clientX;
+      earth?.nudge(dx*.55);
+    });
+    const stopDrag=()=>{dragging=false;stage?.classList.remove('earth-dragging');};
+    stage?.addEventListener('pointerup',stopDrag);
+    stage?.addEventListener('pointercancel',stopDrag);
+    stage?.addEventListener('lostpointercapture',stopDrag);
     search?.addEventListener('input',()=>renderCommands(search.value));
     search?.addEventListener('keydown',event=>{
       const entries=[...commandList.querySelectorAll('.hud-command-result')];
@@ -224,6 +241,15 @@
     document.addEventListener('keydown',handleKey);
     document.addEventListener('click',event=>{
       if(event.target.closest('[data-hud-close]')){closeOverlay();return;}
+
+      const filter=event.target.closest('[data-filter-status]');
+      if(filter){
+        navigate('tasks');
+        const field=document.getElementById('statusFilter'),input=document.getElementById('taskSearch');
+        if(input){input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));}
+        if(field){field.value=filter.dataset.filterStatus;field.dispatchEvent(new Event('change',{bubbles:true}));}
+        return;
+      }
       const task=event.target.closest('[data-task-id]');
       if(task){showTask(task.dataset.taskId);return;}
       const system=event.target.closest('[data-system-name]');
