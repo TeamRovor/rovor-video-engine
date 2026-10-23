@@ -2749,17 +2749,29 @@
       "id": "business-website-opportunity-audit-template",
       "title": "Create a reusable evidence-based website opportunity audit template",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / TeamRovor website audit template 2026-10-23",
       "branch": "business/website-opportunity-audit-template-20261023",
       "scopes": [
         "business/templates/website-opportunity-audit.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T06:07:03.267Z",
-      "next_update": "After template review and a content-quality check against the existing first-offer and opportunity-brief template.",
-      "next_action": "Create a reusable checklist to assess public business websites without inventing conversion problems: capture source/date, user journey, contact path, mobile/CTA/form evidence, accessibility basics, factual trust signals, hypotheses vs observed defects, fit/disqualifiers, smallest scoped fix, and acceptance tests. Keep named prospect data out of the public repository.",
-      "acceptance": "A standalone reusable template and scoring rubric with observed-fact/inference separation, reproducible evidence links, no claims of lost leads or ROI without data, clear disqualifiers, and a smallest-useful-deliverable/acceptance section; no named prospect data or outreach."
+      "updated_at": "2026-10-23T06:07:41.360Z",
+      "next_update": "When the template is reviewed/merged or first used on an authorized prospect in a private workspace.",
+      "next_action": "PR #72 contains the reusable audit rubric at commit 4d99f920f0fea2677944fe1d4212ff5879b952cf. Manual content review completed: observed facts/hypotheses/unknowns are separated, unsupported ROI claims are prohibited, acceptance tests and disqualifiers are included, and private lead records are explicitly kept out of the public repo. PR remains open; no local tests or actual client-site audit were run.",
+      "acceptance": "A standalone reusable template and scoring rubric with observed-fact/inference separation, reproducible evidence links, no claims of lost leads or ROI without data, clear disqualifiers, and a smallest-useful-deliverable/acceptance section; no named prospect data or outreach.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/72"
+      ],
+      "evidence": [
+        {
+          "commit": "4d99f920f0fea2677944fe1d4212ff5879b952cf",
+          "platform": "GitHub repository branch; manual source readback",
+          "check": "Reviewed business/templates/website-opportunity-audit.md for source evidence, fact/hypothesis separation, disqualification, acceptance criteria, and privacy/outreach boundaries.",
+          "result": "PASS manual content review; documentation-only; PR #72 open. No local tests, browser/mobile audit, prospect contact, or CI run claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/72"
+        }
+      ]
     }
   ]
 }
