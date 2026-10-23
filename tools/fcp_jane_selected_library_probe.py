@@ -172,8 +172,17 @@ def has_native_handle(stdout, bundle, pid):
         if not p.startswith(root + os.sep):
             continue
         relative = p[len(root)+1:]
-        if (relative and '..' not in Path(relative).parts
-                and Path(relative).name in NATIVE_NAMES):
+        parts = Path(relative).parts
+        # A synthetic file in Original Media/Render Files must never stand
+        # in for an actual native library DB. Accept only the canonical
+        # bundle root flexolibrary DB or a shallow event fcpevent DB.
+        if (relative == 'CurrentVersion.flexolibrary'
+                or (2 <= len(parts) <= 3
+                    and all(part not in ('', '.', '..', 'Original Media',
+                                         'Optimized Media', 'Proxy Media',
+                                         'Render Files', 'Analysis Files')
+                            for part in parts[:-1])
+                    and parts[-1] == 'CurrentVersion.fcpevent')):
             matched_handle = True
     return seen_pid and matched_handle
 
