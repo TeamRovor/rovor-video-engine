@@ -2489,7 +2489,7 @@
       "id": "session-routing-coverage-and-idle-triage",
       "title": "Make ROVOR session routing complete and useful when lanes are idle",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar system-routing audit 2026-10-22",
       "branch": "feature/rovor-routing-coverage-and-idle-triage",
       "scopes": [
@@ -2503,11 +2503,19 @@
       "depends_on": [
         "work-session-routing"
       ],
-      "updated_at": "2026-10-23T04:38:57.629Z",
-      "next_update": "After GitHub-hosted Python 3.9/3.11 routing regression checks and queue validation",
-      "next_action": "Explicitly classify the currently open ROVOR tasks by lane and actual required capabilities; harden work_brief to expose coverage and blockers, and optionally find eligible tasks in another lane when a selected lane has no safe work. Preserve owner/claim/dependency protection; no automatic code execution, queue mutation, public runner start or speculative computer access.",
+      "updated_at": "2026-10-23T04:50:23.348Z",
+      "next_update": "When next new queue task is added, confirm explicit routing classification in CI",
+      "next_action": "PR #62 merged main at e05d5afd8b914e096863a85343af5dbdeef26813. All current shared task IDs have an explicit lane/capability policy. New tasks must add matching route entry or fail closed. Sessions can opt in to --fallback-any-lane only when their requested lane lacks eligible work; owners, blocked dependencies and missing machine permissions are never bypassed. Read WORK.md and coordination/ROUTING-IMPROVEMENTS.md. CLI does not claim work or run Mac apps.",
       "acceptance": "Every open (ready/active/blocked) task has a valid routing rule, all unclassified remains fail-closed, idle-lane fallback is opt-in and never takes over reserved/blocked tasks, capability and dependency protections remain; deterministic tests pass on Python3.9 and3.11 and existing queue validates.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "e05d5afd8b914e096863a85343af5dbdeef26813",
+          "platform": "GitHub-hosted Ubuntu, Python 3.9 and 3.11 (not user Mac)",
+          "check": "Queue structural validation plus 19 work_brief tests per Python, including actual shared queue coverage, idle-lane fallback, owner protection, host capability refusal, snapshot integrity",
+          "result": "PASS both; 75/75 task routes classified; 2 historic date-only queue timestamps corrected from original completion commit times; no autonomous execution claimed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39902330162"
+        }
+      ]
     }
   ]
 }
