@@ -2078,6 +2078,29 @@
         }
       ],
       "blocker": "GitHub Actions runs triggered, but self-hosted Rovor-Mac matching job #120204145017 had no runner assigned and remained queued at 2026-10-23 02:30:14 UTC; readback run pending behind it. Existing trusted runner needs actual Mac host/runtime inspection to distinguish offline/busy/service/labels. Cloud GitHub connector cannot start an offline laptop process."
+    },
+    {
+      "id": "omniroute-parallel-worker-packets",
+      "title": "Give OmniRoute narrow, reusable parallel ROVOR automation tasks with private receipts",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / OmniRoute workpack engineering session 2026-10-22",
+      "branch": "feature/omniroute-parallel-workpacks",
+      "scopes": [
+        "tools/omniroute_workpack_runner.py",
+        "tests/test_omniroute_workpack_runner.py",
+        "coordination/omniroute-workpacks",
+        "integrations/open-interpreter/OMNIROUTE-PARALLEL-WORK.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T02:36:40.072Z",
+      "next_update": "After offline agent-runner tests and current GitHub main coordination check. Mac localhost invocation requires an actual host executor.",
+      "next_action": "Implement read-only/draft-only OmniRoute local task runner with strict curated packets for Mac supervisor research, CI diagnostics, and test proposal; fail closed on provider failure, no automatic source edits, shell execution or paid fallback. Publish immutable workpack outputs/receipts only from Mac after it actually runs.",
+      "acceptance": "Three scoped agent packets with non-overlapping objectives; bounded opt-in localhost model requests; output as private receipts; no arbitrary provider/model fallback, no shared secrets or private media, no real filesystem/app automation, no claims of autonomous Mac execution unless host receipts supplied. Deterministic offline tests and CI plus coordination handoff.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/integrations/open-interpreter/OMNIROUTE.md"
+      ]
     }
   ]
 }
