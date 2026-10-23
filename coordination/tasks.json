@@ -2661,7 +2661,7 @@
       "id": "routing-intake-work-entrypoint-adoption",
       "title": "Require paired task and route intake in ROVOR shared startup instructions",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar iPhone routing adoption 2026-10-22",
       "branch": "docs/routing-intake-work-entrypoint",
       "scopes": [
@@ -2671,11 +2671,19 @@
       "depends_on": [
         "paired-task-routing-intake"
       ],
-      "updated_at": "2026-10-23T05:12:11.926Z",
-      "next_update": "After hosted existing remote-handoff and route CI pass on documentation-only change",
-      "next_action": "Add the validated paired task+route preparation path to the canonical WORK.md workflow every session reads. Preserve direct GitHub connector limitations and do not imply two REST updates are atomic. Test existing CI and merge.",
+      "updated_at": "2026-10-23T05:14:38.659Z",
+      "next_update": "When next new task is created via the paired helper or GitHub connector, verify both records match",
+      "next_action": "PR #68 merged main at d6b21d7c51739bfa897615644e757ab8cffb5ad8; canonical WORK.md now points Amar/Evan sessions to tools/task_routing_pair.py and coordination/TASK-INTAKE.md and requires both queue and route records reviewed together. GitHub-hosted remote-handoff workflow passed queue, remote report and routing tests. Pairing is not a database transaction and does not execute jobs.",
       "acceptance": "WORK.md instructs local sessions to use `tools/task_routing_pair.py` and review+commit both files once; connector-only sessions must classify route before claim and avoid leaving unrouted task on main; project loop and router CI remain passing.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "d6b21d7c51739bfa897615644e757ab8cffb5ad8",
+          "platform": "GitHub-hosted Ubuntu Python 3.11 on GitHub Actions (not user Mac)",
+          "check": "Shared remote work snapshot: queue validator, remote report tests, work routing tests and handoff artifact",
+          "result": "PASS; canonical WORK.md updated; no macOS runtime work",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39904597008"
+        }
+      ]
     }
   ]
 }
