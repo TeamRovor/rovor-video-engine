@@ -1094,3 +1094,61 @@ body {
 @media (prefers-reduced-motion:reduce) {
  *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; }
 }
+
+
+/* Landscape command-center composition: reference-led three-column instrument deck. */
+@media (min-width:760px) and (orientation:landscape) {
+  .app-shell {
+    max-width:1920px;
+    grid-template-columns:minmax(235px,.88fr) minmax(330px,1.18fr) minmax(235px,.88fr);
+    grid-template-rows:64px minmax(0,1fr) 42px minmax(150px,.7fr);
+    gap:9px;
+    padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));
+  }
+  .topbar { grid-column:1/-1;grid-row:1;min-height:0;padding:7px 14px; }
+  .syncbar { grid-column:1/-1;grid-row:1;justify-self:end;align-self:center;width:min(48%,620px);min-height:30px;margin-right:0;z-index:3; }
+  .reactor-stage { grid-column:2;grid-row:2;min-height:0;height:100%;margin:0; }
+  .ring-panel { grid-column:1;grid-row:2;padding:13px; }
+  .metrics-panel { grid-column:3;grid-row:2;padding:13px; }
+  .warning-panel { grid-column:1;grid-row:4;padding:11px 13px; }
+  .tabbar { grid-column:2;grid-row:3;align-self:center;justify-content:center;min-height:38px;padding:3px; }
+  main { grid-column:3;grid-row:4;max-height:none;min-height:0;overflow:auto; }
+  .hero-grid { display:contents; }
+  .reactor-core { width:clamp(125px,15vw,220px); }
+  .reactor-halo { width:min(96%,62vh); }
+  .halo-mid { width:min(78%,49vh); }
+  .halo-inner { width:min(62%,39vh); }
+  .reactor-readout { top:5%; }
+  .ring-wrap { min-height:clamp(105px,22vh,210px); }
+  .status-ring { width:min(100%,clamp(110px,13vw,185px)); }
+  .metrics { gap:8px; }
+  .metric { padding:9px 10px; }
+  .panel-title { font-size:clamp(10px,.8vw,13px); }
+  .tab { min-height:32px;padding:6px 11px; }
+  .tab-view.active { min-height:100%; }
+}
+@media (min-width:760px) and (orientation:landscape) and (max-height:620px) {
+  .app-shell { grid-template-rows:52px minmax(0,1fr) 34px minmax(108px,.65fr);gap:6px;padding-top:5px;padding-bottom:5px; }
+  .topbar { padding:4px 10px; }
+  .brand-emblem { width:34px;height:34px;flex-basis:34px; }
+  .reactor-stage { min-height:0;height:100%; }
+  .ring-wrap { min-height:95px; }
+  .status-ring { width:105px; }
+  .warning-panel { overflow:auto; }
+  .warning-box p,.notes-list { font-size:9px; }
+  .syncbar { min-height:27px;padding:4px 8px; }
+}
+@media (min-width:760px) and (max-width:1180px) and (orientation:landscape) {
+  .app-shell { grid-template-columns:minmax(205px,.88fr) minmax(270px,1.15fr) minmax(205px,.88fr);gap:7px; }
+  .topbar h1 { font-size:16px; }
+  .header-subtitle { font-size:8px; }
+  .top-actions { gap:4px; }
+  .hud-btn { padding:5px 7px;min-height:28px;font-size:9px; }
+  .ring-panel,.metrics-panel { padding:9px; }
+  .metric { padding:6px; }
+  .reactor-core { width:clamp(105px,14vw,165px); }
+  .syncbar { width:min(50%,560px); }
+}
+@media (max-width:759px) {
+  .syncbar { width:auto;justify-self:auto; }
+}
