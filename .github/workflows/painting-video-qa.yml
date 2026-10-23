@@ -1,0 +1,28 @@
+name: ROVOR painting visual delta QA offline checks
+on:
+  pull_request:
+    paths:
+      - 'tools/video_version_delta_qa.py'
+      - 'tests/test_video_version_delta_qa.py'
+      - 'reviews/painting-v11-v12-20261022.md'
+      - '.github/workflows/painting-video-qa.yml'
+
+permissions:
+  contents: read
+jobs:
+  isolated-qa-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Read-only synthetic pixel-delta regression
+        run: python -m unittest discover -s tests -p 'test_video_version_delta_qa.py' -v
