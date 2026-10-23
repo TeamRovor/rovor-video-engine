@@ -497,6 +497,12 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "github-atomic-paired-task-commit": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }

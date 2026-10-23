@@ -2684,6 +2684,28 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39904597008"
         }
       ]
+    },
+    {
+      "id": "github-atomic-paired-task-commit",
+      "title": "Commit new ROVOR tasks and capability routes in one GitHub transaction",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar GitHub atomic intake session 2026-10-23",
+      "branch": "feature/github-atomic-task-intake-v1",
+      "scopes": [
+        "tools/github_atomic_task_intake.py",
+        "tests/test_github_atomic_task_intake.py",
+        "coordination/ATOMIC-GITHUB-INTAKE.md",
+        ".github/workflows/github-atomic-intake-check.yml"
+      ],
+      "depends_on": [
+        "paired-task-routing-intake"
+      ],
+      "updated_at": "2026-10-23T05:19:06.004Z",
+      "next_update": "After authenticated GitHub API transaction and hosted Python3.9/3.11 regression tests",
+      "next_action": "Create a guarded direct GitHub Git-objects paired task intake using the existing task_routing_pair validation: fetch main head/commit/tree and both records at same pinned head; submit one tree, one commit with exact parent, and nonforce expected-SHA ref update. Test conflicting concurrent head, malformed data, API failures, no secret output. Never start Mac or bypass branch protection.",
+      "acceptance": "Demonstrate one live atomic two-record claim; runtime source has dry-run default and deliberate apply; no partial visible queue entries or unclassified tasks; safe conflict refusal, unit tests and hosted CI success. Preserve other owner scopes and no Mac execution.",
+      "evidence": []
     }
   ]
 }
