@@ -324,18 +324,27 @@ def status(home,*,run=subprocess.run):
             stage_valid=True
         except Refused:
             pass
+    # The service may remain loaded even when its installed files are damaged
+    # or removed. Query only the fixed user-session label independently of
+    # stage integrity; a failed launchctl query is NOT proof it is stopped.
     loaded=False
-    if sys.platform=="darwin" and stage_valid:
+    observation="not_checked_non_mac"
+    if sys.platform=="darwin":
+        observation="unavailable"
         try:
             cmd=["/bin/launchctl","print",
                  "gui/"+str(os.getuid())+"/"+LABEL]
             check=run(cmd,capture_output=True,text=True,timeout=8,check=False)
-            loaded=check.returncode==0
+            if check.returncode==0:
+                loaded=True
+                observation="loaded"
+            else:
+                observation="not_confirmed"
         except (OSError,subprocess.TimeoutExpired):
             pass
     return {"status":"read_only_supervisor_status",
             "staged":staged,"stage_valid":stage_valid,
-            "launchd_loaded":loaded,
+            "launchd_loaded":loaded,"launchd_observation":observation,
             "private_queue_job_ever_executed_verified":False,
             "mac_gui_control_verified":False,
             "token_inspected":False}
