@@ -106,6 +106,8 @@ test('service worker syntax is valid and excludes cross-origin live data from ca
   assert.match(worker,/if \(url\.origin !== self\.location\.origin\) return;/);
   assert.match(worker,/Never cache GitHub API\/raw data/);
   assert.match(worker,/fetch\(request\)/);
+  assert.match(worker,/cache\.put\(new Request\(request\.url\), copy\)/);
+  assert.match(worker,/caches\.match\(new Request\(request\.url\)\)/);
 });
 
 test('HUD registers its shell service worker without requiring it for live operation',()=>{
