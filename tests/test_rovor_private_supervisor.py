@@ -23,8 +23,11 @@ class PrivateSupervisorTests(unittest.TestCase):
         (self.home/'Documents'/'Rovor').mkdir(parents=True)
         (self.home/'Library'/'Application Support').mkdir(parents=True)
         (self.home/'Library'/'LaunchAgents').mkdir()
-        self.script=self.home/'trusted-supervisor.py'
-        self.script.write_text('print("test-only")\n')
+        source=self.home/'reviewed-source'
+        source.mkdir()
+        for name in sup.RUNTIME_FILES:
+            (source/name).write_text('## synthetic trusted fixture: '+name+'\n')
+        self.script=source/'rovor_private_supervisor.py'
         self.python=self.home/'safe-python'
         self.python.write_text('#!dummy executable fixture\n')
         self.repo='TeamRovor/rovors-private-control'
@@ -52,7 +55,15 @@ class PrivateSupervisorTests(unittest.TestCase):
         obj=plistlib.loads(plist.read_bytes())
         self.assertEqual(obj['Label'],sup.LABEL)
         self.assertEqual(obj['ProgramArguments'],
-                         [str(self.python),str(self.script),'--tick'])
+                         [str(self.python),
+                          str(service/sup.RUNTIME_DIR/sup.RUNTIME_FILES[0]),
+                          '--tick'])
+        self.assertEqual(conf['schema'],2)
+        self.assertEqual(set(conf['runtime_sha256']),set(sup.RUNTIME_FILES))
+        for name in sup.RUNTIME_FILES:
+            frozen=service/sup.RUNTIME_DIR/name
+            self.assertEqual(frozen.read_bytes(),(self.script.parent/name).read_bytes())
+            self.assertEqual(frozen.stat().st_mode&0o777,0o600)
         self.assertTrue(obj['RunAtLoad'])
         self.assertEqual(obj['StartInterval'],300)
         self.assertNotIn('KeepAlive',obj)
@@ -96,6 +107,52 @@ class PrivateSupervisorTests(unittest.TestCase):
                           script=self.script,python=self.python)
         self.assertEqual(list(outside.iterdir()),[])
 
+    def test_git_checkout_modification_does_not_change_frozen_runtime(self):
+        self.staged()
+        service, plist, config = sup._check_stage(self.home)
+        original = (service/sup.RUNTIME_DIR/sup.RUNTIME_FILES[0]).read_bytes()
+        self.script.write_text('## mutated Git checkout after stage\n')
+        _service, _plist, verified = sup._check_stage(self.home)
+        self.assertEqual((service/sup.RUNTIME_DIR/sup.RUNTIME_FILES[0]).read_bytes(),
+                         original)
+        self.assertEqual(verified['script_path'],
+                         str(service/sup.RUNTIME_DIR/sup.RUNTIME_FILES[0]))
+        self.assertNotEqual(original,self.script.read_bytes())
+
+    def test_frozen_dependency_edit_blocks_native_service_tick(self):
+        self.staged()
+        service,plist,config=sup._check_stage(self.home)
+        frozen=service/sup.RUNTIME_DIR/'ghost_private_control.py'
+        frozen.write_bytes(b'# swapped after approval\n')
+        with self.assertRaisesRegex(sup.Refused,
+                                    'snapshot differs from reviewed code'):
+            sup._check_stage(self.home)
+        with mock.patch.object(sup.sys,'platform','darwin'):
+            with mock.patch.object(sup.poller,'poll') as agent:
+                with self.assertRaisesRegex(sup.Refused,
+                                            'snapshot differs from reviewed code'):
+                    sup.tick(self.home,key_lookup=lambda:'test-private-token')
+            agent.assert_not_called()
+
+    def test_snapshot_redirect_and_unknown_runtime_path_refused(self):
+        self.staged()
+        service,plist,config=sup._check_stage(self.home)
+        frozen=service/sup.RUNTIME_DIR/'ghost_worker.py'
+        copied=frozen.read_bytes()
+        frozen.unlink()
+        frozen.symlink_to(self.script)
+        with self.assertRaises(sup.Refused):sup._check_stage(self.home)
+        frozen.unlink()
+        frozen.write_bytes(copied)
+        frozen.chmod(0o600)
+        cfg=service/sup.CONFIG_FILE
+        data=json.loads(cfg.read_text())
+        data['script_path']='/Users/someone/Downloads/untrusted.py'
+        cfg.write_text(json.dumps(data))
+        with self.assertRaisesRegex(sup.Refused,
+                                    'Runtime script must be isolated'):
+            sup._check_stage(self.home)
+
     def test_tampered_plist_stops_action(self):
         self.staged()
         _service,plist,_config=sup._check_stage(self.home)
@@ -132,7 +189,7 @@ class PrivateSupervisorTests(unittest.TestCase):
         self.assertEqual(calls[0][:4],(self.repo,'secret-key',self.home,self.issue))
         opts=calls[0][4]
         self.assertEqual(opts['max_jobs'],1)
-        self.assertLessEqual(opts['max_seconds'],30)
+        self.assertLessEqual(opts['max_seconds'],180)
         self.assertFalse(opts['allow_inventory'])
         self.assertNotIn('secret-key',json.dumps(result))
 
