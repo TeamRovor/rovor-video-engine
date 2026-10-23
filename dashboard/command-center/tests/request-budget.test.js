@@ -157,3 +157,25 @@ test('service worker invalidates the pre-focus-view shell cache',()=>{
   assert.match(worker, /rovor-command-center-shell-v4/);
   assert.doesNotMatch(worker, /rovor-command-center-shell-v3/);
 });
+
+test('HUD theme tokens have one canonical root without changing the current palette',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../styles.css'),'utf8');
+  const roots=css.match(/:root\s*\{/g)||[];
+  assert.equal(roots.length,1,'Keep the shared theme tokens in one canonical root');
+  for (const token of [
+    '--bg: #020409;',
+    '--text: #edf7ff;',
+    '--cyan: #a9ddff;',
+    '--cyan2: #278cff;',
+    '--panel-edge: rgba(98, 242, 255, .22);',
+    '--hud-grid: rgba(98, 242, 255, .045);'
+  ]) assert.ok(css.includes(token),'Missing expected HUD theme token: '+token);
+});
+
+test('HUD shell uses local assets and does not require a deployment vendor runtime',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+  assert.match(html,/href="styles\.css"/);
+  assert.match(html,/src="\.\/app\.js"/);
+  assert.match(html,/href="\.\/manifest\.webmanifest"/);
+  assert.doesNotMatch(html,/(?:vercel\.app|@vercel\/|vercel\.com\/analytics)/i);
+});
