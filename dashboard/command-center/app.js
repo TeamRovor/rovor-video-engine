@@ -257,6 +257,8 @@ function wireControls() {
 
 /* Reactor interaction: cycle instrument overlays without faking live repository data. */
 function wireReactor() {
+  // The live-data budget tests run the app with a minimal DOM shim.
+  if (typeof document === 'undefined' || typeof document.querySelector !== 'function') return;
   const stage = document.querySelector('.reactor-stage');
   const core = document.querySelector('.reactor-core');
   if (!stage || !core) return;
