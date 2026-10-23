@@ -59,7 +59,9 @@
       "branch": "review/painting-wip-v11-v12-visual-qa-20261022",
       "scopes": [
         "subsystem:evan-visual-review",
-        "reviews/painting-v11-v12-20261022.md"
+        "reviews/painting-v11-v12-20261022.md",
+        "tools/video_version_delta_qa.py",
+        "tests/test_video_version_delta_qa.py"
       ],
       "depends_on": [],
       "next_action": "Review source-video painting-film V11/V12 evidence and timestamped defects 82/108/120s, then create a source-art-preserving 30–50s continuous animated repair passage. No renderer changes or release approval during review.",
