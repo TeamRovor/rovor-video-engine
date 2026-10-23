@@ -68,9 +68,12 @@ def _safe_file(path, limit=8192):
 
 
 def _json_private(config_path):
+    # File safety failures must not be reclassified as JSON parse failures.
+    # Refused subclasses ValueError and would otherwise be swallowed here.
+    raw = _safe_file(config_path)
     try:
-        config = json.loads(_safe_file(config_path))
-    except (UnicodeError, ValueError, json.JSONDecodeError):
+        config = json.loads(raw)
+    except (UnicodeError, ValueError):
         raise Refused("Invalid local supervisor config") from None
     if (not isinstance(config, dict)
             or set(config) != {"schema", "private_repo", "receipt_issue",
