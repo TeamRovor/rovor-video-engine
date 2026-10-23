@@ -134,3 +134,26 @@ test('failed critical refresh visibly downgrades live data to a stale snapshot',
   assert.match(page.el('syncDetails').textContent,/HTTP 403/);
   assert.ok(page.el('taskTable').innerHTML.includes('Router proof'));
 });
+
+
+test('landscape focus view owns one full-screen grid cell',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../styles.css'),'utf8');
+  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+  assert.match(css, /\.focus-mode \.app-shell\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
+  assert.match(css, /\.focus-mode \.reactor-stage\s*\{[^}]*grid-column:\s*1;[^}]*grid-row:\s*1;/s);
+  assert.match(html, /id="focusExitBtn"/);
+  assert.match(SCRIPT, /event\.key === 'Escape'/);
+});
+
+test('landscape live status cannot overlap the header action controls',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../styles.css'),'utf8');
+  const responsive=css.slice(css.lastIndexOf('/* iPad landscape: keep source health'));
+  assert.match(responsive, /\.syncbar\s*\{[^}]*grid-column:\s*1;[^}]*grid-row:\s*3;/s);
+  assert.match(css, /\.tabbar\s*\{\s*grid-column:2;grid-row:3;/);
+});
+
+test('service worker invalidates the pre-focus-view shell cache',()=>{
+  const worker=fs.readFileSync(path.join(__dirname,'../service-worker.js'),'utf8');
+  assert.match(worker, /rovor-command-center-shell-v4/);
+  assert.doesNotMatch(worker, /rovor-command-center-shell-v3/);
+});
