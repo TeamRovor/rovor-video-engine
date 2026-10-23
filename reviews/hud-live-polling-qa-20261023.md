@@ -27,3 +27,7 @@ The test `tests/test_hud_live_polling_budget.js` runs the **actual inline dashbo
 - This is a deterministic mocked-browser CI run, not a measurement from a deployed browser or real public API.
 - The initial static estimate is approximately 192 requests/hour; the actual simulated count of 194 is the controlling test result and reflects timer scheduling at the test boundary. The fix must be validated against the executable test, not the estimate.
 - An actionable release-blocker comment was posted on PR #73 (comment ID `6358993663`) with the result and a lower-call strategy. Dashboard implementation remains the PR owner's responsibility.
+
+## Harness hardening — pinned raw content remediation
+
+The QA mock now distinguishes `api.github.com` REST calls from pinned `raw.githubusercontent.com` file reads. It accepts either Contents-API reads using `?ref=<immutable SHA>` or raw queue/routing URLs containing that same immutable SHA. Only REST calls count against the 60/hour allowance; raw content reads remain mocked and still have to prove both files use the same SHA. The simulated 403 test uses a small injected REST limit so fail-closed behavior is tested even after a future implementation reduces REST polling. This prevents the QA suite from rejecting the recommended remediation merely because the data transport changes.
