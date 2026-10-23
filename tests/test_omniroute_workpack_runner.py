@@ -324,6 +324,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         destinations = (
             self.repo,
             self.repo / 'private-receipts',
+            alias,
             alias / 'nested-private-receipts',
         )
 
@@ -339,7 +340,9 @@ class OmniRouteWorkpackTests(unittest.TestCase):
                         'explicit/route', 'fixture-key',
                         completion=must_not_call,
                     )
-                if destination != self.repo:
+                if destination == alias:
+                    self.assertTrue(alias.is_symlink(), 'existing alias must not be removed')
+                elif destination != self.repo:
                     self.assertFalse(destination.exists())
         self.assertFalse((self.repo / 'private-receipts').exists())
         self.assertFalse((self.repo / 'nested-private-receipts').exists())
