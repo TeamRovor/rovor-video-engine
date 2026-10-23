@@ -2885,9 +2885,9 @@
       "depends_on": [
         "github-atomic-paired-task-commit"
       ],
-      "updated_at": "2026-10-23T06:44:06.106Z",
-      "next_update": "Whenever the live HUD refresh cadence or PR/tree API calls change, rerun the existing one-hour Command Center budget CI",
-      "next_action": "QA verified two separate dashboards. PR #77 remains a deliberate FAIL for old PR #73 at 194 unauthenticated GitHub REST calls/hour (do not merge until corrected/closed). PR #76 merged independently as Iron Man Command Center; independent 60-minute simulation CI #39913137266 passed 5/5 tests in merged PR #78 at a1f59911d494c16537469cde4c6803b6882895a2. Command Center uses ~31 REST calls/hour for ONE visible tab, pinned raw same-commit queue+routes, with hidden-tab pause/manual refresh. This does not guarantee >1 simultaneous visible device behind a shared IP or prove production hosting. Need optional future cross-device cache/budget tracking; no Mac execution.",
+      "updated_at": "2026-10-23T06:48:00Z",
+      "next_update": "Reopen only if either dashboard changes polling behavior, a regression appears, or multi-device shared-IP usage becomes a release requirement.",
+      "next_action": "Independent hosted QA completed for both live HUDs. Lightweight PR #73 revised head 138d1713a504ef72a8cf57deb8ae1d059df509ec uses 32 REST calls/hour (run 39913411350; 4/4 tests pass), down from 194/hour on the old head (run 39912037508). Merged Iron Man Command Center source on main uses 31 REST calls plus 42 pinned raw reads/hour (run 39913559189; 6/6 tests pass). Tests cover same-SHA reads, fail-closed/stale labeling, hidden-tab pause, manual refresh bounds and no credentials/writes. PR #77 and PR #80 remain draft/open; no merge or deployment performed. Single-tab budget only; two concurrent Command Center tabs sharing one IP could reach about 62 REST calls/hour.",
       "acceptance": "Independent deterministic tests prove 1-hour refresh API request count and replayable rate-limit failure; baseline failure is explicitly recorded; owner must lower REST API calls or use raw pinned files and re-run QA before live deployment.",
       "evidence": [
         {
@@ -2910,13 +2910,30 @@
           "check": "Old PR #73 one-hour request budget 194/>60 intentional fail (run39912037508); actual merged Command Center PR #76 test: one-hour API budget, pinned revision, tab pause, manual refresh and no GitHub write credential",
           "result": "Command Center 5/5 PASS, plus existing dashboard CI PASS; older lightweight PR #73 still FAIL release gate. No live hosting or Mac execution",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913137266"
+        },
+        {
+          "commit": "c056880871f525ef3cf9ba1a4105ac165326ea29",
+          "platform": "GitHub-hosted Node 22; actual lightweight dashboard script in VM with fake DOM/clock/fetch",
+          "check": "60-minute request budget, immutable SHA, injected 403 stale/error, no-token/no-mutation",
+          "result": "PASS 4/4. Measured 32 REST requests/hour on revised PR #73 head; old implementation baseline was 194/hour.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913411350"
+        },
+        {
+          "commit": "9624d3c83c6472d1e26196653d1b281e62a86015",
+          "platform": "GitHub-hosted Node 22; actual merged Command Center app.js in VM with fake DOM/clock/fetch",
+          "check": "60-minute REST budget, pinned SHA, hidden-tab pause, manual refresh, stale downgrade, credential/write scan",
+          "result": "PASS 6/6. Measured 31 REST requests and 42 raw pinned reads per 60 simulated minutes. No deployed-browser or Mac-runtime test claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913559189"
         }
       ],
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/73#issuecomment-6358993663",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/73#issuecomment-6358993663",
         "https://github.com/TeamRovor/rovor-video-engine/pull/77",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912512115",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/73#issuecomment-6358993663"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/80",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912037508",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913411350",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913559189"
       ]
     }
   ]
