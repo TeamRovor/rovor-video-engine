@@ -2629,7 +2629,7 @@
     {
       "id": "paired-task-routing-intake",
       "title": "Prepare validated paired task and routing entries in one local change",
-      "status": "active",
+      "status": "done",
       "priority": 1,
       "owner": "ChatGPT / Amar system routing paired intake 2026-10-22",
       "branch": "feature/rovor-paired-task-routing-intake",
@@ -2643,11 +2643,19 @@
       "depends_on": [
         "session-routing-coverage-and-idle-triage"
       ],
-      "updated_at": "2026-10-23T05:05:04.615Z",
-      "next_update": "After full shared queue validation and GitHub-hosted Python 3.9/3.11 tests",
-      "next_action": "Implement stdlib helper to validate one new task and its explicit route against latest local queue, check duplicate IDs, reserved scope and dependencies, emit both updated files as a paired preview or guarded apply. No task auto-claim, GitHub push or remote execution.",
+      "updated_at": "2026-10-23T05:11:01.093Z",
+      "next_update": "When next GitHub-connected owner proposes a new task, use paired route intake in a clean local checkout or update both files in one reviewed GitHub commit",
+      "next_action": "PR #67 merged main at b87434b7657661407de55a4a263d76d575a600db. Existing `tools/task_routing_pair.py` validates a proposed task and explicit route simultaneously, rejects duplicate IDs/scope collision/unknown deps/malformed routes, leaves original files untouched by default, and guarded --apply writes both tracked files locally for a single reviewed git commit. This does NOT make two renames atomic or automate GitHub API writes. Hosted 12 tests per Python3.9/3.11 and current 80/80 route check passed. See coordination/TASK-INTAKE.md. No Mac control claimed.",
       "acceptance": "New entries cannot be prepared without valid paired route and queue; no owner takeover; refuses dirty source files and mismatched mappings; tests cover duplicate/invalid/blocked scopes and clean valid output; hosted CI pass. Preserve existing read-only work_brief and canonical queue.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "b87434b7657661407de55a4a263d76d575a600db",
+          "platform": "GitHub-hosted Ubuntu Python 3.9 and 3.11",
+          "check": "12 local pair tests per Python; current 80/80 queue route consistency; project_loop queue validator; clean vs dirty local worktree, symlink, duplicate, unknown deps, overlapping claim",
+          "result": "PASS both; source merged, no local computer apps or models executed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39904222320"
+        }
+      ]
     }
   ]
 }
