@@ -2689,7 +2689,7 @@
       "id": "github-atomic-paired-task-commit",
       "title": "Commit new ROVOR tasks and capability routes in one GitHub transaction",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar GitHub atomic intake session 2026-10-23",
       "branch": "feature/github-atomic-task-intake-v1",
       "scopes": [
@@ -2702,11 +2702,19 @@
       "depends_on": [
         "paired-task-routing-intake"
       ],
-      "updated_at": "2026-10-23T05:19:06.004Z",
-      "next_update": "After authenticated GitHub API transaction and hosted Python3.9/3.11 regression tests",
-      "next_action": "Create a guarded direct GitHub Git-objects paired task intake using the existing task_routing_pair validation: fetch main head/commit/tree and both records at same pinned head; submit one tree, one commit with exact parent, and nonforce expected-SHA ref update. Test conflicting concurrent head, malformed data, API failures, no secret output. Never start Mac or bypass branch protection.",
+      "updated_at": "2026-10-23T05:28:18.642Z",
+      "next_update": "When future ROVOR sessions add tasks, use one pinned-head Git-data commit and verify the resulting main SHA",
+      "next_action": "Verified direct GitHub connector one-tree-one-commit task+route ref update at a1b78ca4874665aa016d4bed5fe2b619e57d5287. Reusable tools/github_atomic_task_intake.py source merged at f15bd5ca8b25fe22fe4afce37ea333560a792d78, with 12 mocked-HTTP tests each on GitHub-hosted Python3.9/3.11. Canonical WORK.md integration at 4fe29710037551987e31ea265381d81765a65cea. Use single Git-data transaction with non-force and pinned-head validation, never a partial main update or forced branch update. Live Python CLI has NOT been exercised with credentials; host Mac execution remains unverified.",
       "acceptance": "Demonstrate one live atomic two-record claim; runtime source has dry-run default and deliberate apply; no partial visible queue entries or unclassified tasks; safe conflict refusal, unit tests and hosted CI success. Preserve other owner scopes and no Mac execution.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "f15bd5ca8b25fe22fe4afce37ea333560a792d78",
+          "platform": "GitHub live Git-data connector for actual paired main commit; GitHub-hosted Ubuntu Python3.9 and3.11 for reusable command tests",
+          "check": "Live tree/commit/ref publish included exactly two JSON files; 12 test cases per Python for pinned reads, duplicate IDs, blocked scope, concurrent head, nonfastforward, dry-run, secrets, and request schema; queue coverage",
+          "result": "Actual atomic 82/82 main task-route claim succeeded; automated 12/12 each version PASS; new CLI itself tested only with fake HTTP, no Mac access",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39905586142"
+        }
+      ]
     }
   ]
 }
