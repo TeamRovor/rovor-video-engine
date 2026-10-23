@@ -1692,7 +1692,7 @@
       "id": "jane-diagnostic-xml-integrity",
       "title": "Prevent false valid XML diagnoses for changed native import evidence",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar diagnostic integrity 2026-10-23",
       "branch": "fix/jane-diagnostic-integrity",
       "scopes": [
@@ -1700,11 +1700,22 @@
         "tests/test_fcp_jane_native_probe.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T00:09:19.267Z",
-      "next_update": "After regression tests and source publication",
-      "next_action": "Check receipt XML hashes and exact referenced 30-second 60fps geometry in read-only diagnosis; do not replay native import.",
+      "updated_at": "2026-10-23T00:11:13.396Z",
+      "next_update": "PR #42 review, then actual Mac diagnosis",
+      "next_action": "Review PR #42 stacked on #41. On actual Mac use existing jane_native_worker.py --diagnose against the unresolved attempt; if unexplained, observe native app dialog. Do not repeat research, MCP setup, or dispatch. Source tested/published, not merged, installed or host-verified.",
       "acceptance": "Regressions reject modified XML, incorrect geometry and sequence format, media references, and missing hashes; unchanged actual receipt structure passes; integrated offline suite passes. No Mac runtime claim.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "78d8c05f8a9f75b9b10918dab7474a6a78a0d209",
+          "platform": "Linux Python 3.12.14",
+          "check": "152 integrated offline tests, 13 probe tests, pre-fix run of four new regression methods, git diff --check; published two blob hashes equal tested files",
+          "result": "PASS 152/152 in 6.559s. Pre-fix module fails 11 assertions, zero errors. Queue checker retains pre-existing invalid Blender trailing-slash scope. No Mac/model/native app execution or unattended deployment.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/42"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/42"
+      ]
     }
   ]
 }
