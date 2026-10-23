@@ -1687,6 +1687,24 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/39"
         }
       ]
+    },
+    {
+      "id": "jane-diagnostic-xml-integrity",
+      "title": "Prevent false valid XML diagnoses for changed native import evidence",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar diagnostic integrity 2026-10-23",
+      "branch": "fix/jane-diagnostic-integrity",
+      "scopes": [
+        "tools/fcp_jane_native_probe.py",
+        "tests/test_fcp_jane_native_probe.py"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T00:09:19.267Z",
+      "next_update": "After regression tests and source publication",
+      "next_action": "Check receipt XML hashes and exact referenced 30-second 60fps geometry in read-only diagnosis; do not replay native import.",
+      "acceptance": "Regressions reject modified XML, incorrect geometry and sequence format, media references, and missing hashes; unchanged actual receipt structure passes; integrated offline suite passes. No Mac runtime claim.",
+      "evidence": []
     }
   ]
 }
