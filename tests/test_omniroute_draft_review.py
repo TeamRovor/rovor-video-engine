@@ -18,7 +18,7 @@ class OmniRouteDraftReviewTests(unittest.TestCase):
     def setUp(self):
         tmp=tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
-        self.home=Path(tmp.name)
+        self.home=Path(tmp.name).resolve()
         self.repo=self.home/'repository'
         self.repo.mkdir()
         self.receipts=self.home/'private-receipts'
