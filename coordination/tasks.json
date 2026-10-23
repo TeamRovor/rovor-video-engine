@@ -58,10 +58,11 @@
       "owner": "ChatGPT / Amar iPhone painting-film source-video visual QA 2026-10-22",
       "branch": "review/painting-wip-v11-v12-visual-qa-20261022",
       "scopes": [
-        "subsystem:evan-visual-review"
+        "subsystem:evan-visual-review",
+        "reviews/painting-v11-v12-20261022.md"
       ],
       "depends_on": [],
-      "next_action": "Review the actual accessible original 156s painting-film V11/V12 MP4s and portrait rather than static specs. Quantify V11->V12 content differences, inspect critical body/props/camera shots, publish an evidence-based defect and acceptance queue. This is review only: do not alter renderer source or assert completed 4:23 film.",
+      "next_action": "Review source-video painting-film V11/V12 evidence and timestamped defects 82/108/120s, then create a source-art-preserving 30–50s continuous animated repair passage. No renderer changes or release approval during review.",
       "acceptance": "Record exact source commit, sample and timestamps, observed defect and the next bounded art/acting task. Engineering tests alone do not establish visual approval.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/1",
