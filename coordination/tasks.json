@@ -1147,11 +1147,13 @@
       ]
     },
     {
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar portable work packet contract 2026-10-23",
       "branch": "feature/rovor-work-packet-contract-v1",
       "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/75",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911598094"
       ],
       "id": "rovor-work-packet-contract",
       "title": "Standardize the smallest portable work packet from proven workflows",
@@ -1164,10 +1166,19 @@
       "depends_on": [
         "rovor-capability-evaluation-pack"
       ],
-      "next_action": "Derive a minimal JSON Schema and stdlib validator/fixtures from the source-grounded evaluation pack and existing task/handoff patterns. Validate source refs/hashes, constraints, acceptance, executor requirements, artifact receipt and approval state; keep unknown/unrun separate from success and technical completion separate from human approval. No shell-command payloads, self-granted permissions, duplicate queue or runtime.",
+      "next_action": "PR #75 adds JSON Schema v1, a stdlib validator, three evaluation-derived synthetic packet examples, invalid fixtures and 15 regression tests. Hosted business-operations matrix passed on Ubuntu and Windows, including positive and negative CLI acceptance checks. PR remains draft/open and unmerged; fixtures cite evaluation case IDs on PR #74 branch until that dependency lands. Contract validates structure/cross-field consistency, not source truth or identity.",
       "acceptance": "Schema validates representative accepted and rejected cases, preserves unknown/unrun states and separates technical completion from approval/publication. No opaque shell commands or self-granted permissions. Test against the actual evaluated examples.",
-      "updated_at": "2026-10-23T06:25:00Z",
-      "next_update": "After schema, positive/negative fixtures, and hosted contract tests are in the PR."
+      "updated_at": "2026-10-23T06:29:00Z",
+      "next_update": "After PR #75 review/merge and after PR #74 evaluation-pack dependency is integrated.",
+      "evidence": [
+        {
+          "commit": "b5b3e04b96ba36a87f3f9efae1851c48afb3477f",
+          "platform": "GitHub-hosted Python 3.11; ubuntu-latest and windows-latest",
+          "check": "15 work packet contract regression tests; positive validator CLI; negative fixture CLI with expected failure; business operations report.",
+          "result": "PASS both OS matrix jobs and report job. PR #75 remains draft/open and unmerged. Examples cite evaluation-pack case source URIs from PR #74; they are synthetic and the validator is not semantic truth verification.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39911598094"
+        }
+      ]
     },
     {
       "status": "done",
