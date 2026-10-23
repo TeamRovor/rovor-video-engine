@@ -41,6 +41,17 @@ EXECUTION_CLAIMS = re.compile(
 )
 
 
+# The client in PR #51 limits responses to 2400 completion tokens but does
+# not save finish_reason. This threshold indicates *possible* truncation.
+NEAR_COMPLETION_CAP = 2390
+REPORT_DATE_HEADER = re.compile(
+    r'(?im)^[ \t]*(?:#{1,4}[ \t]*)?(?:\*{1,2})?'
+    r'(?:analysis[ \t]+date|document[ \t]+date|date)'
+    r'(?:\*{1,2})?[ \t]*:[ \t]*(?:\*{1,2})?'
+    r'(\d{4})[-/](\d{2}|XX)[-/](\d{2}|XX)(?![0-9A-Za-z])'
+)
+
+
 def _safe_directory(path):
     # Never create directories or modify permissions during inspection.
     if path.is_symlink() or not path.is_dir():
@@ -126,6 +137,22 @@ def check_receipt(obj,expected_id,expected_provenance):
         return 'sensitive_draft_blocked', ['possible_secret_in_private_answer'],True,True
     if EXECUTION_CLAIMS.search(text):
         return 'execution_claim_needs_review', ['unsupported_execution_claim'],True,True
+    # Inspect only header metadata. Dates inside the analysis body may describe
+    # historical evidence and must not be treated as the report date.
+    concerns=[]
+    usage=obj.get('usage_reported')
+    if isinstance(usage,dict):
+        count=usage.get('completion_tokens')
+        if type(count) is int and count >= NEAR_COMPLETION_CAP:
+            concerns.append('near_completion_token_cap_truncation_unknown')
+    report_date=REPORT_DATE_HEADER.search(text[:1800])
+    if report_date:
+        if 'XX' in report_date.group(0).upper():
+            concerns.append('report_date_placeholder')
+        elif int(report_date.group(1)) != datetime.fromisoformat(obj['created_at']).year:
+            concerns.append('report_header_year_mismatch')
+    if concerns:
+        return 'content_quality_needs_review', concerns, True, True
     return 'draft_ready_for_human_review', ['content_quality_not_automatically_verified'],True,True
 
 
