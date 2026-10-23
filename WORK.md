@@ -71,7 +71,7 @@ If GitHub rejects a stale write, reread and reapply only your task change. Never
 Re-read main after publishing and check for concurrent/overlapping claims. Stop overlapping work if one appears.
 A branch-only claim is proposed, not shared ownership. GitHub updates are not a distributed task lock.
 
-For new tasks, use `tools/task_routing_pair.py` and `coordination/TASK-INTAKE.md` to validate the task and route together. Review both changes and commit both JSON files in one Git commit. A GitHub connector call is not a multi-file transaction; verify routing coverage after any connector-only claim.
+For new tasks, use `tools/task_routing_pair.py` and `coordination/TASK-INTAKE.md` to validate the task and route together. Review both changes and commit both JSON files in one Git commit. For GitHub-connected sessions, prefer the verified Git-data transaction: read the same exact main commit and its tree, validate the new task and route against both pinned JSON files, create one two-file tree and one commit, then update main with **force=false** and a checked prior head. If another session moved main, refresh and reconsider; never overwrite or force an update. `tools/github_atomic_task_intake.py` and `coordination/ATOMIC-GITHUB-INTAKE.md` document the equivalent optional local CLI with dry-run as the default. Never paste credentials. If atomic Git-data operations are unavailable, coordinate the pair on a review branch rather than leave an unrouted task on main. No intake method creates a computer runtime or executes ghost employee tasks.
 
 ## 4. Implement and verify the smallest useful result
 
