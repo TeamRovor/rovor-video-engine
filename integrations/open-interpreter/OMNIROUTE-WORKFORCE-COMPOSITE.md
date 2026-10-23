@@ -2,8 +2,11 @@
 
 **Status: source composite, not a Mac installation or unattended activation.**
 This exact integration candidate starts from the existing PR #41 SQLite queue,
-STOP control and bounded poller, then copies the reviewed 11 PR #51 inference,
-receipt-review, packet manifest and test/CI files **without altering them**.
+STOP control and bounded poller, then layers the 11 PR #51 inference,
+receipt-review, packet manifest and test/CI files. **The Python runner, reviewer,
+manifests and tests are copied unchanged**; the copied old dry-run CI workflow
+is adapted to test the two usable packets and assert that missing runner
+evidence fails closed without reinstating a privileged public workflow.
 The existing PR #102 OmniRoute job kind remains off unless independently opted in.
 
 ## Why this is the next step
@@ -47,6 +50,18 @@ could import neither dependency. This candidate closes that source gap.
   paid fallback or silent replays.
 - Copying reviewed source into this branch does not mean it has been
   deployed, merged into main, or loaded by the Mac's existing LaunchAgent.
+
+## Canonical coordination compatibility
+
+The PR #41 source branch carried a very old copy of the shared task and
+capability routing metadata. This candidate refreshes both files from the
+latest canonical GitHub main pair, without changing main or modifying any
+task owner. It also registers the already-used `blender-runtime` and
+`final-cut-runtime` capability names in `tools/work_brief.py`. Registration
+does **not** grant a session any machine capability: an eligible task still
+requires its caller to explicitly declare and actually possess those runtime
+capabilities. Regression tests preserve that boundary. This repairs the older
+hosted handoff and operations-report job compatibility with current routing.
 
 ## Hosted evidence
 
