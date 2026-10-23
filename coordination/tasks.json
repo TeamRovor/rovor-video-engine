@@ -2860,11 +2860,24 @@
       "depends_on": [
         "github-atomic-paired-task-commit"
       ],
-      "updated_at": "2026-10-23T06:28:13.834Z",
-      "next_update": "After simulated browser polling review and CI evidence",
-      "next_action": "Independently test PR #73's draft dashboard in a Node simulated browser for live refresh correctness, pinned revision identity, and unauthenticated GitHub REST request budget. Fail QA when automatic requests exceed an ordinary 60/hour unauthenticated allowance. Publish evidence to PR #73 without modifying another owner's dashboard code. Stacked PR only for tests/QA.",
+      "updated_at": "2026-10-23T06:34:00Z",
+      "next_update": "After dashboard owner lowers API polling volume and the full-hour mocked-browser budget test passes.",
+      "next_action": "Hosted baseline on PR #73 merge ref reproduced 194 unauthenticated REST requests in 60 simulated minutes, exceeding 60/hour. Same-SHA consistency, simulated 403 fail-closed behavior, and no-token/no-mutation scan passed; budget test failed intentionally (3/4 total). Posted release-blocker comment on PR #73 and recorded exact evidence in QA report/PR #77. Do not merge QA PR until owner changes dashboard polling and budget test passes. No dashboard source changed by QA.",
       "acceptance": "Independent deterministic tests prove 1-hour refresh API request count and replayable rate-limit failure; baseline failure is explicitly recorded; owner must lower REST API calls or use raw pinned files and re-run QA before live deployment.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "d20079e3f730f5f4532aede514ac88955630ba87",
+          "platform": "GitHub-hosted Node 22; deterministic VM/fake DOM/mocked GitHub responses",
+          "check": "Actual PR #73 inline script over 60 simulated minutes; pinned SHA, request budget, HTTP 403 fail-closed, no-token/no-mutation checks.",
+          "result": "3/4 passed; budget acceptance intentionally failed with 194 unauthenticated REST requests versus 60/hour cap. Fail-closed and immutable SHA checks passed. Dashboard owner remains responsible for source changes.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912037508"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/77",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912037508",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/73#issuecomment-6358993663"
+      ]
     }
   ]
 }
