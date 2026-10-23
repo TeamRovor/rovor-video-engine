@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Jane: import existing synthetic FCPXML into NEW native Final Cut library.
+"""Jane legacy XML preparation; user-facing native dispatch is disabled.
 
-Uses Apple's documented FCPXML 'library location' option plus Open Document
-Apple event, NOT GUI menu clicks. No model inference, real media, user-project
-edits, existing library paths or arbitrary XML. A one-time macOS Automation
-permission prompt may appear. Native timeline verification still unproven.
+The historic dispatch function remains for regression tests only. Production
+entrypoints must not call it after the wrong-library host result. The CLI
+refuses --dispatch before preparation or any Apple event.
 """
 import argparse
 from datetime import datetime, timezone
@@ -251,16 +250,18 @@ def main(argv=None):
     p.add_argument('--candidates', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--dispatch', action='store_true',
-                   help='Allow actual Apple event to create new test library')
+                   help='Disabled legacy option; exits without preparing or importing')
     args = p.parse_args(argv)
+    if args.dispatch:
+        print('Jane legacy XML dispatch disabled after wrong-library host evidence. '
+              'Verify isolated library creation and app selection first. No import sent.',
+              file=sys.stderr)
+        return 2
     try:
         output = args.output.expanduser().absolute()
         state = prepare(args.candidates, output)
-        if args.dispatch:
-            state = dispatch(output, state)
         print(json.dumps(state, indent=2))
-        return 0 if state['status'] in (
-            'ready_to_dispatch_not_launched', 'apple_events_sent_timeline_unverified') else 2
+        return 0 if state['status'] == 'ready_to_dispatch_not_launched' else 2
     except Exception as exc:
         print('Jane native import stopped safely: ' + type(exc).__name__ + ': ' +
               str(exc), file=sys.stderr)
