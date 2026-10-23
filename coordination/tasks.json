@@ -2332,6 +2332,29 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39895337525"
         }
       ]
+    },
+    {
+      "id": "private-supervisor-emergency-deactivate",
+      "title": "Make private Mac LaunchAgent emergency deactivation independent of damaged staged files",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar focused supervisor shutdown repair 2026-10-22",
+      "branch": "fix/private-supervisor-emergency-stop-20261022",
+      "scopes": [
+        "tools/rovor_private_supervisor.py",
+        "tests/test_rovor_private_supervisor.py"
+      ],
+      "depends_on": [
+        "private-mac-supervisor-launchagent"
+      ],
+      "updated_at": "2026-10-23T03:36:00Z",
+      "next_update": "After focused hosted Python3.9/3.11 regression run and PR review",
+      "next_action": "Patch PR #54 by directing deactivation at fixed launchd service target without checking corrupt staged snapshot; keep activate/tick full validation; add regression tests and run hosted CI.",
+      "acceptance": "A corrupted/missing snapshot/plist cannot prevent explicit bootout of the exact known ROVOR user service; activation/tick still refuse corruption; no arbitrary label or shell invocation; CLI does not claim Mac host execution; offline Python3.9/3.11 tests pass.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/54",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/54#pullrequestreview-5623615879"
+      ]
     }
   ]
 }
