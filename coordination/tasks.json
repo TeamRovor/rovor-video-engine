@@ -2696,7 +2696,8 @@
         "tools/github_atomic_task_intake.py",
         "tests/test_github_atomic_task_intake.py",
         "coordination/ATOMIC-GITHUB-INTAKE.md",
-        ".github/workflows/github-atomic-intake-check.yml"
+        ".github/workflows/github-atomic-intake-check.yml",
+        "WORK.md"
       ],
       "depends_on": [
         "paired-task-routing-intake"
