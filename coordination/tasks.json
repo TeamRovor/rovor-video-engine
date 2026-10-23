@@ -2097,12 +2097,13 @@
         "tools/omniroute_workpack_runner.py",
         "tests/test_omniroute_workpack_runner.py",
         "coordination/omniroute-workpacks",
-        "integrations/open-interpreter/OMNIROUTE-PARALLEL-WORK.md"
+        "integrations/open-interpreter/OMNIROUTE-PARALLEL-WORK.md",
+        ".github/workflows/omniroute-workpack-check.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T02:36:40.072Z",
+      "updated_at": "2026-10-23T02:41:55.430Z",
       "next_update": "After offline agent-runner tests and current GitHub main coordination check. Mac localhost invocation requires an actual host executor.",
-      "next_action": "Implement read-only/draft-only OmniRoute local task runner with strict curated packets for Mac supervisor research, CI diagnostics, and test proposal; fail closed on provider failure, no automatic source edits, shell execution or paid fallback. Publish immutable workpack outputs/receipts only from Mac after it actually runs.",
+      "next_action": "Validate model-draft runner with offline tests and hosted CI; never claim OmniRoute model calls ran before real Mac execution.",
       "acceptance": "Three scoped agent packets with non-overlapping objectives; bounded opt-in localhost model requests; output as private receipts; no arbitrary provider/model fallback, no shared secrets or private media, no real filesystem/app automation, no claims of autonomous Mac execution unless host receipts supplied. Deterministic offline tests and CI plus coordination handoff.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
