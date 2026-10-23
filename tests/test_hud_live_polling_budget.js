@@ -1,4 +1,5 @@
-/* Independent regression for draft dashboard PR #73. No real GitHub calls. */
+/* Independent regression for draft dashboard PR #73. No real GitHub calls.
+ * Re-run against the updated 3-minute polling / pinned raw-content implementation. */
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
