@@ -1382,14 +1382,14 @@
       "depends_on": [
         "fcp-specialist-research-and-mcp-pilot"
       ],
-      "next_action": "Run tools/fcp_host_smoke.py --output <new disposable output> in normal Terminal. It pins package0.27.2 via uvx Python3.11, validates two1-second synthetic exact60fps gap fixtures against installed1.13 DTD, performs direct MCP initialization/tools-list/inspect and existing outside-root sentinel refusal, then terminates server. No model/native app invocation; direct MCP pass must not be labeled Interpreter-client proof. After direct success, test native Interpreter with inspection-only tool allowlist and disable afterward.",
+      "next_action": "Direct MCP and Open Interpreter app-server inspection have passed on Amar's Mac, including landscape/portrait and outside-root refusal. The latest supplied Mac native probe also already ran: Final Cut process present, requested disposable library absent, generic Untitled library present with no attribution. Continue from native app UI observation in a verified Mac-backed ChatGPT session: inspect pending import/error/Automation dialog without replaying the earlier Apple event. Do not repeat research, MCP registration, DTD preparation or the already-completed read-only diagnosis. No native timeline or unattended operation established.",
       "acceptance": "Verified local Interpreter version/foreground, effective project config, native MCP tool call and outside-root refusal with exact time/output; app version/permission status separately captured, rollback confirmed. A Codex-only result is not Interpreter proof. No real client media, FCP edits, posting or all-day background agent required.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/37"
       ],
-      "updated_at": "2026-10-22T20:24:08.991Z",
-      "next_update": "After installed DTD fixture validation, package review and real MCP test or precise blocker",
-      "blocker": "Work Mode cannot resolve PyPI to install pinned fcp-mcp-server0.27.2; deterministic direct MCP attempt exited before initialization. Actual model queued research works from normal Terminal; MCP server/Interpreter tool handshake not yet proven.",
+      "updated_at": "2026-10-23T00:39:22.154Z",
+      "next_update": "After actual Final Cut UI observation and documented resolution of existing import attempt",
+      "blocker": "MCP host inspection is verified in supplied Mac logs. Native import remains unresolved: landscape event returned zero but requested library absent; portrait not sent. Read-only probe cannot observe app dialogs or attribute the Untitled library. This phone chat currently exposes a Linux cloud shell and no native Mac control tools; paired-host availability cannot be inferred from that.",
       "evidence": [
         {
           "commit": "3d90f1ef200c2f42a8aacc891b0272533bb82351",
@@ -1397,6 +1397,20 @@
           "check": "Read installed bundle DTD inventory, validate1920x1080 and1080x1920 exact60fps fixtures against installedFCPXML1.13, source audit pinnedserver.py/pyproject via GitHub;6 new smoke tests including real JSONRPC fake transport; remote source readback identical; attempted real pinnedpackage install",
           "result": "Both installed-DTD validations PASS; DTD SHA2565afbc7ca1001bbc2190fb3b21d4d440ce061d94f5a5f583074e982b4745cd04d.6/6 tests PASS. Live package/network blocked; no real MCP handshake, native import, Interpreter MCP client or app control proved.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/37"
+        },
+        {
+          "commit": "e8903df22ba0bc0199b62b783dd2688947647968",
+          "platform": "Amar Mac supplied Terminal log / Open Interpreter 0.0.56 app-server / Final Cut MCP",
+          "check": "fcp_interpreter_appserver_smoke.py against existing stage: inspect landscape 1920x1080@60 and portrait1080x1920@60; outside-root refusal",
+          "result": "Supplied receipt passed_interpreter_appserver_mcp_tool_call; open_interpreter_connected=true; outside_root_refused=true. native_final_cut_operated=false; model_turn_started=false. MCP inspection is not native app control.",
+          "reference": "https://chatgpt.com/api/library/files/libfile_b7ff09d3fdb48191b7fee25207609229/download"
+        },
+        {
+          "commit": "5ade85fadcb1451e1e5ef6cbbd261b3eef327aa6",
+          "platform": "Amar actual Mac / supplied Terminal output for fcp-jane-auto-20261022-183007",
+          "check": "fcp_jane_native_probe.py read-only inspection of existing failed import; process names and bounded nearby libraries",
+          "result": "Final Cut process present; osascript absent; expected library absent; portrait not dispatched. Generic Untitled library found in Movies, attribution unverified. No second import started; no UI queried; timeline unverified. Original probe pre-dates PR #42 integrity hardening.",
+          "reference": "https://chatgpt.com/api/library/files/libfile_b7ff09d3fdb48191b7fee25207609229/download"
         }
       ]
     },
@@ -1702,7 +1716,7 @@
       "depends_on": [],
       "updated_at": "2026-10-23T00:11:13.396Z",
       "next_update": "PR #42 review, then actual Mac diagnosis",
-      "next_action": "Review PR #42 stacked on #41. On actual Mac use existing jane_native_worker.py --diagnose against the unresolved attempt; if unexplained, observe native app dialog. Do not repeat research, MCP setup, or dispatch. Source tested/published, not merged, installed or host-verified.",
+      "next_action": "Review PR #42 stacked on #41. New supplied Mac log confirms original read-only diagnosis already ran at 5ade85f: expected library absent; Final Cut running; Untitled library attribution unknown. Next host work is actual app dialog observation, not repeating setup or dispatch. PR #42 remains source-tested, not installed or host-verified.",
       "acceptance": "Regressions reject modified XML, incorrect geometry and sequence format, media references, and missing hashes; unchanged actual receipt structure passes; integrated offline suite passes. No Mac runtime claim.",
       "evidence": [
         {
@@ -1721,17 +1735,26 @@
       "id": "workforce-host-evidence-reconciliation",
       "title": "Reconcile completed Mac MCP and diagnostic evidence with the shared next action",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar workforce evidence reconciliation",
       "branch": "main",
       "scopes": [
         "subsystem:workforce-host-evidence-reconciliation"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T00:38:46.919Z",
-      "next_update": "After queue validation and evidence publication",
-      "next_action": "Append latest supplied Mac results to the FCP host record without changing ownership; replace obsolete setup instructions with native UI observation blocker.",
-      "acceptance": "Current queue passes project_loop validation; supplied MCP/diagnosis facts retain runtime limits; no owners released and no native success inferred."
+      "updated_at": "2026-10-23T00:39:22.154Z",
+      "next_update": "Native app observation in verified Mac-backed chat",
+      "next_action": "Use fcp-mcp-real-host-smoke's reconciled evidence and blocker. Observe actual Final Cut UI through existing ChatGPT remote host; do not rerun completed research/MCP/diagnostic or native import.",
+      "acceptance": "Current queue passes project_loop validation; supplied MCP/diagnosis facts retain runtime limits; no owners released and no native success inferred.",
+      "evidence": [
+        {
+          "commit": "5ade85fadcb1451e1e5ef6cbbd261b3eef327aa6",
+          "platform": "Current GitHub main metadata, supplied Mac Terminal evidence, Linux validation",
+          "check": "Read latest supplied log; compare shared FCP record; validate complete updated queue with existing project_loop.validate",
+          "result": "Completed MCP and probe evidence retained; owner and blocked status preserved; obsolete setup next action replaced. Current live queue already has normalized Blender scope, so no duplicate repair needed. No new Mac execution or app-control success claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/blob/main/coordination/tasks.json"
+        }
+      ]
     }
   ]
 }
