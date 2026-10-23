@@ -3133,9 +3133,9 @@
       "depends_on": [
         "omniroute-private-draft-receipt-review"
       ],
-      "updated_at": "2026-10-23T23:10:00Z",
+      "updated_at": "2026-10-23T23:19:00Z",
       "next_update": "After Mac-side read-only receipt audit and base PR integration",
-      "next_action": "PR #101 is drafted and both hosted Python 3.9/3.11 private receipt regression jobs passed. Review and merge the chained PR only after PR #51 is integrated; then validate the reviewer on the real Mac against existing three private receipts. Neither PR merge nor on-Mac deployment/recurring inference is claimed.",
+      "next_action": "Ready-for-review PR #101; Unicode-date fix hosted CI passes on Python 3.9/3.11. Real Mac at prior commit exposed special-hyphen bug; re-fetch PR #101 and run `python3 tools/omniroute_draft_review.py --all` to confirm report_date_placeholder for supervisor report. No model calls. Then integrate review into existing launchd worker only with separate claimed scope and explicit bounded scheduling.",
       "acceptance": "A read-only, content-free summary blocks October 2026 receipts labeled 2024/2025 or 2024-XX-XX, flags the 2400-token response-cap heuristic without claiming guaranteed truncation, and leaves ordinary dates in task discussions unflagged. Deterministic tests on Python 3.9/3.11; no model calls, credential leaks, Mac operations, or automatic reruns.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/51",
@@ -3148,6 +3148,13 @@
           "check": "Existing read-only OmniRoute receipt test suite including Oct 23 stale-date, placeholder-date, 2398/2400 completion-token heuristics; source confidentiality and no-model defaults.",
           "result": "PASS both Python 3.9 and Python 3.11 (hosted only; Mac receipt review not yet rerun)",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40038763396"
+        },
+        {
+          "commit": "cc8174511954b288fd5875c68d7d675c100f6121",
+          "platform": "GitHub hosted Ubuntu, Python 3.9/3.11; actual Mac receipt review at previous commit",
+          "check": "Unicode nonbreaking/en dash placeholder date parse and existing receipt QA tests; Mac log identified previously unrecognized Unicode `2024‑XX‑XX` report header",
+          "result": "PASS hosted Python 3.9 and 3.11; updated Unicode fix NOT YET Mac retested. Earlier Mac review correctly rejected failed job and near-limit drafts.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40039087477"
         }
       ]
     }
