@@ -84,9 +84,10 @@ test('actual Command Center fetches both queue files pinned to the exact SHA',as
   assert.ok(page.el('taskTable').innerHTML.includes('Router proof'));
 });
 
-test('actual Command Center stays below unauthenticated REST API hourly budget',async()=>{
+test('actual Command Center stays below unauthenticated REST API hourly budget',async(t)=>{
   const page=harness();await page.initial();await page.elapse(60);
   const rest=restCalls(page.calls), raw=rawCalls(page.calls);
+  t.diagnostic('Observed '+rest.length+' GitHub REST requests and '+raw.length+' pinned raw reads in 60 simulated minutes.');
   assert.ok(rest.length<=40,
     'Command Center consumed '+rest.length+' REST calls in 60 simulated minutes, '
     +'leaving inadequate headroom for a 60/hour IP allowance');
