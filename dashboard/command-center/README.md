@@ -17,10 +17,13 @@ When GitHub cannot be reached or a critical file fails to load, the dashboard di
 
 Whimsical is a separate visual architecture board, **not automatically synchronized** by this HUD. Native Mac, Windows, Moho, Blender, Final Cut, local job execution and social posting are likewise **not enabled** by this dashboard. A merged test is not evidence that an actual worker is online.
 
-## Install on an iPad
+## Live Command Center and iPad installation
 
-1. Publish this directory over **HTTPS** on a stable host. The source change alone does not publish it or enable GitHub Pages.
-2. Open the published Command Center URL in **Safari** on the iPad.
+**Live URL:** https://teamrovor.github.io/rovor-video-engine/
+
+The site is published on GitHub Pages from `main`. Changes to `dashboard/command-center/` automatically trigger a new deployment; verify the latest run in [GitHub Actions](https://github.com/TeamRovor/rovor-video-engine/actions/workflows/deploy-command-center-pages.yml).
+
+1. Open the live URL above in **Safari** on the iPad.
 3. Tap **Share** → **Add to Home Screen**. If offered, enable **Open as Web App**, then tap **Add**.
 4. Launch the ROVOR HUD icon from the Home Screen. Rotate to landscape for the full command console; portrait is supported for quick checks.
 
