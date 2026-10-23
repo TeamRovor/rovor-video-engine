@@ -62,7 +62,7 @@ on run argv
             keystroke "g" using {command down, shift down}
             delay 0.7
             -- Must identify Go To Folder combo box before typing; no blind keystrokes.
-            if (count of sheets of sheet 1 of front window) is < 1 then error "Go To Folder sub-sheet not found"
+            if (count of sheets of sheet 1 of front window) is less than 1 then error "Go To Folder sub-sheet not found"
             tell sheet 1 of sheet 1 of front window
                 if not (exists combo box 1) then error "Go To Folder combo box absent"
                 set value of combo box 1 to destinationFolder
