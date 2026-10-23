@@ -1,0 +1,41 @@
+name: OmniRoute workforce composite — offline integration
+
+on:
+  pull_request:
+    paths:
+      - 'tools/ghost_worker.py'
+      - 'tools/ghost_worker_loop.py'
+      - 'tools/ghost_omniroute_job.py'
+      - 'tools/omniroute_workpack_runner.py'
+      - 'tools/omniroute_draft_review.py'
+      - 'coordination/omniroute-workpacks/**'
+      - 'tests/test_omniroute_workforce_composite.py'
+      - '.github/workflows/omniroute-workforce-composite.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Offline real-module composite tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_workforce_composite.py' -v
+      - name: Offline focused SQLite OmniRoute queue tests
+        run: python -m unittest discover -s tests -p 'test_ghost_omniroute_job.py' -v
+      - name: Offline OmniRoute workpack safety tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_workpack_runner.py' -v
+      - name: Offline private receipt review tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_draft_review.py' -v
