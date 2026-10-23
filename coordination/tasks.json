@@ -2618,12 +2618,24 @@
       "depends_on": [
         "omniroute-parallel-worker-packets"
       ],
-      "updated_at": "2026-10-23T05:01:46.622Z",
-      "next_update": "After Python3.9/3.11 hosted tests and code review",
-      "next_action": "Reject direct run_packet() output into public source checkout before reservation or model call; canonical path comparison; preserve CLI behavior.",
+      "updated_at": "2026-10-23T06:05:16.153Z",
+      "next_update": "After PR #71 is reviewed/merged into the #66 implementation branch and the combined head passes CI.",
+      "next_action": "PR #66 implements canonical source/destination containment in run_packet(); separate regression PR #71 adds direct API tests for checkout root, nested output and symlink alias, asserting no completion callback and no output directory. Hosted offline workflow run 39907069562 passed Python 3.9 and 3.11 on test commit 8371141940e79c1fd8d99473c694c5d023759e30. Review/integrate #71 into fix/omniroute-output-path-v1, then confirm combined CI before #66 is merged. Do not claim the two PRs are integrated yet.",
       "acceptance": "No private draft receipt can be written within ROVOR public checkout via CLI or Python direct API; host-independent regression passes.",
       "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/66",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/71",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39907069562"
+      ],
+      "evidence": [
+        {
+          "commit": "8371141940e79c1fd8d99473c694c5d023759e30",
+          "platform": "GitHub-hosted Ubuntu; Python 3.9 and 3.11",
+          "check": "Direct run_packet() path-containment regression: checkout root, nested output, symlink alias; callback must not run and output paths must not be created.",
+          "result": "PASS both Python versions (workflow run 39907069562). Test PR #71 remains open; combined PR #66 head not yet revalidated with this test.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39907069562"
+        }
       ]
     },
     {
