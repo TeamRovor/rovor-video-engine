@@ -158,6 +158,39 @@ test('service worker precache list points only to existing local shell assets',(
   }
 });
 
+test('service worker install precaches the shell and activation removes only obsolete HUD caches',async()=>{
+  const worker=fs.readFileSync(path.join(shellDir,'service-worker.js'),'utf8');
+  const handlers={};
+  let precached=[];
+  let skipped=false;
+  let claimed=false;
+  const deleted=[];
+  const cache={addAll:async assets=>{precached=assets.slice();}};
+  const self={
+    location:{origin:'https://hud.example.test'},
+    clients:{claim:async()=>{claimed=true;}},
+    skipWaiting:async()=>{skipped=true;},
+    addEventListener:(name,handler)=>{handlers[name]=handler;}
+  };
+  const cacheApi={
+    open:async()=>cache,
+    keys:async()=>['rovor-command-center-shell-v0','unrelated-cache','rovor-command-center-shell-v1'],
+    delete:async key=>{deleted.push(key);return true;}
+  };
+  vm.runInNewContext(worker,{self,caches:cacheApi,URL,Request,Response,fetch});
+  let installPromise;
+  handlers.install({waitUntil:promise=>{installPromise=promise;}});
+  await installPromise;
+  assert.ok(skipped,'install should activate the new worker promptly');
+  assert.ok(precached.includes('./index.html'));
+  assert.ok(precached.includes('./app.js'));
+  assert.ok(precached.includes('./manifest.webmanifest'));
+  let activatePromise;
+  handlers.activate({waitUntil:promise=>{activatePromise=promise;}});
+  await activatePromise;
+  assert.deepEqual(deleted,['rovor-command-center-shell-v0']);
+  assert.ok(claimed,'activation should claim existing HUD clients');
+});
 test('HUD registers its shell service worker without requiring it for live operation',()=>{
   const app=fs.readFileSync(path.join(shellDir,'app.js'),'utf8');
   const html=fs.readFileSync(path.join(shellDir,'index.html'),'utf8');
