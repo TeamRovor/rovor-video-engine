@@ -59,9 +59,10 @@ class NativeLibraryBootstrapTests(unittest.TestCase):
             self.assertNotIn('File > Import', script)
             self.assertNotIn('import XML', script)
             self.assertEqual(command[3], str(self.output))
-            self.assertEqual(command[4], gate.LIBRARY_BASENAME)
+            self.assertEqual(command[4], gate.unique_library_name(self.output))
             self.assertEqual(command[5], self.output.name)
             self.assertIn('locationVerified is false', script)
+            self.assertIn('Library name not unique for this job',script)
             # Fake successful native app creation.
             expected.mkdir()
             return subprocess.CompletedProcess(command,0,stdout='',stderr='')
@@ -169,6 +170,18 @@ class NativeLibraryBootstrapTests(unittest.TestCase):
         self.assertEqual(result['status'], 'native_library_not_observed')
         self.assertFalse(result['xml_import_attempted'])
         self.assertFalse(result['native_library_created'])
+
+    def test_native_library_name_unique_to_each_disposable_job(self):
+        first = self.output
+        second = self.root/'fcp-jane-library-20261022-200001'
+        self.assertNotEqual(gate.expected_library(first).name,
+                            gate.expected_library(second).name)
+        self.assertTrue(gate.expected_library(first).name.startswith(
+            gate.LIBRARY_BASENAME + '-'))
+        self.assertEqual(gate.last_safe_ui_stage(
+            '(*JANE_STAGE|opening_file_menu*)\\n'
+            '(*JANE_STAGE|verifying_save_destination*)'),
+            'verifying_save_destination')
 
     def test_reused_destination_refused(self):
         self.output.mkdir()
