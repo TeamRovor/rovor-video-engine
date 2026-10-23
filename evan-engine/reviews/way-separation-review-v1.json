@@ -38,5 +38,44 @@
   "timingChanged": false,
   "boundariesAccepted": false,
   "action": "Review word onset, W-to-vowel transition and existing silence gating against the recording; distinguish an actual pause from a held articulated mouth. Do not remove real pauses or retime merely to hide mouth-art defects.",
-  "visualObservation": "The waveform/spectrogram shows a pronounced low-energy interval inside the assigned W span; this may include a pause. It does not establish an exact phoneme boundary."
+  "visualObservation": "The waveform/spectrogram shows a pronounced low-energy interval inside the assigned W span; this may include a pause. It does not establish an exact phoneme boundary.",
+  "quantitativeAudioControlReview": {
+    "way": {
+      "assignedW": [
+        17.94,
+        18.27
+      ],
+      "assignedEY": [
+        18.27,
+        18.37
+      ],
+      "measuredQuietRun": [
+        18.12,
+        18.18
+      ],
+      "plannerRoundedPeakTime": 18.07600000000046,
+      "plannerRoundedPeak": 0.2342009210981459,
+      "at18_225": {
+        "X": 0.9997354040021877,
+        "A": 0.0,
+        "B": 0.0,
+        "C": 0.0,
+        "D": 0.0,
+        "E": 0.0,
+        "F": 0.0002645959978123115,
+        "G": 0.0,
+        "H": 0.0
+      }
+    },
+    "settings": {
+      "minimumAssignedPhoneSeconds": 0.25,
+      "minimumQuietRunSeconds": 0.06,
+      "thresholdDbFS": -40,
+      "binSamples": 320,
+      "spectrogramSamples": 400,
+      "spectrogramHopSamples": 80
+    },
+    "interpretation": "Quiet B can be a normal bilabial closure and HH can be weak breath; these are review warnings, not proof of pauses or incorrect alignment.",
+    "note": "Low-frequency periodic energy remains visible through the quiet interval. Do not label this a confirmed silence. Rounded target peaks early and reaches near-rest at18.225; exact W/EY boundaries remain unverified."
+  }
 }

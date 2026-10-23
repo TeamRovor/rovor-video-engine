@@ -29,11 +29,11 @@ def flagged_regions(plan,duration,padding=.18):
     for w in plan['words']:
         if not w.get('reviewFlags'):continue
         anchor=anchors.get(w['scriptIndex'])
-        if anchor is None:raise ValueError('Flagged word lacks independent anchor')
-        rows.append(dict(scriptIndex=w['scriptIndex'],word=w['word'],acoustic=[w['start'],w['end']],anchor=[anchor['start'],anchor['end']],flags=w['reviewFlags'],status='unreviewed',boundaryStatus='unresolved'))
+        rows.append(dict(scriptIndex=w['scriptIndex'],word=w['word'],acoustic=[w['start'],w['end']],anchor=[anchor['start'],anchor['end']] if anchor else None,flags=w['reviewFlags'],status='unreviewed',boundaryStatus='unresolved'))
     groups=[]
     for row in rows:
-        a=max(0,min(row['acoustic'][0],row['anchor'][0])-padding);b=min(duration,max(row['acoustic'][1],row['anchor'][1])+padding)
+        anchor=row['anchor'] or row['acoustic']
+        a=max(0,min(row['acoustic'][0],anchor[0])-padding);b=min(duration,max(row['acoustic'][1],anchor[1])+padding)
         if groups and a<=groups[-1]['end']+.35:groups[-1]['end']=max(groups[-1]['end'],b);groups[-1]['indices'].append(row['scriptIndex'])
         else:groups.append(dict(start=a,end=b,indices=[row['scriptIndex']]))
     return rows,groups
@@ -43,6 +43,29 @@ def energy_fraction(x,rate,interval,threshold_db=-40):
     frames=[x[i:min(i+size,b)] for i in range(a,b,size)]
     rms=np.array([np.sqrt(np.mean(f*f)) for f in frames if len(f)])
     return float(np.mean(20*np.log10(np.maximum(rms,1e-9))<threshold_db)) if len(rms) else None
+
+def phone_audio_support(phones,x,rate):
+    """Flag long assigned phones containing a sustained quiet run, never retime.
+
+    Fixed -40dBFS/60ms thresholds are review heuristics, not silence/phone labels.
+    Each20ms bin is entirely inside its phone; partial trailing bins are omitted.
+    """
+    # shortcut: fixed amplitude thresholds are review-only; calibrate before any automatic timing/pose decision.
+    rows=[];size=max(1,round(rate*.02))
+    for index,phone in enumerate(phones):
+        if phone['end']-phone['start']<.25:continue
+        a=max(0,round(phone['start']*rate));b=min(len(x),round(phone['end']*rate))
+        bins=[(i,float(np.sqrt(np.mean(x[i:i+size]**2)))) for i in range(a,b-size+1,size)]
+        longest=run=0;first=best=0
+        for i,(sample,rms) in enumerate(bins):
+            if rms<.01:
+                if not run:first=sample
+                run+=size
+                if run>longest:longest=run;best=first
+            else:run=0
+        if longest/rate<.06:continue
+        rows.append(dict(phoneIndex=index,scriptIndex=phone.get('scriptIndex'),word=phone['word'],phone=phone['phone'],assigned=[phone['start'],phone['end']],lowEnergyRun=[best/rate,(best+longest)/rate],thresholdDbFS=-40,binSamples=size,flag='long-phone-low-energy-run',boundaryStatus='unresolved',timingChanged=False))
+    return rows
 
 def plot_group(plan,x,rate,group,output):
     import matplotlib
@@ -71,9 +94,9 @@ def plot_group(plan,x,rate,group,output):
 def audit(plan,wav,output):
     x,rate=read_audio(wav);rows,groups=flagged_regions(plan,len(x)/rate);output.mkdir(parents=True,exist_ok=True)
     for row in rows:
-        row['anchorOutsideRecording']=row['anchor'][0]<0 or row['anchor'][1]>len(x)/rate
+        row['anchorOutsideRecording']=(row['anchor'][0]<0 or row['anchor'][1]>len(x)/rate) if row['anchor'] else None
         row['energyMeasurementNote']='20 ms RMS windows; intervals clipped to recording; not a speech classifier'
-        row['lowEnergyFractionBelowMinus40dBFS']={name:energy_fraction(x,rate,row[name]) for name in ('acoustic','anchor')}
+        row['lowEnergyFractionBelowMinus40dBFS']={name:energy_fraction(x,rate,row[name]) if row[name] is not None else None for name in ('acoustic','anchor')}
     for i,g in enumerate(groups,1):
         g['plot']=f'Region-{i:02}.png';g['audio']=f'Region-{i:02}.wav';plot_group(plan,x,rate,g,output/g['plot'])
         with wave.open(str(output/g['audio']),'wb') as f:

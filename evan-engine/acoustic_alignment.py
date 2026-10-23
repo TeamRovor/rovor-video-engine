@@ -63,6 +63,14 @@ def upgrade_plan(plan,wav,required=False):
     plan['warnings']=['Recognition audit: '+w for w in plan['warnings']]
     for key in ('words','phonemes','silences'):plan[key]=aligned[key]
     plan['warnings'].extend(aligned['warnings'])
+    from speech_alignment_audit import read_audio,phone_audio_support
+    signal,rate=read_audio(wav)
+    support=phone_audio_support(plan['phonemes'],signal,rate)
+    plan['phoneAudioReview']=support
+    for review in support:
+        word=plan['words'][review['scriptIndex']]
+        if review['flag'] not in word['reviewFlags']:word['reviewFlags'].append(review['flag'])
+        plan['warnings'].append('Review acoustic phone/audio support: '+review['word']+' '+review['phone']+'; low energy is not proof of silence')
     plan['alignment']=dict(status='acoustic',method=aligned['method'],confidenceNote=aligned['confidenceNote'],wordCoverage=1.,reviewWordCount=sum(bool(w['reviewFlags']) for w in aligned['words']))
     plan['timingMethod']=aligned['method'];plan['version']=2
     return plan

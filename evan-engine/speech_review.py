@@ -40,7 +40,7 @@ def render_review(plan,wav,output,start=0,duration=2.5):
     words.set_ylabel('Aligned words *' if acoustic else 'Word estimates');phones.set_ylabel('Aligned phone\n/ initial mouth' if acoustic else 'Estimated phone\n/ mouth');phones.set_xlabel('Recording time (seconds)')
     for ax in axes:ax.set_xlim(start,end)
     for ax in (waveform,controls,words,phones):ax.grid(axis='x',alpha=.2)
-    fig.suptitle('Evan speech review: script + recording\n'+(p['alignment']['method']+'; * = word-anchor disagreement requiring review' if acoustic else 'Estimated phone boundaries; acoustic alignment unavailable'))
+    fig.suptitle('Evan speech review: script + recording\n'+(p['alignment']['method']+'; * = word/phone evidence requiring review' if acoustic else 'Estimated phone boundaries; acoustic alignment unavailable'))
     fig.tight_layout();fig.savefig(output,dpi=150);plt.close(fig)
 
 if __name__=='__main__':
