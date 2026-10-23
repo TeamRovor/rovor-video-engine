@@ -181,6 +181,21 @@ class NativeProbeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'disposable Jane'):
             probe.inspect(self.root,alias,home=self.home)
 
+    def test_queue_folder_requires_canonical_uuid(self):
+        for name in ('native-import-anything', 'native-import-../escape',
+                     'native-import-11111111111111111111111111111111'):
+            with self.subTest(name=name):
+                folder = self.root / name
+                folder.mkdir(parents=True)
+                with self.assertRaisesRegex(ValueError, 'disposable Jane'):
+                    probe.constrained_job(self.root, folder)
+
+    def test_queue_folder_cannot_be_symlink(self):
+        folder = self.root / 'native-import-11111111-1111-4111-8111-111111111111'
+        folder.symlink_to(self.job)
+        with self.assertRaisesRegex(ValueError, 'disposable Jane'):
+            probe.constrained_job(self.root, folder)
+
     def test_process_errors_dont_claim_app_absent(self):
         def failed(cmd,**kw):
             return subprocess.CompletedProcess(cmd,1,stdout='',stderr='Denied')
