@@ -2870,14 +2870,17 @@
       "scopes": [
         "tests/test_hud_live_polling_budget.js",
         ".github/workflows/hud-live-polling-qa.yml",
-        "reviews/hud-live-polling-qa-20261023.md"
+        "reviews/hud-live-polling-qa-20261023.md",
+        "dashboard/command-center/tests/request-budget.test.js",
+        ".github/workflows/command-center-request-budget.yml",
+        "reviews/command-center-request-budget-qa-20261023.md"
       ],
       "depends_on": [
         "github-atomic-paired-task-commit"
       ],
       "updated_at": "2026-10-23T06:37:00Z",
       "next_update": "After dashboard owner lowers API polling volume and the full-hour mocked-browser budget test passes.",
-      "next_action": "Independent hosted QA now supports both Contents API and pinned raw.githubusercontent.com reads while counting only REST API calls against the 60/hour ceiling. Current dashboard baseline remains 194 REST calls/hour. Latest run 39912512115: same-SHA check, injected-403 stale/error behavior, and no-token/no-mutation checks pass; budget test intentionally fails (3/4). Posted evidence and fix direction on PR #73. Do not modify dashboard source or merge QA PR until the owner changes polling and budget test passes.",
+      "next_action": "Independent QA for both HUD implementations: PR #77 deliberately fails old lightweight PR #73 at 194 REST calls/hour. Test the separately merged Iron Man Command Center PR #76 real browser code with a deterministic 60-minute simulated DOM/clock/fetch. Keep status/ownership distinct from actual online Mac. Publish passing regression for supported Command Center; do not edit another owner's HUD source.",
       "acceptance": "Independent deterministic tests prove 1-hour refresh API request count and replayable rate-limit failure; baseline failure is explicitly recorded; owner must lower REST API calls or use raw pinned files and re-run QA before live deployment.",
       "evidence": [
         {
