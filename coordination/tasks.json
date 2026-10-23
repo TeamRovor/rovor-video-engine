@@ -2053,12 +2053,13 @@
       "scopes": [
         ".github/workflows/rovor-mac-exec-proof.yml",
         "rovor-production/mac-queue/exec-smoke-20261022-01.json",
-        "rovor-production/mac-queue/exec-smoke-20261022-02.json"
+        "rovor-production/mac-queue/exec-smoke-20261022-02.json",
+        ".github/workflows/rovor-mac-proof-observer.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T02:25:11.101Z",
+      "updated_at": "2026-10-23T02:29:30.831Z",
       "next_update": "After genuine Issue #48 Mac-host receipt or independently visible Actions job diagnostics",
-      "next_action": "GitHub accepted restricted workflow commit fbca6cb and fixed request commits 66418e2 (write/readback) and 855a6bc (read-only inspect). The report destination is Issue #48. No host result comment observed yet; verify a genuine Mac-runner receipt from Issue #48 or associated Actions logs before calling this done. If no receipt, diagnose actual runner/workflow failure without asking user to repeat installations.",
+      "next_action": "Diagnose whether the allowlisted GitHub push triggers started Mac runner jobs. A separate GitHub-hosted PR observer workflow (no self-hosted execution or Mac permissions) will query exact workflow run/job statuses via Actions API; first capture run IDs and runner waiting/failed evidence. Do not claim host proof from submission alone or run unrestricted commands.",
       "acceptance": "An authenticated main-branch GitHub request runs once on the existing rovor-video Mac runner, creates exactly one new benign private sandbox file using O_EXCL, verifies SHA256 readback, and reports a trustworthy host result; if runner offline then record blocked with exact observed evidence.",
       "evidence": [
         {
