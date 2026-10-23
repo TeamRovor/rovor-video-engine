@@ -247,6 +247,10 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
         elif kind == LIBRARY_KIND:
             if not allow_jane_library_create:
                 raise ValueError('Explicit Jane library creation approval missing')
+            # STOP may have appeared after SQLite claim and before GUI work.
+            # Never proceed or auto-replay on that race.
+            if os.path.lexists(state / 'STOP'):
+                raise ValueError('STOP requested before Jane native GUI dispatch')
             if sys.platform != 'darwin':
                 raise ValueError('Jane native GUI creation only allowed on macOS host')
             import fcp_jane_library_onepass as jane
