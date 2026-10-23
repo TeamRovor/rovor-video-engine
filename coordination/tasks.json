@@ -2298,7 +2298,7 @@
     {
       "id": "private-control-verified-receipt-fix-20261022",
       "title": "Correct private bridge receipt acknowledgment and execution flags",
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT iPhone private bridge receipt verification session",
       "branch": "fix/private-control-verified-receipt-v1",
       "priority": 1,
@@ -2309,10 +2309,18 @@
       "depends_on": [
         "private-mac-control-bridge-v1"
       ],
-      "next_action": "Verify and integrate narrowly scoped receipt fix into existing PR41 workforce candidate with hosted full worker regression tests, without enabling any Mac execution or public runner.",
+      "next_action": "PR #55 merged into PR #41 candidate at b8c561fe98436fdc43f7decb151f3866bdabb181. Hosted Linux Python3.9/3.11 260/260 integrated tests PASS. Still requires a private TeamRovor control repository, operator-authenticated local Mac process and private issue roundtrip. Source merge is not Mac deployment.",
       "acceptance": "Malformed GitHub receipt response never writes receipt marker; post retry does not replay the worker job; return flag executed only for current invocation; malformed encoded packet is refused; Python 3.9 and 3.11 hosted checks pass.",
       "updated_at": "2026-10-22",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "b8c561fe98436fdc43f7decb151f3866bdabb181",
+          "platform": "GitHub-hosted Ubuntu / Python3.9 and3.11",
+          "check": "260 integrated workforce offline tests each; receipt ACK, nonstring packet and execution reporting",
+          "result": "PASS both; no Mac execution performed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39895337525"
+        }
+      ]
     }
   ]
 }
