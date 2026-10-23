@@ -1452,3 +1452,34 @@ body {
 }
 #main-content:focus { outline: none; }
 #main-content:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+
+
+/* Final iPad landscape grid audit: give each major instrument its own track.
+   The sync strip must not share the 38px navigation row or cover the reactor. */
+@media (min-width: 760px) and (orientation: landscape) {
+  .app-shell {
+    grid-template-rows: 50px 30px minmax(0, 1fr) minmax(112px, .68fr);
+    row-gap: 7px;
+  }
+  .topbar { grid-column: 1 / -1; grid-row: 1; }
+  .syncbar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-height: 0;
+    max-height: 30px;
+  }
+  .reactor-stage { grid-column: 2; grid-row: 3; }
+  .ring-panel { grid-column: 1; grid-row: 3; }
+  .metrics-panel { grid-column: 3; grid-row: 3; }
+  .warning-panel { grid-column: 1; grid-row: 4; }
+  .tabbar { grid-column: 2; grid-row: 4; min-height: 0; }
+  main { grid-column: 3; grid-row: 4; min-height: 0; }
+}
+@media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) {
+  .app-shell { grid-template-rows: 46px 28px minmax(0, 1fr) minmax(104px, .66fr); }
+  .syncbar { max-height: 28px; }
+}
+@media (min-width: 760px) and (orientation: landscape) and (max-height: 560px) {
+  .app-shell { grid-template-rows: 40px 26px minmax(0, 1fr) minmax(78px, .58fr); }
+  .syncbar { max-height: 26px; padding-block: 2px; }
+}
