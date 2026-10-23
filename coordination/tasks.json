@@ -3082,6 +3082,22 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39920923934"
         }
       ]
+    },
+    {
+      "id": "supervisor-ci-runtime-dependencies-20261023",
+      "title": "Run private supervisor checks when frozen runtime dependencies change",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar supervisor CI dependency review 2026-10-23",
+      "branch": "fix/supervisor-ci-dependencies-20261023",
+      "scopes": [
+        ".github/workflows/rovor-private-supervisor.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T18:53:40.822357+00:00",
+      "next_update": "After publishing the focused workflow PR against the existing PR41 integration branch",
+      "next_action": "Add the three frozen runtime dependency modules to the supervisor workflow path filter; verify only matching and relevant offline tests. Do not deploy or activate a Mac service.",
+      "acceptance": "Supervisor checks match changes to all four RUNTIME_FILES; unrelated files stay unmatched; existing Python matrix, permissions and commands remain unchanged; offline supervisor tests pass."
     }
   ]
 }

@@ -553,6 +553,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "supervisor-ci-runtime-dependencies-20261023": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write"
+      ]
     }
   }
 }
