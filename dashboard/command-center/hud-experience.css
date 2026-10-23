@@ -106,3 +106,21 @@
 }
 .motion-paused .hud-reactor-pulse .hud-scan-overlay,
 .motion-paused .tabbar .tab[aria-selected="true"] .nav-symbol{animation:none!important}
+
+/* Direct interaction for data bars and the rotating globe. */
+.workload-row {appearance:none;width:100%;padding:4px 6px;margin:-4px -6px;border:1px solid transparent;border-radius:3px;background:transparent;color:inherit;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}
+.workload-row:hover,.workload-row:focus-visible{background:rgba(35,97,166,.3);border-color:rgba(113,185,255,.45);outline:none}
+.workload-row:active{transform:scale(.985)}
+.reactor-stage{touch-action:pan-y;cursor:grab}
+.reactor-stage.earth-dragging{cursor:grabbing}
+.reactor-stage .earth-canvas{transition:opacity .25s}
+.earth-canvas[data-renderer="css-fallback"]{opacity:0}
+.reactor-stage:has(.earth-canvas[data-renderer="css-fallback"]) .planet-horizon::after {
+ content:"";position:absolute;inset:0;
+ border-radius:50%;
+ background:repeating-linear-gradient(106deg,transparent 0 16%,rgba(98,176,255,.12) 17%,transparent 18% 29%);
+ background-size:220% 100%;animation:horizon-drift 85s linear infinite;opacity:.7;
+}
+@keyframes horizon-drift{to{background-position:-200% 0}}
+.motion-paused .planet-horizon::after{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.planet-horizon::after{animation:none!important}}
