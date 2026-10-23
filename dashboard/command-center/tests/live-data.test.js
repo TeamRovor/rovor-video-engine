@@ -112,6 +112,8 @@ test('HUD registers its shell service worker without requiring it for live opera
   const app=fs.readFileSync(path.join(shellDir,'app.js'),'utf8');
   const html=fs.readFileSync(path.join(shellDir,'index.html'),'utf8');
   assert.match(app,/navigator\.serviceWorker\.register\('\.\/service-worker\.js'/);
+  assert.match(app,/addEventListener\('offline'/);
+  assert.match(app,/Device is offline; displayed data is not live/);
   assert.match(html,/rel="manifest" href="\.\/manifest\.webmanifest"/);
   assert.match(html,/apple-mobile-web-app-capable/);
 });
