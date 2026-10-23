@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import sys
 import time
 import uuid
 
@@ -21,6 +22,7 @@ FUTURE_DISABLED = frozenset({
 })
 RESEARCH_KIND = "research.finalcut"
 NATIVE_KIND = "finalcut.import-diagnostic"
+LIBRARY_KIND = "finalcut.library-create"
 NATIVE_DISABLED_REASON = (
     'Legacy native import disabled after wrong-library host evidence; '
     'verify isolated library creation and app selection before a replacement adapter')
@@ -88,12 +90,19 @@ def _event(conn: sqlite3.Connection, job_id: str, name: str, details: dict, now:
 
 def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
             dedupe_key: str, now: float | None = None) -> str:
-    if kind not in ALLOWED | {RESEARCH_KIND, NATIVE_KIND}:
+    if kind not in ALLOWED | {RESEARCH_KIND, NATIVE_KIND, LIBRARY_KIND}:
         raise ValueError(f"Adapter disabled or unknown: {kind}")
     if not isinstance(payload, dict) or not isinstance(dedupe_key, str) or not (1 <= len(dedupe_key) <= 200):
         raise ValueError("A JSON-object payload and nonempty dedupe key (max 200) are required")
     if kind in {"system.ping", RESEARCH_KIND} and payload:
         raise ValueError("This fixed job does not accept parameters")
+    if kind == LIBRARY_KIND:
+        # Only stable slug; no arbitrary app commands, target paths or XML.
+        import fcp_jane_library_onepass as jane
+        if (set(payload) != {'job_id'}
+                or not isinstance(payload['job_id'], str)
+                or not jane.JOB_ID.fullmatch(payload['job_id'])):
+            raise ValueError('Library-create payload requires one bounded job_id')
     if kind == NATIVE_KIND:
         if set(payload) != {'candidates'} or not isinstance(payload['candidates'], str):
             raise ValueError('Native diagnostic requires only a relative candidates directory')
@@ -125,7 +134,7 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
         raise
 
 
-def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False):
+def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False):
     if not owner or len(owner) > 128:
         raise ValueError("Worker identifier required")
     now = time.time() if now is None else now
@@ -134,7 +143,7 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         # Expired leases are safe to replay ONLY because the allowlist is read-only.
         expired = conn.execute("SELECT id,kind,attempts FROM jobs WHERE status='running' AND lease_until<=?", (now,)).fetchall()
         for row in expired:
-            if row["kind"] in {RESEARCH_KIND, NATIVE_KIND} or row["attempts"] >= MAX_ATTEMPTS:
+            if row["kind"] in {RESEARCH_KIND, NATIVE_KIND, LIBRARY_KIND} or row["attempts"] >= MAX_ATTEMPTS:
                 conn.execute("UPDATE jobs SET status='needs_review',lease_owner=NULL,lease_until=NULL,updated_at=? WHERE id=?",
                              (now, row["id"]))
                 _event(conn, row["id"], "exhausted_lease", {}, now)
@@ -143,12 +152,13 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
                              (now, row["id"]))
                 _event(conn, row["id"], "requeued_expired_readonly_lease", {}, now)
         kinds = sorted(ALLOWED | ({RESEARCH_KIND} if allow_model_use else set())
-                       | ({NATIVE_KIND} if allow_native_import else set()))
+                       | ({NATIVE_KIND} if allow_native_import else set())
+                       | ({LIBRARY_KIND} if allow_jane_library_create else set()))
         marks = ",".join("?" for _ in kinds)
         job = conn.execute(f"SELECT * FROM jobs WHERE status='queued' AND kind IN ({marks}) ORDER BY created_at,id LIMIT 1", kinds).fetchone()
         if job:
             conn.execute("UPDATE jobs SET status='running',attempts=attempts+1,lease_owner=?,lease_until=?,updated_at=? WHERE id=?",
-                         (owner, now + (420 if job['kind'] == NATIVE_KIND else 360 if job["kind"] == RESEARCH_KIND else LEASE_SECONDS), now, job["id"]))
+                         (owner, now + (420 if job['kind'] in {NATIVE_KIND, LIBRARY_KIND} else 360 if job["kind"] == RESEARCH_KIND else LEASE_SECONDS), now, job["id"]))
             _event(conn, job["id"], "claimed", {"worker": owner, "attempt": job["attempts"]+1}, now)
         conn.execute("COMMIT")
         return dict(job) if job else None
@@ -195,11 +205,12 @@ def inventory(workspace: Path, subpath: str) -> dict:
             "read_only": True, "truncated_depth": MAX_DEPTH}
 
 
-def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False):
+def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False):
     state = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
     if os.path.lexists(state / "STOP"):
         return None
-    job = claim(conn, owner, now, allow_model_use=allow_model_use, allow_native_import=allow_native_import)
+    job = claim(conn, owner, now, allow_model_use=allow_model_use, allow_native_import=allow_native_import,
+                allow_jane_library_create=allow_jane_library_create)
     if not job:
         return None
     job_id, kind = job["id"], job["kind"]
@@ -221,6 +232,28 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
                       "facts_verified": False, "app_control_verified": False}
         elif kind == "files.inventory":
             result = inventory(workspace, payload.get("subpath", "."))
+        elif kind == LIBRARY_KIND:
+            if not allow_jane_library_create:
+                raise ValueError('Explicit Jane library creation approval missing')
+            if sys.platform != 'darwin':
+                raise ValueError('Jane native GUI creation only allowed on macOS host')
+            import fcp_jane_library_onepass as jane
+            result = jane.onepass(Path.home(), payload['job_id'], create=True)
+            # Creating a bundle on disk is NOT evidence FCP selected it.
+            # No native GUI action is ever automatically retried, including
+            # when a process crashes after click Save.
+            conn.execute("BEGIN IMMEDIATE")
+            updated = conn.execute(
+                "UPDATE jobs SET status='needs_review',result=?,error=NULL,lease_owner=NULL,lease_until=NULL,updated_at=? "
+                "WHERE id=? AND status='running' AND lease_owner=?",
+                (json.dumps(result, sort_keys=True), t, job_id, owner)).rowcount
+            if updated != 1:
+                raise ValueError('Lost Jane job ownership; inspect existing native receipt')
+            _event(conn, job_id, 'needs_review',
+                   {'kind': kind, 'native_status': result.get('status'),
+                    'app_selection_verified': False}, t)
+            conn.execute('COMMIT')
+            return {'id': job_id, 'status': 'needs_review', 'result': result}
         elif kind == NATIVE_KIND:
             raise ValueError(NATIVE_DISABLED_REASON)
         else:
@@ -238,7 +271,7 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
         if conn.in_transaction:
             conn.execute("ROLLBACK")
         conn.execute("BEGIN IMMEDIATE")
-        terminal = 'needs_review' if kind == NATIVE_KIND else 'failed'
+        terminal = 'needs_review' if kind in {NATIVE_KIND, LIBRARY_KIND} else 'failed'
         conn.execute("UPDATE jobs SET status=?,error=?,lease_owner=NULL,lease_until=NULL,updated_at=? "
                      "WHERE id=? AND status='running' AND lease_owner=?", (terminal, str(exc), t, job_id, owner))
         _event(conn, job_id, terminal, {"error": type(exc).__name__}, t)
@@ -260,16 +293,19 @@ def main():
     run.add_argument("--worker-id", default="local-worker")
     run.add_argument("--approve-model-use", action="store_true")
     run.add_argument("--allow-native-import", action="store_true")
+    run.add_argument("--approve-jane-library-create", action="store_true",
+                     help="One explicit Mac GUI library creation; does not import XML")
     sub.add_parser("status")
     args = parser.parse_args()
     with connect(args.state) as conn:
         if args.command == "init":
-            output = {"initialized": True, "allowed_jobs": sorted(ALLOWED), "opt_in_model_jobs": [RESEARCH_KIND], "opt_in_native_jobs": [], "disabled_adapters": sorted(FUTURE_DISABLED | {NATIVE_KIND})}
+            output = {"initialized": True, "allowed_jobs": sorted(ALLOWED), "opt_in_model_jobs": [RESEARCH_KIND], "opt_in_native_jobs": [LIBRARY_KIND], "disabled_adapters": sorted(FUTURE_DISABLED | {NATIVE_KIND})}
         elif args.command == "enqueue":
             output = {"id": enqueue(conn, args.kind, json.loads(args.payload), args.key)}
         elif args.command == "run-once":
             output = run_once(conn, args.workspace, args.worker_id, allow_model_use=args.approve_model_use,
-                              allow_native_import=args.allow_native_import)
+                              allow_native_import=args.allow_native_import,
+                              allow_jane_library_create=args.approve_jane_library_create)
         else:
             rows = conn.execute("SELECT id,kind,status,attempts,error FROM jobs ORDER BY created_at,id").fetchall()
             output = {"jobs": [dict(r) for r in rows]}
