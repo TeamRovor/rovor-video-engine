@@ -1455,3 +1455,37 @@ body {
 @media (max-width: 759px) {
   .focus-exit-btn { top: 8px; right: 8px; min-height: 36px; font-size: 9px; }
 }
+
+
+/* iPad landscape: keep source health out of the header action hit-targets. */
+@media (min-width: 760px) and (orientation: landscape) {
+  .syncbar {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: stretch;
+    justify-self: stretch;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 4px 7px;
+    gap: 6px;
+    border-radius: 3px;
+  }
+  .sync-pill {
+    flex: 0 0 auto;
+    padding: 5px 6px;
+    font-size: 8px;
+    letter-spacing: .04em;
+  }
+  .sync-content { gap: 2px; }
+  .sync-content strong { font-size: 9px; line-height: 1.15; }
+  .sync-content span { font-size: 8px; line-height: 1.15; }
+}
+@media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) {
+  .syncbar { padding-inline: 5px; gap: 4px; }
+  .sync-pill { padding: 4px 5px; font-size: 7px; }
+  .sync-content strong { font-size: 8px; }
+  .sync-content span { font-size: 7px; }
+}
