@@ -26,11 +26,15 @@ Whimsical is a separate visual architecture board, **not automatically synchroni
 
 The web-app manifest and service worker cache only the app shell for faster launch and a limited offline fallback. **Live GitHub API/raw data is never cached by the service worker.** When offline or rate-limited, the HUD must show a stale/error state instead of pretending to be live. iPadOS may suspend a backgrounded or closed web app; this version polls every three minutes while open and syncs when you return. It is not an always-running background agent or push-alert system.
 
-## Open the dashboard
+## Free hosting with GitHub Pages
 
-- If the ROVOR repo has GitHub Pages configured to serve the appropriate directory, use the Pages URL. Merely merging these source files does **not** configure GitHub Pages or deploy a live web address.
-- For local development, from the repository root run `python3 -m http.server 8000`, then visit `http://localhost:8000/dashboard/command-center/`. The browser needs normal HTTPS access to GitHub.
-- The standalone shell (`index.html`, `styles.css`, `live-data.js`, `app.js`, `manifest.webmanifest`, `service-worker.js`, `hud-icon.svg`, and `snapshot.json`) can be deployed on a static HTTPS host without a backend. Do not replace the public agency site unexpectedly.
+The Command Center is static HTML/CSS/JavaScript, so it does not need a paid server or database. This repository now includes `.github/workflows/deploy-command-center-pages.yml`, which publishes only `dashboard/command-center/` to GitHub Pages after changes to that directory land on `main`, or when manually dispatched.
+
+**One-time repository setup is still required:** open the repository's **Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions**. Then merge the deployment workflow and Command Center changes through the approved PR. The workflow will publish the app and report the Pages URL in its successful deployment run. No paid Vercel plan is required for this approach; GitHub Pages availability and usage are subject to GitHub's current plan and repository limits.
+
+For local development, from the repository root run `python3 -m http.server 8000`, then visit `http://localhost:8000/dashboard/command-center/`. The browser needs normal HTTPS access to GitHub.
+
+The standalone shell (`index.html`, `styles.css`, `live-data.js`, `app.js`, `manifest.webmanifest`, `service-worker.js`, `hud-icon.svg`, and `snapshot.json`) can also be hosted on another static HTTPS host without a backend. Do not replace the public agency site unexpectedly.
 
 ## Offline tests
 
