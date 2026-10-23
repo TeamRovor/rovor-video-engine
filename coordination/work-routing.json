@@ -525,6 +525,13 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "business-ops-stale-run-cancellation-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
