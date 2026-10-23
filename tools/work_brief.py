@@ -11,7 +11,8 @@ import project_loop
 ROUTING = 'coordination/work-routing.json'
 LANES = {'efficiency', 'animation', 'integration', 'coordination', 'sales', 'delivery', 'operations'}
 CAPABILITIES = {'github-read', 'github-write', 'hosted-ci', 'local-exec',
-                'original-assets', 'visual-review', 'moho-runtime'}
+                'original-assets', 'visual-review', 'moho-runtime',
+                'blender-runtime', 'final-cut-runtime'}
 
 
 def route(data, policy, participant, capabilities, lane='any'):
