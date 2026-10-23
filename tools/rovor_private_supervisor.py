@@ -82,7 +82,8 @@ def _json_private(config_path):
     for key in ("python_executable", "script_path"):
         value = config.get(key)
         if (not isinstance(value, str) or not value.startswith("/")
-                or "\n" in value or "\r" in value or not Path(value).is_file()):
+                or "\n" in value or "\r" in value
+                or Path(value).is_symlink() or not Path(value).is_file()):
             raise Refused("Configured executable path unavailable")
     return config
 
@@ -117,7 +118,10 @@ def stage(home, private_repo, issue, *, script=None, python=None):
     """Local-only staging; does NOT load launchd or access credentials."""
     if sys.platform != "darwin":
         raise Refused("Mac user session required")
-    repo = control.repo_name(private_repo)
+    try:
+        repo = control.repo_name(private_repo)
+    except (control.Refused, ValueError, TypeError):
+        raise Refused("Expected separate TeamRovor private control repository") from None
     if type(issue) is not int or not 1 <= issue <= 100000000:
         raise Refused("Invalid fixed private receipt issue")
     root,service,plist = paths(home)
@@ -139,10 +143,17 @@ def stage(home, private_repo, issue, *, script=None, python=None):
     if service.exists() or service.is_symlink():
         raise Refused("Supervisor service config already staged; refusing replay")
     script=Path(script or __file__).absolute()
-    python=Path(python or sys.executable).absolute()
-    if (script.is_symlink() or python.is_symlink()
-            or not script.is_file() or not python.is_file()):
-        raise Refused("Missing or redirected local source/runtime")
+    python_input=Path(python or sys.executable).absolute()
+    if script.is_symlink() or not script.is_file():
+        raise Refused("Missing or redirected local source")
+    # Python installed by Homebrew/pyenv commonly uses a symlink. Resolve
+    # that locally *before* pinning the exact reviewed ProgramArguments.
+    try:
+        python=python_input.resolve(strict=True)
+    except (OSError,RuntimeError):
+        raise Refused("Local Python executable missing") from None
+    if not python.is_file():
+        raise Refused("Local Python executable missing")
     config = {
         "schema": 1,
         "private_repo": repo,
@@ -167,11 +178,17 @@ def _check_stage(home):
     root,service,plist=paths(home)
     if not root.is_dir() or root.is_symlink():
         raise Refused("Expected ROVOR root unavailable")
+    for parent in (home / "Library", home / "Library" / "Application Support",
+                   plist.parent):
+        if parent.is_symlink() or not parent.is_dir():
+            raise Refused("Unsafe local LaunchAgent parent")
     _private_folder(service)
     config=_json_private(service / CONFIG_FILE)
     expected=plist_contents(config,service)
+    # Keep permission/symlink errors distinct from corrupt plist syntax.
+    raw_plist=_safe_file(plist,16000)
     try:
-        loaded=plistlib.loads(_safe_file(plist,16000))
+        loaded=plistlib.loads(raw_plist)
     except (ValueError, TypeError, plistlib.InvalidFileException):
         raise Refused("Malformed local LaunchAgent") from None
     if loaded!=expected:
