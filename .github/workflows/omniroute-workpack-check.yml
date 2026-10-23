@@ -26,5 +26,17 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Run fake OmniRoute model and no-side-effect tests
         run: python -m unittest discover -s tests -p test_omniroute_workpack_runner.py -v
-      - name: Prove default dry-run, no model and no local files
-        run: python tools/omniroute_workpack_runner.py --all
+      - name: Prove valid public workpack dry-runs without model calls
+        run: |
+          python tools/omniroute_workpack_runner.py --packet provider-efficiency
+          python tools/omniroute_workpack_runner.py --packet supervisor-resilience
+      - name: Removed public runner workflow must fail closed
+        run: |
+          if [ -f .github/workflows/rovor-mac-exec-proof.yml ]; then
+            python tools/omniroute_workpack_runner.py --packet runner-blocker
+          elif python tools/omniroute_workpack_runner.py --packet runner-blocker; then
+            echo "SECURITY FAILURE: missing runner source incorrectly accepted"
+            exit 1
+          else
+            echo "Expected: runner-blocker denied because its source workflow is absent"
+          fi
