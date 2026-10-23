@@ -2574,6 +2574,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39902753557"
         }
       ]
+    },
+    {
+      "id": "routing-explain-dependency-and-scope-blockers",
+      "title": "Explain exact dependency and scope blockers in ROVOR work briefs",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar iPhone routing blocker diagnostics 2026-10-22",
+      "branch": "feature/rovor-routing-blocker-explanations",
+      "scopes": [
+        "tools/work_brief.py",
+        "tests/test_work_brief.py",
+        "coordination/work-routing.json"
+      ],
+      "depends_on": [
+        "session-routing-coverage-and-idle-triage"
+      ],
+      "updated_at": "2026-10-23T04:59:04.719Z",
+      "next_update": "After real-queue and synthetic GitHub-hosted routing checks on Python 3.9/3.11",
+      "next_action": "Enhance existing read-only work_brief to report structured status and ownership for unmet task dependencies, classify scope conflicts separately, and summarize which ready jobs are blocked on a host versus another session; no task takeover or new worker executor.",
+      "acceptance": "For all ineligible ready tasks, router returns exact unmet dependency IDs/status/owners and conflicting reserved scopes/owners, keeps existing eligibility/priority/ownership behavior, and adds concise idle routing summary. Synthetic and real-queue tests pass on hosted Python 3.9/3.11. No Mac or app access claimed.",
+      "evidence": []
     }
   ]
 }
