@@ -2,7 +2,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
-p=Path(__file__).with_name('video_delta_qa.py')
+p=Path(__file__).resolve().parents[1]/'tools'/'video_version_delta_qa.py'
 spec=importlib.util.spec_from_file_location('video_delta_qa',p)
 video=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(video)
