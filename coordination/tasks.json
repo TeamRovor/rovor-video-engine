@@ -2303,9 +2303,9 @@
       "depends_on": [
         "private-mac-control-bounded-poller-v1"
       ],
-      "updated_at": "2026-10-23T03:31:39.517Z",
-      "next_update": "When distinct private TeamRovor control repository and Mac-only scoped Keychain credential are established, inspect and stage frozen supervisor in a real logged-in Mac session; no automated install from public repo.",
-      "next_action": "Review PR #54 against PR #41; actual Mac executor must first establish separate genuinely private control repo/token and prove one live private-ping/issue receipt. Then on Mac inspect approved local checkout, stage supervisor with explicit approval, verify config/plist/frozen snapshot, activate separately, and confirm real launchctl loaded state plus subsequent private-ping receipt while chat is closed. Never claim 24/7 or GUI control from hosted tests.",
+      "updated_at": "2026-10-23T03:55:00Z",
+      "next_update": "After protected private Mac host repo/token and first authorized system.ping proof; do not treat hosted CI as deployment.",
+      "next_action": "Reviewed opt-in supervisor is now included in PR #41 at merge commit 940fdd4; do not make a second supervisor or queue. Only after separate verified PRIVATE control repo + Mac-local scoped Keychain token + authorized local host executor exist, read-only inspect checkout, stage and explicitly activate in real user session, prove private system.ping receipt and later actual stop/loaded state.",
       "acceptance": "No public runner or new queue; local-only LaunchAgent scheduled once per several minutes; private GitHub queue polling only; scoped token retrieved from Keychain; no secrets printed or in plist; guarded 0600 config; stage-and-activate separate; STOP/offline/missing key fail closed; tests Python3.9/3.11 and no actual Mac execution claim.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -2318,6 +2318,13 @@
           "check": "20 stdlib regression tests for explicit launchd stage vs activate, validated private repo, exact fixed argv, one job/tick, frozen SHA-256 private source snapshot, tamper/symlink/permissions refusal, Keychain token isolation, STOP inherited from bridge, bounded status, no auto-install.",
           "result": "PASS 20/20 on Python3.9 and 20/20 on Python3.11 at commit 1655867e85e0db99f37418c0497ed62dbe334567; later doc-only d498537. No agent staged, launched or observed on user Mac, private repo/token still unverified.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39895341056"
+        },
+        {
+          "commit": "940fdd42953ac3460721f9d80a03489263a681ef",
+          "platform": "GitHub review/integration candidate only; no owner's Mac operation",
+          "check": "PR #54 including PR #57 emergency-stop repair merged into PR #41 candidate. Re-fetched integrated tools/rovor_private_supervisor.py and confirmed exact constant-target shutdown. GitHub hosted focused Python3.9/3.11 regression #39898910038 passed both jobs.",
+          "result": "SOURCE INTEGRATED INTO PR #41 CANDIDATE; hosted tests pass; real Mac service/private ping NOT verified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/54"
         }
       ]
     },
