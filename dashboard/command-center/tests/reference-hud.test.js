@@ -53,6 +53,13 @@ test('reference HUD owns the expected interactive panels, tabs, and source scrip
   assert.match(markup,/claimed does not mean running/i);
 });
 
+test('both visual assets are included in the install and fetch cache shell',()=>{
+  const sw=fs.readFileSync(path.join(root, 'service-worker.js'),'utf8');
+  assert.match(sw,/reference-hud\\.css/);
+  assert.match(sw,/reference-hud\\.js/);
+  assert.match(sw,/rovor-command-center-shell-v3/);
+});
+
 test('open counts, ordering and coverage use queue data, not decorative numbers',()=>{
   const {api} = harness();
   const result=api.model(snapshot,'live');
