@@ -2595,6 +2595,28 @@
       "next_action": "Enhance existing read-only work_brief to report structured status and ownership for unmet task dependencies, classify scope conflicts separately, and summarize which ready jobs are blocked on a host versus another session; no task takeover or new worker executor.",
       "acceptance": "For all ineligible ready tasks, router returns exact unmet dependency IDs/status/owners and conflicting reserved scopes/owners, keeps existing eligibility/priority/ownership behavior, and adds concise idle routing summary. Synthetic and real-queue tests pass on hosted Python 3.9/3.11. No Mac or app access claimed.",
       "evidence": []
+    },
+    {
+      "id": "omniroute-direct-api-receipt-containment",
+      "title": "Guard imported OmniRoute model drafts against public-checkout output paths",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar OmniRoute private receipt hardening",
+      "branch": "fix/omniroute-direct-receipt-containment-20261022",
+      "scopes": [
+        "tools/omniroute_workpack_runner.py",
+        "tests/test_omniroute_workpack_runner.py"
+      ],
+      "depends_on": [
+        "omniroute-parallel-worker-packets"
+      ],
+      "updated_at": "2026-10-23T05:01:46.622Z",
+      "next_update": "After Python3.9/3.11 hosted tests and code review",
+      "next_action": "Reject direct run_packet() output into public source checkout before reservation or model call; canonical path comparison; preserve CLI behavior.",
+      "acceptance": "No private draft receipt can be written within ROVOR public checkout via CLI or Python direct API; host-independent regression passes.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+      ]
     }
   ]
 }
