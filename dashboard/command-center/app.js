@@ -291,9 +291,9 @@ function wireReactor() {
   const core = document.querySelector('.reactor-core');
   if (!stage || !core) return;
   const modes = [
-    { name: 'LIVE TELEMETRY', detail: 'MAIN BRANCH · AUTO SYNC', className: 'mode-telemetry' },
+    { name: 'LIVE TELEMETRY', detail: 'SOURCE STATE SHOWN BELOW', className: 'mode-telemetry' },
     { name: 'ORBITAL SCAN', detail: 'GEOMETRY / PHASE LOCK', className: 'mode-orbit' },
-    { name: 'SIGNAL ANALYSIS', detail: 'PUBLIC DATA / VERIFIED SOURCE', className: 'mode-signal' }
+    { name: 'SIGNAL ANALYSIS', detail: 'SOURCE STATE SHOWN BELOW', className: 'mode-signal' }
   ];
   let active = 0;
   core.setAttribute('role', 'button');
@@ -315,6 +315,9 @@ function wireReactor() {
     if (label) label.textContent = mode.name;
     if (detail) detail.textContent = mode.detail;
     stage.setAttribute('data-instrument-mode', mode.name.toLowerCase().replaceAll(' ', '-'));
+    // The sync bar is the source of truth: never imply GitHub is live/verified
+    // merely because the user switched the reactor's visual instrument mode.
+    if (active === 0) syncReactorStatus();
     if (typeof navigator !== 'undefined' && navigator.vibrate && !document.body.classList.contains('motion-paused')) {
       try { navigator.vibrate(8); } catch (_) { /* Haptics are optional. */ }
     }
