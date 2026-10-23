@@ -152,6 +152,19 @@ class RoutingTests(unittest.TestCase):
                      caps=['github-read','github-write','local-exec','blender-runtime'])
         self.assertEqual(r['recommended']['id'],'blender')
 
+    def test_actual_queue_has_explicit_routes_for_every_unfinished_task(self):
+        root = Path(__file__).resolve().parents[1]
+        data = json.loads((root / 'coordination/tasks.json').read_text(encoding='utf-8'))
+        policy = json.loads((root / 'coordination/work-routing.json').read_text(encoding='utf-8'))
+        b = work_brief.route(data, policy, 'CI coverage check',
+                             {'github-read','github-write'}, 'any')
+        self.assertEqual(b['routing_coverage']['unclassified_unfinished'], [])
+        self.assertEqual(b['routing_coverage']['routed_tasks'],
+                         b['routing_coverage']['total_tasks'])
+        self.assertEqual(b['routing_coverage']['total_tasks'], len(data['tasks']))
+        self.assertIsNone(b['recommended'])
+        self.assertGreater(b['routing_coverage']['status_counts']['done'], 0)
+
     def test_ref_uses_committed_pair_not_dirty_files(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
