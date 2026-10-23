@@ -13,7 +13,6 @@ import ghost_worker_loop as loop
 import fcp_native_auto_import as native
 import jane_native_worker as launcher
 import fcp_jane_native_probe as probe
-import fcp_jane_status as manual_status
 
 
 class NativeQueueTests(unittest.TestCase):
@@ -207,7 +206,8 @@ class NativeQueueTests(unittest.TestCase):
     def test_diagnosis_reuses_existing_probe_without_native_dispatch(self):
         job = self.workspace / 'fcp-jane-auto-20261022-183007'
         with mock.patch.object(launcher.sys, 'platform', 'darwin'), \
-             mock.patch.object(manual_status, 'status', return_value={'job_dir': str(job)}), \
+             mock.patch.object(launcher, 'status', return_value={'jobs': [], 'receipts': [
+                 {'path': str(job / 'native-auto-import-receipt.json'), 'receipt': {}}]}), \
              mock.patch.object(probe, 'inspect', return_value={'native_timeline_verified': False}) as inspect, \
              mock.patch.object(native, 'dispatch') as dispatch:
             result = launcher.diagnose(self.workspace)
@@ -221,6 +221,94 @@ class NativeQueueTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'must run on the Mac'):
                 launcher.diagnose(self.workspace)
             inspect.assert_not_called()
+
+    def queued_attempt(self, with_receipt=True):
+        state = self.workspace / 'jane-native-worker-state'
+        with worker.connect(state) as conn:
+            job_id = worker.enqueue(conn, worker.NATIVE_KIND,
+                                    {'candidates': 'candidates'}, 'diagnostic')
+        folder = self.workspace / ('native-import-' + job_id)
+        if with_receipt:
+            folder.mkdir()
+            (folder / 'native-auto-import-receipt.json').write_text(json.dumps({
+                'status': 'native_library_not_observed',
+                'target_library': str(folder / 'ROVOR-Jane-Test.fcpbundle'),
+                'apple_event_sent': True, 'last_dispatched': 'landscape'}))
+        return folder
+
+    def test_diagnosis_finds_queue_attempt_without_manual_directory(self):
+        folder = self.queued_attempt()
+        before = launcher.status(self.workspace)
+        with mock.patch.object(launcher.sys, 'platform', 'darwin'), \
+             mock.patch.object(worker, 'connect', side_effect=AssertionError('must not initialize queue')), \
+             mock.patch.object(native, 'dispatch') as dispatch:
+            result = launcher.diagnose(self.workspace)
+        self.assertEqual(result['job_dir'], str(folder))
+        self.assertEqual(result['original_job_status'], 'native_library_not_observed')
+        self.assertFalse(result['native_timeline_verified'])
+        dispatch.assert_not_called()
+        self.assertEqual(before, launcher.status(self.workspace))
+
+    def test_corrupt_queue_id_cannot_escape_workspace(self):
+        state = self.workspace / 'jane-native-worker-state'
+        with worker.connect(state) as conn:
+            job = worker.enqueue(conn, worker.NATIVE_KIND, {'candidates': 'candidates'}, 'bad-id')
+            conn.execute('UPDATE jobs SET id=? WHERE id=?', ('../../outside', job))
+        with self.assertRaises(ValueError):
+            launcher.status(self.workspace)
+
+    def test_symlinked_queue_evidence_is_reported_without_following(self):
+        folder = self.queued_attempt()
+        receipt = folder / 'native-auto-import-receipt.json'
+        receipt.unlink()
+        outside = self.root / 'private-receipt.json'
+        outside.write_text('{"private": "must not read"}')
+        receipt.symlink_to(outside)
+        with mock.patch.object(launcher.sys, 'platform', 'darwin'):
+            result = launcher.diagnose(self.workspace)
+        self.assertEqual(result['status'], 'invalid_native_evidence')
+        self.assertNotIn('must not read', json.dumps(result))
+
+    def test_undispatched_queue_attempt_does_not_look_like_missing_job(self):
+        folder = self.queued_attempt(with_receipt=False)
+        with mock.patch.object(launcher.sys, 'platform', 'darwin'), \
+             mock.patch.object(native, 'dispatch') as dispatch:
+            result = launcher.diagnose(self.workspace)
+        self.assertEqual(result['job_dir'], str(folder))
+        self.assertEqual(result['status'], 'no_native_receipt_recorded')
+        self.assertEqual(result['queue_status'], 'queued')
+        self.assertFalse(folder.exists())
+        dispatch.assert_not_called()
+
+    def test_diagnosis_keeps_both_queue_and_manual_evidence(self):
+        self.queued_attempt()
+        folder = self.workspace / 'fcp-jane-auto-20261022-183007'
+        folder.mkdir()
+        (folder / 'native-auto-import-receipt.json').write_text(json.dumps({
+            'status': 'native_library_not_observed',
+            'target_library': str(folder / 'ROVOR-Jane-Test.fcpbundle')}))
+        with mock.patch.object(launcher.sys, 'platform', 'darwin'):
+            result = launcher.diagnose(self.workspace)
+        self.assertEqual(len(result['attempts']), 2)
+        self.assertEqual({a['source'] for a in result['attempts']}, {'queue', 'manual'})
+        self.assertFalse(result['native_timeline_verified'])
+
+    def test_diagnosis_preserves_corrupt_receipt_as_evidence_error(self):
+        folder = self.queued_attempt()
+        (folder / 'native-auto-import-receipt.json').write_text('{broken')
+        with mock.patch.object(launcher.sys, 'platform', 'darwin'):
+            result = launcher.diagnose(self.workspace)
+        self.assertEqual(result['status'], 'invalid_native_evidence')
+        self.assertEqual(result['job_dir'], str(folder))
+        self.assertFalse(result['native_timeline_verified'])
+
+    def test_diagnosis_empty_root_does_not_initialize_queue(self):
+        with mock.patch.object(launcher.sys, 'platform', 'darwin'), \
+             mock.patch.object(native, 'dispatch') as dispatch:
+            result = launcher.diagnose(self.workspace)
+        self.assertEqual(result['status'], 'no_native_attempt_recorded')
+        self.assertFalse((self.workspace / 'jane-native-worker-state').exists())
+        dispatch.assert_not_called()
 
     def test_discovery_skips_invalid_newer_directory(self):
         valid = self.workspace / 'fcp-native-import-20261022-100000'
