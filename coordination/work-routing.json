@@ -479,6 +479,12 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "omniroute-direct-api-receipt-containment": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }
