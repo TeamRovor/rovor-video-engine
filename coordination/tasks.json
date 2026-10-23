@@ -2337,7 +2337,7 @@
       "id": "private-supervisor-emergency-deactivate",
       "title": "Make private Mac LaunchAgent emergency deactivation independent of damaged staged files",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar focused supervisor shutdown repair 2026-10-22",
       "branch": "fix/private-supervisor-emergency-stop-20261022",
       "scopes": [
@@ -2347,13 +2347,22 @@
       "depends_on": [
         "private-mac-supervisor-launchagent"
       ],
-      "updated_at": "2026-10-23T03:36:00Z",
-      "next_update": "After focused hosted Python3.9/3.11 regression run and PR review",
-      "next_action": "Patch PR #54 by directing deactivation at fixed launchd service target without checking corrupt staged snapshot; keep activate/tick full validation; add regression tests and run hosted CI.",
+      "updated_at": "2026-10-23T03:42:00Z",
+      "next_update": "When real private Mac control repo and authorized local execution are established, separately verify live launchctl bootout on the user Mac.",
+      "next_action": "PR #57 merged into PR #54 supervisor candidate. Review PR #54; first establish a separate genuinely private control channel and supervised Mac execution, then test a real user-session stop even after staged-file corruption. Do not claim host activation or publish credentials.",
       "acceptance": "A corrupted/missing snapshot/plist cannot prevent explicit bootout of the exact known ROVOR user service; activation/tick still refuse corruption; no arbitrary label or shell invocation; CLI does not claim Mac host execution; offline Python3.9/3.11 tests pass.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/54",
         "https://github.com/TeamRovor/rovor-video-engine/pull/54#pullrequestreview-5623615879"
+      ],
+      "evidence": [
+        {
+          "commit": "9e31a2e35fb1cbc39f0ecf8c71fd78c97d941498",
+          "platform": "GitHub hosted Linux Python 3.9 and 3.11 (macOS launchctl mocked)",
+          "check": "PR #57 exact two-file shutdown patch, corrupt frozen runtime, missing plist, no-output-leak bootout failure, unknown verb and unchanged strict activation; hosted supervisor regression run #39897042327.",
+          "result": "PASS both Python 3.9 and 3.11 jobs; merged into PR #54 via squash. No Mac launchd activation/host execution performed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39897042327"
+        }
       ]
     }
   ]
