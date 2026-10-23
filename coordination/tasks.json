@@ -1935,6 +1935,44 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/46"
       ]
+    },
+    {
+      "id": "jane-sqlite-isolated-library-creation",
+      "title": "Connect Jane's isolated native library creator to existing durable ghost worker",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar Jane queue-integration session 2026-10-22",
+      "branch": "feature/ghost-native-import-queue",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tools/ghost_worker_loop.py",
+        "tools/jane_library_worker.py",
+        "tools/fcp_jane_library_onepass.py",
+        "tests/test_ghost_jane_library_queue.py",
+        "tests/test_ghost_jane_library_launcher.py",
+        "integrations/open-interpreter/WORKFORCE-CHECKPOINT.md"
+      ],
+      "depends_on": [
+        "ghost-legacy-native-dispatch-disabled"
+      ],
+      "updated_at": "2026-10-23T02:00:33.748Z",
+      "next_update": "Review PR #41 integration and reconcile PR #45's overlapping bootstrap changes before merge; actual host native library and app-selected verification remain blocked",
+      "next_action": "Review CI 39887002258 and PR #41. Existing Mac-enabled agent must run one specifically approved exact-ID library creation job from tested branch; do not retry failed jobs or the disabled XML import. Record first real native library creation and independent FCP selection before enabling any editing/export.",
+      "acceptance": "One existing SQLite queue offers Jane library-create kind separately approved, exact-ID one-shot GUI attempt, STOP pre/postclaim, dedupe/crash nonreplay, immutable needs_review after execution and isolated test library path; existing research/read-only jobs preserved and legacy XML import disabled. Hosted regression tests pass; native Mac operation not claimed.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/37",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/45"
+      ],
+      "evidence": [
+        {
+          "commit": "144d6c5612035a1842b09c37d9f6e711cdbbba9d",
+          "platform": "Hosted Ubuntu Linux Python 3.9 and 3.11; no native Mac GUI execution",
+          "check": "Integrated workforce CI: 83 ghost tests, 40 Interpreter tests, 94 FCP tests; one exact SQLite Jane library create job with separate opt-in, STOP and replay rejection; old native import disabled",
+          "result": "PASS 217/217 on Python3.9 in 7.221s and 217/217 on Python3.11 in 7.037s. Source now connects Jane's onepass to durable worker; native app library creation/selection/export NOT verified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39887002258"
+        }
+      ]
     }
   ]
 }
