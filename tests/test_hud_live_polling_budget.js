@@ -90,10 +90,10 @@ test('pinned-commit queue and route reads use identical immutable SHA', async ()
   assert.ok(result.nodes.get('tasks').innerHTML.includes('Real task'));
 });
 
-test('one hour of unattended HUD polling stays within a 60-request public API budget', async () => {
+test('one hour of unattended HUD polling stays within a 60-request public API budget', async (t) => {
   const result=await simulate(60);
   // Keep the measured count visible in hosted logs for review and comparison.
-  console.log('Observed ' + result.restCalls.length + ' GitHub REST requests over 60 simulated minutes.');
+  t.diagnostic('Observed ' + result.restCalls.length + ' GitHub REST requests over 60 simulated minutes.');
   // GitHub's typical unauthenticated REST allowance is 60 requests/hour/IP.
   // Shared public IPs make headroom desirable; 60 is only an upper bound.
   assert.ok(result.restCalls.length<=60,
