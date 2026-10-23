@@ -157,12 +157,10 @@ class GhostOmniRouteJobTests(unittest.TestCase):
 
     def test_loop_default_never_claims_omni(self):
         jid=self.queue()
-        def fake_monotonic():
-            return 1.0
         # One bounded poll; no sleeping or external operation.
         result=ghost_worker_loop.poll(self.conn,self.workspace,self.state,
             worker_id='test',max_jobs=1,max_seconds=0.01,
-            poll_seconds=0.1,monotonic=iter((1.0,1.1)).__next__,
+            poll_seconds=0.1,monotonic=iter((1.0,1.1,1.2)).__next__,
             sleeper=lambda *_:None)
         self.assertEqual(result['executed'],0)
         self.assertEqual(self.conn.execute(
