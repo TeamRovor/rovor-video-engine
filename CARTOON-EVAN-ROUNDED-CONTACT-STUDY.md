@@ -1,0 +1,23 @@
+# Rounded contact study: candidate rejected, runtime restored
+
+The matched-skin ten-plane face remains the working rig at55c58b8. This pass tested a specific cause of chunky mouth motion: the bilabial vertical seal also suppresses horizontal lip rounding. Simply removing that extra suppression only moved the largest local width step elsewhere. A second candidate let the existing phonetic width context omit the forced contact envelope while keeping actual material/jaw contact weights, original audio, phone boundaries and independent chin unchanged. Full F/V still suppressed rounding. This was a control experiment on the real layered rig, not a new sprite set.
+
+The candidate is NOT adopted. All six modified engine/test files were restored byte-for-byte to55c58b8 after review. The exact tested diff is archived as evan-engine/reviews/rejected-rounded-contact-context-v1.patch, with the decision in rounded-contact-study-decision-v1.json. It is a zero-context diff for the recorded base (reproduction requires git apply --unidiff-zero), not an enabled runtime option. Do not repeat removal of the bilabial suppression or contact-envelope weighting as a presumed general fix.
+
+## Rendered evidence
+
+outputs/evan-cartoon-rounded-contact-study contains three prior/candidate comparisons at1280x720/48fps with original voice and muted quarter-speed counterparts. Super uses source696..767, More-Finished864..935 and Up-All960..1007. Normal clips contain72/72/48 frames and exactly24000/24000/16000 source and AAC-decoded samples; slow clips288/288/192 frames. All six movies fully decode. The prior emulator exactly reproduces the previously committed native888 head pixels. No existing artwork was edited or generated.
+
+All192 pairs of native mouth crops and full comparison frames725/887/979/983 were visually inspected. The selected cartoon likeness and matching jaw palette remain, but the difference is marginal: thin contact bands and narrow rounded transitions remain. The extra narrowing is especially apparent through the up/all transition. These are head construction studies; the existing full-body Rovor scene remains the previous matched-jaw proof. No new body rig, hand pose or native Moho bones are claimed. No independent listening or continuous-playback acceptance was performed.
+
+## Why the tests are insufficient
+
+The candidate passed36 focused tests, including actual rounded bilabial closure without forced widening, retained full F/V geometry, source immutability, geometry/raster target agreement, and existing planner/body contracts. All1059 recording-frame and248 phone-midpoint geometry checks pass, minimum jaw triangle double-area27.41569. Chin trajectories remain exactly unchanged. Those facts establish some mechanical isolation, not quality.
+
+The selected P width step724→725 falls13.21855→10.18167 native pixels. The more/AO lower-contour step887→888 falls12.11368→11.56342. Across the entire recording, however, maximum width step remains14.60095 and its95th percentile grows8.29631→8.35216. Eighteen width steps grow by over1px, including977→978 growing.25833→8.29440 before the up/all release. Maximum lower-contour step falls14.66776→14.00381, a modest change. These are native512 geometry differences, not optical flow or anatomical speed limits. Larger motion is not automatically worse acting, but this evidence and the actual drawings do not support calling the candidate a convincing general improvement.
+
+## Concrete next test
+
+Use the unchanged phoneme plan to author one shared bilabial approach/seal/release trajectory, with explicit lip-corner endpoints and a deliberate held seal. Evaluate all P/B/M contexts across the recording, including the newly exposed up/all regression; do not tune only super. Preserve original samples, complete contact closure and independent chin. This is a hypothesis to test, not a claim that a phase curve alone will supply good animation. The existing thin closed/FV drawings and lip-corner vocabulary may still require matched redraws and a human character animator's performance judgement. Do not add a global low-pass filter, retime flagged words to hide geometry, or accumulate experimental runtime profiles.
+
+Original18+3 acoustic flags remain unverified. Previous proofs, source art and working matched-skin rig remain intact. The8GiB CPU can render these native studies; production vector artwork and expressive acting remain real limits. Main/V3/V4, releases/symlinks/updater/native Moho projects remain untouched. No Moho launch, merge or deployment. Full polished milestone incomplete; automation stays active.
