@@ -1888,12 +1888,14 @@
         "tools/ghost_worker.py",
         "tools/ghost_worker_loop.py",
         "tests/test_ghost_native_import_queue.py",
-        "integrations/open-interpreter/WORKFORCE-CHECKPOINT.md"
+        "integrations/open-interpreter/WORKFORCE-CHECKPOINT.md",
+        "tools/fcp_native_auto_import.py",
+        "tests/test_fcp_native_auto_import.py"
       ],
       "depends_on": [],
       "updated_at": "2026-10-23T01:14:15.962Z",
       "next_update": "After worker regression tests and integration update",
-      "next_action": "Remove direct legacy XML importer dispatch from worker; opted-in native jobs become needs_review without launching app. Report requested versus enabled native capability accurately; preserve read-only/research adapters and queue evidence.",
+      "next_action": "Carry the latest pilot CLI prohibition into the integration candidate without losing its newer STOP/replay/hash controls; remove worker legacy dispatch; native jobs require review and capability flags remain accurate.",
       "acceptance": "No worker route invokes native.prepare/dispatch even with --allow-native-import; native job recorded once as needs_review without replay; read-only jobs/research opt-ins unaffected; loop capability reflects disabled native import; tests pass.",
       "evidence": []
     }
