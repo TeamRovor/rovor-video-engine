@@ -10,6 +10,7 @@ import hashlib
 from datetime import datetime, timezone
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -26,7 +27,8 @@ def constrained_job(root, job):
     root = root.expanduser().absolute()
     job = job.expanduser().absolute()
     if (root.is_symlink() or not root.is_dir() or job.is_symlink()
-            or job.parent != root or not job.name.startswith(JOB_PREFIX)
+            or job.parent != root or not (job.name.startswith(JOB_PREFIX) or
+                re.fullmatch(r'native-import-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', job.name))
             or not job.is_dir()):
         raise ValueError('Use one existing disposable Jane job directly in the ROVOR root')
     return root, job
