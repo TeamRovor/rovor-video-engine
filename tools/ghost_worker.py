@@ -21,6 +21,8 @@ FUTURE_DISABLED = frozenset({
     "email.send", "social.publish", "files.move", "files.delete",
 })
 RESEARCH_KIND = "research.finalcut"
+OMNI_KIND = "research.omniroute"
+OMNI_MAX_24H = 5
 NATIVE_KIND = "finalcut.import-diagnostic"
 LIBRARY_KIND = "finalcut.library-create"
 NATIVE_DISABLED_REASON = (
@@ -90,10 +92,13 @@ def _event(conn: sqlite3.Connection, job_id: str, name: str, details: dict, now:
 
 def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
             dedupe_key: str, now: float | None = None) -> str:
-    if kind not in ALLOWED | {RESEARCH_KIND, NATIVE_KIND, LIBRARY_KIND}:
+    if kind not in ALLOWED | {RESEARCH_KIND, OMNI_KIND, NATIVE_KIND, LIBRARY_KIND}:
         raise ValueError(f"Adapter disabled or unknown: {kind}")
     if not isinstance(payload, dict) or not isinstance(dedupe_key, str) or not (1 <= len(dedupe_key) <= 200):
         raise ValueError("A JSON-object payload and nonempty dedupe key (max 200) are required")
+    if kind == OMNI_KIND:
+        import ghost_omniroute_job
+        ghost_omniroute_job.validate_payload(payload)
     if kind in {"system.ping", RESEARCH_KIND} and payload:
         raise ValueError("This fixed job does not accept parameters")
     if kind == LIBRARY_KIND:
@@ -135,7 +140,7 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
 
 
 def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
-          jane_queue_job_id=None):
+          jane_queue_job_id=None, allow_omniroute_model_use=False):
     if jane_queue_job_id is not None and not jane_library_only:
         raise ValueError('Job ID filter requires Jane library-only mode')
     if jane_library_only and not allow_jane_library_create:
@@ -148,7 +153,7 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         # Expired leases are safe to replay ONLY because the allowlist is read-only.
         expired = conn.execute("SELECT id,kind,attempts FROM jobs WHERE status='running' AND lease_until<=?", (now,)).fetchall()
         for row in expired:
-            if row["kind"] in {RESEARCH_KIND, NATIVE_KIND, LIBRARY_KIND} or row["attempts"] >= MAX_ATTEMPTS:
+            if row["kind"] in {RESEARCH_KIND, OMNI_KIND, NATIVE_KIND, LIBRARY_KIND} or row["attempts"] >= MAX_ATTEMPTS:
                 conn.execute("UPDATE jobs SET status='needs_review',lease_owner=NULL,lease_until=NULL,updated_at=? WHERE id=?",
                              (now, row["id"]))
                 _event(conn, row["id"], "exhausted_lease", {}, now)
@@ -156,7 +161,15 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
                 conn.execute("UPDATE jobs SET status='queued',lease_owner=NULL,lease_until=NULL,updated_at=? WHERE id=?",
                              (now, row["id"]))
                 _event(conn, row["id"], "requeued_expired_readonly_lease", {}, now)
+        # Quota is enforced inside this SQLite IMMEDIATE transaction, so
+        # concurrent worker processes cannot both claim the final allowance.
+        omni_used = conn.execute(
+            "SELECT COUNT(*) FROM events e JOIN jobs j ON e.job_id=j.id "
+            "WHERE j.kind=? AND e.event='claimed' AND e.timestamp>=?",
+            (OMNI_KIND, now - 86400)).fetchone()[0]
+        omni_enabled = allow_omniroute_model_use and omni_used < OMNI_MAX_24H
         kinds = sorted(ALLOWED | ({RESEARCH_KIND} if allow_model_use else set())
+                       | ({OMNI_KIND} if omni_enabled else set())
                        | ({NATIVE_KIND} if allow_native_import else set())
                        | ({LIBRARY_KIND} if allow_jane_library_create else set()))
         if jane_library_only:
@@ -167,7 +180,7 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         job = conn.execute(f"SELECT * FROM jobs WHERE status='queued' AND kind IN ({marks}){job_filter} ORDER BY created_at,id LIMIT 1", args).fetchone()
         if job:
             conn.execute("UPDATE jobs SET status='running',attempts=attempts+1,lease_owner=?,lease_until=?,updated_at=? WHERE id=?",
-                         (owner, now + (420 if job['kind'] in {NATIVE_KIND, LIBRARY_KIND} else 360 if job["kind"] == RESEARCH_KIND else LEASE_SECONDS), now, job["id"]))
+                         (owner, now + (420 if job['kind'] in {NATIVE_KIND, LIBRARY_KIND} else 360 if job["kind"] in {RESEARCH_KIND, OMNI_KIND} else LEASE_SECONDS), now, job["id"]))
             _event(conn, job["id"], "claimed", {"worker": owner, "attempt": job["attempts"]+1}, now)
         conn.execute("COMMIT")
         return dict(job) if job else None
@@ -215,14 +228,15 @@ def inventory(workspace: Path, subpath: str) -> dict:
 
 
 def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
-             jane_queue_job_id=None):
+             jane_queue_job_id=None, allow_omniroute_model_use=False):
     state = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
     if os.path.lexists(state / "STOP"):
         return None
     job = claim(conn, owner, now, allow_model_use=allow_model_use, allow_native_import=allow_native_import,
                 allow_jane_library_create=allow_jane_library_create,
                 jane_library_only=jane_library_only,
-                jane_queue_job_id=jane_queue_job_id)
+                jane_queue_job_id=jane_queue_job_id,
+                allow_omniroute_model_use=allow_omniroute_model_use)
     if not job:
         return None
     job_id, kind = job["id"], job["kind"]
@@ -242,6 +256,26 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
                 raise ValueError('Research did not complete; inspect private receipt: ' + str(receipt))
             result = {"research_receipt": str(receipt), "answer_sha256": report['answer_sha256'],
                       "facts_verified": False, "app_control_verified": False}
+        elif kind == OMNI_KIND:
+            if not allow_omniroute_model_use:
+                raise ValueError('OmniRoute requires separate explicit approval')
+            import ghost_omniroute_job
+            result = ghost_omniroute_job.execute(
+                state, job_id, payload, stop_path=state / 'STOP')
+            # A provider-produced memo is never automatically approved. Even
+            # an HTTP 200 / nonempty answer remains a review-required draft.
+            conn.execute('BEGIN IMMEDIATE')
+            changed = conn.execute(
+                "UPDATE jobs SET status='needs_review',result=?,error=NULL,"
+                "lease_owner=NULL,lease_until=NULL,updated_at=? "
+                "WHERE id=? AND status='running' AND lease_owner=?",
+                (json.dumps(result, sort_keys=True), t, job_id, owner)).rowcount
+            if changed != 1:
+                raise ValueError('Lost OmniRoute job ownership')
+            _event(conn, job_id, 'needs_review',
+                   {'kind': kind, 'draft_status': result['draft_status']}, t)
+            conn.execute('COMMIT')
+            return {'id': job_id, 'status': 'needs_review', 'result': result}
         elif kind == "files.inventory":
             result = inventory(workspace, payload.get("subpath", "."))
         elif kind == LIBRARY_KIND:
@@ -287,7 +321,7 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
         if conn.in_transaction:
             conn.execute("ROLLBACK")
         conn.execute("BEGIN IMMEDIATE")
-        terminal = 'needs_review' if kind in {NATIVE_KIND, LIBRARY_KIND} else 'failed'
+        terminal = 'needs_review' if kind in {NATIVE_KIND, LIBRARY_KIND, OMNI_KIND} else 'failed'
         conn.execute("UPDATE jobs SET status=?,error=?,lease_owner=NULL,lease_until=NULL,updated_at=? "
                      "WHERE id=? AND status='running' AND lease_owner=?", (terminal, str(exc), t, job_id, owner))
         _event(conn, job_id, terminal, {"error": type(exc).__name__}, t)
@@ -308,6 +342,8 @@ def main():
     run = sub.add_parser("run-once")
     run.add_argument("--worker-id", default="local-worker")
     run.add_argument("--approve-model-use", action="store_true")
+    run.add_argument("--approve-omniroute-model-use", action="store_true",
+                     help="Separate approval; max five private OmniRoute jobs per rolling 24h")
     run.add_argument("--allow-native-import", action="store_true")
     run.add_argument("--approve-jane-library-create", action="store_true",
                      help="One explicit Mac GUI library creation; does not import XML")
@@ -315,13 +351,14 @@ def main():
     args = parser.parse_args()
     with connect(args.state) as conn:
         if args.command == "init":
-            output = {"initialized": True, "allowed_jobs": sorted(ALLOWED), "opt_in_model_jobs": [RESEARCH_KIND], "opt_in_native_jobs": [LIBRARY_KIND], "disabled_adapters": sorted(FUTURE_DISABLED | {NATIVE_KIND})}
+            output = {"initialized": True, "allowed_jobs": sorted(ALLOWED), "opt_in_model_jobs": [RESEARCH_KIND, OMNI_KIND], "opt_in_native_jobs": [LIBRARY_KIND], "disabled_adapters": sorted(FUTURE_DISABLED | {NATIVE_KIND})}
         elif args.command == "enqueue":
             output = {"id": enqueue(conn, args.kind, json.loads(args.payload), args.key)}
         elif args.command == "run-once":
             output = run_once(conn, args.workspace, args.worker_id, allow_model_use=args.approve_model_use,
                               allow_native_import=args.allow_native_import,
-                              allow_jane_library_create=args.approve_jane_library_create)
+                              allow_jane_library_create=args.approve_jane_library_create,
+                              allow_omniroute_model_use=args.approve_omniroute_model_use)
         else:
             rows = conn.execute("SELECT id,kind,status,attempts,error FROM jobs ORDER BY created_at,id").fetchall()
             output = {"jobs": [dict(r) for r in rows]}
