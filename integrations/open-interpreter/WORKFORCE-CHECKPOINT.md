@@ -13,19 +13,43 @@ The newest supplied Mac receipt is from `fcp-jane-auto-20261022-183007`:
 manual status check confirmed the requested library was absent. Portrait was
 not dispatched. This supersedes earlier notes saying the command had no result.
 
-Do not repeat research, MCP registration, DTD preparation or native dispatch to
-address that receipt. The next host action is the existing read-only diagnosis:
+The latest supplied Mac UI probe (source `7860ab5d5840b8627c41071b54bec501efe4deee`)
+already observed two Final Cut windows, zero sheets, and no recognized import,
+library-picker or error title. It did not read UI contents or click controls.
+The generic Untitled library was created on October 7, before the October 22
+job; its modification time does not attribute it to Jane.
 
-```sh
-python3 tools/jane_native_worker.py --diagnose
-```
+Do not repeat research, MCP registration, DTD preparation, the completed basic
+process/window-title probes, or native dispatch. The import outcome is still
+unexplained. The next host investigation must capture the actual import result
+or application error on the existing disposable attempt, using a verified
+Mac-backed session. Window titles and a zero Apple-event return are insufficient
+to establish success. Do not create another import as a diagnostic shortcut.
 
-This observes process names, the known receipt, XML target and bounded nearby
-library locations. It does not launch an app or read an application dialog.
-Finding an existing default Untitled library does not attribute it to this job.
-The probe cannot establish a live timeline, resolve a modal dialog or infer the
-cause from a missing folder. Actual app observation is still required if the
-read-only evidence cannot locate the import outcome.
+## Consolidated repairs and verification
+
+PRs #42, #43 and #44 are merged into this integration branch. PR #41 remains the
+review candidate; these child merges do not deploy a service or merge the full
+worker stack into main.
+
+- Native XML diagnosis checks the original receipt hashes, exact orientation,
+  linked format and single empty 30-second/60fps gap.
+- Diagnosis now includes the durable queue's UUID-named output folders and
+  manual attempts. One attempt retains its flat response; multiple attempts
+  return a bounded `attempts` array. Missing/corrupt/symlinked evidence stays
+  explicit; inspection neither initializes the queue nor retries an import.
+- Queue initialization rejects pre-existing symlinked or nonregular database,
+  WAL and shared-memory paths before opening SQLite.
+
+All six changed code/test blobs on the consolidated branch match the locally
+tested files. Linux Python 3.12.14: **164 offline tests pass** in 6.705 seconds.
+Actual hosted [Python 3.9 and 3.11 checks](https://github.com/TeamRovor/rovor-video-engine/actions/runs/39880072286)
+both passed on repair head `57da42936b6fb90e45c80b4fb2ae2cced1e7581e`;
+the 3.9 log confirms 164 tests in 6.965 seconds. The final merged code is
+byte-identical to those tested modules. Earlier queue-diagnosis
+[CI](https://github.com/TeamRovor/rovor-video-engine/actions/runs/39879902562)
+also passed. No new Mac runtime verification, model turn, native timeline,
+installation or unattended operation is claimed.
 
 ## One command per purpose
 
@@ -57,9 +81,9 @@ server is launched by the offline tests; subprocess tests use local fakes.
    because the read-only scheduler exists.
 
 These are release stages, not another development task or ownership queue.
-`coordination/tasks.json` remains canonical. Its older FCP next-action text must
-be reconciled with this Mac receipt when the shared task update is authorized.
-Until then, read the current PR/checkpoint alongside main, as WORK.md requires.
+`coordination/tasks.json` remains canonical. Its FCP evidence now records the
+completed MCP and basic diagnosis rather than directing repeated setup. Read the
+current PR/checkpoint alongside main, as WORK.md requires.
 
 ## Source provenance
 
