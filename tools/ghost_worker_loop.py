@@ -86,7 +86,8 @@ def clear_stop(state: Path) -> bool:
 def poll(conn, workspace: Path, state: Path, *, worker_id: str,
          max_jobs: int = 100, max_seconds: float = 900,
          poll_seconds: float = 1.0, monotonic=time.monotonic,
-         sleeper=time.sleep, allow_model_use=False, allow_native_import=False) -> dict:
+         sleeper=time.sleep, allow_model_use=False, allow_native_import=False,
+         allow_jane_library_create=False) -> dict:
     """Poll bounded jobs with explicit opt-ins, observing STOP between operations.
 
     Limits are cooperative: a synchronous adapter cannot be interrupted mid-call.
@@ -110,7 +111,13 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
         if elapsed >= max_seconds:
             reason = "max_seconds"
             break
-        if allow_native_import:
+        if allow_jane_library_create:
+            receipt = ghost_worker.run_once(
+                conn, workspace, owner=worker_id,
+                allow_model_use=allow_model_use,
+                allow_native_import=allow_native_import,
+                allow_jane_library_create=True)
+        elif allow_native_import:
             receipt = ghost_worker.run_once(conn, workspace, owner=worker_id,
                                            allow_model_use=allow_model_use, allow_native_import=True)
         elif allow_model_use:
@@ -131,9 +138,11 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
     return {"stop_reason": reason, "executed": executed, "succeeded": succeeded,
             "failed": failed, "idle_polls": idle_polls,
             "elapsed_seconds": round(max(0, monotonic() - start), 3),
-            "read_only": not allow_model_use,
+            "read_only": not (allow_model_use or allow_jane_library_create),
             "native_import_requested": allow_native_import,
             "native_import_enabled": False,
+            "jane_library_creation_approved": allow_jane_library_create,
+            "native_timeline_verified": False,
             "model_use_enabled": allow_model_use, "worker_id": worker_id}
 
 
@@ -146,6 +155,8 @@ def main() -> None:
     run.add_argument("--worker-id", default="rovor-local-worker")
     run.add_argument("--approve-model-use", action="store_true")
     run.add_argument("--allow-native-import", action="store_true")
+    run.add_argument("--approve-jane-library-create", action="store_true",
+                     help="One explicit native Library creation job; no XML import")
     run.add_argument("--max-jobs", type=int, default=100)
     run.add_argument("--max-seconds", type=float, default=900)
     run.add_argument("--poll-seconds", type=float, default=1.0)
@@ -158,7 +169,8 @@ def main() -> None:
             result = poll(conn, args.workspace, args.state, worker_id=args.worker_id,
                           max_jobs=args.max_jobs, max_seconds=args.max_seconds,
                           poll_seconds=args.poll_seconds, allow_model_use=args.approve_model_use,
-                          allow_native_import=args.allow_native_import)
+                          allow_native_import=args.allow_native_import,
+                          allow_jane_library_create=args.approve_jane_library_create)
     elif args.command == "stop":
         result = {"stop_requested": True, "marker_created": request_stop(args.state)}
     else:
