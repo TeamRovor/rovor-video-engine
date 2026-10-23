@@ -1483,3 +1483,39 @@ body {
   .app-shell { grid-template-rows: 40px 26px minmax(0, 1fr) minmax(78px, .58fr); }
   .syncbar { max-height: 26px; padding-block: 2px; }
 }
+
+
+/* Focus View is an instrument mode, not a compressed version of the dashboard. */
+.focus-mode .app-shell {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  min-height: 100dvh;
+}
+.focus-mode .topbar,
+.focus-mode .syncbar,
+.focus-mode .ring-panel,
+.focus-mode .metrics-panel,
+.focus-mode .warning-panel,
+.focus-mode .tabbar,
+.focus-mode main {
+  display: none !important;
+}
+.focus-mode .reactor-stage {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+}
+@media (min-width: 760px) and (orientation: landscape) {
+  .focus-mode .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .focus-mode .reactor-stage {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
