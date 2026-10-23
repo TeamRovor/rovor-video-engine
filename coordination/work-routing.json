@@ -539,6 +539,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "capability-evaluator-malformed-output-guard-20261023": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

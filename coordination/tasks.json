@@ -2999,6 +2999,25 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39914586466"
         }
       ]
+    },
+    {
+      "id": "capability-evaluator-malformed-output-guard-20261023",
+      "title": "Fail closed on malformed AI answers in capability evaluator",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar independent evaluation robustness 2026-10-23",
+      "branch": "feature/rovor-evaluation-pack-ci-20261023",
+      "scopes": [
+        "architecture/evaluations/evaluate.py",
+        "architecture/evaluations/test_evaluate.py"
+      ],
+      "depends_on": [
+        "rovor-capability-evaluation-pack"
+      ],
+      "updated_at": "2026-10-23T07:15:53.217Z",
+      "next_update": "After evaluator regression suite and hosted Ubuntu/Windows validation",
+      "next_action": "Guard unhashable/malformed AI answers and CI job result records to return structured rejection instead of a Python exception. Preserve good/bad fixture semantics, add focused regression coverage and integrate only after validation.",
+      "acceptance": "Malformed `case_id`, `claim.id`, unknown fields, approval and `job_results[*].job_id` never raise TypeError; they fail closed with stable issue codes. Existing good/bad examples and hosted tests pass; no model or Mac execution claimed."
     }
   ]
 }
