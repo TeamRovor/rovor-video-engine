@@ -2497,7 +2497,8 @@
         "tests/test_work_brief.py",
         "coordination/work-routing.json",
         "coordination/ROUTING-IMPROVEMENTS.md",
-        ".github/workflows/work-brief-routing-check.yml"
+        ".github/workflows/work-brief-routing-check.yml",
+        "WORK.md"
       ],
       "depends_on": [
         "work-session-routing"
