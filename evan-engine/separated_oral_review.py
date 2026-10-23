@@ -8,9 +8,10 @@ from PIL import Image
 from cartoon_body import ROOT
 from labiodental_construction import FaceCapture,load
 from lower_lip_plane import LowerLipPlane,arch_surface
-from guided_jaw_exposure import contour_target_mesh
+from guided_jaw_exposure import contour_target_mesh,SOURCE,POLYGON
+from cartoon_neck import jaw_cut
 from jaw_overlap_exposure import INTERFACE,mapped_interface
-from lip_surface_correspondence import source_mesh,corresponding_fields
+from lip_surface_correspondence import corresponding_fields
 from layered_cartoon_head import over,straight
 from lingual_cartoon_head import tongue_lift
 from painted_timing import ease
@@ -61,9 +62,19 @@ def face_ownership(target,upper):
  cv2.fillPoly(mask,[np.rint(polygon*3*256).astype('int32')],255,lineType=cv2.LINE_AA,shift=8)
  return cv2.resize(mask,(512,512),interpolation=cv2.INTER_AREA).astype('float32')/255
 
+def original_jaw_skin(source):
+ # Keep the chin through the neck split; the ear belongs to the upper face.
+ polygon=np.vstack([POLYGON[:9],[[329,448],[128,448],[128,315]]])
+ mask=np.zeros((1536,1536),np.uint8)
+ cv2.fillPoly(mask,[np.rint(polygon*3*256).astype('int32')],255,lineType=cv2.LINE_AA,shift=8)
+ mask=cv2.resize(mask,(512,512),interpolation=cv2.INTER_AREA).astype('float32')/255
+ yy,xx=np.mgrid[:512,:512];mask*=np.clip((jaw_cut(xx)+5-yy)/3,0,1)
+ jaw=source.astype('float32').copy();jaw[:,:,:3]*=jaw[:,:,3:4]/255
+ return jaw*mask[:,:,None]
+
 class SeparatedOralReview:
  def __init__(self):
-  self.head=MaterialCapture();self.jaw=load(ROOT/'jaw-simplification-v1/Jaw-Candidate.png');self.source_points,_=source_mesh(self.jaw);self.lower=LowerLipPlane();self.cap=load(ROOT/'labiodental-guide-v1/Upper-Lip-Candidate-v2.png');self.neck=load(ROOT/'jaw-overlap-v1/Neck.png')
+  self.head=MaterialCapture();self.jaw=original_jaw_skin(self.head.layers['face-skin']);self.source_points=SOURCE.copy();self.lower=LowerLipPlane();self.cap=load(ROOT/'labiodental-guide-v1/Upper-Lip-Candidate-v2.png');self.neck=load(ROOT/'jaw-overlap-v1/Neck.png')
   folder=ROOT/'rounded-upper-rim-v1';self.round_cap=load(folder/'Upper-Rim-Candidate.png');self.round_edge=np.asarray(json.loads((folder/'Registration.json').read_text())['sourceEdge'],np.float32)
   x=np.linspace(198,274,9);self.cap_edge=np.column_stack([x,321-(x-198)*.5/76-1.75*np.sin(np.linspace(0,np.pi,9))]).astype('float32')
  def at(self,t,plan):

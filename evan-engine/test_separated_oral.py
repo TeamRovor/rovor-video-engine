@@ -1,12 +1,22 @@
 """Fresh material/geometry, geometric crown occlusion and source safety."""
 import unittest,cv2,numpy as np
-from separated_oral_review import SeparatedOralReview,inner_arch,rounded_oral_arch
+from separated_oral_review import SeparatedOralReview,inner_arch,rounded_oral_arch,original_jaw_skin
 
 class SeparatedOralTests(unittest.TestCase):
  @classmethod
  def setUpClass(cls):cv2.setNumThreads(1);cls.rig=SeparatedOralReview()
  def pose(self,fv):
   w=np.eye(9)[3]*(1-fv)+np.eye(9)[7]*fv;baseline=self.rig.head.weights(w);return self.rig.assemble(baseline)
+ def test_original_skin_extraction_preserves_color_chin_and_source(self):
+  source=self.rig.head.layers['face-skin'];before=source.copy();jaw=original_jaw_skin(source)
+  np.testing.assert_array_equal(source,before)
+  self.assertEqual(float(jaw[:314,:,3].max()),0)
+  self.assertEqual(float(jaw[448:,:,3].max()),0)
+  self.assertEqual(float(jaw[:,330:,3].max()),0)
+  expected=source.astype('float32').copy();expected[:,:,:3]*=expected[:,:,3:4]/255
+  np.testing.assert_array_equal(jaw[335:390,210:250],expected[335:390,210:250])
+  np.testing.assert_array_equal(jaw[390:397,215:240],expected[390:397,215:240])
+  self.assertGreater(float(jaw[390:397,215:240,3].sum()),0)
  def test_inner_arch_preserves_actual_registered_xy_pairs(self):
   oral=np.arange(96,dtype=np.float32).reshape(48,2)
   np.testing.assert_array_equal(inner_arch(oral),oral[16:25][::-1])
