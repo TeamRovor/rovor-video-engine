@@ -1,18 +1,20 @@
 :root {
-  --bg: #03070d;
-  --bg2: #071321;
-  --panel: rgba(7, 20, 36, 0.78);
-  --border: rgba(103, 174, 255, 0.32);
-  --text: #e8f3ff;
-  --muted: #91abc6;
-  --cyan: #80c7ff;
-  --cyan2: #2788ff;
+  --bg: #020409;
+  --bg2: #050b14;
+  --panel: rgba(3,9,18,.88);
+  --border: rgba(112,190,255,.48);
+  --text: #edf7ff;
+  --muted: #8ca8c5;
+  --cyan: #a9ddff;
+  --cyan2: #278cff;
   --orange: #4b9eff;
-  --orange2: #c2e2ff;
-  --red: #ff5c77;
-  --green: #54f0c7;
-  --yellow: #ffd255;
-  --shadow: 0 0 0 1px rgba(98, 242, 255, 0.08), 0 0 32px rgba(42, 182, 255, 0.12);
+  --orange2: #d8efff;
+  --red: #ff6c89;
+  --green: #36efb4;
+  --yellow: #a9dcff;
+  --shadow: 0 0 0 1px rgba(104,185,255,.05),0 0 22px rgba(35,124,255,.10);
+  --panel-edge: rgba(98, 242, 255, .22);
+  --hud-grid: rgba(98, 242, 255, .045);
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -177,12 +179,8 @@ body {
 .hud-btn:disabled { cursor:wait; opacity:.55; }
 @media(max-width:760px){.syncbar{flex-wrap:wrap}}
 
-
 /* ROVOR Stark HUD polish + tablet-first ergonomics */
-:root {
-  --panel-edge: rgba(98, 242, 255, .22);
-  --hud-grid: rgba(98, 242, 255, .045);
-}
+
 html { background: var(--bg); scroll-behavior: smooth; }
 body {
   min-height: 100%;
@@ -270,16 +268,8 @@ body {
   *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
 }
 
-
 /* ROVOR DIGITAL — animated orbital identity and iPad mini landscape fit */
-:root {
-  --cyan:#c7e8ff;
-  --cyan2:#4da9ff;
-  --orange:#a9d8ff;
-  --orange2:#eef8ff;
-  --border:rgba(154,207,255,.26);
-  --muted:#91a8c1;
-}
+
 body {
   background-color:#02050a;
   background-image:
@@ -383,15 +373,8 @@ body::before {
   .halo-outer,.halo-mid,.halo-inner,.status-ring { animation:none !important; }
 }
 
-
 /* ROVOR DIGITAL COMMAND BRIDGE — reference-led, iPad mini landscape composition */
-:root {
-  --bg:#02050a; --bg2:#07101b; --panel:rgba(3,9,18,.93);
-  --border:rgba(117,190,255,.34); --text:#eef7ff; --muted:#8eaac7;
-  --cyan:#bfe5ff; --cyan2:#328dff; --orange:#8fcaff; --orange2:#d8eeff;
-  --green:#31edb0; --yellow:#ffd780; --red:#ff6c89;
-  --shadow:0 0 0 1px rgba(130,195,255,.05),0 0 24px rgba(32,116,235,.12);
-}
+
 html,body { min-height:100%; background:#02050a; }
 body { background:
  radial-gradient(ellipse at 50% 48%,rgba(26,79,145,.19),transparent 33%),
@@ -524,16 +507,8 @@ main{grid-column:2/4;grid-row:4;min-width:0;max-height:220px;overflow:auto;borde
 }
 @media(prefers-reduced-motion:reduce){.halo-outer,.halo-mid,.halo-inner{animation:none!important}}
 
-
 /* Reference fidelity pass: remove the inherited orange cyberpunk palette. */
-:root {
-  --orange: #8fcaff;
-  --orange2: #d8eeff;
-  --cyan: #c8eaff;
-  --cyan2: #4c9dff;
-  --border: rgba(151, 205, 255, .30);
-  --shadow: 0 0 0 1px rgba(180, 222, 255, .045), 0 0 22px rgba(45, 126, 229, .10);
-}
+
 body {
   background:
     radial-gradient(ellipse at 50% 46%, rgba(28, 82, 151, .17), transparent 34%),
@@ -556,7 +531,6 @@ body {
   box-shadow: 0 0 12px rgba(102, 178, 255, .65);
 }
 .warning-head { color: #d9edff; }
-
 
 /* Landscape composition: give navigation and the selected workspace their own rows.
    The earlier shared row constrained every tab to a 150px strip on tablet screens. */
@@ -607,7 +581,6 @@ body {
   .reactor-stage { min-height: 155px; }
   main { max-height: none; }
 }
-
 
 /* iPad mini art-direction pass: tighten the composition without shrinking the workspace.
    Keep controls, reactor, and data panels legible across short and tall landscape viewports. */
@@ -729,24 +702,9 @@ body {
   .hud-btn:hover { transform: none; }
 }
 
-
 /* ROVOR reference-match pass: monochrome chrome, electric-blue instrumentation,
    and restrained continuous motion. Existing layout and controls remain intact. */
-:root {
-  --bg: #02050b;
-  --bg2: #050c18;
-  --panel: rgba(2, 7, 15, .88);
-  --border: rgba(111, 194, 255, .38);
-  --text: #eaf5ff;
-  --muted: #8da9c4;
-  --cyan: #a9dcff;
-  --cyan2: #368eff;
-  --orange: #a9dcff;
-  --orange2: #d8efff;
-  --green: #42f6bd;
-  --yellow: #a9dcff;
-  --shadow: 0 0 0 1px rgba(100,174,255,.08), 0 0 26px rgba(36,120,255,.10);
-}
+
 body {
   background:
     radial-gradient(ellipse at 50% 48%, rgba(22,76,145,.19), transparent 35%),
@@ -844,7 +802,6 @@ body.motion-paused .reactor-stage::after {
   animation-play-state: paused !important;
 }
 
-
 /* Interactive instrument modes for the central reactor. */
 .reactor-core[role="button"] { cursor: pointer; touch-action: manipulation; transition: box-shadow .25s ease, border-color .25s ease, filter .25s ease; }
 .reactor-core[role="button"]:hover,
@@ -870,7 +827,6 @@ body.motion-paused .reactor-stage::after {
 @media (prefers-reduced-motion: reduce) {
   .reactor-stage.mode-orbit .reactor-halo { animation: none !important; }
 }
-
 
 /* Landscape-first refinement for iPad-sized touch displays. */
 @media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) {
@@ -930,7 +886,6 @@ body.motion-paused .reactor-stage.mode-signal .reactor-halo {
   animation-play-state: paused !important;
 }
 
-
 /* Reference-inspired angular HUD framing and layered telemetry dividers. */
 .topbar, .tabbar {
   position: relative;
@@ -976,7 +931,6 @@ body.motion-paused .reactor-stage.mode-signal .reactor-halo {
   }
   .hud-panel::after { inset: 3px; }
 }
-
 
 /* Reactor telemetry hardware layer — visual instrumentation, not fake data widgets. */
 .reactor-stage {
@@ -1037,20 +991,13 @@ body.motion-paused .telemetry-pulse { animation-play-state: paused !important; }
 }
 @media (prefers-reduced-motion: reduce) { .telemetry-pulse { animation: none !important; } }
 
-
 /* Make the central instrument reliably operable by touch and keyboard. */
 .reactor-core { cursor: pointer; touch-action: manipulation; }
 .reactor-core:focus-visible { outline: 3px solid #d9efff; outline-offset: 8px; }
 
-
 /* Reference-alignment pass: hard black glass, precise cyan edges, restrained chrome.
    Keep the original ROVOR SVG assets and live-data components intact. */
-:root {
-  --bg:#020409; --bg2:#050b14; --panel:rgba(2,7,15,.92);
-  --border:rgba(113,190,255,.58); --text:#e8f5ff; --muted:#8eaac6;
-  --cyan:#b9e6ff; --cyan2:#278dff; --orange:#72c9ff; --orange2:#e5f6ff;
-  --green:#31f2b0; --shadow:0 0 22px rgba(38,133,255,.11);
-}
+
 html,body { background:#020409; }
 body {
  background:radial-gradient(ellipse at 50% 53%,rgba(15,62,111,.22),transparent 38%),
@@ -1117,7 +1064,6 @@ body {
  *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; }
 }
 
-
 /* Landscape command-center composition: reference-led three-column instrument deck. */
 @media (min-width:760px) and (orientation:landscape) {
   .app-shell {
@@ -1175,7 +1121,6 @@ body {
   .syncbar { width:auto;justify-self:auto; }
 }
 
-
 /* Final fit-and-finish pass: safe-area-aware landscape layout and clear focus states. */
 :focus-visible {
   outline: 2px solid #bdeaff;
@@ -1212,23 +1157,9 @@ button:disabled {
   .tab { min-height:34px; }
 }
 
-
 /* ROVOR Command Bridge — consolidated reference-led visual layer.
    Keep layout behavior in the responsive rules above; this layer owns only the visual system. */
-:root {
-  --bg:#020409;
-  --bg2:#050b14;
-  --panel:rgba(3,9,18,.88);
-  --border:rgba(112,190,255,.48);
-  --text:#edf7ff;
-  --muted:#8ca8c5;
-  --cyan:#a9ddff;
-  --cyan2:#278cff;
-  --orange:#4b9eff;
-  --orange2:#d8efff;
-  --green:#36efb4;
-  --shadow:0 0 0 1px rgba(104,185,255,.05),0 0 22px rgba(35,124,255,.10);
-}
+
 body {
   background:
     radial-gradient(ellipse at 50% 61%,rgba(17,73,130,.16),transparent 32%),
@@ -1328,7 +1259,6 @@ body {
   .metric,.task-card,.system-card,.system-mini,.worker-card,.repo-bar-row {transition:none;}
 }
 
-
 /* Final responsive correction: keep the landscape instrument deck inside the viewport
    and stop the global content panels from competing with the reactor for height. */
 @media (min-width:760px) and (orientation:landscape) {
@@ -1388,7 +1318,6 @@ body {
   .metric,.task-card,.system-card,.system-mini,.worker-card,.repo-bar-row {transition:none!important;}
 }
 
-
 /* Review pass: real source navigation and a genuine instrument-only focus view. */
 .source-link {
   color: #bfe5ff;
@@ -1437,7 +1366,6 @@ body {
   .source-link { transition: none; }
 }
 
-
 /* Focus-mode exit remains reachable on touch-only iPads. */
 .focus-exit-btn {
   position: absolute;
@@ -1460,7 +1388,6 @@ body {
 @media (max-width: 759px) {
   .focus-exit-btn { top: 8px; right: 8px; min-height: 36px; font-size: 9px; }
 }
-
 
 /* iPad landscape: keep source health out of the header action hit-targets. */
 @media (min-width: 760px) and (orientation: landscape) {
@@ -1494,7 +1421,6 @@ body {
   .sync-content strong { font-size: 8px; }
   .sync-content span { font-size: 7px; }
 }
-
 
 /* Focus view must collapse the landscape deck to one explicit full-screen cell. */
 @media (min-width: 760px) and (orientation: landscape) {
