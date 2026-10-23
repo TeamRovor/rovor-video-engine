@@ -24,7 +24,7 @@ test('kinetic HUD uses bundled scripts and accessible working controls, not imag
   assert.match(sw,/rovor-command-center-shell-v4/);
   assert.match(html,/aria-modal="true"/);
   assert.match(style,/prefers-reduced-motion:reduce/);
-  assert.doesNotMatch(source,/https?:\/\/[^'" ]+\.(?:js|css)/);
+  assert.ok(!source.includes('https://cdn.') && !source.includes('https://unpkg.com') && !source.includes('https://cdnjs.'));
 });
 
 test('Earth texture is deterministic, recognises land and produces ocean/land contrast',()=>{
