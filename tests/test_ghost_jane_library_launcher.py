@@ -129,5 +129,59 @@ class JaneDurableLauncherTests(unittest.TestCase):
                 launcher.execute(self.home,self.slug,create=True)
 
 
+    def test_native_attempt_is_not_cli_success_even_when_package_observed(self):
+        # A native folder is insufficient to prove the library is active in FCP.
+        import io
+        from contextlib import redirect_stdout
+        outcomes = [
+            ({'status':'creation_attempt_recorded',
+              'job_status':'needs_review',
+              'native_library_folder_observed':False,
+              'native_library_app_selected_verified':False,
+              'review_required':True},3),
+            ({'status':'creation_attempt_recorded',
+              'job_status':'needs_review',
+              'native_library_folder_observed':True,
+              'native_library_app_selected_verified':False,
+              'review_required':True},3),
+            ({'status':'stop_requested_no_queue_or_native_action'},2),
+        ]
+        for result,expected_rc in outcomes:
+            with self.subTest(result=result):
+                with mock.patch.object(launcher,'execute',return_value=result):
+                    output=io.StringIO()
+                    with redirect_stdout(output):
+                        rc=launcher.main(['--job-id',self.slug,'--create'])
+                self.assertEqual(rc,expected_rc)
+                self.assertEqual(json.loads(output.getvalue())['status'],
+                                 result['status'])
+
+    def test_readonly_commands_retains_success_exit(self):
+        import io
+        from contextlib import redirect_stdout
+        with mock.patch.object(launcher,'execute',return_value={
+                'status':'dry_run_only','native_gui_attempted':False}):
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(launcher.main(['--job-id',self.slug]),0)
+        with mock.patch.object(launcher,'read_status',return_value={
+                'status':'not_initialized','read_only':True}):
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(launcher.main(['--status']),0)
+
+    def test_launcher_native_receipt_always_review_required(self):
+        receipt={'status':'library_bootstrap_not_verified',
+                 'target_library_exists':False,
+                 'native_library_app_selected_verified':False,
+                 'xml_import_attempted':False}
+        with mock.patch.object(launcher.sys,'platform','darwin'):
+            with mock.patch.object(jane,'onepass',return_value=receipt):
+                result=launcher.execute(self.home,self.slug,create=True)
+        self.assertEqual(result['status'],'creation_attempt_recorded')
+        self.assertEqual(result['job_status'],'needs_review')
+        self.assertTrue(result['review_required'])
+        self.assertFalse(result['native_library_folder_observed'])
+        self.assertFalse(result['native_library_app_selected_verified'])
+
+
 if __name__=='__main__':
     unittest.main()
