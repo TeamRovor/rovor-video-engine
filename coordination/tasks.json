@@ -1382,14 +1382,14 @@
       "depends_on": [
         "fcp-specialist-research-and-mcp-pilot"
       ],
-      "next_action": "MCP, process/library diagnosis and basic native window-title probe have already completed on Amar's Mac. Latest UI probe observed two windows, zero sheets, and no recognized import/error/library-picker title; it did not read UI contents. Untitled library creation predates the job. Investigate the actual native import outcome on the existing disposable attempt in a verified Mac-backed session, without repeating setup/basic probes or resending the Apple event. Consolidated source candidate is PR41.",
+      "next_action": "Latest supplied audit found the exact landscape marker in pre-existing Untitled; do not replay XML. Creation-only isolated-library attemptfcp-jane-library-20261022-200846 failed exit1 with no library and no XML import; precise old stderr was discarded. Use the pilot's existing read-only library-failure probe on that prior job to inspect app/menu/accessibility state in an actual Mac-backed session. Do not rerun --create, delete/rename Untitled or re-enable legacy worker import. Candidate worker/CLI routes now disabled by mergedPR46.",
       "acceptance": "Verified local Interpreter version/foreground, effective project config, native MCP tool call and outside-root refusal with exact time/output; app version/permission status separately captured, rollback confirmed. A Codex-only result is not Interpreter proof. No real client media, FCP edits, posting or all-day background agent required.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/37"
       ],
-      "updated_at": "2026-10-23T00:49:14.454Z",
+      "updated_at": "2026-10-23T01:22:57.559Z",
       "next_update": "After actual Final Cut UI observation and documented resolution of existing import attempt",
-      "blocker": "Native import remains unexplained: requested library absent, portrait not sent. Basic UI title check did not find a recognized dialog and did not inspect UI contents. Untitled library predates the job. This conversation currently has cloud execution only; current host pairing/reachability is not established by that.",
+      "blocker": "Isolated library creation and app selection are not verified. Prior --create returned generic AppleScript/accessibility exit1 and cannot be diagnosed from discarded stderr alone. Current phone chat has cloud execution; no actual Mac UI controls exposed.",
       "evidence": [
         {
           "commit": "3d90f1ef200c2f42a8aacc891b0272533bb82351",
@@ -1418,6 +1418,20 @@
           "check": "fcp_jane_ui_probe.py on existingfcp-jane-auto-20261022-183007; read-only window category counts and default-library timestamps",
           "result": "Two windows,zero sheets,no recognized import/error/library-picker title. UI contents not read,buttons not clicked,timeline unverified. Untitled creation2026-10-07 predates job2026-10-22; not attributed to Jane.",
           "reference": "https://chatgpt.com/api/library/files/libfile_90d1b70c94488191bbf22a4500087e7f/download"
+        },
+        {
+          "commit": "492a14aa665eaff8da1e88ae88277755f2048a11",
+          "platform": "Amar actual Mac supplied import-audit receipt",
+          "check": "Read-only exact landscape/portrait markers in known pre-existing Untitled package; bounded native metadata scan",
+          "result": "Landscape exact marker found in directory name and native database bytes; portrait absent;507904 metadata bytes scanned, no media. Native timeline remains unverified; audit cautions marker presence may indicate wrong destination.",
+          "reference": "https://chatgpt.com/api/library/files/libfile_a5bce42d5e908191b15486a72fad0c9e/download"
+        },
+        {
+          "commit": "64d6e388abcab82326d66059dd0cef9f59a88475",
+          "platform": "Amar actual Mac / creation-only bootstrap supplied Terminal receipt",
+          "check": "One --create attempt on newfcp-jane-library-20261022-200846; initial and terminal atomic receipts",
+          "result": "ui_create_failed_unverified;exit1; native_library_created=false;native_library_app_selected_verified=false;xml_import_attempted=false;model_turn_started=false. Original stderr not retained; no cause inferred.",
+          "reference": "https://chatgpt.com/api/library/files/libfile_a5bce42d5e908191b15486a72fad0c9e/download"
         }
       ]
     },
@@ -1863,7 +1877,7 @@
       "id": "jane-bootstrap-error-details",
       "title": "Preserve actionable stage and error evidence for failed native library bootstrap",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "ChatGPT / Amar bootstrap failure repair",
       "branch": "fix/jane-bootstrap-error-details",
       "scopes": [
@@ -1871,17 +1885,29 @@
         "tests/test_fcp_jane_library_bootstrap.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T01:10:52.282Z",
-      "next_update": "After reproducing generic error loss and offline regression checks",
-      "next_action": "Add fixed AppleScript stage markers and bounded redacted failure metadata; preserve no-replay behavior, import prohibition and exact-destination guard.",
+      "updated_at": "2026-10-23T01:22:57.559Z",
+      "next_update": "Reconcile PR45 with current pilot bootstrap changes",
+      "next_action": "Review current pilot changes and reconcile PR45's stage/timeout diagnostics while preserving its latest UI logic and safe classifier. Do not replay the failed bootstrap. Existing Mac failure detail remains unrecoverable; use read-only failure probe on prior job.",
       "acceptance": "Generic exit1 produces useful observed stage/numeric error when present; empty/oversized/unknown stderr handled without leaking text; failed/time-out attempts remain non-replayable and never import XML; exact source tests pass.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "401383d09246b612bd516b53e91fcb586d8d63c4",
+          "platform": "Linux Python3.12.14 plus hosted macOS Python3.9/3.11",
+          "check": "91 FCP tests pass after preserving latest pilot2263e7e; exact resolved tree9f03aaac1c7bdb096d6d0ed867d858ac96644299 published; hosted unit tests and native AppleScript compilation passed",
+          "result": "PASS91/91 in0.138s, hosted unit/DTD/compile jobs successful. Current pilot advanced after resolution; PR remains unmerged due conflicts. No Mac GUI action, import or replay.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39883344582"
+        }
+      ],
+      "blocker": "PR45 source401383d09246b612bd516b53e91fcb586d8d63c4 passed91 tests and hosted AppleScript compilation, but pilot advanced again toa737a5f714a65b19b09569cf33a5cb39e52eee3c during integration. Guarded merge refused conflicts; no current pilot source overwritten.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/45"
+      ]
     },
     {
       "id": "ghost-legacy-native-dispatch-disabled",
       "title": "Apply proven wrong-library import restriction to the durable worker route",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar native worker correction",
       "branch": "fix/ghost-native-import-disabled",
       "scopes": [
@@ -1894,11 +1920,22 @@
         "tools/jane_native_worker.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T01:14:15.962Z",
-      "next_update": "After worker regression tests and integration update",
-      "next_action": "Carry the latest pilot CLI prohibition into the integration candidate without losing its newer STOP/replay/hash controls; remove worker legacy dispatch; native jobs require review and capability flags remain accurate.",
+      "updated_at": "2026-10-23T01:22:57.559Z",
+      "next_update": "PR41 review and verified isolated native library workflow",
+      "next_action": "PR46 merged into PR41 candidate at967112cd5b2010fa5e5c26330ba44f6edda50a55. CLI native dispatch disabled before preparation; worker native requests record needs_review once without native effects. Preserve research/read-only jobs and wait for verified isolated library creation/app selection plus replacement adapter.",
       "acceptance": "No worker route invokes native.prepare/dispatch even with --allow-native-import; native job recorded once as needs_review without replay; read-only jobs/research opt-ins unaffected; loop capability reflects disabled native import; tests pass.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "967112cd5b2010fa5e5c26330ba44f6edda50a55",
+          "platform": "Linux local Python3.12.14 and hosted Python3.9/3.11",
+          "check": "166 integrated offline tests; native queue and CLI regression checks; guarded PR46 merge; six merged code/test blobs equal tested files; hosted3.9 log count verified",
+          "result": "PASS166/166 local6.668s; hosted3.9/3.11 successful,3.9 log166 tests in7.054s. Production legacy importer call removed, capability receipts corrected. No native app/model/service action.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39883182817"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/46"
+      ]
     }
   ]
 }
