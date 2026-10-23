@@ -3,8 +3,8 @@ name: Open Interpreter research adapter offline regression
 on:
   push:
     branches:
-      - test/interpreter-research-hosted-regression-20261022
       - feature/interpreter-research-job-v1
+      - main
     paths:
       - tools/interpreter_research_job.py
       - tests/test_interpreter_research_job.py
@@ -40,7 +40,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: ''
       - name: Compile adapter and test file without executing models
         run: |
           python - <<'PY'
