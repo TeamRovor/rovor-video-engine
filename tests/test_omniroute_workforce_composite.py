@@ -34,7 +34,8 @@ class CompositeTests(unittest.TestCase):
     def setUp(self):
         tmp=tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
-        self.home=Path(tmp.name)
+        # macOS temporary paths may traverse /var -> /private/var.
+        self.home=Path(tmp.name).resolve()
         self.state=self.home/'private-state'
         self.workspace=self.home/'workspace'
         self.workspace.mkdir()
@@ -44,6 +45,14 @@ class CompositeTests(unittest.TestCase):
     def enqueue(self,packet='provider-efficiency',suffix='one'):
         return ghost_worker.enqueue(self.conn,ghost_worker.OMNI_KIND,
                                     {'packet':packet},'composite-'+suffix)
+
+    def test_canonical_fixture_still_rejects_redirected_receipt_parent(self):
+        self.assertEqual(self.home,self.home.resolve())
+        alias=self.home/'redirected-state'
+        alias.symlink_to(self.state,target_is_directory=True)
+        with self.assertRaises(ValueError):
+            workpack.safe_private_root(alias/'receipts')
+        self.assertFalse((self.state/'receipts').exists())
 
     def test_both_composed_modules_are_importable_and_public_inputs_parse(self):
         for slug in ('provider-efficiency','supervisor-resilience'):
