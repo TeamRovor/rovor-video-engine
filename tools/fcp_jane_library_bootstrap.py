@@ -17,6 +17,7 @@ import argparse
 from datetime import datetime, timezone
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import subprocess
@@ -98,6 +99,43 @@ end run
 '''
 
 
+def classify_safe_gui_error(stderr):
+    """Return only a known control-point category and Apple errno, never UI text.
+
+    osascript error strings can contain private paths, project names or
+    document titles. They must NEVER be copied to public/shared receipts.
+    """
+    message = (stderr or '')[:4096].lower()
+    groups = (
+        ('accessibility_permission', (
+            'not authorized', 'not allowed', 'permission',
+            'assistive access', 'accessibility', '(-1743)', '(-25211)',
+            '(-1719)')),
+        ('frontmost_preflight', (
+            'final cut must be frontmost', 'fcp missing', 'no fcp windows')),
+        ('menu_preflight', (
+            'no file menu', 'no file/new menu', 'no file/new/library')),
+        ('existing_sheet_abort', ('existing fcp sheet present',)),
+        ('save_dialog_missing', (
+            'new library save sheet not identified',
+            'expected a native save sheet', 'expected library name text field')),
+        ('go_to_folder_ui_missing', (
+            'go to folder sub-sheet not found',
+            'go to folder combo box absent', 'go to folder go button absent')),
+        ('save_destination_unverified', (
+            'save destination could not be verified',
+            'save sheet changed unexpectedly', 'save button disappeared',
+            'filename field missing', 'library name changed unexpectedly')),
+        ('missing_ui_element', ("can't get", 'can’t get', '(-1728)')),
+    )
+    category = next((label for label, phrases in groups
+                     if any(p in message for p in phrases)),
+                    'unclassified_native_ui_error')
+    found = re.findall(r'\((-?\d{1,6})\)', message)
+    apple_number = int(found[-1]) if found else None
+    return category, apple_number
+
+
 def atomic_report(folder, info):
     tmp = folder / ('receipt-' + secrets.token_hex(12) + '.tmp')
     try:
@@ -171,9 +209,11 @@ def create_library(output, report, run=subprocess.run, clock=time.monotonic,
              str(output), LIBRARY_BASENAME, output.name],
             capture_output=True, text=True, timeout=65, check=False)
         if process.returncode:
+            category, apple_number = classify_safe_gui_error(process.stderr)
             checkpoint(output, report, 'ui_create_failed_unverified',
                        error_code=process.returncode,
-                       error_class='applescript_or_accessibility')
+                       error_class=category,
+                       apple_error_number=apple_number)
             return report
         checkpoint(output, report, 'ui_create_acknowledged_checking_filesystem')
         deadline = clock() + timeout
