@@ -46,7 +46,15 @@ async function syncGitHub(forceExtras = false) {
   }
 }
 
+function registerShellWorker() {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('./service-worker.js', { scope: './' }).catch(() => {
+    // Live GitHub operation still works if offline-shell installation is unavailable.
+  });
+}
+
 async function boot() {
+  registerShellWorker();
   wireTabs();
   wireControls();
   syncView();
