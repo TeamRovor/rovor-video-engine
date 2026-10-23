@@ -36,9 +36,10 @@ REPORT = 'native-library-bootstrap-receipt.json'
 # The path is supplied as argv, never interpolated into source statements.
 APPLE_SCRIPT = r'''
 on run argv
-    if (count of argv) is not 2 then error "Expected parent directory and unique library name"
+    if (count of argv) is not 3 then error "Expected directory, name and folder label"
     set destinationFolder to item 1 of argv
     set targetName to item 2 of argv
+    set folderLabel to item 3 of argv
     if targetName is not "ROVOR-Jane-Isolated" then error "Library name not allowlisted"
     tell application "Final Cut Pro" to activate
     tell application "System Events"
@@ -75,6 +76,18 @@ on run argv
                 if not (exists button "Save") then error "Save button disappeared"
                 if not (exists text field 1) then error "Filename field missing"
                 if (value of text field 1 as text) is not targetName then error "Library name changed unexpectedly"
+                -- Save destination must show the exact freshly created folder.
+                -- A successful "Go" action alone is NOT evidence of location.
+                set locationVerified to false
+                repeat with locationPopUp in every pop up button
+                    try
+                        if (value of locationPopUp as text) is folderLabel then set locationVerified to true
+                    end try
+                    try
+                        if (name of locationPopUp as text) is folderLabel then set locationVerified to true
+                    end try
+                end repeat
+                if locationVerified is false then error "Save destination could not be verified; NO SAVE"
             end tell
             -- Important: the Save target directory is job-unique and empty.
             -- User/host must verify resulting fcpbundle, not AppleScript exit.
@@ -155,7 +168,7 @@ def create_library(output, report, run=subprocess.run, clock=time.monotonic,
     try:
         process = run(
             ['/usr/bin/osascript', '-e', APPLE_SCRIPT,
-             str(output), LIBRARY_BASENAME],
+             str(output), LIBRARY_BASENAME, output.name],
             capture_output=True, text=True, timeout=65, check=False)
         if process.returncode:
             checkpoint(output, report, 'ui_create_failed_unverified',
