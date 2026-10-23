@@ -209,3 +209,17 @@ test('iPad landscape gives navigation and tab workspace independent grid rows',(
   assert.match(css,/main\s*\{[^}]*grid-row: 5/s);
   assert.match(css,/max-height: none/);
 });
+
+test('command views expose accessible tabs with keyboard navigation',()=>{
+  const html=fs.readFileSync(path.join(shellDir,'index.html'),'utf8');
+  const app=fs.readFileSync(path.join(shellDir,'app.js'),'utf8');
+  assert.match(html,/role="tablist" aria-label="Command bridge views"/);
+  assert.equal((html.match(/role="tab"/g)||[]).length,5);
+  assert.equal((html.match(/role="tabpanel"/g)||[]).length,5);
+  assert.match(html,/aria-selected="true" aria-controls="tab-overview" tabindex="0"/);
+  assert.match(app,/event\.key === 'ArrowRight'/);
+  assert.match(app,/event\.key === 'ArrowLeft'/);
+  assert.match(app,/event\.key === 'Home'/);
+  assert.match(app,/event\.key === 'End'/);
+  assert.match(app,/panel\.hidden = !selected/);
+});
