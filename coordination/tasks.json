@@ -2002,7 +2002,7 @@
       "id": "jane-launcher-outcome-reporting",
       "title": "Make Jane native library CLI report review-required outcomes without false shell success",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar iPhone GitHub review session 2026-10-22",
       "branch": "fix/jane-outcome-contract-20261022",
       "scopes": [
@@ -2012,11 +2012,19 @@
       "depends_on": [
         "jane-sqlite-isolated-library-creation"
       ],
-      "updated_at": "2026-10-23T02:11:37.354Z",
-      "next_update": "After isolated PR tests and Macbook handoff",
-      "next_action": "Patch only the Jane SQLite launcher output and CLI exit status: native needs_review is not terminal success, even if an .fcpbundle folder appears. Preserve stable job ID, existing retry/STOP enforcement and every existing native file; add no-live-FCP regression tests and an explicit review-required result. Validate through CI without touching Mac applications.",
+      "updated_at": "2026-10-23T02:17:07.274Z",
+      "next_update": "After PR #47 integration into PR #41; host test remains with Mac lane",
+      "next_action": "PR #47 is ready for integration review into PR #41. Exit 3 now explicitly indicates a recorded, review-required GUI operation, never verified success; Mac test must inspect bundle existence and independent app selection. PR #45 owns bootstrap diagnostic conflicts; do not overwrite it.",
       "acceptance": "CLI create attempt never exits 0 merely because enqueue/dispatch was recorded; clearly reports native created/app selection/review outcome; existing same-ID no-replay and status/dry-run unchanged; focused regression tests pass; original FCP libraries untouched.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "03aee976b1deef124a9ebcccf6b0403839e90946",
+          "platform": "GitHub-hosted Python 3.9 and 3.11 (Linux)",
+          "check": "Integrated workforce offline regression suite including Jane launcher create/review-required and read-only cases",
+          "result": "PASS on both Python versions; not a native Mac GUI run or app-selected proof",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39888632870"
+        }
+      ]
     }
   ]
 }
