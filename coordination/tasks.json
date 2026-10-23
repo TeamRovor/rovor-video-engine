@@ -1984,14 +1984,15 @@
       "scopes": [
         "tools/fcp_jane_selected_library_probe.py",
         "tests/test_fcp_jane_selected_library_probe.py",
-        "integrations/open-interpreter/JANE-SELECTION-EVIDENCE.md"
+        "integrations/open-interpreter/JANE-SELECTION-EVIDENCE.md",
+        ".github/workflows/jane-selection-ax-compile.yml"
       ],
       "depends_on": [
         "jane-sqlite-isolated-library-creation"
       ],
-      "updated_at": "2026-10-23T02:11:11.489Z",
-      "next_update": "After isolated source tests and macOS AppleScript compile CI; native Mac GUI execution separately blocked until browser/host connector established",
-      "next_action": "Implement a read-only app-selection evidence probe for an existing Jane isolated-library job. Require exact selected library UI and native open file descriptor evidence, fail closed and do not enable FCPXML import. Test on hosted CI; publish limitations without claiming Mac runtime execution.",
+      "updated_at": "2026-10-23T02:17:17.326Z",
+      "next_update": "After macOS AppleScript compile and integrated workforce CI on PR41",
+      "next_action": "Add macOS-15-intel osacompile validation for the read-only selection probe, then verify hosted unit tests and publish source-only evidence. Do not run on user's Mac without a connected host executor.",
       "acceptance": "Own-file-only read-only tool and offline tests; refuse missing or symlinked Jane receipts/libraries, avoid private project/title leaks, bound local UI and file-handle inspection, prove positive and negative mock cases; never alter Final Cut, existing Untitled, source media, queue status, or native import gates.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
