@@ -231,3 +231,13 @@ test('shared ROVOR mark stays a compact vector asset with separated wheel center
   assert.match(mark,/fill="#fff"/);
   assert.ok(mark.length<4000,'mark should remain a small inline vector asset');
 });
+
+
+test('iPad mini landscape art direction keeps three-column telemetry and five-row workspace responsive',()=>{
+  const css=fs.readFileSync(path.join(shellDir,'styles.css'),'utf8');
+  assert.match(css,/@media \(min-width: 760px\) and \(max-width: 1180px\) and \(orientation: landscape\) \{[\s\S]*?grid-template-columns: minmax\(0, \.88fr\) minmax\(0, 1\.12fr\) minmax\(0, \.98fr\)/);
+  assert.match(css,/\.top-actions \.hud-btn\s*\{[^}]*white-space: nowrap/s);
+  assert.match(css,/\.status-ring\s*\{[^}]*clamp\(92px, 13vh, 118px\)/s);
+  assert.match(css,/min-height: 142px, \.72fr/);
+  assert.match(css,/@media \(hover: none\) and \(pointer: coarse\)/);
+});
