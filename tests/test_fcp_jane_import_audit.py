@@ -87,6 +87,7 @@ class WrongLibraryMarkerAuditTests(unittest.TestCase):
 
     def test_library_symlink_does_not_follow(self):
         old=self.lib
+        self.event.rmdir()
         old.rmdir()
         target=self.home/'private-library'
         target.mkdir()
