@@ -2047,7 +2047,7 @@
       "id": "mac-execution-roundtrip",
       "title": "Verify GitHub-to-owned-Mac sandbox write/read round trip",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "ChatGPT / Amar iPhone Mac-link proof session 2026-10-22",
       "branch": "main",
       "scopes": [
@@ -2057,9 +2057,9 @@
         ".github/workflows/rovor-mac-proof-observer.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T02:29:30.831Z",
-      "next_update": "After genuine Issue #48 Mac-host receipt or independently visible Actions job diagnostics",
-      "next_action": "Diagnose whether the allowlisted GitHub push triggers started Mac runner jobs. A separate GitHub-hosted PR observer workflow (no self-hosted execution or Mac permissions) will query exact workflow run/job statuses via Actions API; first capture run IDs and runner waiting/failed evidence. Do not claim host proof from submission alone or run unrestricted commands.",
+      "updated_at": "2026-10-23T02:32:44.049Z",
+      "next_update": "When MacBook local executor establishes existing runner service state, or when queued job 120204145017 starts/completes.",
+      "next_action": "Use the existing MacBook-local authorized execution context to inspect and restore already-registered Rovor-Mac runner (not reinstall/reconfigure). Check job 120204145017 then readback workflow run 39889323818; accept only observed sandbox file and Issue #48 receipt. Keep runtime claim blocked until actual host evidence.",
       "acceptance": "An authenticated main-branch GitHub request runs once on the existing rovor-video Mac runner, creates exactly one new benign private sandbox file using O_EXCL, verifies SHA256 readback, and reports a trustworthy host result; if runner offline then record blocked with exact observed evidence.",
       "evidence": [
         {
@@ -2068,8 +2068,16 @@
           "check": "Restricted sandbox-write request and read-only receipt request committed to fixed self-hosted Mac workflow",
           "result": "SUBMITTED; no authenticated Rovor-Mac execution receipt observed in Issue #48 yet",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/issues/48"
+        },
+        {
+          "commit": "5f2a135c22ecb8f765db918719c3677ad73e5155",
+          "platform": "GitHub-hosted Ubuntu observer; not user Mac",
+          "check": "GitHub REST GET exact Mac workflow runs and jobs; observer job 120206922616",
+          "result": "PASS observer; write workflow 39889060406 queued, self-hosted runner assignment empty; readback workflow 39889323818 pending; NO Mac execution observed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39889909663"
         }
-      ]
+      ],
+      "blocker": "GitHub Actions runs triggered, but self-hosted Rovor-Mac matching job #120204145017 had no runner assigned and remained queued at 2026-10-23 02:30:14 UTC; readback run pending behind it. Existing trusted runner needs actual Mac host/runtime inspection to distinguish offline/busy/service/labels. Cloud GitHub connector cannot start an offline laptop process."
     }
   ]
 }
