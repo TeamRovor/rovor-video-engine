@@ -2275,7 +2275,7 @@
       "id": "private-mac-supervisor-launchagent",
       "title": "Package existing private Mac poller as a safe opt-in persistent LaunchAgent",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / ROVOR private supervisor packaging session 2026-10-22",
       "branch": "feature/private-mac-supervisor-launchagent-v1",
       "scopes": [
@@ -2287,12 +2287,22 @@
       "depends_on": [
         "private-mac-control-bounded-poller-v1"
       ],
-      "updated_at": "2026-10-23T03:18:28.712Z",
-      "next_update": "After Python3.9/3.11 hosted offline tests, docs and PR; actual user Mac installation and service status unverified",
-      "next_action": "Create isolated opt-in LaunchAgent configuration and safe single-pass executor around existing private control poller. Never edit poller or bridge internals, never store tokens in GitHub or LaunchAgent, stage locally only on explicit user Mac command. Validate safety and STOP controls offline.",
+      "updated_at": "2026-10-23T03:31:39.517Z",
+      "next_update": "When distinct private TeamRovor control repository and Mac-only scoped Keychain credential are established, inspect and stage frozen supervisor in a real logged-in Mac session; no automated install from public repo.",
+      "next_action": "Review PR #54 against PR #41; actual Mac executor must first establish separate genuinely private control repo/token and prove one live private-ping/issue receipt. Then on Mac inspect approved local checkout, stage supervisor with explicit approval, verify config/plist/frozen snapshot, activate separately, and confirm real launchctl loaded state plus subsequent private-ping receipt while chat is closed. Never claim 24/7 or GUI control from hosted tests.",
       "acceptance": "No public runner or new queue; local-only LaunchAgent scheduled once per several minutes; private GitHub queue polling only; scoped token retrieved from Keychain; no secrets printed or in plist; guarded 0600 config; stage-and-activate separate; STOP/offline/missing key fail closed; tests Python3.9/3.11 and no actual Mac execution claim.",
       "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/pull/41"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/54"
+      ],
+      "evidence": [
+        {
+          "commit": "d498537c26369485af73553cd18b869dde75c2f3",
+          "platform": "Hosted GitHub Linux Python 3.9 and 3.11; launchctl and Keychain mocked, no Mac execution",
+          "check": "20 stdlib regression tests for explicit launchd stage vs activate, validated private repo, exact fixed argv, one job/tick, frozen SHA-256 private source snapshot, tamper/symlink/permissions refusal, Keychain token isolation, STOP inherited from bridge, bounded status, no auto-install.",
+          "result": "PASS 20/20 on Python3.9 and 20/20 on Python3.11 at commit 1655867e85e0db99f37418c0497ed62dbe334567; later doc-only d498537. No agent staged, launched or observed on user Mac, private repo/token still unverified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39895341056"
+        }
       ]
     },
     {
