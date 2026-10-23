@@ -2108,6 +2108,26 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/integrations/open-interpreter/OMNIROUTE.md"
       ]
+    },
+    {
+      "id": "jane-status-sqlite-sidecar-guard",
+      "title": "Reject redirected SQLite database sidecars in Jane read-only status inspection",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar iPhone SQLite status guard session 2026-10-22",
+      "branch": "fix/jane-status-sqlite-sidecars-20261022",
+      "scopes": [
+        "tools/jane_library_worker.py",
+        "tests/test_ghost_jane_library_launcher.py"
+      ],
+      "depends_on": [
+        "jane-sqlite-isolated-library-creation"
+      ],
+      "updated_at": "2026-10-23T02:37:51.090Z",
+      "next_update": "After hosted workforce regression run on exact patch",
+      "next_action": "Patch the existing Jane SQLite status reader to reject symlinked, broken-link or nonregular jobs.sqlite3, jobs.sqlite3-wal and jobs.sqlite3-shm before readonly sqlite3.connect; add focused tests with outside sentinel. Preserve GUI one-shot, STOP, native import disabled and prior CI. Do not alter active PR #45 bootstrap files.",
+      "acceptance": "Read-only Jane status never connects to a redirected or nonregular SQLite DB/WAL/SHM path; outside sentinel unchanged; clean uninitialized status unchanged; Python3.9/3.11 integrated suite passes, with separate host FCP unverified.",
+      "evidence": []
     }
   ]
 }
