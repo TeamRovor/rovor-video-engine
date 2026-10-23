@@ -1876,6 +1876,26 @@
       "next_action": "Add fixed AppleScript stage markers and bounded redacted failure metadata; preserve no-replay behavior, import prohibition and exact-destination guard.",
       "acceptance": "Generic exit1 produces useful observed stage/numeric error when present; empty/oversized/unknown stderr handled without leaking text; failed/time-out attempts remain non-replayable and never import XML; exact source tests pass.",
       "evidence": []
+    },
+    {
+      "id": "ghost-legacy-native-dispatch-disabled",
+      "title": "Apply proven wrong-library import restriction to the durable worker route",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar native worker correction",
+      "branch": "fix/ghost-native-import-disabled",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tools/ghost_worker_loop.py",
+        "tests/test_ghost_native_import_queue.py",
+        "integrations/open-interpreter/WORKFORCE-CHECKPOINT.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T01:14:15.962Z",
+      "next_update": "After worker regression tests and integration update",
+      "next_action": "Remove direct legacy XML importer dispatch from worker; opted-in native jobs become needs_review without launching app. Report requested versus enabled native capability accurately; preserve read-only/research adapters and queue evidence.",
+      "acceptance": "No worker route invokes native.prepare/dispatch even with --allow-native-import; native job recorded once as needs_review without replay; read-only jobs/research opt-ins unaffected; loop capability reflects disabled native import; tests pass.",
+      "evidence": []
     }
   ]
 }
