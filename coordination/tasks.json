@@ -2455,7 +2455,7 @@
       "id": "private-mac-control-readiness-preflight",
       "title": "Add one read-only preflight for private GitHub, Keychain, and local launchd readiness",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar read-only Mac control preflight session 2026-10-22",
       "branch": "feature/private-mac-preflight-readonly-20261022",
       "scopes": [
@@ -2467,13 +2467,22 @@
         "private-mac-supervisor-launchagent",
         "private-supervisor-status-after-tamper"
       ],
-      "updated_at": "2026-10-23T04:35:53.872Z",
-      "next_update": "When hosted Python 3.9 and 3.11 tests pass and handoff is recorded",
-      "next_action": "Add local read-only --preflight to existing ROVOR supervisor. Verify staged files, Keychain credential availability, separately private GitHub repo active and exact private issue visibility. Output only non-sensitive gate booleans, no jobs/no activation/no writes, and test errors/tampering/no credential.",
+      "updated_at": "2026-10-23T04:41:28.569Z",
+      "next_update": "After authorized real Mac worker/private repo/Keychain credential are available; no further source setup loops.",
+      "next_action": "Read-only private control --preflight merged into PR #41 at 97d8818, hosted CI passed both Python versions. Operator still must create/connect distinct truly private TeamRovor repo and authorize Mac-only scoped Keychain token on real Mac before preflight can validate it; then prove actual private system.ping + issue POST receipt and unattended repeat. Do not assume --preflight GET metadata is a successful Mac job or private issue-write permission.",
       "acceptance": "One no-write Mac check distinguishes stage/launchd/keychain/repo/issue readiness without publishing names/tokens; refuses public source repo; observed remote metadata does not claim live job execution; hosted Python3.9+3.11 regression green.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
         "https://github.com/TeamRovor/rovor-video-engine/pull/54"
+      ],
+      "evidence": [
+        {
+          "commit": "97d881824e3a475c498f3aab4b27e8c5cfcc4674",
+          "platform": "Hosted Linux GitHub Actions Python 3.9 and 3.11 (Mac Keychain and launchctl mocked)",
+          "check": "Six preflight regressions GET-only private metadata and issue, no token display/POST/job dispatch, keychain absent, damaged snapshot, public-repo metadata refusal, issue write not presumed, non-Mac refusal; exact branch integration plus full workforce/Jane compile checks.",
+          "result": "PR #61 squash merged to PR #41; focused 39901594243, integrated workforce 39901594238 and Jane compile-only 39901594219 all PASS on respective matrix. No physical Mac deployment or private issue receipt.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/61"
+        }
       ]
     },
     {
