@@ -18,4 +18,4 @@ jobs:
         with:
           node-version: '22'
       - name: Test actual browser script with mocked GitHub data for one hour
-        run: node --test dashboard/command-center/tests/request-budget.test.js
+        run: node --check dashboard/command-center/reference-hud.js && node --test dashboard/command-center/tests/request-budget.test.js dashboard/command-center/tests/reference-hud.test.js
