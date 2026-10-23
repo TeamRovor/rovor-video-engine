@@ -508,6 +508,11 @@
       "lane": "sales",
       "requires": [],
       "objective": "win-qualified-clients"
+    },
+    "business-website-opportunity-audit-template": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
     }
   }
 }
