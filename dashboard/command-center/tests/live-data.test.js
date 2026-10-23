@@ -110,6 +110,42 @@ test('service worker syntax is valid and excludes cross-origin live data from ca
   assert.match(worker,/caches\.match\(new Request\(request\.url\)\)/);
 });
 
+test('service worker serves same-origin shell from cache offline and leaves cross-origin data untouched',async()=>{
+  const worker=fs.readFileSync(path.join(shellDir,'service-worker.js'),'utf8');
+  const origin='https://hud.example.test';
+  const stored=new Map();
+  let fetchCalls=0;
+  let fetchHandler;
+  const requestUrl=request=>typeof request==='string'?request:request.url;
+  const cache={
+    addAll:async()=>{},
+    put:async(request,response)=>{stored.set(requestUrl(request),response);},
+    match:async request=>stored.get(requestUrl(request))
+  };
+  const cacheApi={
+    open:async()=>cache,
+    keys:async()=>['rovor-command-center-shell-v1'],
+    match:async request=>stored.get(requestUrl(request))
+  };
+  const self={
+    location:{origin},
+    clients:{claim:async()=>{}},
+    skipWaiting:async()=>{},
+    addEventListener:(name,handler)=>{if(name==='fetch')fetchHandler=handler;}
+  };
+  vm.runInNewContext(worker,{self,caches:cacheApi,URL,Request,Response,fetch:async()=>{fetchCalls++;throw Error('offline');}});
+  const shellUrl=origin+'/dashboard/command-center/styles.css';
+  stored.set(shellUrl,new Response('cached shell'));
+  let shellResponse;
+  fetchHandler({request:new Request(shellUrl),respondWith:promise=>{shellResponse=promise;}});
+  assert.equal(await (await shellResponse).text(),'cached shell');
+  assert.equal(fetchCalls,1);
+  let crossOriginHandled=false;
+  fetchHandler({request:new Request('https://raw.githubusercontent.com/TeamRovor/rovor-video-engine/main/snapshot.json'),respondWith:()=>{crossOriginHandled=true;}});
+  assert.equal(crossOriginHandled,false);
+  assert.equal(fetchCalls,1);
+});
+
 test('HUD registers its shell service worker without requiring it for live operation',()=>{
   const app=fs.readFileSync(path.join(shellDir,'app.js'),'utf8');
   const html=fs.readFileSync(path.join(shellDir,'index.html'),'utf8');
