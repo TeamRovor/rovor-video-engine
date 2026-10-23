@@ -3157,6 +3157,34 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40039087477"
         }
       ]
+    },
+    {
+      "id": "ghost-omniroute-queue-adapter-20261023",
+      "title": "Connect bounded OmniRoute draft jobs to existing SQLite ghost queue",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar OmniRoute queue adapter 2026-10-23",
+      "branch": "feature/ghost-omniroute-private-queue-v1",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tools/ghost_worker_loop.py",
+        "tools/ghost_omniroute_job.py",
+        "tests/test_ghost_omniroute_job.py",
+        "integrations/open-interpreter/GHOST-OMNIROUTE-QUEUE.md",
+        ".github/workflows/ghost-omniroute-queue.yml"
+      ],
+      "depends_on": [
+        "ghost-interpreter-research-queue",
+        "omniroute-parallel-worker-packets"
+      ],
+      "updated_at": "2026-10-23T23:24:00Z",
+      "next_update": "After hosted offline regression tests and exact-branch review",
+      "next_action": "Implement one-shot free-only, 24-hour capped OmniRoute draft research kind in existing ghost worker, opt-in via separate flag and STOP. Block auto-replay, code execution, and automatic draft approval. Require reviewed OmniRoute runner and reviewer to be co-located at integration time; do not copy other workers' actively owned files.",
+      "acceptance": "Existing SQLite queue accepts only three known public workpacks with pinned ROVOR free-only combos, preserves at-most-once + STOP, enforces rolling 24-hour max 5 OmniRoute calls transactionally, stores private receipt and marks AI output needs_review not succeeded; disabled by default. Offline Python3.9/3.11 hosted tests; source integration only, no Mac deployment or native app access.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+      ]
     }
   ]
 }
