@@ -1877,7 +1877,7 @@
       "id": "jane-bootstrap-error-details",
       "title": "Preserve actionable stage and error evidence for failed native library bootstrap",
       "priority": 1,
-      "status": "blocked",
+      "status": "active",
       "owner": "ChatGPT / Amar bootstrap failure repair",
       "branch": "fix/jane-bootstrap-error-details",
       "scopes": [
@@ -1885,9 +1885,9 @@
         "tests/test_fcp_jane_library_bootstrap.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T01:22:57.559Z",
-      "next_update": "Reconcile PR45 with current pilot bootstrap changes",
-      "next_action": "Review current pilot changes and reconcile PR45's stage/timeout diagnostics while preserving its latest UI logic and safe classifier. Do not replay the failed bootstrap. Existing Mac failure detail remains unrecoverable; use read-only failure probe on prior job.",
+      "updated_at": "2026-10-23T01:27:58.509Z",
+      "next_update": "After latest pilot reconciliation, full FCP checks and guarded PR45 integration",
+      "next_action": "Resume own PR45 claim; preserve current pilot UI logic while adding fixed stage/timeout evidence. Verify exact merged tree, hosted compilation and unit tests before guarded merge.",
       "acceptance": "Generic exit1 produces useful observed stage/numeric error when present; empty/oversized/unknown stderr handled without leaking text; failed/time-out attempts remain non-replayable and never import XML; exact source tests pass.",
       "evidence": [
         {
@@ -1898,7 +1898,6 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39883344582"
         }
       ],
-      "blocker": "PR45 source401383d09246b612bd516b53e91fcb586d8d63c4 passed91 tests and hosted AppleScript compilation, but pilot advanced again toa737a5f714a65b19b09569cf33a5cb39e52eee3c during integration. Guarded merge refused conflicts; no current pilot source overwritten.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/45"
       ]
