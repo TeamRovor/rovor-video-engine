@@ -7,16 +7,21 @@ import json,cv2,numpy as np
 from cartoon_body import ROOT
 from labiodental_construction import load
 
+def arch_surface(source,edge,arch,thickness=1):
+ arch=np.asarray(arch,dtype=np.float32);edge=np.asarray(edge,dtype=np.float32)
+ if arch.shape!=(9,2) or not np.isfinite(arch).all() or np.any(np.diff(arch[:,0])<=0):raise ValueError('Expected nine finite arch points ordered left to right')
+ if edge.ndim!=2 or edge.shape[1]!=2 or len(edge)<2 or not np.isfinite(edge).all() or np.any(np.diff(edge[:,0])<=0):raise ValueError('Source edge must be finite and ordered left to right')
+ if not np.isfinite(thickness) or thickness<=0:raise ValueError('Thickness must be positive and finite')
+ yy,xx=np.mgrid[:1536,:1536].astype('float32');xx/=3;yy/=3
+ sx=edge[0,0]+(xx-arch[0,0])*(edge[-1,0]-edge[0,0])/(arch[-1,0]-arch[0,0]);top=np.interp(xx,arch[:,0],arch[:,1]);source_top=np.interp(sx,edge[:,0],edge[:,1])
+ sy=source_top+(yy-top)/thickness
+ part=cv2.remap(source,sx.astype('float32'),sy.astype('float32'),cv2.INTER_LINEAR,borderMode=cv2.BORDER_CONSTANT)
+ return cv2.resize(part,(512,512),interpolation=cv2.INTER_AREA)
+
 class LowerLipPlane:
  def __init__(self):
   folder=ROOT/'lower-lip-pressure-v1';self.source=load(folder/'Lower-Lip-Candidate.png');self.edge=np.asarray(json.loads((folder/'Registration.json').read_text())['sourceTopEdge'],np.float32)
  def pose(self,arch,pressure):
-  arch=np.asarray(arch,dtype=np.float32)
-  if arch.shape!=(9,2) or not np.isfinite(arch).all() or np.any(np.diff(arch[:,0])<=0):raise ValueError('Expected nine finite arch points ordered left to right')
   if not np.isfinite(pressure) or not 0<=pressure<=1:raise ValueError('Pressure must be within0..1')
-  yy,xx=np.mgrid[:1536,:1536].astype('float32');xx/=3;yy/=3
-  sx=198+(xx-arch[0,0])*76/(arch[-1,0]-arch[0,0]);top=np.interp(xx,arch[:,0],arch[:,1]);source_top=np.interp(sx,self.edge[:,0],self.edge[:,1])
   # shortcut: thickness is a pressure proxy; design lip roll/tuck before narration use.
-  sy=source_top+(yy-top)/(1-.4*pressure)
-  part=cv2.remap(self.source,sx.astype('float32'),sy.astype('float32'),cv2.INTER_LINEAR,borderMode=cv2.BORDER_CONSTANT)
-  return cv2.resize(part,(512,512),interpolation=cv2.INTER_AREA)
+  return arch_surface(self.source,self.edge,arch,1-.4*pressure)

@@ -8,7 +8,17 @@ Repo work/engine; development/evan-painted-rig (legacy name), draft PR#4 https:/
 
 Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful review milestones/failure/completion/required action only; disable when actually ready. Routine decisions need no question.
 
-## Latest: actual separate lower-lip paint and independent pressure control
+## Latest: nine independent oral/face planes driven by original narration
+
+Read CARTOON-EVAN-SEPARATED-NARRATED-ORAL.md. New separated_oral_review uses original full oral controls/voice with separate cleanface, cavity, tongue, rigidcrown, jawskin, lowerlip and uppercap plus neck/skinunderlap. No combined-mouth carrier, head swaps, two-pose adapter or newart. Original nonoral blend/browpostpass preserved above310guard. Lowerpressure still thicknessproxy; capprofile authored/notcalibrated.
+
+Initial fullFV endpoint failed165RGB due different interior matte; fixed by clipping crown through same painted cavity at zero/mixed/fullFV. Both endpoint epsilon/freshness tests pass≤2/255. Initial upperface/blend/brow mismatch corrected; final104upper288rows exact/nose0. Original capture byte-exact. TH/DH front-tip overlay is NOT yet separated: review explicitly rejects active dentalphones; existingheads unaffected. Do not claim full39phone support.
+
+outputs/evan-cartoon-separated-oral:104normal voiced/416mutedquarter frames1280x720/48fps fullydecode;source816..919,34667original/decoded samples272000:306667. All104native mouth crops/heads/fullframes inspected against concept; no independent listening/playback acceptance. All104oralROImin255, mintriangle45.5. Nineactualplane PSD851/855 reloadmean .025716/.025155; tongue legitimately inactive851/active855. Nine focused/regression tests pass. Sourceart/alignment unchanged.
+
+New unverified way flag/source waveform+spectrogram: W330ms/EY100ms; lowenergyinterval insideW may include pause. Review onset/silencegating; do not remove real pauses or retime to hide art. Original18flaggedreviews retained. Shallowmouth/thinFVband/slash-likeclosedposes, proxy pressure, angularjoins/staticacting andjaw2.4634pxsourceerror stillbelowconcept. Humanartist/animator review needed. Fullpolishedmilestone NOTready, automationACTIVE. No pendingjobs. Prior checkpoint HISTORY-2026-10-23-A.
+
+## Retained: actual separate lower-lip paint and independent pressure control
 
 Read CARTOON-EVAN-INDEPENDENT-LOWER-LIP.md. Built-in image_gen created isolated lowerlip V1(too plump)→V2(thinner). Original1254square alpha/prompt/inputhashes saved lower-lip-pressure-v1/source. Uniform2corner registration, neutralcenter residual .34552px versus AUTHORED guide; not anatomy calibration. Native actualpaint loaded by LowerLipPlane, separate from jaw.
 
@@ -74,8 +84,9 @@ Retained relaxed hand/forearm, wrist-axis articulation, authored detail/finished
 
 ## Next concrete work
 
-1. Independent lower-lip plane now exists in eight-plane authored review. Next integrate it with original FULL continuous oral controls and separate upper-lip/incisor planes from the carrier; coordinate F/V-to-vowel roll/tuck. Do not use the rejected two-pose clamp as narration profile. Pressure thickness proxy is not accepted anatomy.
-2. Preserve original voice/alignment uncertainty, source alpha/prompt provenance and failed proofs. Artist redraw/review still needed for lip wrap, angular skin joins and jawregistration drift2.4634px. No default promotion, staging expansion or unattended Moho operation.
+1. Nine-plane narrated construction now exists for validatedwindow. Separate existing TH/DH front dental-tip overlap before whole-recording use; current review deliberately rejects dentalphones. Preserve existing independent sources and full continuous driver.
+2. Review way word onset/pause allocation and existing silence gating using saved waveform/spectrogram; no independent listening/boundary acceptance yet. Do not delete real pauses or force animation over lowenergy to hide art.
+3. Improve designed lip roll/tuck and rounded shape appeal; thicknessproxy is not anatomy. Artist redraw/review still needed for cap/jawjoins and2.4634px jaw drift. Restore broader body/staging only when face is convincing. Preserve all original voice/alignment uncertainty and failed studies. No default promotion or unattended Moho.
 
 ## Runtime/history
 

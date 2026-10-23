@@ -13,7 +13,7 @@
     "Philtrum shadow softened only modestly; corner hooks remain prominent",
     "V2 inherits V1 registration; center fit not independently checked",
     "Unpaired with approved lower-lip/release artwork",
-    "V2 is sampled only by the standalone six-plane silent construction, not a default/narration head profile"
+    "V2 is sampled by standalone constructions and a limited voiced separation review; not a default or approved production profile."
   ],
   "preferredCandidate": "Upper-Lip-Candidate-v2.png",
   "assets": [
@@ -29,5 +29,11 @@
     }
   ],
   "reviewConstructionUsesV2": true,
-  "defaultProfileLoadsCandidate": false
+  "defaultProfileLoadsCandidate": false,
+  "narratedReviewUsesV2": true,
+  "narratedReviewWindow": [
+    17,
+    19.166666666666668
+  ],
+  "completeRecordingIntegrated": false
 }

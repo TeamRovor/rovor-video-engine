@@ -29,6 +29,9 @@ class MaxillaryCartoonHead(ContinuousFVCartoonHead):
 
     def teeth_surface(self,w,oral,shape_weights=None):
         if self._fv_strength>=1:return super().teeth_surface(w,oral,shape_weights)
+        return self.rigid_teeth_surface(w,oral)
+
+    def rigid_teeth_surface(self,w,oral):
         # The source alpha is already isolated teeth. Hidden RGB elsewhere in
         # that PNG must never be mistaken for visible full-face paint.
         source=self.layers['upper-teeth'].astype('float32').copy();source[:,:,:3]*=source[:,:,3:4]/255

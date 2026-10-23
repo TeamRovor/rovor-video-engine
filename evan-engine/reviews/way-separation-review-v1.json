@@ -1,0 +1,42 @@
+{
+  "word": "way",
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "sourceAudioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "phones": [
+    {
+      "start": 17.94,
+      "end": 18.27,
+      "phone": "W",
+      "value": "F",
+      "word": "way",
+      "scriptIndex": 53,
+      "timing": "acoustic-forced",
+      "acousticScore": -736,
+      "confidence": null
+    },
+    {
+      "start": 18.27,
+      "end": 18.37,
+      "phone": "EY",
+      "value": "C",
+      "word": "way",
+      "scriptIndex": 53,
+      "timing": "acoustic-forced",
+      "acousticScore": -77,
+      "confidence": null
+    }
+  ],
+  "observation": "Existing plan assigns330ms to W and100ms to EY; the rendered hold must be reviewed against the recording rather than assumed accurate.",
+  "waveformSpectrogramWindow": [
+    17.7,
+    18.5
+  ],
+  "fftSamples": 256,
+  "hopSamples": 32,
+  "displayDbRelativeToWindowPeak": true,
+  "independentListeningVerified": false,
+  "timingChanged": false,
+  "boundariesAccepted": false,
+  "action": "Review word onset, W-to-vowel transition and existing silence gating against the recording; distinguish an actual pause from a held articulated mouth. Do not remove real pauses or retime merely to hide mouth-art defects.",
+  "visualObservation": "The waveform/spectrogram shows a pronounced low-energy interval inside the assigned W span; this may include a pause. It does not establish an exact phoneme boundary."
+}

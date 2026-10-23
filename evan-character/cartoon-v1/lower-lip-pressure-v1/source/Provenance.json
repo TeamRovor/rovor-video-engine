@@ -32,10 +32,15 @@
     }
   ],
   "firstPassResult": "Separate component but too plump; not selected.",
-  "secondPassResult": "Thinner separate lower-lip ribbon; registered candidate for authored pressure tests only.",
+  "secondPassResult": "Thinner separate lower-lip ribbon; registered candidate used in authored pressure tests and a limited narrated separation review.",
   "reviewConstructionLoaded": true,
   "defaultProfileLoaded": false,
-  "fullNarrationIntegrated": false,
   "anatomyAccepted": false,
-  "animationReady": false
+  "animationReady": false,
+  "narratedReviewLoaded": true,
+  "narratedReviewWindow": [
+    17,
+    19.166666666666668
+  ],
+  "completeRecordingIntegrated": false
 }

@@ -1,7 +1,7 @@
 """Independent control and source safety, not anatomy/animation acceptance."""
 import unittest
 import cv2,numpy as np
-from lower_lip_plane import LowerLipPlane
+from lower_lip_plane import LowerLipPlane,arch_surface
 
 class LowerLipTests(unittest.TestCase):
  @classmethod
@@ -23,5 +23,7 @@ class LowerLipTests(unittest.TestCase):
   for value in [float('nan'),190]:
    arch=self.arch();arch[2,0]=value
    with self.assertRaises(ValueError):self.lip.pose(arch,0)
+  with self.assertRaises(ValueError):arch_surface(self.lip.source,[[198,321],[198,322]],self.arch())
+  with self.assertRaises(ValueError):arch_surface(self.lip.source,self.lip.edge,self.arch(),0)
 
 if __name__=='__main__':unittest.main()
