@@ -24,7 +24,7 @@ Or `--packet runner-blocker` to inspect a single existing private receipt. The c
 - Certain high-confidence private-key/token patterns or unsubstantiated first-person claims such as having verified a Mac execution cause extra review blocks
 - Failed and reserved receipts remain non-replayable and are **not** upgraded into successful drafts
 - The existing 2400-token OmniRoute response budget has no persisted finish-reason in receipts. When completion usage is at least **2390 tokens**, the gate flags *possible truncation* for manual review; the worker must later preserve actual finish-reason metadata to establish completeness.
-- The gate compares report date headers near the start of a memo to the receipt creation year. Wrong years and unfinished placeholders such as `2024-XX-XX` produce `content_quality_needs_review`. References to historical dates in the body are unaffected. This does not fact-check the answer or claim host/runtime verification.
+- The gate compares report date headers near the start of a memo to the receipt creation year. Wrong years and unfinished placeholders such as `2024-XX-XX` or `2024‑XX‑XX` (Unicode nonbreaking hyphens seen in the actual Mac report) produce `content_quality_needs_review`. References to historical dates in the body are unaffected. This does not fact-check the answer or claim host/runtime verification.
 
 **October 23 Mac evidence:** the user observed `provider-efficiency` with a `2025-01-15` memo header and 2400 completion tokens, and `supervisor-resilience` with `2024-XX-XX` and 2398 completion tokens. The new review checks flag both without replaying inference or disclosing answers. They do not automatically modify the existing private receipts.
 
