@@ -112,6 +112,15 @@ class WorkPacketContractTests(unittest.TestCase):
         self.assertIn("invalid_packet",
                       {x["code"] for x in result["results"][0]["issues"]})
 
+    def test_malformed_enum_values_and_packet_id_do_not_crash(self):
+        packet = copy.deepcopy(self.valid["packets"][0])
+        packet["constraints"]["data_classification"] = []
+        packet["artifact_receipt"]["state"] = []
+        packet["approval"]["state"] = []
+        self.assertTrue(validate_packet(packet))
+        batch = {"version": 1, "packets": [{"packet_id": []}]}
+        self.assertEqual(evaluate(batch)["summary"]["failed"], 1)
+
     def test_input_size_guard(self):
         path = CONTRACT / "oversize-fixture.tmp"
         try:
