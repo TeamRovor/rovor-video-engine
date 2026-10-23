@@ -89,16 +89,16 @@
       </div>
     </section>
 
-    <nav class="tabbar hud-panel">
-      <button class="tab active" data-tab="overview">Overview</button>
-      <button class="tab" data-tab="tasks">Tasks</button>
-      <button class="tab" data-tab="systems">Systems</button>
-      <button class="tab" data-tab="repo">Repo Map</button>
-      <button class="tab" data-tab="workers">Workers</button>
+    <nav class="tabbar hud-panel" role="tablist" aria-label="Command bridge views">
+      <button class="tab active" id="tab-button-overview" role="tab" aria-selected="true" aria-controls="tab-overview" tabindex="0" data-tab="overview">Overview</button>
+      <button class="tab" id="tab-button-tasks" role="tab" aria-selected="false" aria-controls="tab-tasks" tabindex="-1" data-tab="tasks">Tasks</button>
+      <button class="tab" id="tab-button-systems" role="tab" aria-selected="false" aria-controls="tab-systems" tabindex="-1" data-tab="systems">Systems</button>
+      <button class="tab" id="tab-button-repo" role="tab" aria-selected="false" aria-controls="tab-repo" tabindex="-1" data-tab="repo">Repo Map</button>
+      <button class="tab" id="tab-button-workers" role="tab" aria-selected="false" aria-controls="tab-workers" tabindex="-1" data-tab="workers">Workers</button>
     </nav>
 
     <main>
-      <section class="tab-view active" id="tab-overview">
+      <section class="tab-view active" id="tab-overview" role="tabpanel" aria-labelledby="tab-button-overview" tabindex="0">
         <div class="section-grid two-thirds">
           <div class="hud-panel">
             <div class="panel-title">CONNECTED SYSTEMS</div>
@@ -120,7 +120,7 @@
         </div>
       </section>
 
-      <section class="tab-view" id="tab-tasks">
+      <section class="tab-view" id="tab-tasks" role="tabpanel" aria-labelledby="tab-button-tasks" tabindex="0" hidden>
         <div class="hud-panel">
           <div class="panel-title">TASK QUEUE</div>
           <div class="task-toolbar">
@@ -136,7 +136,7 @@
         </div>
       </section>
 
-      <section class="tab-view" id="tab-systems">
+      <section class="tab-view" id="tab-systems" role="tabpanel" aria-labelledby="tab-button-systems" tabindex="0" hidden>
         <div class="section-grid triple">
           <div class="hud-panel">
             <div class="panel-title">SYSTEM STATUS</div>
@@ -169,7 +169,7 @@
         </div>
       </section>
 
-      <section class="tab-view" id="tab-repo">
+      <section class="tab-view" id="tab-repo" role="tabpanel" aria-labelledby="tab-button-repo" tabindex="0" hidden>
         <div class="section-grid two-thirds">
           <div class="hud-panel">
             <div class="panel-title">REPOSITORY MODULE MAP</div>
@@ -188,7 +188,7 @@
         </div>
       </section>
 
-      <section class="tab-view" id="tab-workers">
+      <section class="tab-view" id="tab-workers" role="tabpanel" aria-labelledby="tab-button-workers" tabindex="0" hidden>
         <div class="hud-panel">
           <div class="panel-title">WORKER ROUTING</div>
           <div id="workersGrid" class="workers-grid"></div>
