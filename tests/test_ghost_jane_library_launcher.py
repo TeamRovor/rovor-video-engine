@@ -183,5 +183,43 @@ class JaneDurableLauncherTests(unittest.TestCase):
         self.assertFalse(result['native_library_app_selected_verified'])
 
 
+    def test_status_refuses_sqlite_db_wal_shm_symlinks_before_connect(self):
+        self.state.mkdir()
+        sentinel=self.home/'external-sentinel.txt'
+        sentinel.write_bytes(b'external data must stay unchanged')
+        for suffix in ('', '-wal', '-shm'):
+            with self.subTest(suffix=suffix):
+                redirected=self.state/('jobs.sqlite3'+suffix)
+                redirected.symlink_to(sentinel)
+                with mock.patch.object(launcher.sqlite3,'connect',
+                                       side_effect=AssertionError('SQLite opened unsafe path')):
+                    with self.assertRaisesRegex(ValueError,'Unsafe redirected'):
+                        launcher.read_status(self.home)
+                redirected.unlink()
+        self.assertEqual(sentinel.read_bytes(), b'external data must stay unchanged')
+        self.assertFalse((self.state/'jobs.sqlite3').exists())
+
+    def test_status_refuses_broken_links_and_nonregular_sidecars(self):
+        self.state.mkdir()
+        for suffix in ('', '-wal', '-shm'):
+            path=self.state/('jobs.sqlite3'+suffix)
+            with self.subTest(kind='broken_link',suffix=suffix):
+                path.symlink_to(self.home/'missing-outside-file')
+                with mock.patch.object(launcher.sqlite3,'connect',
+                                       side_effect=AssertionError('SQLite opened unsafe path')):
+                    with self.assertRaisesRegex(ValueError,'Unsafe redirected'):
+                        launcher.read_status(self.home)
+                path.unlink()
+            with self.subTest(kind='directory',suffix=suffix):
+                path.mkdir()
+                with mock.patch.object(launcher.sqlite3,'connect',
+                                       side_effect=AssertionError('SQLite opened unsafe path')):
+                    with self.assertRaisesRegex(ValueError,'Unsafe redirected'):
+                        launcher.read_status(self.home)
+                path.rmdir()
+        self.assertFalse((self.state/'jobs.sqlite3').exists())
+        self.assertEqual(launcher.read_status(self.home)['status'],'not_initialized')
+
+
 if __name__=='__main__':
     unittest.main()
