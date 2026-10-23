@@ -1382,14 +1382,14 @@
       "depends_on": [
         "fcp-specialist-research-and-mcp-pilot"
       ],
-      "next_action": "Direct MCP and Open Interpreter app-server inspection have passed on Amar's Mac, including landscape/portrait and outside-root refusal. The latest supplied Mac native probe also already ran: Final Cut process present, requested disposable library absent, generic Untitled library present with no attribution. Continue from native app UI observation in a verified Mac-backed ChatGPT session: inspect pending import/error/Automation dialog without replaying the earlier Apple event. Do not repeat research, MCP registration, DTD preparation or the already-completed read-only diagnosis. No native timeline or unattended operation established.",
+      "next_action": "MCP, process/library diagnosis and basic native window-title probe have already completed on Amar's Mac. Latest UI probe observed two windows, zero sheets, and no recognized import/error/library-picker title; it did not read UI contents. Untitled library creation predates the job. Investigate the actual native import outcome on the existing disposable attempt in a verified Mac-backed session, without repeating setup/basic probes or resending the Apple event. Consolidated source candidate is PR41.",
       "acceptance": "Verified local Interpreter version/foreground, effective project config, native MCP tool call and outside-root refusal with exact time/output; app version/permission status separately captured, rollback confirmed. A Codex-only result is not Interpreter proof. No real client media, FCP edits, posting or all-day background agent required.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/37"
       ],
-      "updated_at": "2026-10-23T00:39:22.154Z",
+      "updated_at": "2026-10-23T00:49:14.454Z",
       "next_update": "After actual Final Cut UI observation and documented resolution of existing import attempt",
-      "blocker": "MCP host inspection is verified in supplied Mac logs. Native import remains unresolved: landscape event returned zero but requested library absent; portrait not sent. Read-only probe cannot observe app dialogs or attribute the Untitled library. This phone chat currently exposes a Linux cloud shell and no native Mac control tools; paired-host availability cannot be inferred from that.",
+      "blocker": "Native import remains unexplained: requested library absent, portrait not sent. Basic UI title check did not find a recognized dialog and did not inspect UI contents. Untitled library predates the job. This conversation currently has cloud execution only; current host pairing/reachability is not established by that.",
       "evidence": [
         {
           "commit": "3d90f1ef200c2f42a8aacc891b0272533bb82351",
@@ -1411,6 +1411,13 @@
           "check": "fcp_jane_native_probe.py read-only inspection of existing failed import; process names and bounded nearby libraries",
           "result": "Final Cut process present; osascript absent; expected library absent; portrait not dispatched. Generic Untitled library found in Movies, attribution unverified. No second import started; no UI queried; timeline unverified. Original probe pre-dates PR #42 integrity hardening.",
           "reference": "https://chatgpt.com/api/library/files/libfile_b7ff09d3fdb48191b7fee25207609229/download"
+        },
+        {
+          "commit": "7860ab5d5840b8627c41071b54bec501efe4deee",
+          "platform": "Amar actual Mac / latest supplied Terminal UI-probe receipt",
+          "check": "fcp_jane_ui_probe.py on existingfcp-jane-auto-20261022-183007; read-only window category counts and default-library timestamps",
+          "result": "Two windows,zero sheets,no recognized import/error/library-picker title. UI contents not read,buttons not clicked,timeline unverified. Untitled creation2026-10-07 predates job2026-10-22; not attributed to Jane.",
+          "reference": "https://chatgpt.com/api/library/files/libfile_90d1b70c94488191bbf22a4500087e7f/download"
         }
       ]
     },
@@ -1715,8 +1722,8 @@
       ],
       "depends_on": [],
       "updated_at": "2026-10-23T00:11:13.396Z",
-      "next_update": "PR #42 review, then actual Mac diagnosis",
-      "next_action": "Review PR #42 stacked on #41. New supplied Mac log confirms original read-only diagnosis already ran at 5ade85f: expected library absent; Final Cut running; Untitled library attribution unknown. Next host work is actual app dialog observation, not repeating setup or dispatch. PR #42 remains source-tested, not installed or host-verified.",
+      "next_update": "PR41 review / actual Mac import investigation",
+      "next_action": "Repair merged into the existing PR41 integration candidate, feature/ghost-native-import-queue, at8f0502c141422a27407176e7297269141704d583. Use the consolidated checkpoint; no separate child checkout needed. Full workforce stack is not merged to main, installed or host-verified.",
       "acceptance": "Regressions reject modified XML, incorrect geometry and sequence format, media references, and missing hashes; unchanged actual receipt structure passes; integrated offline suite passes. No Mac runtime claim.",
       "evidence": [
         {
@@ -1773,8 +1780,8 @@
         "jane-diagnostic-xml-integrity"
       ],
       "updated_at": "2026-10-23T00:44:57.527Z",
-      "next_update": "PR #43 integration review",
-      "next_action": "Review PR #43 stacked on #42, then use the existing host only for unresolved native import investigation. Queue/manual diagnostic coverage is tested source, not host deployment.",
+      "next_update": "PR41 review / actual Mac import investigation",
+      "next_action": "Repair merged into the existing PR41 integration candidate, feature/ghost-native-import-queue, at8f0502c141422a27407176e7297269141704d583. Use the consolidated checkpoint; no separate child checkout needed. Full workforce stack is not merged to main, installed or host-verified.",
       "acceptance": "Queued native-import UUID folder can be diagnosed; malformed paths refused; manual/queue mixed attempts retained; missing receipts explicit; no model, native dispatch or DB initialization; integrated suite passes.",
       "evidence": [
         {
@@ -1804,8 +1811,8 @@
         "jane-queued-native-diagnosis"
       ],
       "updated_at": "2026-10-23T00:46:40.914Z",
-      "next_update": "Integration candidate review and hosted CI",
-      "next_action": "Integrate PR #44 with #43/#42 into the existing workforce candidate after hosted checks; retain explicit Mac deployment gate.",
+      "next_update": "PR41 review / actual Mac import investigation",
+      "next_action": "Repair merged into the existing PR41 integration candidate, feature/ghost-native-import-queue, at8f0502c141422a27407176e7297269141704d583. Use the consolidated checkpoint; no separate child checkout needed. Full workforce stack is not merged to main, installed or host-verified.",
       "acceptance": "Deterministic regressions prove no SQLite connection or external target write on redirected paths; regular queues initialize/restart as before; integrated suite passes.",
       "evidence": [
         {
@@ -1824,7 +1831,7 @@
       "id": "workforce-repair-candidate-integration",
       "title": "Consolidate verified worker repairs into the existing integration candidate",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar continuous workforce repair",
       "branch": "feature/ghost-native-import-queue",
       "scopes": [
@@ -1835,11 +1842,22 @@
         "jane-queued-native-diagnosis",
         "ghost-worker-database-path-integrity"
       ],
-      "updated_at": "2026-10-23T00:46:40.914Z",
-      "next_update": "After guarded child-PR merges and final source verification",
-      "next_action": "Check hosted CI, then merge narrowly reviewed PRs42-44 into PR41's branch with expected-head guards. Refresh checkpoint with actual latest Mac UI observations and source checks. Do not merge full worker stack into main or activate a host service.",
+      "updated_at": "2026-10-23T00:49:14.454Z",
+      "next_update": "PR41 candidate review and existing Mac import outcome investigation",
+      "next_action": "Use feature/ghost-native-import-queue at8f0502c141422a27407176e7297269141704d583 as the consolidated source candidate. PRs42/43/44 merged into this branch; full workforce stack remains unmerged to main and uninstalled. Latest Mac basic UI probe already completed; investigate actual existing import outcome without repeating setup/probes or dispatch.",
       "acceptance": "One existing integration checkout contains all three tested repairs; published code equals tested blobs; hosted checks recorded; checkpoint names exact unresolved native import and latest Mac/UI evidence. No deployment/native success inferred.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "8f0502c141422a27407176e7297269141704d583",
+          "platform": "GitHub integration branch and Linux tests / hosted Linux Python3.9 and3.11",
+          "check": "Guarded merges PR42/43/44; six integrated code/test blob hashes equal164-test local files; hosted final-repair CI success both Python versions; 3.9 log count verified; refreshed checkpoint and PR41",
+          "result": "PASS164 local tests in6.705s and hosted Python3.9 in6.965s; Python3.11 job successful. All repair source consolidated; documentation checkpoint follows final code mergee32374977f974267818eca192f6e0e86693bd664. No Mac deployment, model, native import replay or unattended worker.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39880072286"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41"
+      ]
     }
   ]
 }
