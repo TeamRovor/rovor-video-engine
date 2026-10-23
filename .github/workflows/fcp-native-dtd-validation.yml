@@ -5,6 +5,7 @@ on:
     paths:
       - 'tools/fcp_native_import_candidate.py'
       - 'tools/fcp_native_auto_import.py'
+      - 'tools/fcp_jane_ui_probe.py'
       - '.github/workflows/fcp-native-dtd-validation.yml'
   push:
     branches: [main]
@@ -31,6 +32,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Compile Jane's read-only Final Cut GUI AppleScript (NO launch)
+        shell: bash
+        run: |
+          set -euo pipefail
+          WORK="$(mktemp -d)"
+          trap 'rm -rf "$WORK"' EXIT
+          python3 - "$WORK" <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0,'tools')
+          from fcp_jane_ui_probe import READ_ONLY_GUI_APPLESCRIPT
+          Path(sys.argv[1], 'jane-ui.applescript').write_text(READ_ONLY_GUI_APPLESCRIPT)
+          PY
+          osacompile -o "$WORK/jane-ui.scpt" "$WORK/jane-ui.applescript"
+          echo 'PASS: Jane GUI inspection AppleScript compiled on macOS, NOT executed.'
       - name: Validate real generated 30-second XML against Apple FCPXML 1.13 DTD mirror
         shell: bash
         run: |
