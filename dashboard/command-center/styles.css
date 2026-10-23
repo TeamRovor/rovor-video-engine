@@ -953,3 +953,40 @@ body.motion-paused .reactor-stage.mode-signal .reactor-halo {
   }
   .hud-panel::after { inset: 3px; }
 }
+
+
+/* Reactor telemetry hardware layer — visual instrumentation, not fake data widgets. */
+.reactor-stage { overflow: hidden; }
+.reactor-cross-ring {
+  position: absolute; z-index: 0; left: 50%; top: 48%;
+  width: min(57%, 470px); aspect-ratio: 1;
+  border: 1px solid rgba(147,211,255,.17); border-radius: 50%;
+  transform: translate(-50%,-50%);
+  box-shadow: 0 0 0 1px rgba(54,142,255,.045), inset 0 0 40px rgba(45,130,255,.045);
+  pointer-events: none;
+}
+.reactor-cross-ring::before, .reactor-cross-ring::after {
+  content: ""; position: absolute; background: linear-gradient(90deg,transparent,rgba(123,196,255,.23),transparent);
+  left: -12%; top: 50%; width: 124%; height: 1px;
+}
+.reactor-cross-ring::after { transform: rotate(90deg); }
+.reactor-telemetry {
+  position: absolute; z-index: 3; left: 50%; width: min(72%, 720px);
+  transform: translateX(-50%); display: flex; align-items: center;
+  gap: 12px; color: rgba(159,207,247,.68); font: 8px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .18em; pointer-events: none;
+}
+.telemetry-top { top: 5%; }
+.telemetry-bottom { bottom: 5%; }
+.telemetry-line { height: 1px; flex: 1; min-width: 12px; background: linear-gradient(90deg,rgba(83,163,255,.05),rgba(110,194,255,.5),rgba(83,163,255,.05)); }
+.telemetry-pulse { width: 5px; height: 5px; border-radius: 50%; background: #b9e5ff; box-shadow: 0 0 10px #388eff; animation: rovor-signal-pulse 2.4s ease-in-out infinite; }
+.telemetry-bottom b { color: #d9efff; font-weight: 600; }
+@keyframes rovor-signal-pulse { 0%,100% { opacity: .4; box-shadow: 0 0 4px #388eff; } 50% { opacity: 1; box-shadow: 0 0 13px #388eff; } }
+.reactor-stage.mode-signal .reactor-cross-ring { border-style: dashed; }
+.reactor-stage.mode-orbit .reactor-cross-ring { transform: translate(-50%,-50%) rotate(45deg); border-radius: 42%; }
+body.motion-paused .telemetry-pulse { animation-play-state: paused !important; }
+@media (max-width: 759px) {
+  .reactor-telemetry { width: 84%; gap: 7px; font-size: 6px; letter-spacing: .1em; }
+  .reactor-cross-ring { width: min(64%, 310px); }
+}
+@media (prefers-reduced-motion: reduce) { .telemetry-pulse { animation: none !important; } }
