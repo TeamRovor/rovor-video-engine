@@ -2,6 +2,20 @@
 
 **Primary local executor: Open Interpreter.** Codex is an optional fallback client, not the ROVOR workforce's primary runtime. Walter coordinates Jane and other existing specialist roles, Open Interpreter supplies local agent sessions/MCP/tool permissions, and GitHub holds source/version/task evidence. None of this alone starts an always-on process or tunnels cloud ChatGPT to the Mac.
 
+## Mac GUI diagnostic resolved, existing library changed during test — 2026-10-22
+
+Real user Mac output from `tools/fcp_jane_ui_probe.py` (not a hypothetical):
+- Job `~/Documents/Rovor/fcp-jane-auto-20261022-183007` was created **2026-10-22 23:30:07.652604 UTC**.
+- `~/Movies/Untitled.fcpbundle` **predates** the test: creation **2026-10-07 19:11:13.840812 UTC**. Its modification timestamp is **2026-10-22 23:30:16.813371 UTC**, about **9.2 seconds after the Jane job directory was created**. This time correlation is NOT proof Jane imported into it; Final Cut or another process may have autosaved it.
+- Final Cut is running. System Events read-only GUI inspection succeeded: **2 windows, 0 sheets**, no windows categorized as import dialog, library picker or error dialog. This excludes a *currently visible categorized dialog at observation time*, not all possible app-level errors.
+- Intended new `ROVOR-Jane-Test.fcpbundle` **still does not exist**; portrait not dispatched; native timeline still NOT verified. Do not claim that source media were modified, nor that other existing library metadata were untouched.
+
+**New isolation protection:** `tools/fcp_native_auto_import.py` now refuses further native import dispatch while the pre-existing `~/Movies/Untitled.fcpbundle` is present. This is a deliberate fail-closed guard, NOT a request for the user to delete/move the existing library. The adapter also marks any app-driven writes to existing libraries as `not_assessed`; no longer asserts they are untouched. This protects the original user's editing work against silent repeat imports.
+
+**Next single targeted read-only investigation:** `tools/fcp_jane_import_audit.py --job ~/Documents/Rovor/fcp-jane-auto-20261022-183007`. It scans ONLY known native metadata/database files and directory names in the existing `Untitled.fcpbundle`, within fixed byte/entry/depth budgets, for exact identifiers `ROVOR NATIVE IMPORT TEST landscape` and `ROVOR NATIVE IMPORT TEST portrait`. It deliberately excludes Original/Optimized/Proxy Media, render files, unrelated project data, network, app commands, and exports. Only yes/no marker-presence flags leave the Mac; no unrelated project names or contents are printed. **A positive match indicates the test's marker exists in the wrong library, but a negative result is inconclusive** because Final Cut metadata may be encoded or stored elsewhere. It cannot verify project properties or timeline.
+
+After this evidence, plan native UI library creation using a new isolated disposable target and verified Accessibility capabilities, then import only after the native library exists, and require app-level project verification. Do NOT replay the old `osascript open` sequence or ask the user to create a library manually.
+
 ## Native import gate: Final Cut running; UNATTRIBUTED Untitled library; UI diagnosis next (2026-10-22)
 
 The user's **latest** real Mac read-only `tools/fcp_jane_native_probe.py` output from exact job `~/Documents/Rovor/fcp-jane-auto-20261022-183007` shows:
