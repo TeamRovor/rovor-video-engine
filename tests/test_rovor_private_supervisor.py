@@ -307,6 +307,7 @@ class PrivateSupervisorTests(unittest.TestCase):
             out=sup.status(self.home,run=fake)
         self.assertTrue(out['staged'])
         self.assertTrue(out['launchd_loaded'])
+        self.assertEqual(out['launchd_observation'],'loaded')
         self.assertNotIn('PRIVATE DETAILS',json.dumps(out))
         self.assertFalse(out['private_queue_job_ever_executed_verified'])
 
@@ -317,6 +318,72 @@ class PrivateSupervisorTests(unittest.TestCase):
         with mock.patch.object(sup.sys,'platform','darwin'):
             result=sup.status(self.home,run=fail)
         self.assertFalse(result['launchd_loaded'])
+
+    def test_status_observes_loaded_service_despite_corrupt_snapshot(self):
+        self.staged()
+        service,_,_=sup._check_stage(self.home)
+        (service/sup.RUNTIME_DIR/'ghost_private_control.py').write_text('corrupt')
+        commands=[]
+        def fake(command,**kwargs):
+            commands.append(command)
+            return subprocess.CompletedProcess(command,0,
+                                               stdout='PRIVATE CONTENTS',stderr='')
+        with mock.patch.object(sup.sys,'platform','darwin'):
+            with mock.patch.object(sup,'keychain_token') as secret:
+                result=sup.status(self.home,run=fake)
+            secret.assert_not_called()
+        self.assertTrue(result['staged'])
+        self.assertFalse(result['stage_valid'])
+        self.assertTrue(result['launchd_loaded'])
+        self.assertEqual(result['launchd_observation'],'loaded')
+        self.assertEqual(commands,[['/bin/launchctl','print',
+                                     'gui/'+str(os.getuid())+'/'+sup.LABEL]])
+        self.assertNotIn('PRIVATE CONTENTS',json.dumps(result))
+
+    def test_status_observes_loaded_service_even_without_installed_plist(self):
+        self.staged()
+        _,plist,_=sup._check_stage(self.home)
+        plist.unlink()
+        commands=[]
+        def fake(command,**kwargs):
+            commands.append(command)
+            return subprocess.CompletedProcess(command,0,stdout='',stderr='')
+        with mock.patch.object(sup.sys,'platform','darwin'):
+            result=sup.status(self.home,run=fake)
+        self.assertFalse(result['staged'])
+        self.assertFalse(result['stage_valid'])
+        self.assertTrue(result['launchd_loaded'])
+        self.assertEqual(result['launchd_observation'],'loaded')
+        self.assertEqual(len(commands),1)
+
+    def test_status_launchctl_nonzero_cannot_prove_stopped(self):
+        commands=[]
+        def unavailable(command,**kwargs):
+            commands.append(command)
+            return subprocess.CompletedProcess(command,2,stdout='SECRET',stderr='KEY')
+        with mock.patch.object(sup.sys,'platform','darwin'):
+            result=sup.status(self.home,run=unavailable)
+        self.assertFalse(result['launchd_loaded'])
+        self.assertEqual(result['launchd_observation'],'not_confirmed')
+        self.assertEqual(len(commands),1)
+        self.assertNotIn('SECRET',json.dumps(result))
+        self.assertNotIn('KEY',json.dumps(result))
+
+    def test_status_launchctl_exception_is_unavailable_not_unloaded(self):
+        def inaccessible(command,**kwargs):
+            raise subprocess.TimeoutExpired(command,8)
+        with mock.patch.object(sup.sys,'platform','darwin'):
+            result=sup.status(self.home,run=inaccessible)
+        self.assertFalse(result['launchd_loaded'])
+        self.assertEqual(result['launchd_observation'],'unavailable')
+
+    def test_status_nonmac_does_not_call_launchctl(self):
+        def forbidden(*args,**kwargs):
+            self.fail('launchctl invoked outside macOS')
+        with mock.patch.object(sup.sys,'platform','linux'):
+            result=sup.status(self.home,run=forbidden)
+        self.assertFalse(result['launchd_loaded'])
+        self.assertEqual(result['launchd_observation'],'not_checked_non_mac')
 
     def test_config_symlink_and_private_repo_identity_refused(self):
         self.staged()
