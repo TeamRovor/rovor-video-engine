@@ -145,6 +145,42 @@ class OmniRouteDraftReviewTests(unittest.TestCase):
         self.assertEqual(result['reasons'],['unsupported_execution_claim'])
         self.assertFalse(result['actual_mac_execution_verified'])
 
+    def test_observed_stale_header_and_token_usage_trigger_review(self):
+        cases=(
+            ('provider-efficiency','**Date:** 2025-01-15 (analysis date)',2400,
+             {'report_header_year_mismatch','near_completion_token_cap_truncation_unknown'}),
+            ('supervisor-resilience','**Date:** 2024-XX-XX',2398,
+             {'report_date_placeholder','near_completion_token_cap_truncation_unknown'}),
+        )
+        for slug,header,used,expected in cases:
+            with self.subTest(slug=slug):
+                path,obj=self.make(slug,answer=header+'\n## Research notes\nUnverified draft.')
+                obj['created_at']='2026-10-23T18:00:00-05:00'
+                obj['usage_reported']={'completion_tokens':used,
+                                      'prompt_tokens':50,'total_tokens':used+50}
+                path.write_text(json.dumps(obj))
+                result=gate.inspect(self.repo,self.receipts,slug)
+                self.assertEqual(result['status'],'content_quality_needs_review')
+                self.assertEqual(set(result['reasons']),expected)
+                self.assertFalse(result['approval_granted'])
+                self.assertNotIn(header,json.dumps(result))
+
+    def test_current_header_and_historical_body_dates_are_reviewable(self):
+        body=('**Date:** 2026-10-23\n'
+              '# Evidence\nThe older 2024-XX-XX and 2025-01-15 refer '
+              'to past work, not the current memo.')
+        path,obj=self.make('provider-efficiency',answer=body)
+        obj['created_at']='2026-10-23T18:00:00-05:00'
+        obj['usage_reported']={'completion_tokens':2350}
+        path.write_text(json.dumps(obj))
+        outcome=gate.inspect(self.repo,self.receipts,'provider-efficiency')
+        self.assertEqual(outcome['status'],'draft_ready_for_human_review')
+
+    def test_no_header_and_missing_completion_usage_are_reviewable(self):
+        self.make('provider-efficiency',answer='No report date or usage known.')
+        self.assertEqual(gate.inspect(self.repo,self.receipts,
+            'provider-efficiency')['status'],'draft_ready_for_human_review')
+
     def test_pending_and_failed_receipts_never_count_as_draft(self):
         for state,status in [('reserved_no_retry','incomplete_needs_review'),
                              ('needs_review_no_auto_retry','failed_needs_review')]:
