@@ -2,6 +2,19 @@
 
 **Primary local executor: Open Interpreter.** Codex is an optional fallback client, not the ROVOR workforce's primary runtime. Walter coordinates Jane and other existing specialist roles, Open Interpreter supplies local agent sessions/MCP/tool permissions, and GitHub holds source/version/task evidence. None of this alone starts an always-on process or tunnels cloud ChatGPT to the Mac.
 
+## Native import gate: Final Cut running; UNATTRIBUTED Untitled library; UI diagnosis next (2026-10-22)
+
+The user's **latest** real Mac read-only `tools/fcp_jane_native_probe.py` output from exact job `~/Documents/Rovor/fcp-jane-auto-20261022-183007` shows:
+- `original_job_status=native_library_not_observed`, `apple_event_returned_zero=true`, `last_dispatched=landscape`, `portrait_dispatched=false`.
+- Both XML files parse and retain their intended **30-second, 60fps, empty** timelines and exact destination URL `file:///Users/amarhavic/Documents/Rovor/fcp-jane-auto-20261022-183007/ROVOR-Jane-Test.fcpbundle`.
+- Final Cut Pro app installed and **its process was observed running** on the host; `osascript_process_present=false` by the later read-only snapshot.
+- **The expected ROVOR test library is not present**, and `native_timeline_verified=false`.
+- `~/Movies/Untitled.fcpbundle` is present but **may predate the attempt or have an entirely unrelated origin**. Merely seeing it is NOT evidence of imported projects, app success, or an alternate import destination.
+
+**Next tool** `tools/fcp_jane_ui_probe.py` is a safe diagnostic to narrow this root cause without launching Final Cut, clicking buttons, reading actual media or opening libraries. It reads only metadata for the known `~/Movies/Untitled.fcpbundle` (creation/mtime versus job start) and optionally uses *read-only* macOS System Events Accessibility scripting to categorize Final Cut's window titles and count blocking sheets. Title strings are redacted; not logged to GitHub. If Accessibility permission is unavailable, it returns `accessibility_or_automation_denied` rather than implying app success. A native macOS `osacompile` job validates the AppleScript syntax without execution; unit tests cover permission errors, blocked GUI, missing app and metadata-only privacy. **DO NOT REPEAT** the existing `--dispatch` attempt or ask user to create/import FCP projects manually.
+
+Native Apple docs: [Send FCPXML via Open Document](https://developer.apple.com/documentation/professional-video-applications/sending-data-programmatically-to-final-cut-pro), [library location import-option example](https://developer.apple.com/documentation/professional-video-applications/describing-final-cut-pro-items-in-fcpxml), [read-only System Events inspection](https://developer.apple.com/library/archive/documentation/LanguagesUtilities/Conceptual/MacAutomationScriptingGuide/AutomatetheUserInterface.html).
+
 ## Real Mac native auto-import result: NO LIBRARY OBSERVED — 2026-10-22
 
 **Update from the user's second, complete Terminal paste (the earlier log was truncated):** first `--dispatch` at 2026-10-22 18:30:07 CDT, job `~/Documents/Rovor/fcp-jane-auto-20261022-183007`, **COMPLETED** with status `native_library_not_observed`. `osascript` returned exit code **0**, so script's `apple_event_sent=true`, but **the expected library package does not exist**, `library_creation_observed=false`, `native_timeline_verified=false`, `last_dispatched=landscape`, and `portrait` was NOT dispatched. The read-only `fcp_jane_status.py` independently observed the same result: `native_library_exists=false`, `xml_candidates_present=true`. The dispatch generated 30s DTD-valid landscape and portrait XML hashes, did not edit original media, and did not run a model. No native project creation has been verified.
