@@ -1387,3 +1387,47 @@ body {
 @media (prefers-reduced-motion:reduce) {
   .metric,.task-card,.system-card,.system-mini,.worker-card,.repo-bar-row {transition:none!important;}
 }
+
+
+/* Review pass: real source navigation and a genuine instrument-only focus view. */
+.source-link {
+  color: #bfe5ff;
+  text-decoration: none;
+  text-underline-offset: 3px;
+  border-bottom: 1px solid rgba(145, 203, 255, .42);
+  transition: color .18s ease, border-color .18s ease, text-shadow .18s ease;
+}
+.source-link:hover, .source-link:focus-visible {
+  color: #fff;
+  border-color: #e8f6ff;
+  text-shadow: 0 0 12px rgba(94, 174, 255, .65);
+}
+.source-link:focus-visible { outline: 2px solid #d8efff; outline-offset: 4px; }
+.focus-mode .app-shell {
+  height: 100svh;
+  min-height: 0;
+  max-height: 100svh;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+}
+.focus-mode .topbar,
+.focus-mode .syncbar,
+.focus-mode .hero-grid,
+.focus-mode .tabbar,
+.focus-mode main { display: none !important; }
+.focus-mode .reactor-stage {
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  margin: 0;
+  border-radius: 4px;
+}
+.focus-mode .reactor-core { width: clamp(100px, 20vh, 220px); }
+.focus-mode .reactor-readout { font-size: clamp(9px, 1.1vw, 13px); }
+.focus-mode .reactor-readout strong { font-size: clamp(12px, 1.5vw, 17px); }
+.focus-mode .reactor-readout small { font-size: clamp(8px, .9vw, 11px); }
+.focus-mode .reactor-interaction-hint { bottom: max(12px, env(safe-area-inset-bottom)); }
+@media (prefers-reduced-motion: reduce) {
+  .source-link { transition: none; }
+}
