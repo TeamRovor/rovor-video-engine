@@ -2137,6 +2137,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39890793103"
         }
       ]
+    },
+    {
+      "id": "private-mac-control-bridge-v1",
+      "title": "Build private GitHub-to-Mac bounded execution bridge with SQLite receipts",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar iPhone secure bridge engineering 2026-10-22",
+      "branch": "feature/private-mac-control-bridge-v1",
+      "scopes": [
+        "tools/ghost_private_control.py",
+        "tests/test_ghost_private_control.py",
+        "integrations/open-interpreter/PRIVATE-MAC-CONTROL.md"
+      ],
+      "depends_on": [
+        "rovor-ghost-worker-readonly-v1"
+      ],
+      "updated_at": "2026-10-23T02:46:50.840Z",
+      "next_update": "After offline tests, hosted checks and code review; no claim of on-Mac deployment",
+      "next_action": "Implement exact-ID one-shot GitHub private-repo request fetcher, fail closed on public repos, allow only ping and explicitly approved bounded workspace inventory via existing ghost_worker SQLite queue, reject redirected state/files, STOP, preserve dedupe and no replay, post sanitized receipt to fixed private issue. Test in fake HTTP/offline runtime and hosted CI. Do not touch other worker or FCP source files, use model, restart public runner, or claim remote OS access.",
+      "acceptance": "GitHub API refuses public repositories and current public repo; exact validated job payload fetched via scoped token; shared ghost_worker engine runs an approved one-shot read-only job under private nonoverlapping state; never runs other queued jobs; safe STOP/dedupe/fail-closed receipts; remote sanitized status; no secrets printed; tests actually pass.",
+      "evidence": []
     }
   ]
 }
