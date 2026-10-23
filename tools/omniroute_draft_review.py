@@ -47,7 +47,7 @@ NEAR_COMPLETION_CAP = 2390
 REPORT_DATE_HEADER = re.compile(
     r'(?im)^[ \t]*(?:#{1,4}[ \t]*)?(?:\*{1,2})?'
     r'(?:analysis[ \t]+date|document[ \t]+date|date)'
-    r'(?:\*{1,2})?[ \t]*:[ \t]*(?:\*{1,2})?'
+    r'(?:\*{1,2})?[ \t]*:[ \t]*(?:\*{1,2})?[ \t]*'
     r'(\d{4})[-/](\d{2}|XX)[-/](\d{2}|XX)(?![0-9A-Za-z])'
 )
 
