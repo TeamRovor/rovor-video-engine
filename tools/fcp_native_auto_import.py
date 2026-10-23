@@ -169,7 +169,10 @@ def prepare(candidates, output, dtd=DTD, run=subprocess.run):
         'library_creation_observed': False,
         'native_timeline_verified': False,
         'model_turn_started': False,
-        'original_media_modified': False,
+        # The adapter does not write source media. However, Final Cut may
+        # still modify open libraries when it receives an Apple event.
+        'original_media_modified': 'not_assessed',
+        'preexisting_fcp_library_writes': 'not_assessed',
     }
     receipt_write(output, report)
     return report
@@ -184,6 +187,17 @@ def dispatch(output, report, run=subprocess.run, clock=time.monotonic,
     target = Path(report['target_library'])
     if target.exists() or target.is_symlink():
         raise ValueError('Disposable test library already exists; refusing to reuse it')
+    # The first live host trial returned AppleScript success but unexpectedly
+    # changed the timestamp of an existing ~/Movies/Untitled.fcpbundle.
+    # The attempted import may have landed in that library. DO NOT run any
+    # future disposable import while this ambiguity is unresolved.
+    legacy_library = Path.home() / 'Movies' / 'Untitled.fcpbundle'
+    if legacy_library.exists() or legacy_library.is_symlink():
+        raise ValueError(
+            'UNSAFE: Pre-existing ~/Movies/Untitled.fcpbundle detected; '
+            'refusing to risk another XML import into an existing library. '
+            'Use the read-only Jane import audit and build isolated native '
+            'library creation before any new import attempt.')
     checkpoint(output, report, 'dispatch_starting_no_app_result', apple_event_dispatch_attempted=False)
     try:
         for label, _, _ in LABELS:
