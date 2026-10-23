@@ -1327,3 +1327,63 @@ body {
 @media (prefers-reduced-motion:reduce) {
   .metric,.task-card,.system-card,.system-mini,.worker-card,.repo-bar-row {transition:none;}
 }
+
+
+/* Final responsive correction: keep the landscape instrument deck inside the viewport
+   and stop the global content panels from competing with the reactor for height. */
+@media (min-width:760px) and (orientation:landscape) {
+  html,body {height:100%;min-height:100%;overflow:hidden;}
+  .app-shell {
+    height:100svh;min-height:0;max-height:100svh;
+    grid-template-rows:58px minmax(0,1fr) 38px minmax(124px,.72fr);
+    overflow:hidden;
+  }
+  .topbar {min-width:0;gap:10px;}
+  .brand-lockup {min-width:0;flex:0 1 auto;}
+  .top-actions {min-width:0;flex-wrap:wrap;justify-content:flex-end;}
+  .syncbar {min-width:0;max-width:48%;overflow:hidden;}
+  .sync-content {min-width:0;}
+  .sync-content strong,.sync-content span {overflow-wrap:anywhere;}
+  .reactor-stage {min-width:0;min-height:0;}
+  .reactor-halo.halo-outer {width:min(92%,min(58vh,58vw));height:auto;aspect-ratio:1;}
+  .reactor-halo.halo-mid {width:min(76%,min(48vh,48vw));height:auto;aspect-ratio:1;}
+  .reactor-halo.halo-inner {width:min(60%,min(38vh,38vw));height:auto;aspect-ratio:1;}
+  .reactor-core {width:clamp(104px,16vh,clamp(104px,15vw,190px));}
+  .warning-panel,main {min-height:0;max-height:100%;overflow:auto;overscroll-behavior:contain;}
+  .warning-panel {scrollbar-width:thin;}
+  main {scrollbar-width:thin;scrollbar-color:#28618b transparent;}
+  main>.tab-view {min-height:0;}
+  .tab-view.active {padding-bottom:4px;}
+  .tabbar {min-width:0;overflow-x:auto;overscroll-behavior-x:contain;}
+  .tab {white-space:nowrap;flex:0 0 auto;}
+}
+@media (min-width:760px) and (max-width:1180px) and (orientation:landscape) {
+  .app-shell {grid-template-rows:50px minmax(0,1fr) 36px minmax(118px,.7fr);}
+  .topbar {gap:6px;padding-inline:8px;}
+  .brand-emblem {width:32px;height:32px;flex-basis:32px;}
+  .topbar h1 {font-size:clamp(12px,1.55vw,17px);}
+  .eyebrow {font-size:8px;letter-spacing:.2em;}
+  .header-subtitle {font-size:7px;}
+  .top-actions {gap:3px;}
+  .hud-btn {min-height:34px;padding:5px 6px;font-size:9px;}
+  .syncbar {max-width:48%;padding:5px 8px;gap:7px;}
+  .reactor-readout {max-width:31%;font-size:9px;}
+  .reactor-core {width:clamp(96px,15vh,150px);}
+  .warning-panel {padding:8px;}
+  .warning-box {padding:8px;gap:8px;margin-bottom:6px;}
+  .warning-head {font-size:10px;}
+  .warning-panel p,.notes-list {font-size:10px;line-height:1.35;}
+  main .hud-panel {padding:10px;}
+  .section-grid {gap:8px;}
+}
+@media (min-width:760px) and (orientation:landscape) and (max-height:560px) {
+  .app-shell {grid-template-rows:42px minmax(0,1fr) 30px minmax(84px,.62fr);gap:5px;}
+  .topbar {padding-block:3px;}
+  .top-actions .hud-btn {min-height:30px;}
+  .reactor-telemetry {font-size:7px;}
+  .reactor-readout {font-size:8px;}
+  .warning-panel p,.notes-list {font-size:9px;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .metric,.task-card,.system-card,.system-mini,.worker-card,.repo-bar-row {transition:none!important;}
+}
