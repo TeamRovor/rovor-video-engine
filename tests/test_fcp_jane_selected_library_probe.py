@@ -84,12 +84,13 @@ class SelectedJaneNativeLibraryEvidenceTests(unittest.TestCase):
             self.assertEqual(response['ui_status'],status.lower())
 
     def test_lsof_needs_matching_process_and_exact_native_db_name(self):
-        db=self.bundle/'Original Media'/'CurrentVersion.flexolibrary'
+        db=self.bundle/'CurrentVersion.flexolibrary'
         positive='p187\nn'+str(db)+'\n'
         self.assertTrue(probe.has_native_handle(positive,self.bundle,187))
         for raw in ('p123\nn'+str(db),
                     'p187\nn/tmp/Untitled.fcpbundle/CurrentVersion.flexolibrary',
                     'p187\nn'+str(self.bundle/'secret.mov'),
+                    'p187\nn'+str(self.bundle/'Original Media'/'CurrentVersion.fcpevent'),
                     'p187\nn'+str(self.bundle/'CurrentVersion.flexolibrary.bak'),
                     'p187\nn'+str(self.bundle/'../Untitled.fcpbundle/CurrentVersion.fcpevent'),
                     'p187\np187\nn'+str(db)):
