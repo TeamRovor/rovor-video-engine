@@ -84,6 +84,9 @@ test('pinned-commit queue and route reads use identical immutable SHA', async ()
   assert.equal(pinned.length,2);
   assert.ok(pinned.every(url=>url.includes('?ref=' + result.sha) ||
     url.includes('/' + result.sha + '/coordination/')));
+  const rawReads=result.calls.filter(url=>url.includes('raw.githubusercontent.com'));
+  assert.ok(rawReads.length===0 || rawReads.length===2,
+    'Queue and routing must use one transport strategy, not mix API and raw reads');
   assert.ok(result.nodes.get('tasks').innerHTML.includes('Real task'));
 });
 
