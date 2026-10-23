@@ -162,8 +162,21 @@ class RoutingTests(unittest.TestCase):
         self.assertEqual(b['routing_coverage']['routed_tasks'],
                          b['routing_coverage']['total_tasks'])
         self.assertEqual(b['routing_coverage']['total_tasks'], len(data['tasks']))
-        self.assertIsNone(b['recommended'])
         self.assertGreater(b['routing_coverage']['status_counts']['done'], 0)
+        # The real queue may gain eligible work in the future. A new,
+        # correctly routed, unclaimed task must NOT make this test fail.
+        future = copy.deepcopy(data)
+        future['tasks'].append(task('future-eligible-work', priority=1,
+                                    scopes=['future-eligible-work']))
+        future_policy = copy.deepcopy(policy)
+        future_policy['tasks']['future-eligible-work'] = {
+            'lane': 'coordination', 'requires': []}
+        with_new = work_brief.route(future, future_policy, 'CI coverage check',
+                                    {'github-read','github-write'}, 'any')
+        eligible_ids = [t['id'] for t in
+                        ([with_new['recommended']] if with_new['recommended'] else [])
+                        + with_new['alternatives']]
+        self.assertIn('future-eligible-work', eligible_ids)
 
     def test_ref_uses_committed_pair_not_dirty_files(self):
         with tempfile.TemporaryDirectory() as td:
