@@ -2537,6 +2537,26 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/38"
       ]
+    },
+    {
+      "id": "routing-future-ready-queue-regression",
+      "title": "Prevent routing CI from rejecting a legitimately ready future task",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar routing future-queue regression 2026-10-22",
+      "branch": "fix/rovor-routing-future-ready-tasks",
+      "scopes": [
+        "tests/test_work_brief.py",
+        "coordination/work-routing.json"
+      ],
+      "depends_on": [
+        "session-routing-coverage-and-idle-triage"
+      ],
+      "updated_at": "2026-10-23T04:51:30.932Z",
+      "next_update": "After hosted routing tests and merge; no local/host execution",
+      "next_action": "Replace inappropriate static assumption that GitHub-only sessions must always have zero eligible tasks with a real-queue test that verifies coverage and truthfully permits future eligible work. Add the new task's routing rule, validate and merge tested fix.",
+      "acceptance": "CI allows correctly classified new ready GitHub-only tasks, still rejects unclassified tasks and protects owners/capabilities. Queue and routing coverage full; Python3.9/3.11 checks pass.",
+      "evidence": []
     }
   ]
 }
