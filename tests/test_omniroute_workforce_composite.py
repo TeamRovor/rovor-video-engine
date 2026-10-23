@@ -62,6 +62,20 @@ class CompositeTests(unittest.TestCase):
             self.assertTrue(provenance['sources'])
             self.assertFalse(packet['external_effects_allowed'])
 
+    def test_direct_api_rejects_external_private_symlinks_before_inference(self):
+        target=self.home/'external-private'
+        target.mkdir(mode=0o700)
+        alias=self.home/'private-alias'
+        alias.symlink_to(target,target_is_directory=True)
+        for destination in (alias,alias/'receipts'):
+            with self.subTest(destination=destination):
+                with mock.patch.object(workpack,'http_completion') as completion:
+                    with self.assertRaises(ValueError):
+                        workpack.run_packet(ROOT,destination,'provider-efficiency',
+                                            'rovor-reason-free-v1','fixture-key')
+                    completion.assert_not_called()
+        self.assertEqual(list(target.iterdir()),[])
+
     def test_one_queued_job_writes_private_reviewed_receipt_with_real_modules(self):
         jid=self.enqueue()
         calls=[]
