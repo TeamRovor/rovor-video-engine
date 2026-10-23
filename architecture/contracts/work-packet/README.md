@@ -5,7 +5,7 @@ This is a small, versioned data contract, not a second task queue, scheduler, ru
 ## Files
 
 - `work-packet.schema.json`: JSON Schema 2020-12 shape.
-- `examples.json`: three synthetic packet projections based on evaluation-pack case IDs for client intake, sourced sales observation and GitHub Actions triage.
+- `examples.json`: three synthetic packet projections based on evaluation-pack case IDs for client intake, sourced sales observation and GitHub Actions triage. The case-source links are pinned to immutable evaluation commit `3a5520da17bb1373193bb552673f8abdeba484b9`, not a moving branch.
 - `invalid-examples.json`: intentionally invalid candidates for the negative acceptance check.
 - `validate.py`: dependency-free structural and cross-field checks.
 - `tests/test_work_packet_contract.py`: regression suite.
