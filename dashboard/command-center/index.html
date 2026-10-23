@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to command content</a>
   <div class="scanlines"></div>
   <div class="glow-orbit orbit-a"></div>
   <div class="glow-orbit orbit-b"></div>
@@ -101,7 +102,7 @@
       <button type="button" class="tab" id="tab-button-workers" role="tab" aria-selected="false" aria-controls="tab-workers" tabindex="-1" data-tab="workers">Workers</button>
     </nav>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <section class="tab-view active" id="tab-overview" role="tabpanel" aria-labelledby="tab-button-overview" tabindex="0">
         <div class="section-grid two-thirds">
           <div class="hud-panel">
