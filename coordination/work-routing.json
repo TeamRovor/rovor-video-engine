@@ -467,6 +467,12 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "interpreter-research-hosted-regression-gate": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }
