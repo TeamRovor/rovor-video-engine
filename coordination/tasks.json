@@ -2152,7 +2152,7 @@
       "id": "private-mac-control-bridge-v1",
       "title": "Build private GitHub-to-Mac bounded execution bridge with SQLite receipts",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar iPhone secure bridge engineering 2026-10-22",
       "branch": "feature/private-mac-control-bridge-v1",
       "scopes": [
@@ -2163,11 +2163,19 @@
       "depends_on": [
         "rovor-ghost-worker-readonly-v1"
       ],
-      "updated_at": "2026-10-23T02:46:50.840Z",
-      "next_update": "After offline tests, hosted checks and code review; no claim of on-Mac deployment",
-      "next_action": "Implement exact-ID one-shot GitHub private-repo request fetcher, fail closed on public repos, allow only ping and explicitly approved bounded workspace inventory via existing ghost_worker SQLite queue, reject redirected state/files, STOP, preserve dedupe and no replay, post sanitized receipt to fixed private issue. Test in fake HTTP/offline runtime and hosted CI. Do not touch other worker or FCP source files, use model, restart public runner, or claim remote OS access.",
+      "updated_at": "2026-10-23T02:53:54.995Z",
+      "next_update": "When a private TeamRovor control repository is connected and an authorized Mac executor completes first exact-ID private job",
+      "next_action": "Source bridge merged into PR #41 at 863d61be6ef1c979ead46ebc58d312d5d09ecef7 and tested 247/247 on Python3.9 and3.11 (Linux). NOT deployed to Mac. Next needs genuinely private TeamRovor control repo, scoped read/issues-write token kept only on Mac, and actual local foreground adapter execution to private issue receipt. Public self-hosted runner stays isolated/offline. Do not claim direct ChatGPT Mac access or auto-scheduling before host proof.",
       "acceptance": "GitHub API refuses public repositories and current public repo; exact validated job payload fetched via scoped token; shared ghost_worker engine runs an approved one-shot read-only job under private nonoverlapping state; never runs other queued jobs; safe STOP/dedupe/fail-closed receipts; remote sanitized status; no secrets printed; tests actually pass.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "863d61be6ef1c979ead46ebc58d312d5d09ecef7",
+          "platform": "GitHub-hosted Linux / Python 3.9.25 and 3.11.17",
+          "check": "247 integrated ROVOR offline tests including 13 new private control channel tests; local isolated stub tests 13/13 before GitHub publish",
+          "result": "PASS both hosted suites; PR #52 merged to PR #41; Mac/private repo deployment remains UNVERIFIED",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39891954141"
+        }
+      ]
     },
     {
       "id": "omniroute-loopback-egress-guard",
