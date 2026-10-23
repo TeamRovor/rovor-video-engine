@@ -90,6 +90,34 @@ class NativeLibraryBootstrapTests(unittest.TestCase):
         persisted = json.loads((output / gate.REPORT).read_text())
         self.assertEqual(persisted['status'],'ui_create_failed_unverified')
 
+    def test_native_automation_permission_error_is_sanitized(self):
+        output, report = self.prepared()
+        private = 'Confidential Project 74828'
+        def fake(argv, **kw):
+            return subprocess.CompletedProcess(argv,1,stdout='',
+                stderr='execution error: Not authorized to control ' +
+                       private + ' (-1743)')
+        with mock.patch.object(gate, 'APP', self.root):
+            result = gate.create_library(output, report, run=fake)
+        self.assertEqual(result['error_class'], 'accessibility_permission')
+        self.assertEqual(result['apple_error_number'], -1743)
+        self.assertNotIn(private, json.dumps(result))
+        self.assertNotIn(private, (output/gate.REPORT).read_text())
+        self.assertFalse(result['xml_import_attempted'])
+
+    def test_step_errors_do_not_leak_personal_window_names(self):
+        output, report = self.prepared()
+        private = 'Client 123 private film'
+        def fake(argv, **kw):
+            return subprocess.CompletedProcess(argv,1,stdout='',
+                stderr='execution error: No File/New/Library command; ' +
+                       private + ' (-2700)')
+        with mock.patch.object(gate, 'APP', self.root):
+            result = gate.create_library(output, report, run=fake)
+        self.assertEqual(result['error_class'], 'menu_preflight')
+        self.assertEqual(result['apple_error_number'], -2700)
+        self.assertNotIn(private, json.dumps(result))
+
     def test_osascript_success_without_library_is_not_success(self):
         output, report = self.prepared()
         def fake(argv, **kw):
