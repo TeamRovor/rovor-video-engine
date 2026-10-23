@@ -24,6 +24,7 @@ class TestPrivateControl(unittest.TestCase):
         self.private=True
         self.staged=None
         self.fail_posts=False
+        self.post_response={'id':1}
 
     def http(self,method,path,token,body=None):
         self.calls.append((method,path,body))
@@ -35,7 +36,7 @@ class TestPrivateControl(unittest.TestCase):
             return {'encoding':'base64','type':'file','size':len(raw),'content':base64.b64encode(raw).decode()}
         if method=='POST' and path=='/repos/'+self.repo+'/issues/7/comments':
             if self.fail_posts:raise bridge.Refused('simulated network error')
-            return {'id':1}
+            return self.post_response
         self.fail('Unexpected method or path: '+method+' '+path)
 
     def work(self,**kwargs):
@@ -70,6 +71,19 @@ class TestPrivateControl(unittest.TestCase):
             with self.subTest(packet=packet):
                 with self.assertRaises(bridge.Refused):
                     bridge.validate_packet(packet,self.job,allow_inventory=True)
+
+    def test_encoded_packet_content_must_be_text(self):
+        base_http = self.http
+        for malformed in (None, 42, [], {'encoded':'abc'}):
+            with self.subTest(malformed=malformed):
+                def fake_http(method, path, token, body=None):
+                    if method == 'GET' and '/contents/control/jobs/' in path:
+                        return {'type':'file','encoding':'base64','size':24,
+                                'content':malformed}
+                    return base_http(method,path,token,body)
+                with self.assertRaises(bridge.Refused):
+                    bridge.fetch_private_job(
+                        self.repo,self.job,'test-token',http=fake_http)
 
     def test_inventory_requires_exact_local_approval(self):
         self.packet={'schema':1,'id':self.job,'kind':'files.inventory','payload':{'subpath':'.'}}
@@ -117,6 +131,26 @@ class TestPrivateControl(unittest.TestCase):
         import sqlite3
         with sqlite3.connect(str(self.home/'Documents'/'Rovor'/bridge.STATE/self.job/'jobs.sqlite3')) as con:
             self.assertEqual(con.execute('SELECT attempts FROM jobs').fetchone()[0],1)
+
+    def test_missing_ack_preserves_unposted_receipt_and_does_not_replay(self):
+        import sqlite3
+        for malformed in ({}, {'id':0}, {'id':True}, {'id':'42'}, None, []):
+            with self.subTest(ack=malformed):
+                self.post_response = malformed
+                with self.assertRaisesRegex(bridge.Refused,'not acknowledged'):
+                    self.work(execute=True)
+                state=self.home/'Documents'/'Rovor'/bridge.STATE/self.job
+                self.assertFalse((state/bridge.MARKER).exists())
+                with sqlite3.connect(str(state/'jobs.sqlite3')) as con:
+                    self.assertEqual(
+                        con.execute('SELECT attempts FROM jobs').fetchone()[0],1)
+        self.post_response={'id':1829}
+        out=self.work(execute=True)
+        self.assertEqual(out['status'],'succeeded')
+        self.assertTrue(out['receipt_posted'])
+        self.assertFalse(out['executed'])  # Receipt retried; job not rerun
+        self.assertTrue((state/bridge.MARKER).exists())
+        self.assertEqual(len([x for x in self.calls if x[0]=='POST']),7)
 
     def test_stop_marker_prevents_any_queue_creation_or_post(self):
         state=self.home/'Documents'/'Rovor'/bridge.STATE
@@ -180,7 +214,7 @@ class TestPrivateControl(unittest.TestCase):
         (state/bridge.MARKER).unlink()
         result=self.work(execute=True)
         self.assertEqual(result['status'],'needs_review')
-        self.assertEqual(result['executed'],True)
+        self.assertFalse(result['executed'])  # Past attempt, not this invocation
         with sqlite3.connect(str(state/'jobs.sqlite3')) as con:
             self.assertEqual(con.execute('SELECT attempts FROM jobs').fetchone()[0],1)
 

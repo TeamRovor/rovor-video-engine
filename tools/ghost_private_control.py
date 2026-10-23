@@ -130,7 +130,10 @@ def fetch_private_job(repo, job_id, token, *, allow_inventory=False, http=_trans
             or not 0 < content['size'] <= MAX_REMOTE_SIZE):
         raise Refused('Missing or oversized private control packet')
     try:
-        decoded = base64.b64decode(content['content'].replace('\n', ''), validate=True)
+        encoded = content.get('content')
+        if not isinstance(encoded, str):
+            raise Refused('Missing encoded packet')
+        decoded = base64.b64decode(encoded.replace('\n', ''), validate=True)
         if len(decoded) != content['size'] or len(decoded) > MAX_REMOTE_SIZE:
             raise Refused('Packet size mismatch')
         packet = json.loads(decoded)
@@ -209,6 +212,7 @@ def _run_local(packet, home, *, issue_number, repo, token,
             raise Refused('Unsafe STOP marker')
         if marker.exists():
             return {'status':'stopped','executed':False,'receipt_posted':False}
+    executed_now = False
     with closing(ghost_worker.connect(per_job)) as conn:
         dedupe='private-control:' + packet['id']
         uuid=ghost_worker.enqueue(conn, packet['kind'], packet['payload'], dedupe)
@@ -217,6 +221,7 @@ def _run_local(packet, home, *, issue_number, repo, token,
             receipt=execution(conn, workspace, owner='rovor-private-control')
             if receipt is None or receipt.get('id') != uuid:
                 raise Refused('Worker did not execute exact reserved task')
+            executed_now = True
         result=conn.execute('SELECT status,attempts FROM jobs WHERE id=?',(uuid,)).fetchone()
         status = result['status']
         attempts = result['attempts']
@@ -231,11 +236,19 @@ def _run_local(packet, home, *, issue_number, repo, token,
     if _report_needed(per_job, issue_number, packet['id']):
         # Issue number is chosen ONLY by the Mac operator, never from remote job.
         # Do not publish private filesystem paths, file inventories or tokens.
-        http('POST', '/repos/' + repo + '/issues/' + str(issue_number) + '/comments',
-             token, {'body':'ROVOR_PRIVATE_CONTROL_RECEIPT ' +
+        acknowledgment = http(
+            'POST', '/repos/' + repo + '/issues/' + str(issue_number) + '/comments',
+            token, {'body':'ROVOR_PRIVATE_CONTROL_RECEIPT ' +
                             json.dumps(response, sort_keys=True, separators=(',', ':'))})
+        # A network response is not proof that a private issue comment exists.
+        # Preserve the unposted state on malformed ACK; retry publication
+        # without repeating the already committed SQLite job.
+        if (not isinstance(acknowledgment, dict)
+                or type(acknowledgment.get('id')) is not int
+                or acknowledgment['id'] < 1):
+            raise Refused('Private receipt was not acknowledged')
         _mark_reported(per_job, issue_number, packet['id'])
-        return {'status':public_status,'executed':attempts > 0,
+        return {'status':public_status,'executed':executed_now,
                 'receipt_posted':True,'job_id':packet['id']}
     return {'status':public_status,'executed':False,
             'receipt_posted':False,'job_id':packet['id']}
