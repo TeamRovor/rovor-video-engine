@@ -32,7 +32,10 @@ class WorkPacketContractTests(unittest.TestCase):
 
     def test_fixtures_reference_evaluation_cases(self):
         refs = [s["uri"] for p in self.valid["packets"] for s in p["source_refs"]]
-        self.assertTrue(any("cases.json" in uri for uri in refs))
+        self.assertTrue(any(
+            "blob/3a5520da17bb1373193bb552673f8abdeba484b9/architecture/evaluations/cases.json" in uri
+            for uri in refs
+        ))
         self.assertTrue(any("39683961823" in uri for uri in refs))
 
     def test_unknown_and_unrun_states_are_preserved(self):
