@@ -27,7 +27,7 @@
   <div class="panel"><h2>Task queue</h2><div class="toolbar"><input id="search" type="search" placeholder="Filter tasks…" aria-label="Filter tasks"><select id="statusFilter" aria-label="Filter by status"><option value="all">All statuses</option><option>ready</option><option>active</option><option>blocked</option><option>done</option></select></div><div id="tasks" class="tasks"><p class="muted">Loading public queue…</p></div></div>
   <aside class="panel"><h2>Capability routing</h2><div id="routes" class="routes"><p class="muted">Loading routing…</p></div><h2 style="margin-top:24px">Open pull requests</h2><div id="prs" class="prlist"><p class="muted">Loading pull requests…</p></div></aside>
  </section>
- <p class="foot">Auto-refresh: queue + routes every 60 seconds; pull requests every 5 minutes. Requests use GitHub's unauthenticated public API. Rate limits and network failures are shown rather than hidden. This page never contains a GitHub token and never claims to dispatch jobs.</p>
+ <p class="foot">Auto-refresh: queue + routes every 3 minutes; pull requests every 15 minutes. Requests use GitHub's unauthenticated public API. Rate limits and network failures are shown rather than hidden. This page never contains a GitHub token and never claims to dispatch jobs.</p>
 </main>
 <script>
 (() => {
@@ -42,11 +42,13 @@
  function renderRoutes(){const tasks=latestRoutes.tasks||{};const entries=Object.entries(tasks);$('routes').innerHTML=entries.length?entries.map(([id,r])=>'<div class="route"><strong>'+esc(id)+'</strong><div class="taskmeta">Lane: '+esc(r.lane||'unclassified')+' · Requires: '+esc((r.requires||[]).join(', ')||'none declared')+(r.objective?' · Objective: '+esc(r.objective):'')+'</div></div>').join(''):'<p class="muted">No route entries found.</p>'}
  function renderCounts(){const c={ready:0,active:0,blocked:0,done:0,other:0};latestTasks.forEach(t=>c[c[t.status]!==undefined?t.status:'other']++);$('counts').textContent=latestTasks.length+' tasks · '+c.active+' active';$('counts').title=Object.entries(c).map(([k,v])=>k+': '+v).join(', ')}
  async function sync(includePrs=false){if(busy)return;busy=true;$('refresh').disabled=true;try{
+  // Only the commit lookup consumes REST budget; both JSON reads use the same immutable SHA.
   const commits=await get(api+'/repos/'+owner+'/'+repo+'/commits?sha=main&per_page=1');if(!commits.length)throw new Error('No main commit returned');
   const sha=commits[0].sha;
-  const [tasksFile,routesFile]=await Promise.all([get(api+'/repos/'+owner+'/'+repo+'/contents/coordination/tasks.json?ref='+sha),get(api+'/repos/'+owner+'/'+repo+'/contents/coordination/work-routing.json?ref='+sha)]);
-  const decode=f=>JSON.parse(decodeURIComponent(escape(atob(f.content.replace(/\n/g,'')))));
-  const taskData=decode(tasksFile),routeData=decode(routesFile);
+  const raw='https://raw.githubusercontent.com/'+owner+'/'+repo+'/'+sha+'/coordination/';
+  const [taskResponse,routeResponse]=await Promise.all([fetch(raw+'tasks.json'),fetch(raw+'work-routing.json')]);
+  if(!taskResponse.ok||!routeResponse.ok)throw new Error('Pinned raw data fetch failed (HTTP '+(!taskResponse.ok?taskResponse.status:routeResponse.status)+')');
+  const [taskData,routeData]=await Promise.all([taskResponse.json(),routeResponse.json()]);
   if(!Array.isArray(taskData.tasks)||!routeData.tasks)throw new Error('Unexpected queue/routing schema');
   latestTasks=taskData.tasks;latestRoutes=routeData;pinnedSha=sha;
   $('commit').textContent=short(sha);$('commit').title=sha;$('commit').innerHTML='<a style="color:inherit" href="https://github.com/'+owner+'/'+repo+'/commit/'+sha+'" target="_blank" rel="noreferrer">'+esc(short(sha))+' ↗</a>';
@@ -55,7 +57,7 @@
   if(includePrs||Date.now()-lastPrFetch>300000){const prs=await get(api+'/repos/'+owner+'/'+repo+'/pulls?state=open&per_page=50');$('prs').innerHTML=prs.length?prs.map(p=>'<div class="pr"><a href="'+esc(p.html_url)+'" target="_blank" rel="noreferrer">#'+esc(p.number)+' '+esc(p.title)+'</a><div class="taskmeta">'+esc(p.head.ref)+' → '+esc(p.base.ref)+(p.draft?' · draft':'')+'</div></div>').join(''):'<p class="muted">No open pull requests.</p>';lastPrFetch=Date.now()}
  }catch(e){$('connection').textContent='STALE / ERROR';$('connection').className='value bad';setNotice('Sync failed: '+e.message+'. Displayed data, if any, may be stale. Retry manually or wait for the next poll.',true)}finally{busy=false;$('refresh').disabled=false}}
  $('refresh').addEventListener('click',()=>sync(true));$('search').addEventListener('input',renderTasks);$('statusFilter').addEventListener('change',renderTasks);
- sync(true);setInterval(()=>sync(false),60000);
+ sync(true);setInterval(()=>sync(false),180000);
 })();
 </script>
 </body>
