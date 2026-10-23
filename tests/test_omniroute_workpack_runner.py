@@ -149,6 +149,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
 
     def test_http_payload_uses_local_loopback_only_and_one_route(self):
         class Response:
+            status = 200
             def __enter__(self): return self
             def __exit__(self,*exc): return None
             def read(self,n):
@@ -172,6 +173,75 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         self.assertFalse(body['stream'])
         self.assertEqual(len(body['messages']),2)
         self.assertNotIn('key-from-keychain',req.data.decode())
+
+    def test_safe_local_open_disables_environment_proxies_and_redirects(self):
+        captured=[]
+        class FakeOpener:
+            def open(self,req,timeout):
+                self.last=(req,timeout)
+                return 'fake'
+        actual=FakeOpener()
+        def build(*handlers):
+            captured.extend(handlers)
+            return actual
+        with mock.patch.object(worker.request,'build_opener',side_effect=build):
+            result=worker.safe_local_open('request',12)
+        self.assertEqual(result,'fake')
+        self.assertEqual(actual.last,('request',12))
+        self.assertTrue(any(type(h) is worker.request.ProxyHandler
+                            and h.proxies == {} for h in captured))
+        self.assertTrue(any(isinstance(h,worker.RefuseRedirects)
+                            for h in captured))
+        handler=worker.RefuseRedirects()
+        with self.assertRaisesRegex(ValueError,'localhost redirect refused'):
+            handler.redirect_request(None,None,302,'Found',{},
+                                     'https://external.invalid/steal')
+
+    def test_http_refuses_redirect_or_non_200_status(self):
+        class Response:
+            def __init__(self,status): self.status=status
+            def __enter__(self): return self
+            def __exit__(self,*args): return False
+            def read(self,*args):
+                raise AssertionError('should not read unexpected HTTP status')
+        for status in (301,302,307,308,401,500):
+            with self.subTest(status=status):
+                with self.assertRaisesRegex(ValueError,'not HTTP 200'):
+                    worker.http_completion('valid/route','prompt','dummy',
+                        opener=lambda req,timeout:Response(status))
+        with self.assertRaisesRegex(ValueError,'Unsafe'):
+            worker.http_completion('invalid with spaces','prompt','key',
+                                   opener=lambda *_:self.fail('no request'))
+
+    def test_only_bounded_integer_usage_counts_are_preserved(self):
+        self.assertEqual(worker.sanitized_usage({
+            'total_tokens':19,
+            'prompt_tokens':True,
+            'completion_tokens':-4,
+            'api_key':'SHOULD_NOT_BE_SAVED',
+            'cost_usd':98.74}),{'total_tokens':19})
+        self.assertIsNone(worker.sanitized_usage({'metadata':'secret'}))
+        self.assertIsNone(worker.sanitized_usage('secret'))
+
+    def test_refuse_receipts_under_public_git_checkout(self):
+        with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':'fixture-key'}):
+            with redirect_stderr(io.StringIO()) as err:
+                code=worker.main(['--repo',str(self.repo),'--packet',
+                    'runner-blocker','--model','test/route',
+                    '--approve-model-use','--confirm-no-paid-fallback',
+                    '--out',str(self.repo/'accidental-private')])
+        self.assertEqual(code,2)
+        self.assertFalse((self.repo/'accidental-private').exists())
+        self.assertNotIn('fixture-key',err.getvalue())
+
+    def test_refuse_symlinked_ancestor_to_private_receipts_folder(self):
+        target=self.base/'destination'
+        target.mkdir()
+        ancestor=self.base/'alias'
+        ancestor.symlink_to(target,target_is_directory=True)
+        with self.assertRaisesRegex(ValueError,'redirected parent'):
+            worker.safe_private_root(ancestor/'receipts')
+        self.assertFalse((target/'receipts').exists())
 
     def test_keychain_stays_local_and_not_logged(self):
         with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':''}):
