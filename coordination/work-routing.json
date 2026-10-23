@@ -503,6 +503,11 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "business-home-service-prospect-shortlist": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
     }
   }
 }

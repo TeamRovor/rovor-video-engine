@@ -2727,6 +2727,22 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39905586142"
         }
       ]
+    },
+    {
+      "id": "business-home-service-prospect-shortlist",
+      "title": "Research a source-backed first home-service prospect shortlist",
+      "priority": 2,
+      "status": "active",
+      "owner": "ChatGPT / TeamRovor prospect research 2026-10-23",
+      "branch": "business/prospect-research-shortlist-20261023",
+      "scopes": [
+        "business/prospect-research/first-home-service-shortlist-2026-10-23.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T06:06:13.499Z",
+      "next_update": "After the public-source shortlist is reviewed for factual accuracy and fit; before any outreach.",
+      "next_action": "Use the existing first-offer draft and opportunity-brief template to research three US home-service businesses as candidates. Record dated public sources, observable website/contact-path facts, evidence-based fit and disqualifiers, unknown decision-maker/need, and a safe next qualification question. Do not contact prospects, claim inferred lost leads, or treat candidates as qualified without verification.",
+      "acceptance": "One reviewable shortlist with at least three candidates or a documented evidence-based reason fewer qualify; every factual observation links to a current public source and access date; explicit separation of observed facts, hypotheses, and unknowns; no outreach, private data, fabricated portfolio claims, or unverified owner/decision-maker claims."
     }
   ]
 }
