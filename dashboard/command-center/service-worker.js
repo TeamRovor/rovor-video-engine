@@ -39,7 +39,7 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   const path = url.pathname;
-  const isShellAsset = /\\/(index\\.html|styles\\.css|live-data\\.js|app\\.js|manifest\\.webmanifest|hud-icon\\.svg|snapshot\\.json|)$/.test(path);
+  const isShellAsset = /\/(index\.html|styles\.css|live-data\.js|app\.js|manifest\.webmanifest|hud-icon\.svg|snapshot\.json|)$/.test(path);
   if (!isShellAsset) return;
 
   event.respondWith(
