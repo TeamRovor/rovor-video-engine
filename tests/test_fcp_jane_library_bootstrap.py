@@ -90,6 +90,54 @@ class NativeLibraryBootstrapTests(unittest.TestCase):
         persisted = json.loads((output / gate.REPORT).read_text())
         self.assertEqual(persisted['status'],'ui_create_failed_unverified')
 
+    def test_failure_preserves_stage_and_number_without_private_error_text(self):
+        output, report = self.prepared()
+        def fake(argv, **kw):
+            return subprocess.CompletedProcess(argv, 1, stdout='', stderr=(
+                '(*ROVOR_BOOTSTRAP_STAGE:identify_save_sheet*)\n'
+                'execution error: private project name /Users/private/customer (-1728)\n'))
+        with mock.patch.object(gate, 'APP', self.root):
+            result = gate.create_library(output, report, run=fake)
+        self.assertEqual(result['last_observed_stage'], 'identify_save_sheet')
+        self.assertEqual(result['applescript_error_number'], -1728)
+        self.assertNotIn('private', json.dumps(result))
+        self.assertEqual(json.loads((output / gate.REPORT).read_text()), result)
+
+    def test_unknown_and_oversized_stderr_are_bounded_and_redacted(self):
+        for value in ('', 'personal data', b'bad byte\xff',
+                      'secret' * 4000 + '\n(*ROVOR_BOOTSTRAP_STAGE:unrecognized*)\n(-2741)'):
+            with self.subTest(value_type=type(value).__name__):
+                result = gate.failure_details(value)
+                self.assertIsNone(result['last_observed_stage'])
+                self.assertLess(len(json.dumps(result)), 500)
+                self.assertNotIn('personal', json.dumps(result))
+                self.assertNotIn('secret', json.dumps(result))
+        self.assertTrue(gate.failure_details('x' * 17000)['stderr_truncated'])
+
+    def test_timeout_retains_observed_stage_without_retry(self):
+        output, report = self.prepared()
+        def fake(argv, **kw):
+            raise subprocess.TimeoutExpired(argv, 65,
+                stderr=b'(*ROVOR_BOOTSTRAP_STAGE:navigate_destination*)\nprivate')
+        with mock.patch.object(gate, 'APP', self.root):
+            result = gate.create_library(output, report, run=fake)
+        self.assertEqual(result['failure_kind'], 'timeout')
+        self.assertEqual(result['last_observed_stage'], 'navigate_destination')
+        self.assertNotIn('private', json.dumps(result))
+        with self.assertRaisesRegex(ValueError, 'previously attempted'):
+            gate.create_library(output, result, run=fake)
+
+    def test_os_failure_retains_numeric_errno_without_private_message(self):
+        output, report = self.prepared()
+        def fake(argv, **kw):
+            raise PermissionError(13, 'private user detail')
+        with mock.patch.object(gate, 'APP', self.root):
+            result = gate.create_library(output, report, run=fake)
+        self.assertEqual(result['failure_kind'], 'os_error')
+        self.assertEqual(result['os_error_number'], 13)
+        self.assertNotIn('private user detail', json.dumps(result))
+        self.assertFalse(result['xml_import_attempted'])
+
     def test_osascript_success_without_library_is_not_success(self):
         output, report = self.prepared()
         def fake(argv, **kw):
