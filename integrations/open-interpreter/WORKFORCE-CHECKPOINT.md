@@ -2,6 +2,22 @@
 
 ## Current result and next action
 
+**Native import correction:** the latest supplied Mac audit found the landscape
+project's exact marker in the pre-existing Untitled library, while the requested
+library was absent. Marker presence is not timeline verification. The subsequent
+creation-only bootstrap failed at exit 1 without creating its target or importing
+XML; the old receipt discarded the precise script error. PR #45 adds redacted
+stage/error capture on the existing pilot, without authorizing a retry.
+
+The legacy XML CLI `--dispatch` route is disabled before preparation. The durable
+worker also no longer calls the historic importer: explicitly opted-in legacy
+native jobs are recorded once as `needs_review`. The loop distinguishes native
+import requested from enabled, and the launcher preview reports the reason.
+Read-only jobs and separately opted-in Interpreter research remain available.
+New native import requires independently verified isolated library creation AND
+native app selection, followed by a replacement adapter. Do not re-enable the
+historic route or treat tests as permission to import into an existing library.
+
 One review checkout now contains the durable worker, poller, Interpreter research
 adapter, native Final Cut diagnostic action, existing FCP status/probe tools,
 disabled MCP configuration and their offline regression tests. It is an
@@ -59,7 +75,7 @@ installation or unattended operation is claimed.
 | `python3 tools/jane_native_worker.py --status` | Read-only queue and manual-attempt checkpoints |
 | `python3 tools/jane_native_worker.py --diagnose` | Existing read-only Mac probe, no native retry |
 | `python3 tools/jane_native_worker.py` | Preview candidate selection without queue writes |
-| `python3 tools/jane_native_worker.py --execute` | Explicit single native job; blocked while prior manual attempt is unresolved |
+| `python3 tools/jane_native_worker.py --execute` | Records a review-required legacy job; native import remains disabled |
 
 The combined suite is stdlib on Python 3.11+. Python 3.9 tests additionally need
 the test-only TOML parser `tomli==2.2.1`; runtime adapters remain stdlib. The CI
@@ -71,8 +87,9 @@ server is launched by the offline tests; subprocess tests use local fakes.
 1. **Integrated source:** PR #41 is the current worker/research/native candidate.
    It reuses PR #39 and the required source modules from PR #37, rather than
    merging animation work or maintaining several importer implementations.
-2. **Host verified:** explain the already-observed missing-library outcome and
-   establish one actual disposable import before enabling further native work.
+2. **Host verified:** resolve the failed creation-only bootstrap and establish
+   isolated library creation plus native app selection before any replacement
+   import adapter. The historic worker/CLI import routes remain disabled.
 3. **Installed:** select an immutable tested revision and preserve the previous
    working checkout. A branch update must not replace an executing installation.
 4. **Unattended:** reuse the existing LaunchAgent work in PR #34 only after
