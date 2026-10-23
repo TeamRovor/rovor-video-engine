@@ -36,8 +36,16 @@ def read_status(home):
     base = resolve_root(home)
     state = base / STATE_NAME
     db = state / 'jobs.sqlite3'
-    if state.is_symlink() or db.is_symlink():
+    if state.is_symlink():
         raise ValueError('Unsafe redirected worker state')
+    # SQLite may touch WAL/SHM while opening a database read-only. Reject
+    # redirected or nonregular sidecars BEFORE sqlite3.connect, just as the
+    # existing write-capable worker.connect() already does.
+    for name in ('jobs.sqlite3', 'jobs.sqlite3-wal', 'jobs.sqlite3-shm'):
+        candidate = state / name
+        if candidate.is_symlink() or (candidate.exists()
+                                      and not candidate.is_file()):
+            raise ValueError('Unsafe redirected worker database path')
     if not db.is_file():
         return {'status':'not_initialized','read_only':True,
                 'native_library_app_selected_verified':False,'jobs':[]}
