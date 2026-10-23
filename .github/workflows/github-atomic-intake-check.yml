@@ -1,0 +1,32 @@
+name: ROVOR atomic paired GitHub intake checks
+
+on:
+  pull_request:
+    paths:
+      - 'tools/github_atomic_task_intake.py'
+      - 'tests/test_github_atomic_task_intake.py'
+      - 'coordination/ATOMIC-GITHUB-INTAKE.md'
+      - '.github/workflows/github-atomic-intake-check.yml'
+permissions:
+  contents: read
+jobs:
+  one-commit-intake-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Validate canonical task and route
+        run: |
+          python tools/project_loop.py check
+          python tools/task_routing_pair.py --check
+      - name: Test single-commit intake and concurrency refusal
+        run: python -m unittest discover -s tests -p 'test_github_atomic_task_intake.py' -v
