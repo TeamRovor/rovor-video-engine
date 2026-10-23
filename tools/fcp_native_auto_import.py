@@ -251,6 +251,17 @@ def main(argv=None):
     p.add_argument('--dispatch', action='store_true',
                    help='Allow actual Apple event to create new test library')
     args = p.parse_args(argv)
+    if args.dispatch:
+        # A REAL Mac host test proved this legacy Open Document Apple event
+        # deposited an FCPXML project into the user's pre-existing
+        # ~/Movies/Untitled.fcpbundle instead of its requested new library.
+        # Disable the user-facing dangerous execution path irrespective of
+        # whether that specific Untitled library currently exists.
+        print('Jane legacy XML dispatch DISABLED: confirmed wrong-library ' +
+              'import into a pre-existing library. First create and verify ' +
+              'an isolated native FCP library using fcp_jane_library_bootstrap.py. ' +
+              'No XML import was sent.', file=sys.stderr)
+        return 2
     try:
         output = args.output.expanduser().absolute()
         state = prepare(args.candidates, output)
