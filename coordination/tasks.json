@@ -3221,15 +3221,20 @@
         "subsystem:omniroute-workforce-source-composition",
         "tests/test_omniroute_workforce_composite.py",
         "integrations/open-interpreter/OMNIROUTE-WORKFORCE-COMPOSITE.md",
-        ".github/workflows/omniroute-workforce-composite.yml"
+        ".github/workflows/omniroute-workforce-composite.yml",
+        "tools/work_brief.py",
+        "tests/test_work_brief.py",
+        ".github/workflows/omniroute-workpack-check.yml",
+        "coordination/tasks.json",
+        "coordination/work-routing.json"
       ],
       "depends_on": [
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-23T23:33:13.541Z",
+      "updated_at": "2026-10-23T23:37:57.023Z",
       "next_update": "After GitHub-hosted Python 3.9/3.11 composite CI",
-      "next_action": "Create a separate branch from current PR41 head, copy PR51 fixed OmniRoute source files unchanged and add focused offline integration tests. Explicitly keep runner-blocker packet disabled when its workflow source is absent; do not reintroduce unsafe self-hosted GitHub Actions. Preserve active PR66 source ownership; no Mac installation/inference.",
+      "next_action": "Complete isolated PR103 composite; refresh PR41 stale metadata; extend work_brief capability enumeration to support existing blender-runtime/final-cut-runtime route names, and adapt copied OmniRoute dry-run CI to fail closed without restoring unsafe self-hosted workflow. Hosted tests only, no Mac service activation.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
