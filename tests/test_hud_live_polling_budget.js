@@ -11,7 +11,7 @@ const SCRIPT = HTML.match(/<script>([\s\S]*?)<\/script>/i);
 assert.ok(SCRIPT, 'Standalone HUD must have one readable inline app script');
 
 async function simulate(minutes, limit = Infinity) {
-  const nodes = new Map(), listeners = new Map(), timers = [], calls = [];
+  const nodes = new Map(), listeners = new Map(), timers = [], calls = [], restCalls = [];
   let clock = 0;
   const sha = 'a'.repeat(40);
   const tasks = {version: 1, tasks: [
@@ -34,16 +34,22 @@ async function simulate(minutes, limit = Infinity) {
     return nodes.get(id);
   }
   const fetch = async url => {
-    calls.push(String(url));
-    if (calls.length > limit) return {ok:false, status:403, json:async()=>({})};
     const address=String(url);
-    let body;
+    calls.push(address);
+    const isRest=address.startsWith('https://api.github.com/');
+    if (isRest) {
+      restCalls.push(address);
+      if (restCalls.length > limit) return {ok:false,status:403,json:async()=>({})};
+    }
+    let body, rawText=null;
     if (address.includes('/commits?')) body=[{sha}];
     else if (address.includes('/contents/coordination/tasks.json?ref=')) body=file(tasks);
     else if (address.includes('/contents/coordination/work-routing.json?ref=')) body=file(routing);
     else if (address.includes('/pulls?')) body=[];
+    else if (address.includes('raw.githubusercontent.com/TeamRovor/rovor-video-engine/'+sha+'/coordination/tasks.json')) rawText=JSON.stringify(tasks);
+    else if (address.includes('raw.githubusercontent.com/TeamRovor/rovor-video-engine/'+sha+'/coordination/work-routing.json')) rawText=JSON.stringify(routing);
     else throw new Error('Unexpected external request: ' + address);
-    return {ok:true,status:200,json:async()=>body};
+    return {ok:true,status:200,json:async()=>rawText===null?body:JSON.parse(rawText),text:async()=>rawText===null?JSON.stringify(body):rawText};
   };
   class ClockDate extends Date {
     constructor(...args) { super(...(args.length ? args : [clock])); }
@@ -67,15 +73,16 @@ async function simulate(minutes, limit = Infinity) {
     timers[0].fn();
     await settle();
   }
-  return {calls, nodes, listeners, sha, interval:timers[0].ms};
+  return {calls, restCalls, nodes, listeners, sha, interval:timers[0].ms};
 }
 
 test('pinned-commit queue and route reads use identical immutable SHA', async () => {
   const result=await simulate(0);
   assert.equal(result.nodes.get('connection').textContent,'ONLINE');
-  const pinned=result.calls.filter(url=>url.includes('/contents/coordination/'));
+  const pinned=result.calls.filter(url=>/coordination\/(?:tasks|work-routing)\.json/.test(url));
   assert.equal(pinned.length,2);
-  assert.ok(pinned.every(url=>url.endsWith('?ref=' + result.sha)));
+  assert.ok(pinned.every(url=>url.includes('?ref=' + result.sha) ||
+    url.includes('/' + result.sha + '/coordination/')));
   assert.ok(result.nodes.get('tasks').innerHTML.includes('Real task'));
 });
 
@@ -83,15 +90,15 @@ test('one hour of unattended HUD polling stays within a 60-request public API bu
   const result=await simulate(60);
   // GitHub's typical unauthenticated REST allowance is 60 requests/hour/IP.
   // Shared public IPs make headroom desirable; 60 is only an upper bound.
-  assert.ok(result.calls.length<=60,
-    'HUD used '+result.calls.length+' unauthenticated REST calls in 60 min; '
+  assert.ok(result.restCalls.length<=60,
+    'HUD used '+result.restCalls.length+' unauthenticated REST calls in 60 min; 
     +'default 60/hour public API budget exhausted. '
     +'Use pinned raw GitHub content or slower REST polling.');
 });
 
 test('an exhausted API budget never continues claiming LIVE data',async () => {
-  const result=await simulate(25,60);
-  assert.ok(result.calls.length>60,'Test must actually trigger simulated 403');
+  const result=await simulate(25,5);
+  assert.ok(result.restCalls.length>5,'Test must actually trigger simulated REST 403');
   assert.equal(result.nodes.get('connection').textContent,'STALE / ERROR');
   assert.ok(result.nodes.get('notice').textContent.includes('Sync failed'));
 });
