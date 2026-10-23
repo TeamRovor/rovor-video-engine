@@ -22,7 +22,7 @@ This is a small, versioned data contract, not a second task queue, scheduler, ru
 
 ## Validation boundaries
 
-The standard-library validator mirrors the contract's critical type, length, collection-count, evidence-reference and cross-field constraints. The 18 regression tests include malformed input handling, strict integer schema-version typing, bounded source/artifact/acceptance collections, and URI length limits. The schema and validator do not authenticate reviewers, fetch source URIs, execute packet instructions, or prove that evidence is truthful.
+The standard-library validator mirrors the contract's critical type, length, collection-count, evidence-reference and cross-field constraints. The 19 regression tests include malformed input handling, strict integer schema-version typing, bounded source/artifact/acceptance collections, and URI length limits. The schema and validator do not authenticate reviewers, fetch source URIs, execute packet instructions, or prove that evidence is truthful.
 
 ## Run
 
