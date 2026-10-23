@@ -821,3 +821,30 @@ body.motion-paused .reactor-stage::before,
 body.motion-paused .reactor-stage::after {
   animation-play-state: paused !important;
 }
+
+
+/* Interactive instrument modes for the central reactor. */
+.reactor-core[role="button"] { cursor: pointer; touch-action: manipulation; transition: box-shadow .25s ease, border-color .25s ease, filter .25s ease; }
+.reactor-core[role="button"]:hover,
+.reactor-core[role="button"]:focus-visible {
+  border-color: rgba(220,242,255,.98);
+  box-shadow: 0 0 0 7px rgba(85,165,255,.08), 0 0 42px rgba(63,151,255,.42), inset 0 0 28px rgba(115,190,255,.28);
+}
+.reactor-interaction-hint {
+  position: absolute; left: 50%; bottom: 1.5%; transform: translateX(-50%);
+  max-width: 90%; color: rgba(174,216,255,.72); font-size: 8px;
+  letter-spacing: .18em; text-align: center; white-space: nowrap;
+  pointer-events: none; text-shadow: 0 0 12px rgba(58,142,255,.32);
+}
+.reactor-stage.mode-orbit .reactor-stage::after { border-style: solid; }
+.reactor-stage.mode-orbit .reactor-halo { border-style: dashed; animation: rovor-orbit-spin 30s linear infinite; }
+.reactor-stage.mode-signal .reactor-halo { border-color: rgba(190,232,255,.72); box-shadow: 0 0 18px rgba(55,145,255,.2); }
+.reactor-stage.mode-signal .reactor-grid { opacity: .85; filter: brightness(1.5); }
+.reactor-stage.mode-signal .reactor-core { box-shadow: 0 0 0 8px rgba(92,172,255,.08), 0 0 52px rgba(80,167,255,.42), inset 0 0 34px rgba(113,193,255,.28); }
+.reactor-stage.mode-orbit .reactor-core { border-color: rgba(110,196,255,.92); }
+@media (max-width: 759px) {
+  .reactor-interaction-hint { font-size: 7px; letter-spacing: .12em; bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reactor-stage.mode-orbit .reactor-halo { animation: none !important; }
+}
