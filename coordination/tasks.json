@@ -3214,7 +3214,7 @@
       "id": "omniroute-workforce-composite-20261023",
       "title": "Combine the tested OmniRoute workpacks and ghost queue into one isolated source candidate",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar Mac composite repair 2026-10-23",
       "branch": "feature/ghost-native-import-queue",
       "scopes": [
@@ -3233,9 +3233,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-23T23:48:56.569Z",
+      "updated_at": "2026-10-23T23:49:48.183Z",
       "next_update": "After PR66 owner repairs raw-path symlink rejection and Mac regression passes",
-      "next_action": "Add direct API external-private symlink regression in owned composite test file; validate minimal raw-path correction locally against PR66 without editing its owned branch. Run actual private-supervisor preflight and record live host blockers.",
+      "next_action": "Apply reviewed minimal PR66 raw-path symlink correction posted at comment6377048710 on existing owner branch, run new PR41 composite integration regression (7 tests), then review/integrate. Host executor must have access to existing OmniRoute DB and Keychain; current Work command fails readonly DB and key lookup unavailable, while prior user terminal auth remains established. Private supervisor preflight stage_valid=false; preserve STOP and old queued jobs.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -3264,9 +3264,16 @@
           "check": "python3 -m unittest discover -s tests -p test_omniroute_workforce_composite.py -v (6); same composite under installed python3.12 (6); test_ghost_omniroute_job.py (8), test_omniroute_draft_review.py (17), test_ghost_worker_loop.py (13). All inference mocked. launchctl print; plist read; SQLite mode=ro&immutable=1 inventory.",
           "result": "PASS after test-only temporary-root canonicalization at fae4fde and bace85f; production unchanged. Existing LaunchAgent idle, interval300s/max1 job/240s, STOP present, no OmniRoute runtime modules/jobs. Independent PR66 bypass reproduced despite PR71 22-test suite passing; not integrated. No live calls, deployment, replay or schedule changes.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/66#issuecomment-6376995379"
+        },
+        {
+          "commit": "3a7c3c1498bdeddadbf384823ea90b6941cf031a",
+          "platform": "Actual macOS15.8.1 / Python3.9.6",
+          "check": "New direct API external-private symlink leaf+ancestor regression; exact PR66 runner reproduces 3 failures; raw-path correction gives 7/7 composite and 21/21 workpack PASS (canonical tempfile fixture). rovor_private_supervisor.py --preflight; sanitized CLI/Keychain diagnosis.",
+          "result": "Regression committed to PR41; tested minimal repair posted to PR66 owner, not integrated. Preflight stage_valid=false and unattended_execution_verified=false. OmniRoute CLI error: attempt to write a readonly database; current context key lookup returns item-not-found. No model call, old job replay, activation, credentials disclosure, or installation.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/66#issuecomment-6377048710"
         }
       ],
-      "blocker": "PR66 direct API resolves away external symlink ancestry before security check (Mac mock reproducer calls completion and writes receipt). Installed pinned research runtime lacks OmniRoute modules; STOP remains present; no live model job authorized/executed in this checkpoint."
+      "blocker": "Security owner integration pending; current session cannot write existing OmniRoute CLI database or retrieve existing endpoint key. Private supervisor not staged; live AI job and unattended operation unverified."
     }
   ]
 }
