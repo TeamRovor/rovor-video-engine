@@ -175,7 +175,7 @@ test('HUD theme tokens have one canonical root without changing the current pale
 test('HUD shell uses local assets and does not require a deployment vendor runtime',()=>{
   const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
   assert.match(html,/href="styles\.css"/);
-  assert.match(html,/src="\.\/app\.js"/);
+  assert.match(html,/src="app\.js"/);
   assert.match(html,/href="\.\/manifest\.webmanifest"/);
   assert.doesNotMatch(html,/(?:vercel\.app|@vercel\/|vercel\.com\/analytics)/i);
 });
