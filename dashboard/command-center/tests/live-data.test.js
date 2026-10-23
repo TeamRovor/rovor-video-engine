@@ -185,10 +185,11 @@ test('service worker install precaches the shell and activation removes only obs
   assert.ok(precached.includes('./index.html'));
   assert.ok(precached.includes('./app.js'));
   assert.ok(precached.includes('./manifest.webmanifest'));
+  assert.ok(precached.includes('./rovor-mark.svg'),'brand mark should be available in the offline shell');
   let activatePromise;
   handlers.activate({waitUntil:promise=>{activatePromise=promise;}});
   await activatePromise;
-  assert.deepEqual(deleted,['rovor-command-center-shell-v0']);
+  assert.deepEqual(deleted,['rovor-command-center-shell-v0','rovor-command-center-shell-v1']);
   assert.ok(claimed,'activation should claim existing HUD clients');
 });
 test('HUD registers its shell service worker without requiring it for live operation',()=>{
