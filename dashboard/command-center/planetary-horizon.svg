@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" preserveAspectRatio="xMidYMid slice">
+<defs>
+ <radialGradient id="space"><stop stop-color="#102943"/><stop offset=".55" stop-color="#050d18"/><stop offset="1" stop-color="#010308"/></radialGradient>
+ <linearGradient id="rim" x1="0" y1="0" x2="1" y2=".25"><stop stop-color="#07182a"/><stop offset=".55" stop-color="#4caaff"/><stop offset=".73" stop-color="#e0f5ff"/><stop offset=".86" stop-color="#286eb3"/><stop offset="1" stop-color="#061321"/></linearGradient>
+ <radialGradient id="planet"><stop stop-color="#172d42"/><stop offset=".68" stop-color="#07111e"/><stop offset="1" stop-color="#02050b"/></radialGradient>
+ <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#28435a"/><stop offset=".24" stop-color="#0a1724"/><stop offset="1" stop-color="#010307"/></linearGradient>
+ <filter id="blur"><feGaussianBlur stdDeviation="12"/></filter>
+ <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <pattern id="terrain" width="140" height="38" patternUnits="userSpaceOnUse"><path d="M0 30 L20 20 42 27 66 9 91 23 111 15 140 29" fill="none" stroke="#85b8df" stroke-opacity=".12" stroke-width="1"/></pattern>
+</defs>
+<rect width="1200" height="760" fill="url(#space)"/>
+<g fill="#b9dfff" opacity=".62">
+ <circle cx="124" cy="106" r="1.4"/><circle cx="225" cy="188" r="1"/><circle cx="334" cy="90" r="1.2"/><circle cx="901" cy="103" r="1.4"/><circle cx="1043" cy="171" r="1"/><circle cx="1002" cy="260" r="1.3"/><circle cx="153" cy="282" r="1"/><circle cx="784" cy="73" r="1"/><circle cx="1090" cy="330" r="1.1"/><circle cx="276" cy="327" r=".9"/>
+</g>
+<ellipse cx="600" cy="585" rx="530" ry="360" fill="none" stroke="#2678bb" stroke-opacity=".22" stroke-width="38" filter="url(#blur)"/>
+<circle cx="600" cy="525" r="400" fill="url(#planet)" stroke="url(#rim)" stroke-width="3" filter="url(#glow)"/>
+<circle cx="600" cy="525" r="408" fill="none" stroke="#6dbdff" stroke-opacity=".36" stroke-width="1"/>
+<path d="M190 570 Q340 465 490 505 T780 483 T1010 558 L1030 760 170 760Z" fill="url(#ground)"/>
+<path d="M190 570 Q340 465 490 505 T780 483 T1010 558" fill="none" stroke="#9bd5ff" stroke-opacity=".7" stroke-width="2" filter="url(#glow)"/>
+<path d="M190 570 Q340 465 490 505 T780 483 T1010 558 L1030 760 170 760Z" fill="url(#terrain)"/>
+<g fill="none" stroke="#78bfff" stroke-opacity=".15">
+ <path d="M230 605 Q420 568 600 609 T980 608"/><path d="M200 650 Q430 618 600 656 T1000 649"/><path d="M175 700 Q400 674 600 705 T1025 695"/>
+</g>
+<path d="M880 126 Q920 155 950 199" fill="none" stroke="#d6f1ff" stroke-opacity=".85" stroke-width="4" filter="url(#glow)"/>
+<circle cx="900" cy="142" r="18" fill="#b7e3ff" opacity=".28" filter="url(#blur)"/>
+<rect width="1200" height="760" fill="url(#space)" opacity=".14"/>
+</svg>
