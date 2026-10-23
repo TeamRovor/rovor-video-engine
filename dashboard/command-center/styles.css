@@ -534,3 +534,54 @@ body {
   box-shadow: 0 0 12px rgba(102, 178, 255, .65);
 }
 .warning-head { color: #d9edff; }
+
+
+/* Landscape composition: give navigation and the selected workspace their own rows.
+   The earlier shared row constrained every tab to a 150px strip on tablet screens. */
+@media (min-width: 760px) and (orientation: landscape) {
+  .app-shell {
+    grid-template-rows: auto auto minmax(220px, 1fr) auto minmax(150px, .72fr);
+    align-content: start;
+  }
+  .warning-panel {
+    grid-column: 1;
+    grid-row: 4 / 6;
+    overflow: auto;
+    min-height: 0;
+  }
+  .tabbar {
+    grid-column: 2 / 4;
+    grid-row: 4;
+    justify-content: flex-start;
+    min-height: 38px;
+  }
+  main {
+    grid-column: 2 / 4;
+    grid-row: 5;
+    max-height: none;
+    min-height: 0;
+    height: 100%;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(105, 174, 255, .45) rgba(4, 12, 22, .5);
+  }
+  .tab-view.active { min-height: 100%; }
+  .tab-view > .hud-panel,
+  .tab-view > .section-grid { min-height: 100%; }
+  .tab-view .section-grid { align-items: stretch; }
+  .metric .label { font-size: 9px; letter-spacing: .1em; }
+  .metric .value { font-size: clamp(17px, 2vw, 24px); color: #eaf6ff; }
+  .status-bar-item label { font-size: 9px; }
+  .status-bar-item span { font-size: 10px; }
+}
+@media (min-width: 760px) and (orientation: landscape) and (max-height: 620px) {
+  .app-shell {
+    grid-template-rows: auto auto minmax(155px, 1fr) auto minmax(112px, .65fr);
+  }
+  .warning-panel { grid-row: 4 / 6; }
+  .ring-wrap { min-height: 100px; }
+  .status-ring { width: 100px; }
+  .reactor-stage { min-height: 155px; }
+  main { max-height: none; }
+}

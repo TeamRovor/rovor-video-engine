@@ -201,3 +201,11 @@ test('HUD registers its shell service worker without requiring it for live opera
   assert.match(html,/rel="manifest" href="\.\/manifest\.webmanifest"/);
   assert.match(html,/apple-mobile-web-app-capable/);
 });
+
+test('iPad landscape gives navigation and tab workspace independent grid rows',()=>{
+  const css=fs.readFileSync(path.join(shellDir,'styles.css'),'utf8');
+  assert.match(css,/@media \(min-width: 760px\) and \(orientation: landscape\) \{[\s\S]*?grid-template-rows: auto auto minmax\(220px, 1fr\) auto minmax\(150px, \.72fr\)/);
+  assert.match(css,/\.tabbar\s*\{[^}]*grid-row: 4/s);
+  assert.match(css,/main\s*\{[^}]*grid-row: 5/s);
+  assert.match(css,/max-height: none/);
+});
