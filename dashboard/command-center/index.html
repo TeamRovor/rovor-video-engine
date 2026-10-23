@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#04111f" />
+  <meta name="theme-color" content="#020409" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="ROVOR HUD" />
@@ -30,7 +30,7 @@
       <div class="top-actions">
         <button id="motionBtn" class="hud-btn alt" type="button" aria-pressed="true" aria-label="Toggle interface motion">Motion: On</button>
         <button id="focusBtn" class="hud-btn alt" type="button" aria-pressed="false" aria-label="Toggle focus view">Focus View</button>
-        <button id="refreshBtn" class="hud-btn">Refresh GitHub</button>
+        <button id="refreshBtn" class="hud-btn" type="button" aria-label="Refresh live GitHub data">Refresh GitHub</button>
         <button id="exportBtn" class="hud-btn alt" type="button">Export JSON</button>
       </div>
     </header>
@@ -93,11 +93,11 @@
     </section>
 
     <nav class="tabbar hud-panel" role="tablist" aria-label="Command bridge views">
-      <button class="tab active" id="tab-button-overview" role="tab" aria-selected="true" aria-controls="tab-overview" tabindex="0" data-tab="overview">Overview</button>
-      <button class="tab" id="tab-button-tasks" role="tab" aria-selected="false" aria-controls="tab-tasks" tabindex="-1" data-tab="tasks">Tasks</button>
-      <button class="tab" id="tab-button-systems" role="tab" aria-selected="false" aria-controls="tab-systems" tabindex="-1" data-tab="systems">Systems</button>
-      <button class="tab" id="tab-button-repo" role="tab" aria-selected="false" aria-controls="tab-repo" tabindex="-1" data-tab="repo">Repo Map</button>
-      <button class="tab" id="tab-button-workers" role="tab" aria-selected="false" aria-controls="tab-workers" tabindex="-1" data-tab="workers">Workers</button>
+      <button type="button" class="tab active" id="tab-button-overview" role="tab" aria-selected="true" aria-controls="tab-overview" tabindex="0" data-tab="overview">Overview</button>
+      <button type="button" class="tab" id="tab-button-tasks" role="tab" aria-selected="false" aria-controls="tab-tasks" tabindex="-1" data-tab="tasks">Tasks</button>
+      <button type="button" class="tab" id="tab-button-systems" role="tab" aria-selected="false" aria-controls="tab-systems" tabindex="-1" data-tab="systems">Systems</button>
+      <button type="button" class="tab" id="tab-button-repo" role="tab" aria-selected="false" aria-controls="tab-repo" tabindex="-1" data-tab="repo">Repo Map</button>
+      <button type="button" class="tab" id="tab-button-workers" role="tab" aria-selected="false" aria-controls="tab-workers" tabindex="-1" data-tab="workers">Workers</button>
     </nav>
 
     <main>
