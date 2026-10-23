@@ -254,11 +254,21 @@ function wireControls() {
     motionBtn.textContent = paused ? 'Motion: Off' : 'Motion: On';
     motionBtn.setAttribute('aria-pressed', String(!paused));
   });
-  focusBtn.addEventListener('click', () => {
-    const focused = document.body.classList.toggle('focus-mode');
+  const focusExitBtn = document.getElementById('focusExitBtn');
+  const setFocusMode = focused => {
+    document.body.classList.toggle('focus-mode', focused);
     focusBtn.textContent = focused ? 'Exit Focus' : 'Focus View';
     focusBtn.setAttribute('aria-pressed', String(focused));
-  });
+    if (focusExitBtn) focusExitBtn.hidden = !focused;
+    if (!focused) focusBtn.focus({ preventScroll: true });
+  };
+  focusBtn.addEventListener('click', () => setFocusMode(!document.body.classList.contains('focus-mode')));
+  if (focusExitBtn) focusExitBtn.addEventListener('click', () => setFocusMode(false));
+  if (typeof globalThis.addEventListener === 'function') {
+    globalThis.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && document.body.classList.contains('focus-mode')) setFocusMode(false);
+    });
+  }
   document.getElementById('taskSearch').addEventListener('input',()=>filterTasks());
   document.getElementById('statusFilter').addEventListener('change',()=>filterTasks());
   document.getElementById('refreshBtn').addEventListener('click',()=>syncGitHub(true));
