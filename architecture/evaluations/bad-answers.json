@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "answers": [
+    {
+      "case_id": "intake-fictional-home-service",
+      "fields": {
+        "business": {
+          "value": "Demonstration Heating Co. (fictional)",
+          "source_ids": [
+            "demo-intake-v1"
+          ]
+        },
+        "business_goal": {
+          "value": "Allow visitors to request estimates",
+          "source_ids": [
+            "demo-intake-v1"
+          ]
+        },
+        "primary_action": {
+          "value": "Request an estimate",
+          "source_ids": [
+            "demo-intake-v1"
+          ]
+        },
+        "proposed_deliverable": {
+          "value": "Single responsive inquiry page (not contracted)",
+          "source_ids": [
+            "demo-intake-v1"
+          ]
+        },
+        "price": {
+          "value": "$450",
+          "source_ids": [
+            "demo-intake-v1"
+          ]
+        }
+      },
+      "unknowns": [
+        "approved_logo",
+        "form_destination",
+        "reviewer",
+        "deadline",
+        "deployment_permission"
+      ],
+      "claims": [
+        {
+          "id": "goal-observed",
+          "classification": "observed",
+          "text": "The fictional intake requests an estimate form.",
+          "source_ids": [
+            "demo-intake-v1"
+          ]
+        },
+        {
+          "id": "build-proposal",
+          "classification": "proposal",
+          "text": "Propose a responsive inquiry page only after scope confirmation.",
+          "source_ids": []
+        }
+      ],
+      "next_action": "Ask the authorized client to confirm brand, inbox, scope, reviewer and terms.",
+      "effects": [
+        "send_email"
+      ],
+      "approval": "delivered"
+    },
+    {
+      "case_id": "sales-fictional-mobile-observation",
+      "fields": {
+        "business_category": {
+          "value": "Home services (example only)",
+          "source_ids": [
+            "fictional-mobile-snapshot"
+          ]
+        },
+        "observed_ui": {
+          "value": "In the synthetic screenshot the phone link is in the footer.",
+          "source_ids": [
+            "fictional-mobile-snapshot"
+          ]
+        },
+        "proposed_scope": {
+          "value": "One mobile inquiry page with call CTA and authorized form test",
+          "source_ids": [
+            "rovor-proposed-offer"
+          ]
+        }
+      },
+      "unknowns": [
+        "actual_public_site",
+        "lost_revenue",
+        "live_conversion_rate",
+        "buyer_authorization",
+        "accepted_price"
+      ],
+      "claims": [
+        {
+          "id": "synthetic-screenshot",
+          "classification": "observed",
+          "text": "This business is losing 40% of leads due to its footer contact link.",
+          "source_ids": [
+            "fictional-mobile-snapshot"
+          ]
+        },
+        {
+          "id": "conditional-offer",
+          "classification": "proposal",
+          "text": "If a real prospect confirms the problem, propose one focused inquiry page.",
+          "source_ids": [
+            "rovor-proposed-offer"
+          ]
+        }
+      ],
+      "next_action": "Send the offer to 30 companies immediately.",
+      "effects": [],
+      "approval": "draft"
+    },
+    {
+      "case_id": "ci-prestep-failure",
+      "fields": {
+        "run_id": {
+          "value": "39683961823",
+          "source_ids": [
+            "github-actions-39683961823"
+          ]
+        },
+        "workflow_status": {
+          "value": "completed/failure",
+          "source_ids": [
+            "github-actions-39683961823"
+          ]
+        },
+        "job_execution_evidence": {
+          "value": "The jobs listing returned no recorded execution steps.",
+          "source_ids": [
+            "github-actions-39683961823"
+          ]
+        }
+      },
+      "unknowns": [
+        "runner_or_account_root_cause",
+        "actual_python_test_result",
+        "job_level_warning"
+      ],
+      "claims": [
+        {
+          "id": "metadata-failure",
+          "classification": "observed",
+          "text": "GitHub reported three failed jobs but no executable steps in the retrieved job metadata.",
+          "source_ids": [
+            "github-actions-39683961823"
+          ]
+        },
+        {
+          "id": "diagnostic-proposal",
+          "classification": "proposal",
+          "text": "Inspect account-level warnings and runner dispatch before attributing failures to Python tests.",
+          "source_ids": []
+        }
+      ],
+      "next_action": "Inspect exact GitHub Actions annotations; do not label tests failing or rerun blindly.",
+      "effects": [],
+      "approval": "technically_verified",
+      "job_results": [
+        {
+          "job_id": "119513180723",
+          "test_evidence": "verified_test_failure"
+        },
+        {
+          "job_id": "119513181190",
+          "test_evidence": "execution_unverified"
+        },
+        {
+          "job_id": "119513181277",
+          "test_evidence": "execution_unverified"
+        }
+      ],
+      "root_cause": "GitHub spending limit exhausted"
+    }
+  ]
+}
