@@ -55,8 +55,8 @@ test('reference HUD owns the expected interactive panels, tabs, and source scrip
 
 test('both visual assets are included in the install and fetch cache shell',()=>{
   const sw=fs.readFileSync(path.join(root, 'service-worker.js'),'utf8');
-  assert.match(sw,/reference-hud\\.css/);
-  assert.match(sw,/reference-hud\\.js/);
+  assert.ok(sw.includes('reference-hud.css'));
+  assert.ok(sw.includes('reference-hud.js'));
   assert.match(sw,/rovor-command-center-shell-v3/);
 });
 
