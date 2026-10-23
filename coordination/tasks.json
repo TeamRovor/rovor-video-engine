@@ -88,8 +88,8 @@
       "id": "scene-moho-contract",
       "title": "Document the smallest shared scene-to-Moho contract",
       "priority": 2,
-      "status": "active",
-      "owner": "ChatGPT / Rovor scene-to-Moho contract 2026-10-23",
+      "status": "ready",
+      "owner": null,
       "branch": "docs/scene-moho-contract-20261023",
       "scopes": [
         "subsystem:scene-moho-contract-review"
@@ -98,14 +98,12 @@
         "windows-runtime",
         "moho-disposable-pose"
       ],
-      "next_action": "Inspect the current scene metadata, compiler and verified disposable Moho evidence; document only source-grounded timing, coordinate, asset and capability contracts plus unresolved gaps. Keep adapter implementation and real production-rig approval out of scope.",
+      "next_action": "After runtime and native-pose evidence, compare existing scene metadata with actual Moho capabilities; document timing, coordinate units, assets and capability gaps before adapter implementation.",
       "acceptance": "A concise contract document cites repository paths/evidence for timing and frame rate, coordinate units/transforms, asset identity/paths, channel/layer naming and capability boundaries; distinguishes verified behavior from assumptions; lists explicit open questions and no claims of production-rig or real-film validation.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/7",
         "https://github.com/TeamRovor/rovor-video-engine/issues/6"
-      ],
-      "updated_at": "2026-10-23T06:10:51.601Z",
-      "next_update": "After source review and first contract draft, before opening a PR"
+      ]
     },
     {
       "id": "shared-session-checks",
