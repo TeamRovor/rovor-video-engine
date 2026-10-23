@@ -229,7 +229,9 @@ def main(argv=None):
     parser.add_argument('--repo',type=Path,default=Path.cwd())
     parser.add_argument('--packet',choices=PACKETS)
     parser.add_argument('--all',action='store_true')
-    parser.add_argument('--model',help='Explicit verified OmniRoute model/route')
+    parser.add_argument('--model',help='Explicit verified model/route for all packets')
+    parser.add_argument('--route',action='append',default=[],
+                        help='Optional packet=model override, repeat per packet')
     parser.add_argument('--approve-model-use',action='store_true')
     parser.add_argument('--confirm-no-paid-fallback',action='store_true')
     parser.add_argument('--out',type=Path,default=
@@ -246,18 +248,30 @@ def main(argv=None):
         if not args.approve_model_use:
             print(json.dumps({'status':'dry_run_no_model_calls',
                 'packets':[{'id':p['id'],'title':p['title'],
-                    'sources':meta['sources']} for p,_,meta in packets],
+                    'role':p['role'],'sources':meta['sources']} for p,_,meta in packets],
                 'would_call_external_models':False},indent=2))
             return 0
         if not args.confirm_no_paid_fallback:
             raise ValueError('Explicit no-paid-fallback confirmation required')
-        if not args.model or not MODEL.fullmatch(args.model):
-            raise ValueError('Must supply one explicit bounded OmniRoute route/model')
+        routes = {}
+        for item in args.route:
+            if not isinstance(item,str) or '=' not in item:
+                raise ValueError('Expected --route approved-packet=verified-model')
+            slug,chosen=item.split('=',1)
+            if slug not in PACKETS or slug in routes or not MODEL.fullmatch(chosen):
+                raise ValueError('Unsafe or repeated per-packet model override')
+            routes[slug]=chosen
+        route_for={slug:routes.get(slug,args.model) for slug in slugs}
+        if any(not chosen or not MODEL.fullmatch(chosen)
+               for chosen in route_for.values()):
+            raise ValueError('Each packet needs an explicitly chosen OmniRoute route/model')
+        if any(slug not in slugs for slug in routes):
+            raise ValueError('Unused model override not allowed')
         key=access_key()
         # Small bounded parallelism. Each packet writes its reservation BEFORE
         # making a request, so crash recovery is NEVER automatic for model jobs.
         with ThreadPoolExecutor(max_workers=2) as executor:
-            futures=[executor.submit(run_packet,root,args.out,slug,args.model,key)
+            futures=[executor.submit(run_packet,root,args.out,slug,route_for[slug],key)
                      for slug in slugs]
             results=[f.result() for f in as_completed(futures)]
         print(json.dumps({'status':'attempted_review_only',
