@@ -2386,6 +2386,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39897042327"
         }
       ]
+    },
+    {
+      "id": "painting-82sec-physical-contact-audition",
+      "title": "Render original-audio painting contact audition replacing 82-second graphic",
+      "status": "active",
+      "owner": "ChatGPT / Amar iPhone physical-contact repair audition 2026-10-22",
+      "priority": 1,
+      "branch": "review/painting-82sec-physical-contact-audition",
+      "scopes": [
+        "reviews/painting-82sec-contact-audition.md",
+        "tools/painting_contact_audition.py",
+        "tests/test_painting_contact_audition.py"
+      ],
+      "depends_on": [
+        "evan-acting-review"
+      ],
+      "updated_at": "2026-10-23T04:11:39.871Z",
+      "next_update": "After actual dual-1080p60 30s review outputs and technical QA",
+      "next_action": "From private original V12 156s landscape/portrait and exact original 262.687313s MP3, create read-only V18 source-art physical-roller insertion at exact [79.6,86.8)s into an independent 70–100s comparison audition. Preserve source videos and narration; verify 1800 frames each 60fps, contact/camera visual checks and voice match. Do not claim V18 rejected art as approved, upload private clips, or edit active renderer branches.",
+      "acceptance": "One 30s each landscape/portrait source-faithful contact audition with original narration and no placeholder slate, exact 60fps validated and source frame range proof; full existing video unchanged; release quality remains not approved.",
+      "evidence": []
     }
   ]
 }
