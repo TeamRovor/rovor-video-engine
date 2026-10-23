@@ -906,3 +906,50 @@ body.motion-paused .reactor-stage.mode-orbit .reactor-halo,
 body.motion-paused .reactor-stage.mode-signal .reactor-halo {
   animation-play-state: paused !important;
 }
+
+
+/* Reference-inspired angular HUD framing and layered telemetry dividers. */
+.topbar, .tabbar {
+  position: relative;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+.hud-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(111,194,255,.34);
+  clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% calc(100% - 13px), calc(100% - 13px) 100%, 13px 100%, 0 calc(100% - 13px));
+}
+.hud-panel::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  inset: 5px;
+  border: 1px solid rgba(111,194,255,.075);
+  clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px));
+}
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(111,194,255,.15);
+}
+.metric, .task-row, .system-card, .worker-card {
+  border-bottom: 1px solid rgba(111,194,255,.15);
+}
+.reactor-stage::before {
+  outline: 1px solid rgba(120,199,255,.08);
+  outline-offset: 8px;
+}
+.reactor-stage::after {
+  box-shadow: 0 0 0 8px rgba(56,142,255,.025), 0 0 0 20px rgba(56,142,255,.018);
+}
+@media (max-width: 759px) {
+  .topbar, .tabbar {
+    clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
+  }
+  .hud-panel {
+    clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px));
+  }
+  .hud-panel::after { inset: 3px; }
+}
