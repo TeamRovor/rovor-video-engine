@@ -261,7 +261,7 @@ function wireControls() {
   });
   document.getElementById('taskSearch').addEventListener('input',()=>filterTasks());
   document.getElementById('statusFilter').addEventListener('change',()=>filterTasks());
-  document.getElementById('refreshBtn').addEventListener('click',()=>syncGitHub(false));
+  document.getElementById('refreshBtn').addEventListener('click',()=>syncGitHub(true));
   document.getElementById('exportBtn').addEventListener('click',()=>{
     if (!state.raw) return;
     const blob = new Blob([JSON.stringify({sync_mode:state.syncMode,exported_at:new Date().toISOString(),snapshot:state.raw},null,2)],{type:'application/json'});
