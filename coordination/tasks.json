@@ -2475,6 +2475,29 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
         "https://github.com/TeamRovor/rovor-video-engine/pull/54"
       ]
+    },
+    {
+      "id": "session-routing-coverage-and-idle-triage",
+      "title": "Make ROVOR session routing complete and useful when lanes are idle",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar system-routing audit 2026-10-22",
+      "branch": "feature/rovor-routing-coverage-and-idle-triage",
+      "scopes": [
+        "tools/work_brief.py",
+        "tests/test_work_brief.py",
+        "coordination/work-routing.json",
+        "coordination/ROUTING-IMPROVEMENTS.md",
+        ".github/workflows/work-brief-routing-check.yml"
+      ],
+      "depends_on": [
+        "work-session-routing"
+      ],
+      "updated_at": "2026-10-23T04:38:57.629Z",
+      "next_update": "After GitHub-hosted Python 3.9/3.11 routing regression checks and queue validation",
+      "next_action": "Explicitly classify the currently open ROVOR tasks by lane and actual required capabilities; harden work_brief to expose coverage and blockers, and optionally find eligible tasks in another lane when a selected lane has no safe work. Preserve owner/claim/dependency protection; no automatic code execution, queue mutation, public runner start or speculative computer access.",
+      "acceptance": "Every open (ready/active/blocked) task has a valid routing rule, all unclassified remains fail-closed, idle-lane fallback is opt-in and never takes over reserved/blocked tasks, capability and dependency protections remain; deterministic tests pass on Python3.9 and3.11 and existing queue validates.",
+      "evidence": []
     }
   ]
 }
