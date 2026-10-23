@@ -121,6 +121,26 @@ class WorkPacketContractTests(unittest.TestCase):
         batch = {"version": 1, "packets": [{"packet_id": []}]}
         self.assertEqual(evaluate(batch)["summary"]["failed"], 1)
 
+    def test_boolean_schema_version_is_not_integer_one(self):
+        packet = copy.deepcopy(self.valid["packets"][0])
+        packet["schema_version"] = True
+        self.assertIn("schema_version",
+                      {x["code"] for x in validate_packet(packet)})
+
+    def test_validator_enforces_schema_collection_and_uri_limits(self):
+        packet = copy.deepcopy(self.valid["packets"][0])
+        packet["source_refs"] = packet["source_refs"] * 51
+        packet["artifact_receipt"] = {"state": "produced", "artifacts": [
+            {"id": "artifact-1", "uri": "x" * 2049,
+             "status": "unverified", "sha256": None}
+        ] * 51}
+        packet["acceptance"] = packet["acceptance"] * 51
+        codes = {x["code"] for x in validate_packet(packet)}
+        self.assertIn("source_limit", codes)
+        self.assertIn("artifact_limit", codes)
+        self.assertIn("artifact_uri", codes)
+        self.assertIn("acceptance_limit", codes)
+
     def test_input_size_guard(self):
         path = CONTRACT / "oversize-fixture.tmp"
         try:
