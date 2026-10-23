@@ -1,0 +1,77 @@
+{
+  "sourceCorners": [
+    [
+      391.0,
+      536.0
+    ],
+    [
+      1382.0,
+      536.0
+    ]
+  ],
+  "authoredTargetCorners": [
+    [
+      198.0,
+      321.0
+    ],
+    [
+      274.0,
+      320.5
+    ]
+  ],
+  "matrix": [
+    [
+      0.07669021189212799,
+      0.0005045408615842462,
+      167.7436981201172
+    ],
+    [
+      -0.0005045408615842462,
+      0.07669021189212799,
+      280.09130859375
+    ]
+  ],
+  "sourceEdge": [
+    [
+      198.0,
+      321.0
+    ],
+    [
+      207.5,
+      319.4942321777344
+    ],
+    [
+      217.0,
+      318.4918212890625
+    ],
+    [
+      226.5,
+      315.9498596191406
+    ],
+    [
+      236.0,
+      314.5096740722656
+    ],
+    [
+      245.5,
+      315.5157470703125
+    ],
+    [
+      255.0,
+      317.57818603515625
+    ],
+    [
+      264.5,
+      319.1790771484375
+    ],
+    [
+      274.0,
+      320.5
+    ]
+  ],
+  "edgeNote": "Interior half-alpha bottom crossings minus authored1px ink underlap; endpoint corner guides. Measurement only.",
+  "sourceSha256": "85308b5246a3d93231cabd8f028c323a35b46dcca8fb0e1d3098ddf1d10d4f79",
+  "sourceAlphaModified": false,
+  "placementAccepted": false,
+  "anatomyCalibrated": false
+}

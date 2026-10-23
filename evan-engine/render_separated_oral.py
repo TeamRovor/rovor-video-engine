@@ -27,4 +27,4 @@ if __name__=='__main__':
   d.text((35,650),f'{word} [{phone}] / {t:.4f}s / original voice and alignment / peak-scaled waveform',font=font(20),fill='#253c49');d.text((35,682),'Pressure remains a thickness proxy. Contact shape, expressions and sync accuracy are unaccepted.',font=font(19),fill='#48636d');im.save(a.output/'frames'/f'{i:06}.png')
   if i==a.start or i==a.end-1 or any(x['phone'] in ('TH','DH') for x in active):new.save(a.output/f'Separated-{i}.png');old.save(a.output/f'Prior-{i}.png')
   if i%16==0:print(i,flush=True)
- (a.output/f'Audit-{a.start}.json').write_text(json.dumps(dict(rows=rows,planSha256=hashlib.sha256(a.plan.read_bytes()).hexdigest(),audioSha256=hashlib.sha256(a.audio.read_bytes()).hexdigest(),timingChanged=False,sourceArtworkChanged=False,defaultChanged=False,anatomyAccepted=False),indent=2)+'\n')
+ (a.output/f'Audit-{a.start}.json').write_text(json.dumps(dict(rows=rows,planSha256=hashlib.sha256(a.plan.read_bytes()).hexdigest(),audioSha256=hashlib.sha256(a.audio.read_bytes()).hexdigest(),timingChanged=False,existingSourceArtworkModified=False,defaultChanged=False,anatomyAccepted=False),indent=2)+'\n')
