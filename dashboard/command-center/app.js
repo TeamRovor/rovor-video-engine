@@ -46,6 +46,19 @@ async function syncGitHub(forceExtras = false) {
   }
 }
 
+function wireNetworkStatus() {
+  if (typeof globalThis.addEventListener !== 'function') return;
+  globalThis.addEventListener('offline', () => {
+    state.syncMode = state.raw ? 'snapshot' : 'error';
+    state.warnings = ['Device is offline; displayed data is not live'];
+    syncView();
+  });
+  globalThis.addEventListener('online', () => {
+    state.warnings = ['Network restored; verifying GitHub…'];
+    syncGitHub(false);
+  });
+}
+
 function registerShellWorker() {
   if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
   navigator.serviceWorker.register('./service-worker.js', { scope: './' }).catch(() => {
@@ -55,6 +68,7 @@ function registerShellWorker() {
 
 async function boot() {
   registerShellWorker();
+  wireNetworkStatus();
   wireTabs();
   wireControls();
   syncView();
