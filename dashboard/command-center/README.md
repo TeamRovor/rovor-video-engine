@@ -2,6 +2,16 @@
 
 This is an actual static browser dashboard, not a static mockup. It reads **public** source data from `TeamRovor/rovor-video-engine` and requires no secrets, extensions or server-side access.
 
+## Reference-style interactive command deck (October 23, 2026)
+
+The command deck is **real HTML/CSS/JS**, not a generated screenshot. Its top screen follows the supplied blue orbital HUD reference: left task/evidence rails, a central animated ROVOR reactor, right routing/repository telemetry rails, and a five-view dock. All panels re-render from the same GitHub source state as the existing detailed workspace.
+
+- Click a task row to open and filter its actual task record. Use Dashboard, Tasks, Systems, GitHub, or Workers to switch detailed views; the lower workspace retains the existing search, status filter, routing and worker information.
+- The task workload bars represent GitHub queue **statuses**, not computer resource utilization. “Claimed” means the queue records an owner, **not** that an autonomous worker is currently running.
+- Routing health is measured from current task-routing coverage, **not** invented 99% host uptime. Real CPU/GPU utilization, camera feeds, model API quota and remote Mac execution are unavailable in this public read-only dashboard and are deliberately **not faked**.
+- “Verified activity” shows source SHA, last verified sync, PR count and snapshot timestamp, not fabricated render-complete events. It clearly marks historical fallback or failed verification.
+- Motion and Focus controls still work; reduced-motion settings are respected. The iPad landscape composition and single-column mobile layout remain interactive. Public source refresh remains 3 minutes while the tab is open; the service worker caches only the shell.
+
 ## What updates automatically
 
 - GitHub `main` HEAD is checked every **3 minutes while this page is open** and when you return to the tab after a long pause. Each poll reads the task queue and capability routing JSON pinned to **the same SHA**, preventing mismatched moving-branch reads.

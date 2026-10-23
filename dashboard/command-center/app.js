@@ -19,6 +19,7 @@ function syncView() {
   when.textContent = state.lastSuccess ? 'Last verified: ' + new Date(state.lastSuccess).toLocaleString() : 'Not yet verified';
   document.getElementById('refreshBtn').disabled = state.busy;
   document.getElementById('refreshBtn').textContent = state.busy ? 'Syncing…' : 'Refresh GitHub';
+  if (globalThis.RovorReferenceHud) globalThis.RovorReferenceHud.sync(state);
 }
 
 async function syncGitHub(forceExtras = false) {
@@ -99,6 +100,7 @@ function renderAll() {
   renderMeta(); renderMetrics(); renderStatusBars(); renderNotes();
   renderSystemNetwork(); renderOverviewColumns(); renderTasks();
   renderSystems(); renderRepoBars(); renderRepoMeta(); renderWorkers();
+  if (globalThis.RovorReferenceHud) globalThis.RovorReferenceHud.render(state.raw, state);
 }
 
 function renderMeta() {

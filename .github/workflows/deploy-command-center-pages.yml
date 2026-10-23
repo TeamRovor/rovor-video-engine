@@ -38,9 +38,10 @@ jobs:
       - name: Verify Command Center before publishing
         run: |
           node --check dashboard/command-center/live-data.js
+          node --check dashboard/command-center/reference-hud.js
           node --check dashboard/command-center/app.js
           node --check dashboard/command-center/service-worker.js
-          node --test dashboard/command-center/tests/live-data.test.js dashboard/command-center/tests/request-budget.test.js
+          node --test dashboard/command-center/tests/live-data.test.js dashboard/command-center/tests/request-budget.test.js dashboard/command-center/tests/reference-hud.test.js
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

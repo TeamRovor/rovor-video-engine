@@ -12,6 +12,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./hud-icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="reference-hud.css" />
 </head>
 <body>
   <div class="scanlines"></div>
@@ -22,11 +23,12 @@
       <div class="brand-lockup">
         <div class="brand-emblem" aria-hidden="true"><img src="./rovor-mark.svg" alt="" /><span class="emblem-orbit"></span></div>
       <div>
-        <div class="eyebrow">ROVOR DIGITAL • COMMAND INTERFACE</div>
-        <h1>COMMAND BRIDGE / LIVE REPOSITORY</h1>
-        <p class="header-subtitle"><span class="header-dot"></span> BUILD / CREATE / AUTOMATE / SCALE <span class="header-separator">/</span> PUBLIC DATA LINK</p>
+        <div class="eyebrow">OPERATIONS CONTROL // 01</div>
+        <h1>ROVOR DIGITAL</h1>
+        <p class="header-subtitle"><span class="header-dot"></span> BUILD &nbsp;/&nbsp; CREATE &nbsp;/&nbsp; AUTOMATE &nbsp;/&nbsp; SCALE</p>
       </div>
       </div>
+      <div class="header-status"><span class="header-status-led"></span><span id="headerConnection">VERIFYING SOURCE</span><span class="header-clock"><strong id="hudClock">--:--</strong><small id="hudDate">—</small></span></div>
       <div class="top-actions">
         <button id="motionBtn" class="hud-btn alt" type="button" aria-pressed="true">Motion: On</button>
         <button id="focusBtn" class="hud-btn alt" type="button" aria-pressed="false">Focus View</button>
@@ -35,66 +37,91 @@
       </div>
     </header>
 
-    <div class="reactor-stage" aria-label="Animated Rovor Digital orbital interface">
-      <div class="reactor-grid"></div><div class="reactor-halo halo-outer"></div><div class="reactor-halo halo-mid"></div><div class="reactor-halo halo-inner"></div>
-      <div class="reactor-core"><span class="core-crosshair"></span><img src="./rovor-mark.svg" alt="" /></div>
-      <div class="reactor-readout readout-left"><span>ROVOR DIGITAL</span><strong>COMMAND / 01</strong><small>PUBLIC REPOSITORY LINK</small></div>
-      <div class="reactor-readout readout-right"><span class="telemetry-dot"></span><strong>LIVE TELEMETRY</strong><small>MAIN BRANCH · AUTO SYNC</small></div>
-      <div class="reactor-tick tick-a"></div><div class="reactor-tick tick-b"></div><div class="reactor-tick tick-c"></div>
+
+    <div class="syncbar hud-panel" role="status" aria-live="polite">
+      <span class="sync-pill loading" id="syncState">CONNECTING</span>
+      <div class="sync-content"><strong id="syncLast">Not yet verified</strong><span id="syncDetails">Checking GitHub…</span></div>
     </div>
-    <div class="syncbar hud-panel" role="status" aria-live="polite"><span class="sync-pill loading" id="syncState">CONNECTING</span><div class="sync-content"><strong id="syncLast">Not yet verified</strong><span id="syncDetails">Checking GitHub…</span></div></div>
 
-    <section class="hero-grid">
-      <div class="hud-panel ring-panel">
-        <div class="panel-title">ROUTING INTEGRITY</div>
-        <div class="ring-wrap">
-          <svg viewBox="0 0 220 220" class="status-ring">
-            <defs>
-              <linearGradient id="ringGradient" x1="0%" x2="100%" y1="0%" y2="100%">
-                <stop offset="0%" stop-color="#e8f6ff"></stop>
-                <stop offset="100%" stop-color="#3f9cff"></stop>
-              </linearGradient>
-            </defs>
-            <circle cx="110" cy="110" r="86" class="ring-bg"></circle>
-            <circle id="integrityRing" cx="110" cy="110" r="86" class="ring-fg"></circle>
-            <circle cx="110" cy="110" r="56" class="ring-inner"></circle>
-          </svg>
-          <div class="ring-center">
-            <span id="integrityPct">—</span>
-            <small>tasks routed</small>
-          </div>
-        </div>
-        <div class="tiny-grid" id="snapshotMeta"></div>
+    <section class="reference-console" aria-label="ROVOR interactive operations dashboard">
+      <div class="console-rail console-left">
+        <section class="hud-panel reference-panel quick-tasks">
+          <div class="reference-panel-head"><h2 class="panel-title">TASK COMMAND</h2><span class="panel-counter" id="activeTaskCount">—</span></div>
+          <p class="source-caption">GitHub queue · claimed does not mean running</p>
+          <div class="quick-task-list" id="activeTaskPreview" aria-live="polite"><p class="muted">Loading public task queue…</p></div>
+          <button type="button" class="micro-link" data-open-view="tasks">VIEW COMPLETE QUEUE <span aria-hidden="true">↗</span></button>
+        </section>
+        <section class="hud-panel reference-panel workload-panel">
+          <h2 class="panel-title">TASK WORKLOAD</h2>
+          <div class="workload-bars" id="workloadBars"><p class="muted">Awaiting task counts…</p></div>
+          <p class="source-caption">Queue distribution · not CPU / GPU / Mac metrics</p>
+        </section>
+        <section class="hud-panel reference-panel activity-panel">
+          <h2 class="panel-title">VERIFIED ACTIVITY</h2>
+          <div class="evidence-list" id="recentEvidence"><p class="muted">Waiting for source evidence…</p></div>
+        </section>
       </div>
 
-      <div class="hud-panel metrics-panel">
-        <div class="panel-title">GITHUB TELEMETRY</div>
-        <div class="metrics" id="metrics"></div>
-        <div class="barline">
-          <div class="bar-label">Task distribution</div>
-          <div id="statusBars" class="status-bars"></div>
+      <div class="console-center">
+        <div class="reactor-stage" aria-label="ROVOR GitHub operations hub, decorative animated rings">
+          <div class="core-banner">R O V O R &nbsp; D I G I T A L</div>
+          <div class="reactor-grid"></div>
+          <div class="reactor-halo halo-outer"></div><div class="reactor-halo halo-mid"></div><div class="reactor-halo halo-inner"></div>
+          <div class="orbit-deck orbit-deck-outer" aria-hidden="true"></div><div class="orbit-deck orbit-deck-inner" aria-hidden="true"></div>
+          <div class="reactor-core"><span class="core-crosshair"></span><img src="./rovor-mark.svg" alt="ROVOR emblem" /></div>
+          <div class="reactor-readout readout-left"><span>OPERATIONS LINK</span><strong id="coreSyncMode">VERIFYING GITHUB</strong><small id="coreCommit">Source SHA unavailable</small></div>
+          <div class="reactor-readout readout-right"><span class="telemetry-dot" aria-hidden="true"></span><strong id="coreTaskSummary">QUEUE / PENDING VERIFICATION</strong><small>Claimed ≠ executing</small></div>
+          <div class="reactor-tick tick-a"></div><div class="reactor-tick tick-b"></div><div class="reactor-tick tick-c"></div>
+          <div class="planet-horizon" aria-hidden="true"></div>
+          <div class="reactor-motto">REAL TOOLS. VERIFIED RESULTS.</div>
         </div>
       </div>
 
-      <div class="hud-panel warning-panel">
-        <div class="panel-title">SYSTEM ALERTS</div>
-        <div class="warning-box">
-          <div class="warning-led"></div>
-          <div>
-            <div class="warning-head">UNVERIFIED HOST EXECUTION</div>
-            <p>GitHub routing and intake are verified. Native Mac / Final Cut / Blender execution is still permission-gated and not proven from this snapshot.</p>
+      <div class="console-rail console-right">
+        <section class="hud-panel reference-panel ring-panel">
+          <h2 class="panel-title">ROUTING HEALTH</h2>
+          <div class="health-topline">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 220 220" class="status-ring" role="img" aria-label="Percent of queued tasks with routing rules">
+                <defs><linearGradient id="ringGradient" x1="0%" x2="100%" y1="0%" y2="100%"><stop offset="0%" stop-color="#e8f6ff"></stop><stop offset="100%" stop-color="#3f9cff"></stop></linearGradient></defs>
+                <circle cx="110" cy="110" r="86" class="ring-bg"></circle>
+                <circle id="integrityRing" cx="110" cy="110" r="86" class="ring-fg"></circle>
+                <circle cx="110" cy="110" r="56" class="ring-inner"></circle>
+              </svg>
+              <div class="ring-center"><span id="integrityPct">—</span><small>tasks routed</small></div>
+            </div>
+            <div class="health-facts" id="healthFacts">
+              <div><span class="status-light pending"></span><span>GitHub</span><strong>VERIFYING</strong></div>
+              <div><span class="status-light pending"></span><span>Routing</span><strong>—</strong></div>
+              <div><span class="status-light pending"></span><span>Mac executor</span><strong>UNVERIFIED</strong></div>
+            </div>
           </div>
-        </div>
-        <ul id="notesList" class="notes-list"></ul>
+          <div class="tiny-grid" id="snapshotMeta"></div>
+        </section>
+        <section class="hud-panel reference-panel metrics-panel">
+          <h2 class="panel-title">GITHUB TELEMETRY</h2>
+          <div class="metrics" id="metrics"></div>
+          <div class="barline"><div class="bar-label">QUEUE STATUS DISTRIBUTION</div><div id="statusBars" class="status-bars"></div></div>
+          <p class="source-caption">Public repository metadata only · no API quota measurement</p>
+        </section>
+        <section class="hud-panel reference-panel warning-panel">
+          <h2 class="panel-title">EXECUTION BOUNDARY</h2>
+          <div class="warning-box">
+            <div class="warning-led" aria-hidden="true"></div>
+            <div><div class="warning-head">NATIVE APP EXECUTION UNVERIFIED</div>
+              <p>Public GitHub status is not proof that a Mac, Final Cut, Blender, or Moho is executing tasks.</p></div>
+          </div>
+          <details class="boundary-details"><summary>Source limitations</summary><ul id="notesList" class="notes-list"></ul></details>
+        </section>
       </div>
     </section>
 
     <nav class="tabbar hud-panel" role="tablist" aria-label="Command bridge views">
-      <button class="tab active" id="tab-button-overview" role="tab" aria-selected="true" aria-controls="tab-overview" tabindex="0" data-tab="overview">Overview</button>
-      <button class="tab" id="tab-button-tasks" role="tab" aria-selected="false" aria-controls="tab-tasks" tabindex="-1" data-tab="tasks">Tasks</button>
-      <button class="tab" id="tab-button-systems" role="tab" aria-selected="false" aria-controls="tab-systems" tabindex="-1" data-tab="systems">Systems</button>
-      <button class="tab" id="tab-button-repo" role="tab" aria-selected="false" aria-controls="tab-repo" tabindex="-1" data-tab="repo">Repo Map</button>
-      <button class="tab" id="tab-button-workers" role="tab" aria-selected="false" aria-controls="tab-workers" tabindex="-1" data-tab="workers">Workers</button>
+      <button class="tab active" id="tab-button-overview" role="tab" aria-selected="true" aria-controls="tab-overview" tabindex="0" data-tab="overview"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Dashboard</span></button>
+      <button class="tab" id="tab-button-tasks" role="tab" aria-selected="false" aria-controls="tab-tasks" tabindex="-1" data-tab="tasks"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m7 12 3 3 7-7"/></svg><span>Tasks</span></button>
+      <button class="tab" id="tab-button-systems" role="tab" aria-selected="false" aria-controls="tab-systems" tabindex="-1" data-tab="systems"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg><span>Systems</span></button>
+      <button class="tab" id="tab-button-repo" role="tab" aria-selected="false" aria-controls="tab-repo" tabindex="-1" data-tab="repo"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="3" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="20" r="2"/><path d="M6 5v11m0-4c0-4 12-1 12-6"/></svg><span>GitHub</span></button>
+      <button class="tab" id="tab-button-workers" role="tab" aria-selected="false" aria-controls="tab-workers" tabindex="-1" data-tab="workers"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="m18 9 2-2-3-3-2 2a8 8 0 0 0-3-1l-.5-2h-4L7 5a8 8 0 0 0-2.8 1l-2-1.7-2 3.3L2 9a8 8 0 0 0 0 6l-1.8 1.4 2 3.3 2.1-1.7A8 8 0 0 0 7 19l.5 2h4l.5-2a8 8 0 0 0 3-1l2 2 3-3-2-2a8 8 0 0 0 0-6z"/></svg><span>Workers</span></button>
     </nav>
 
     <main>
@@ -198,6 +225,7 @@
   </div>
 
   <script src="live-data.js"></script>
+  <script src="reference-hud.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
