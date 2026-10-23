@@ -31,3 +31,9 @@ The test `tests/test_hud_live_polling_budget.js` runs the **actual inline dashbo
 ## Harness hardening — pinned raw content remediation
 
 The QA mock now distinguishes `api.github.com` REST calls from pinned `raw.githubusercontent.com` file reads. It accepts either Contents-API reads using `?ref=<immutable SHA>` or raw queue/routing URLs containing that same immutable SHA. Only REST calls count against the 60/hour allowance; raw content reads remain mocked and still have to prove both files use the same SHA. The simulated 403 test uses a small injected REST limit so fail-closed behavior is tested even after a future implementation reduces REST polling. This prevents the QA suite from rejecting the recommended remediation merely because the data transport changes.
+
+## Retest target updated by dashboard owner
+
+PR #73 now points to HUD head `138d1713a504ef72a8cf57deb8ae1d059df509ec`, which switches queue/routing reads to raw content pinned to the immutable commit SHA and polls the REST commit endpoint every three minutes. The independent test suite is being rerun against this new base; the result from the old 194-call implementation is not a verdict on the revised head.
+
+One discrepancy to verify in the actual measured result: the latest `dashboard/index.html` still uses `300000` ms for PR refresh (five minutes), while the owner's PR comment says fifteen minutes. The test's request count is authoritative; keep the source/docs/comment aligned after the run.
