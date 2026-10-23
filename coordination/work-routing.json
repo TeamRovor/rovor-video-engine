@@ -77,7 +77,7 @@
     "rovor-work-packet-contract": {
       "lane": "integration",
       "requires": [
-        "local-exec"
+        "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
     },

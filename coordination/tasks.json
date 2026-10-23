@@ -1147,9 +1147,9 @@
       ]
     },
     {
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "ChatGPT / Amar portable work packet contract 2026-10-23",
+      "branch": "feature/rovor-work-packet-contract-v1",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/blob/main/ROVOR-AI-PLAN.md"
       ],
@@ -1163,8 +1163,10 @@
       "depends_on": [
         "rovor-capability-evaluation-pack"
       ],
-      "next_action": "Derive a minimal versioned schema and fixtures from the evaluated workflows: capability, source refs/hashes, constraints, acceptance, executor requirements, artifact receipt and approval state. Reuse current queue/handoffs and existing native render transport; do not build a second owner database or runtime service.",
-      "acceptance": "Schema validates representative accepted and rejected cases, preserves unknown/unrun states and separates technical completion from approval/publication. No opaque shell commands or self-granted permissions. Test against the actual evaluated examples."
+      "next_action": "Derive a minimal JSON Schema and stdlib validator/fixtures from the source-grounded evaluation pack and existing task/handoff patterns. Validate source refs/hashes, constraints, acceptance, executor requirements, artifact receipt and approval state; keep unknown/unrun separate from success and technical completion separate from human approval. No shell-command payloads, self-granted permissions, duplicate queue or runtime.",
+      "acceptance": "Schema validates representative accepted and rejected cases, preserves unknown/unrun states and separates technical completion from approval/publication. No opaque shell commands or self-granted permissions. Test against the actual evaluated examples.",
+      "updated_at": "2026-10-23T06:25:00Z",
+      "next_update": "After schema, positive/negative fixtures, and hosted contract tests are in the PR."
     },
     {
       "status": "done",
