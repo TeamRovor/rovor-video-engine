@@ -1743,3 +1743,82 @@ body {
 
 /* Focus View hides the command-content destination; keep skip navigation out of its tab order. */
 .focus-mode .skip-link { display: none !important; }
+
+
+/* Reference-alignment pass: make the core read as a dimensional emblem over a planetary horizon. */
+.reactor-stage {
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(119, 198, 255, .34);
+  background:
+    radial-gradient(ellipse at 50% 82%, rgba(38, 137, 222, .24) 0, rgba(7, 24, 43, .12) 26%, transparent 53%),
+    radial-gradient(ellipse at 50% 46%, rgba(12, 38, 64, .58) 0, rgba(2, 8, 16, .92) 58%),
+    linear-gradient(180deg, #02050a 0%, #061321 70%, #02060b 100%);
+  box-shadow: inset 0 0 90px rgba(12, 78, 145, .14), 0 0 28px rgba(34, 126, 226, .08);
+}
+.reactor-stage::after {
+  z-index: -1;
+  bottom: -14%;
+  height: 43%;
+  border-top: 1px solid rgba(177, 222, 255, .78);
+  border-radius: 50% 50% 0 0 / 24% 24% 0 0;
+  background:
+    linear-gradient(180deg, rgba(72, 159, 231, .24), rgba(5, 17, 31, .08) 34%, transparent 75%),
+    repeating-linear-gradient(174deg, transparent 0 23px, rgba(94, 170, 231, .035) 24px 25px, transparent 26px 42px);
+  box-shadow: 0 -8px 34px rgba(74, 166, 255, .18);
+}
+.reactor-core {
+  width: clamp(142px, 20vw, 248px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(213, 239, 255, .72);
+  background:
+    radial-gradient(circle at 34% 25%, rgba(220, 243, 255, .15), transparent 34%),
+    radial-gradient(circle, rgba(24, 71, 111, .2), rgba(2, 7, 14, .96) 67%);
+  box-shadow:
+    0 0 0 5px rgba(107, 190, 255, .06),
+    0 0 0 13px rgba(69, 155, 231, .045),
+    0 0 0 25px rgba(69, 155, 231, .025),
+    0 0 42px rgba(49, 145, 240, .24),
+    inset 0 0 36px rgba(91, 177, 255, .13);
+}
+.reactor-core img {
+  width: 76%;
+  height: 76%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 1px rgba(0, 0, 0, .9)) drop-shadow(0 0 2px rgba(255, 255, 255, .95)) drop-shadow(0 0 12px rgba(102, 187, 255, .42));
+}
+.reactor-halo { border-color: rgba(133, 205, 255, .52); }
+.reactor-halo.halo-outer { border-style: solid; }
+.reactor-grid {
+  opacity: .48;
+  background-image: linear-gradient(rgba(107, 190, 255, .045) 1px, transparent 1px), linear-gradient(90deg, rgba(107, 190, 255, .045) 1px, transparent 1px);
+  mask-image: radial-gradient(ellipse at center, #000 8%, transparent 72%);
+}
+.reactor-readout {
+  border-top-color: rgba(143, 210, 255, .46);
+  background: linear-gradient(90deg, rgba(2, 8, 15, .9), rgba(2, 8, 15, .14));
+  letter-spacing: .12em;
+}
+.topbar, .hud-panel, .syncbar, .tabbar {
+  border-radius: 2px;
+  border-color: rgba(112, 190, 255, .34);
+  box-shadow: inset 0 1px 0 rgba(225, 243, 255, .025), 0 8px 24px rgba(0, 0, 0, .18);
+}
+.panel-title {
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+@media (min-width: 761px) and (max-width: 1180px) and (orientation: landscape) {
+  .app-shell { padding: 8px 12px max(12px, env(safe-area-inset-bottom)); }
+  .topbar { margin-bottom: 8px; }
+  .reactor-stage { min-height: clamp(270px, 44vh, 390px); }
+  .reactor-core { width: clamp(136px, 19vw, 206px); }
+  .hero-grid { gap: 10px; }
+  .hero-grid > .hud-panel { padding: 12px; }
+  .tabbar { margin-top: 8px; }
+}
+@media (max-height: 760px) and (orientation: landscape) {
+  .reactor-stage { min-height: clamp(250px, 46vh, 340px); }
+  .reactor-core { width: clamp(124px, 17vw, 180px); }
+  .reactor-stage::after { bottom: -18%; height: 47%; }
+}
