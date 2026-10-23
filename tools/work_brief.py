@@ -11,10 +11,11 @@ import project_loop
 ROUTING = 'coordination/work-routing.json'
 LANES = {'efficiency', 'animation', 'integration', 'coordination', 'sales', 'delivery', 'operations'}
 CAPABILITIES = {'github-read', 'github-write', 'hosted-ci', 'local-exec',
-                'original-assets', 'visual-review', 'moho-runtime'}
+                'original-assets', 'visual-review', 'moho-runtime',
+                'blender-runtime', 'final-cut-runtime'}
 
 
-def route(data, policy, participant, capabilities, lane='any'):
+def route(data, policy, participant, capabilities, lane='any', fallback_any_lane=False):
     errors, warnings = project_loop.validate(data)
     if errors:
         raise ValueError('Invalid shared queue: ' + '; '.join(errors))
@@ -36,44 +37,80 @@ def route(data, policy, participant, capabilities, lane='any'):
     ids = {t['id'] for t in tasks}
     warnings += ['Routing references missing task: ' + i for i in rules if i not in ids]
     available = {t['id'] for t in project_loop.suggestions(data)}
-    candidates, excluded = [], []
+    candidates, other_lane, excluded = [], [], []
     for task in tasks:
         if task['status'] == 'done':
             continue
         reason = None
         own = task.get('owner') == participant
+        rule = rules.get(task['id'])
         if task['status'] == 'blocked':
             reason = 'blocked (ownership retained): ' + task['blocker']
         elif task['status'] == 'active' and not own:
             reason = 'reserved by ' + task['owner']
         elif task['status'] == 'ready' and task['id'] not in available:
             reason = 'unfinished dependency or reserved scope'
-        rule = rules.get(task['id'])
-        if reason is None:
-            if rule is None:
-                reason = 'capabilities not classified; inspect task before adding a routing rule'
+        elif rule is None:
+            reason = 'capabilities not classified; inspect task before adding a routing rule'
+        else:
+            # Capabilities are independently confirmed by the caller, never
+            # inferred from the session's name, device or another worker.
+            missing = (set(rule['requires']) | {'github-read', 'github-write'}) - capabilities
+            if missing:
+                reason = 'missing confirmed capabilities: ' + ', '.join(sorted(missing))
             elif lane != 'any' and rule['lane'] != lane:
-                reason = 'outside selected lane: ' + rule['lane']
-            else:
-                missing = (set(rule['requires']) | {'github-read', 'github-write'}) - capabilities
-                if missing:
-                    reason = 'missing confirmed capabilities: ' + ', '.join(sorted(missing))
+                if fallback_any_lane:
+                    other_lane.append({**task, 'action': 'resume' if own else 'claim',
+                                       'lane': rule['lane']})
+                else:
+                    reason = 'outside selected lane: ' + rule['lane']
         if reason:
             excluded.append({'id': task['id'], 'reason': reason})
-        else:
-            candidates.append({**task, 'action': 'resume' if own else 'claim', 'lane': rule['lane']})
+        elif rule is not None and not (
+                lane != 'any' and rule['lane'] != lane and fallback_any_lane):
+            candidates.append({**task, 'action': 'resume' if own else 'claim',
+                               'lane': rule['lane']})
+    selection = 'requested_lane' if candidates else 'none'
+    if not candidates and fallback_any_lane and other_lane:
+        candidates = other_lane
+        selection = 'fallback_other_lane'
+    elif other_lane:
+        excluded.extend({'id': t['id'], 'reason': 'outside selected lane: ' + t['lane']}
+                        for t in other_lane)
     candidates.sort(key=lambda t: (t['action'] != 'resume', t['priority'], t['id']))
+    unfinished = [t for t in tasks if t['status'] != 'done']
+    unrouted = sorted(t['id'] for t in unfinished if t['id'] not in rules)
+    status_counts = {status: sum(t['status'] == status for t in tasks)
+                     for status in ('ready', 'active', 'blocked', 'done')}
+    coverage = {
+        'total_tasks': len(tasks),
+        'routed_tasks': sum(t['id'] in rules for t in tasks),
+        'unfinished_tasks': len(unfinished),
+        'routed_unfinished': len(unfinished) - len(unrouted),
+        'unclassified_unfinished': unrouted,
+        'status_counts': status_counts,
+    }
+    if unrouted:
+        warnings.append('Unclassified unfinished tasks: ' + ', '.join(unrouted))
     return {'participant': participant, 'lane': lane, 'capabilities': sorted(capabilities),
             'recommended': candidates[0] if candidates else None,
             'alternatives': candidates[1:], 'excluded': excluded, 'warnings': warnings,
+            'routing_coverage': coverage, 'selection_mode': selection,
+            'fallback_any_lane_requested': fallback_any_lane,
             'notice': 'Snapshot only. Refresh main and open PRs; publish and re-read a claim before edits. '
                       'Capabilities are caller assertions, not machine verification. No automatic claim or remote control.'}
+
 
 
 def render(brief):
     lines = ['# ROVOR work brief', 'Source: ' + brief['source'], brief['notice'],
              'Participant: ' + brief['participant'], 'Lane: ' + brief['lane']]
     lines += ['WARN: ' + w for w in brief['warnings']]
+    coverage = brief['routing_coverage']
+    lines += ['Routing: %d/%d tasks classified; %d/%d unfinished classified' %
+              (coverage['routed_tasks'], coverage['total_tasks'],
+               coverage['routed_unfinished'], coverage['unfinished_tasks']),
+              'Selection: ' + brief['selection_mode']]
     task = brief['recommended']
     if task:
         lines += ['', '## Next: ' + task['action'] + ' ' + task['id'],
@@ -98,6 +135,8 @@ def main(argv=None):
     p.add_argument('--lane', choices=['any'] + sorted(LANES), default='any')
     p.add_argument('--capability', action='append', choices=sorted(CAPABILITIES), default=[])
     p.add_argument('--json', action='store_true')
+    p.add_argument('--fallback-any-lane', action='store_true',
+                   help='If selected lane has no eligible work, consider other lanes without overriding claims')
     args = p.parse_args(argv)
     try:
         if args.ref:
@@ -109,7 +148,8 @@ def main(argv=None):
             data = project_loop.load_state(args.repo)
             policy = json.loads((args.repo / ROUTING).read_text(encoding='utf-8'))
             source = 'local working files (freshness unverified)'
-        brief = route(data, policy, args.participant, set(args.capability), args.lane)
+        brief = route(data, policy, args.participant, set(args.capability),
+                      args.lane, fallback_any_lane=args.fallback_any_lane)
         brief['source'] = source
         print(json.dumps(brief, indent=2) if args.json else render(brief), end='\n' if args.json else '')
         return 0
