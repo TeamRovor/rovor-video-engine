@@ -236,7 +236,7 @@ def run_packet(repo_root,receipt_root,slug,model,key,
     source=Path(repo_root).expanduser().resolve(strict=True)
     destination=Path(receipt_root).expanduser().resolve(strict=False)
     if destination==source or source in destination.parents:
-        raise ValueError('Private model receipts cannot be inside Git checkout')
+        raise ValueError('Private model receipts inside Git checkout or redirected are refused')
     packet,prompt,provenance=load_packet(source,slug)
     private=safe_private_root(destination)
     receipt_file=private/(slug+'.receipt.json')
