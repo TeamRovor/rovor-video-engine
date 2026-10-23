@@ -2181,7 +2181,7 @@
       "id": "omniroute-loopback-egress-guard",
       "title": "Prevent OmniRoute inference requests escaping localhost via proxy or redirect and tighten draft receipts",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / OmniRoute transport safety 2026-10-22",
       "branch": "feature/omniroute-parallel-workpacks",
       "scopes": [
@@ -2192,12 +2192,21 @@
       "depends_on": [
         "omniroute-parallel-worker-packets"
       ],
-      "updated_at": "2026-10-23T02:52:20.338Z",
-      "next_update": "After hosted 3.9/3.11 no-network regression and private-transport proof",
-      "next_action": "Harden the local-only OmniRoute client against HTTP_PROXY/HTTPS_PROXY and cross-origin 3xx redirects, validate response and bounded provider usage, preserve mockable inference and disabled shell/GUI. Add tests and update doc. No Mac actions while iPhone owns private control bridge.",
+      "updated_at": "2026-10-23T02:55:27.539Z",
+      "next_update": "After a real Mac localhost OmniRoute test and provider cost/terms review, inspect private task receipts; hosted test success is not Mac/agent activation.",
+      "next_action": "Review draft PR #51. Host executor on user's Mac must confirm local OmniRoute service readiness, model route, provider billing/fallback settings and endpoint credentials before choosing an approved first draft task. Do not touch phone chat's private-mac-control-bridge-v1 scope or unblock public-repo self-hosted runner.",
       "acceptance": "The runner uses a proxy-free, redirect-refusing opener by default; rejects 3xx/malformed/non-200 HTTP and unbounded response/usage metadata without saving private data publicly. No outbound provider calls during CI. All current 16 tests and new transport tests pass Python3.9/3.11, PR kept draft.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+      ],
+      "evidence": [
+        {
+          "commit": "63e2bda455c81ea172b08c01c8a7a57667c9befa",
+          "platform": "Hosted Ubuntu Python 3.9 and 3.11, no real localhost service or macOS GUI",
+          "check": "Loopback-only HTTP opener ignores proxy env, rejects all redirects and HTTP non-200 responses, rejects unsafe model name, sanitizes usage token metadata, refuses Git checkout receipts and redirected ancestors; default model use off",
+          "result": "21/21 tests PASS on Python 3.9 and 21/21 tests PASS on Python 3.11. Zero remote model calls or Mac operations; upstream provider billing/policy unverified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39892075079"
+        }
       ]
     },
     {
