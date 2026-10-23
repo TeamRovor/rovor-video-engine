@@ -2657,15 +2657,16 @@
       "depends_on": [
         "omniroute-parallel-worker-packets"
       ],
-      "updated_at": "2026-10-23T06:23:00Z",
-      "next_update": "After PR #71 is reviewed/merged into the #66 implementation branch and the combined head passes CI.",
-      "next_action": "PR #66 now also rejects receipt destinations inside any enclosing Git checkout, covering imported API callers that pass a nested subproject as repo_root. Added test_direct_api_refuses_receipts_in_ancestor_checkout. Hosted offline CI passed Python 3.9 and 3.11 at 939c302f9ca0071bbe44dadff9230f55f9a2ce14. PR #71 still contains the separate checkout-root/nested-output/symlink regression set and has not been integrated; await explicit authorization to integrate #71, then rerun combined-head CI.",
+      "updated_at": "2026-10-23T06:39:00Z",
+      "next_update": "After explicit approval to integrate PR #71's test-only branch into PR #66; then rerun hosted CI on the resulting PR #66 head.",
+      "next_action": "PR #66 current implementation head 939c302f9ca0071bbe44dadff9230f55f9a2ce14 has hosted offline checks passing. PR #71 adds direct API regression cases for checkout root, nested receipt output, checkout-root symlink alias and nested symlink output; latest stacked PR CI used #66 current head as base and passed Python 3.9 and 3.11. Test branch remains separate. Do not merge or integrate without explicit approval; no local Mac runtime validation claimed.",
       "acceptance": "No private draft receipt can be written within ROVOR public checkout via CLI or Python direct API; host-independent regression passes.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/51",
         "https://github.com/TeamRovor/rovor-video-engine/pull/66",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39907069562",
         "https://github.com/TeamRovor/rovor-video-engine/pull/71",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39907069562"
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912668639"
       ],
       "evidence": [
         {
@@ -2681,6 +2682,13 @@
           "check": "Direct run_packet() refuses private receipt output in an enclosing checkout when repo_root is a nested project; callback is not invoked and output directory is not created.",
           "result": "PASS both Python versions; run 39910929858.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39910929858"
+        },
+        {
+          "commit": "7883c0d50f947386e677a096b0bba81066494821",
+          "platform": "GitHub-hosted Python 3.9 and 3.11; PR merge ref with base 939c302f9ca0071bbe44dadff9230f55f9a2ce14",
+          "check": "Direct run_packet receipt containment for checkout root, nested destination, checkout-root symlink alias and nested symlink destination; fake completion callback must not run.",
+          "result": "Both Python jobs PASS. PR #71 test-only branch remains separate; explicit authorization required to integrate. No local Mac runtime validation.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39912668639"
         }
       ]
     },
