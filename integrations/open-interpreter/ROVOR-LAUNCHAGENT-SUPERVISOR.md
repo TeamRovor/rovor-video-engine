@@ -37,3 +37,9 @@ For now, **a staged plist is not an installed ghost employee**. Even a loaded su
 This implementation is intentionally separate from the iPhone session's bridge/poller work, which remains in PR #41; it adds no edits to `tools/ghost_private_control.py`, `tools/ghost_private_control_loop.py` or Jane's bootstrap files.
 
 **Verification:** hosted regression tests `tests/test_rovor_private_supervisor.py`, via `.github/workflows/rovor-private-supervisor.yml` (Python 3.9/3.11). They mock Mac-only launchctl, Keychain, launchd and private GitHub calls, and **do not run any of those on the owner's computer**.
+
+## Single-command read-only connectivity preflight (source only)
+
+Once a **separate actual private repository** and scoped Keychain credential have been created by the owner on a trusted Mac, run `python3 tools/rovor_private_supervisor.py --preflight` from a reviewed local checkout. This command **does not** install, activate, enqueue, execute, publish or change any file. It checks staged runtime integrity and a fixed user launchd label, retrieves the credential without displaying it, and makes only GET requests to verify that the configured repository is private/active and that the exact operator-selected private receipt issue is open/readable. All response fields are booleans or fixed status enums; no repository name, local path, issue number, private response or token appears in printed status.
+
+The preflight intentionally reports `private_issue_write_verified=false`, `remote_job_executed=false`, and `unattended_execution_verified=false`: metadata/GET checks **do not establish** GitHub issue comment permission or successful real execution. If the Keychain is locked, snapshot is tampered, repository is public, issue is missing/closed, or network fails, it fails closed rather than invoking an alternate process. It is a preparatory diagnostic, **not** a substitute for a real Mac-issued `system.ping` and verified private issue receipt.
