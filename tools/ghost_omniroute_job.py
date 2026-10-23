@@ -122,7 +122,7 @@ def execute(state, job_id, payload, *, stop_path=None, catalog=None):
                 'user_review_required': True,
                 'facts_verified': False,
                 'mac_app_control_verified': False}
-    except (ImportError, OSError, ValueError, KeyError, TypeError):
+    except Exception:
         # Do not persist upstream errors or arbitrary provider response data
         # in the SQLite worker's world-readable status channel.
         raise ValueError('OmniRoute draft requires private review; no automatic retry') from None
