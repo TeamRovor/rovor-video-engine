@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#04111f" />
+  <meta name="theme-color" content="#020409" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="ROVOR HUD" />
@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to command content</a>
   <div class="scanlines"></div>
   <div class="glow-orbit orbit-a"></div>
   <div class="glow-orbit orbit-b"></div>
@@ -22,24 +23,28 @@
       <div class="brand-lockup">
         <div class="brand-emblem" aria-hidden="true"><img src="./rovor-mark.svg" alt="" /><span class="emblem-orbit"></span></div>
       <div>
-        <div class="eyebrow">ROVOR DIGITAL • COMMAND INTERFACE</div>
-        <h1>COMMAND BRIDGE / LIVE REPOSITORY</h1>
-        <p class="header-subtitle"><span class="header-dot"></span> BUILD / CREATE / AUTOMATE / SCALE <span class="header-separator">/</span> PUBLIC DATA LINK</p>
+        <div class="eyebrow">COMMAND BRIDGE / LIVE REPOSITORY</div>
+        <h1>ROVOR DIGITAL</h1>
+        <p class="header-subtitle"><span class="header-dot"></span> BUILD / CREATE / AUTOMATE / SCALE <span class="header-separator">/</span> <a class="source-link" href="https://github.com/TeamRovor/rovor-video-engine" target="_blank" rel="noopener noreferrer">GITHUB SOURCE ↗</a></p>
       </div>
       </div>
       <div class="top-actions">
-        <button id="motionBtn" class="hud-btn alt" type="button" aria-pressed="true">Motion: On</button>
-        <button id="focusBtn" class="hud-btn alt" type="button" aria-pressed="false">Focus View</button>
-        <button id="refreshBtn" class="hud-btn">Refresh GitHub</button>
-        <button id="exportBtn" class="hud-btn alt">Export JSON</button>
+        <button id="motionBtn" class="hud-btn alt" type="button" aria-pressed="true" aria-label="Toggle interface motion">Motion: On</button>
+        <button id="focusBtn" class="hud-btn alt" type="button" aria-pressed="false" aria-label="Toggle focus view">Focus View</button>
+        <button id="refreshBtn" class="hud-btn" type="button" aria-label="Refresh live GitHub data">Refresh GitHub</button>
+        <button id="exportBtn" class="hud-btn alt" type="button">Export JSON</button>
       </div>
     </header>
 
-    <div class="reactor-stage" aria-label="Animated Rovor Digital orbital interface">
+    <div class="reactor-stage mode-telemetry" data-instrument-mode="live-telemetry" aria-label="Animated Rovor Digital orbital interface">
+      <button id="focusExitBtn" class="focus-exit-btn" type="button" hidden aria-label="Exit focus view">EXIT FOCUS ×</button>
+      <div class="reactor-telemetry telemetry-top" aria-hidden="true"><span>SYS / 07</span><span class="telemetry-line"></span><span>ROVOR CORE</span><span class="telemetry-pulse"></span></div>
+      <div class="reactor-telemetry telemetry-bottom" aria-hidden="true"><span>INSTRUMENT STATUS <b>VISUAL MODE</b></span><span class="telemetry-line"></span><span>LINK STATE / SEE STATUS</span></div>
+      <div class="reactor-cross-ring" aria-hidden="true"></div>
       <div class="reactor-grid"></div><div class="reactor-halo halo-outer"></div><div class="reactor-halo halo-mid"></div><div class="reactor-halo halo-inner"></div>
       <div class="reactor-core"><span class="core-crosshair"></span><img src="./rovor-mark.svg" alt="" /></div>
       <div class="reactor-readout readout-left"><span>ROVOR DIGITAL</span><strong>COMMAND / 01</strong><small>PUBLIC REPOSITORY LINK</small></div>
-      <div class="reactor-readout readout-right"><span class="telemetry-dot"></span><strong>LIVE TELEMETRY</strong><small>MAIN BRANCH · AUTO SYNC</small></div>
+      <div class="reactor-readout readout-right" aria-live="polite" aria-atomic="true"><span class="telemetry-dot"></span><strong>VERIFYING SOURCE</strong><small>WAITING FOR GITHUB</small></div>
       <div class="reactor-tick tick-a"></div><div class="reactor-tick tick-b"></div><div class="reactor-tick tick-c"></div>
     </div>
     <div class="syncbar hud-panel" role="status" aria-live="polite"><span class="sync-pill loading" id="syncState">CONNECTING</span><div class="sync-content"><strong id="syncLast">Not yet verified</strong><span id="syncDetails">Checking GitHub…</span></div></div>
@@ -90,14 +95,14 @@
     </section>
 
     <nav class="tabbar hud-panel" role="tablist" aria-label="Command bridge views">
-      <button class="tab active" id="tab-button-overview" role="tab" aria-selected="true" aria-controls="tab-overview" tabindex="0" data-tab="overview">Overview</button>
-      <button class="tab" id="tab-button-tasks" role="tab" aria-selected="false" aria-controls="tab-tasks" tabindex="-1" data-tab="tasks">Tasks</button>
-      <button class="tab" id="tab-button-systems" role="tab" aria-selected="false" aria-controls="tab-systems" tabindex="-1" data-tab="systems">Systems</button>
-      <button class="tab" id="tab-button-repo" role="tab" aria-selected="false" aria-controls="tab-repo" tabindex="-1" data-tab="repo">Repo Map</button>
-      <button class="tab" id="tab-button-workers" role="tab" aria-selected="false" aria-controls="tab-workers" tabindex="-1" data-tab="workers">Workers</button>
+      <button type="button" class="tab active" id="tab-button-overview" role="tab" aria-selected="true" aria-controls="tab-overview" tabindex="0" data-tab="overview">Overview</button>
+      <button type="button" class="tab" id="tab-button-tasks" role="tab" aria-selected="false" aria-controls="tab-tasks" tabindex="-1" data-tab="tasks">Tasks</button>
+      <button type="button" class="tab" id="tab-button-systems" role="tab" aria-selected="false" aria-controls="tab-systems" tabindex="-1" data-tab="systems">Systems</button>
+      <button type="button" class="tab" id="tab-button-repo" role="tab" aria-selected="false" aria-controls="tab-repo" tabindex="-1" data-tab="repo">Repo Map</button>
+      <button type="button" class="tab" id="tab-button-workers" role="tab" aria-selected="false" aria-controls="tab-workers" tabindex="-1" data-tab="workers">Workers</button>
     </nav>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <section class="tab-view active" id="tab-overview" role="tabpanel" aria-labelledby="tab-button-overview" tabindex="0">
         <div class="section-grid two-thirds">
           <div class="hud-panel">
@@ -124,8 +129,8 @@
         <div class="hud-panel">
           <div class="panel-title">TASK QUEUE</div>
           <div class="task-toolbar">
-            <input id="taskSearch" type="text" placeholder="Search task id, title, or owner" />
-            <select id="statusFilter">
+            <input id="taskSearch" type="search" aria-label="Search tasks by ID, title, or owner" autocomplete="off" placeholder="Search task ID, title, or owner" />
+            <select id="statusFilter" aria-label="Filter tasks by status">
               <option value="all">All statuses</option>
               <option value="active">Active</option>
               <option value="blocked">Blocked</option>

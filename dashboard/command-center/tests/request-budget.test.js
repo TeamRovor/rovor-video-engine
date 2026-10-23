@@ -134,3 +134,66 @@ test('failed critical refresh visibly downgrades live data to a stale snapshot',
   assert.match(page.el('syncDetails').textContent,/HTTP 403/);
   assert.ok(page.el('taskTable').innerHTML.includes('Router proof'));
 });
+
+
+test('landscape focus view owns one full-screen grid cell',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../styles.css'),'utf8');
+  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+  assert.match(css, /\.focus-mode \.app-shell\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
+  assert.match(css, /\.focus-mode \.reactor-stage\s*\{[^}]*grid-column:\s*1;[^}]*grid-row:\s*1;/s);
+  assert.match(html, /id="focusExitBtn"/);
+  assert.match(SCRIPT, /event\.key === 'Escape'/);
+});
+
+test('landscape live status cannot overlap the header action controls',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../styles.css'),'utf8');
+  const responsive=css.slice(css.lastIndexOf('/* iPad landscape: keep source health'));
+  assert.match(responsive, /\.syncbar\s*\{[^}]*grid-column:\s*1;[^}]*grid-row:\s*3;/s);
+  assert.match(css, /\.tabbar\s*\{\s*grid-column:2;grid-row:3;/);
+});
+
+test('service worker invalidates the pre-focus-view shell cache',()=>{
+  const worker=fs.readFileSync(path.join(__dirname,'../service-worker.js'),'utf8');
+  assert.match(worker, /rovor-command-center-shell-v5/);
+  assert.doesNotMatch(worker, /rovor-command-center-shell-v3/);
+});
+
+test('HUD theme tokens have one canonical root without changing the current palette',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'../styles.css'),'utf8');
+  const roots=css.match(/:root\s*\{/g)||[];
+  assert.equal(roots.length,1,'Keep the shared theme tokens in one canonical root');
+  for (const token of [
+    '--bg: #020409;',
+    '--text: #edf7ff;',
+    '--cyan: #a9ddff;',
+    '--cyan2: #278cff;',
+    '--panel-edge: rgba(98, 242, 255, .22);',
+    '--hud-grid: rgba(98, 242, 255, .045);'
+  ]) assert.ok(css.includes(token),'Missing expected HUD theme token: '+token);
+});
+
+test('HUD shell uses local assets and does not require a deployment vendor runtime',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+  assert.match(html,/href="styles\.css"/);
+  assert.match(html,/src="app\.js"/);
+  assert.match(html,/href="\.\/manifest\.webmanifest"/);
+  assert.doesNotMatch(html,/(?:vercel\.app|@vercel\/|vercel\.com\/analytics)/i);
+});
+
+
+test('keyboard users can skip the decorative HUD chrome',()=>{
+  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../styles.css'),'utf8');
+  assert.ok(html.includes('<a class="skip-link" href="#main-content">Skip to command content</a>'));
+  assert.ok(html.includes('<main id="main-content" tabindex="-1">'));
+  assert.match(css, /\.skip-link:focus\s*\{[^}]*transform:\s*translateY\(0\)/s);
+  assert.match(css, /\.skip-link\s*\{[^}]*position:\s*fixed/);
+});
+
+
+test('service worker waits for successful shell writes before completing a fetch',()=>{
+  const worker=fs.readFileSync(path.join(__dirname,'../service-worker.js'),'utf8');
+  assert.match(worker, /fetch\(request\)\.then\(async response =>/);
+  assert.match(worker, /await cache\.put\(new Request\(request\.url\), copy\)/);
+  assert.ok(worker.includes('catch (_) { /* A cache write failure must not block the live response. */ }'));
+});
