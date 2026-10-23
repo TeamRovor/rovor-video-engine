@@ -836,7 +836,7 @@ body.motion-paused .reactor-stage::after {
   letter-spacing: .18em; text-align: center; white-space: nowrap;
   pointer-events: none; text-shadow: 0 0 12px rgba(58,142,255,.32);
 }
-.reactor-stage.mode-orbit .reactor-stage::after { border-style: solid; }
+.reactor-stage.mode-orbit::after { border-style: solid; }
 .reactor-stage.mode-orbit .reactor-halo { border-style: dashed; animation: rovor-orbit-spin 30s linear infinite; }
 .reactor-stage.mode-signal .reactor-halo { border-color: rgba(190,232,255,.72); box-shadow: 0 0 18px rgba(55,145,255,.2); }
 .reactor-stage.mode-signal .reactor-grid { opacity: .85; filter: brightness(1.5); }
