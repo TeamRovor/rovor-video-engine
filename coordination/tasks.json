@@ -2972,17 +2972,26 @@
       "id": "routing-ci-supersession-cancellation-20261023",
       "title": "Stop superseded work-routing checks while keeping cross-version validation",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar GitHub workflow-efficiency 2026-10-23",
       "branch": "fix/routing-ci-cancel-stale-20261023",
       "scopes": [
         ".github/workflows/work-brief-routing-check.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-23T06:55:43.956Z",
-      "next_update": "After hosted routing CI",
-      "next_action": "Enable same-ref stale-run cancellation for frequent queue/routing checks, preserving Python 3.9 and 3.11 suites; verify CI and merge",
-      "acceptance": "Concurrent stale main/PR routing checks may be replaced by the latest same-ref run; current validations and security permissions stay unchanged; hosted checks succeed."
+      "updated_at": "2026-10-23T06:57:11.679Z",
+      "next_update": "Implementation complete; inspect future superseded-run cancellation only when multiple pushes happen",
+      "next_action": "No remaining source task. A future genuine rapid-push sequence can establish actual runner-minute savings; successful checks establish behavior was preserved, not measured savings.",
+      "acceptance": "Concurrent stale main/PR routing checks may be replaced by the latest same-ref run; current validations and security permissions stay unchanged; hosted checks succeed.",
+      "evidence": [
+        {
+          "commit": "a7a1b1b959b610121abb9cdff6ca826025fabc69",
+          "platform": "GitHub Actions / Python 3.9 and 3.11 / Ubuntu",
+          "check": "PR #83 workflow #39914586466: routing checks on both Python versions",
+          "result": "MERGED and CI PASS; no measured cancellation sample",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39914586466"
+        }
+      ]
     }
   ]
 }
