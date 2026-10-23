@@ -3162,7 +3162,7 @@
       "id": "ghost-omniroute-queue-adapter-20261023",
       "title": "Connect bounded OmniRoute draft jobs to existing SQLite ghost queue",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar OmniRoute queue adapter 2026-10-23",
       "branch": "feature/ghost-omniroute-private-queue-v1",
       "scopes": [
@@ -3177,13 +3177,30 @@
         "ghost-interpreter-research-queue",
         "omniroute-parallel-worker-packets"
       ],
-      "updated_at": "2026-10-23T23:24:00Z",
-      "next_update": "After hosted offline regression tests and exact-branch review",
-      "next_action": "Implement one-shot free-only, 24-hour capped OmniRoute draft research kind in existing ghost worker, opt-in via separate flag and STOP. Block auto-replay, code execution, and automatic draft approval. Require reviewed OmniRoute runner and reviewer to be co-located at integration time; do not copy other workers' actively owned files.",
+      "updated_at": "2026-10-23T23:34:00Z",
+      "next_update": "After reviewed composite PR #41/#51 source and real Mac one-shot",
+      "next_action": "PR #102 source/tests complete at commit 32d5c522; merge with PR #41 after review. It is not Mac-deployed: before real OmniRoute jobs, integrate trusted PR #51's exact workpack/review modules and public packet manifests into a pinned, tested composite checkout, reconcile active PR #66 receipt-path hardening, confirm free-only combo list and key on Mac, verify STOP/scheduler loaded state, and manually approve ONE NEW job. Do not replay Oct 23 private receipts, enable paid fallback, or run on public self-hosted Actions runner.",
       "acceptance": "Existing SQLite queue accepts only three known public workpacks with pinned ROVOR free-only combos, preserves at-most-once + STOP, enforces rolling 24-hour max 5 OmniRoute calls transactionally, stores private receipt and marks AI output needs_review not succeeded; disabled by default. Offline Python3.9/3.11 hosted tests; source integration only, no Mac deployment or native app access.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/102"
+      ],
+      "evidence": [
+        {
+          "commit": "32d5c52203d8e607713c1a702bafdae0d42f5e9a",
+          "platform": "GitHub-hosted Ubuntu / Python 3.9 and Python 3.11 (no Mac/model calls)",
+          "check": "8 focused new OmniRoute SQLite/STOP/free-combo/quota/no-replay tests and integrated workforce safety suite (268 tests in Python 3.11)",
+          "result": "PASS, both Python 3.9 and 3.11; source-only, Mac integration and co-located PR51 dependencies not verified",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40039959575"
+        },
+        {
+          "commit": "32d5c52203d8e607713c1a702bafdae0d42f5e9a",
+          "platform": "GitHub-hosted Ubuntu / Python 3.9 and Python 3.11",
+          "check": "Existing integrated workforce offline regression, including prior worker, research and Final Cut safeguards",
+          "result": "PASS, both Python versions",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40039959623"
+        }
       ]
     }
   ]
