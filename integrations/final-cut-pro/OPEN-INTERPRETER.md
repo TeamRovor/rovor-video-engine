@@ -2,6 +2,14 @@
 
 **Primary local executor: Open Interpreter.** Codex is an optional fallback client, not the ROVOR workforce's primary runtime. Walter coordinates Jane and other existing specialist roles, Open Interpreter supplies local agent sessions/MCP/tool permissions, and GitHub holds source/version/task evidence. None of this alone starts an always-on process or tunnels cloud ChatGPT to the Mac.
 
+## Real Mac isolated library bootstrap FAILED — 2026-10-22 20:08 CDT
+
+**New host evidence:** The user's subsequent Terminal paste shows one execution of `tools/fcp_jane_library_bootstrap.py --create` from commit `64d6e388abcab82326d66059dd0cef9f59a88475`, job `~/Documents/Rovor/fcp-jane-library-20261022-200846`. Terminal emitted `JANE LIBRARY ui_create_attempt_started` followed by `ui_create_failed_unverified`, AppleScript subprocess return code **1**. Receipt confirms `native_library_created=false`, `native_library_directory_observed=false`, `native_library_app_selected_verified=false`, `xml_import_attempted=false`, `model_turn_started=false`. This **does NOT** establish whether Accessibility permission was denied, File/New/Library was inaccessible, an existing sheet interfered, or the Save panel layout failed: legacy receipt only said `error_class=applescript_or_accessibility` and did not retain native error details.
+
+**Important: DO NOT replay the prior --create command or retry XML import.** Do not delete or rename `Untitled.fcpbundle`. New code `tools/fcp_jane_library_failure_probe.py` is read-only: it accepts the exact previous `fcp-jane-library-20261022-200846` job, checks its receipt and expected native bundle, and asks System Events only for Final Cut's frontmost flag, count of windows/sheets, and existence of File/New/Library menu entries. It does not activate Final Cut, type, click, issue Open Document Apple events, read personal project titles/media, write files or retry creation. Unknown nested menu accessibility may be reported as false while menus are closed; **do not infer definitely missing action from a false result**. It returns only constrained booleans and safe native error code, if available. CI validates AppleScript syntax on Intel macOS and tests privacy + no replay.
+
+**Improved future receipts:** `tools/fcp_jane_library_bootstrap.py` now retains an allowlisted `error_class` and Apple-native `apple_error_number`, replacing the prior uninformative class without recording sensitive raw stderr. This applies to future operations ONLY; it cannot reconstruct the uncaptured prior failure. An isolated library's filesystem presence alone never proves that Final Cut selected it, and XML import remains disabled.
+
 ## Wrong-library import PROVEN by native markers — 2026-10-22, 19:54 CDT
 
 **Supersedes earlier speculation.** User's real Mac output from `tools/fcp_jane_import_audit.py` on existing job `~/Documents/Rovor/fcp-jane-auto-20261022-183007`:
