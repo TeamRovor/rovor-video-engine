@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Run the existing blank Final Cut import through the durable Jane worker.
+"""Inspect Jane's native attempts; legacy XML dispatch remains disabled.
 
-Default is a read-only plan. --execute allows ONE native diagnostic job. No AI
-model, service installation, personal media or publishing is involved.
+Default is a read-only plan. --execute records one review-required legacy job;
+it cannot import XML. No AI model or native app is launched.
 """
 import argparse
 import hashlib
@@ -42,7 +42,9 @@ def run(root, execute=False):
     state = root / 'jane-native-worker-state'
     result = {'candidates': str(candidates), 'dedupe_key': key,
               'state': str(state), 'native_timeline_verified': False,
-              'model_turn_started': False, 'execute': execute}
+              'model_turn_started': False, 'execute': execute,
+              'native_import_enabled': False,
+              'native_import_disabled_reason': worker.NATIVE_DISABLED_REASON}
     if not execute:
         return result
     prior = status(root)
@@ -142,7 +144,8 @@ def diagnose(root):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     actions = parser.add_mutually_exclusive_group()
-    actions.add_argument('--execute', action='store_true')
+    actions.add_argument('--execute', action='store_true',
+                         help='Record a review-required legacy job; native import disabled')
     actions.add_argument('--status', action='store_true', help='Read queue and import checkpoints; never dispatch')
     actions.add_argument('--diagnose', action='store_true', help='Read-only Mac diagnosis of the existing manual attempt')
     args = parser.parse_args(argv)

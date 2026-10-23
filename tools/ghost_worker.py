@@ -2,7 +2,7 @@
 """ROVOR durable job executor with read-only defaults and opt-in native import.
 
 This job database records *execution jobs*, not GitHub development task ownership.
-Native Final Cut diagnostic import is separately opt-in. No mail/publishing adapters.
+Legacy Final Cut import jobs require review; native dispatch is disabled.
 """
 from __future__ import annotations
 
@@ -21,6 +21,9 @@ FUTURE_DISABLED = frozenset({
 })
 RESEARCH_KIND = "research.finalcut"
 NATIVE_KIND = "finalcut.import-diagnostic"
+NATIVE_DISABLED_REASON = (
+    'Legacy native import disabled after wrong-library host evidence; '
+    'verify isolated library creation and app selection before a replacement adapter')
 MAX_PAYLOAD_BYTES = 4096
 MAX_FILES = 2000
 MAX_DEPTH = 6
@@ -219,22 +222,7 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
         elif kind == "files.inventory":
             result = inventory(workspace, payload.get("subpath", "."))
         elif kind == NATIVE_KIND:
-            import fcp_native_auto_import as native
-            root = Path(workspace).expanduser().resolve(strict=True)
-            requested = root / _relative_path(payload['candidates'])
-            if requested.is_symlink() or not requested.is_dir():
-                raise ValueError('Candidates must be an existing real directory')
-            candidates = requested.resolve(strict=True)
-            if not candidates.is_relative_to(root):
-                raise ValueError('Candidates escape authorized workspace')
-            output = root / ('native-import-' + job_id)
-            report = native.prepare(candidates, output)
-            report = native.dispatch(output, report, stop_file=state / 'STOP')
-            if report['status'] != 'apple_events_sent_timeline_unverified':
-                raise ValueError('Native import incomplete; inspect receipt: ' + str(output))
-            result = {'native_receipt': str(output / 'native-auto-import-receipt.json'),
-                      'native_timeline_verified': False, 'model_turn_started': False,
-                      'dispatch_completed': True}
+            raise ValueError(NATIVE_DISABLED_REASON)
         else:
             raise ValueError("Adapter disabled; no execution")
         conn.execute("BEGIN IMMEDIATE")
@@ -276,7 +264,7 @@ def main():
     args = parser.parse_args()
     with connect(args.state) as conn:
         if args.command == "init":
-            output = {"initialized": True, "allowed_jobs": sorted(ALLOWED), "opt_in_model_jobs": [RESEARCH_KIND], "opt_in_native_jobs": [NATIVE_KIND], "disabled_adapters": sorted(FUTURE_DISABLED)}
+            output = {"initialized": True, "allowed_jobs": sorted(ALLOWED), "opt_in_model_jobs": [RESEARCH_KIND], "opt_in_native_jobs": [], "disabled_adapters": sorted(FUTURE_DISABLED | {NATIVE_KIND})}
         elif args.command == "enqueue":
             output = {"id": enqueue(conn, args.kind, json.loads(args.payload), args.key)}
         elif args.command == "run-once":

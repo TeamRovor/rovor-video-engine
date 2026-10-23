@@ -53,18 +53,18 @@ class NativeQueueTests(unittest.TestCase):
             start.assert_not_called()
         self.assertEqual(tuple(self.row(job)), ('queued', 0))
 
-    def test_opt_in_dispatches_once_and_retains_unverified_state(self):
+    def test_opt_in_records_review_without_legacy_dispatch_or_replay(self):
         job = self.submit()
         self.assertEqual(job, self.submit())
-        with mock.patch.object(native, 'prepare', side_effect=self.prepare), \
+        with mock.patch.object(native, 'prepare', side_effect=self.prepare) as prepared, \
              mock.patch.object(native, 'dispatch', side_effect=self.dispatch) as dispatched:
             result = worker.run_once(self.conn, self.workspace, allow_native_import=True)
-            self.assertEqual(result['status'], 'succeeded')
-            self.assertFalse(result['result']['native_timeline_verified'])
-            self.assertTrue(Path(result['result']['native_receipt']).is_file())
+            self.assertEqual(result['status'], 'needs_review')
+            self.assertIn('disabled', result['error'])
             self.assertIsNone(worker.run_once(self.conn, self.workspace, allow_native_import=True))
-            dispatched.assert_called_once()
-        self.assertEqual(tuple(self.row(job)), ('succeeded', 1))
+            prepared.assert_not_called()
+            dispatched.assert_not_called()
+        self.assertEqual(tuple(self.row(job)), ('needs_review', 1))
 
     def test_crashed_native_lease_never_requeues(self):
         job = self.submit()
@@ -78,6 +78,17 @@ class NativeQueueTests(unittest.TestCase):
             self.assertEqual(worker.run_once(self.conn, self.workspace, allow_native_import=True)['status'], 'needs_review')
             self.assertIsNone(worker.run_once(self.conn, self.workspace, allow_native_import=True))
         self.assertEqual(tuple(self.row(job)), ('needs_review', 1))
+
+    def test_disabled_native_job_does_not_prevent_read_only_work(self):
+        self.submit()
+        ping = worker.enqueue(self.conn, 'system.ping', {}, 'next-ping')
+        with mock.patch.object(native, 'dispatch') as dispatch:
+            results = [worker.run_once(self.conn, self.workspace, allow_native_import=True)
+                       for _ in range(2)]
+        self.assertEqual([r['status'] for r in results], ['needs_review', 'succeeded'])
+        self.assertEqual(results[1]['id'], ping)
+        dispatch.assert_not_called()
+        self.assertEqual(list(self.workspace.glob('native-import-*')), [])
 
     def test_stop_before_claim_leaves_job_queued(self):
         job = self.submit()
@@ -104,9 +115,11 @@ class NativeQueueTests(unittest.TestCase):
              mock.patch.object(native, 'dispatch', side_effect=self.dispatch):
             result = loop.poll(self.conn, self.workspace, self.state, worker_id='native',
                                max_jobs=1, max_seconds=1, allow_native_import=True)
-        self.assertEqual(result['succeeded'], 1)
-        self.assertTrue(result['native_import_enabled'])
-        self.assertFalse(result['read_only'])
+        self.assertEqual(result['failed'], 1)
+        self.assertEqual(result['succeeded'], 0)
+        self.assertFalse(result['native_import_enabled'])
+        self.assertTrue(result['native_import_requested'])
+        self.assertTrue(result['read_only'])
         self.assertFalse(result['model_use_enabled'])
 
     def test_stop_between_native_events_prevents_portrait(self):
@@ -137,6 +150,8 @@ class NativeQueueTests(unittest.TestCase):
                 json.dumps({'fcpxml_sha256': {'landscape': 'a'*64, 'portrait': 'b'*64}}))
             result = launcher.run(self.workspace)
         self.assertFalse(result['execute'])
+        self.assertFalse(result['native_import_enabled'])
+        self.assertIn('disabled', result['native_import_disabled_reason'])
         self.assertFalse((self.workspace / 'jane-native-worker-state').exists())
 
     def test_launcher_restart_never_redispatches_terminal_job(self):
@@ -153,8 +168,8 @@ class NativeQueueTests(unittest.TestCase):
             second = launcher.run(self.workspace, True)
         self.assertEqual(first['job_id'], second['job_id'])
         self.assertEqual(second['job']['attempts'], 1)
-        self.assertEqual(second['job']['status'], 'succeeded')
-        dispatched.assert_called_once()
+        self.assertEqual(second['job']['status'], 'needs_review')
+        dispatched.assert_not_called()
 
     def test_identical_candidates_in_new_folder_do_not_import_twice(self):
         receipt = json.dumps({'fcpxml_sha256': {'landscape': 'a'*64, 'portrait': 'b'*64}})
@@ -172,7 +187,7 @@ class NativeQueueTests(unittest.TestCase):
             two = launcher.run(self.workspace, True)
         self.assertEqual(one['job_id'], two['job_id'])
         self.assertEqual(two['job']['attempts'], 1)
-        called.assert_called_once()
+        called.assert_not_called()
 
     def test_status_does_not_initialize_or_dispatch(self):
         with mock.patch.object(native, 'dispatch') as called:
