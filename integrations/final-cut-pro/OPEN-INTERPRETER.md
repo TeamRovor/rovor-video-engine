@@ -2,6 +2,23 @@
 
 **Primary local executor: Open Interpreter.** Codex is an optional fallback client, not the ROVOR workforce's primary runtime. Walter coordinates Jane and other existing specialist roles, Open Interpreter supplies local agent sessions/MCP/tool permissions, and GitHub holds source/version/task evidence. None of this alone starts an always-on process or tunnels cloud ChatGPT to the Mac.
 
+## Wrong-library import PROVEN by native markers — 2026-10-22, 19:54 CDT
+
+**Supersedes earlier speculation.** User's real Mac output from `tools/fcp_jane_import_audit.py` on existing job `~/Documents/Rovor/fcp-jane-auto-20261022-183007`:
+- `status=read_only_targeted_marker_audit`
+- `existing_untitled_library_scanned=true`
+- `marker_presence.landscape.found=true`, evidence types **`directory_name` AND `native_database_byte_match`** for exact `ROVOR NATIVE IMPORT TEST landscape` identifier inside pre-existing `~/Movies/Untitled.fcpbundle`.
+- `marker_presence.portrait.found=false`, consistent with `last_dispatched=landscape` and portrait withholding.
+- `database_search_limit_hit=false`; 17 package entries inspected, five metadata files read (507,904 bytes). No media read, imported or copied; no unrelated names returned. No second import attempted.
+- Intended disposable `ROVOR-Jane-Test.fcpbundle` was NOT created, and native timeline *properties* have not been verified. Existing `Untitled.fcpbundle` predates the run (October 7) and its mtime changed near the October 22 import. **Conclusion: strong dual native-marker proof the FCPXML landscape project landed in the wrong pre-existing library.** No longer state destination unknown, though the precise reason `import-options library location` was bypassed remains unverified.
+- **Do not delete, rename, repair, or modify `Untitled` or its contents.** User has not authorized changing or cleaning up existing projects. Do not repeat the old import command.
+
+**Root cause mitigation:** Apple documents that FCPXML's `library location` option can target a new library, but our live Mac test demonstrates that this is NOT a reliable isolation boundary on its own. Therefore any "open FCPXML" call without a proven isolated native destination is now considered unsafe. In `tools/fcp_native_auto_import.py` there is already a guard that forbids future import if pre-existing `~/Movies/Untitled.fcpbundle` exists. It remains in place.
+
+**New implementation in PR #37:** `tools/fcp_jane_library_bootstrap.py` contains a separate native **File → New → Library** GUI automation using macOS System Events. It prepares a previously nonexistent, uniquely named folder `~/Documents/Rovor/fcp-jane-library-*`, and has an explicit `--create` path that opens the native Save dialog, navigates to the unique folder and creates a dedicated `ROVOR-Jane-Isolated.fcpbundle`. It does **not** import XML, edit, export, publish, or operate on `Untitled`. It records an atomic state receipt; even if its filesystem creation succeeds, it explicitly records `native_library_app_selected_verified=false`. No automatic import is enabled until **native library creation AND FCP app selection** are independently observed. All UI execution still requires actual Mac host verification. Local GUI app permission may be needed once. The repository's macOS CI compiles the AppleScript source and regression tests enforce no XML import, fail-closed behavior, and no repeat. Continue improving GUI-specific confirmation before enabling anything more.
+
+**Product direction:** stop making the human manually create FCP libraries; Jane's orchestration should perform this within an isolated job. The macOS host bridge currently needs a one-time launcher due to this chat having no live local-execution connection. The system is not yet a continuously running ghost employee.
+
 ## Mac GUI diagnostic resolved, existing library changed during test — 2026-10-22
 
 Real user Mac output from `tools/fcp_jane_ui_probe.py` (not a hypothetical):
