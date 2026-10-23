@@ -14,7 +14,33 @@ from jaw_overlap_exposure import INTERFACE,mapped_interface
 from lip_surface_correspondence import corresponding_fields
 from layered_cartoon_head import over,straight
 from lingual_cartoon_head import tongue_lift
-from painted_timing import ease
+from painted_timing import ease,flowing_track
+from speech_planner import VOWELS
+from english_articulation import PHONE_CATALOG
+from duration_cartoon_head import duration_jaw_weights
+from rounded_cartoon_head import RoundedCartoonHead,rounding_identity
+
+def corner_signature(plan):
+ rows=lambda ps:tuple((p['start'],p['end'],p['phone'],p['value']) for p in ps)
+ return (rows(plan['phonemes']),rows(plan.get('gestures',plan['phonemes'])),plan['audio']['step'],tuple(plan['audio']['energy']),tuple((s['start'],s['end']) for s in plan.get('silences',[])))
+
+def phonetic_corner_keys(plan,pose):
+ keys={}
+ for p in plan['phonemes']:
+  a,b=p['start'],p['end'];mid=(a+b)/2;base=p['phone'].rstrip('012')
+  if not np.isfinite([a,b]).all() or b<=a:raise ValueError('Expected finite positive phone intervals')
+  if base in {'P','B','M','F','V'}:times=[min(a+.015,mid),max(b-.010,mid)]
+  elif base in VOWELS:
+   phases=len(PHONE_CATALOG[base]['targets']);times=[a+(b-a)*(i+.5)/phases for i in range(phases)]
+  elif base=='W':times=[mid]
+  else:continue
+  for t in times:keys[round(t,9)]=(t,*pose(t))
+ for s in plan.get('silences',[]):
+  if not np.isfinite([s['start'],s['end']]).all() or s['end']<s['start']:raise ValueError('Expected finite ordered silence intervals')
+  if s['end']-s['start']>=.08:
+   for t in [s['start']+.035,s['end']-.035]:keys[round(t,9)]=(t,*pose(t))
+ ordered=sorted(keys.values())
+ return [[(row[0],row[j]) for row in ordered] for j in [1,2]] if ordered else None
 
 def rounded_oral_arch(oral,aperture,strength):
  if not np.isfinite(strength) or not 0<=strength<=1:raise ValueError('Rounding strength must be within0..1')
@@ -28,6 +54,22 @@ def rounded_oral_arch(oral,aperture,strength):
  return result
 
 class MaterialCapture(FaceCapture):
+ def baseline_corners(self,t,plan):
+  # RoundedDuration preserves these original X controls while scaling height.
+  points=RoundedCartoonHead.target_points(self,duration_jaw_weights(t,plan),rounding_identity(t,plan))
+  return float(points[8,0]),float(points[0,0])
+ def at(self,t,plan):
+  previous=getattr(self,'corner_time',None)
+  try:
+   if plan.get('alignment',{}).get('status')=='acoustic':
+    signature=corner_signature(plan)
+    if signature!=getattr(self,'corner_signature',None):
+     keys=phonetic_corner_keys(plan,lambda time:self.baseline_corners(time,plan))
+     self.corner_keys=keys;self.corner_signature=signature
+    self.corner_time=t if self.corner_keys else None
+   else:self.corner_time=None
+   return super().at(t,plan)
+  finally:self.corner_time=previous
  def weights(self,weights,expression=None,shape_weights=None,geometry_weights=None):
   previous=getattr(self,'review_rounding',0.)
   identity=np.asarray(weights if shape_weights is None else shape_weights,float);identity=identity/identity.sum()
@@ -38,6 +80,10 @@ class MaterialCapture(FaceCapture):
  def oral_target(self,target,aperture):
   oral=super().oral_target(target,aperture)
   oral=rounded_oral_arch(oral,aperture,self.review_rounding)
+  if getattr(self,'corner_time',None) is not None:
+   left,right=[flowing_track(self.corner_time,keys) for keys in self.corner_keys];a,b=oral[8,0],oral[0,0]
+   if not np.isfinite([left,right,a,b]).all() or right<=left or b<=a:raise ValueError('Invalid lip-corner span')
+   oral[:32,0]=left+(oral[:32,0]-a)*(right-left)/(b-a)
   self.current_oral=oral.copy();self.current_rounding=self.review_rounding;self.current_round_material=self.review_rounding*float(ease((aperture-3)/8));return oral
  def composite_oral(self,face,cavity,teeth,tongue,contact,closed,aperture,w):
   # Use the same rigid incisor parent at pure/mixed F/V; no material switch.

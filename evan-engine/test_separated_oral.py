@@ -66,4 +66,42 @@ class SeparatedOralTests(unittest.TestCase):
    np.testing.assert_array_equal(source,self.rig.head.dental_tip)
   finally:self.rig.head.dental_fraction=0
 
+class CornerPhaseTests(unittest.TestCase):
+ def setUp(self):
+  from audit_separated_geometry import GeometryCapture
+  from english_articulation import phone_gestures
+  cv2.setNumThreads(1);self.rig=SeparatedOralReview();self.rig.head=GeometryCapture()
+  phones=[dict(start=a,end=b,phone=p,value=v,word='test') for a,b,p,v in [(0,.1,'UW','F'),(.1,.3,'M','A'),(.3,.4,'S','B'),(.4,.6,'AO','E')]]
+  self.plan=dict(alignment={'status':'acoustic'},words=phones,phonemes=phones,gestures=phone_gestures(phones),audio=dict(step=.01,energy=[.8]*100),fallbackCues=[],silences=[])
+ def prior(self,t):
+  from separated_oral_review import MaterialCapture
+  from audit_separated_geometry import GeometryCaptured
+  try:super(MaterialCapture,self.rig.head).at(t,self.plan)
+  except GeometryCaptured:pass
+  return self.rig.head.current_oral.copy(),self.rig.head.exposure_skin.copy()
+ def test_native_corner_reference_and_held_seal(self):
+  from audit_separated_geometry import capture
+  for t in [.05,.15,.29,.35,.5]:
+   oral,_=self.prior(t);np.testing.assert_array_equal(self.rig.head.baseline_corners(t,self.plan),oral[[8,0],0])
+  for t in [.15,.2,.28]:
+   row=capture(self.rig,t,self.plan);self.assertAlmostEqual(row['width'],69,places=4)
+   oral=self.rig.head.current_oral;self.assertLessEqual(float(oral[20,1]-oral[28,1]),.151)
+ def test_only_horizontal_oral_controls_change(self):
+  from audit_separated_geometry import capture
+  oral,skin=self.prior(.35);capture(self.rig,.35,self.plan);new=self.rig.head.current_oral
+  self.assertGreater(float(abs(oral[:32,0]-new[:32,0]).max()),1)
+  np.testing.assert_array_equal(oral[:,1],new[:,1]);np.testing.assert_array_equal(oral[32:],new[32:]);np.testing.assert_array_equal(skin,self.rig.head.exposure_skin)
+ def test_cache_updates_for_in_place_plan_edit_and_cleans_exception_state(self):
+  from audit_separated_geometry import capture
+  capture(self.rig,.2,self.plan);keys=self.rig.head.corner_keys
+  capture(self.rig,.21,self.plan);self.assertIs(keys,self.rig.head.corner_keys)
+  self.plan['audio']['energy'][5]=.1;capture(self.rig,.2,self.plan);self.assertIsNot(keys,self.rig.head.corner_keys)
+  self.plan['phonemes'][0]['end']=0
+  with self.assertRaises(ValueError):capture(self.rig,.2,self.plan)
+  self.assertIsNone(self.rig.head.corner_time)
+ def test_diphthong_phases_and_rounded_w_have_corner_targets(self):
+  from separated_oral_review import phonetic_corner_keys
+  p=dict(self.plan,phonemes=[dict(start=0,end=.4,phone='OW',value='E'),dict(start=.4,end=.6,phone='W',value='F')])
+  keys=phonetic_corner_keys(p,lambda t:(190,270));np.testing.assert_allclose([t for t,_ in keys[0]],[.1,.3,.5])
+
 if __name__=='__main__':unittest.main()
