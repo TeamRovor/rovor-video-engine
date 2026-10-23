@@ -2270,6 +2270,30 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39893071195"
         }
       ]
+    },
+    {
+      "id": "private-mac-supervisor-launchagent",
+      "title": "Package existing private Mac poller as a safe opt-in persistent LaunchAgent",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / ROVOR private supervisor packaging session 2026-10-22",
+      "branch": "feature/private-mac-supervisor-launchagent-v1",
+      "scopes": [
+        "tools/rovor_private_supervisor.py",
+        "tests/test_rovor_private_supervisor.py",
+        "integrations/open-interpreter/ROVOR-LAUNCHAGENT-SUPERVISOR.md",
+        ".github/workflows/rovor-private-supervisor.yml"
+      ],
+      "depends_on": [
+        "private-mac-control-bounded-poller-v1"
+      ],
+      "updated_at": "2026-10-23T03:18:28.712Z",
+      "next_update": "After Python3.9/3.11 hosted offline tests, docs and PR; actual user Mac installation and service status unverified",
+      "next_action": "Create isolated opt-in LaunchAgent configuration and safe single-pass executor around existing private control poller. Never edit poller or bridge internals, never store tokens in GitHub or LaunchAgent, stage locally only on explicit user Mac command. Validate safety and STOP controls offline.",
+      "acceptance": "No public runner or new queue; local-only LaunchAgent scheduled once per several minutes; private GitHub queue polling only; scoped token retrieved from Keychain; no secrets printed or in plist; guarded 0600 config; stage-and-activate separate; STOP/offline/missing key fail closed; tests Python3.9/3.11 and no actual Mac execution claim.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41"
+      ]
     }
   ]
 }
