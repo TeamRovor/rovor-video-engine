@@ -1755,6 +1755,28 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/blob/main/coordination/tasks.json"
         }
       ]
+    },
+    {
+      "id": "jane-queued-native-diagnosis",
+      "title": "Make native diagnosis inspect queued jobs as well as manual import attempts",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar continuous workforce repair",
+      "branch": "fix/jane-queued-diagnosis",
+      "scopes": [
+        "tools/jane_native_worker.py",
+        "tools/fcp_jane_native_probe.py",
+        "tests/test_ghost_native_import_queue.py",
+        "tests/test_fcp_jane_native_probe.py"
+      ],
+      "depends_on": [
+        "jane-diagnostic-xml-integrity"
+      ],
+      "updated_at": "2026-10-23T00:42:07.028Z",
+      "next_update": "After failing regression reproduction and repaired integrated offline suite",
+      "next_action": "Reuse existing read-only queue status and probe; report all bounded persisted queued/manual attempts, missing receipts and invalid evidence without dispatch or database initialization.",
+      "acceptance": "Queued native-import UUID folder can be diagnosed; malformed paths refused; manual/queue mixed attempts retained; missing receipts explicit; no model, native dispatch or DB initialization; integrated suite passes.",
+      "evidence": []
     }
   ]
 }
