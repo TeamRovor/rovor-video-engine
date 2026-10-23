@@ -5,6 +5,9 @@ Uses the existing SQLite ghost-worker DB and onepass native UI adapter.
 Without --create: no DB, model, app or filesystem writes.
 With --create: only a fresh unique FCP library; NEVER imports XML, never
 edits or replays an earlier job, never auto-approves/launches a daemon.
+Exit code 3 means a one-time GUI attempt was recorded and still needs review;
+exit code 2 means the request was refused or not dispatched. Exit 0 is
+reserved for read-only status/dry-run, not an unverified GUI result.
 This is not a generic unattended executor.
 """
 import argparse
@@ -95,10 +98,17 @@ def execute(home, job_id, *, create=False):
                     'job_id':job,
                     'reason':'STOP or concurrent worker owns this job',
                     'xml_import_attempted':False}
+        native_result = receipt.get('result')
+        # A recorded attempt is not a successful FCP operation. The native
+        # package may still be absent and app selection is never proven here.
+        observed = (isinstance(native_result, dict)
+                    and native_result.get('target_library_exists') is True)
         return {'status':'creation_attempt_recorded',
                 'job_id':job,'job_status':receipt['status'],
-                'native':receipt.get('result'),
+                'native':native_result,
                 'error_class':receipt.get('error'),
+                'native_library_folder_observed':bool(observed),
+                'review_required':True,
                 'native_library_app_selected_verified':False,
                 'xml_import_attempted':False}
 
@@ -122,8 +132,11 @@ def main(argv=None):
                 p.error('--job-id is required for create and dry-run')
             result=execute(Path.home(),args.job_id,create=args.create)
         print(json.dumps(result,indent=2,sort_keys=True))
-        if args.create and result['status'] != 'creation_attempt_recorded':
-            return 2
+        if args.create:
+            # Exit 3 = the native attempt was recorded, but requires review.
+            # Exit 2 = refused/not dispatched. Never exit 0 for an unverified
+            # native GUI action: wrappers must not infer success from rc=0.
+            return 3 if result['status'] == 'creation_attempt_recorded' else 2
         return 0
     except (ValueError, OSError, sqlite3.Error) as e:
         print(json.dumps({'status':'blocked',
