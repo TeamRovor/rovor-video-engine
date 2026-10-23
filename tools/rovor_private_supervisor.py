@@ -10,6 +10,7 @@ stage (--approve-stage) and activate (--approve-activate). The private control
 token stays in macOS Keychain, NEVER in a plist, GitHub, CLI args or logs.
 """
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -25,9 +26,13 @@ LABEL = "com.rovordigital.private-control-supervisor"
 KEYCHAIN_SERVICE = "rovordigital.private-control.github-token"
 APP_FOLDER = "ROVOR-Private-Supervisor"
 CONFIG_FILE = "config.json"
+RUNTIME_DIR = "runtime"
+RUNTIME_FILES = ("rovor_private_supervisor.py", "ghost_private_control.py",
+                 "ghost_private_control_loop.py", "ghost_worker.py")
+MAX_RUNTIME_FILE = 512 * 1024
 PLIST_FILE = LABEL + ".plist"
 INTERVAL = 300
-MAX_TICK_SECONDS = 15
+MAX_TICK_SECONDS = 120
 
 
 class Refused(ValueError):
@@ -69,9 +74,9 @@ def _json_private(config_path):
         raise Refused("Invalid local supervisor config") from None
     if (not isinstance(config, dict)
             or set(config) != {"schema", "private_repo", "receipt_issue",
-                               "python_executable", "script_path"}
+                               "python_executable", "script_path", "runtime_sha256"}
             or type(config.get("schema")) is not int
-            or config["schema"] != 1
+            or config["schema"] != 2
             or type(config.get("receipt_issue")) is not int
             or not 1 <= config["receipt_issue"] <= 100000000):
         raise Refused("Invalid local supervisor config")
@@ -79,6 +84,15 @@ def _json_private(config_path):
         control.repo_name(config["private_repo"])
     except (ValueError, TypeError):
         raise Refused("Unsafe private repository name") from None
+    digests = config.get("runtime_sha256")
+    if (not isinstance(digests, dict) or set(digests) != set(RUNTIME_FILES)
+            or any(not isinstance(digest,str) or len(digest)!=64
+                   or any(c not in "0123456789abcdef" for c in digest)
+                   for digest in digests.values())):
+        raise Refused("Missing trusted runtime snapshot digests")
+    expected_script = str(config_path.parent / RUNTIME_DIR / RUNTIME_FILES[0])
+    if config.get("script_path") != expected_script:
+        raise Refused("Runtime script must be isolated private snapshot")
     for key in ("python_executable", "script_path"):
         value = config.get(key)
         if (not isinstance(value, str) or not value.startswith("/")
@@ -154,15 +168,36 @@ def stage(home, private_repo, issue, *, script=None, python=None):
         raise Refused("Local Python executable missing") from None
     if not python.is_file():
         raise Refused("Local Python executable missing")
+    if script.name != RUNTIME_FILES[0]:
+        raise Refused("Expected exact reviewed supervisor module")
+    # Freeze one private local runtime. An ordinary Git checkout update must
+    # never silently change unattended code with access to Mac Keychain.
+    inputs={}
+    for name in RUNTIME_FILES:
+        source=script.parent/name
+        if source.is_symlink() or not source.is_file():
+            raise Refused("Missing or redirected runtime dependency")
+        with source.open("rb") as stream:
+            blob=stream.read(MAX_RUNTIME_FILE+1)
+        if len(blob)>MAX_RUNTIME_FILE:
+            raise Refused("Runtime source file too large")
+        inputs[name]=blob
+    snapshot=service/RUNTIME_DIR
     config = {
-        "schema": 1,
+        "schema": 2,
         "private_repo": repo,
         "receipt_issue": issue,
         "python_executable": str(python),
-        "script_path": str(script),
+        "script_path": str(snapshot/RUNTIME_FILES[0]),
+        "runtime_sha256": {name:hashlib.sha256(blob).hexdigest()
+                           for name,blob in inputs.items()},
     }
     service.mkdir(mode=0o700)
     _private_folder(service)
+    snapshot.mkdir(mode=0o700)
+    _private_folder(snapshot)
+    for name,blob in inputs.items():
+        _new_file(snapshot/name,blob,0o600)
     data=(json.dumps(config,indent=2,sort_keys=True)+"\n").encode()
     _new_file(service / CONFIG_FILE, data, 0o600)
     payload=plistlib.dumps(plist_contents(config,service),sort_keys=True)
@@ -184,6 +219,12 @@ def _check_stage(home):
             raise Refused("Unsafe local LaunchAgent parent")
     _private_folder(service)
     config=_json_private(service / CONFIG_FILE)
+    snapshot=service/RUNTIME_DIR
+    _private_folder(snapshot)
+    for name in RUNTIME_FILES:
+        blob=_safe_file(snapshot/name,MAX_RUNTIME_FILE)
+        if hashlib.sha256(blob).hexdigest() != config["runtime_sha256"][name]:
+            raise Refused("Private runtime snapshot differs from reviewed code")
     expected=plist_contents(config,service)
     # Keep permission/symlink errors distinct from corrupt plist syntax.
     raw_plist=_safe_file(plist,16000)
