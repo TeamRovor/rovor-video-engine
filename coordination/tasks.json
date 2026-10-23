@@ -2633,7 +2633,7 @@
           "commit": "8371141940e79c1fd8d99473c694c5d023759e30",
           "platform": "GitHub-hosted Ubuntu; Python 3.9 and 3.11",
           "check": "Direct run_packet() path-containment regression: checkout root, nested output, symlink alias; callback must not run and output paths must not be created.",
-          "result": "PASS both Python versions (workflow run 39907069562). Test PR #71 remains open; combined PR #66 head not yet revalidated with this test.",
+          "result": "PASS both Python versions on the pull_request workflow merge ref using PR #66's current base SHA. The regression is validated together with the implementation in CI, but the test commit has not been merged/cherry-picked into PR #66's branch; neither PR has been merged.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39907069562"
         }
       ]
