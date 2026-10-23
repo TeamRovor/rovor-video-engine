@@ -2913,9 +2913,9 @@
       "depends_on": [
         "github-atomic-paired-task-commit"
       ],
-      "updated_at": "2026-10-23T06:48:00Z",
-      "next_update": "Reopen only if either dashboard changes polling behavior, a regression appears, or multi-device shared-IP usage becomes a release requirement.",
-      "next_action": "Independent hosted QA completed for both live HUDs. Lightweight PR #73 revised head 138d1713a504ef72a8cf57deb8ae1d059df509ec uses 32 REST calls/hour (run 39913411350; 4/4 tests pass), down from 194/hour on the old head (run 39912037508). Merged Iron Man Command Center source on main uses 31 REST calls plus 42 pinned raw reads/hour (run 39913559189; 6/6 tests pass). Tests cover same-SHA reads, fail-closed/stale labeling, hidden-tab pause, manual refresh bounds and no credentials/writes. PR #77 and PR #80 remain draft/open; no merge or deployment performed. Single-tab budget only; two concurrent Command Center tabs sharing one IP could reach about 62 REST calls/hour.",
+      "updated_at": "2026-10-23T07:34:01.307Z",
+      "next_update": "Reopen only if GitHub polling, public API quota or stale-status behavior changes",
+      "next_action": "Merged test-only PR #80 at 1d61b4b6d57a0dee2bc550149800544f619a8a0a; hosted HUD and one-hour quota checks passed. PR #79's overlapping stale-status test was superseded and closed. This is mocked browser QA, not deployed live access or Mac execution.",
       "acceptance": "Independent deterministic tests prove 1-hour refresh API request count and replayable rate-limit failure; baseline failure is explicitly recorded; owner must lower REST API calls or use raw pinned files and re-run QA before live deployment.",
       "evidence": [
         {
@@ -2952,6 +2952,13 @@
           "check": "60-minute REST budget, pinned SHA, hidden-tab pause, manual refresh, stale downgrade, credential/write scan",
           "result": "PASS 6/6. Measured 31 REST requests and 42 raw pinned reads per 60 simulated minutes. No deployed-browser or Mac-runtime test claimed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39913559189"
+        },
+        {
+          "commit": "1d61b4b6d57a0dee2bc550149800544f619a8a0a",
+          "platform": "GitHub Actions Ubuntu / Node.js mocked browser regression",
+          "check": "PR #80 merged; Command Center one-hour REST request budget and failed-critical-refresh stale-state regressions (#39918278455) plus HUD live-data checks (#39918278606)",
+          "result": "PASS both hosted workflows; duplicate draft PR #79 closed; no production source changes or deployment",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39918278455"
         }
       ],
       "links": [
