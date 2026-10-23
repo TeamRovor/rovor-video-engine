@@ -230,8 +230,67 @@ class PrivateSupervisorTests(unittest.TestCase):
         self.assertEqual(a['status'],'activation_dispatched_not_verified')
         self.assertEqual(d['status'],'deactivation_dispatched_not_verified')
         self.assertEqual(commands[0][:2],['/bin/launchctl','bootstrap'])
-        self.assertEqual(commands[1][:2],['/bin/launchctl','bootout'])
+        self.assertEqual(commands[1],['/bin/launchctl','bootout',
+                                      'gui/'+str(os.getuid())+'/'+sup.LABEL])
         self.assertNotIn('/bin/sh',str(commands))
+
+    def test_emergency_deactivate_works_with_corrupt_frozen_runtime(self):
+        self.staged()
+        service,_,_=sup._check_stage(self.home)
+        (service/sup.RUNTIME_DIR/'ghost_worker.py').write_text('corrupted')
+        calls=[]
+        def fake(command,**kwargs):
+            calls.append(command)
+            return subprocess.CompletedProcess(command,0,stdout='',stderr='')
+        with mock.patch.object(sup.sys,'platform','darwin'):
+            with mock.patch.object(sup,'_check_stage',
+                                   side_effect=AssertionError('deactivate must not inspect damaged stage')):
+                result=sup.launchctl(self.home,'deactivate',run=fake)
+        self.assertEqual(result['status'],'deactivation_dispatched_not_verified')
+        self.assertFalse(result['native_gui_control_verified'])
+        self.assertEqual(calls,[['/bin/launchctl','bootout',
+                                 'gui/'+str(os.getuid())+'/'+sup.LABEL]])
+
+    def test_emergency_deactivate_works_with_missing_plist(self):
+        self.staged()
+        _,plist,_=sup._check_stage(self.home)
+        plist.unlink()
+        commands=[]
+        def fake(command,**kwargs):
+            commands.append(command)
+            return subprocess.CompletedProcess(command,0,stdout='',stderr='')
+        with mock.patch.object(sup.sys,'platform','darwin'):
+            sup.launchctl(self.home,'deactivate',run=fake)
+            with mock.patch.object(sup,'subprocess') as mocked:
+                with self.assertRaises(sup.Refused):
+                    sup.launchctl(self.home,'activate')
+                mocked.run.assert_not_called()
+        self.assertEqual(commands,[['/bin/launchctl','bootout',
+                                     'gui/'+str(os.getuid())+'/'+sup.LABEL]])
+
+    def test_emergency_deactivate_reports_bootout_failure_without_leaking_output(self):
+        command_log=[]
+        def fake(command,**kwargs):
+            command_log.append(command)
+            return subprocess.CompletedProcess(command,1,
+                                               stdout='SENSITIVE',
+                                               stderr='SECRET')
+        with mock.patch.object(sup.sys,'platform','darwin'):
+            with self.assertRaisesRegex(sup.Refused,'launchctl action not confirmed') as error:
+                sup.launchctl(self.home,'deactivate',run=fake)
+        self.assertNotIn('SECRET',str(error.exception))
+        self.assertEqual(command_log,[['/bin/launchctl','bootout',
+                                        'gui/'+str(os.getuid())+'/'+sup.LABEL]])
+
+    def test_unknown_launchctl_verb_is_not_dispatched(self):
+        commands=[]
+        def fake(command,**kwargs):
+            commands.append(command)
+            return subprocess.CompletedProcess(command,0,stdout='',stderr='')
+        with mock.patch.object(sup.sys,'platform','darwin'):
+            with self.assertRaises(sup.Refused):
+                sup.launchctl(self.home,'reload',run=fake)
+        self.assertEqual(commands,[])
 
     def test_activation_requires_explicit_confirmation(self):
         with mock.patch.object(sup,'launchctl') as actuator:
