@@ -22,7 +22,9 @@ on:
       - 'tools/fcp_jane_import_audit.py'
       - 'tests/test_fcp_jane_import_audit.py'
       - 'tools/fcp_jane_library_bootstrap.py'
+      - 'tools/fcp_jane_library_onepass.py'
       - 'tests/test_fcp_jane_library_bootstrap.py'
+      - 'tests/test_fcp_jane_library_onepass.py'
       - 'tools/fcp_jane_library_failure_probe.py'
       - 'tests/test_fcp_jane_library_failure_probe.py'
       - 'tests/test_fcp_native_import_candidate.py'
@@ -50,7 +52,9 @@ on:
       - 'tools/fcp_jane_import_audit.py'
       - 'tests/test_fcp_jane_import_audit.py'
       - 'tools/fcp_jane_library_bootstrap.py'
+      - 'tools/fcp_jane_library_onepass.py'
       - 'tests/test_fcp_jane_library_bootstrap.py'
+      - 'tests/test_fcp_jane_library_onepass.py'
       - 'tools/fcp_jane_library_failure_probe.py'
       - 'tests/test_fcp_jane_library_failure_probe.py'
       - 'tests/test_fcp_native_import_candidate.py'
@@ -86,4 +90,5 @@ jobs:
           python -m unittest discover -s tests -p test_fcp_jane_ui_probe.py -v
           python -m unittest discover -s tests -p test_fcp_jane_import_audit.py -v
           python -m unittest discover -s tests -p test_fcp_jane_library_bootstrap.py -v
+          python -m unittest discover -s tests -p test_fcp_jane_library_onepass.py -v
           python -m unittest discover -s tests -p test_fcp_jane_library_failure_probe.py -v
