@@ -2620,7 +2620,7 @@
       ],
       "updated_at": "2026-10-23T06:05:16.153Z",
       "next_update": "After PR #71 is reviewed/merged into the #66 implementation branch and the combined head passes CI.",
-      "next_action": "PR #66 implements canonical source/destination containment in run_packet(); separate regression PR #71 adds direct API tests for checkout root, nested output and symlink alias, asserting no completion callback and no output directory. Hosted offline workflow run 39907069562 passed Python 3.9 and 3.11 on test commit 8371141940e79c1fd8d99473c694c5d023759e30. Review/integrate #71 into fix/omniroute-output-path-v1, then confirm combined CI before #66 is merged. Do not claim the two PRs are integrated yet.",
+      "next_action": "PR #71's hosted pull_request workflow succeeded on 8371141940e79c1fd8d99473c694c5d023759e30 with base SHA 26a30719fd890f751c4f789af8645c03e8b56ac1 (the current PR #66 head), so combined-head validation is green. The regression test is still only on PR #71, not integrated into PR #66's branch. Await explicit user authorization before merging #71 into #66; after authorized integration, rerun hosted CI on the resulting #66 head before considering any merge to its parent.",
       "acceptance": "No private draft receipt can be written within ROVOR public checkout via CLI or Python direct API; host-independent regression passes.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/51",
