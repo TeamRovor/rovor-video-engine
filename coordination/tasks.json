@@ -2967,6 +2967,22 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39914220685"
         }
       ]
+    },
+    {
+      "id": "routing-ci-supersession-cancellation-20261023",
+      "title": "Stop superseded work-routing checks while keeping cross-version validation",
+      "priority": 2,
+      "status": "active",
+      "owner": "ChatGPT / Amar GitHub workflow-efficiency 2026-10-23",
+      "branch": "fix/routing-ci-cancel-stale-20261023",
+      "scopes": [
+        ".github/workflows/work-brief-routing-check.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T06:55:43.956Z",
+      "next_update": "After hosted routing CI",
+      "next_action": "Enable same-ref stale-run cancellation for frequent queue/routing checks, preserving Python 3.9 and 3.11 suites; verify CI and merge",
+      "acceptance": "Concurrent stale main/PR routing checks may be replaced by the latest same-ref run; current validations and security permissions stay unchanged; hosted checks succeed."
     }
   ]
 }

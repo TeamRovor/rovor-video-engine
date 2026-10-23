@@ -532,6 +532,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "routing-ci-supersession-cancellation-20261023": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
