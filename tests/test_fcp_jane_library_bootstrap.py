@@ -46,6 +46,15 @@ class NativeLibraryBootstrapTests(unittest.TestCase):
         self.assertEqual(protected.read_bytes(), b'original')
         self.assertFalse(Path(receipt['target_library']).exists())
 
+    def test_new_jobs_do_not_require_oct22_historical_failure_receipt(self):
+        self.job.rename(self.root/'old-not-present')
+        output, report=gate.prepare(None,self.output,home=self.home)
+        self.assertIsNone(report['prior_job'])
+        self.assertEqual(report['schema_version'],2)
+        self.assertEqual(report['target_library'],
+                         str(gate.expected_library(output)))
+        self.assertFalse(report['xml_import_attempted'])
+
     def test_create_only_calls_new_library_ui_apple_script(self):
         output, report = self.prepared()
         cmds = []
