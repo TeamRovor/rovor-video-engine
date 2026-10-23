@@ -6,10 +6,13 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "any",
-  "background_color": "#030c17",
-  "theme_color": "#04111f",
-  "categories": ["productivity", "utilities"],
+  "orientation": "landscape",
+  "background_color": "#02050a",
+  "theme_color": "#03070d",
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "./hud-icon.svg",
