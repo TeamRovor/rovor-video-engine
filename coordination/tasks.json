@@ -2788,11 +2788,15 @@
       "depends_on": [
         "github-atomic-paired-task-commit"
       ],
-      "updated_at": "2026-10-23T06:13:05.008Z",
+      "updated_at": "2026-10-23T06:19:00Z",
       "next_update": "After browser network-failure tests and GitHub-hosted static checks",
-      "next_action": "Adapt existing Iron Man ROVOR HUD to load live public GitHub task+route files pinned to one commit, auto-poll while dashboard open, refresh on demand, show stale/network/API rate-limit errors and worker claim vs host online distinction. Fetch open PRs and tree periodically within unauthenticated API limits. Publish public-safe source and downloadable ZIP; no GitHub token in browser or claim of native Mac execution.",
+      "next_action": "PR #73 adds a standalone static live-data HUD at dashboard/index.html, pinning tasks.json and work-routing.json to one main commit SHA; PR is draft and browser/live API checks have not run. Legacy Iron Man HUD source was absent from main, queued branch, and searched conversation/library. Actions ZIP workflow could not be added through the available write path, so downloadable artifact remains incomplete. Next: obtain the legacy HUD source (or owner approval to proceed without it), add a supported ZIP distribution path, then validate in a browser and update acceptance evidence.",
       "acceptance": "Dashboard visibly updates task counts/routing/owners after GitHub source changes; no fixed-only refresh; network errors cannot silently label stale snapshot as live; tests simulate concurrent refs, HTTP errors, mismatched routes, untrusted task HTML; no app control or credentials.",
-      "evidence": []
+      "evidence": [],
+      "blocker": "Legacy Iron Man HUD source is not present in main, the queued feature branch, or searchable conversation/library files. The available GitHub write path rejected adding .github/workflows/dashboard-live-data.yml, so ZIP artifact packaging is not yet implemented. Static review only; no browser/live API test.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/73"
+      ]
     }
   ]
 }
