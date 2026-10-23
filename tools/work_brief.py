@@ -15,6 +15,49 @@ CAPABILITIES = {'github-read', 'github-write', 'hosted-ci', 'local-exec',
                 'blender-runtime', 'final-cut-runtime'}
 
 
+def ready_task_explanations(tasks, rules, capabilities):
+    """Read-only reasons a ready task cannot start in this session.
+
+    Preserve the exact task owner/scope and dependency status; avoid guessing
+    whether another machine is available. These explanations never claim work.
+    """
+    by_id = {t['id']: t for t in tasks}
+    reserved = [t for t in tasks if t['status'] in {'active', 'blocked'}]
+    explanations = []
+    for task in tasks:
+        if task['status'] != 'ready':
+            continue
+        dependencies = [
+            {'id': dep, 'status': by_id[dep]['status'],
+             'owner': by_id[dep].get('owner')}
+            for dep in task.get('depends_on', [])
+            if by_id[dep]['status'] != 'done'
+        ]
+        conflicts = []
+        for other in reserved:
+            for wanted in task['scopes']:
+                for occupied in other['scopes']:
+                    if project_loop.overlaps(wanted, occupied):
+                        conflicts.append({
+                            'id': other['id'], 'status': other['status'],
+                            'owner': other.get('owner'), 'wanted_scope': wanted,
+                            'reserved_scope': occupied,
+                        })
+        rule = rules.get(task['id'])
+        missing = sorted((set(rule['requires']) |
+                          {'github-read', 'github-write'}) - capabilities) if rule else []
+        if dependencies or conflicts or missing or rule is None:
+            explanations.append({
+                'id': task['id'], 'priority': task['priority'],
+                'lane': rule['lane'] if rule else None,
+                'dependencies': dependencies, 'reserved_scope_conflicts': conflicts,
+                'missing_capabilities': missing,
+                'unclassified': rule is None,
+            })
+    explanations.sort(key=lambda t: (t['priority'], t['id']))
+    return explanations
+
+
 def route(data, policy, participant, capabilities, lane='any', fallback_any_lane=False):
     errors, warnings = project_loop.validate(data)
     if errors:
@@ -36,6 +79,7 @@ def route(data, policy, participant, capabilities, lane='any', fallback_any_lane
     tasks = data['tasks']
     ids = {t['id'] for t in tasks}
     warnings += ['Routing references missing task: ' + i for i in rules if i not in ids]
+    ready_explanations = ready_task_explanations(tasks, rules, capabilities)
     available = {t['id'] for t in project_loop.suggestions(data)}
     candidates, other_lane, excluded = [], [], []
     for task in tasks:
@@ -96,6 +140,7 @@ def route(data, policy, participant, capabilities, lane='any', fallback_any_lane
             'recommended': candidates[0] if candidates else None,
             'alternatives': candidates[1:], 'excluded': excluded, 'warnings': warnings,
             'routing_coverage': coverage, 'selection_mode': selection,
+            'ready_blockers': ready_explanations,
             'fallback_any_lane_requested': fallback_any_lane,
             'notice': 'Snapshot only. Refresh main and open PRs; publish and re-read a claim before edits. '
                       'Capabilities are caller assertions, not machine verification. No automatic claim or remote control.'}
@@ -120,6 +165,25 @@ def render(brief):
     else:
         lines += ['', 'No eligible implementation task. Read current PR evidence and propose one bounded',
                   'task with acceptance criteria and capability requirements; do not take another owner’s task.']
+    if not task and brief['ready_blockers']:
+        lines.append('')
+        lines.append('## Ready-task blockers (no ownership changes)')
+        for item in brief['ready_blockers'][:5]:
+            parts = []
+            if item['dependencies']:
+                parts.append('dependencies: ' + ', '.join(
+                    d['id'] + ' [' + d['status'] +
+                    (', owner=' + d['owner'] if d.get('owner') else '') + ']'
+                    for d in item['dependencies']))
+            if item['reserved_scope_conflicts']:
+                parts.append('reserved scopes: ' + ', '.join(sorted({
+                    d['id'] + ' (' + d['wanted_scope'] + ')'
+                    for d in item['reserved_scope_conflicts']})))
+            if item['missing_capabilities']:
+                parts.append('missing capabilities: ' + ', '.join(item['missing_capabilities']))
+            if item['unclassified']:
+                parts.append('unclassified route')
+            lines.append(item['id'] + ': ' + '; '.join(parts))
     lines += ['', '## Other eligible tasks'] + [t['id'] for t in brief['alternatives']]
     lines += ['', '## Excluded'] + [t['id'] + ': ' + t['reason'] for t in brief['excluded']]
     lines += ['', 'Handoff: exact commit/PR, changed files, actual checks/platform/results, blockers,',
