@@ -223,3 +223,11 @@ test('command views expose accessible tabs with keyboard navigation',()=>{
   assert.match(app,/event\.key === 'End'/);
   assert.match(app,/panel\.hidden = !selected/);
 });
+
+test('shared ROVOR mark stays a compact vector asset with separated wheel centers',()=>{
+  const mark=fs.readFileSync(path.join(shellDir,'rovor-mark.svg'),'utf8');
+  assert.match(mark,/<svg[^>]*viewBox="0 0 837 601"/);
+  assert.equal((mark.match(/<path\b/g)||[]).length,3);
+  assert.match(mark,/fill="#fff"/);
+  assert.ok(mark.length<4000,'mark should remain a small inline vector asset');
+});
