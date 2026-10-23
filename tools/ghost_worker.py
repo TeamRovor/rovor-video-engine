@@ -134,7 +134,10 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
         raise
 
 
-def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False):
+def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
+          jane_queue_job_id=None):
+    if jane_queue_job_id is not None and not jane_library_only:
+        raise ValueError('Job ID filter requires Jane library-only mode')
     if jane_library_only and not allow_jane_library_create:
         raise ValueError('Jane-only selector requires specific library creation approval')
     if not owner or len(owner) > 128:
@@ -159,7 +162,9 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         if jane_library_only:
             kinds = [LIBRARY_KIND]
         marks = ",".join("?" for _ in kinds)
-        job = conn.execute(f"SELECT * FROM jobs WHERE status='queued' AND kind IN ({marks}) ORDER BY created_at,id LIMIT 1", kinds).fetchone()
+        job_filter = " AND id=?" if jane_queue_job_id is not None else ""
+        args = [*kinds, jane_queue_job_id] if jane_queue_job_id is not None else kinds
+        job = conn.execute(f"SELECT * FROM jobs WHERE status='queued' AND kind IN ({marks}){job_filter} ORDER BY created_at,id LIMIT 1", args).fetchone()
         if job:
             conn.execute("UPDATE jobs SET status='running',attempts=attempts+1,lease_owner=?,lease_until=?,updated_at=? WHERE id=?",
                          (owner, now + (420 if job['kind'] in {NATIVE_KIND, LIBRARY_KIND} else 360 if job["kind"] == RESEARCH_KIND else LEASE_SECONDS), now, job["id"]))
@@ -209,13 +214,15 @@ def inventory(workspace: Path, subpath: str) -> dict:
             "read_only": True, "truncated_depth": MAX_DEPTH}
 
 
-def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False):
+def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
+             jane_queue_job_id=None):
     state = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
     if os.path.lexists(state / "STOP"):
         return None
     job = claim(conn, owner, now, allow_model_use=allow_model_use, allow_native_import=allow_native_import,
                 allow_jane_library_create=allow_jane_library_create,
-                jane_library_only=jane_library_only)
+                jane_library_only=jane_library_only,
+                jane_queue_job_id=jane_queue_job_id)
     if not job:
         return None
     job_id, kind = job["id"], job["kind"]
