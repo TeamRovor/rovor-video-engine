@@ -2026,6 +2026,24 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39888632870"
         }
       ]
+    },
+    {
+      "id": "mac-execution-roundtrip",
+      "title": "Verify GitHub-to-owned-Mac sandbox write/read round trip",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar iPhone Mac-link proof session 2026-10-22",
+      "branch": "main",
+      "scopes": [
+        ".github/workflows/rovor-mac-exec-proof.yml",
+        "rovor-production/mac-queue/exec-smoke-20261022-01.json"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T02:19:00.269Z",
+      "next_update": "When first triggered self-hosted job completes or fails with evidence",
+      "next_action": "Submit one allowlisted write-and-readback task through existing self-hosted Rovor-Mac runner. Touch only a new disposable Documents/Rovor/ChatGPT-Link-Proof file, fail closed on existing file or unsupported request, confirm exact GitHub Actions job and host receipt. No unrestricted shell, models, FCP, other personal files, credentials, paid tools or looping.",
+      "acceptance": "An authenticated main-branch GitHub request runs once on the existing rovor-video Mac runner, creates exactly one new benign private sandbox file using O_EXCL, verifies SHA256 readback, and reports a trustworthy host result; if runner offline then record blocked with exact observed evidence.",
+      "evidence": []
     }
   ]
 }
