@@ -54,7 +54,7 @@
       "id": "evan-acting-review",
       "title": "Identify the next visible character defect from existing acting work",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar iPhone painting-film source-video visual QA 2026-10-22",
       "branch": "review/painting-wip-v11-v12-visual-qa-20261022",
       "scopes": [
@@ -65,13 +65,24 @@
         ".github/workflows/painting-video-qa.yml"
       ],
       "depends_on": [],
-      "next_action": "Review source-video painting-film V11/V12 evidence and timestamped defects 82/108/120s, then create a source-art-preserving 30–50s continuous animated repair passage. No renderer changes or release approval during review.",
+      "next_action": "Review report on main reviews/painting-v11-v12-20261022.md and Issue #1 comment 6357019320. Source-video QA completed; 156s WIP is not accepted, ~90–92% sampled runtime unchanged V11 to V12. Fix P0 giant overlay 82s, weak physical hand/cloth 108s and tool/wall contact 120s in an independently owned renderer task, then produce one ≥30-second 1080p60 original-narration moving-art preview in landscape/portrait and seek normal-speed artistic approval. Do not overwrite active painting/rig module owners. Full 4:23 film unfinished.",
       "acceptance": "Record exact source commit, sample and timestamps, observed defect and the next bounded art/acting task. Engineering tests alone do not establish visual approval.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/1",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/5"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/5",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/58",
+        "https://github.com/TeamRovor/rovor-video-engine/issues/1#issuecomment-6357019320"
       ],
-      "updated_at": "2026-10-22"
+      "updated_at": "2026-10-22",
+      "evidence": [
+        {
+          "platform": "User's existing private 156s V11/V12 video files examined in isolated QA container; hosted GitHub Python3.9/3.11 for synthetic tests",
+          "check": "Frame SHA256, 1fps visual delta aligned and ffmpeg resampled, decoded PCM byte identity, video PTS 9377-frame cadence; manual 70-120s contact-sheet/frames; synthetic QA suite",
+          "result": "Source comparison verified; 5/5 Python3.9 and 5/5 Python3.11 PASSED; animation/release quality REJECTED; no media modified",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39897522625",
+          "commit": "2aac8a351cebfad533286e3763fcb0e94a670acd"
+        }
+      ]
     },
     {
       "id": "scene-moho-contract",
