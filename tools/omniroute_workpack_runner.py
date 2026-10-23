@@ -193,7 +193,7 @@ def write_receipt(path, payload, *, replace=False):
 
 
 def run_packet(repo_root,receipt_root,slug,model,key,
-               completion=http_completion):
+               completion=None):
     packet,prompt,provenance=load_packet(repo_root,slug)
     private=safe_private_root(receipt_root)
     receipt_file=private/(slug+'.receipt.json')
@@ -211,6 +211,8 @@ def run_packet(repo_root,receipt_root,slug,model,key,
         return {'id':packet['id'],'status':'concurrent_attempt_not_replayed'}
     start=time.monotonic()
     try:
+        if completion is None:
+            completion = http_completion
         text,usage=completion(model,prompt,key)
         final={**base,'status':'draft_completed_needs_review',
                'answer':text,'usage_reported':usage,
