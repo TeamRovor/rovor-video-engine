@@ -333,5 +333,36 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         self.assertFalse(answer['paid_fallback_attempted'])
 
 
+
+    def test_direct_api_refuses_receipts_inside_checkout_before_completion(self):
+        alias = self.base / 'repo-alias'
+        alias.symlink_to(self.repo, target_is_directory=True)
+        destinations = (
+            self.repo,
+            self.repo / 'private-receipts',
+            alias,
+            alias / 'nested-private-receipts',
+        )
+
+        def must_not_call(*args, **kwargs):
+            self.fail('completion must not run for a public-checkout destination')
+
+        for destination in destinations:
+            with self.subTest(destination=str(destination)):
+                with self.assertRaisesRegex(
+                        ValueError, 'inside Git checkout or redirected'):
+                    worker.run_packet(
+                        self.repo, destination, 'runner-blocker',
+                        'explicit/route', 'fixture-key',
+                        completion=must_not_call,
+                    )
+                if destination == alias:
+                    self.assertTrue(alias.is_symlink(), 'existing alias must not be removed')
+                elif destination != self.repo:
+                    self.assertFalse(destination.exists())
+        self.assertFalse((self.repo / 'private-receipts').exists())
+        self.assertFalse((self.repo / 'nested-private-receipts').exists())
+
+
 if __name__=='__main__':
     unittest.main()
