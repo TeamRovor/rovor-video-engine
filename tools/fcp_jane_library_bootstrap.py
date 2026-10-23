@@ -127,6 +127,20 @@ end run
 '''
 
 
+KNOWN_UI_STAGES = (
+    'activating_final_cut', 'frontmost_confirmed', 'opening_file_menu',
+    'opening_new_submenu', 'choosing_new_library',
+    'navigating_isolated_folder', 'verifying_save_destination',
+    'clicking_save_in_isolated_folder', 'save_click_dispatched',
+)
+
+
+def last_safe_ui_stage(stderr):
+    """Only report fixed code-owned stage identifiers, never UI strings."""
+    matches = re.findall(r'JANE_STAGE\\|([a-z0-9_]{1,50})', (stderr or '')[:16384])
+    return next((stage for stage in reversed(matches) if stage in KNOWN_UI_STAGES), None)
+
+
 def classify_safe_gui_error(stderr):
     """Return only a known control-point category and Apple errno, never UI text.
 
@@ -241,9 +255,11 @@ def create_library(output, report, run=subprocess.run, clock=time.monotonic,
             checkpoint(output, report, 'ui_create_failed_unverified',
                        error_code=process.returncode,
                        error_class=category,
-                       apple_error_number=apple_number)
+                       apple_error_number=apple_number,
+                       last_ui_stage=last_safe_ui_stage(process.stderr))
             return report
-        checkpoint(output, report, 'ui_create_acknowledged_checking_filesystem')
+        checkpoint(output, report, 'ui_create_acknowledged_checking_filesystem',
+                   last_ui_stage=last_safe_ui_stage(process.stderr))
         deadline = clock() + timeout
         while clock() < deadline and not target.is_dir():
             sleeper(1)
