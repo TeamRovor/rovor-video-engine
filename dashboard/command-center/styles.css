@@ -585,3 +585,124 @@ body {
   .reactor-stage { min-height: 155px; }
   main { max-height: none; }
 }
+
+
+/* iPad mini art-direction pass: tighten the composition without shrinking the workspace.
+   Keep controls, reactor, and data panels legible across short and tall landscape viewports. */
+@media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) {
+  .app-shell {
+    min-height: 100svh;
+    align-content: stretch;
+    grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr) minmax(0, .98fr);
+    column-gap: 8px;
+    row-gap: 7px;
+  }
+  .topbar {
+    min-width: 0;
+    gap: 12px;
+    padding: 8px 12px;
+  }
+  .brand-lockup { gap: 9px; }
+  .brand-lockup > div:last-child { min-width: 0; }
+  .eyebrow { font-size: 9px; letter-spacing: .22em; }
+  .topbar h1 {
+    font-size: clamp(13px, 1.55vw, 19px);
+    letter-spacing: .075em;
+    line-height: 1.2;
+  }
+  .header-subtitle {
+    gap: 6px;
+    font-size: 8px;
+    letter-spacing: .08em;
+    line-height: 1.45;
+  }
+  .top-actions { flex-wrap: nowrap; gap: 4px; }
+  .top-actions .hud-btn {
+    min-height: 34px;
+    padding: 6px 8px;
+    white-space: nowrap;
+    font-size: 9px;
+  }
+  .reactor-stage {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    margin: 0;
+  }
+  .reactor-readout { letter-spacing: .14em; }
+  .reactor-readout strong { letter-spacing: .12em; }
+  .ring-panel, .metrics-panel { padding: 10px; }
+  .panel-title {
+    font-size: 9px;
+    letter-spacing: .12em;
+    margin-bottom: 7px;
+    padding-bottom: 6px;
+  }
+  .ring-wrap { min-height: 112px; }
+  .status-ring { width: clamp(92px, 13vh, 118px); }
+  .ring-center span { font-size: clamp(22px, 3vh, 27px); }
+  .ring-center small { font-size: 8px; }
+  .tiny-grid { gap: 4px; }
+  .tiny-grid > div { min-width: 0; padding: 5px; overflow-wrap: anywhere; }
+  .metrics { gap: 5px; margin-bottom: 7px; }
+  .metric { min-width: 0; padding: 7px; }
+  .metric .label { font-size: 8px; letter-spacing: .08em; }
+  .metric .value { margin-top: 4px; font-size: clamp(16px, 2vw, 22px); }
+  .status-bars { min-height: 70px; gap: 5px; }
+  .status-bar-item { min-width: 0; }
+  .status-bar-item label { font-size: 8px; overflow-wrap: anywhere; }
+  .status-bar-item span { font-size: 9px; }
+  .warning-panel { padding: 9px 10px; }
+  .warning-box { gap: 7px; padding: 7px; }
+  .warning-head { font-size: 8px; line-height: 1.35; }
+  .warning-box p, .notes-list { font-size: 9px; line-height: 1.4; }
+  .tabbar { gap: 4px; padding: 4px; }
+  .tab { min-width: 0; padding: 7px 9px; font-size: 9px; letter-spacing: .06em; }
+  main { min-width: 0; }
+  .tab-view > .section-grid, .tab-view > .hud-panel { min-width: 0; }
+  .section-grid { gap: 7px; }
+  .section-grid > .hud-panel { padding: 10px; }
+  .task-toolbar { gap: 7px; }
+  .task-toolbar input, .task-toolbar select { min-width: 0; }
+}
+
+@media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) and (min-height: 621px) and (max-height: 800px) {
+  .app-shell {
+    grid-template-rows: auto auto minmax(170px, .9fr) auto minmax(142px, .72fr);
+  }
+  .reactor-stage { min-height: 170px; }
+  .warning-panel { overflow: auto; }
+  .notes-list { margin-bottom: 2px; }
+}
+
+@media (min-width: 760px) and (max-width: 1180px) and (orientation: landscape) and (max-height: 620px) {
+  .app-shell {
+    grid-template-rows: auto auto minmax(145px, .82fr) auto minmax(118px, .66fr);
+  }
+  .topbar { padding-top: 5px; padding-bottom: 5px; }
+  .reactor-readout small { display: none; }
+  .ring-wrap { min-height: 92px; }
+  .status-ring { width: 88px; }
+  .warning-panel { overflow: auto; }
+  .notes-list { display: none; }
+  .tab { min-height: 32px; padding: 5px 7px; }
+}
+
+@media (min-width: 760px) and (max-width: 900px) and (orientation: landscape) {
+  .app-shell { column-gap: 6px; }
+  .brand-emblem { width: 36px; height: 36px; flex-basis: 36px; }
+  .brand-emblem img { width: 27px; height: 27px; }
+  .top-actions .hud-btn { padding: 5px 6px; font-size: 8px; }
+  .topbar h1 { font-size: 13px; }
+  .header-subtitle { max-width: 330px; }
+  .tab { padding-left: 7px; padding-right: 7px; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .hud-btn, .tab { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .hud-btn:hover { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-btn:hover { transform: none; }
+}
