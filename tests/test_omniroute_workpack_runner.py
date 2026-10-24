@@ -169,7 +169,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
             def __enter__(self): return self
             def __exit__(self,*exc): return None
             def read(self,n):
-                return json.dumps({'choices':[{'message':{'content':'Review only'}}],
+                return json.dumps({'choices':[{'message':{'content':'Review only'}, 'finish_reason':'stop'}],
                                    'usage':{'total_tokens':10}}).encode()
         calls=[]
         def opener(req,timeout):
@@ -190,6 +190,224 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         self.assertFalse(body['stream'])
         self.assertEqual(len(body['messages']),2)
         self.assertNotIn('key-from-keychain',req.data.decode())
+
+    def test_rejects_reasoning_only_and_truncated_gateway_answer(self):
+        class Response:
+            status = 200
+            def __init__(self, data): self.data = data
+            def __enter__(self): return self
+            def __exit__(self,*exc): return False
+            def read(self,n): return json.dumps(self.data).encode()
+        cases = [
+            ({'choices':[{'message':{'content':''},'finish_reason':'length'}],
+              'usage':{'completion_tokens':2400,
+                       'completion_tokens_details':{'reasoning_tokens':2400}}},
+             'reasoning_budget_exhausted'),
+            ({'choices':[{'message':{'content':'Partial'},'finish_reason':'length'}]},
+             'incomplete_length_stop'),
+            ({'choices':[{'message':{'content':'Looks complete'},'finish_reason':'tool_calls'}]},
+             'unapproved_finish_reason'),
+            ({'choices':[{'message':{'content':'No finish reason'}}]},
+             'unapproved_finish_reason'),
+            ({'choices':[]}, 'invalid_response_shape'),
+        ]
+        for data,reason in cases:
+            called = []
+            def opener(req,timeout):
+                called.append(req.full_url)
+                return Response(data)
+            with self.subTest(reason=reason):
+                with self.assertRaisesRegex(ValueError, '^' + reason + '
+        calls=[]
+        def opener(req,timeout):
+            calls.append(timeout)
+            raise TimeoutError('fixture')
+        with self.assertRaises(ValueError):
+            worker.http_completion('rovor-code-free-v1','public fixture','fixture-key',opener=opener)
+        self.assertEqual(calls,[120])
+
+    def test_safe_local_open_disables_environment_proxies_and_redirects(self):
+        captured=[]
+        class FakeOpener:
+            def open(self,req,timeout):
+                self.last=(req,timeout)
+                return 'fake'
+        actual=FakeOpener()
+        def build(*handlers):
+            captured.extend(handlers)
+            return actual
+        with mock.patch.object(worker.request,'build_opener',side_effect=build):
+            result=worker.safe_local_open('request',12)
+        self.assertEqual(result,'fake')
+        self.assertEqual(actual.last,('request',12))
+        self.assertTrue(any(type(h) is worker.request.ProxyHandler
+                            and h.proxies == {} for h in captured))
+        self.assertTrue(any(isinstance(h,worker.RefuseRedirects)
+                            for h in captured))
+        handler=worker.RefuseRedirects()
+        with self.assertRaisesRegex(ValueError,'localhost redirect refused'):
+            handler.redirect_request(None,None,302,'Found',{},
+                                     'https://external.invalid/steal')
+
+    def test_http_refuses_redirect_or_non_200_status(self):
+        class Response:
+            def __init__(self,status): self.status=status
+            def __enter__(self): return self
+            def __exit__(self,*args): return False
+            def read(self,*args):
+                raise AssertionError('should not read unexpected HTTP status')
+        for status in (301,302,307,308,401,500):
+            with self.subTest(status=status):
+                with self.assertRaisesRegex(ValueError,'not HTTP 200'):
+                    worker.http_completion('valid/route','prompt','dummy',
+                        opener=lambda req,timeout:Response(status))
+        with self.assertRaisesRegex(ValueError,'Unsafe'):
+            worker.http_completion('invalid with spaces','prompt','key',
+                                   opener=lambda *_:self.fail('no request'))
+
+    def test_only_bounded_integer_usage_counts_are_preserved(self):
+        self.assertEqual(worker.sanitized_usage({
+            'total_tokens':19,
+            'prompt_tokens':True,
+            'completion_tokens':-4,
+            'api_key':'SHOULD_NOT_BE_SAVED',
+            'cost_usd':98.74}),{'total_tokens':19})
+        self.assertIsNone(worker.sanitized_usage({'metadata':'secret'}))
+        self.assertIsNone(worker.sanitized_usage('secret'))
+
+    def test_refuse_receipts_under_public_git_checkout(self):
+        with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':'fixture-key'}):
+            with redirect_stderr(io.StringIO()) as err:
+                code=worker.main(['--repo',str(self.repo),'--packet',
+                    'runner-blocker','--model','test/route',
+                    '--approve-model-use','--confirm-no-paid-fallback',
+                    '--out',str(self.repo/'accidental-private')])
+        self.assertEqual(code,2)
+        self.assertFalse((self.repo/'accidental-private').exists())
+        self.assertNotIn('fixture-key',err.getvalue())
+
+    def test_refuse_symlinked_ancestor_to_private_receipts_folder(self):
+        target=self.base/'destination'
+        target.mkdir()
+        ancestor=self.base/'alias'
+        ancestor.symlink_to(target,target_is_directory=True)
+        with self.assertRaisesRegex(ValueError,'redirected parent'):
+            worker.safe_private_root(ancestor/'receipts')
+        self.assertFalse((target/'receipts').exists())
+
+    def test_keychain_stays_local_and_not_logged(self):
+        with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':''}):
+            with mock.patch.object(worker.sys,'platform','darwin'):
+                def lookup(cmd,**kwargs):
+                    self.assertEqual(cmd[0],'/usr/bin/security')
+                    self.assertIn('rovordigital.omniroute.endpoint',cmd)
+                    return subprocess.CompletedProcess(cmd,0,
+                            stdout='stored-endpoint-key\n',stderr='')
+                self.assertEqual(worker.access_key(lookup=lookup),
+                                 'stored-endpoint-key')
+
+    def test_local_key_invalid_or_missing_fails(self):
+        with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':''}):
+            with mock.patch.object(worker.sys,'platform','linux'):
+                with self.assertRaisesRegex(ValueError,'unavailable'):
+                    worker.access_key()
+        with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':'line1\nline2'}):
+            with self.assertRaisesRegex(ValueError,'Invalid'):
+                worker.access_key()
+
+    def test_per_packet_routes_are_selected_without_fallback(self):
+        records={}
+        def completion(model,prompt,key):
+            for slug in worker.PACKETS:
+                if slug.replace('-','') in prompt.replace('-',''):
+                    pass
+            records[model]=records.get(model,0)+1
+            return ('No executed Mac action; draft only',None)
+        with mock.patch.object(worker,'http_completion',side_effect=completion):
+            with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':'fake'}):
+                with redirect_stdout(io.StringIO()) as out:
+                    rc=worker.main(['--repo',str(self.repo),'--all',
+                         '--out',str(self.out),'--approve-model-use',
+                         '--confirm-no-paid-fallback',
+                         '--route','runner-blocker=groq/verified-fast',
+                         '--route','supervisor-resilience=mistral/verified-code',
+                         '--route','provider-efficiency=gemini/verified-reason',
+                         '--route','overnight-acceptance=gemini/verified-reason',
+                         '--route','unattended-readiness=gemini/verified-reason'])
+        self.assertEqual(rc,0)
+        self.assertEqual(set(records),{'groq/verified-fast',
+                                      'mistral/verified-code',
+                                      'gemini/verified-reason'})
+        self.assertEqual(sum(records.values()),len(worker.PACKETS))
+        self.assertFalse(json.loads(out.getvalue())['paid_fallback_attempted'])
+
+    def test_reject_missing_role_routing_or_untrusted_model(self):
+        with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':'fake'}):
+            with redirect_stderr(io.StringIO()):
+                rc=worker.main(['--repo',str(self.repo),'--all',
+                                '--approve-model-use',
+                                '--confirm-no-paid-fallback',
+                                '--route','runner-blocker=fast/only'])
+        self.assertEqual(rc,2)
+        self.assertFalse(self.out.exists())
+
+    def test_all_model_draft_jobs_via_mock_no_gui_or_github_write(self):
+        with mock.patch.object(worker,'http_completion',
+                               side_effect=lambda m,p,k:('Audit only',None)) as llm:
+            with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':'mock-key'}):
+                with redirect_stdout(io.StringIO()) as out:
+                    result=worker.main(['--repo',str(self.repo),'--all',
+                                        '--out',str(self.out),
+                                        '--model','explicit/verified-route',
+                                        '--approve-model-use',
+                                        '--confirm-no-paid-fallback'])
+        self.assertEqual(result,0)
+        self.assertEqual(llm.call_count,len(worker.PACKETS))
+        answer=json.loads(out.getvalue())
+        self.assertEqual(len(answer['results']),len(worker.PACKETS))
+        self.assertTrue(all(x['status']=='draft_completed_needs_review'
+                            for x in answer['results']))
+        self.assertFalse(answer['host_app_control_verified'])
+        self.assertFalse(answer['paid_fallback_attempted'])
+
+
+
+    def test_direct_api_refuses_receipts_inside_checkout_before_completion(self):
+        alias = self.base / 'repo-alias'
+        alias.symlink_to(self.repo, target_is_directory=True)
+        destinations = (
+            self.repo,
+            self.repo / 'private-receipts',
+            alias,
+            alias / 'nested-private-receipts',
+        )
+
+        def must_not_call(*args, **kwargs):
+            self.fail('completion must not run for a public-checkout destination')
+
+        for destination in destinations:
+            with self.subTest(destination=str(destination)):
+                with self.assertRaisesRegex(
+                        ValueError, 'inside Git checkout or redirected'):
+                    worker.run_packet(
+                        self.repo, destination, 'runner-blocker',
+                        'explicit/route', 'fixture-key',
+                        completion=must_not_call,
+                    )
+                if destination == alias:
+                    self.assertTrue(alias.is_symlink(), 'existing alias must not be removed')
+                elif destination != self.repo:
+                    self.assertFalse(destination.exists())
+        self.assertFalse((self.repo / 'private-receipts').exists())
+        self.assertFalse((self.repo / 'nested-private-receipts').exists())
+
+
+if __name__=='__main__':
+    unittest.main()
+):
+                    worker.http_completion('rovor-code-free-v1',
+                                           'bounded public context','test-key',opener=opener)
+                self.assertEqual(called,[worker.GATEWAY])
 
     def test_timeout_is_terminal_without_second_http_request(self):
         calls=[]

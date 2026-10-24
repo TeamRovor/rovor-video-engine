@@ -208,11 +208,14 @@ def http_completion(model, prompt, key, opener=None):
         raise ValueError('Inference response exceeds safety limit')
     try:
         obj=json.loads(raw)
-        answer=obj['choices'][0]['message']['content']
-    except (ValueError,KeyError,TypeError,IndexError):
-        raise ValueError('Unexpected chat completion response shape')
-    if not isinstance(answer,str) or not answer.strip() or len(answer)>MAX_OUTPUT:
-        raise ValueError('Blank or oversized model output')
+    except (UnicodeError, ValueError):
+        raise ValueError('Unexpected chat completion response shape') from None
+    # Verified complete visible content ONLY. Reject finish_reason=length,
+    # empty/reasoning-only output, unsafe response shapes and unknown finishes.
+    # This is response validation, not permission to disable model reasoning:
+    # such requests require independent current capability/billing evidence.
+    from omniroute_reasoning_admission import extract_review_text
+    answer=extract_review_text(obj)
     return answer, sanitized_usage(obj.get('usage'))
 
 
