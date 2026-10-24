@@ -4927,6 +4927,26 @@
       "depends_on": [],
       "next_action": "Publish one immutable sanitized receipt for the previous completed Mike result, matching open PR189 exact tested head and successful CI. Do not report the current run completed, modify owner reviews or merge/deploy.",
       "acceptance": "One exact-commit historical receipt passes existing schema and actual GitHub evidence readback. Prior recorded platform result completed before observed_at; no private IDs, model/token fabrication or owner approval. Existing hosted HUD checks pass; PR remains reviewable."
+    },
+    {
+      "id": "walter-ghost-cloud-approved-feed-20261024",
+      "title": "Enqueue explicitly approved canonical public tasks into the existing cloud nine-provider job ledger",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / cloud migration feed shift 2026-10-24",
+      "updated_at": "2026-10-24T23:11:08.027Z",
+      "next_update": "After focused Node tests and GitHub Actions verification",
+      "branch": "feature/walter-ghost-cloud-approved-feed-20261024",
+      "scopes": [
+        "integrations/ghost-cloud/approved-feed.mjs",
+        "tests/test_ghost_cloud_feed.mjs",
+        ".github/workflows/ghost-cloud-feed.yml"
+      ],
+      "depends_on": [
+        "nine-provider-cloud-dispatch-20261024"
+      ],
+      "next_action": "Implement immutable-source canonical task admission with private operator allowlist, deterministic no-replay job IDs, bounded one-shot writer integration and STOP preservation; no auto deployment or provider inference.",
+      "acceptance": "No new task manager or scheduler; feed accepts only source-pinned active canonical public tasks with explicit cloud packet and private operator approval; rejects stale/unknown/malformed/unowned/duplicate/unsafe work, caps batches, submits to existing authenticated cloud job endpoint, and has adversarial tests plus hosted CI. No live provider or Mac access claimed."
     }
   ]
 }
