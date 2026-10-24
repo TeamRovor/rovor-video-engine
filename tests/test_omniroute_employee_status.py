@@ -88,6 +88,37 @@ class ProbeTests(unittest.TestCase):
         self.assertEqual(result["database_status"],"unsafe_database_sidecar")
         self.assertNotIn("private-data",json.dumps(result))
 
+    def test_sanitized_failed_specialist_receipt_reports_class_and_elapsed_bucket(self):
+        job_id = "a1111111-2222-3333-4444-555555555555"
+        slug = "walter-v1-moho-viseme-review"
+        receipt_dir = self.state / "omniroute-drafts" / job_id
+        receipt_dir.mkdir(parents=True)
+        (receipt_dir / (slug + ".receipt.json")).write_text(json.dumps({
+            "id": "walter-public-v1-moho-viseme-review",
+            "status": "needs_review_no_auto_retry",
+            "error_class": "ValueError",
+            "elapsed_seconds": 3.4,
+            "answer": "CONFIDENTIAL_OUTPUT_MUST_NOT_LEAK",
+        }))
+        db = sqlite3.connect(str(self.state/"jobs.sqlite3"))
+        db.execute("INSERT INTO jobs VALUES(?,?,?,?,?)",
+                   (job_id, "research.omniroute", "needs_review",
+                    json.dumps({"packet": slug}),
+                    json.dumps({"draft_status": "needs_review_no_auto_retry",
+                                "review_status": "failed_needs_review",
+                                "receipt": "/private/secret"})))
+        db.commit()
+        db.close()
+        got = status.inspect(self.state, run=lambda *args, **kwargs:
+                             type("X",(),{"returncode":1})())
+        self.assertEqual(got["nonready_reason_counts"], {
+            "draft:needs_review_no_auto_retry": 1,
+            "review:failed_needs_review": 1,
+            "exception:ValueError": 1})
+        self.assertEqual(got["nonready_elapsed_buckets"], {"1_to_15s":1})
+        self.assertNotIn("CONFIDENTIAL_OUTPUT_MUST_NOT_LEAK", json.dumps(got))
+        self.assertNotIn("/private/secret", json.dumps(got))
+
     def test_stop_reported_without_resuming_worker(self):
         (self.state/"STOP").write_text("owner stopped")
         obj=status.inspect(self.state,run=lambda *args,**kwargs: type("X",(),{"returncode":1})())
