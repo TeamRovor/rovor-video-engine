@@ -4677,10 +4677,10 @@
       "id": "hud-persistent-telemetry-20261024",
       "title": "Add durable private HUD telemetry ingestion and outbound collector without temporary tunnel links",
       "priority": 1,
-      "status": "blocked",
+      "status": "active",
       "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
-      "updated_at": "2026-10-24T20:56:44.454Z",
-      "next_update": "When an authenticated Cloudflare deployment target is connected; then install reporter and register reader connector.",
+      "updated_at": "2026-10-24T21:07:38.668Z",
+      "next_update": "After trying connected private Sites hosting and its source synchronization",
       "branch": "feature/hud-persistent-telemetry-20261024",
       "scopes": [
         "integrations/hud-cloud",
@@ -4689,7 +4689,7 @@
         ".github/workflows/hud-cloud.yml"
       ],
       "depends_on": [],
-      "next_action": "PR #182 merged at 3b22147df623e92804d46a3420c66ae9454b88b7. Cloud receiver, original-HUD authenticated serving, outbound reporter, read-only MCP status and LaunchAgent template implemented. 18/18 local Node24 SQLite-backed tests and both GitHub hosted runs 40131970730/40131967606 pass; plist lint passes. Not deployed: no Cloudflare deployment credentials/browser session available; D1 ID remains placeholder. Next: authenticate cloud account, provision schema+distinct reader/writer secrets, deploy, verify private browser+report delivery, install reporter from persistent checkout, and register authenticated MCP reader. No change to existing worker service; actual host snapshot showed failure_circuit_requires_review and no verified online employee.",
+      "next_action": "Continue the existing task through connected private Sites hosting if supported, preserving HUD and collectors. Verify source push and deployment before claiming a live receiver. Do not install reporting until cloud ingestion is verified.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
@@ -4703,8 +4703,7 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/182",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40131970730"
-      ],
-      "blocker": "Authenticated Cloudflare deployment access is unavailable. Cloud receiver, permanent Mac reporter and ChatGPT reader connection have not been deployed/installed/registered."
+      ]
     }
   ]
 }
