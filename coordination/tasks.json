@@ -3940,8 +3940,8 @@
       "id": "omniroute-model-atomic-claim-20261024",
       "title": "Reserve verified OmniRoute model slots and quota atomically alongside existing SQLite job claims",
       "priority": 1,
-      "status": "active",
-      "owner": "ChatGPT / Amar isolated GitHub per-model reservation implementation 2026-10-24",
+      "status": "blocked",
+      "owner": "Existing PR #137 Mac runtime integration / Amar",
       "branch": "feature/omniroute-atomic-model-reservation",
       "scopes": [
         "tools/omniroute_model_reservation.py",
@@ -3952,12 +3952,24 @@
       "depends_on": [
         "omniroute-proportional-capacity-20261024"
       ],
-      "updated_at": "2026-10-24T08:37:43.102Z",
-      "next_update": "After hosted Python matrix and host integration handoff",
-      "next_action": "Implement a source-only SQLite reservation helper that is usable *inside* the existing worker's BEGIN IMMEDIATE claim transaction: verified model fit, bounded per-model in-flight, local request-count decrement after attestations, unique job ID, conservative final-slot concurrency, no auto reuse/refunds, STOP/circuit. No separate scheduler, no host deployment, no upstream inference. Transfer to current PR #137 owner for reviewed use before worker commit.",
+      "updated_at": "2026-10-24T08:44:06.019Z",
+      "next_update": "After existing Mac owner integrates atomic reservations into the running SQLite claim boundary and verifies host model account quotas",
+      "next_action": "Merged PR #146 (new tools/omniroute_model_reservation.py, tests, notes) and 16 offline regression tests on each Python3.9/3.11. Integrate reserve() INSIDE ghost_worker.claim's existing BEGIN IMMEDIATE before marking a fresh OmniRoute job running; use authenticated Mac quota+cost+privacy evidence, map selected exact model ID to an approved installed OmniRoute route; reserve and claim the same job atomically. After a terminal private receipt, release_finished_slot() frees concurrency but never refunds request quota. Verify per-account shared pool counters and no-repeat on actual Mac; only then relax bottlenecks within owner-approved 144/day global cap and STOP/failure circuit. Installed service unchanged by source merge.",
       "acceptance": "Race-proof in-memory SQLite concurrent reservation tests; preserves historical reservations after completion for quota accounting, refuses duplicate/replay, expired pending not silently released, paid/unverified/private task rejected; zero network/inference, 3.9/3.11 CI.",
-      "links": [],
-      "evidence": []
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/146",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40079109395"
+      ],
+      "evidence": [
+        {
+          "commit": "f6c001d937b1522c12a787468091bae15752ebc6",
+          "platform": "GitHub Actions Ubuntu / Python 3.9 and 3.11",
+          "check": "16 focused fake SQLite concurrency/quota/STOP/no-retry tests per runtime incl. competing final provider request",
+          "result": "PASS both matrix jobs; helper merged to main. No actual Mac model calls, installed LaunchAgent edit, private receipt or live model routing claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40079109395"
+        }
+      ],
+      "blocker": "Requires host-side integration in PR #137 actively owned runtime and verified real Mac model/provider account identity, model-to-route mapping and quota/terms evidence. No direct Mac access from this GitHub session; source CI is NOT live nine-model utilization."
     }
   ]
 }
