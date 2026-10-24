@@ -4826,6 +4826,24 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/186",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40138231206"
       ]
+    },
+    {
+      "id": "nine-provider-cloud-dispatch-20261024",
+      "title": "Implement Mac-independent nine-provider cloud execution and durable usage receipts",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar nine-provider cloud execution session",
+      "branch": "feature/nine-provider-cloud-dispatch-20261024",
+      "scopes": [
+        "integrations/ghost-cloud",
+        "tests/test_ghost_cloud.mjs",
+        ".github/workflows/ghost-cloud.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T22:33:56.242Z",
+      "next_update": "After bounded cloud runtime tests and deployment-readiness review",
+      "next_action": "Implement independent cloud provider adapters, D1 atomic job claims, STOP, quota admission and authenticated status with actual inference receipts. Integrate no existing owner files.",
+      "acceptance": "All nine fixed HTTPS adapters execute through injected fetch; durable single-attempt claims enforce concurrency and quota, fail closed on unknown eligibility, reject blank output, retain actual usage and review status. Focused tests pass. Live provisioning remains separate and must be truthfully reported."
     }
   ]
 }

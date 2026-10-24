@@ -863,6 +863,14 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "nine-provider-cloud-dispatch-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
