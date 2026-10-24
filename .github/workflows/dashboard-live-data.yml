@@ -43,6 +43,14 @@ jobs:
           node-version: '22'
       - name: Exercise existing HUD Workload popup in headless Chrome
         run: node dashboard/command-center/tests/workload-popup.browser.cjs
+      - name: Package actual native HUD HTML for user review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rovor-existing-hud-workload-html
+          path: dashboard/command-center/native-v8-9/index.html
+          if-no-files-found: error
+          retention-days: 7
       - name: Save responsive screenshot evidence
         if: always()
         uses: actions/upload-artifact@v4
