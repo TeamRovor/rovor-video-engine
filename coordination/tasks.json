@@ -3234,9 +3234,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:00:30.674Z",
-      "next_update": "After PR66 owner repairs raw-path symlink rejection and Mac regression passes",
-      "next_action": "User requested concrete one-paste Terminal setup. Integrate reviewed PR66/71 changes plus Mac-verified raw-path correction into PR41 composition, preserving owner branches; pin and test source, prepare bounded foreground command with existing state/STOP and no unattended activation.",
+      "updated_at": "2026-10-24T00:05:10.660Z",
+      "next_update": "After user runs pinned foreground Terminal command and returns sanitized output",
+      "next_action": "Run pinned e21ea94f07d3bef6c06e4b606e567eb4470bf92a tools/omniroute_mac_once.py --approve-one-free-job from existing Mac Terminal after offline tests. It uses existing state, pauses existing LaunchAgent, restores STOP and never enables scheduling. Inspect private receipt quality and one attempt before considering unattended activation. Do not replay on failure or change dedupe. Original PR66/71 branches untouched; their reviewed security changes integrated only into PR41 composition.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -3272,9 +3272,16 @@
           "check": "New direct API external-private symlink leaf+ancestor regression; exact PR66 runner reproduces 3 failures; raw-path correction gives 7/7 composite and 21/21 workpack PASS (canonical tempfile fixture). rovor_private_supervisor.py --preflight; sanitized CLI/Keychain diagnosis.",
           "result": "Regression committed to PR41; tested minimal repair posted to PR66 owner, not integrated. Preflight stage_valid=false and unattended_execution_verified=false. OmniRoute CLI error: attempt to write a readonly database; current context key lookup returns item-not-found. No model call, old job replay, activation, credentials disclosure, or installation.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/66#issuecomment-6377048710"
+        },
+        {
+          "commit": "e21ea94f07d3bef6c06e4b606e567eb4470bf92a",
+          "platform": "Actual macOS15.8.1 / Python3.9.6 and installed Python3.12",
+          "check": "103 focused tests before packet refresh; 61 final OmniRoute tests on Python3.9.6 and3.12; default launcher no-approval; git diff --check",
+          "result": "PASS; pinned foreground handoff prepared. New v2 packet reviews new launcher, not old architecture. STOP restoration, existing-service unload, no replay, exact UUID and old-job isolation tested offline. Live request and unattended activation NOT performed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/e21ea94f07d3bef6c06e4b606e567eb4470bf92a"
         }
       ],
-      "blocker": "Security owner integration pending; current session cannot write existing OmniRoute CLI database or retrieve existing endpoint key. Private supervisor not staged; live AI job and unattended operation unverified."
+      "blocker": "Awaiting unrestricted user Terminal invocation for existing gateway CLI/database and Keychain access; no model request or actual deployment verified here."
     }
   ]
 }
