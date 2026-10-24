@@ -123,6 +123,32 @@ class PrivateBootstrapTests(unittest.TestCase):
             b.bootstrap(api, apply=True)
         self.assertFalse(any(m in ("PUT", "POST") for m,_,_ in api.calls))
 
+    def test_mismatched_readback_prevents_queue_publication(self):
+        class CorruptReadback(FakeGitHub):
+            def __call__(self, method, path, body=None):
+                if (method == "GET" and path.endswith(
+                        "/contents/" + b.JOB_PATH + "?ref=main")
+                        and b.JOB_PATH in self.files):
+                    wrong = {"schema": 1, "id": "different-job", "kind": "system.ping", "payload": {}}
+                    raw = json.dumps(wrong).encode()
+                    return 200, {"type": "file", "encoding": "base64",
+                                 "size": len(raw),
+                                 "content": base64.b64encode(raw).decode()}
+                return super().__call__(method, path, body)
+        api = CorruptReadback()
+        with self.assertRaisesRegex(b.Refused, "existing_control_file_conflict"):
+            b.bootstrap(api, apply=True)
+        self.assertNotIn(b.QUEUE_PATH, api.files)
+        self.assertFalse(any(path.endswith("/contents/" + b.QUEUE_PATH) and method == "PUT"
+                             for method, path, _ in api.calls))
+
+    def test_declared_file_size_must_match(self):
+        raw = json.dumps(b.PING).encode()
+        with self.assertRaisesRegex(b.Refused, "existing_control_file_unreadable"):
+            b.verify_file_contents({"type": "file", "encoding": "base64",
+                                    "size": len(raw) + 1,
+                                    "content": base64.b64encode(raw).decode()}, b.PING)
+
     def test_closed_issue_refused_no_duplicate(self):
         api = FakeGitHub(existing=True)
         api.issue = {"title": b.ISSUE_TITLE, "number": 7, "state": "closed"}
