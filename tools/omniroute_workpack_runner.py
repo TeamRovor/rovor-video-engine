@@ -413,6 +413,7 @@ def run_packet(repo_root,receipt_root,slug,model,key,
                 'receipt':str(receipt_file)}
     base={'schema_version':1,'id':packet['id'],'model':model,
           'status':'reserved_no_retry','created_at':utc(),
+          'completion_token_limit':MAX_COMPLETION_TOKENS,
           'provenance':provenance,
           'external_effects_allowed':False,'source_edits':False,
           'mac_control_verified':False,'user_review_required':True}
