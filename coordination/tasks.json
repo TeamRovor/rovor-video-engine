@@ -3404,8 +3404,11 @@
           "pr": "https://github.com/TeamRovor/rovor-video-engine/pull/117",
           "merge_commit": "7f863b6272149d13d39f0fea8dc87eee052472d5",
           "ci": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40049797497",
-          "platform": "GitHub-hosted Ubuntu Python 3.9 and 3.11",
-          "result": "PASS 2/2 matrix jobs; source code merged, no live private GitHub repository creation or Mac execution."
+          "platform": "GitHub-hosted Linux / Python 3.9 and 3.11",
+          "result": "PASS 2/2 offline matrix jobs; code merged to main. No live Mac or private repo provisioning.",
+          "commit": "7f863b6272149d13d39f0fea8dc87eee052472d5",
+          "check": "Private control repo bootstrap (offline) two-matrix CI",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40049797497"
         }
       ]
     },
@@ -3437,7 +3440,11 @@
           "pr": "https://github.com/TeamRovor/rovor-video-engine/pull/118",
           "merge_commit": "41930d9048b98fb078ce50018631331aa6432773",
           "ci": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40050811549",
-          "result": "Source-only Python 3.9 and 3.11 PASS; 5 hosted workflows PASS. No Mac command executed."
+          "result": "PASS 2/2 offline matrix jobs and 5 workflow suite checks; merged to existing PR41 development branch. No real Mac terminal command.",
+          "commit": "41930d9048b98fb078ce50018631331aa6432773",
+          "platform": "GitHub-hosted Linux / Python 3.9 and 3.11",
+          "check": "Private Mac terminal proof offline tests; additional five integration workflows",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40050811549"
         }
       ]
     },
