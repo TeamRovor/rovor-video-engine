@@ -4283,6 +4283,26 @@
           "reference": "tests/test_hud_omniroute_bridge.mjs"
         }
       ]
+    },
+    {
+      "id": "walter-real-receipt-coverage-bridge-20261024",
+      "title": "Normalize real Mac SQLite research receipts into trustworthy private specialist coverage outcomes",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 receipt bridge shift",
+      "branch": "feature/walter-real-receipt-coverage-bridge-v1",
+      "scopes": [
+        "tools/walter_real_receipt_bridge.py",
+        "tests/test_walter_real_receipt_bridge.py",
+        ".github/workflows/walter-real-receipt-bridge.yml",
+        "subsystem:private-sqlite-outcomes-to-specialist-coverage"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T11:52:27.763Z",
+      "next_update": "After focused Python 3.9/3.11 CI and shared queue checks; never operate the Mac from GitHub.",
+      "next_action": "Implement a source-only, read-only adapter for existing research.omniroute SQLite job/claimed-event snapshots and separately authenticated human review decisions; normalize UUID job IDs and SHA256 dedupe keys for the existing Walter specialist coverage selector. Preserve privacy, at-most-once history, and fail-closed review semantics. No worker changes or model calls.",
+      "acceptance": "Pure Python3.9 stdlib bridge accepts independently trusted complete copied SQLite job/event snapshots, authenticated job-role map and human review receipts, rejects missing/duplicate claims, replayed dedupe, invalid status transitions and spoofed model approval; emits no raw private result/path, normalizes UUID and SHA256 identities for existing specialist coverage chooser. At least 15 offline regression tests and hosted Python3.9/3.11 plus shared queue checks. Source-only; no Mac execution or auto approval.",
+      "evidence": []
     }
   ]
 }

@@ -765,6 +765,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "walter-real-receipt-coverage-bridge-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
