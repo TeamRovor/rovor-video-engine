@@ -4639,7 +4639,7 @@
       "id": "walter-citation-draft-quality-20261024",
       "title": "Reject citation-only and citation-dumped OmniRoute research drafts before human review",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 draft-quality shift",
       "branch": "feature/walter-citation-draft-quality-20261024",
       "scopes": [
@@ -4648,11 +4648,30 @@
         "subsystem:walter-draft-citation-density"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T20:25:41.966Z",
-      "next_update": "After focused Python 3.9/3.11 CI and PR review",
-      "next_action": "Implement a strict public research-draft quality check in the existing citation CLI, preserving the lower-level citation format verifier used by reviewed handoff. Reject citation-only drafts, long uncited paragraphs and single-citation padding without auto-approval; add focused adversarial tests.",
+      "updated_at": "2026-10-24T20:28:51.265Z",
+      "next_update": "Source-only merged and CI-verified; private Mac owner and Hank may independently review integration.",
+      "next_action": "PR #181 merged into main at c4e9c13ae8dec0b14a1821b26fdc8fe67af11438. The existing public citation CLI now rejects citation-only answers, unsupported uncited paragraphs, excessive prose per citation and repetitive low-information drafts, while preserving verify() for independently reviewed finding handoffs. Hosted Python 3.9/3.11 run 40129898906: 36 focused tests each PASS; project_loop.py check and task_routing_pair.py --check PASS. Source-only: no Mac integration, private model drafts, inference, human approval, paid provider or 24-hour soak. Mac owner/Hank may independently test representative redacted draft cases offline before considering integration; do not auto-deploy or replay existing jobs.",
       "acceptance": "Existing source citation CLI must fail closed on citation-only/low-information drafts and unsupported long paragraphs while accepting specific multi-paragraph sourced research. Preserve low-level verify() citation binding for existing reviewed-finding handoff. Python 3.9/3.11 hosted tests and shared coordination checks; no inference, private data, Mac execution or automated approval.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "75fcae2fb0e5a02d834ebefb3a8f38be7d0836d6",
+          "platform": "GitHub Actions Ubuntu Python 3.9 and 3.11",
+          "check": "36 focused citation-gate regressions each; python tools/project_loop.py check; python tools/task_routing_pair.py --check",
+          "result": "PASS both Python matrix jobs in run 40129898906. Earlier fixture escape errors and paragraph split tests failed; corrected on final head and rerun. No model/Mac access.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40129898906"
+        },
+        {
+          "commit": "c4e9c13ae8dec0b14a1821b26fdc8fe67af11438",
+          "platform": "GitHub PR #181 squash merge to main",
+          "check": "Existing citation CLI strict draft-quality path, 7 new adversarial tests; low-level citation API preserved",
+          "result": "MERGED source-only; not installed on Mac, no live worker receipts or private content reviewed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/181"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/181",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40129898906"
+      ]
     }
   ]
 }
