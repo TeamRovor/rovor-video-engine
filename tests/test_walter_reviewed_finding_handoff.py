@@ -185,7 +185,7 @@ class HandoffTests(unittest.TestCase):
 
     def test_malformed_unicode_in_private_summary_is_rejected(self):
         self.check_block("non_actionable_finding",
-                         finding={"problem": PROBLEM + "\\ud800"})
+                         finding={"problem": PROBLEM + chr(0xD800)})
 
     def test_extra_model_supplied_field(self):
         finding, params = fixture()
