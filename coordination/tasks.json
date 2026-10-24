@@ -4677,10 +4677,10 @@
       "id": "hud-persistent-telemetry-20261024",
       "title": "Add durable private HUD telemetry ingestion and outbound collector without temporary tunnel links",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
-      "updated_at": "2026-10-24T21:59:07.955Z",
-      "next_update": "After cloud activity evidence feed, untouched-HUD artifact injection and Pages deployment verification",
+      "updated_at": "2026-10-24T22:15:14.208Z",
+      "next_update": "After the next independently recorded cloud shift is exported and Pages redeploys, or a cloud inference runtime and credential path become available.",
       "branch": "feature/hud-cloud-activity-20261024",
       "scopes": [
         "integrations/hud-cloud",
@@ -4693,7 +4693,7 @@
         "tests/test_hud_cloud_activity.mjs"
       ],
       "depends_on": [],
-      "next_action": "Add public sanitized cloud shift evidence to the existing GitHub Pages HUD Recent Activity panel via build-time injection; preserve original source/branding. Show historical completion and unrecorded human review distinctly from model usage/online state. Verify own tests, Pages release checks and real deployment.",
+      "next_action": "PR185 merged at 3c07a28b5984b52f3c9024c7925dbec0c10611fe. Existing public HUD now includes recorded cloud work in Recent Activity and its drawer via artifact-only injection, preserving exact native-v8-9 source. Pages run40137087982 SUCCESS: full Command Center release checks, workforce no-dispatch/source gates, ten cloud-activity tests, actual PR184/CI readback, artifact creation and deployment all passed. 39 focused tests PASS locally and hosted. Published https://teamrovor.github.io/rovor-video-engine/ with one separately attested Walter completion; model/tokens unknown and human review not recorded. Existing Walter automation prompt updated (hourly schedule unchanged) to export a previously completed matched run as a unique scoped immutable receipt and watch evidence/Pages checks; next automatic export is not yet verified. Browser QA attempted but tool returned Tab 1 is not part of this browser session after an infrastructure timeout; no rendered-screen approval claimed. Next: verify a newly published cloud receipt, then stage one approved zero-cost provider call in a cloud runtime with private credentials and durable usage/review storage. Do not label historical completions as online state or ChatGPT cloud as OmniRoute inference.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
@@ -4723,13 +4723,22 @@
           "check": "Matched completed automation run/result; verified PR184 merged; inspected only provider/auth/count/presence fields; updated existing Walter prompt and requested immediate shift",
           "result": "Real cloud repository engineering verified. Nine API-key connection configurations observed; no secret values exposed, no live cloud model inference or HUD deployment. Immediate shift request accepted only; no completion claimed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/184"
+        },
+        {
+          "commit": "3c07a28b5984b52f3c9024c7925dbec0c10611fe",
+          "platform": "GitHub Actions Ubuntu Node22 Pages release; local macOS Node24.22",
+          "check": "39 focused tests; all existing Pages release checks; actual cloud PR/CI readback; artifact-only injection; GitHub Pages deployment",
+          "result": "DEPLOYED existing HUD cloud completion feed with one attested Walter record. Run40137087982 and every step SUCCESS. Original native source unchanged; browser rendering not verified; no nine-provider cloud inference or human approval.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40137087982"
         }
       ],
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/182",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40131970730",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/183"
-      ]
+        "https://github.com/TeamRovor/rovor-video-engine/pull/183",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/185"
+      ],
+      "blocker": "Cloud completion tracking is deployed through existing public Pages. Full nine-provider cloud inference, private real-time usage/queue storage, human pass/fail review writes and the first new automatically exported cloud-shift receipt remain unverified. Separate private Site source upload is still blocked by managed source-host DNS; browser attachment also failed."
     },
     {
       "id": "walter-citation-code-context-20261024",
