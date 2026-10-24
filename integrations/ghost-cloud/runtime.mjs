@@ -70,10 +70,11 @@ export async function infer(provider,cfg,env,prompt,fetcher=fetch,now=Date.now()
  try {
   const response=await fetcher(...requestFor(provider,cfg,env,prompt));
   if(!response.ok){
-   const raw=response.headers.get('Retry-After'); const n=Number(raw);
-   const delay=raw && Number.isFinite(n) && n>=0 ? n*1000 : Date.parse(raw || '')-now;
+   const raw=response.headers.get('Retry-After')?.trim();
+   const delay=/^\d+$/.test(raw || '') ? Number(raw)*1000 : Date.parse(raw || '')-now;
    await response.body?.cancel();
-   return {status:'failed',error_code:response.status===429?'rate_limited':response.status===401||response.status===403?'auth_rejected':'upstream_http',retry_after:response.status===429?now+Math.max(60000,Number.isFinite(delay)?Math.min(delay,DAY):60000):null};
+   // A provider reset may exceed a day; clamp only at the safe storage ceiling.
+   return {status:'failed',error_code:response.status===429?'rate_limited':response.status===401||response.status===403?'auth_rejected':'upstream_http',retry_after:response.status===429?Math.min(Number.MAX_SAFE_INTEGER,now+Math.max(60000,Number.isNaN(delay)?60000:delay)):null};
   }
   const data=await boundedJson(response), choice=data.choices?.[0], text=choice?.message?.content;
   const usage=data.usage || {}, count=n=>Number.isSafeInteger(n)&&n>=0?n:null;

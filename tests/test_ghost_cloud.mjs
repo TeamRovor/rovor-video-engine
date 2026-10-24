@@ -88,6 +88,36 @@ test('429 respects retry-after across new jobs in a shared pool',async()=>{
  assert.equal(sqlite.prepare("SELECT error_code FROM ghost_cloud_attempts WHERE job_id='limited'").get().error_code,'rate_limited');
 });
 
+test('long numeric and date Retry-After deadlines are preserved',async()=>{
+ const {env}=setup();
+ const future=Math.floor((NOW+90000000)/1000)*1000;
+ for(const [header,expected] of [['90000',NOW+90000000],[new Date(future).toUTCString(),future]]){
+  const out=await infer('groq',cfg(),env,'public',async()=>new Response('',{status:429,headers:{'Retry-After':header}}),NOW);
+  assert.equal(out.retry_after,expected);
+ }
+ for(const header of ['9'.repeat(400),'9007199254740991']){
+  const out=await infer('groq',cfg(),env,'public',async()=>new Response('',{status:429,headers:{'Retry-After':header}}),NOW);
+  assert.equal(out.retry_after,Number.MAX_SAFE_INTEGER);
+ }
+ for(const header of ['', 'invalid', '-12', '0']){
+  const out=await infer('groq',cfg(),env,'public',async()=>new Response('',{status:429,headers:{'Retry-After':header}}),NOW);
+  assert.equal(out.retry_after,NOW+60000);
+ }
+});
+
+test('renewing eligibility cannot bypass a long shared-account cooldown',async()=>{
+ const {env,db,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('long-limit'));enqueue(sqlite,job('after-reset'));
+ await tick(env,async()=>new Response('',{status:429,headers:{'Retry-After':'90000'}}),NOW);
+ const reset=sqlite.prepare('SELECT retry_after FROM ghost_cloud_attempts').get().retry_after;
+ const refreshed=cfg({verified_at:NOW+86400000,canary_at:NOW+86400001,valid_until:NOW+172800000});
+ env.GHOST_FLEET_CONFIG=JSON.stringify({groq:refreshed,mistral:refreshed});
+ assert.equal(eligibility('groq',refreshed,env,reset-1),null);
+ assert.equal(await claim(db,'groq',refreshed,reset-1),null);
+ assert.equal(await claim(db,'mistral',refreshed,reset-1),null);
+ assert.equal((await tick(env,async()=>success(),reset)).dispatched,1);
+ assert.equal(sqlite.prepare("SELECT count(*) n FROM ghost_cloud_attempts WHERE job_id='long-limit'").get().n,1);
+});
+
 test('network uncertainty and stale running claims never replay their jobs',async()=>{
  const {env,db,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('uncertain'));
  await tick(env,async()=>{throw Error('secret-containing transport failure');},NOW);
