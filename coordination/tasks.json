@@ -3685,6 +3685,25 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/129"
         }
       ]
+    },
+    {
+      "id": "omniroute-paced-runtime-health-20261024",
+      "title": "Implement paced dispatch decisions and truthful runtime quota/backlog health",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar paced-runtime session 2026-10-24",
+      "branch": "fix/omniroute-paced-runtime-health",
+      "scopes": [
+        "tools/omniroute_dispatch_pacing.py",
+        "tests/test_omniroute_dispatch_pacing.py",
+        ".github/workflows/omniroute-dispatch-pacing.yml",
+        "integrations/open-interpreter/OMNIROUTE-DISPATCH-PACING.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T06:28:00Z",
+      "next_update": "After focused tests and a read-only live Mac quota diagnosis",
+      "next_action": "Build and test pacing and exact rolling-quota wake-up decisions in independent files; inspect live worker without changing installed service or overlapping PR41 modules.",
+      "acceptance": "Per-claim pacing prevents early quota exhaustion; exact release times, STOP, running jobs, circuit and queue exhaustion remain distinct. Simulated rolling-day tests and read-only host diagnosis; no model calls or installed service edits."
     }
   ]
 }
