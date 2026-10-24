@@ -14,8 +14,8 @@ test('Workload Distribution opens only existing native focus popup, never a new 
   assert.match(html,/function renderDrawer\(view\)\{/);
   assert.match(html,/if\(view==='workload'\)\{/);
   assert.match(html,/ROVOR_WORKLOAD\.mount\(host\)/);
-  assert.match(html,/ROVOR_WORKLOAD\\.mountPreview\\(w,/);
-  assert.doesNotMatch(html,/const w=\\$\\('workloadPanel'\\);w\\.replaceChildren\\(\\);if\\(ok\\)/);
+  assert.match(html,/ROVOR_WORKLOAD\.mountPreview\(w,/);
+  assert.doesNotMatch(html,/const w=\$\('workloadPanel'\);w\.replaceChildren\(\);if\(ok\)/);
   assert.match(html,/class="nav" aria-label="Main navigation"/);
   assert.match(html,/R O V O R &nbsp; D I G I T A L/);
   assert.doesNotMatch(html,/data-view="workload"[^>]*class="nav-item"/);
@@ -36,10 +36,10 @@ test('Popup defaults to unverified without network, keys or made-up model names'
   assert.match(popup,/Array\.from\(\{length:9\}/);
   assert.match(popup,/EMPLOYEES\.map/);
   assert.match(popup,/VIEW SAMPLE LAYOUT/);
-  assert.match(popup,/function mountPreview\\(container,openDetails\\)/);
+  assert.match(popup,/function mountPreview\(container,openDetails\)/);
   assert.match(popup,/TELEMETRY UNVERIFIED/);
   assert.match(popup,/— UNKNOWN · NOT ZERO/);
-  assert.match(css,/#workloadPanel \\.wl-compact-row/);
+  assert.match(css,/#workloadPanel \.wl-compact-row/);
   assert.doesNotMatch(popup,/(fetch\(|XMLHttpRequest|localStorage|sessionStorage|Authorization|Bearer|http:\/\/|https:\/\/)/);
   assert.match(css,/#rovor-workload-popup/);
   assert.doesNotMatch(css,/(^|\n)\s*(html|body|\.hud|\.nav)\s*\{/);
