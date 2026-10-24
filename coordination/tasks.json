@@ -3731,17 +3731,18 @@
         "integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T09:17:46Z",
-      "next_update": "After read-only nine-model roster on actual Mac and diagnosis of 12 nonready + 5 failed/pending review outcomes, then true per-model provider eligibility and routing",
-      "next_action": "Host telemetry now PROVEN: 27 distinct internal claims/24h, current outcomes 10 review-ready drafts,12 nonready model attempts,5 pending/failed review, one fresh public job queued and heartbeat 136s recent, paced_wait expected. Do not reinstall or requeue failed IDs. Next Mac audit actual model roster vs nine configured connections with merged omniroute_model_fleet.py read-only, classify failures safely, verify per-model $0 quotas/privacy/terms/canary and selected upstream before controlled PR147 opt-in atomic fleet integration. Preserve 601s spacing, 144 rolling/day, STOP/circuit.",
+      "updated_at": "2026-10-24T09:23:07Z",
+      "next_update": "After verifying installed OmniRoute version and sanitized provider-to-model/quota/cost mapping on Mac, then approved route-to-specialist capability matrix",
+      "next_action": "The real Mac read-only fleet inspector VERIFIED nine provider connection entries but only THREE distinct IDs across FOUR ROVOR combos; all EIGHT Walter/specialist packets bind to ONE rovor-fast-free-v1 priority combo (north-mini-code then nemotron-3.5-super-vl). No differentiated per-role model selection, cost/usage proof or private receipt attribution. Continue existing scheduler without changes. Read-only verify installed CLI version/models/quota help, then safely audit which additional distinct model IDs are configured, account-level free entitlements, quotas, capability/skills and successful receipts before staging PR147 callback and single-model combo bindings. Prior 27 claims: 10 ready, 12 nonready, 5 pending/failed; improve valid output rate before claim ceiling.",
       "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation.",
-      "blocker": "Working scheduler, host telemetry and feeder observed. 17 of 27 recent claimed jobs not review-ready; cause unknown without sanitized review/error classification. Zero exact model reservations on installed older worker; provider model identity, account quotas, usable canaries and human-accepted deliverables remain unverified.",
+      "blocker": "Nine configured provider connection entries DO NOT equal nine routable/eligible models. Real Mac currently routes 3 distinct models and all 8 roles via fast combo. Need verified provider/model/account metadata, $0 entitlement and quota reset evidence; 17/27 claims are not review-ready. Mac PR137 pinned worker still lacks optional atomic model selection in installed runtime.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/137",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40072143609",
         "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6381898438",
         "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382406783",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382472095"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382472095",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382529114"
       ],
       "evidence": [
         {
@@ -3778,6 +3779,13 @@
           "check": "tools/omniroute_workforce_telemetry.py executed against live existing Mac SQLite/WAL and heartbeat, no inference or state writes",
           "result": "Consistent snapshot: 27 claims/24h; 10 review-ready drafts, 12 model-attempt-not-review-ready, 5 pending/failed-review among recently claimed jobs; 1 queued, 136-sec fresh heartbeat, feed=new_public_task_assignment_queued, dispatch=paced_wait, no per-model reservation table (0/27 exact model attributions). No proof of actual nine models or human-approved outputs.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382472095"
+        },
+        {
+          "commit": "1d92002b19924781b98a9712cfd99ede4cc874c5",
+          "platform": "Actual Mac OmniRoute CLI / 2026-10-24 04:23 CDT owner-shared Terminal log",
+          "check": "Read-only merged PR141 omniroute_model_fleet.py --expected-models 9, actual installed provider and combo catalogs",
+          "result": "9 connection entries, 4 ROVOR combos, 3 distinct routed model IDs; all 8 worker roles use rovor-fast-free-v1 (2 models). Free suffix but upstream billing/quota and successful provider inference unverified; no model calls or installed routing changes.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382529114"
         }
       ]
     },
@@ -3865,12 +3873,13 @@
         "integrations/open-interpreter/OMNIROUTE-MODEL-FLEET.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T07:42:42.307Z",
-      "next_update": "Source inspector merged and hosted-tested; host usage proof remains pending in existing Mac worker task",
-      "next_action": "Merged PR #141 source is ready on main. The existing PR #137 Mac owner should pull verified model roster on host, run python3 tools/omniroute_model_fleet.py --expected-models 9, inspect sanitized count/role mismatch and then separately verify actually eligible model costs, quotas and real accepted inference receipts before routing additional provider models. No host change or model completion claimed here.",
+      "updated_at": "2026-10-24T09:23:07Z",
+      "next_update": "Host source inspector is now actually run; next task is independent free/usable model eligibility and complete account quota mapping.",
+      "next_action": "Inspector completed a real sanitized host audit: 9 configured connection entries; four ROVOR combos, three distinct routed OpenRouter model IDs; all Walter plus 7 specialists mapped to rovor-fast-free-v1. No claim nine actual models. Produce fresh authenticated provider/account/model inventory and quota/cost/reset and canary evidence before enabling PR147 selection. The source inspector task itself remains done.",
       "acceptance": "New isolated CLI inspector reads installed providers/combos, distinguishes model connection count from routed model IDs and proof of completed inference, detects route drift and malformed/paid entries, sanitizes stdout and does not call models or change scheduler; CI Python 3.9/3.11 pass.",
       "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/pull/141"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/141",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382529114"
       ],
       "evidence": [
         {
@@ -3879,6 +3888,13 @@
           "check": "9 focused offline OmniRoute model-fleet inventory tests across two jobs",
           "result": "PASS both matrix jobs; inspector merged to main. Provider count/model count separated, worker route mismatch, nine-route count, no raw secret output, no actual model requests. Not installed/verified on user's Mac.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40075094787"
+        },
+        {
+          "commit": "1d92002b19924781b98a9712cfd99ede4cc874c5",
+          "platform": "Actual user Mac / read-only CLI models and ROVOR combos",
+          "check": "omniroute_model_fleet.py expected 9 after main source fetch",
+          "result": "PASS live host inventory read: nine connections, three distinct routed model IDs, four combos, all eight specialist routes point to fast. No billing/working model claims. Host source inspection is complete; production route activation remains separately gated.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382529114"
         }
       ]
     },
