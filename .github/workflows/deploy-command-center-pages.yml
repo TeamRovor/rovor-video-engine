@@ -45,6 +45,9 @@ jobs:
           node --check dashboard/command-center/service-worker.js
           node --test dashboard/command-center/tests/live-data.test.js dashboard/command-center/tests/request-budget.test.js dashboard/command-center/tests/reference-hud.test.js dashboard/command-center/tests/hud-experience.test.js
 
+      - name: Prepare and verify NASA Earth textures
+        run: bash dashboard/command-center/tools/prepare-earth-textures.sh
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:

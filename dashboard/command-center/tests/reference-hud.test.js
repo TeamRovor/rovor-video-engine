@@ -57,7 +57,7 @@ test('both visual assets are included in the install and fetch cache shell',()=>
   const sw=fs.readFileSync(path.join(root, 'service-worker.js'),'utf8');
   assert.ok(sw.includes('reference-hud.css'));
   assert.ok(sw.includes('reference-hud.js'));
-  assert.match(sw,/rovor-command-center-shell-v4/);
+  assert.match(sw,/rovor-command-center-shell-v5/);
 });
 
 test('open counts, ordering and coverage use queue data, not decorative numbers',()=>{

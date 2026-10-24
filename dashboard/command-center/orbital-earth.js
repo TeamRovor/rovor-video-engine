@@ -13,56 +13,69 @@
   const FRAGMENT = `
 precision mediump float;
 uniform sampler2D uMap;
+uniform sampler2D uNightMap;
 uniform vec2 uSize;
 uniform float uAngle;
 uniform float uCloud;
-varying vec2 unusedVarying;
+uniform float uHasNight;
 
-float rnd(vec2 p) {
-  return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);
+float hash(vec2 p) {
+  return fract(sin(dot(p,vec2(41.23,277.17)))*43758.5453);
 }
-float noise2(vec2 p) {
-  vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
-  return mix(mix(rnd(i),rnd(i+vec2(1.,0.)),f.x),
-             mix(rnd(i+vec2(0.,1.)),rnd(i+vec2(1.,1.)),f.x),f.y);
+float smoothNoise(vec2 p) {
+  vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);
+  return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),f.x),
+             mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),f.x),f.y);
 }
-vec4 globe(vec2 pixel,vec2 center,float radius,float nightDim) {
+vec4 globe(vec2 pixel,vec2 center,float radius,float darkness) {
   vec2 p=(pixel-center)/radius;
-  float r2=dot(p,p);
-  if(r2>1.075) return vec4(0.);
-  if(r2>=1.0) {
-    float halo=(1.075-r2)/0.075;
-    return vec4(vec3(0.05,0.27,0.75),0.16*halo);
+  float r=length(p);
+  if(r>1.085) return vec4(0.0);
+
+  // Thin, soft atmospheric halo instead of the previous oversized electric ring.
+  if(r>=1.0) {
+    float falloff=pow(clamp(1.0-(r-1.0)/0.085,0.0,1.0),4.0);
+    return vec4(vec3(0.13,0.41,0.89)*falloff,falloff*0.48);
   }
-  vec3 n=vec3(p,sqrt(max(0.,1.-r2)));
-  float lon=atan(n.x,n.z)/6.2831853 + 0.5 + uAngle/6.2831853;
-  float lat=asin(clamp(n.y,-1.,1.))/3.1415926 + 0.5;
-  vec3 base=texture2D(uMap,vec2(fract(lon),lat)).rgb;
-  vec3 sun=normalize(vec3(-0.15,0.48,0.87));
-  float diffuse=max(dot(n,sun),0.);
-  float illumination=0.08+0.92*diffuse;
-  float cloud=noise2(vec2(lon*77.+uCloud*0.15,lat*33.));
-  cloud+=0.45*noise2(vec2(lon*172.+uCloud*0.29,lat*83.));
-  cloud=smoothstep(0.83,1.20,cloud)*0.39;
-  float limb=pow(1.0-max(0.,n.z),4.0);
-  vec3 col=base*(illumination*(1.0-nightDim*0.28));
-  col+=vec3(0.47,0.69,0.87)*cloud*illumination;
-  col+=vec3(0.06,0.31,0.75)*limb*1.28;
-  float blueRim=pow(1.-n.z,13.);
-  col+=vec3(0.22,0.56,1.0)*blueRim*1.15;
-  float edge=1.0-smoothstep(0.94,1.0,sqrt(r2));
-  return vec4(min(col,vec3(1.0)),edge);
+
+  vec3 normal=vec3(p,sqrt(max(0.0,1.0-r*r)));
+  float longitude=atan(normal.x,normal.z)/6.2831853 + 0.5 + uAngle/6.2831853;
+  float latitude=asin(clamp(normal.y,-1.0,1.0))/3.1415926 + 0.5;
+  vec2 coords=vec2(fract(longitude),latitude);
+  vec3 day=texture2D(uMap,coords).rgb;
+  vec3 night=texture2D(uNightMap,coords).rgb*uHasNight;
+
+  float light=max(dot(normal,normalize(vec3(0.55,0.37,0.77))),0.0);
+  // Low-key blue Earth, with real terrain and city lights where available.
+  vec3 daySide=day*(0.23+0.52*light);
+  vec3 nightSide=day*0.065 + night*(0.65+0.3*(1.0-light));
+  vec3 color=mix(daySide+night*0.18*(1.0-light),nightSide,darkness);
+
+  // Cloud wisps are subtle and secondary to NASA imagery.
+  float cloud=smoothNoise(coords*vec2(68.0,31.0)+vec2(uCloud*0.12,0.0));
+  cloud=smoothstep(0.70,0.88,cloud)*0.11;
+  color+=vec3(0.41,0.59,0.76)*cloud*light*(1.0-darkness*0.6);
+
+  float fresnel=pow(1.0-normal.z,5.0);
+  color+=vec3(0.055,0.29,0.76)*fresnel*1.75;
+  float rim=pow(1.0-normal.z,15.0);
+  color+=vec3(0.26,0.62,1.0)*rim*0.7;
+  float edge=1.0-smoothstep(0.987,1.0,r);
+  return vec4(clamp(color,0.0,1.0),edge);
 }
 void main() {
   vec2 pix=gl_FragCoord.xy;
-  float horizonRadius=min(uSize.x*0.98,uSize.y*0.75);
-  vec4 horizon=globe(pix,vec2(uSize.x*0.50,-uSize.y*0.19),horizonRadius,0.38);
-  float sphereRadius=min(uSize.x*0.315,uSize.y*0.275);
-  vec4 planet=globe(pix,vec2(uSize.x*0.50,uSize.y*0.56),sphereRadius,0.);
-  vec3 finalRgb=mix(horizon.rgb,planet.rgb,planet.a);
-  float alpha=horizon.a+planet.a*(1.-horizon.a);
-  gl_FragColor=vec4(finalRgb,alpha);
-}`;
+
+  // Horizon begins in the lower third, matching the reference composition.
+  float horizonRadius=min(uSize.x*1.20,uSize.y*0.78);
+  vec4 horizon=globe(pix,vec2(uSize.x*0.50,-uSize.y*0.39),horizonRadius,0.88);
+
+  float sphereRadius=min(uSize.x*0.325,uSize.y*0.275);
+  vec4 planet=globe(pix,vec2(uSize.x*0.50,uSize.y*0.56),sphereRadius,0.34);
+  vec3 result=mix(horizon.rgb,planet.rgb,planet.a);
+  gl_FragColor=vec4(result,horizon.a+planet.a*(1.0-horizon.a));
+}
+`;
   // A deterministic natural-color map with continent silhouettes; generated once,
   // moved as a real texture across a shader-projected 3D sphere every frame.
   const LAND = [
@@ -140,19 +153,66 @@ void main() {
     const doc=options.document||(typeof document!=='undefined'?document:null);
     const map=doc?createTexture(doc):null;
     if(!map)return null;
+    // NASA Blue Marble and Earth-at-night maps are self-hosted with the Pages build.
+    // The procedural map stays in place if assets fail to load (e.g. local preview).
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
     const texture=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,map);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    const nightTexture=gl.createTexture();
+    gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,nightTexture);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
     const sizeLoc=gl.getUniformLocation(program,'uSize');
     const angleLoc=gl.getUniformLocation(program,'uAngle');
     const cloudLoc=gl.getUniformLocation(program,'uCloud');
+    const nightLoc=gl.getUniformLocation(program,'uHasNight');
     gl.uniform1i(gl.getUniformLocation(program,'uMap'),0);
+    gl.uniform1i(gl.getUniformLocation(program,'uNightMap'),1);
+    gl.uniform1f(nightLoc,0);
     let angle=0,cloud=0,lastTime=0,lastDraw=0,frame=0,speed=1,stopped=false,manualPause=false;
     const environment=options.environment||root;
     const motionQuery=environment.matchMedia&&environment.matchMedia('(prefers-reduced-motion: reduce)');
+    let hasNight=false;
+    // URL paths are fixed local assets; never load arbitrary remote origins.
+    function loadMap(path,unit,tex,ready) {
+      const ImageType=options.ImageClass||environment.Image;
+      if(typeof ImageType!=='function')return;
+      const image=new ImageType();
+      image.onload=()=>{
+        if(stopped)return;
+        const w=image.naturalWidth||image.width,h=image.naturalHeight||image.height;
+        if(!w||!h||w>4096||h>2048)return;
+        try {
+          gl.activeTexture(gl.TEXTURE0+unit);
+          gl.bindTexture(gl.TEXTURE_2D,tex);
+          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+          gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+          // Both published maps have power-of-two dimensions.
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+          ready();
+          lastDraw=0;
+        } catch (_) { /* Keep local fallback on image/texture error. */ }
+      };
+      image.onerror=()=>{/* Preserve fallback when developing without built assets. */};
+      image.src=path;
+    }
+    loadMap('./earth-blue-marble.png',0,texture,()=>{
+      if(canvas.dataset)canvas.dataset.texture='nasa-blue-marble';
+    });
+    loadMap('./earth-night.png',1,nightTexture,()=>{
+      hasNight=true;
+      if(canvas.dataset)canvas.dataset.nightLights='nasa-night';
+    });
     const isStopped=()=>manualPause || !!motionQuery?.matches ||
       !!doc?.hidden || !!doc?.body?.classList?.contains('motion-paused');
     function resize() {
@@ -179,6 +239,7 @@ void main() {
         gl.uniform2f(sizeLoc,canvas.width,canvas.height);
         gl.uniform1f(angleLoc,angle);
         gl.uniform1f(cloudLoc,cloud);
+        gl.uniform1f(nightLoc,hasNight?1:0);
         gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
         lastDraw=time;
       }
@@ -193,7 +254,7 @@ void main() {
       isPaused(){return isStopped();},
       nudge(degrees){angle=(angle+Number(degrees||0)*Math.PI/180)%(2*Math.PI);lastDraw=0;},
       reset(){angle=0;cloud=0;lastDraw=0;},
-      stop(){stopped=true;environment.cancelAnimationFrame?.(frame);gl.deleteTexture(texture);gl.deleteProgram(program);gl.deleteBuffer(buffer);},
+      stop(){stopped=true;environment.cancelAnimationFrame?.(frame);gl.deleteTexture(texture);gl.deleteTexture(nightTexture);gl.deleteProgram(program);gl.deleteBuffer(buffer);},
     };
   }
   function boot(doc,environment) {

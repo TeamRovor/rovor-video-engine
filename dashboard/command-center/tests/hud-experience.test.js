@@ -21,7 +21,7 @@ test('kinetic HUD uses bundled scripts and accessible working controls, not imag
   }
   assert.ok(html.indexOf('orbital-earth.js')<html.indexOf('hud-experience.js'));
   assert.ok(html.indexOf('hud-experience.js')<html.indexOf('app.js'));
-  assert.match(sw,/rovor-command-center-shell-v4/);
+  assert.match(sw,/rovor-command-center-shell-v5/);
   assert.match(html,/aria-modal="true"/);
   assert.match(style,/prefers-reduced-motion:reduce/);
   assert.ok(!source.includes('https://cdn.') && !source.includes('https://unpkg.com') && !source.includes('https://cdnjs.'));
@@ -71,4 +71,11 @@ test('keyboard, reduced motion, and renderer lifecycle are wired',()=>{
   assert.match(engine,/prefers-reduced-motion: reduce/);
   assert.match(engine,/webglcontextlost|createRenderer/);
   assert.match(engine,/DEFAULT_REVOLUTION_SECONDS/);
+  assert.ok(engine.includes('earth-blue-marble.png'));
+  assert.ok(engine.includes('earth-night.png'));
+  assert.match(engine,/uNightMap/);
+  assert.match(engine,/uHasNight/);
+  assert.match(sw,/IMAGE_ASSETS/);
+  assert.ok(sw.includes('earth-blue-marble.png'));
+  assert.ok(sw.includes('earth-night.png'));
 });
