@@ -163,6 +163,8 @@ def triage(answer, *, packet_id, role, deliverable, public_sources,
     if not _specific(sections["Next read-only check"], 40):
         _deny("missing_read_only_next_check")
     if not CITE.search(sections["Evidence"]):
+        if "[[source" in sections["Evidence"].casefold():
+            _deny("citation_or_source_integrity_rejected")
         _deny("evidence_section_not_cited")
     try:
         citations = verify_citations(
