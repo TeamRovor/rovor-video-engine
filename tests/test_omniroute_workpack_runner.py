@@ -223,6 +223,12 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         body=json.loads(req.data)
         self.assertEqual(body['model'],'groq/openai/gpt-oss-120b')
         self.assertFalse(body['stream'])
+        # Jane's v2 free-route response previously hit a 2400-token
+        # finish_reason=length. The next revision permits at most 4096
+        # output tokens; still one POST only, no retries or paid fallback.
+        self.assertEqual(worker.MAX_COMPLETION_TOKENS,4096)
+        self.assertEqual(body['max_tokens'],4096)
+        self.assertLessEqual(body['max_tokens'],4096)
         self.assertEqual(len(body['messages']),2)
         self.assertNotIn('key-from-keychain',req.data.decode())
 
