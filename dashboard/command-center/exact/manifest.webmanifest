@@ -1,0 +1,11 @@
+{
+  "name": "ROVOR Digital — Exact HUD",
+  "short_name": "ROVOR HUD",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#010309",
+  "theme_color": "#020711",
+  "description": "1:1 ROVOR command center with independently verified GitHub task data",
+  "icons": [{"src": "../rovor-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]
+}

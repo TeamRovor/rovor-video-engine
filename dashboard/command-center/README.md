@@ -1,5 +1,15 @@
 # ROVOR Command Center — live GitHub HUD
 
+## Default screen: pixel-matched original HUD (October 24, 2026)
+
+**The main GitHub Pages address now opens `./exact/` by default.** The older CSS approximation is no longer the default. This preserves the user's original reference artwork, including its precise ROVOR emblem, planetary Earth, neon angular frames, labels, and navigation at native 1672×941 ratio. It is the existing, interactive `exact/` build, **not** a newly generated graphic.
+
+- On desktop widescreen the reference fills the screen at its natural ratio. Click pictured task panels, system gauges, camera area, logo, or bottom nav to open working inspector/command panels; ⌘/Ctrl+K opens commands; Escape closes; **I** toggles 1:1 immersive mode.
+- The same browser session verifies public GitHub task and route files against a single resolved SHA. A screenshot's rendered 12 tasks, 99% uptime, 98% quota, and green sample statuses remain artwork **only**, not verified live measurements. The inspector explicitly shows real source state or UNVERIFIED.
+- `exact/` now includes its own scoped static-only PWA manifest and service worker; it never caches GitHub API requests or task/routing responses.
+- The old CSS-oriented cockpit is preserved in `index.html` solely as an emergency rollback and regression fixture. The early redirect prevents its scripts/styles from displaying on the main route.
+
+
 ## Electric-blue-only visual theme
 
 The public HUD uses icy white, electric blue, steel blue, and deep navy. **No green, teal-green, yellow, orange, or red status lights** are intentionally displayed. A verified/live connection glows bright blue, pending/ready is medium steel blue, and blocked/error is identified by an explicit label with a pale outlined or dashed marker (not only by color). This change is presentation-only: GitHub data, freshness warnings, task semantics, API request budget, and unattended-worker security boundaries are unchanged.

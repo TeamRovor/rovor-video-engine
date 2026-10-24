@@ -120,5 +120,8 @@
  $('overlay').addEventListener('keydown',event=>{if(event.key!=='Tab')return;const els=[...$('overlay').querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled])')].filter(el=>el.getClientRects().length);if(!els.length)return;const first=els[0],last=els[els.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}});
  document.addEventListener('visibilitychange',()=>document.body.classList.toggle('motion-off',!state.motion||document.hidden));
  applySettings();cacheStatus();verify();setInterval(()=>verify(),300000);
+ if (typeof navigator!=='undefined' && 'serviceWorker' in navigator && location.protocol==='https:') {
+   navigator.serviceWorker.register('./service-worker.js', {scope:'./'}).catch(()=>{});
+ }
  window.ROVOR_HUD={state,verify,openView};
 })();
