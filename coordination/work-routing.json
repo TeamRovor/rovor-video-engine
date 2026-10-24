@@ -750,6 +750,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "walter-specialist-coverage-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
