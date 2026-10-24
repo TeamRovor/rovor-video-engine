@@ -29,8 +29,8 @@ test('Popup JavaScript and existing inline HUD script compile',()=>{
 });
 
 test('Popup defaults to unverified without network, keys or made-up model names',()=>{
-  assert.match(html,/src="\.\/workload-popup\.js"/);
-  assert.match(html,/href="\.\/workload-popup\.css"/);
+  assert.doesNotMatch(html,/src="\\.\\/workload-popup\\.js"/);
+  assert.doesNotMatch(html,/href="\\.\\/workload-popup\\.css"/);
   assert.match(popup,/NO VERIFIED LIVE MODEL TELEMETRY/);
   assert.match(popup,/demo:false,employee:/);
   assert.match(popup,/Array\.from\(\{length:9\}/);
