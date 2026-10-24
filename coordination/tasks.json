@@ -3615,6 +3615,25 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/123"
         }
       ]
+    },
+    {
+      "id": "omniroute-free-dispatch-permit-20261024",
+      "title": "Validate zero-cost, fresh OmniRoute route evidence before preparing unattended inference",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24",
+      "branch": "feature/walter-omniroute-dispatch-permit-v1",
+      "scopes": [
+        "tools/omniroute_dispatch_permit.py",
+        "tests/test_omniroute_dispatch_permit.py",
+        ".github/workflows/omniroute-dispatch-permit.yml",
+        "subsystem:omniroute-free-route-fresh-evidence"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T04:54:06.700Z",
+      "next_update": "After Python 3.9/3.11 hosted CI and shared routing checks",
+      "next_action": "Implement a stdlib-only, fail-closed offline dispatch permit that checks exact installed combo membership, provider/account free entitlement, quota, evidence freshness, STOP, public-source opt-in and reasoning-none support, composing the existing reasoning admission module. No live provider calls or Mac edits.",
+      "acceptance": "Produce a bounded review-only chat request only with a trusted fresh per-model zero-cost attestation, matching approved local combo and explicit owner opt-in. Reject stale/unknown/paid/unsupported fallback, insufficient quota, STOP, non-public content and malformed evidence. Focused Python3.9/3.11 tests and hosted CI; no network, new scheduler, inference, Mac runtime writes or old job replay."
     }
   ]
 }

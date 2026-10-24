@@ -637,6 +637,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "omniroute-free-dispatch-permit-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
