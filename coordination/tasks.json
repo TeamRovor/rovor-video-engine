@@ -3865,6 +3865,29 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40075094787"
         }
       ]
+    },
+    {
+      "id": "omniroute-proportional-capacity-20261024",
+      "title": "Apply proportional verified model capacity, safe failover and quota reset routing across nine OmniRoute resources",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar isolated GitHub source policy 2026-10-24",
+      "branch": "feature/omniroute-capacity-router",
+      "scopes": [
+        "tools/omniroute_capacity_router.py",
+        "tests/test_omniroute_capacity_router.py",
+        ".github/workflows/omniroute-capacity-router.yml",
+        "integrations/open-interpreter/OMNIROUTE-CAPACITY-ROUTING.md"
+      ],
+      "depends_on": [
+        "omniroute-nine-model-coverage-20261024"
+      ],
+      "updated_at": "2026-10-24T08:30:57.248Z",
+      "next_update": "After source CI and integration handoff to already-activated Mac worker",
+      "next_action": "Implement tested inert capability tier, size/headroom, per-provider/model budget and cooldown/recheck/automatic eligible replacement planning. Integrate ONLY into current PR137 Mac SQLite worker under atomic claim with trusted real capacity and actual nine-model route proofs; observe model success before raising concurrency or aggregate limit. No second scheduler or paid inference.",
+      "acceptance": "Offline pure model-policy tests: proportional headroom, task capability fit, small/medium/deep model choice, cooldown/quota rollover, readiness verification, successful free canary, no paid/private request, STOP/circuit, fail-closed shape, concurrency. Python3.9/3.11 hosted CI; current mac rollout unchanged.",
+      "links": [],
+      "evidence": []
     }
   ]
 }

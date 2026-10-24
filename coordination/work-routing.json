@@ -692,6 +692,15 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "omniroute-proportional-capacity-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "maximize-reliable-omniroute-capacity"
     }
   }
 }
