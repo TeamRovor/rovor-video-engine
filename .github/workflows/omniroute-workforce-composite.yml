@@ -6,7 +6,11 @@ on:
       - 'tools/ghost_worker.py'
       - 'tools/ghost_worker_loop.py'
       - 'tools/ghost_omniroute_job.py'
+      - 'tools/ghost_omniroute_feed.py'
+      - 'tests/test_ghost_omniroute_feed.py'
       - 'tools/omniroute_workpack_runner.py'
+      - 'tools/omniroute_reasoning_admission.py'
+      - 'tests/test_omniroute_reasoning_admission.py'
       - 'tools/omniroute_draft_review.py'
       - 'coordination/omniroute-workpacks/**'
       - 'tests/test_omniroute_workforce_composite.py'
@@ -33,8 +37,12 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Offline real-module composite tests
         run: python -m unittest discover -s tests -p 'test_omniroute_workforce_composite.py' -v
+      - name: Offline specialist autonomous-feed tests
+        run: python -m unittest discover -s tests -p 'test_ghost_omniroute_feed.py' -v
       - name: Offline focused SQLite OmniRoute queue tests
         run: python -m unittest discover -s tests -p 'test_ghost_omniroute_job.py' -v
+      - name: Offline strict reasoning-response admission tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_reasoning_admission.py' -v
       - name: Offline OmniRoute workpack safety tests
         run: python -m unittest discover -s tests -p 'test_omniroute_workpack_runner.py' -v
       - name: Offline private receipt review tests

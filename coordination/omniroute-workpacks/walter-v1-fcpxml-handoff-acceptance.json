@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-fcpxml-handoff-acceptance",
+  "id": "walter-public-v1-fcpxml-handoff-acceptance",
+  "title": "ROVOR Jane research: fcpxml handoff acceptance",
+  "role": "software-architecture",
+  "inputs": [
+    "AGENTS.md",
+    "architecture/HYBRID-24-7-GHOST-WORKFORCE.md"
+  ],
+  "task": "ROVOR ghost specialist: JANE. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Specify what a research-only Final Cut handoff must prove before any native app automation is authorized.",
+  "deliverable": "A practical handoff contract with artifact identity, target-library gates, and rollback criteria.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

@@ -169,7 +169,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
             def __enter__(self): return self
             def __exit__(self,*exc): return None
             def read(self,n):
-                return json.dumps({'choices':[{'message':{'content':'Review only'}}],
+                return json.dumps({'choices':[{'message':{'content':'Review only'}, 'finish_reason':'stop'}],
                                    'usage':{'total_tokens':10}}).encode()
         calls=[]
         def opener(req,timeout):
@@ -190,6 +190,38 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         self.assertFalse(body['stream'])
         self.assertEqual(len(body['messages']),2)
         self.assertNotIn('key-from-keychain',req.data.decode())
+
+    def test_rejects_reasoning_only_and_truncated_gateway_answer(self):
+        class Response:
+            status = 200
+            def __init__(self, data): self.data = data
+            def __enter__(self): return self
+            def __exit__(self, *exc): return False
+            def read(self, n): return json.dumps(self.data).encode()
+        cases = [
+            ({'choices':[{'message':{'content':''},'finish_reason':'length'}],
+              'usage':{'completion_tokens':2400,
+                       'completion_tokens_details':{'reasoning_tokens':2400}}},
+             'reasoning_budget_exhausted'),
+            ({'choices':[{'message':{'content':'Partial'},'finish_reason':'length'}]},
+             'incomplete_length_stop'),
+            ({'choices':[{'message':{'content':'Looks complete'},'finish_reason':'tool_calls'}]},
+             'unapproved_finish_reason'),
+            ({'choices':[{'message':{'content':'No finish reason'}}]},
+             'unapproved_finish_reason'),
+            ({'choices':[]}, 'invalid_response_shape'),
+        ]
+        for data, reason in cases:
+            called = []
+            def opener(req, timeout):
+                called.append(req.full_url)
+                return Response(data)
+            with self.subTest(reason=reason):
+                with self.assertRaisesRegex(ValueError, '^' + reason + chr(36)):
+                    worker.http_completion('rovor-code-free-v1',
+                                           'bounded public context', 'test-key',
+                                           opener=opener)
+                self.assertEqual(called, [worker.GATEWAY])
 
     def test_timeout_is_terminal_without_second_http_request(self):
         calls=[]

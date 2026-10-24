@@ -159,7 +159,7 @@ def check_receipt(obj,expected_id,expected_provenance):
 
 def inspect(repo_root,receipt_root,slug):
     """Pure read-only: receipt output is explicitly content-free."""
-    if slug not in worker.PACKETS:
+    if slug not in worker.ALLOWED_PACKETS:
         raise ValueError('Unrecognized curated packet')
     packet,_,provenance=worker.load_packet(repo_root,slug)
     result={
@@ -190,7 +190,7 @@ def main(argv=None):
     parser.add_argument('--receipts',type=Path,
         default=Path.home()/'Documents'/'Rovor'/'OmniRoute-Draft-Receipts')
     choice=parser.add_mutually_exclusive_group(required=True)
-    choice.add_argument('--packet',choices=worker.PACKETS)
+    choice.add_argument('--packet',choices=worker.ALLOWED_PACKETS)
     choice.add_argument('--all',action='store_true')
     args=parser.parse_args(argv)
     try:

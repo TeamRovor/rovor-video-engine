@@ -27,6 +27,24 @@ ROUTES = {
         ('openrouter/nvidia/nemotron-3-ultra-550b-a55b:free',
          'openrouter/nvidia/nemotron-3.5-super-vl:free')),
 }
+WALTER_ROLE_ROUTES = {
+    "walter-v1-mac-worker-stop-recovery": ROUTES["supervisor-resilience"],
+    "walter-v1-finalcut-source-first-process": ROUTES["supervisor-resilience"],
+    "walter-v1-moho-viseme-review": ROUTES["supervisor-resilience"],
+    "walter-v1-blender-isolation-plan": ROUTES["supervisor-resilience"],
+    "walter-v1-safe-client-intake": ROUTES["runner-blocker"],
+    "walter-v1-outreach-draft-review": ROUTES["runner-blocker"],
+    "walter-v1-proof-before-done": ROUTES["runner-blocker"],
+    "walter-v1-omniroute-failure-boundaries": ROUTES["supervisor-resilience"],
+    "walter-v1-fcpxml-handoff-acceptance": ROUTES["supervisor-resilience"],
+    "walter-v1-animation-checkpoints": ROUTES["supervisor-resilience"],
+    "walter-v1-render-confidence-rubric": ROUTES["supervisor-resilience"],
+    "walter-v1-business-delivery-checkpoints": ROUTES["runner-blocker"],
+    "walter-v1-social-content-safety": ROUTES["runner-blocker"],
+    "walter-v1-free-route-usage-audit": ROUTES["runner-blocker"],
+}
+ROUTES.update(WALTER_ROLE_ROUTES)
+
 MAX_24H = 5
 ROUTES['overnight-acceptance'] = ROUTES['provider-efficiency']
 ROUTES['unattended-readiness'] = ROUTES['provider-efficiency']

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-mac-worker-stop-recovery",
+  "id": "walter-public-v1-mac-worker-stop-recovery",
+  "title": "ROVOR Mike research: mac worker stop recovery",
+  "role": "evidence-triage",
+  "inputs": [
+    "architecture/HYBRID-24-7-GHOST-WORKFORCE.md",
+    "WORK.md"
+  ],
+  "task": "ROVOR ghost specialist: MIKE. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Use public worker architecture to explain safe recovery from restart, stopped jobs, stale lease, and unavailable OmniRoute, separating verified code paths from host-only checks.",
+  "deliverable": "One host-safe incident checklist with STOP checkpoints and no arbitrary shell.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

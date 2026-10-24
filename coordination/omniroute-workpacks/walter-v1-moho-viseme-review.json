@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-moho-viseme-review",
+  "id": "walter-public-v1-moho-viseme-review",
+  "title": "ROVOR Jesse research: moho viseme review",
+  "role": "software-architecture",
+  "inputs": [
+    "AGENTS.md",
+    "ROVOR-AI-PLAN.md"
+  ],
+  "task": "ROVOR ghost specialist: JESSE. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Design an evidence-first way to evaluate English lip-sync and 2D shot-planning accuracy without altering original artwork.",
+  "deliverable": "A reusable Moho viseme and scene QA rubric with rejection examples.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

@@ -43,10 +43,12 @@ class FeedTests(unittest.TestCase):
         self.db.execute("UPDATE jobs SET status='needs_review' WHERE id=?", (job,))
         new = feed.feed(self.db, self.state, ROOT)
         self.assertEqual(new['submitted'], 1)
-        for status in ('queued', 'running', 'failed', 'needs_review', 'succeeded'):
-            self.db.execute('UPDATE jobs SET status=? WHERE id=?', (status, new['job_id']))
-            self.assertEqual(feed.feed(self.db, self.state, ROOT)['submitted'], 0)
-        self.assertEqual(self.db.execute('SELECT COUNT(*) FROM jobs').fetchone()[0], 2)
+        self.db.execute("UPDATE jobs SET status='needs_review' WHERE id=?", (new['job_id'],))
+        following = feed.feed(self.db, self.state, ROOT)
+        self.assertEqual(following['submitted'], 1)
+        self.assertNotEqual(following['job_id'], new['job_id'])
+        self.assertEqual(self.db.execute(
+            'SELECT COUNT(*) FROM jobs WHERE id=?', (new['job_id'],)).fetchone()[0], 1)
 
     def test_loop_requires_separate_approval(self):
         for options in ({}, {'allow_omniroute_model_use': True, 'allow_model_use': True}):
@@ -65,7 +67,7 @@ class FeedTests(unittest.TestCase):
         row = self.db.execute('SELECT * FROM jobs').fetchone()
         self.assertEqual((row['status'], row['attempts']), ('needs_review', 1))
         self.assertEqual(json.loads(row['payload']), {'packet': 'unattended-readiness'})
-        self.assertEqual(feed.feed(self.db, self.state, ROOT)['status'], 'plan_exhausted_review_required')
+        self.assertEqual(feed.feed(self.db, self.state, ROOT)['submitted'], 1)
 
     def test_feeder_does_not_bypass_existing_rolling_quota(self):
         for i in range(5):
@@ -97,7 +99,43 @@ class FeedTests(unittest.TestCase):
         self.assertFalse(review.inspect(ROOT, receipt.parent, 'unattended-readiness')['approval_granted'])
         self.assertEqual(receipt.parent.stat().st_mode & 0o777, 0o700)
         self.assertNotIn('fixture-key', receipt.read_text())
-        self.assertEqual(feed.feed(self.db, self.state, ROOT)['submitted'], 0)
+        self.assertEqual(feed.feed(self.db, self.state, ROOT)['submitted'], 1)
+
+    def test_seven_roles_and_all_fixed_packets_are_loadable(self):
+        self.assertEqual(len(feed.ROLE_PLAN), 7)
+        self.assertEqual(len(feed.PLAN), 15)
+        self.assertEqual(len({key for _, key in feed.PLAN}), 15)
+        for packet, _key in feed.PLAN:
+            obj, prompt, _ = workpack.load_packet(ROOT, packet)
+            self.assertFalse(obj['external_effects_allowed'])
+            self.assertLess(len(prompt), 38000)
+            self.assertIn(packet, omni.ROUTES)
+
+    def test_stage_two_requires_ready_prior_draft_without_blocking_other_roles(self):
+        seen = []
+        for index in range(8):  # Original packet then seven different first stages.
+            submission = feed.feed(self.db, self.state, ROOT)
+            self.assertEqual(submission['submitted'], 1)
+            row = self.db.execute('SELECT * FROM jobs WHERE id=?',
+                                  (submission['job_id'],)).fetchone()
+            seen.append(json.loads(row['payload'])['packet'])
+            valid = index != 1  # Mike's first draft failed; do not unlock Mike stage two.
+            receipt = {'draft_status': 'draft_completed_needs_review',
+                       'review_status': 'draft_ready_for_human_review'} if valid else {
+                       'draft_status': 'needs_review_no_auto_retry'}
+            self.db.execute("UPDATE jobs SET status='needs_review',result=? WHERE id=?",
+                            (json.dumps(receipt), submission['job_id']))
+        self.assertEqual(len(set(seen)), 8)
+        self.assertEqual(seen[1], 'walter-v1-mac-worker-stop-recovery')
+        next_job = feed.feed(self.db, self.state, ROOT)
+        self.assertEqual(next_job['submitted'], 1)
+        packet = self.db.execute('SELECT payload FROM jobs WHERE id=?',
+                                 (next_job['job_id'],)).fetchone()['payload']
+        self.assertEqual(json.loads(packet)['packet'],
+                         'walter-v1-fcpxml-handoff-acceptance')
+        self.assertEqual(self.db.execute(
+            "SELECT COUNT(*) FROM jobs WHERE dedupe_key=?",
+            ('walter-public-v1-omniroute-failure-boundaries',)).fetchone()[0], 0)
 
 
 if __name__ == '__main__': unittest.main()
