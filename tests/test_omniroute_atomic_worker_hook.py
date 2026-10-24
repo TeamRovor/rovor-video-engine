@@ -184,6 +184,16 @@ class WorkerAtomicFleetTests(unittest.TestCase):
                               (job,)).fetchone()
         self.assertEqual(row[0], "released")
 
+    def test_selected_provider_drift_is_rejected_even_when_model_name_same(self):
+        drifted = [{
+            "name": COMBO, "strategy": "priority", "isHidden": False,
+            "models": [{"kind": "model", "providerId": "groq", "model": MODEL}]
+        }]
+        with self.assertRaisesRegex(ValueError, "selected_model_changed_before_completion"):
+            binding.verify_before_completion(
+                {"model_id": MODEL, "combo": COMBO,
+                 "pool_id": POOL, "provider_id": "openrouter"}, drifted)
+
     def test_verify_binding_requires_one_exact_provider_model(self):
         self.assertEqual(binding.verify_binding(MODEL, ROUTES, CATALOG), COMBO)
         with self.assertRaises(ValueError):
