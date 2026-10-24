@@ -3,8 +3,9 @@
 
 This is an opt-in foreground bridge, NOT a daemon, terminal, browser/GUI,
 model call, application-control connector, or unattended ghost employee.
-No arbitrary code from GitHub is ever executed.  v1 accepts only system.ping
-and (with explicit local approval) inventory of a new isolated sandbox.
+No arbitrary code from GitHub is ever executed. v1 allows system.ping,
+explicitly approved sandbox inventory, and a separate opt-in fixed Mac version
+terminal probe; no remote strings are interpreted as shell commands.
 
 The private control repo does NOT run a self-hosted GitHub Actions runner.
 Request token has only scoped metadata/contents-read/issues-write rights;
@@ -102,7 +103,7 @@ def validate_private(metadata, expected):
         raise Refused('Remote control repository not confirmed private and active')
 
 
-def validate_packet(data, job_id, allow_inventory=False):
+def validate_packet(data, job_id, allow_inventory=False, allow_terminal_probe=False):
     if not isinstance(data, dict) or set(data) != {'schema', 'id', 'kind', 'payload'}:
         raise Refused('Unrecognized remote task structure')
     if type(data['schema']) is not int or data['schema'] != 1 or data['id'] != job_id:
@@ -112,12 +113,14 @@ def validate_packet(data, job_id, allow_inventory=False):
         raise Refused('Task payload must be an object')
     if kind == 'system.ping' and not payload:
         return kind, {}
+    if kind == 'terminal.probe' and allow_terminal_probe and not payload:
+        return kind, {}
     if kind == 'files.inventory' and allow_inventory and payload == {'subpath': '.'}:
         return kind, {'subpath': '.'}
     raise Refused('Task capability not locally approved or unsupported')
 
 
-def fetch_private_job(repo, job_id, token, *, allow_inventory=False, http=_transport):
+def fetch_private_job(repo, job_id, token, *, allow_inventory=False, allow_terminal_probe=False, http=_transport):
     """Read one exact main-branch job; never list or consume arbitrary tasks."""
     repo = repo_name(repo)
     job_id = job_name(job_id)
@@ -139,7 +142,7 @@ def fetch_private_job(repo, job_id, token, *, allow_inventory=False, http=_trans
         packet = json.loads(decoded)
     except (ValueError, TypeError, KeyError, UnicodeError, base64.binascii.Error) as exc:
         raise Refused('Invalid private control packet') from None
-    kind, payload = validate_packet(packet, job_id, allow_inventory)
+    kind, payload = validate_packet(packet, job_id, allow_inventory, allow_terminal_probe)
     return {'id':job_id,'kind':kind,'payload':payload}
 
 
@@ -198,7 +201,7 @@ def _report_needed(job_state, issue_number, packet_id):
 
 
 def _run_local(packet, home, *, issue_number, repo, token,
-               http=_transport, execution=ghost_worker.run_once):
+               http=_transport, execution=ghost_worker.run_once, allow_terminal_probe=False):
     """One DB per exact remote ID: cannot dispatch unrelated queued jobs."""
     workspace, state = local_paths(home, create=True)
     per_job = state / packet['id']
@@ -218,11 +221,17 @@ def _run_local(packet, home, *, issue_number, repo, token,
         uuid=ghost_worker.enqueue(conn, packet['kind'], packet['payload'], dedupe)
         existing=conn.execute('SELECT status,attempts,result FROM jobs WHERE id=?',(uuid,)).fetchone()
         if existing['status'] == 'queued':
-            receipt=execution(conn, workspace, owner='rovor-private-control')
+            if packet['kind'] == 'terminal.probe':
+                if not allow_terminal_probe:
+                    raise Refused('Terminal probe needs explicit host approval')
+                receipt=execution(conn, workspace, owner='rovor-private-control',
+                                  allow_terminal_probe=True)
+            else:
+                receipt=execution(conn, workspace, owner='rovor-private-control')
             if receipt is None or receipt.get('id') != uuid:
                 raise Refused('Worker did not execute exact reserved task')
             executed_now = True
-        result=conn.execute('SELECT status,attempts FROM jobs WHERE id=?',(uuid,)).fetchone()
+        result=conn.execute('SELECT status,attempts,result FROM jobs WHERE id=?',(uuid,)).fetchone()
         status = result['status']
         attempts = result['attempts']
     # A stale in-progress job must never be automatically replayed by this
@@ -233,6 +242,21 @@ def _run_local(packet, home, *, issue_number, repo, token,
                 'native_app_control_verified':False,
                 'open_interpreter_control_verified':False,
                 'local_only_readonly':True}
+    if packet['kind'] == 'terminal.probe' and public_status == 'succeeded':
+        try:
+            proof = json.loads(result['result'])
+        except (ValueError, TypeError):
+            raise Refused('Mac terminal receipt unavailable') from None
+        version = proof.get('macos_version') if isinstance(proof, dict) else None
+        if (not isinstance(proof, dict)
+                or proof.get('terminal_subprocess_verified') is not True
+                or proof.get('command_id') != 'macos-version'
+                or not isinstance(version, str)
+                or len(version) > 32
+                or re.fullmatch(r'[0-9]{1,3}(?:\.[0-9]{1,3}){1,2}', version) is None):
+            raise Refused('Mac terminal receipt failed validation')
+        response['terminal_probe'] = {'command_id': 'macos-version', 'macos_version': version}
+        response['terminal_subprocess_verified'] = True
     if _report_needed(per_job, issue_number, packet['id']):
         # Issue number is chosen ONLY by the Mac operator, never from remote job.
         # Do not publish private filesystem paths, file inventories or tokens.
@@ -255,7 +279,7 @@ def _run_local(packet, home, *, issue_number, repo, token,
 
 
 def bridge(repo, job_id, *, home, token, issue_number=None,
-           execute=False, allow_inventory=False, http=_transport):
+           execute=False, allow_inventory=False, allow_terminal_probe=False, http=_transport):
     repo = repo_name(repo)
     job_id = job_name(job_id)
     if not token:
@@ -263,12 +287,14 @@ def bridge(repo, job_id, *, home, token, issue_number=None,
     if execute and (type(issue_number) is not int or not 1 <= issue_number <= 100000000):
         raise Refused('A fixed private receipt issue number is required')
     packet=fetch_private_job(repo, job_id, token,
-                             allow_inventory=allow_inventory,http=http)
+                             allow_inventory=allow_inventory,
+                             allow_terminal_probe=allow_terminal_probe,http=http)
     if not execute:
         return {'status':'valid_private_job_dry_run','id':job_id,
                 'kind':packet['kind'],'executed':False,'receipt_posted':False}
     return _run_local(packet, home, issue_number=issue_number,
-                      repo=repo, token=token, http=http)
+                      repo=repo, token=token, http=http,
+                      allow_terminal_probe=allow_terminal_probe)
 
 
 def main(argv=None):
@@ -278,6 +304,8 @@ def main(argv=None):
     parser.add_argument('--execute',action='store_true',help='Run at most one safe local job')
     parser.add_argument('--allow-inventory',action='store_true',
                         help='Approve inventory only of Mac-Control-Sandbox')
+    parser.add_argument('--allow-terminal-probe',action='store_true',
+                        help='Approve only fixed macOS version subprocess; never a shell')
     parser.add_argument('--receipt-issue',type=int,
                         help='Fixed issue number in the same private repository')
     args=parser.parse_args(argv)
@@ -285,7 +313,8 @@ def main(argv=None):
         result=bridge(args.repo,args.job_id,home=Path.home(),
                       token=os.environ.get('ROVOR_PRIVATE_GITHUB_TOKEN'),
                       issue_number=args.receipt_issue,execute=args.execute,
-                      allow_inventory=args.allow_inventory)
+                      allow_inventory=args.allow_inventory,
+                      allow_terminal_probe=args.allow_terminal_probe)
         print(json.dumps(result, sort_keys=True))
         return 0 if result['status'] in ('valid_private_job_dry_run','succeeded') else 2
     except (Refused, ValueError, OSError, sqlite3.Error):
