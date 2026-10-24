@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-omniroute-failure-boundaries",
+  "id": "walter-public-v1-omniroute-failure-boundaries",
+  "title": "ROVOR Mike research: omniroute failure boundaries",
+  "role": "evidence-triage",
+  "inputs": [
+    "coordination/ghost-provider-policy.json",
+    "architecture/HYBRID-24-7-GHOST-WORKFORCE.md"
+  ],
+  "task": "ROVOR ghost specialist: MIKE. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Using the public provider policy, classify harmless read-only model failures versus uncertain side effects; never request or replay a failed ID.",
+  "deliverable": "A conservative fault decision tree with human-review escalation and free-only gates.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

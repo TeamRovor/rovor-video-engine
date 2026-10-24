@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-outreach-draft-review",
+  "id": "walter-public-v1-outreach-draft-review",
+  "title": "ROVOR Saul research: outreach draft review",
+  "role": "evidence-triage",
+  "inputs": [
+    "ROVOR-AI-PLAN.md",
+    "coordination/ghost-provider-policy.json"
+  ],
+  "task": "ROVOR ghost specialist: SAUL. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Build an ethical business outreach draft QA checklist from public ROVOR goals without sending messages.",
+  "deliverable": "A pre-send checklist covering truthfulness, consent, claims, deliverables, and approval.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

@@ -21,7 +21,22 @@ import time
 from urllib import request, error
 
 GATEWAY = 'http://127.0.0.1:20128/v1/chat/completions'
-PACKETS = ('runner-blocker', 'supervisor-resilience', 'provider-efficiency', 'overnight-acceptance', 'unattended-readiness')
+PACKETS = ('runner-blocker', 'supervisor-resilience', 'provider-efficiency', 'overnight-acceptance', 'unattended-readiness',
+    "walter-v1-mac-worker-stop-recovery",
+    "walter-v1-finalcut-source-first-process",
+    "walter-v1-moho-viseme-review",
+    "walter-v1-blender-isolation-plan",
+    "walter-v1-safe-client-intake",
+    "walter-v1-outreach-draft-review",
+    "walter-v1-proof-before-done",
+    "walter-v1-omniroute-failure-boundaries",
+    "walter-v1-fcpxml-handoff-acceptance",
+    "walter-v1-animation-checkpoints",
+    "walter-v1-render-confidence-rubric",
+    "walter-v1-business-delivery-checkpoints",
+    "walter-v1-social-content-safety",
+    "walter-v1-free-route-usage-audit",
+)
 ROLES = ('evidence-triage','software-architecture','inference-routing')
 MAX_INPUT = 28000
 MAX_RESPONSE = 131072
