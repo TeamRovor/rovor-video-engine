@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-blender-isolation-plan",
+  "id": "walter-public-v1-blender-isolation-plan",
+  "title": "ROVOR Gale research: blender isolation plan",
+  "role": "software-architecture",
+  "inputs": [
+    "AGENTS.md",
+    "ROVOR-AI-PLAN.md"
+  ],
+  "task": "ROVOR ghost specialist: GALE. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Define a disposable Blender scene research protocol that distinguishes source review from actual Blender execution.",
+  "deliverable": "An isolated-scene verification checklist and render evidence specification.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

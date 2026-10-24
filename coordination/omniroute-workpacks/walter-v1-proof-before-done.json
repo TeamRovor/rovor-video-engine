@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-proof-before-done",
+  "id": "walter-public-v1-proof-before-done",
+  "title": "ROVOR Hank research: proof before done",
+  "role": "evidence-triage",
+  "inputs": [
+    "WORK.md",
+    "integrations/open-interpreter/HANK-CLOUD-WATCHDOG.md"
+  ],
+  "task": "ROVOR ghost specialist: HANK. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Define evidence thresholds preventing source-only PRs or hosted CI from being mislabeled as Mac runtime achievements.",
+  "deliverable": "An evidence rubric for CI, Mac, model, deployment and customer-facing results.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}
