@@ -3900,6 +3900,26 @@
         }
       ],
       "blocker": "Source-only policy finished; existing Mac runtime still lacks per-model attested budgets and integrated cross-model reservation. Need actual host-side verified model IDs, free eligibility and real outcome evidence before enabling automatic switching."
+    },
+    {
+      "id": "walter-draft-actionability-20261024",
+      "title": "Triage specialist draft actionability and near-duplicates before private human review",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 draft actionability shift",
+      "branch": "feature/walter-draft-actionability-v1",
+      "scopes": [
+        "tools/walter_draft_actionability.py",
+        "tests/test_walter_draft_actionability.py",
+        ".github/workflows/walter-draft-actionability.yml",
+        "subsystem:private-research-draft-actionability-triage"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T08:37:00.323Z",
+      "next_update": "After hosted Python 3.9/3.11 CI and exact GitHub PR evidence.",
+      "next_action": "Implement an offline, private-only, source-citation-verified triage that detects duplicate or generic specialist drafts, enforces actionable evidence/change/test/uncertainty sections and preserves all private content outside GitHub. No Mac runtime or PR137 files touched.",
+      "acceptance": "Standalone Python3.9-compatible standard-library module verifies independently pinned source digests and citation line spans using existing citation gate, enforces concrete action/test sections and role/deliverable alignment, detects exact and near-duplicate drafts against separately supplied private history, returns sanitized bounded metrics only, requires human review. Focused adversarial tests and hosted CI with shared task/routing checks. No live inference, no Mac writes or auto-approval.",
+      "evidence": []
     }
   ]
 }

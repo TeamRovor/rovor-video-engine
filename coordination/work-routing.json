@@ -701,6 +701,13 @@
         "hosted-ci"
       ],
       "objective": "maximize-reliable-omniroute-capacity"
+    },
+    "walter-draft-actionability-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
