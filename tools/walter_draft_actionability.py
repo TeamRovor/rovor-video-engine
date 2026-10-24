@@ -51,6 +51,23 @@ READ_ONLY = re.compile(r"^\s*(read|inspect|compare|review|check|verify|audit|exa
 SIDE_EFFECT = re.compile(
     r"\b(run|execute|deploy|install|send|publish|post|write|commit|merge|delete|modify)\b", re.I
 )
+
+DRAFT_FORMAT_INSTRUCTIONS = (
+    "Write a PRIVATE review-only specialist research draft using exactly these "
+    "five Markdown headings in order: ## Evidence; ## Proposed change; "
+    "## Acceptance check; ## Unverified; ## Next read-only check. "
+    "Evidence must include exact [[source:PATH#LNUMBER]] citations from the "
+    "supplied approved public source excerpts. Proposed change must describe "
+    "a concrete role-specific action addressing the named deliverable. "
+    "Acceptance check must state a reproducible read-only verification method "
+    "and expected result. Unverified must explicitly identify what was not "
+    "verified on the Mac or with a real provider. Next read-only check must "
+    "begin with Read, Inspect, Compare, Review, Check, Verify, Audit or Examine "
+    "and must not require execution, installation, sending, publishing, or "
+    "modification. Never claim deployment, model inference, approval or live "
+    "app control; a human must review every draft. Avoid generic advice."
+)
+
 MAX_ANSWER = 22000
 MAX_HISTORY = 50
 NEAR_DUPLICATE_THRESHOLD = 0.82
@@ -93,6 +110,10 @@ def _sections(answer):
             or BAD_CONTROLS.search(answer) or "&#" in answer
             or "\x60\x60\x60" in answer):
         _deny("draft_invalid")
+    try:
+        answer.encode("utf-8")
+    except UnicodeError:
+        _deny("draft_invalid")
     matches = list(HEADER.finditer(answer))
     if len(matches) != len(HEADINGS) or tuple(
             m.group(1).strip() for m in matches) != HEADINGS:
@@ -125,6 +146,10 @@ def _check_history(history, packet_id, role, answer):
                 or type(record["answer"]) is not str
                 or len(record["answer"]) > MAX_ANSWER
                 or BAD_CONTROLS.search(record["answer"])):
+            _deny("private_history_unverified")
+        try:
+            record["answer"].encode("utf-8")
+        except UnicodeError:
             _deny("private_history_unverified")
         if record["packet_id"] != packet_id or record["role"] != role:
             continue
