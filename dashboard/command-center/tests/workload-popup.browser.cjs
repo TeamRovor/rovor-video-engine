@@ -1,0 +1,75 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const os=require('node:os');
+const http=require('node:http');
+const {spawn,spawnSync}=require('node:child_process');
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+const root=path.resolve(__dirname,'..');
+const file=path.join(root,'native-v8-9','index.html');
+const output=path.join(root,'qa-screenshots','workload-popup');
+const sizes=[[430,932,'iphone-portrait',true],[820,1180,'ipad-portrait',true],[1180,820,'ipad-landscape',true],[1366,768,'laptop',false],[1672,941,'desktop',false]];
+let server,chrome,socket,tmp,serial=0;
+const pending=new Map();
+const cmd=(method,params={})=>new Promise((resolve,reject)=>{const id=++serial;pending.set(id,{resolve,reject});socket.send(JSON.stringify({id,method,params}))});
+const evalJS=async source=>{const r=await cmd('Runtime.evaluate',{expression:'(()=>{'+source+'})()',returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error('Browser JS error: '+JSON.stringify(r.exceptionDetails));return r.result.value};
+const poll=async fn=>{for(let i=0;i<600;i++){try{const v=await fn();if(v)return v}catch{}await delay(100)}throw Error('Browser operation timed out')};
+async function screenshot(name){const r=await cmd('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync(path.join(output,name+'.png'),Buffer.from(r.data,'base64'))}
+async function main(){
+ fs.mkdirSync(output,{recursive:true});
+ server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost').pathname!=='/hud'){res.writeHead(404).end();return}res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(fs.readFileSync(file))});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ const url='http://127.0.0.1:'+server.address().port+'/hud';
+ const bin=[process.env.CHROME,'google-chrome','chromium','chromium-browser'].filter(Boolean).find(n=>spawnSync('which',[n],{encoding:'utf8'}).status===0);
+ assert(bin,'Chrome is required for browser QA');
+ tmp=fs.mkdtempSync(path.join(os.tmpdir(),'rovor-browser-'));
+ chrome=spawn(bin,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--no-first-run','--remote-debugging-port=0','--user-data-dir='+tmp,url],{stdio:'ignore'});
+ const port=await poll(()=>{const f=path.join(tmp,'DevToolsActivePort');return fs.existsSync(f)?fs.readFileSync(f,'utf8').split('\n')[0]:null});
+ const targets=await poll(async()=>{const r=await fetch('http://127.0.0.1:'+port+'/json/list');return r.ok?await r.json():null});
+ const page=targets.find(t=>t.type==='page');
+ assert(page,'Chrome page target not found');
+ socket=new WebSocket(page.webSocketDebuggerUrl);
+ await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true})});
+ socket.addEventListener('message',e=>{const message=JSON.parse(e.data);const waiting=pending.get(message.id);if(!waiting)return;pending.delete(message.id);message.error?waiting.reject(Error(JSON.stringify(message.error))):waiting.resolve(message.result)});
+ await cmd('Page.enable');await cmd('Runtime.enable');
+ const results=[];
+ for(const [width,height,name,mobile] of sizes){
+  await cmd('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile});
+  await cmd('Page.navigate',{url});
+  await poll(()=>evalJS('return !!window.ROVOR_NATIVE && document.querySelectorAll("#workloadPanel .wl-compact-row").length===9'));
+  const home=await evalJS('return {models:document.querySelectorAll("#workloadPanel .wl-compact-row").length,nav:document.querySelectorAll(".nav-item").length,panels:document.querySelectorAll(".rail .panel").length,hidden:document.querySelector("#screen").hidden,pageWidth:document.documentElement.scrollWidth,viewport:innerWidth}');
+  assert.equal(home.models,9,name+': 9 model rows');
+  assert.equal(home.nav,5,name+': dock preserved');
+  assert.equal(home.panels,6,name+': HUD panels preserved');
+  assert(home.hidden,name+': popup should start hidden');
+  assert(home.pageWidth<=home.viewport+2,name+': horizontal page overflow');
+  if(name==='iphone-portrait'||name==='desktop')await screenshot(name+'-compact');
+  if(name==='iphone-portrait'||name==='desktop'){
+   await evalJS('document.querySelector("#workloadPanel").closest(".panel").scrollIntoView({block:"center"});return true');
+   await screenshot(name+'-workload-card');
+  }
+  await evalJS('document.querySelector(".panel-expand[data-view=workload]").click();return true');
+  const expanded=await evalJS('const d=document.querySelector(".drawer").getBoundingClientRect();return {open:!document.querySelector("#screen").hidden,title:document.querySelector("#drawerTitle").textContent,rows:document.querySelectorAll(".wl-matrix tbody tr").length,cols:document.querySelectorAll(".wl-matrix thead th").length,unverified:document.querySelector("#rovor-workload-popup").textContent.includes("NO VERIFIED LIVE MODEL TELEMETRY"),width:d.width,height:d.height}');
+  assert(expanded.open,name+': popup must open');
+  assert.equal(expanded.rows,8);
+  assert.equal(expanded.cols,10);
+  assert(expanded.unverified,name+': unknown telemetry must be explicit');
+  assert(expanded.width<=width+2&&expanded.height<=height+2,name+': modal overflow');
+  if(name==='iphone-portrait'||name==='desktop')await screenshot(name+'-heatmap');
+  await evalJS('document.querySelector("[data-wl-tab=models]").click();return true');
+  assert(await poll(()=>evalJS('return document.querySelectorAll(".wl-model-entry").length===9')),name+': model listing did not settle');
+  await evalJS('window.ROVOR_NATIVE.open("workload");return true');
+  assert(await poll(()=>evalJS('return document.querySelectorAll(".wl-model-entry").length===9')),name+': popup view lost after refresh remount');
+  await evalJS('document.querySelector("[data-wl-tab=routing]").click();return true');
+  assert(await poll(()=>evalJS('return !!document.querySelector(".wl-route-chart")')),name+': routing chart not shown');
+  await evalJS('document.querySelector("#screen .close").click();document.querySelector("[data-wl-compact-tab=employees]").click();return true');
+  assert.equal(await evalJS('return document.querySelectorAll("#workloadPanel .wl-compact-row").length'),8);
+  await evalJS('document.querySelectorAll("#workloadPanel .wl-compact-row")[2].click();return true');
+  assert(await poll(()=>evalJS('return !!document.querySelector("#rovor-workload-popup")?.textContent.includes("JANE")')),name+': employee selection not shown');
+  results.push({name,width,height,home,expanded,pass:true});
+ }
+ fs.writeFileSync(path.join(output,'results.json'),JSON.stringify(results,null,2));
+ console.log('PASS: ROVOR Workload popup opened and interacted in '+results.length+' responsive viewports');
+}
+main().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>{try{socket?.close()}catch{};try{chrome?.kill()}catch{};try{server?.close()}catch{};if(tmp){try{fs.rmSync(tmp,{recursive:true,force:true,maxRetries:8,retryDelay:200})}catch(error){console.warn('Chrome cleanup deferred:',error.code)}}});

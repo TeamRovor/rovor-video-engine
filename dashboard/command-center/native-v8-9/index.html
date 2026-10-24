@@ -1372,6 +1372,91 @@ body{background:#01030a}
 /* Visible cue should remain below the pinned panel header. */
 .panel.preview-has-more > .panel-content::after{inset:auto 8px 2px auto!important;}
 .panel.preview-scrollable > .panel-content::before{inset:auto auto 3px 10px!important;}
+
+/* ROVOR Workload Distribution popup only. No global HUD geometry changes. */
+#rovor-workload-popup{display:flex;flex-direction:column;gap:14px;min-width:0;width:100%;font:inherit;color:#d8efff}
+#rovor-workload-popup *{box-sizing:border-box}
+#rovor-workload-popup .wl-toolbar,#rovor-workload-popup .wl-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+#rovor-workload-popup .wl-kicker{font-size:10px;letter-spacing:.18em;color:#88bde7;text-transform:uppercase}
+#rovor-workload-popup .wl-notice{padding:10px 12px;border:1px solid #497ca9;background:#0a2543;font-size:11px;line-height:1.5;color:#b9d8ef}
+#rovor-workload-popup .wl-notice strong{color:#edf7ff}
+#rovor-workload-popup button,#rovor-workload-popup select{font:inherit;color:#d9efff;cursor:pointer}
+#rovor-workload-popup .wl-button{min-height:39px;border:1px solid #4a84bd;background:linear-gradient(150deg,#0e325c,#071b35);padding:8px 11px;letter-spacing:.07em;font-size:11px}
+#rovor-workload-popup .wl-button:hover,#rovor-workload-popup .wl-button:focus-visible{border-color:#badfff;background:#184c7f}
+#rovor-workload-popup .wl-button[aria-pressed="true"]{background:#1c5687;border-color:#b9e6ff;box-shadow:inset 0 0 12px #4992de66}
+#rovor-workload-popup .wl-period{display:flex;gap:4px;flex-wrap:wrap}
+#rovor-workload-popup .wl-period .wl-button{min-height:34px;padding:6px 9px}
+#rovor-workload-popup .wl-card{min-width:0;border:1px solid #4582bd;background:linear-gradient(150deg,rgba(12,43,77,.94),rgba(3,16,37,.96));padding:14px;box-shadow:inset 0 0 28px #2361a51c;clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% 100%,0 100%,0 9px)}
+#rovor-workload-popup .wl-card h3{font-size:12px;letter-spacing:.12em;color:#b9e7ff;margin:0 0 11px;padding-bottom:8px;border-bottom:1px solid #3874aa66}
+#rovor-workload-popup .wl-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+#rovor-workload-popup .wl-stat{padding:10px;border:1px solid #326895;background:#071c37;min-width:0}
+#rovor-workload-popup .wl-stat small{display:block;font-size:10px;color:#8fbcdf;margin-bottom:4px;line-height:1.4}
+#rovor-workload-popup .wl-stat b{display:block;font-size:16px;color:#e5f6ff;overflow-wrap:anywhere}
+#rovor-workload-popup .wl-empty{color:#91bce0;font-size:12px;line-height:1.7;max-width:740px}
+#rovor-workload-popup .wl-matrix-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:6px;scrollbar-color:#5fa5dc #06162c;scrollbar-width:thin}
+#rovor-workload-popup .wl-matrix{border-collapse:separate;border-spacing:4px;min-width:685px;width:100%;font-size:11px}
+#rovor-workload-popup .wl-matrix th{font-weight:500;color:#9dcbed;font-size:10px;text-align:center}
+#rovor-workload-popup .wl-matrix th:first-child{min-width:112px;text-align:left;position:sticky;left:0;z-index:2;background:#0c2749}
+#rovor-workload-popup .wl-matrix td{padding:0;text-align:center}
+#rovor-workload-popup .wl-cell{width:100%;min-width:44px;height:39px;border:1px solid #326494;background:#0b2543;color:#8ab8db;font-size:12px;cursor:pointer}
+#rovor-workload-popup .wl-cell[data-active="yes"]{background:rgba(68,145,222,var(--wl-intensity));color:#fff;border-color:#6fbbf8}
+#rovor-workload-popup .wl-cell[aria-pressed="true"]{outline:2px solid #e0f6ff;outline-offset:1px}
+#rovor-workload-popup .wl-row-select{width:100%;text-align:left;min-height:39px;border:1px solid transparent;background:#102d4e;padding:4px 7px;color:#dcedff;font-size:11px}
+#rovor-workload-popup .wl-row-select[aria-pressed="true"]{border-color:#86c8ff;background:#1b4b77}
+#rovor-workload-popup .wl-scrollhint{display:none;margin-top:4px;color:#8fc9f2;font-size:10px;letter-spacing:.07em}
+#rovor-workload-popup .wl-key{display:flex;flex-wrap:wrap;gap:11px;color:#a8cbeb;font-size:10px;margin-top:11px}
+#rovor-workload-popup .wl-key span:before{content:"";display:inline-block;width:8px;height:8px;border:1px solid #75a8d5;background:#285583;margin-right:6px}
+#rovor-workload-popup .wl-details{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#rovor-workload-popup .wl-details p{margin:4px 0;color:#adcce8;line-height:1.5;font-size:12px}
+#rovor-workload-popup .wl-models{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#rovor-workload-popup .wl-model-entry{min-width:0;padding:11px;border:1px solid #356d9f;background:#09213d;text-align:left;display:grid;gap:7px}
+#rovor-workload-popup .wl-model-entry[aria-pressed="true"]{border-color:#a3d9ff;background:#123f69}
+#rovor-workload-popup .wl-model-entry .wl-row{display:flex;justify-content:space-between;gap:7px;align-items:center}
+#rovor-workload-popup .wl-model-entry strong{font-size:12px;overflow-wrap:anywhere}
+#rovor-workload-popup .wl-model-entry small{font-size:10px;color:#a3c8e7}
+#rovor-workload-popup .wl-meter{height:5px;background:#133655;border:1px solid #275077;overflow:hidden}
+#rovor-workload-popup .wl-meter i{display:block;background:linear-gradient(90deg,#397cba,#b6e8ff);height:100%;width:var(--wl-share)}
+#rovor-workload-popup .wl-route-layout{display:grid;grid-template-columns:minmax(130px,.8fr) minmax(0,2fr);gap:12px;align-items:start}
+#rovor-workload-popup .wl-employees{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+#rovor-workload-popup .wl-employees button{min-height:41px;border:1px solid #3a719f;background:#0b2846;font-size:11px;padding:6px}
+#rovor-workload-popup .wl-employees button[aria-pressed="true"]{border-color:#b3e2ff;background:#164c7d}
+#rovor-workload-popup .wl-route-chart{width:100%;height:auto;background:radial-gradient(ellipse at 50% 50%,rgba(19,83,144,.27),transparent 70%)}
+#rovor-workload-popup button:focus-visible{outline:2px solid #e9f7ff;outline-offset:2px}
+@media(max-width:780px){#rovor-workload-popup .wl-models{grid-template-columns:1fr}#rovor-workload-popup .wl-route-layout{grid-template-columns:1fr}#rovor-workload-popup .wl-scrollhint{display:block}}
+@media(max-width:520px){#rovor-workload-popup .wl-summary{grid-template-columns:repeat(2,minmax(0,1fr))}#rovor-workload-popup .wl-stat:last-child{grid-column:1/-1}#rovor-workload-popup .wl-details{grid-template-columns:1fr}#rovor-workload-popup .wl-card{padding:10px}#rovor-workload-popup .wl-toolbar{align-items:stretch}#rovor-workload-popup .wl-actions{gap:5px}#rovor-workload-popup .wl-button{font-size:10px;padding:7px}}
+@media(prefers-reduced-motion:reduce){#rovor-workload-popup *{animation:none!important;transition:none!important}}
+
+/* Compact existing Workload Distribution instrument — no frame/grid changes. */
+#workloadPanel .wl-compact{width:100%;min-width:0;display:flex;flex-direction:column;gap:7px;color:#d2eeff}
+#workloadPanel .wl-compact *{box-sizing:border-box}
+#workloadPanel .wl-compact-tabs{display:flex;gap:4px;min-width:0}
+#workloadPanel .wl-compact-tabs button{display:flex;align-items:center;justify-content:center;gap:5px;flex:1;min-width:0;min-height:28px;padding:4px 5px;cursor:pointer;background:#0a223e;border:1px solid #326a99;color:#9cc7e8;letter-spacing:.08em;font-size:9px;font-weight:650}
+#workloadPanel .wl-compact-tabs button[aria-pressed="true"]{background:#1b517d;color:#e0f6ff;border-color:#8ccdf5}
+#workloadPanel .wl-compact-tabs small{font-size:9px;color:#97c7ee}
+#workloadPanel .wl-compact-meta,#workloadPanel .wl-compact-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;color:#8bb9db;font-size:9px;letter-spacing:.07em}
+#workloadPanel .wl-compact-dot{width:5px;height:5px;flex:0 0 5px;border-radius:50%;background:#557a9c;border:1px solid #9abbd6;box-shadow:none}
+#workloadPanel .wl-compact-meta>span:last-child{margin-left:auto}
+#workloadPanel .wl-compact-items{display:flex;flex-direction:column;gap:2px;min-width:0}
+#workloadPanel .wl-compact-row{display:grid;grid-template-columns:minmax(53px,70px) minmax(0,1fr) 24px;align-items:center;gap:6px;min-height:27px;width:100%;padding:4px 2px;color:#c6e7ff;background:transparent;border:0;border-bottom:1px solid #294a684f;text-align:left;cursor:pointer}
+#workloadPanel .wl-compact-row:hover,#workloadPanel .wl-compact-row:focus-visible{background:#133b61;outline:1px solid #83c8ff}
+#workloadPanel .wl-compact-name{font-size:10px;font-weight:580;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#workloadPanel .wl-compact-track{height:5px;min-width:0;display:block;position:relative;background:repeating-linear-gradient(90deg,#0c2540 0,#0c2540 5px,#193b5a 5px,#193b5a 7px);border:1px solid #47749e;overflow:hidden}
+#workloadPanel .wl-compact-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3987ce,#b4e6ff)}
+#workloadPanel .wl-compact-value{text-align:right;font-size:11px;color:#a1cde9}
+#workloadPanel .wl-compact-foot{border-top:1px solid #3d709c5c;padding-top:6px;font-size:8px}
+#workloadPanel .wl-compact-foot span{color:#d1eeff}
+@media(max-width:780px){#workloadPanel .wl-compact-row{min-height:33px;grid-template-columns:minmax(57px,72px) minmax(0,1fr) 25px}#workloadPanel .wl-compact-tabs button{min-height:34px}}
+
+
+/* Refine mobile density without altering the original panel size or grid. */
+@media(max-width:780px){
+ #workloadPanel .wl-compact{gap:3px}
+ #workloadPanel .wl-compact-tabs button{min-height:27px}
+ #workloadPanel .wl-compact-meta{font-size:8px}
+ #workloadPanel .wl-compact-foot{display:none}
+ #workloadPanel .wl-compact-row{min-height:36px}
+ #rovor-workload-popup .wl-cell,#rovor-workload-popup .wl-row-select{min-height:44px}
+}
 </style>
 </head>
 <body>
@@ -1401,7 +1486,7 @@ body{background:#01030a}
 <section class="deck" aria-label="ROVOR operations HUD">
 <div class="rail left">
  <section class="panel"><div class="panel-content"><div class="panel-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg>ACTIVE TASKS<b id="taskCount">—</b><button class="mini-scope" id="taskScopeButton" type="button" aria-pressed="false" title="Toggle open tasks or all verified tasks">OPEN</button><button type="button" class="panel-expand" data-view="tasks" title="Expand active tasks" aria-label="Expand active tasks">↗</button></div><div class="panel-body preview-scroll" id="tasksPanel" role="region" tabindex="0" aria-label="Scrollable tasks preview, swipe or mouse-wheel to browse" aria-live="polite"><div class="tiny-label">Connecting to GitHub task queue…</div></div></div></section>
- <section class="panel"><div class="panel-content"><div class="panel-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 21V11M10 21V5M15 21V13M20 21V8"/></svg>WORKLOAD DISTRIBUTION<button type="button" class="panel-expand" data-view="tasks" title="Expand task workload" aria-label="Expand task workload">↗</button></div><div class="panel-body preview-scroll" id="workloadPanel" role="region" tabindex="0" aria-label="Scrollable workload preview"><div class="tiny-label">Source verification pending</div></div></div></section>
+ <section class="panel"><div class="panel-content"><div class="panel-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 21V11M10 21V5M15 21V13M20 21V8"/></svg>WORKLOAD DISTRIBUTION<button type="button" class="panel-expand" data-view="workload" title="Expand workload distribution" aria-label="Expand task workload">↗</button></div><div class="panel-body preview-scroll" id="workloadPanel" role="region" tabindex="0" aria-label="Scrollable workload preview"><div class="tiny-label">Source verification pending</div></div></div></section>
  <section class="panel"><div class="panel-content"><div class="panel-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 3"/></svg>RECENT ACTIVITY <button class="panel-expand" data-view="activity" aria-label="See activity">↗</button></div><div class="panel-body preview-scroll" id="activityPanel" role="region" tabindex="0" aria-label="Scrollable recent activity, swipe or mouse-wheel to browse"><div class="tiny-label">No verified activity yet</div></div></div></section>
 </div>
 <div class="core" aria-label="Animated central ROVOR reactor"><svg class="core-shoulders" viewBox="0 0 600 640" preserveAspectRatio="none" aria-hidden="true" focusable="false">
@@ -1452,6 +1537,198 @@ body{background:#01030a}
 </div>
 <div id="screen" class="screen" hidden><div class="scrim" data-close></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle"><header><div><div class="kicker">ROVOR DIGITAL / COMMAND INTERFACE</div><h2 id="drawerTitle">COMMAND CONSOLE</h2></div><button class="close" data-close aria-label="Close panel">×</button></header><div class="drawer-inner" id="drawerBody"></div><div class="drawer-footnote">STATUS DATA IS VERIFIED AGAINST ONE GITHUB COMMIT. A CLAIMED TASK IS NOT A RUNNING MAC WORKER.</div></aside></div>
 <script>
+/* Embedded module for the existing native v8.9 Workload Distribution focus popup.
+   No requests, dispatch, keys, storage, or runtime-worker claims. */
+(() => {
+  'use strict';
+  const EMPLOYEES=[
+    ['walter','Walter','Supervisor'],['mike','Mike','Mac systems'],
+    ['jane','Jane','Final Cut'],['jesse','Jesse','Moho 2D'],
+    ['gale','Gale','Blender 3D'],['gus','Gus','Operations'],
+    ['saul','Saul','Marketing'],['hank','Hank','Quality']
+  ];
+  // Slot labels are intentionally NOT invented OmniRoute model identities.
+  const MODELS=Array.from({length:9},(_,i)=>'MODEL '+String(i+1).padStart(2,'0'));
+  const htmlEscape=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const fmt=n=>Number(n).toLocaleString('en-US');
+  const periodScale={ '1H':1,'24H':6,'7D':19 };
+  function simulatedCounts(period) {
+    const factor=periodScale[period];
+    return EMPLOYEES.map((_,i)=>MODELS.map((_,j)=>{
+      const base=((i*13+j*7+3)%17);
+      return (base<3?0:(base+((i+j)%5)))*factor;
+    }));
+  }
+  function makeUI(state){
+    const matrix=state.demo?simulatedCounts(state.period):null;
+    const totals=MODELS.map((_,j)=>matrix?matrix.reduce((n,row)=>n+row[j],0):null);
+    const grandTotal=state.demo?totals.reduce((a,b)=>a+b,0):null;
+    const role=EMPLOYEES[state.employee];
+    const model=MODELS[state.model];
+    const chosen=matrix?.[state.employee]?.[state.model]??null;
+    const countText=n=>n===null?'—':fmt(n);
+    const viewButton=(id,name)=>`<button type="button" class="wl-button" data-wl-tab="${id}" aria-pressed="${state.view===id}">${name}</button>`;
+    const periodButton=id=>`<button type="button" class="wl-button" data-wl-period="${id}" aria-pressed="${state.period===id}">${id}</button>`;
+    const summary=`<div class="wl-summary">
+      <div class="wl-stat"><small>AI routes expected</small><b>9 <span style="font-size:11px;font-weight:400">/ unverified</span></b></div>
+      <div class="wl-stat"><small>Recorded model calls · ${state.period}</small><b>${countText(grandTotal)}</b></div>
+      <div class="wl-stat"><small>Runtime source</small><b style="font-size:12px">${state.demo?'SAMPLE DATA':'NOT CONNECTED'}</b></div>
+    </div>`;
+    const details=`<section class="wl-card">
+      <h3>SELECTED PAIR / ${role[1].toUpperCase()} × ${model}</h3>
+      <div class="wl-details">
+        <div><div class="wl-kicker">Ghost employee</div><p><strong>${role[1]}</strong> · ${role[2]}</p><p>${state.demo?'Illustrative workload only':'No verified worker heartbeat or active job'}</p></div>
+        <div><div class="wl-kicker">OmniRoute model slot</div><p><strong>${model}</strong> · actual model ID unknown</p><p>${state.demo?fmt(chosen)+' sample calls in selected period':'No measured requests, quota, cost or capacity'}</p></div>
+      </div>
+    </section>`;
+    const header=`<div class="wl-toolbar">
+      <span class="wl-kicker">OmniRoute / named employees / routing telemetry</span>
+      <div class="wl-period" aria-label="Usage period">${['1H','24H','7D'].map(periodButton).join('')}</div>
+    </div>
+    <div class="wl-notice" role="status">
+      <strong>${state.demo?'DEMONSTRATION — SYNTHETIC NUMBERS':'NO VERIFIED LIVE MODEL TELEMETRY'}</strong> ·
+      ${state.demo?'All counts and illuminated routes are fabricated for layout testing. Nothing is running from this preview.':'The model catalog, worker heartbeat and inference receipts require an authenticated Mac data bridge. Unknown is not zero usage.'}
+    </div>
+    <div class="wl-toolbar"><div class="wl-actions" role="group" aria-label="Workload views">
+      ${viewButton('matrix','EMPLOYEE × MODEL')}
+      ${viewButton('models','9 MODELS')}
+      ${viewButton('routing','ROUTING')}
+    </div>
+    <button type="button" class="wl-button" data-wl-demo aria-pressed="${state.demo}">${state.demo?'EXIT SAMPLE MODE':'VIEW SAMPLE LAYOUT'}</button></div>`;
+    let visual='';
+    if(state.view==='matrix'){
+      visual=`<section class="wl-card">
+        <h3>EMPLOYEE × AI MODEL / REQUEST ACTIVITY</h3>
+        <div class="wl-scrollhint">SWIPE LEFT OR RIGHT FOR ALL NINE MODELS ↔</div>
+        <div class="wl-matrix-scroll" tabindex="0" role="region" aria-label="Scrollable nine-model employee usage matrix">
+          <table class="wl-matrix"><thead><tr><th scope="col">EMPLOYEE</th>${MODELS.map((m,j)=>`<th scope="col"><span title="OmniRoute model ID not yet verified">M${String(j+1).padStart(2,'0')}</span></th>`).join('')}</tr></thead>
+          <tbody>${EMPLOYEES.map((emp,i)=>`<tr>
+          <th scope="row"><button type="button" class="wl-row-select" data-wl-employee="${i}" aria-pressed="${state.employee===i}">${emp[1]}</button></th>
+          ${MODELS.map((m,j)=>{
+            const n=matrix?.[i]?.[j]??null;
+            const value=n===null?'—':(n===0?'0':String(n));
+            const selected=state.employee===i&&state.model===j;
+            const alpha=n===null?0:Math.max(.2,Math.min(.95,n/(Math.max(...(totals.filter(Number.isFinite)))||1)));
+            return `<td><button class="wl-cell" type="button" data-wl-cell="${i}-${j}" data-active="${n!==null&&n>0?'yes':'no'}" aria-pressed="${selected}" style="--wl-intensity:${alpha.toFixed(2)}" aria-label="${emp[1]}, model ${j+1}, ${n===null?'unverified':n+' sample calls'}">${value}</button></td>`;
+          }).join('')}</tr>`).join('')}</tbody></table>
+        </div>
+        <div class="wl-key"><span>Blue intensity: relative calls (sample mode only)</span><span>— : no verified telemetry</span></div>
+      </section>`;
+    }else if(state.view==='models'){
+      visual=`<section class="wl-card"><h3>OMNIROUTE / ALL NINE MODEL SLOTS</h3>
+        <p class="wl-empty">Request share is not remaining quota or model capacity. Model identities and usage must come from verified OmniRoute receipts.</p>
+        <div class="wl-models">${MODELS.map((m,j)=>{
+           const v=totals[j],share=grandTotal?100*v/grandTotal:0;
+           return `<button type="button" class="wl-model-entry" data-wl-model="${j}" aria-pressed="${state.model===j}">
+             <span class="wl-row"><strong>${m}</strong><small>${state.demo?share.toFixed(1)+'% of sample calls':'UNVERIFIED'}</small></span>
+             <span class="wl-meter" aria-hidden="true"><i style="--wl-share:${share.toFixed(1)}%"></i></span>
+             <span class="wl-row"><small>${state.demo?fmt(v)+' sample requests':'Model ID / provider unknown'}</small><small>↗ INSPECT</small></span>
+           </button>`}).join('')}</div></section>`;
+    }else{
+      // Static SVG is driven only by explicit sample mode. Unverified routes are intentionally unlit.
+      const left=EMPLOYEES.map((emp,i)=>{
+        const y=24+i*34,selected=state.employee===i;
+        return `<text x="18" y="${y+4}" font-size="11" fill="${selected?'#e6f8ff':'#80b1dc'}">${emp[1]}</text>
+        <line x1="92" y1="${y}" x2="205" y2="143" stroke="${state.demo&&selected?'#8cd6ff':'#38577a'}" stroke-width="${selected?2:1}" stroke-dasharray="${state.demo&&selected?'none':'3 6'}" opacity="${state.demo&&selected?0.9:0.3}"/>`}).join('');
+      const right=MODELS.map((m,j)=>{
+        const y=16+j*33;
+        const active=state.demo&&matrix[state.employee][j]>0;
+        return `<line x1="275" y1="143" x2="400" y2="${y+4}" stroke="${active?'#8cd6ff':'#38577a'}" stroke-width="${active?2:1}" stroke-dasharray="${active?'none':'3 6'}" opacity="${active?0.8:0.25}"/>
+        <circle cx="407" cy="${y+4}" r="7" fill="${active?'#257bbf':'#0c2748'}" stroke="#73b8e9"/>
+        <text x="421" y="${y+8}" font-size="11" fill="${state.model===j?'#e6f8ff':'#9acbea'}">M${String(j+1).padStart(2,'0')}</text>`}).join('');
+      visual=`<section class="wl-card"><h3>SELECTED EMPLOYEE / ROUTE TO OMNIROUTE MODELS</h3>
+      <div class="wl-route-layout"><div><div class="wl-kicker" style="margin-bottom:9px">Choose employee</div>
+        <div class="wl-employees">${EMPLOYEES.map((emp,i)=>`<button type="button" data-wl-employee="${i}" aria-pressed="${state.employee===i}">${emp[1]}</button>`).join('')}</div></div>
+        <div><svg class="wl-route-chart" viewBox="0 0 470 315" role="img" aria-label="Conceptual routing diagram. Only sample mode shows synthetic route activity.">
+          ${left}${right}<circle cx="240" cy="143" r="38" fill="#10355c" stroke="#8ad6ff" stroke-width="2"/>
+          <circle cx="240" cy="143" r="31" fill="none" stroke="#4d9bd5" stroke-dasharray="3 5"/>
+          <text x="240" y="139" text-anchor="middle" font-size="13" fill="#f1fbff">OMNI</text><text x="240" y="153" text-anchor="middle" font-size="10" fill="#b1d9fa">ROUTE</text></svg></div>
+      </div><p class="wl-empty">Routing connections are only illuminated in sample mode. Live edges will require authenticated inference receipts—not estimates from GitHub task claims.</p>
+      </section>`;
+    }
+    return header+summary+visual+details;
+  }
+
+  // Workload Distribution card content only. The parent panel dimensions and
+  // existing ROVOR HUD frame are untouched.
+  let compactTab='models';
+  let compactPick=null;
+  let retainedPopup=null;
+  function mountPreview(container,openDetails){
+    if(!container)return;
+    container.replaceChildren();
+    const root=document.createElement('div');
+    root.className='wl-compact';
+    const paint=()=>{
+      const models=compactTab==='models';
+      root.innerHTML=`<div class="wl-compact-tabs" role="group" aria-label="Workload preview type">
+        <button type="button" data-wl-compact-tab="models" aria-pressed="${models}">AI MODELS <small>09</small></button>
+        <button type="button" data-wl-compact-tab="employees" aria-pressed="${!models}">EMPLOYEES <small>08</small></button>
+      </div>
+      <div class="wl-compact-meta" aria-label="OmniRoute live telemetry unavailable"><span class="wl-compact-dot"></span> TELEMETRY UNVERIFIED <span>USAGE</span></div>
+      <div class="wl-compact-items">${(models?MODELS:EMPLOYEES.map(e=>e[1])).map((label,i)=>`
+        <button type="button" class="wl-compact-row" data-wl-compact-row="${i}" aria-label="${label}, usage unknown, open workload details">
+          <span class="wl-compact-name">${models?'M'+String(i+1).padStart(2,'0'):htmlEscape(label)}</span>
+          <span class="wl-compact-track" aria-hidden="true"><i></i></span>
+          <span class="wl-compact-value">—</span>
+        </button>`).join('')}</div>
+      <div class="wl-compact-foot">— UNKNOWN · NOT ZERO <span>↗ DETAILS</span></div>`;
+    };
+    root.addEventListener('click',event=>{
+      const target=event.target.closest('button');
+      if(!target||!root.contains(target))return;
+      if(target.hasAttribute('data-wl-compact-tab')){
+        compactTab=target.dataset.wlCompactTab;
+        paint();
+      }else if(target.hasAttribute('data-wl-compact-row')){
+        const index=Number(target.dataset.wlCompactRow);
+        compactPick=compactTab==='models'?{view:'models',model:index}:{view:'matrix',employee:index};
+        if(typeof openDetails==='function')openDetails();
+      }
+    });
+    container.append(root);
+    paint();
+  }
+  function mount(container) {
+    if(!container)return;
+    const carriedLeft=container.querySelector?.('.wl-matrix-scroll')?.scrollLeft??0;
+    container.replaceChildren();
+    const root=document.createElement('div');
+    root.id='rovor-workload-popup';
+    const state=retainedPopup
+      ? {...retainedPopup}
+      : {view:'matrix',period:'24H',demo:false,employee:0,model:0};
+    if(compactPick)Object.assign(state,compactPick);
+    compactPick=null;
+    const paint=()=>{
+      const previousLeft=root.querySelector?.('.wl-matrix-scroll')?.scrollLeft??0;
+      retainedPopup={...state};
+      root.innerHTML=makeUI(state);
+      const nextScroll=root.querySelector?.('.wl-matrix-scroll');
+      if(nextScroll)nextScroll.scrollLeft=previousLeft;
+    };
+    root.addEventListener('click',ev=>{
+      const b=ev.target.closest('button');
+      if(!b||!root.contains(b))return;
+      if(b.hasAttribute('data-wl-tab'))state.view=b.dataset.wlTab;
+      else if(b.hasAttribute('data-wl-period'))state.period=b.dataset.wlPeriod;
+      else if(b.hasAttribute('data-wl-demo'))state.demo=!state.demo;
+      else if(b.hasAttribute('data-wl-employee'))state.employee=Number(b.dataset.wlEmployee);
+      else if(b.hasAttribute('data-wl-model'))state.model=Number(b.dataset.wlModel);
+      else if(b.hasAttribute('data-wl-cell')){
+        const [r,m]=b.dataset.wlCell.split('-').map(Number);
+        state.employee=r;state.model=m;
+      }else return;
+      paint();
+    });
+    container.append(root);
+    paint();
+    const matrix=root.querySelector?.('.wl-matrix-scroll');
+    if(matrix)matrix.scrollLeft=carriedLeft;
+  }
+  function resetPopup(){retainedPopup=null;}
+  window.ROVOR_WORKLOAD={mount,mountPreview,resetPopup};
+})();
 (() => {
 'use strict';
 const repo='TeamRovor/rovor-video-engine'; const api='https://api.github.com/repos/'+repo;
@@ -1468,7 +1745,11 @@ function setClock(){const n=new Date();$('clock').textContent=n.toLocaleTimeStri
 function taskButton(t){const b=document.createElement('button');b.className='task-entry';b.type='button';b.dataset.id=t.id;const dot=document.createElement('i');dot.className='dot';if(t.status==='blocked')dot.style.background='#cbdff2';const main=document.createElement('span');main.style.minWidth='0';const title=document.createElement('span');title.className='name';title.textContent=t.title||t.id;const sub=document.createElement('small');sub.textContent=t.id;main.append(title,sub);const badge=document.createElement('span');badge.className='status'+(t.status==='blocked'?' warn':'');badge.textContent=t.status==='active'?'CLAIMED':t.status.toUpperCase();b.append(dot,main,badge);b.addEventListener('click',()=>openTask(t));return b}
 function textNode(c,text){c.replaceChildren();const p=document.createElement('div');p.className='tiny-label';p.textContent=text;c.append(p)}
 function render(){const previewPositions=Object.fromEntries(['tasksPanel','workloadPanel','activityPanel','systemsList','quotaPreview','sourcePreview'].map(id=>[id,$(id)?.scrollTop||0]));const ok=dataOK();$('connectionLabel').textContent=ok?'GITHUB VERIFIED':state.mode==='loading'?'VERIFYING SOURCE':'SOURCE UNAVAILABLE';$('connectionLight').className='led'+(ok?'':state.mode==='error'?' warn':' dim');$('taskCount').textContent=ok?state.tasks.filter(x=>x.status!=='done').length:'—';const t=$('tasksPanel');t.replaceChildren();$('taskScopeButton').textContent=taskPreviewAll?'ALL':'OPEN';$('taskScopeButton').setAttribute('aria-pressed',String(taskPreviewAll));if(ok){state.tasks.filter(x=>taskPreviewAll||x.status!=='done').sort((a,b)=>(a.priority??99)-(b.priority??99)).forEach(x=>t.append(taskButton(x)));if(!t.children.length)textNode(t,'No tasks in selected view')}else textNode(t,'GitHub queue not verified — no invented task states');
-const w=$('workloadPanel');w.replaceChildren();if(ok){const c=counts();statusList.forEach(x=>{const d=document.createElement('button');d.type='button';d.className='metric-row interactive-bar';d.setAttribute('aria-label','Filter queue: '+x+' tasks');d.addEventListener('click',()=>{open('tasks');const filter=$('taskStatusFilter');if(filter){filter.value=x;renderTaskSearch('')}});const n=document.createElement('small');n.textContent=x.toUpperCase();const track=document.createElement('div');track.className='metric-track';const fill=document.createElement('div');fill.className='metric-fill';fill.style.width=(state.tasks.length?100*c[x]/state.tasks.length:0)+'%';track.append(fill);const qty=document.createElement('strong');qty.textContent=String(c[x]);d.append(n,track,qty);w.append(d)});const priorities=new Map();state.tasks.forEach(t=>{const p=Number.isFinite(Number(t.priority))?String(t.priority):'—';priorities.set(p,(priorities.get(p)||0)+1)});for(const [priority,count] of [...priorities].sort((a,b)=>Number(a[0])-Number(b[0]))){const item=document.createElement('button');item.type='button';item.className='metric-row interactive-bar';item.setAttribute('aria-label','Open task queue for priority '+priority);const label=document.createElement('small');label.textContent='PRIORITY '+priority;const track=document.createElement('div');track.className='metric-track';const fill=document.createElement('div');fill.className='metric-fill';fill.style.width=(state.tasks.length?100*count/state.tasks.length:0)+'%';track.append(fill);const qty=document.createElement('strong');qty.textContent=count;item.append(label,track,qty);item.addEventListener('click',()=>open('tasks'));w.append(item)}}else textNode(w,'No verified task distribution');
+const w=$('workloadPanel');
+if(window.ROVOR_WORKLOAD && typeof window.ROVOR_WORKLOAD.mountPreview==='function'){
+  // GitHub source refreshes must not replace the user's active Workload controls.
+  if(!w.querySelector('.wl-compact')) window.ROVOR_WORKLOAD.mountPreview(w,()=>open('workload',w.closest('.panel')));
+}else if(!w.textContent?.includes('unavailable'))textNode(w,'AI model telemetry unavailable');
 const a=$('activityPanel');a.replaceChildren();if(ok){let ordered=state.tasks.filter(x=>x.updated_at).sort((x,y)=>Date.parse(y.updated_at)-Date.parse(x.updated_at));ordered.forEach(x=>{const b=document.createElement('button');b.className='log-entry';b.style.background='transparent';b.style.border='0';b.style.width='100%';b.style.textAlign='left';b.style.cursor='pointer';const time=document.createElement('time');time.textContent=new Date(x.updated_at).toLocaleDateString([], {month:'numeric',day:'numeric'});const sep=document.createElement('i');sep.textContent='•';const v=document.createElement('span');v.textContent=x.title;b.append(time,sep,v);b.addEventListener('click',()=>openTask(x));a.append(b)});if(!ordered.length)textNode(a,'No timestamped task events')}else textNode(a,'Awaiting verified repository history');
 const routed=ok?state.tasks.filter(t=>Object.prototype.hasOwnProperty.call(state.routes,t.id)).length:0;
 const routingRatio=ok&&state.tasks.length?routed/state.tasks.length:null;
@@ -1497,7 +1778,20 @@ async function refresh(){if(state.busy||document.hidden)return;const beforeRefre
 const nav=$('.nav');let returnFocus=null;let focusAnimation=null;
 function openTask(t){state.selected=t;open('task',document.activeElement?.closest?.('.panel')||null)}
 function card(heading,body){return `<div class="card"><h3>${safe(heading)}</h3>${body}</div>`}
-function renderDrawer(view){state.view=view;const titles={dashboard:'DASHBOARD',tasks:'TASK CONTROL',task:'TASK DETAILS',activity:'RECENT ACTIVITY',systems:'SYSTEM HEALTH',quota:'API QUOTA',media:'MEDIA PIPELINE',github:'GITHUB REPOSITORY',settings:'HUD SETTINGS',command:'COMMAND CONSOLE',help:'KEYBOARD SHORTCUTS'};$('drawerTitle').textContent=titles[view]||view.toUpperCase();const container=$('drawerBody');container.replaceChildren();const root=document.createElement('div');let html='';if(view==='task'&&state.selected){let t=state.selected;html+=card(safe(t.title),row('ID',t.id)+row('Status',t.status)+row('Owner',t.owner||'Unclaimed')+row('Priority',t.priority??'—')+row('Updated',dateStr(t.updated_at))+(t.next_action?`<p>${safe(t.next_action)}</p>`:''));html+='<div class="warn">A claimed task is not proof that an autonomous worker is running.</div>';}else if(view==='settings'){html+=card('DISPLAY SETTINGS','<label class="choice">Animated reactor <input type="checkbox" id="motionToggle" '+(state.motion?'checked':'')+'></label><label class="choice">Earth rotation speed <select class="tool-input" id="earthSpeedSelect"><option value="0.5" '+(state.earthSpeed===.5?'selected':'')+'>Slow · 7 min</option><option value="1" '+(state.earthSpeed===1?'selected':'')+'>Normal · 3 min 40 sec</option><option value="2" '+(state.earthSpeed===2?'selected':'')+'>Fast · 1 min 50 sec</option></select></label><label class="choice">Compact source panels <input type="checkbox" id="detailsToggle" '+(state.showDetails?'checked':'')+'></label>');}else if(view==='help'){html+=card('KEYBOARD CONTROLS',row('⌘ / Ctrl + K','Open command console')+row('1–5','Switch dashboard views')+row('Escape','Close current panel')+row('Tab / Shift+Tab','Cycle inspector controls')+row('Enter','Activate focused control'));}else if(view==='command'){html+=card('SEARCH YOUR WORK','<input id="cmdSearch" type="search" class="tool-input" placeholder="Search tasks or commands"><div id="cmdResults"></div>');}else if(view==='github'){html+=card('PUBLIC SOURCE',row('Repository',repo)+row('Verification',state.mode.toUpperCase())+row('Commit',state.sha.slice(0,12)||'—')+row('Tasks',dataOK()?state.tasks.length:'Unverified'));if(dataOK()&&state.commits.length)html+=card('RECENT COMMITS',state.commits.slice(0,5).map(x=>row(x.sha?.slice(0,7),x.commit?.message?.split('\n')[0]?.slice(0,95))).join(''));
+function renderDrawer(view){
+ state.view=view;
+ const footnote=$('screen').querySelector('.drawer-footnote');
+ if(footnote)footnote.textContent=view==='workload'
+   ?'OMNIROUTE / GHOST EMPLOYEE USAGE: NOT CONNECTED. SAMPLE MODE IS SYNTHETIC; NO WORKER OR MODEL CALLS ARE IMPLIED.'
+   :'STATUS DATA IS VERIFIED AGAINST ONE GITHUB COMMIT. A CLAIMED TASK IS NOT A RUNNING MAC WORKER.';
+ if(view==='workload'){
+   $('drawerTitle').textContent='WORKLOAD DISTRIBUTION';
+   const host=$('drawerBody');host.replaceChildren();
+   if(window.ROVOR_WORKLOAD && typeof window.ROVOR_WORKLOAD.mount==='function') window.ROVOR_WORKLOAD.mount(host);
+   else host.textContent='Workload details could not be loaded. Existing dashboard is unaffected.';
+   return;
+ }
+ const titles={dashboard:'DASHBOARD',tasks:'TASK CONTROL',task:'TASK DETAILS',activity:'RECENT ACTIVITY',systems:'SYSTEM HEALTH',quota:'API QUOTA',media:'MEDIA PIPELINE',github:'GITHUB REPOSITORY',settings:'HUD SETTINGS',command:'COMMAND CONSOLE',help:'KEYBOARD SHORTCUTS'};$('drawerTitle').textContent=titles[view]||view.toUpperCase();const container=$('drawerBody');container.replaceChildren();const root=document.createElement('div');let html='';if(view==='task'&&state.selected){let t=state.selected;html+=card(safe(t.title),row('ID',t.id)+row('Status',t.status)+row('Owner',t.owner||'Unclaimed')+row('Priority',t.priority??'—')+row('Updated',dateStr(t.updated_at))+(t.next_action?`<p>${safe(t.next_action)}</p>`:''));html+='<div class="warn">A claimed task is not proof that an autonomous worker is running.</div>';}else if(view==='settings'){html+=card('DISPLAY SETTINGS','<label class="choice">Animated reactor <input type="checkbox" id="motionToggle" '+(state.motion?'checked':'')+'></label><label class="choice">Earth rotation speed <select class="tool-input" id="earthSpeedSelect"><option value="0.5" '+(state.earthSpeed===.5?'selected':'')+'>Slow · 7 min</option><option value="1" '+(state.earthSpeed===1?'selected':'')+'>Normal · 3 min 40 sec</option><option value="2" '+(state.earthSpeed===2?'selected':'')+'>Fast · 1 min 50 sec</option></select></label><label class="choice">Compact source panels <input type="checkbox" id="detailsToggle" '+(state.showDetails?'checked':'')+'></label>');}else if(view==='help'){html+=card('KEYBOARD CONTROLS',row('⌘ / Ctrl + K','Open command console')+row('1–5','Switch dashboard views')+row('Escape','Close current panel')+row('Tab / Shift+Tab','Cycle inspector controls')+row('Enter','Activate focused control'));}else if(view==='command'){html+=card('SEARCH YOUR WORK','<input id="cmdSearch" type="search" class="tool-input" placeholder="Search tasks or commands"><div id="cmdResults"></div>');}else if(view==='github'){html+=card('PUBLIC SOURCE',row('Repository',repo)+row('Verification',state.mode.toUpperCase())+row('Commit',state.sha.slice(0,12)||'—')+row('Tasks',dataOK()?state.tasks.length:'Unverified'));if(dataOK()&&state.commits.length)html+=card('RECENT COMMITS',state.commits.slice(0,5).map(x=>row(x.sha?.slice(0,7),x.commit?.message?.split('\n')[0]?.slice(0,95))).join(''));
  html+=card('OPEN ISSUES',dataOK()&&state.issues.length?state.issues.slice(0,8).map(x=>'<a class="issue-link" rel="noopener noreferrer" target="_blank" href="https://github.com/'+repo+'/issues/'+Number(x.number)+'"><span>#'+Number(x.number)+'</span><strong>'+safe(x.title||'Untitled issue')+'</strong><span aria-hidden="true">↗</span></a>').join(''):'<p>No open issues returned by the GitHub API.</p>');
  html+=card('LINKS','<a href="https://github.com/'+repo+'" target="_blank" rel="noopener noreferrer" style="color:#8fd0ff">OPEN REPOSITORY ↗</a>');}else if(view==='systems'){const missing=dataOK()?state.tasks.filter(t=>!(t.id in state.routes)).length:'Unknown';html+=card('VERIFIED VS CONNECTED',row('GitHub queue',dataOK()?'VERIFIED':'UNAVAILABLE')+row('Routing coverage',dataOK()?(state.tasks.length-missing)+' / '+state.tasks.length:'Unknown')+row('MacBook worker','NOT CONNECTED')+row('Video engine status','NOT MONITORED'));}else if(view==='quota'){html+=card('GITHUB API',row('Remaining',state.rate??'Unknown')+row('Rate limit',state.rateLimit??'Unknown')+row('OmniRoute provider','NOT CONNECTED'));}else if(view==='media'){html+=card('MEDIA PIPELINE','<p>This panel links to repository media work. No webcam or live render feed is connected.</p><a href="https://github.com/'+repo+'/actions" target="_blank" rel="noopener noreferrer" style="color:#8fd0ff">VIEW GITHUB WORKFLOWS ↗</a>');}else if(view==='activity'){html+=card('SOURCE-VERIFIED ACTIVITY',dataOK()?state.tasks.filter(t=>t.updated_at).sort((x,y)=>Date.parse(y.updated_at)-Date.parse(x.updated_at)).slice(0,12).map(t=>row(t.id,dateStr(t.updated_at))).join(''):'<p>No verified activity</p>');}else if(view==='tasks'){html+=card('TASK QUEUE',`<input class="tool-input" type="search" id="taskSearch" placeholder="Filter tasks by title or ID"><label class="filter-label" for="taskStatusFilter">Task state</label><select id="taskStatusFilter" class="tool-input"><option value="all">All states</option><option value="active">Claimed</option><option value="ready">Ready</option><option value="blocked">Blocked</option><option value="done">Done</option></select><div id="taskResults"></div>`);}else{html+=card('SOURCE STATUS',row('GitHub',state.mode)+row('Last checked',dateStr(state.updated)));}root.innerHTML=html;container.append(root);if(state.mode!=='verified'&&view!=='settings'){const div=document.createElement('div');div.className='warn';div.textContent='LIVE DATA NOT VERIFIED. '+state.error;container.append(div)}if(view==='tasks')renderTaskSearch('');if(view==='command')renderCommandSearch('');}
 function renderTaskSearch(q){let target=$('taskResults');if(!target)return;target.replaceChildren();(dataOK()?state.tasks:[]).filter(t=>(t.title+' '+t.id).toLowerCase().includes(q.toLowerCase())&&(!$('taskStatusFilter')||$('taskStatusFilter').value==='all'||t.status===$('taskStatusFilter').value)).slice(0,60).forEach(t=>{let b=document.createElement('button');b.className='drawer-button';b.textContent=t.title;const sub=document.createElement('small');sub.textContent=t.status.toUpperCase()+' · '+t.id;b.append(sub);b.addEventListener('click',()=>openTask(t));target.append(b)})}
@@ -1521,7 +1815,7 @@ function open(view, source){
  $('screen').querySelector('.close').focus();
  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('selected',b.dataset.view===view));
 } 
-function close(){$('screen').hidden=true;document.body.style.overflow='';document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('selected',b.dataset.view==='dashboard'));if(returnFocus?.isConnected) returnFocus.focus();returnFocus=null}
+function close(){if(state.view==='workload')window.ROVOR_WORKLOAD?.resetPopup?.();$('screen').hidden=true;document.body.style.overflow='';document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('selected',b.dataset.view==='dashboard'));if(returnFocus?.isConnected) returnFocus.focus();returnFocus=null}
 document.addEventListener('click',e=>{if(e.target.closest('#taskScopeButton')){taskPreviewAll=!taskPreviewAll;const t=$('tasksPanel');t.scrollTop=0;render();return}if(e.target.closest('[data-close]'))return close();const view=e.target.closest('[data-view]');if(view){open(view.dataset.view,view.closest('.panel,.nav-item'));return}if(e.target.closest('#connection'))return open('systems');if(e.target.closest('#coreButton'))return open('command');if(e.target.closest('#motionButton')){state.motion=!state.motion;document.body.classList.toggle('motion-off',!state.motion);$('motionButton').textContent=state.motion?'⟳  REACTOR ACTIVE':'⏸  REACTOR PAUSED';return}});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('svg[data-view]')){e.preventDefault();open(e.target.dataset.view)}});document.addEventListener('input',e=>{if(e.target.id==='taskSearch'||e.target.id==='taskStatusFilter')renderTaskSearch($('taskSearch')?.value||'');if(e.target.id==='cmdSearch')renderCommandSearch(e.target.value);if(e.target.id==='motionToggle'){state.motion=e.target.checked;document.body.classList.toggle('motion-off',!state.motion);$('motionButton').textContent=state.motion?'⟳  REACTOR ACTIVE':'⏸  REACTOR PAUSED'}if(e.target.id==='detailsToggle')state.showDetails=e.target.checked;if(e.target.id==='earthSpeedSelect')setEarthSpeed(Number(e.target.value))});
 document.addEventListener('keydown',e=>{if(e.key==='Tab'&&!$('screen').hidden){const controls=[...$('screen').querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled])')].filter(el=>el.getClientRects().length);if(controls.length){const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}if(e.key==='Escape'&&!$('screen').hidden)close();if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();open('command')}if(e.key==='?'&&$('screen').hidden&&!e.target.closest('input,textarea,select'))open('help');if(/^[1-5]$/.test(e.key)&&$('screen').hidden&&!e.target.closest('input,textarea,select'))open(['dashboard','tasks','media','github','settings'][Number(e.key)-1])});
