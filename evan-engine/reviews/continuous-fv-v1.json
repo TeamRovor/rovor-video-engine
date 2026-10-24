@@ -1,0 +1,57 @@
+{
+  "sourceFrames": [
+    489,
+    693
+  ],
+  "sourceTime": [
+    10.1875,
+    14.4375
+  ],
+  "mixedContactEpisodes": [
+    [
+      545,
+      553
+    ],
+    [
+      564,
+      571
+    ],
+    [
+      631,
+      638
+    ],
+    [
+      645,
+      653
+    ]
+  ],
+  "mixedContactFrames": 34,
+  "zeroContactFramesExact": 170,
+  "continuousFVFallbacks": 0,
+  "dentalFallbacks": 0,
+  "minimumOralTriangleArea2": 0.11124199628829956,
+  "maxAlphaDifference": 1,
+  "epsilonEntry": {
+    "previousMaxChannelDifference": 244,
+    "previousChangedPixels": 3674,
+    "newMaxChannelDifference": 1,
+    "newChangedPixels": 89,
+    "contactWeightDelta": 1e-07,
+    "limits": "Fixed C/G mixture fixture, not observed motion/optical flow or sync accuracy."
+  },
+  "epsilonFullContact": {
+    "newMaxChannelDifference": 1,
+    "newChangedPixels": 41,
+    "contactWeightDelta": 1e-07
+  },
+  "testsPassed": 4,
+  "phonemeTimingChanged": false,
+  "exactAlignmentVerified": false,
+  "readyForPromotion": false,
+  "visualFindings": [
+    "Shared contact construction avoids the previous binary family change in inspected V/F entry/exit samples",
+    "Some mixed surfaces still read as color/material dissolves, not lip roll or compression",
+    "Gray tooth/lip-edge artifacts remain in zero-FV frames554 and630; those frames are pixel-exact to prior direct-aperture profile and the source/matte relationship needs investigation",
+    "Mechanical oval/neutral contact and reduced vowel excursion from the prior direct profile remain; this pass does not prove vowel emphasis or overall fluidity"
+  ]
+}

@@ -1,0 +1,43 @@
+# Evan cartoon: current checkpoint
+
+## Direction and safeguards
+
+Entertaining expressive 2D CARTOON. Follow CARTOON-EVAN-DIRECTION.md and evan-character/cartoon-v1/source/design-sheet-v1.png. Photograph supplies loose identity only; realistic painted direction superseded. Preserve hair/glasses/navy shirt/black tie and official Rovor mark. No photographic facial crops, geometric mouth stickers or flattened whole-character swaps.
+
+Repo work/engine; development/evan-painted-rig (legacy name), draft PR #4 https://github.com/TeamRovor/rovor-video-engine/pull/4, base experiment/moho-native-rig. Commit/push bounded development work authorized. Never merge/deploy without explicit approval. Preserve main 4e099b5f1a30661c952358f49e1e2d70a5fe2a62, V4 27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/symlinks/updater/native projects. Do NOT launch/restart/probe Moho unattended after its crash.
+
+Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful milestones/failure/completion/required action only; disable once the agreed polished milestone is actually ready. Routine decisions need no question.
+
+## Latest: registered clean skin component; rejected paint extraction
+
+Read CARTOON-EVAN-CONSTRUCTION-SKIN.md. Built-in image_gen clean-skin-v1 source removes mouth artwork from coordinated v2 three-head sheet, alpha retained. Exact prompt/provenance under construction-skin-v1/source. Each pose fitted to its matching source construction; ECC .998787/.998460/.998405. One Seal skin supplies optional working-face-skin.png in existing rig coordinates: ellipse center(237,337), radii65/29, smooth outer30%, original-nose guard y<=310. Cheek RGB calibration[0,5,6]. Original alpha, nose and pixels outside mask exact. ConstructionSkinCartoonHead replaces ONLY face-skin on RoundedDuration; other oral art, controls, mesh/independent chin and phone timing unchanged. No separate mandible drawing or fixed lip-release claim.
+
+Minimum-valid-opacity mouth-paint trial reconstructs paired source ROIs with errors .0445/.0490/.0815 RGB/255, but isolated layers show skin-colored opacity speckling and combine lips/interior/tongue. REJECTED FOR RUNTIME despite low errors. Paint-Extraction-Decision.json records it. No trial paint loaded by profile. Keep trial only as failed diagnostic/reference; do NOT promote as anatomical alpha or apply more numeric thresholds to call it clean. Need genuinely painted transparent lip/inner-lip/cavity components. Three two-plane PSDs explicitly label REJECTED trial; reload errors .00561/.00610/.01013/255 prove reassembly only, not rig quality/native bones.
+
+outputs/evan-cartoon-construction-skin: normal60/muted quarter-speed240frames at1280x720/48fps; source714–773(14.875–16.125s), original20,000samples16k from238000–257999 inclusive. Complete audio helper retained; films fully decode. All60frames preserve top290rows and alpha exactly; max channel difference7/255, subtle skin-only difference. Captured oral fallback counters0. Three tests pass (source/nose/alpha isolation; derived-matte ROI reconstruction/bounds; only-skin substitution). Native source/parts and seal738/release741/rounded742 old/new inspected. Old hooked seal and large release remain, no independent listening/continuous-playback approval. Defaults/prior profiles unchanged, no pending renders/exports; automation ACTIVE, polished milestone incomplete.
+
+Prior coordinated full-face v2 is still SOURCE ONLY: mouth-construction-v1 source sheet and512px diagnostic alignments/PSD full-head references are not a layered mouth rig. Upper-face ECC ~.991 does not prove topology. Prior complete-thought staging and narrated_export fix retained in docs/history; no more staging expansion until mouth parts exist. Source art, gates and waveform/phoneme plan references retained.
+
+## Retained systems and rejected work
+
+Relaxed hand: read RELAXED-HAND doc. Built-in imagegen v1 counting pose rejected, v2 registered with alpha retained; right-skin is actual continuous forearm/hand layer. All five digits share wrist; no individual finger animation/pose switching. Forearm-axis wrist weights fixed old Y-only foldover on thumb. Default posed_vertices hook previously matched scene684/748 JPEGs byte exact. Six actual posed PSD body planes verified (.00717/255 mean), not native Moho skeleton or expanded face rig. Source hashes/prompts/history retained in relaxed-hand-v1 and outputs/evan-cartoon-relaxed-hand.
+
+Detail acting: contiguous super/small/detail script43/44/45 anchors authored preparation/hold/settle with elbow/wrist/index/head offsets. Read DETAIL-ACTING doc; outputs/evan-cartoon-detail-acting has original normal/slow and comparison. Earlier pointing accents remain for globe/up here and favicon. Legs static; eyes/blinks unrigged. Current relaxed profile reuses same acting, not emotion inference.
+
+RoundedDuration: AO/E-only authored excursion floor75% for<=80ms, unchanged>=220ms. Original X/corners/rounding, independent chin track and contact weights preserved. Existing60/60/190ms AO labels in small/more/all remain unverified; no retiming. Read ROUNDED-DURATION doc. UniformSeal artwork remains UNAPPROVED; isolated seam glyphs did not fix compound release. Do not promote it or repeat isolated seam generation.
+
+IndependentChin:9tap/48Hz control of three existing skin anchors45/46/47, not a redrawn mandible. Earlier shared-target bug suspicion was disproved; source targets already separate. DrawnDental provides registered TH/DH source and floor/tooth occlusion, old L retained. Previous compressed-L blade rejected. RootedFloor/cache full0–10.1875s489normal/1956slow reference completed; do not re-render or mistake partial duration frames for full baseline. Associated docs/outputs and history retain evidence.
+
+Speech:66 words/248 phones/39 ARPABET; two-pass acoustic alignment, coarticulation/diphthongs/contact/silence gating. Plan ../../outputs/evan-speech-alignment/Aligned-Speech-Plan.json. All18 flagged anchors have waveform/spectrogram VISUAL review in evan-engine/reviews/evan-reference-timing-v1.json; exact boundaries UNVERIFIED. Coverage is not accuracy. Preserve timings until evidence warrants correction.
+
+## Next concrete work
+
+1. Paint proper transparent lip rim/lower inner lip and cavity surfaces from coordinated v2 FULL-FACE context, with shared lip-corner and inner-contour landmarks. This is layer breakup of a coordinated drawing, not more isolated seam design. Reject the minimum-opacity paint trials; no threshold cleanup or full-head swaps. The clean skin component is available beneath future oral layers.
+2. Establish compatible source correspondence, contact sealing, interior occlusion and separate jaw articulation, then native voiced normal/slow review before any promotion. Human character artist/animator redraw and review remain needed for final anatomy/performance. Hardware cannot supply missing drawings.
+3. Keep narration sample-complete via narrated_export, retain18flagged boundary uncertainty and all release safeguards. Full polished milestone incomplete.
+
+## Runtime and history
+
+Python /Users/amarhavic/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3; PYTHONPATH=../painted/deps:evan-engine from repo. cv2.setNumThreads(1). Local8GiB/8logical CPUs, CPU raster rendering. Temporary caffeinate scoped to long renderer/encoder, display sleep allowed. No scipy: FFT evidence uses numpy/matplotlib with MPLCONFIGDIR in work/. Recording sibling referenced-chatgpt-conversation-this-is-an/work/evan-narration.wav mono PCM16/16k; FFmpeg sibling work/media-tools/ffmpeg. Scratch work/cartoon-skin-construction, work/cartoon-mouth-construction, work/cartoon-finished-thought and work/cartoon-relaxed-hand and earlier work/cartoon-detail-acting/rounded-duration/lip-seal retained. User deliverables outputs/.
+
+Previous checkpoint archived PAINTED-EVAN-HISTORY-2026-10-20-I.md; -H/-G/-F/-E/-D/-C/-B and prior history retain details. No pending renders/exports. Continue from actual branch state.

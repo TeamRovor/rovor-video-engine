@@ -1,0 +1,260 @@
+{
+  "version": 1,
+  "canvas": [
+    1024,
+    1536
+  ],
+  "registration": {
+    "method": "original setup polygon with original upper-sleeve overlap",
+    "generated_plate": "rejected: changed shirt proportions; ECC gate failed"
+  },
+  "arms": {
+    "left": {
+      "shoulder": [
+        340,
+        405
+      ],
+      "elbow": [
+        275,
+        625
+      ],
+      "wrist": [
+        202,
+        784
+      ],
+      "polygon": [
+        [
+          300,
+          340
+        ],
+        [
+          280,
+          390
+        ],
+        [
+          265,
+          480
+        ],
+        [
+          245,
+          535
+        ],
+        [
+          240,
+          578
+        ],
+        [
+          236,
+          622
+        ],
+        [
+          211,
+          641
+        ],
+        [
+          177,
+          739
+        ],
+        [
+          115,
+          790
+        ],
+        [
+          115,
+          840
+        ],
+        [
+          140,
+          880
+        ],
+        [
+          150,
+          930
+        ],
+        [
+          230,
+          930
+        ],
+        [
+          268,
+          880
+        ],
+        [
+          258,
+          830
+        ],
+        [
+          252,
+          786
+        ],
+        [
+          279,
+          708
+        ],
+        [
+          310,
+          675
+        ],
+        [
+          326,
+          640
+        ],
+        [
+          338,
+          598
+        ],
+        [
+          371,
+          545
+        ],
+        [
+          380,
+          480
+        ],
+        [
+          387,
+          411
+        ],
+        [
+          380,
+          369
+        ]
+      ]
+    },
+    "right": {
+      "shoulder": [
+        684,
+        405
+      ],
+      "elbow": [
+        749,
+        625
+      ],
+      "wrist": [
+        822,
+        784
+      ],
+      "polygon": [
+        [
+          724,
+          340
+        ],
+        [
+          744,
+          390
+        ],
+        [
+          759,
+          480
+        ],
+        [
+          779,
+          535
+        ],
+        [
+          784,
+          578
+        ],
+        [
+          788,
+          622
+        ],
+        [
+          813,
+          641
+        ],
+        [
+          847,
+          739
+        ],
+        [
+          909,
+          790
+        ],
+        [
+          909,
+          840
+        ],
+        [
+          884,
+          880
+        ],
+        [
+          874,
+          930
+        ],
+        [
+          794,
+          930
+        ],
+        [
+          756,
+          880
+        ],
+        [
+          766,
+          830
+        ],
+        [
+          772,
+          786
+        ],
+        [
+          745,
+          708
+        ],
+        [
+          714,
+          675
+        ],
+        [
+          698,
+          640
+        ],
+        [
+          686,
+          598
+        ],
+        [
+          653,
+          545
+        ],
+        [
+          644,
+          480
+        ],
+        [
+          637,
+          411
+        ],
+        [
+          644,
+          369
+        ]
+      ]
+    }
+  },
+  "head_transform": {
+    "scale": 0.82,
+    "translate": [
+      297,
+      -24
+    ],
+    "pivot": [
+      510,
+      343
+    ]
+  },
+  "source_sha256": {
+    "source/setup-v1.png": "df225efb732048fd2b6abbe7b7b0b97b70b4919326ac08f11c44731bfc5106f4",
+    "body-source/torso-hidden-v1.png": "7bf71bf3424a944043c01263ddebf5474becf0bafc1323d0e5400bf935134542"
+  },
+  "status": "experimental body component; shoulder joins and neck registration require visual review",
+  "animationReady": false,
+  "limitations": [
+    "Original sleeve overlap only; armpit creases need redrawn hidden surfaces",
+    "One open hand per side; fingers not rigged",
+    "Legs are static",
+    "No native Moho project verified"
+  ]
+}

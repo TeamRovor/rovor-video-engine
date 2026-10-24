@@ -1,0 +1,30 @@
+{
+  "mode": "built-in imagegen",
+  "prompts": [
+    {
+      "id": "v1",
+      "prompt": "Use case: stylized-concept.\nAsset type: ONE isolated 2D cartoon closed-lip seal source component for a layered character-animation rig, not a character sheet.\nInput image1: selected Evan cartoon design, STYLE reference only. Input image2: full-head animation comparison, context for the closed M/B/P mouth only. Do not reproduce the character, face or comparison panel.\nPrimary request: a clean appealing pressed-lip seal for a male cartoon host saying M/B/P. One elegant thin dark warm-brown contact seam; shallow relaxed asymmetric curve, short gently tapered ends. The right corner MUST NOT curl upward into a hook or spear. Under the center of the seam, a tiny separate understated warm ochre lower-lip shadow, not a fleshy red lip. The pressed lips feel relaxed and flexible, with simple tasteful cel linework matching the reference cartoon. Mouth corners stay compact. This is a completely CLOSED seal: no gap, teeth, tongue or dark mouth cavity.\nComposition: one horizontal graphic, seam from left to right nearly level, about800px wide; seam thickness about10px at center tapering at both ends. Total asset height at most90px including the small lower-lip shadow. Center on a square transparent canvas with generous margin. No duplicates, no other objects.\nStyle: crisp expressive hand-drawn 2D cel cartoon; economical tapered ink. Main seam dark warm brown, subtle lower mark warm ochre matching cartoon skin shadows. No thick black outline around a lip mass, no lipstick, no glossy highlight, no realism/3D/texture/gradients. NO skin-colored disk or rectangle, no face pixels, no nose/chin, no captions or labels.\nBackground: genuine transparent alpha; not a painted checkerboard. Source plate will be registered separately. Preserve transparency.",
+      "references": [
+        "evan-character/cartoon-v1/source/design-sheet-v1.png",
+        "outputs/evan-cartoon-chin-follow-through/Tabs-Closure.png"
+      ],
+      "disposition": "Rejected thick ribbon/bowl shapes."
+    },
+    {
+      "id": "v2",
+      "prompt": "Use case: precise-object-edit.\nEdit target: the isolated transparent closed-lip source image just provided.\nChange ONLY the stroke construction: the upper dark mark is currently a thick filled ribbon/banana. Replace it with a very fine elegant tapered INK LINE, approximately8pixels thick across the same650pixel span. NOT a ribbon, crescent, filled lip, grin emoji, or thick smile. Both endpoints taper smoothly without curling into hooks. Keep a shallow relaxed asymmetric curvature but make the central8pixel-thick contact line the only substantial mark.\nThe lower ochre shape is currently a filled semicircle. Replace it with one tiny soft ochre DASH about100pixels wide and4pixels thick, detached slightly below the center. No outlined bowl or lip mass.\nKeep the exact warm brown/ochre palette, overall graphic location and scale, transparent canvas size and genuine alpha. No skin, mouth cavity, teeth, tongue, nose, character, background, text or other elements. Flat2D cel cartoon, no gradient or texture.\nThis will be downsampled to an86pixel-wide character mouth, so thin economical drawing is essential.",
+      "references": [
+        "source/seal-source-v1.png"
+      ],
+      "disposition": "Rejected in full head: faint stroke and resting-expression change."
+    },
+    {
+      "id": "v3",
+      "prompt": "Use case: precise-object-edit.\nEdit target: the transparent isolated two-mark lip drawing provided.\nKeep transparent alpha, canvas, location, warm-brown/ochre palette, and exactly two disconnected marks.\nRevise the main seam for a PRESSED M/B/P seal rather than a smile: reduce its downward bow by about75percent, so the whole long seam is nearly horizontal with just a gentle shallow asymmetric bend. Increase ink thickness to about16pixels across the same760pixel length, enough to survive downsampling to86pixels. Opaque dark warm-brown ink, roughly#25150f. Ends taper smoothly. Neither end curls up into a hook. Not a filled crescent/ribbon, not a smiling emoji or mouth cavity.\nKeep the tiny detached lower ochre dash, make it half its current width and a single fine stroke. Do not draw a lip mass or a semicircle.\nNo skin, teeth, tongue, face, text, labels, gradients, gloss or texture. Clean expressive2D cel animation component only.",
+      "references": [
+        "source/seal-source-v2.png"
+      ],
+      "disposition": "Selected for bilabial-only component study; not artistic approval."
+    }
+  ]
+}

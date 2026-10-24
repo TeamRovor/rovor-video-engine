@@ -1,0 +1,63 @@
+{
+  "source": "evan-character/cartoon-v1/guided-jaw-v1/source/jaw-v2.png",
+  "sourceSha256": "ee5e2682072632fcf693d7e87e068026963166ac8f553485f66bc574bbbabe1d",
+  "sourceSize": [
+    1585,
+    992
+  ],
+  "nativeWorkWindow": [
+    128,
+    288,
+    384,
+    448
+  ],
+  "matrix": [
+    [
+      0.16151419281959534,
+      0.0,
+      128.0
+    ],
+    [
+      0.0,
+      0.16129031777381897,
+      288.0
+    ]
+  ],
+  "axisScaleRatio": 1.0013880729675293,
+  "sourceAlphaModified": false,
+  "canvasPlacementOnly": true,
+  "edgeSamples": [
+    {
+      "anchor": "left lip corner",
+      "x": 194,
+      "targetY": 325,
+      "actualAlphaEdgeY": 324,
+      "residualY": -1
+    },
+    {
+      "anchor": "lower lip center",
+      "x": 228,
+      "targetY": 329,
+      "actualAlphaEdgeY": 328,
+      "residualY": -1
+    },
+    {
+      "anchor": "right lip corner",
+      "x": 263,
+      "targetY": 325,
+      "actualAlphaEdgeY": 326,
+      "residualY": 1
+    },
+    {
+      "anchor": "chin",
+      "x": 220,
+      "targetY": 394,
+      "actualAlphaEdgeY": 396,
+      "residualY": 2
+    }
+  ],
+  "carrierPartition": "explicit guide polygon; NOT painted overlap layers",
+  "assemblyReady": false,
+  "defaultProfileChanged": false,
+  "animationReady": false
+}

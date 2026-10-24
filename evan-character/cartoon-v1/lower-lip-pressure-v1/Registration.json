@@ -1,0 +1,101 @@
+{
+  "source": "lip-v2.png",
+  "sourceSha256": "9584a0a3b66623ab786989fc8fd96c3bf9226c37329411b9bac95da432b3784b",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "sourceCorners": [
+    [
+      418,
+      789
+    ],
+    [
+      768,
+      789
+    ]
+  ],
+  "targetCorners": [
+    [
+      198,
+      321
+    ],
+    [
+      274,
+      320.5
+    ]
+  ],
+  "matrix": [
+    [
+      0.21714285714285708,
+      0.0014282226562498813,
+      106.10741803850458
+    ],
+    [
+      -0.0014285714285714086,
+      0.21714324951171923,
+      150.27111899239637
+    ]
+  ],
+  "sourceTopEdge": [
+    [
+      198.0,
+      321.0
+    ],
+    [
+      201.0,
+      322.1912841796875
+    ],
+    [
+      211.0,
+      324.53759765625
+    ],
+    [
+      220.0,
+      326.06439208984375
+    ],
+    [
+      229.0,
+      326.9883728027344
+    ],
+    [
+      238.0,
+      327.3481750488281
+    ],
+    [
+      247.0,
+      326.7774353027344
+    ],
+    [
+      256.0,
+      325.6111145019531
+    ],
+    [
+      265.0,
+      323.5379333496094
+    ],
+    [
+      271.0,
+      321.33050537109375
+    ],
+    [
+      274.0,
+      320.5
+    ]
+  ],
+  "topEdgeMeasurement": "Half-alpha crossing for UV correspondence only; no source cleanup",
+  "neutralCenterMapped": [
+    235.82856026785714,
+    327.7000125558036
+  ],
+  "neutralCenterProposal": [
+    236,
+    328
+  ],
+  "neutralCenterResidualPixels": 0.34551996821125314,
+  "sourceAlphaModified": false,
+  "artistCoordinatesMeasured": false,
+  "defaultProfileLoaded": false,
+  "anatomyAccepted": false,
+  "animationReady": false
+}

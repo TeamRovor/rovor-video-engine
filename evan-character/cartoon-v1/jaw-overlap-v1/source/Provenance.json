@@ -1,0 +1,24 @@
+{
+  "mode": "built-in image_gen",
+  "sources": [
+    {
+      "file": "jaw-flat-v1.png",
+      "generatorFile": "exec-f9ad3f14-bb5d-4164-b67f-99af8975a1ae.png",
+      "sha256": "66f37f016b27ec9066e403ccaa144bd5c89d913ea12c97413d0a67b22ed29e41",
+      "role": "flatter combined jaw/lower-lip redraw; not independent lip plane"
+    },
+    {
+      "file": "neck-back-v1.png",
+      "generatorFile": "exec-a41d82b8-f4e8-4cbb-bc32-db9133081fc2.png",
+      "sha256": "6e150e27076d1783d40444860f3d1a7579ed596cc7fa2dc5bc1280bceec0b231",
+      "role": "new independent neck backing with hidden upper surplus"
+    }
+  ],
+  "sourceAlphaRetained": true,
+  "colorKeyOrOpacityExtraction": false,
+  "pixelExactGenerationInvariants": false,
+  "upperFace": "existing rendered art with authored front cheek ownership, not a generated whole-head replacement or new cheek artwork",
+  "defaultProfileChanged": false,
+  "reviewToolLoaded": true,
+  "animationReady": false
+}

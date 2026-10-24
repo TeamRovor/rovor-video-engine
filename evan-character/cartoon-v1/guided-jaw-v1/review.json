@@ -1,0 +1,21 @@
+{
+  "source": "source/jaw-v2.png",
+  "sourceSha256": "ee5e2682072632fcf693d7e87e068026963166ac8f553485f66bc574bbbabe1d",
+  "registeredPart": "Registered-Jaw-v2.png",
+  "registeredSha256": "fa7a2b40ed296c355d1bd7d3a1f1bce2b36c1ee038da692c8353588ec00e01db",
+  "sampledEdgeResidualY": [
+    -1,
+    -1,
+    1,
+    2
+  ],
+  "meshMinimumArea2": 34.112396240234375,
+  "tests": 4,
+  "normalFrames": 60,
+  "slowFrames": 240,
+  "audioSamples": 20000,
+  "reviewToolLoaded": true,
+  "defaultProfileChanged": false,
+  "assemblyDecision": "REJECT: cheek seam, tonal mask, lip-roll balance, silhouette/neck overlap and missing separate surfaces",
+  "animationReady": false
+}

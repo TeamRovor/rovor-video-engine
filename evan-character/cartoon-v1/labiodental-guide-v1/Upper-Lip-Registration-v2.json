@@ -1,0 +1,52 @@
+{
+  "sourceSha256": "13564cbada2c7ece2138bcee34c38bd06dc23fcb2c61d49f0969dd8699fc3280",
+  "sourceSize": [
+    1774,
+    887
+  ],
+  "sourceCorners": [
+    [
+      546,
+      494
+    ],
+    [
+      1228,
+      494
+    ]
+  ],
+  "nativeCorners": [
+    [
+      198,
+      321
+    ],
+    [
+      274,
+      320.5
+    ]
+  ],
+  "matrix": [
+    [
+      0.11143695014662759,
+      0.0007331848144533243,
+      136.79323192160138
+    ],
+    [
+      -0.0007331378299120047,
+      0.11143646240234334,
+      266.3506808283743
+    ]
+  ],
+  "method": "Same uniform corner parent as V1, inherited from requested canvas/outline invariants; no new deformation fit",
+  "proposedCenterNative": [
+    235,
+    319
+  ],
+  "heldOutCenterResidualPixels": null,
+  "outsideUpperLipEnvelopeAlphaPixels": 0,
+  "sourceAlphaModified": false,
+  "registeredCandidateOnly": true,
+  "runtimeLoaded": false,
+  "anatomyAccepted": false,
+  "animationReady": false,
+  "limits": "V1 center residual was 0.868px; not independently measured for V2. Native bounds pass is not anatomical or correspondence approval."
+}

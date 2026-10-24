@@ -1,0 +1,3 @@
+Use case: precise-object-edit
+Asset type: hidden mouth underpainting for separating a layered cartoon rig.
+Edit target: attached isolated F/V mouth. Remove ONLY the two ivory tooth tips. Fill their exact previous footprint with simple dark burgundy mouth-interior paint matching the adjacent dark cavity, approximately #4f1c17. This is the cavity behind the independently animated upper teeth. Preserve all lower-lip peach paint, its roll and shading, the full dark contour/corners, silhouette, scale, placement and transparent padding exactly. Do not close the mouth or reshape lips; replace the white tooth pixels with hidden dark cavity paint only. No new tooth, tongue, face, skin patch, labels, text or objects. Keep true transparency outside the original mouth.

@@ -1,0 +1,40 @@
+{
+  "animationReady": false,
+  "status": "experimental; collar edge fails large-tilt review",
+  "source": "Existing registered cartoon head and socket torso; no new generated artwork",
+  "headScale": 0.82,
+  "headTranslate": [
+    285,
+    -24
+  ],
+  "headPivot": [
+    510,
+    343
+  ],
+  "previousHeadTranslate": [
+    297,
+    -24
+  ],
+  "neckGrid": [
+    10,
+    18
+  ],
+  "neckBaseExtension": 35,
+  "authoredTiltDegrees": [
+    -1.1,
+    1.4
+  ],
+  "stressTiltDegrees": [
+    -8,
+    8
+  ],
+  "limitations": [
+    "Antialiased collar rim and retained two-pixel skin overlap remain rough",
+    "Gap exposed at -8 degree tilt; this range is not accepted",
+    "No head perspective, new anatomy drawing, native Moho rig or production approval"
+  ],
+  "hashes": {
+    "socket-rig/torso.png": "eb929f5dacd22cd86edd02e1aa9c5499ca1bd03296f814e4a59fb0cd4eb64848",
+    "oral-rig/face-skin.png": "2cee2229260e1479781e512493a4bd88687e82862813aed7a27bc5faa97577a6"
+  }
+}

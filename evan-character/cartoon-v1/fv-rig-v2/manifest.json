@@ -1,0 +1,87 @@
+{
+  "version": 2,
+  "sourceSha256": "03b3b55eff15877506c8efe6dcf66a2fcd4fd5c2e8570207d9c3f1f4812c0d0e",
+  "registration": {
+    "ecc": 0.998660238728631,
+    "matrix": [
+      [
+        1.0000529289245605,
+        0.0002257681335322559,
+        0.05927203223109245
+      ],
+      [
+        -0.00031591576407663524,
+        1.0004892349243164,
+        -0.007017501629889011
+      ]
+    ]
+  },
+  "geometry": [
+    196,
+    325,
+    270,
+    320,
+    315,
+    337,
+    319,
+    325,
+    393
+  ],
+  "animationReady": false,
+  "extractionContour": [
+    [
+      193,
+      325
+    ],
+    [
+      199,
+      319
+    ],
+    [
+      216,
+      315
+    ],
+    [
+      239,
+      314
+    ],
+    [
+      257,
+      317
+    ],
+    [
+      272,
+      320
+    ],
+    [
+      272,
+      324
+    ],
+    [
+      251,
+      329
+    ],
+    [
+      235,
+      335
+    ],
+    [
+      220,
+      338
+    ],
+    [
+      209,
+      336
+    ],
+    [
+      203,
+      331
+    ]
+  ],
+  "limitations": [
+    "Peach lower-lip roll remains stylized; not anatomical approval",
+    "One contact design shared by F and V",
+    "Feathered skin rim may show a seam during contact release",
+    "No acoustic timing or pronunciation changes"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "assets": [
+    {
+      "file": "jaw-v1.png",
+      "sha256": "dd100ab0b9a03b2ee0ad0ac68330bd7d088eab846540462e51a97200152501a6",
+      "mode": "built-in image_gen edit",
+      "promptFile": "jaw-v1-prompt.txt",
+      "inputFiles": [
+        {
+          "file": "fv-redraw-v1/Contact-Jaw-Candidate.png",
+          "sha256": "3c999db581e5ca512b56ecc09e9130d04c4958dffd5c1ac55352e89a8ba94e61"
+        },
+        {
+          "file": "source/design-sheet-v1.png",
+          "sha256": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7"
+        }
+      ],
+      "sourceAlphaModified": false
+    },
+    {
+      "file": "jaw-v2.png",
+      "sha256": "c3b5bc9ad6b7746cc475b38cab7c50e47731df4bf39474e7251c69c86e3b9ad0",
+      "mode": "built-in image_gen edit",
+      "promptFile": "jaw-v2-prompt.txt",
+      "inputFiles": [
+        {
+          "file": "jaw-simplification-v1/source/jaw-v1.png",
+          "sha256": "dd100ab0b9a03b2ee0ad0ac68330bd7d088eab846540462e51a97200152501a6"
+        }
+      ],
+      "sourceAlphaModified": false
+    }
+  ],
+  "firstPassRejected": "Retained heavy crescent despite the requested softer fold.",
+  "secondPassResult": "Crescent removed; flat jaw has no independent lower-lip pressure drawing.",
+  "registration": "Uniform two-corner placement; held-out chin residual2.4634px FAILS proposed2px placement tolerance, not corrected or promoted.",
+  "reviewOnly": true,
+  "defaultProfileLoaded": false,
+  "anatomyAccepted": false,
+  "nativeMohoModified": false,
+  "animationReady": false
+}

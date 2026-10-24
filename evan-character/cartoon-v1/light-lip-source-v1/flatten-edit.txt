@@ -1,0 +1,3 @@
+Use case: precise-object-edit
+Edit target: the attached isolated mouth source.
+Change only the interior fill: replace all gradients and shading INSIDE the dark ink outline with a single uniform flat deep burgundy cel colour, approximately #57171c. Preserve the exact outer silhouette, thin dark outline, its organic asymmetry, orientation, position, scale and transparent padding. No tongue, floor stripe, teeth, highlights, shadows, peach lip band, surrounding skin or other objects. Keep genuinely transparent pixels outside the ink contour. This is one flat cavity layer for a cartoon rig; do not add depth effects.

@@ -16,9 +16,9 @@ class MohoExposureTests(unittest.TestCase):
     def test_gap(self):
         self.assertEqual(exposure([{"start":.1,"end":.2,"value":"D"}],20,.35),
                          [(1,"rest"),(3,"AI"),(5,"rest")])
-    def test_merged_similar_shapes(self):
+    def test_rounded_vowels_remain_distinct(self):
         x=[{"start":0,"end":.05,"value":"E"},{"start":.05,"end":.1,"value":"F"}]
-        self.assertEqual(exposure(x,60,.1),[(1,"O"),(7,"rest")])
+        self.assertEqual(exposure(x,60,.1),[(1,"O"),(4,"U"),(7,"rest")])
     def test_overlap_rejected(self):
         with self.assertRaises(ValueError):
             exposure([{"start":0,"end":.3,"value":"A"},

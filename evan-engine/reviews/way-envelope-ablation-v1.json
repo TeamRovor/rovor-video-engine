@@ -1,0 +1,380 @@
+{
+  "sourceAudioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "sourceCodeSha256": "61da170b9a21c0c65fb6eaf9c178156de3e26ceb58d63fbd381918a05b35384e",
+  "weightOrder": "XABCDEFGH",
+  "rows": [
+    {
+      "time": 17.96,
+      "current": [
+        0.9669628024965384,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.010685101786335973,
+        0.0,
+        0.02235209571712563
+      ],
+      "noSilenceGate": [
+        0.9669628024965384,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.010685101786335973,
+        0.0,
+        0.02235209571712563
+      ],
+      "noEnergyWeighting": [
+        0.9651032968276454,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.01254460745522905,
+        0.0,
+        0.02235209571712563
+      ],
+      "sustainedWTrial": [
+        0.6436442281228613,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.3340036761600131,
+        0.0,
+        0.022352095717125625
+      ]
+    },
+    {
+      "time": 18.076,
+      "current": [
+        0.7657990789018513,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.23420092109814875,
+        0.0,
+        0.0
+      ],
+      "noSilenceGate": [
+        0.7657990789018513,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.23420092109814875,
+        0.0,
+        0.0
+      ],
+      "noEnergyWeighting": [
+        0.6049235308204908,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.3950764691795093,
+        0.0,
+        0.0
+      ],
+      "sustainedWTrial": [
+        0.7628804149388753,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.2371195850611248,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "time": 18.15,
+      "current": [
+        0.864877140748183,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.13512285925181708,
+        0.0,
+        0.0
+      ],
+      "noSilenceGate": [
+        0.864877140748183,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.13512285925181708,
+        0.0,
+        0.0
+      ],
+      "noEnergyWeighting": [
+        0.7455974999999953,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.2544025000000048,
+        0.0,
+        0.0
+      ],
+      "sustainedWTrial": [
+        0.7875447619393449,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.21245523806065514,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "time": 18.225,
+      "current": [
+        0.9997354040021877,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0002645959978123115,
+        0.0,
+        0.0
+      ],
+      "noSilenceGate": [
+        0.9997354040021877,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0002645959978123115,
+        0.0,
+        0.0
+      ],
+      "noEnergyWeighting": [
+        0.9996781174510626,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.00032188254893740856,
+        0.0,
+        0.0
+      ],
+      "sustainedWTrial": [
+        0.6711893842200642,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.32881061577993576,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "time": 18.26,
+      "current": [
+        0.6537075976795255,
+        0.0,
+        0.0,
+        0.34629240232047453,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "noSilenceGate": [
+        0.6537075976795255,
+        0.0,
+        0.0,
+        0.34629240232047453,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "noEnergyWeighting": [
+        0.6238425925925408,
+        0.0,
+        0.0,
+        0.3761574074074592,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "sustainedWTrial": [
+        0.3089311657959574,
+        0.0,
+        0.0,
+        0.34629240232047453,
+        0.0,
+        0.0,
+        0.34477643188356805,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "maximumGateAblationDifference": 0.0,
+  "silencesNearWay": [],
+  "allAssignedW": [
+    {
+      "start": 0.82,
+      "end": 0.93,
+      "phone": "W",
+      "value": "F",
+      "word": "website",
+      "scriptIndex": 4,
+      "timing": "acoustic-forced",
+      "acousticScore": -58,
+      "confidence": null
+    },
+    {
+      "start": 17.18,
+      "end": 17.28,
+      "phone": "W",
+      "value": "F",
+      "word": "website",
+      "scriptIndex": 51,
+      "timing": "acoustic-forced",
+      "acousticScore": -67,
+      "confidence": null
+    },
+    {
+      "start": 17.94,
+      "end": 18.27,
+      "phone": "W",
+      "value": "F",
+      "word": "way",
+      "scriptIndex": 53,
+      "timing": "acoustic-forced",
+      "acousticScore": -736,
+      "confidence": null
+    },
+    {
+      "start": 19.52,
+      "end": 19.68,
+      "phone": "W",
+      "value": "F",
+      "word": "we",
+      "scriptIndex": 56,
+      "timing": "acoustic-forced",
+      "acousticScore": -84,
+      "confidence": null
+    }
+  ],
+  "timingChanged": false,
+  "artworkChanged": false,
+  "productionPlannerChanged": false,
+  "independentListeningVerified": false,
+  "boundariesAccepted": false,
+  "baseCommit": "7d7e7a6ec15c3ca8d5ebd590a30b1e177be1146e",
+  "decision": "DO NOT PROMOTE: sustained W trial does not produce convincing pursed/rounded articulation; assigned boundaries remain unverified.",
+  "rootCause": "No silence interval intersects17.7..18.5 and removing silence gate changes no weights. Near-rest18.225 persists with energy disabled. Capped midpoint consonant kernel is the main cause of rounded-control loss inside assigned long W.",
+  "trialChange": "Use existing sustained vowel envelope for W only; retain energy, salience, contact/silence rules and all source timings.",
+  "selfChecks": {
+    "PUnchanged": true,
+    "MUnchanged": true,
+    "FUnchanged": true,
+    "VUnchanged": true,
+    "AOUnchanged": true,
+    "EYUnchanged": true,
+    "ExplicitSilenceStillRests": true,
+    "NoProductionCodeChanged": true
+  },
+  "motion": {
+    "sourceFrames": [
+      850,
+      898
+    ],
+    "sourceSamples": [
+      283333,
+      299333
+    ],
+    "sourcePcmExact": true,
+    "currentOralChinMatchesFrozen882": true,
+    "geometrySamples": 1307,
+    "geometryFailures": 0,
+    "minimumJawTriangleArea2": 28.090896606445312,
+    "metrics": {
+      "width": {
+        "currentMaximumStep": 13.84722900390625,
+        "trialMaximumStep": 13.84722900390625,
+        "currentP95Step": 6.23684844970703,
+        "trialP95Step": 6.304391479492186,
+        "maximumPositionChange": 6.5525665283203125,
+        "largerStepByOverOnePixel": 4
+      },
+      "lowerY": {
+        "currentMaximumStep": 14.667755126953125,
+        "trialMaximumStep": 14.667755126953125,
+        "currentP95Step": 6.19515380859375,
+        "trialP95Step": 6.100123596191404,
+        "maximumPositionChange": 6.880859375,
+        "largerStepByOverOnePixel": 1
+      },
+      "chinY": {
+        "currentMaximumStep": 2.301361083984375,
+        "trialMaximumStep": 2.301361083984375,
+        "currentP95Step": 1.171139526367187,
+        "trialP95Step": 1.171139526367187,
+        "maximumPositionChange": 0.353302001953125,
+        "largerStepByOverOnePixel": 0
+      }
+    },
+    "productionPlannerChanged": false,
+    "animationAccepted": false,
+    "independentListeningVerified": false
+  },
+  "audio": {
+    "sourcePcm16Samples": 16000,
+    "decodedPcm16Samples": 16000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "films": {
+    "Normal": {
+      "decodedFrames": 48,
+      "sha256": "435b92d46adcaaafa3d67e69988e12116805c39cd210e3e9ff9241b3a366a888"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 192,
+      "sha256": "1bdd0c0c9fcb466f53ef8014788cadcdd3e2acb745c25a3f4e8d68fa5a2983ae"
+    }
+  },
+  "outputs": "outputs/evan-cartoon-way-envelope",
+  "reviewedNativeMouthPairs": 48,
+  "renderScope": "Only way context850..897 was rendered; other three assigned W spans have geometry/control checks only.",
+  "patchSha256": "988d9e80a240ca1afed64d373e7601764a8d04c62839c2155b4272b8e6668846",
+  "sourcePlannerFileSha256": "f64d82bf0984c658eeb960ac6a2ae47e0c8f8e21dd2d6429a75fcaa87a40035e",
+  "polishedMilestoneReady": false,
+  "historicalPartialControlTrial": true,
+  "correction": "Old monkeypatch changed jaw planner but not the direct imported rounded_cartoon_head.acoustic_weights alias. Render/geometry results are partial-control evidence only. Root silence/energy ablation remains valid.",
+  "supersededBy": "CARTOON-EVAN-SUSTAINED-W.md"
+}

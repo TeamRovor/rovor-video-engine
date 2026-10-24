@@ -1,0 +1,14 @@
+{
+  "previous_24fps": {
+    "maximum_lip_landmark_step_px": 25.01999282836914,
+    "p95_step_px": 14.03566837310791
+  },
+  "new_24fps": {
+    "maximum_lip_landmark_step_px": 19.061777114868164,
+    "p95_step_px": 9.806413650512695
+  },
+  "new_48fps": {
+    "maximum_lip_landmark_step_px": 14.492439270019531,
+    "p95_step_px": 5.30446720123291
+  }
+}
