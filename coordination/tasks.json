@@ -4141,13 +4141,25 @@
         "reviews/mike-one-service-rollout-20261024.md"
       ],
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "TeamRovor / scheduled GitHub-only maintenance 2026-10-24 Mike rollout",
       "branch": "docs/mike-one-service-rollout-20261024",
       "depends_on": [],
-      "updated_at": "2026-10-24T13:19:46.641Z",
-      "next_update": "After source-only review draft PR is published and linked with evidence; host activation remains owner-approved only",
-      "next_action": "Prepare source-pinned single-service Mac rollout acceptance and rollback review for PR #137; documentation only, no host changes."
+      "updated_at": "2026-10-24T13:20:46.757Z",
+      "next_update": "Owner review of draft PR #172; no host activation without separate explicit approval",
+      "next_action": "Review source-only acceptance/rollback checklist in draft PR #172 and current PR #137. If owner approves a real Mac rollout, an authorized operator must separately verify current service, private SQLite backup, STOP/leases, free-only billing, receipt and soak. No host execution occurred.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/172"
+      ],
+      "evidence": [
+        {
+          "commit": "551569502f4332fc409548ae48d437b71b72e5ae",
+          "platform": "Connected TeamRovor GitHub only; public PR #137 head c8510adb5534a2bb3304494ae43af8b84add3d85",
+          "check": "Read PR #137 installer, SQLite worker, continuous tick and documentation; read back committed 10,736-character source-only review and verified nine key content markers; equivalent JS task ID/dependency/route/ownership checks. No Python tests, hosted CI, private SQLite, provider inference, Mac host or rollout.",
+          "result": "PASS: draft PR #172 contains source-pinned single-service activation gates, explicit SQLite-backup gap, negative tests and rollback handoff; proposed only, not host verified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/172"
+        }
+      ]
     },
     {
       "id": "a-overnight-03-saul-business-draft",
