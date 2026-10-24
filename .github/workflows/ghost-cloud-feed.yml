@@ -1,0 +1,30 @@
+name: Ghost cloud approved canonical task feed
+on:
+  pull_request:
+    paths:
+      - 'integrations/ghost-cloud/approved-feed.mjs'
+      - 'tests/test_ghost_cloud_feed.mjs'
+      - '.github/workflows/ghost-cloud-feed.yml'
+      - 'integrations/ghost-cloud/runtime.mjs'
+      - 'integrations/ghost-cloud/worker.mjs'
+  push:
+    branches: [main]
+    paths:
+      - 'integrations/ghost-cloud/approved-feed.mjs'
+      - 'tests/test_ghost_cloud_feed.mjs'
+      - '.github/workflows/ghost-cloud-feed.yml'
+      - 'integrations/ghost-cloud/runtime.mjs'
+      - 'integrations/ghost-cloud/worker.mjs'
+permissions:
+  contents: read
+jobs:
+  approved-feed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/test_ghost_cloud_feed.mjs
+      - run: python3 tools/project_loop.py check
+      - run: python3 tools/task_routing_pair.py --check
