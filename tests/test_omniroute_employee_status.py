@@ -140,6 +140,37 @@ class ProbeTests(unittest.TestCase):
         self.assertTrue(result["inference_claim_guard_would_block"])
         self.assertEqual(result["ai_claims_last_24h"],3)
 
+    def test_non_allowlisted_exception_class_is_visible_without_provider_message(self):
+        job_id = "a1111111-2222-3333-4444-555555555555"
+        slug = "walter-v1-moho-viseme-review"
+        folder = self.state / "omniroute-drafts" / job_id
+        folder.mkdir(parents=True)
+        receipt = folder / (slug + ".receipt.json")
+        receipt.write_text(json.dumps({
+            "id": "walter-public-v1-moho-viseme-review",
+            "status": "needs_review_no_auto_retry",
+            "error_class": "RemoteDisconnected",
+            "raw_error": "DO_NOT_EXPOSE_UPSTREAM_STRING"}))
+        db = sqlite3.connect(str(self.state / "jobs.sqlite3"))
+        db.execute("INSERT INTO jobs VALUES(?,?,?,?,?)",
+                   (job_id, "research.omniroute", "needs_review",
+                    json.dumps({"packet":slug}),
+                    json.dumps({"draft_status":"needs_review_no_auto_retry",
+                                "review_status":"failed_needs_review"})))
+        db.commit()
+        db.close()
+        result = status.inspect(self.state, run=lambda *args, **kwargs:
+                                type("R",(),{"returncode":1})())
+        self.assertEqual(result["nonready_reason_counts"]["exception:RemoteDisconnected"],1)
+        self.assertNotIn("DO_NOT_EXPOSE_UPSTREAM_STRING",json.dumps(result))
+        obj = json.loads(receipt.read_text())
+        obj["error_class"] = "RemoteDisconnected; PRIVATE_METADATA"
+        receipt.write_text(json.dumps(obj))
+        bad = status.inspect(self.state,run=lambda *a,**k:
+                             type("R",(),{"returncode":1})())
+        self.assertIn("exception:unavailable",bad["nonready_reason_counts"])
+        self.assertNotIn("PRIVATE_METADATA",json.dumps(bad))
+
     def test_stop_reported_without_resuming_worker(self):
         (self.state/"STOP").write_text("owner stopped")
         obj=status.inspect(self.state,run=lambda *args,**kwargs: type("X",(),{"returncode":1})())
