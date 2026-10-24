@@ -26,6 +26,9 @@ jobs:
       - name: Check native v8.6 instrument previews and routing regression
         run: node --test dashboard/command-center/tests/native-v8-5.test.cjs dashboard/command-center/tests/native-v8-6.test.cjs dashboard/command-center/tests/native-v8-7.test.cjs dashboard/command-center/tests/default-exact.test.cjs
 
+      - name: Test workforce control center draft and verified-source boundaries
+        run: node --test dashboard/command-center/tests/workforce-control.test.cjs
+
       - name: Test native v8.9 scrolling and rollback contract
         run: node --test dashboard/command-center/tests/native-v8-9.test.cjs dashboard/command-center/tests/default-exact.test.cjs
 
