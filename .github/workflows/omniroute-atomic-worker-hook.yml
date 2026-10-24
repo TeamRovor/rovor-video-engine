@@ -1,0 +1,33 @@
+name: OmniRoute worker atomic fleet hook (offline)
+on:
+  pull_request:
+    paths:
+      - 'tools/ghost_worker.py'
+      - 'tools/omniroute_continuous.py'
+      - 'tools/omniroute_capacity_router.py'
+      - 'tools/omniroute_model_reservation.py'
+      - 'tools/omniroute_fleet_binding.py'
+      - 'tests/test_omniroute_atomic_worker_hook.py'
+      - '.github/workflows/omniroute-atomic-worker-hook.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  atomic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Test existing one-service legacy/paced worker
+        run: python -m unittest discover -s tests -p test_omniroute_continuous.py -v
+      - name: Test integrated worker claim and model route
+        run: python -m unittest discover -s tests -p test_omniroute_atomic_worker_hook.py -v

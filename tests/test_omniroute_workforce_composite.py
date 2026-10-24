@@ -119,7 +119,7 @@ class CompositeTests(unittest.TestCase):
         def near_cap(model,prompt,key):
             return ('**Date:** 2025-01-15 (analysis date)\n'
                     'A proposed architecture requires human review.',
-                    {'prompt_tokens':100,'completion_tokens':2400,'total_tokens':2500})
+                    {'prompt_tokens':100,'completion_tokens':4070,'total_tokens':4170})
         with mock.patch.object(omni,'read_combo_catalog',return_value=fixed_catalog()):
             with mock.patch.object(workpack,'access_key',return_value='fake-key'):
                 with mock.patch.object(workpack,'http_completion',side_effect=near_cap):

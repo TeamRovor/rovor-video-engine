@@ -41,9 +41,15 @@ EXECUTION_CLAIMS = re.compile(
 )
 
 
-# The client in PR #51 limits responses to 2400 completion tokens but does
-# not save finish_reason. This threshold indicates *possible* truncation.
-NEAR_COMPLETION_CAP = 2390
+# Historical receipts lack the posted request token cap. Their old 2400-token
+# client may have truncated near 2390 and must stay conservatively flagged.
+# New receipts record the actual 4096-token request ceiling in immutable
+# per-job metadata, so a valid 2500-token draft is not misclassified based on
+# the old threshold. Completion finish_reason still must pass strict gateway
+# admission; metadata is not evidence of factual accuracy or human acceptance.
+LEGACY_NEAR_COMPLETION_CAP = 2390
+CURRENT_COMPLETION_CAP_MARGIN = 128
+CURRENT_SUPPORTED_COMPLETION_CAP = worker.MAX_COMPLETION_TOKENS
 REPORT_DATE_HEADER = re.compile(
     r'(?im)^[ \t]*(?:#{1,4}[ \t]*)?(?:\*{1,2})?'
     r'(?:analysis[ \t]+date|document[ \t]+date|date)'
@@ -103,9 +109,22 @@ def check_receipt(obj,expected_id,expected_provenance):
     keys=BASE | (SUCCESS_FIELDS if state==SUCCESS
                    else ERROR_FIELDS if state=='needs_review_no_auto_retry'
                    else frozenset())
-    extra_admission = (state == 'needs_review_no_auto_retry' and
-                       set(obj) == keys | {'admission_code'})
-    if set(obj)!=keys and not extra_admission:
+    # New source records one fixed request ceiling. Old receipts (missing
+    # completion_token_limit) keep the legacy conservative review threshold.
+    # Reject arbitrary future/greater limits until explicitly audited.
+    versioned = 'completion_token_limit' in obj
+    if versioned and (type(obj['completion_token_limit']) is not int
+                      or obj['completion_token_limit'] != CURRENT_SUPPORTED_COMPLETION_CAP):
+        return 'invalid_receipt', ['invalid_completion_request_limit'], False, False
+    budgeted = 'source_budget_chars' in obj
+    if budgeted and (type(obj['source_budget_chars']) is not int
+                     or obj['source_budget_chars'] not in worker.SOURCE_CONTEXT_BUDGETS):
+        return 'invalid_receipt', ['invalid_source_context_budget'], False, False
+    expected = (keys | ({'completion_token_limit'} if versioned else set())
+                | ({'source_budget_chars'} if budgeted else set()))
+    extra_admission = (state == 'needs_review_no_auto_retry'
+                       and set(obj) == expected | {'admission_code'})
+    if set(obj) != expected and not extra_admission:
         return 'invalid_receipt', ['schema_fields_mismatch'], False, False
     if (obj.get('schema_version')!=1
             or obj.get('id')!=expected_id
@@ -150,7 +169,9 @@ def check_receipt(obj,expected_id,expected_provenance):
     usage=obj.get('usage_reported')
     if isinstance(usage,dict):
         count=usage.get('completion_tokens')
-        if type(count) is int and count >= NEAR_COMPLETION_CAP:
+        near_cap = (CURRENT_SUPPORTED_COMPLETION_CAP - CURRENT_COMPLETION_CAP_MARGIN
+                    if versioned else LEGACY_NEAR_COMPLETION_CAP)
+        if type(count) is int and count >= near_cap:
             concerns.append('near_completion_token_cap_truncation_unknown')
     report_date=REPORT_DATE_HEADER.search(text[:1800])
     if report_date:
@@ -167,7 +188,17 @@ def inspect(repo_root,receipt_root,slug):
     """Pure read-only: receipt output is explicitly content-free."""
     if slug not in worker.ALLOWED_PACKETS:
         raise ValueError('Unrecognized curated packet')
-    packet,_,provenance=worker.load_packet(repo_root,slug)
+    # Read the same immutable excerpt profile that was used for *this* job.
+    # Legacy receipts have none, so their original full-source provenance and
+    # conservative historical review behavior stay completely unchanged.
+    safe_root = _safe_directory(receipt_root)
+    obj = _read_receipt(receipt_root/(slug+'.receipt.json')) if safe_root else None
+    saved_budget = (obj.get('source_budget_chars')
+                    if isinstance(obj, dict) else None)
+    budget = (saved_budget if type(saved_budget) is int
+              and saved_budget in worker.SOURCE_CONTEXT_BUDGETS else None)
+    packet,_,provenance=worker.load_packet(
+        repo_root,slug,source_budget_chars=budget)
     result={
         'packet_id':packet['id'],
         'status':'missing_private_receipt',
@@ -178,12 +209,10 @@ def inspect(repo_root,receipt_root,slug):
         'evidence':'local_receipt_inspection_only',
         'reasons':[],
     }
-    if not _safe_directory(receipt_root):
+    if not safe_root:
         result['status']='private_receipt_root_unavailable'
         result['reasons']=['missing_or_redirected_private_folder']
         return result
-    path=receipt_root/(slug+'.receipt.json')
-    obj=_read_receipt(path)
     status,reasons,fresh,responded=check_receipt(obj,packet['id'],provenance)
     result.update(status=status,source_fresh=fresh,
                   response_present=responded,reasons=reasons)

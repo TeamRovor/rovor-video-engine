@@ -54,6 +54,11 @@ ALLOWED_PACKETS = PACKETS + SPECIALIST_PACKETS + RECOVERY_PACKETS
 EXCERPT_PACKETS = frozenset(("unattended-readiness",) + SPECIALIST_PACKETS + RECOVERY_PACKETS)
 ROLES = ('evidence-triage','software-architecture','inference-routing')
 MAX_INPUT = 28000
+# Fixed, reviewed source budgets for *new* concise research assignments.
+# Raw sources are still read and SHA256-fingerprinted in full. Excerpts are
+# labeled visibly and reflected in provenance; no silent truncation or reuse
+# of a historical receipt under a new budget is permitted.
+SOURCE_CONTEXT_BUDGETS = frozenset((9000, 11000, 14500))
 MAX_RESPONSE = 131072
 MAX_OUTPUT = 22000
 MAX_PACKET = 10000
@@ -106,9 +111,14 @@ def read_public_file(root, relative, maximum):
     return content.decode('utf-8',errors='strict')
 
 
-def load_packet(root, slug):
+def load_packet(root, slug, *, source_budget_chars=None):
     if slug not in ALLOWED_PACKETS:
         raise ValueError('Unapproved OmniRoute packet')
+    if source_budget_chars is not None and (
+            type(source_budget_chars) is not int
+            or source_budget_chars not in SOURCE_CONTEXT_BUDGETS
+            or slug not in EXCERPT_PACKETS):
+        raise ValueError('Unapproved source context budget')
     rel = 'coordination/omniroute-workpacks/' + slug + '.json'
     raw = read_public_file(root, rel, MAX_PACKET)
     packet = json.loads(raw)
@@ -145,12 +155,14 @@ def load_packet(root, slug):
         source_sections.append('--- PUBLIC SOURCE: '+relpath+' ---\n'+data)
     context = '\n\n'.join(source_sections)
     excerpts = None
-    if len(context)>MAX_INPUT:
+    effective_context_limit = (MAX_INPUT if source_budget_chars is None
+                               else source_budget_chars)
+    if len(context)>effective_context_limit:
         if slug not in EXCERPT_PACKETS:
             raise ValueError('Combined source too large; no silent truncation')
-        # No model decides the excerpts. Share a fixed, documented character
-        # budget fairly across public sources, redistributing unused capacity.
-        budget = MAX_INPUT - 2000
+        # No model chooses excerpts. Leave room for audit labels and explicit
+        # omitted-range warnings, with equal fairness across approved inputs.
+        budget = effective_context_limit - 2000
         lengths = [len(data) for _path, data in source_items]
         allocations = [0] * len(lengths)
         remaining = budget
@@ -179,7 +191,7 @@ def load_packet(root, slug):
                                  'total_chars':len(data),
                                  'omitted_chars':omitted}
         context = '\n\n'.join(source_sections)
-        if len(context)>MAX_INPUT:
+        if len(context)>effective_context_limit:
             raise ValueError('Bounded excerpt still exceeds public source budget')
     prompt = ('PUBLIC REPOSITORY REVIEW PACKET\n'
               + json.dumps({k:packet[k] for k in ('id','title','role','task',
@@ -189,7 +201,10 @@ def load_packet(root, slug):
                 'next read-only validation. Never assert actual execution.')
     if len(prompt) > 38000:
         raise ValueError('Prompt too large')
-    provenance = {'packet_sha256':sha(raw.encode()),'sources':fingerprints}
+    provenance={'packet_sha256':sha(raw.encode()),'sources':fingerprints}
+    if source_budget_chars is not None:
+        # Bind even no-excerpt small contexts to their exact review profile.
+        provenance['source_budget_chars'] = source_budget_chars
     if excerpts is not None:
         provenance['explicit_source_excerpts'] = excerpts
     return packet, prompt, provenance
@@ -384,7 +399,7 @@ def safe_admission_code(exc):
 
 
 def run_packet(repo_root,receipt_root,slug,model,key,
-               completion=None):
+               completion=None, *, source_budget_chars=None):
     # The public-checkout boundary applies to every entry point, not merely
     # main(). Other future workers may import and invoke run_packet directly.
     # Canonicalize even nonexistent output folders to catch aliased parents.
@@ -405,7 +420,8 @@ def run_packet(repo_root,receipt_root,slug,model,key,
             any(destination==root or root in destination.parents
                 for root in checkout_roots)):
         raise ValueError('Private model receipts inside Git checkout or redirected are refused')
-    packet,prompt,provenance=load_packet(source,slug)
+    packet,prompt,provenance=load_packet(
+        source,slug,source_budget_chars=source_budget_chars)
     private=safe_private_root(destination)
     receipt_file=private/(slug+'.receipt.json')
     if receipt_file.exists() or receipt_file.is_symlink():
@@ -413,9 +429,12 @@ def run_packet(repo_root,receipt_root,slug,model,key,
                 'receipt':str(receipt_file)}
     base={'schema_version':1,'id':packet['id'],'model':model,
           'status':'reserved_no_retry','created_at':utc(),
+          'completion_token_limit':MAX_COMPLETION_TOKENS,
           'provenance':provenance,
           'external_effects_allowed':False,'source_edits':False,
           'mac_control_verified':False,'user_review_required':True}
+    if source_budget_chars is not None:
+        base['source_budget_chars'] = source_budget_chars
     try:
         write_receipt(receipt_file,base)
     except FileExistsError:

@@ -103,6 +103,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         report=json.loads(Path(first['receipt']).read_text())
         self.assertEqual(report['answer'],
                          'Unverified assumptions; collect Mac runner status')
+        self.assertEqual(report['completion_token_limit'],worker.MAX_COMPLETION_TOKENS)
         self.assertTrue(report['user_review_required'])
         self.assertFalse(report['source_edits'])
         self.assertFalse(report['mac_control_verified'])
@@ -128,6 +129,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
                                  'rovor-fast-free-v1','test-key',completion=failed)
         saved=json.loads(Path(result['receipt']).read_text())
         self.assertEqual(saved['status'],'needs_review_no_auto_retry')
+        self.assertEqual(saved['completion_token_limit'],worker.MAX_COMPLETION_TOKENS)
         self.assertEqual(saved['error_class'],'GatewayInvalidCompletion')
         self.assertEqual(saved['admission_code'],'invalid_usage_shape')
         self.assertIsNone(worker.safe_admission_code(
@@ -189,6 +191,67 @@ class OmniRouteWorkpackTests(unittest.TestCase):
                             for v in provenance['explicit_source_excerpts'].values()))
         self.assertTrue(any(v['omitted_chars'] > 0
                             for v in provenance['explicit_source_excerpts'].values()))
+
+    def test_new_shortform_context_is_explicit_and_smaller_than_full_packet(self):
+        slug = 'unattended-readiness'
+        manifest=json.loads((self.repo/'coordination'/'omniroute-workpacks'/
+                            (slug+'.json')).read_text())
+        for rel in manifest['inputs']:
+            (self.repo/rel).write_text(('Public background; source ' + rel + '.\\n')*650)
+        _packet, long_prompt, _legacy = worker.load_packet(self.repo,slug)
+        packet, short_prompt, proof = worker.load_packet(
+            self.repo,slug,source_budget_chars=9000)
+        self.assertEqual(packet['slug'], slug)
+        self.assertLess(len(short_prompt),len(long_prompt))
+        self.assertLess(len(short_prompt),14000)
+        self.assertIn('PUBLIC SOURCE EXCERPT',short_prompt)
+        self.assertIn('characters intentionally omitted',short_prompt)
+        self.assertEqual(proof['source_budget_chars'],9000)
+        self.assertTrue(any(v['omitted_chars']>0 for v
+                            in proof['explicit_source_excerpts'].values()))
+        original_sources=worker.load_packet(self.repo,slug)[2]['sources']
+        self.assertEqual(proof['sources'],original_sources)
+
+    def test_new_budget_is_bound_to_private_provenance_and_never_replayed(self):
+        import omniroute_draft_review as reviewer
+        slug='unattended-readiness'
+        manifest=json.loads((self.repo/'coordination'/'omniroute-workpacks'/
+                            (slug+'.json')).read_text())
+        for rel in manifest['inputs']:
+            (self.repo/rel).write_text(('Verified public fixture '+rel+'\\n')*500)
+        calls=[]
+        def completion(_model,prompt,_key):
+            calls.append(prompt)
+            return ('This is a proposal. Review its public-source limitations.',
+                    {'prompt_tokens':500,'completion_tokens':80,'total_tokens':580})
+        reply=worker.run_packet(self.repo,self.out,slug,'rovor-fast-free-v1',
+                                'fake-key',completion=completion,
+                                source_budget_chars=11000)
+        self.assertEqual(reply['status'],'draft_completed_needs_review')
+        saved=json.loads(Path(reply['receipt']).read_text())
+        self.assertEqual(saved['source_budget_chars'],11000)
+        self.assertEqual(saved['provenance']['source_budget_chars'],11000)
+        self.assertEqual(reviewer.inspect(self.repo,self.out,slug)['status'],
+                         'draft_ready_for_human_review')
+        saved['source_budget_chars']=14500
+        Path(reply['receipt']).write_text(json.dumps(saved))
+        verdict=reviewer.inspect(self.repo,self.out,slug)
+        self.assertEqual(verdict['status'],'stale_source')
+        self.assertNotIn('fake-key',json.dumps(verdict))
+        again=worker.run_packet(self.repo,self.out,slug,'rovor-fast-free-v1',
+                                'fake-key',completion=lambda *_:self.fail('replayed'),
+                                source_budget_chars=11000)
+        self.assertEqual(again['status'],'previous_attempt_not_replayed')
+        self.assertEqual(len(calls),1)
+
+    def test_source_budgets_reject_unapproved_packet_and_bool(self):
+        with self.assertRaisesRegex(ValueError,'Unapproved source context budget'):
+            worker.load_packet(self.repo,'runner-blocker',source_budget_chars=9000)
+        for budget in (True,5000,28000,'9000'):
+            with self.subTest(budget=budget):
+                with self.assertRaisesRegex(ValueError,'Unapproved source context budget'):
+                    worker.load_packet(self.repo,'unattended-readiness',
+                                       source_budget_chars=budget)
 
     def test_combined_input_limit_refuses_silent_truncation(self):
         f=self.repo/'coordination'/'hosted-runner-diagnosis.md'
