@@ -92,13 +92,15 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
          sleeper=time.sleep, allow_model_use=False, allow_native_import=False,
          allow_jane_library_create=False, jane_queue_job_id=None,
          allow_omniroute_model_use=False, allow_omniroute_work_plan=False,
-         parallel_omniroute_workers=1) -> dict:
+         parallel_omniroute_workers=1, omni_max_24h=ghost_worker.OMNI_MAX_24H) -> dict:
     """Poll bounded jobs with explicit opt-ins, observing STOP between operations.
 
     Limits are cooperative: a synchronous adapter cannot be interrupted mid-call.
     The underlying SQLite claim transaction prevents duplicate claimed jobs.
     """
     validate_limits(max_jobs=max_jobs, max_seconds=max_seconds, poll_seconds=poll_seconds)
+    if type(omni_max_24h) is not int or not 1 <= omni_max_24h <= 20:
+        raise ValueError('OmniRoute rolling claim budget must be 1 to 20')
     if (type(parallel_omniroute_workers) is not int or not 1 <= parallel_omniroute_workers <= 3):
         raise ValueError('Parallel worker count must be 1 to 3')
     if parallel_omniroute_workers > 1 and (
@@ -141,7 +143,8 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
                 scoped.execute("PRAGMA busy_timeout=20000")
                 return ghost_worker.run_once(
                     scoped, workspace, owner=worker_id + "/specialist-" + str(index),
-                    allow_omniroute_model_use=True)
+                    allow_omniroute_model_use=True,
+                    omni_max_24h=omni_max_24h)
         with ThreadPoolExecutor(max_workers=parallel_omniroute_workers) as pool:
             receipts = list(pool.map(one, range(parallel_omniroute_workers)))
         nonempty = [receipt for receipt in receipts if receipt is not None]
@@ -157,6 +160,7 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
                                     for x in nonempty),
                 "needs_review": sum(x["status"] == "needs_review" for x in nonempty),
                 "work_plan": feed_result, "parallel_workers": parallel_omniroute_workers,
+                "max_free_model_claims_24h": omni_max_24h,
                 "read_only": False, "native_import_enabled": False,
                 "model_use_enabled": False, "omniroute_model_use_enabled": True,
                 "worker_id": worker_id}
@@ -184,7 +188,8 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
         elif allow_native_import:
             receipt = ghost_worker.run_once(conn, workspace, owner=worker_id,
                                            allow_model_use=allow_model_use, allow_native_import=True,
-                                           allow_omniroute_model_use=allow_omniroute_model_use)
+                                           allow_omniroute_model_use=allow_omniroute_model_use,
+                                           omni_max_24h=omni_max_24h)
         elif allow_model_use or allow_omniroute_model_use:
             receipt = ghost_worker.run_once(conn, workspace, owner=worker_id,
                                            allow_model_use=allow_model_use,
@@ -226,6 +231,8 @@ def main() -> None:
     run.add_argument("--approve-model-use", action="store_true")
     run.add_argument("--approve-omniroute-model-use", action="store_true",
                      help="Enable separately approved capped OmniRoute research jobs")
+    run.add_argument("--max-omniroute-claims-per-day", type=int, default=ghost_worker.OMNI_MAX_24H,
+                     help="Default five; explicitly approved free-only max 20")
     run.add_argument("--parallel-omniroute-workers", type=int, default=1,
                      help="Opt-in one to three independent bounded OmniRoute research claims")
     run.add_argument("--approve-omniroute-work-plan", action="store_true",
@@ -250,6 +257,7 @@ def main() -> None:
                           allow_omniroute_model_use=args.approve_omniroute_model_use,
                           allow_omniroute_work_plan=args.approve_omniroute_work_plan,
                           parallel_omniroute_workers=args.parallel_omniroute_workers,
+                          omni_max_24h=args.max_omniroute_claims_per_day,
                           allow_jane_library_create=args.approve_jane_library_create,
                           jane_queue_job_id=args.jane_queue_job_id)
     elif args.command == "stop":
