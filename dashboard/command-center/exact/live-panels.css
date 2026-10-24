@@ -2,7 +2,7 @@
    It is OFF by default, preserving pixel-for-pixel original imagery. */
 .live-panels[hidden]{display:none!important}
 .live-panels{
-  position:absolute;inset:0;z-index:4;pointer-events:none;
+  position:absolute;inset:0;z-index:8;pointer-events:none;
   color:#dfedff;font-family:Inter,"Segoe UI",Arial,sans-serif;
 }
 .telemetry-panel {
