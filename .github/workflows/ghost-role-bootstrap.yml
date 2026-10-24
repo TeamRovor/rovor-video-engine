@@ -1,0 +1,30 @@
+name: Ghost role onboarding (offline)
+on:
+  pull_request:
+    paths:
+      - 'tools/ghost_role_bootstrap.py'
+      - 'tests/test_ghost_role_bootstrap.py'
+      - 'coordination/ghost-role-bootstrap.json'
+      - '.github/workflows/ghost-role-bootstrap.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Offline role state and no-replay tests
+        run: python -m unittest discover -s tests -p test_ghost_role_bootstrap.py -v
+      - name: One read-only role preview
+        run: python tools/ghost_role_bootstrap.py --role mike
