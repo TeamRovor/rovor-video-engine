@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "release": "hud-ai-workforce-control-center-proposal-2026-10-24",
+  "rollout_status": "proposal_only",
+  "UX_policy": {
+    "principle": "simple_surface_power_on_demand",
+    "primary_action": "new_job",
+    "show_source_freshness": true,
+    "source_unknown_means": "unverified",
+    "phone_portrait": "prioritize_composer_queue_alerts",
+    "ipad_portrait": "preserve_approved_two_column",
+    "landscape": "preserve_approved_three_column",
+    "scrollable_preview": true,
+    "expanded_visual_skin": "native_hud",
+    "no_fake_live_status": true
+  },
+  "permissions": {
+    "default": "read_only",
+    "enqueue_requires": "authenticated_private_controller_and_explicit_approval",
+    "dispatch_requires": "existing_host_worker_atomic_claim_stop_budget_privacy_check",
+    "paid_model_use": "owner_explicit_opt_in_only",
+    "side_effect_retries": "never_after_uncertainty"
+  },
+  "modules": [
+    {
+      "id": "job_queue",
+      "label": "Job Queue",
+      "home_panel": "active_tasks",
+      "phase": 1,
+      "preview": "latest_authorized_jobs",
+      "expand": "filtered_jobs_and_approvals",
+      "read_source": "private_controller_snapshot_future",
+      "actions": [
+        "save_draft",
+        "inspect_receipt"
+      ],
+      "privileged_actions_later": [
+        "approve_queue",
+        "cancel_job"
+      ]
+    },
+    {
+      "id": "ai_fleet",
+      "label": "AI Fleet",
+      "home_panel": "system_health",
+      "phase": 1,
+      "preview": "named_roles_last_seen",
+      "expand": "role_capabilities_receipts_and_blockers",
+      "read_source": "role_manifest_plus_authenticated_host_snapshot_future",
+      "actions": [
+        "inspect_role"
+      ]
+    },
+    {
+      "id": "model_registry",
+      "label": "Model Registry",
+      "home_panel": "api_quota",
+      "phase": 1,
+      "preview": "verified_eligible_models",
+      "expand": "provider_model_quotas_cost_and_failures",
+      "read_source": "mac_omniroute_inventory_bridge_future",
+      "actions": [
+        "inspect_model"
+      ],
+      "privileged_actions_later": [
+        "change_route"
+      ]
+    },
+    {
+      "id": "timeline",
+      "label": "Mission Timeline",
+      "home_panel": "recent_activity",
+      "phase": 1,
+      "preview": "recent_state_changes",
+      "expand": "job_attempts_checks_and_artifacts",
+      "read_source": "private_runtime_receipts_future",
+      "actions": [
+        "inspect_event"
+      ]
+    },
+    {
+      "id": "results_vault",
+      "label": "Results Vault",
+      "home_panel": "live_feed",
+      "phase": 1,
+      "preview": "last_verified_artifact",
+      "expand": "browse_outputs_and_qa",
+      "read_source": "approved_artifact_index_future",
+      "actions": [
+        "preview_artifact",
+        "request_review"
+      ]
+    },
+    {
+      "id": "machine_budget",
+      "label": "Machine & Cost",
+      "home_panel": "resource_usage",
+      "phase": 1,
+      "preview": "host_last_heartbeat_budget_and_stop",
+      "expand": "host_capabilities_spend_and_safety",
+      "read_source": "private_host_snapshot_future",
+      "actions": [
+        "inspect_status"
+      ],
+      "privileged_actions_later": [
+        "stop_worker"
+      ]
+    }
+  ],
+  "job_composer": {
+    "phase": 3,
+    "initial_action": "save_draft_only",
+    "required": [
+      "goal"
+    ],
+    "optional": [
+      "employee",
+      "deliverable",
+      "due_date"
+    ],
+    "proposed_plan_requires_review": true,
+    "permitted_first_use": "public_source_research_draft",
+    "not_permitted_without_specific_authorization": [
+      "terminal_execution",
+      "social_publish",
+      "email_send",
+      "client_account_edit",
+      "native_library_edit",
+      "spend"
+    ]
+  },
+  "employees": [
+    {
+      "id": "walter",
+      "label": "Walter",
+      "role": "supervisor"
+    },
+    {
+      "id": "mike",
+      "label": "Mike",
+      "role": "mac_systems"
+    },
+    {
+      "id": "jane",
+      "label": "Jane",
+      "role": "final_cut"
+    },
+    {
+      "id": "jesse",
+      "label": "Jesse",
+      "role": "moho_2d"
+    },
+    {
+      "id": "gale",
+      "label": "Gale",
+      "role": "blender_3d"
+    },
+    {
+      "id": "gus",
+      "label": "Gus",
+      "role": "operations"
+    },
+    {
+      "id": "saul",
+      "label": "Saul",
+      "role": "marketing"
+    },
+    {
+      "id": "hank",
+      "label": "Hank",
+      "role": "quality_assurance"
+    }
+  ],
+  "implementation_constraints": {
+    "github_development_claims": "coordination/tasks.json",
+    "github_capability_router": "coordination/work-routing.json",
+    "runtime_queue": "private_sqlite_or_cloudflare_d1_only_if_authorized",
+    "mac_executor": "reuse_existing_launchagent_sqlite_worker",
+    "model_gateway": "mac_local_omniroute_only_after_host_verification",
+    "remote_access": "authenticated_outbound_mac_pull_not_public_localhost",
+    "cloud_control_plane_deployed": false,
+    "live_model_inventory_verified": false,
+    "live_mac_access_proven": false,
+    "default_paid_dispatch": false
+  }
+}
