@@ -116,7 +116,7 @@ def _research_draft_quality(answer):
     """
     all_words = []
     cited_blocks = 0
-    for block in re.split(r"\\n\\s*\\n", answer.strip()):
+    for block in re.split(r"\n\s*\n", answer.strip()):
         prose = CITATION.sub("", block)
         words = re.findall(r"[A-Za-z0-9_]+", prose)
         all_words.extend(word.lower() for word in words)

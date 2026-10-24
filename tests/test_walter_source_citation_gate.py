@@ -167,7 +167,7 @@ class CitationTests(unittest.TestCase):
                   "is constantly productive and all models have been verified "
                   "throughout the day despite no new independent evidence.")
         with self.assertRaises(CitationError) as error:
-            _research_draft_quality(first + "\\n\\n" + second)
+            _research_draft_quality(first + "\n\n" + second)
         self.assertEqual(str(error.exception), "draft_paragraph_missing_citation")
 
     def test_research_draft_rejects_single_citation_padding(self):
@@ -190,7 +190,7 @@ class CitationTests(unittest.TestCase):
         answer = (
             "The dispatch workflow must verify its STOP state before selecting "
             "another grounded task. This is a proposed code-review check rather "
-            "than proof of live host operation. [[source:WORK.md#L2]]\\n\\n"
+            "than proof of live host operation. [[source:WORK.md#L2]]\n\n"
             "The research packet should preserve its source fingerprint and "
             "separate any model-authored conclusions from authenticated evidence. "
             "A reviewer can then evaluate the proposed regression tests before "
