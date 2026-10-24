@@ -3498,8 +3498,8 @@
         "ghost-self-research-bootstrap-20261023"
       ],
       "updated_at": "2026-10-24T02:38:07.657Z",
-      "next_update": "First push execution verified; recurrence needs later scheduled event",
-      "next_action": "Hank hosted QA workflow merged into main via PR120. First push run passed at https://github.com/TeamRovor/rovor-video-engine/actions/runs/40054927354. Cron minutes 17 and 47 UTC configured; real cron run not yet observed. Mac worker and model inference remain separate.",
+      "next_update": "GitHub scheduled wakeup independently observed; Mac model worker still separately unverified",
+      "next_action": "PR120 merged and real hosted HANK workflow schedule event SUCCESS at https://github.com/TeamRovor/rovor-video-engine/actions/runs/40057356251. First recurring scheduled cloud execution confirmed (one schedule event), but this is deterministic QA, no AI inference, no Mac app access or continuous 24/7 SLA.",
       "acceptance": "Hourly or half-hourly hosted schedule installed on main with read-only permissions, no local Mac/paid model credentials, no task queue mutation; summary reports actionable inconsistent task/role policy and stale claim counts, fails on actual broken safety invariants, warns on aged claims without taking ownership. Offline Python3.9/3.11 tests and first post-merge hosted push workflow run pass. Schedule wakeup not claimed until observed.",
       "evidence": [
         {
@@ -3508,6 +3508,13 @@
           "check": "Hank workflow main push run",
           "result": "PASS: first real hosted execution; schedule not yet observed",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40054927354"
+        },
+        {
+          "commit": "695632e66ab515bb1bbaac5f5ec099eeade1fc44",
+          "platform": "GitHub-hosted Ubuntu / scheduled Actions event",
+          "check": "First independent GitHub Actions event=schedule for Hank public-repository QA",
+          "result": "PASS: scheduled execution occurred; confirms at least one unattended cloud wakeup, not continuous AI or Mac runtime.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40057356251"
         }
       ]
     },
@@ -3547,7 +3554,7 @@
       "id": "walter-backlog-runtime-workpack-compile-20261023",
       "title": "Compile reviewed Walter specialist backlog to legacy OmniRoute public workpack schema without worker edits",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar public workpack compatibility session 2026-10-23",
       "branch": "feature/walter-workpack-compile-v1",
       "scopes": [
@@ -3560,10 +3567,19 @@
       "depends_on": [
         "walter-approved-research-backlog-20261023"
       ],
-      "updated_at": "2026-10-24T03:17:36.163Z",
-      "next_update": "When Python 3.9/3.11 tests confirm all generated packet schemas match reviewed runner constraints",
-      "next_action": "Generate 14 immutable public-source OmniRoute-compatible research packets into distinct new files; verify load boundaries, names, source size, contents, invariants and deterministic drift. Do not modify owned feeder/runner/route code; separate Mac owner integration after first successful repaired inference.",
-      "acceptance": "14 new immutable packet JSON under established workpack folder, matching existing PR41 workpack schema and bounded source limits, generated deterministically from approved Walter backlog. Strict 0 model calls, no public client/private data, no scheduler/queue edits. Hosted Python3.9/3.11 CI and coordination checks pass. PR merged with explicit Mac owner handoff."
+      "updated_at": "2026-10-24T03:20:54.796Z",
+      "next_update": "PR122 source release and hosted CI complete; actual Mac integration and real model responses unverified",
+      "next_action": "PR #122 merged main d0232c3785c5447d667b2e6db113f778e1ce6e0f. Fourteen packet JSON files match PR41 runner fields and source limits; 20 Python 3.9/3.11 offline tests + shared queue passed. Existing hardcoded runner PACKETS and ghost_omniroute_job.ROUTES/feeder still block actual execution; Mac owner's live inference repair must verify new accepted receipt, then separately integrate reviewed slugs and opt-in work. No Mac worker edit or provider call in this task.",
+      "acceptance": "14 new immutable packet JSON under established workpack folder, matching existing PR41 workpack schema and bounded source limits, generated deterministically from approved Walter backlog. Strict 0 model calls, no public client/private data, no scheduler/queue edits. Hosted Python3.9/3.11 CI and coordination checks pass. PR merged with explicit Mac owner handoff.",
+      "evidence": [
+        {
+          "commit": "d0232c3785c5447d667b2e6db113f778e1ce6e0f",
+          "platform": "GitHub-hosted Ubuntu / Python 3.9 & 3.11",
+          "check": "Walter 14 packet compile and drift validator (20 tests) plus shared queue checks",
+          "result": "PASS Python matrix and coordination; 14 inert source packets merged; no direct Mac execution or AI invocation.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40057857541"
+        }
+      ]
     }
   ]
 }
