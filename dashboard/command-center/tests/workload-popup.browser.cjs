@@ -45,6 +45,10 @@ async function main(){
   assert(home.hidden,name+': popup should start hidden');
   assert(home.pageWidth<=home.viewport+2,name+': horizontal page overflow');
   if(name==='iphone-portrait'||name==='desktop')await screenshot(name+'-compact');
+  if(name==='iphone-portrait'||name==='desktop'){
+   await evalJS('document.querySelector("#workloadPanel").closest(".panel").scrollIntoView({block:"center"});return true');
+   await screenshot(name+'-workload-card');
+  }
   await evalJS('document.querySelector(".panel-expand[data-view=workload]").click();return true');
   const expanded=await evalJS('const d=document.querySelector(".drawer").getBoundingClientRect();return {open:!document.querySelector("#screen").hidden,title:document.querySelector("#drawerTitle").textContent,rows:document.querySelectorAll(".wl-matrix tbody tr").length,cols:document.querySelectorAll(".wl-matrix thead th").length,unverified:document.querySelector("#rovor-workload-popup").textContent.includes("NO VERIFIED LIVE MODEL TELEMETRY"),width:d.width,height:d.height}');
   assert(expanded.open,name+': popup must open');
@@ -59,7 +63,7 @@ async function main(){
   assert(await evalJS('return !!document.querySelector(".wl-route-chart")'));
   await evalJS('document.querySelector("#screen .close").click();document.querySelector("[data-wl-compact-tab=employees]").click();return true');
   assert.equal(await evalJS('return document.querySelectorAll("#workloadPanel .wl-compact-row").length'),8);
-  await evalJS('document.querySelector("#workloadPanel [data-wl-compact-row=2]").click();return true');
+  await evalJS('document.querySelectorAll("#workloadPanel .wl-compact-row")[2].click();return true');
   assert(await evalJS('return document.querySelector("#rovor-workload-popup").textContent.includes("JANE")'));
   results.push({name,width,height,home,expanded,pass:true});
  }
