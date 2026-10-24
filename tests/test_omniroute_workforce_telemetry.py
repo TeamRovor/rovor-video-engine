@@ -186,6 +186,27 @@ class WorkforceTelemetryTests(unittest.TestCase):
         absent=Path(self.folder.name)/"nonexistent"
         self.assertEqual(telemetry.main(["--state",str(absent)]),2)
 
+    def test_new_verified_batch_counts_are_read_without_private_content(self):
+        self.record("a","needs_review","draft_completed_needs_review",
+                    "draft_ready_for_human_review")
+        (self.state/"continuous-status.json").write_text(json.dumps({
+            "observed_at":NOW-2,
+            "executed":3,
+            "review_ready":True,
+            "dispatch_mode":"verified_independent_pool_opt_in",
+            "dispatch":{"reason":"independent_pool_capacity_checked_per_claim",
+                        "private":SECRET},
+            "private":SECRET}))
+        summary=telemetry.inspect(self.state,now=NOW)
+        self.assertEqual(summary["heartbeat"]["last_tick_executed_claim_or_job"],3)
+        self.assertEqual(summary["heartbeat"]["last_tick_dispatch_reason"],
+                         "independent_pool_capacity_checked_per_claim")
+        self.assertNotIn(SECRET,json.dumps(summary))
+        (self.state/"continuous-status.json").write_text(
+            json.dumps({"observed_at":NOW-1,"executed":10}))
+        self.assertIsNone(telemetry.heartbeat(self.state,now=NOW)
+                          ["last_tick_executed_claim_or_job"])
+
     def test_heartbeat_future_or_invalid_not_echoed(self):
         self.record("a","running")
         (self.state/"continuous-status.json").write_text(
