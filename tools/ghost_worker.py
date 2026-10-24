@@ -144,7 +144,12 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
 
 def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
           jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False,
-          omni_max_24h=OMNI_MAX_24H):
+          omni_max_24h=OMNI_MAX_24H, allow_recovery_canary=False):
+    if allow_recovery_canary and (
+            not allow_omniroute_model_use or not omniroute_queue_job_id
+            or allow_model_use or allow_native_import or allow_jane_library_create
+            or allow_terminal_probe or jane_queue_job_id is not None):
+        raise ValueError('Manual recovery must select one exact OmniRoute-only job')
     if omniroute_queue_job_id is not None and (not allow_omniroute_model_use or jane_library_only or jane_queue_job_id is not None):
         raise ValueError('Exact OmniRoute selector requires separate OmniRoute-only approval')
     if jane_queue_job_id is not None and not jane_library_only:
@@ -201,7 +206,8 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
             consecutive_failed += 1
         omni_circuit_open = consecutive_failed >= 3
         omni_enabled = (allow_omniroute_model_use and
-                        omni_used < omni_max_24h and not omni_circuit_open)
+                        omni_used < omni_max_24h and
+                        (not omni_circuit_open or allow_recovery_canary))
         kinds = sorted(ALLOWED | ({RESEARCH_KIND} if allow_model_use else set())
                        | ({OMNI_KIND} if omni_enabled else set())
                        | ({NATIVE_KIND} if allow_native_import else set())
@@ -216,6 +222,15 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         job_filter = " AND id=?" if selected_id is not None else ""
         args = [*kinds, selected_id] if selected_id is not None else kinds
         job = conn.execute(f"SELECT * FROM jobs WHERE status='queued' AND kind IN ({marks}){job_filter} ORDER BY created_at,id LIMIT 1", args).fetchone()
+        if job and allow_recovery_canary:
+            # The only permitted circuit exception is a new, pinned,
+            # review-only canary, selected by its exact UUID. Preserve
+            # *every* prior failed job and still count this model claim
+            # against the owner's existing rolling daily quota.
+            if (job["dedupe_key"] != "walter-public-v2-recovery-proof"
+                    or json.loads(job["payload"]) !=
+                    {"packet": "walter-v2-recovery-proof"}):
+                raise ValueError("Recovery canary ID is not the one reviewed packet")
         if job:
             conn.execute("UPDATE jobs SET status='running',attempts=attempts+1,lease_owner=?,lease_until=?,updated_at=? WHERE id=?",
                          (owner, now + (420 if job['kind'] in {NATIVE_KIND, LIBRARY_KIND} else 360 if job["kind"] in {RESEARCH_KIND, OMNI_KIND} else LEASE_SECONDS), now, job["id"]))
@@ -289,7 +304,7 @@ def macos_version_probe(*, run=subprocess.run, platform=None) -> dict:
 
 def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
              jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False,
-             omni_max_24h=OMNI_MAX_24H):
+             omni_max_24h=OMNI_MAX_24H, allow_recovery_canary=False):
     state = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
     if os.path.lexists(state / "STOP"):
         return None
@@ -300,7 +315,8 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
                 allow_omniroute_model_use=allow_omniroute_model_use,
                 omniroute_queue_job_id=omniroute_queue_job_id,
                  allow_terminal_probe=allow_terminal_probe,
-                 omni_max_24h=omni_max_24h)
+                 omni_max_24h=omni_max_24h,
+                 allow_recovery_canary=allow_recovery_canary)
     if not job:
         return None
     job_id, kind = job["id"], job["kind"]
