@@ -3831,7 +3831,7 @@
       "id": "omniroute-nine-model-coverage-20261024",
       "title": "Inspect actual nine OmniRoute model resources and seven specialist/Walter route coverage",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar OmniRoute fleet source audit 2026-10-24",
       "branch": "feature/omniroute-nine-model-coverage",
       "scopes": [
@@ -3841,12 +3841,22 @@
         "integrations/open-interpreter/OMNIROUTE-MODEL-FLEET.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T07:40:22.624Z",
-      "next_update": "After hosted CI and exact Mac model roster evidence",
-      "next_action": "Validate real OmniRoute CLI-shaped model catalog and routed worker packets with independent Python 3.9/3.11 GitHub tests. Report role-to-model gaps without guessing cost or sending requests. Hand off to existing PR137 Mac operator for approved integration and live completion proof.",
+      "updated_at": "2026-10-24T07:42:42.307Z",
+      "next_update": "Source inspector merged and hosted-tested; host usage proof remains pending in existing Mac worker task",
+      "next_action": "Merged PR #141 source is ready on main. The existing PR #137 Mac owner should pull verified model roster on host, run python3 tools/omniroute_model_fleet.py --expected-models 9, inspect sanitized count/role mismatch and then separately verify actually eligible model costs, quotas and real accepted inference receipts before routing additional provider models. No host change or model completion claimed here.",
       "acceptance": "New isolated CLI inspector reads installed providers/combos, distinguishes model connection count from routed model IDs and proof of completed inference, detects route drift and malformed/paid entries, sanitizes stdout and does not call models or change scheduler; CI Python 3.9/3.11 pass.",
-      "links": [],
-      "evidence": []
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/141"
+      ],
+      "evidence": [
+        {
+          "commit": "1d92002b19924781b98a9712cfd99ede4cc874c5",
+          "platform": "GitHub Actions Ubuntu / Python 3.9 and 3.11",
+          "check": "9 focused offline OmniRoute model-fleet inventory tests across two jobs",
+          "result": "PASS both matrix jobs; inspector merged to main. Provider count/model count separated, worker route mismatch, nine-route count, no raw secret output, no actual model requests. Not installed/verified on user's Mac.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40075094787"
+        }
+      ]
     }
   ]
 }
