@@ -829,7 +829,7 @@
       "requires": [
         "hosted-ci"
       ],
-      "objective": "prevent-owner-conflict"
+      "objective": "reduce-repeat-work"
     }
   }
 }
