@@ -1,0 +1,72 @@
+/* Verified read-only telemetry sits INSIDE the picture's existing panel frames.
+   It is OFF by default, preserving pixel-for-pixel original imagery. */
+.live-panels[hidden]{display:none!important}
+.live-panels{
+  position:absolute;inset:0;z-index:4;pointer-events:none;
+  color:#dfedff;font-family:Inter,"Segoe UI",Arial,sans-serif;
+}
+.telemetry-panel {
+  position:absolute;overflow:hidden;pointer-events:auto;
+  background:linear-gradient(145deg,rgba(2,9,22,.985),rgba(3,14,31,.985));
+  border:1px solid rgba(85,166,249,.45);
+  box-shadow:inset 0 0 18px rgba(31,100,186,.16);
+  color:#d7ebff;padding:clamp(5px,.65vw,11px);
+  display:flex;flex-direction:column;
+  --size:clamp(7px,.73vw,12px);
+  font-size:var(--size);
+}
+.telemetry-panel::before{
+ content:"";position:absolute;left:12%;right:13%;top:0;height:1px;
+ background:linear-gradient(90deg,transparent,#78c9ff,transparent);
+ box-shadow:0 0 9px #459fff;
+}
+.telemetry-tasks{left:3.3%;top:16.7%;width:25.2%;height:22.7%}
+.telemetry-resources{left:3.3%;top:47.2%;width:25.2%;height:16.9%}
+.telemetry-activity{left:3.3%;top:71%;width:25.2%;height:16.6%}
+.telemetry-health{left:70.1%;top:15%;width:25.3%;height:21%}
+.telemetry-quota{left:70.1%;top:44%;width:25.3%;height:19.6%}
+.telemetry-media{left:70.1%;top:71.1%;width:25.3%;height:16.3%}
+.telemetry-heading{
+  color:#91caff;letter-spacing:.15em;line-height:1.2;
+  font-size:clamp(7px,.62vw,10px);font-weight:700;
+  padding-bottom:clamp(3px,.4vw,6px);
+  margin-bottom:clamp(3px,.45vw,6px);
+  border-bottom:1px solid rgba(105,178,245,.22);
+}
+.telemetry-body{display:flex;flex-direction:column;min-height:0;flex:1;overflow:auto;scrollbar-width:thin;scrollbar-color:#2869a6 transparent}
+.telemetry-count{text-align:right;font-weight:700;color:#ceeaff;letter-spacing:.1em;line-height:1.5}
+.telemetry-action{
+  appearance:none;text-align:left;display:flex;justify-content:space-between;gap:6px;
+  align-items:center;width:100%;border:0;border-bottom:1px solid rgba(96,151,220,.14);
+  color:#d9f0ff;background:transparent;padding:clamp(4px,.6vw,10px) 3px;
+  min-height:0;font-size:var(--size);font-weight:500;white-space:normal;cursor:pointer;
+}
+.telemetry-action small{color:#83b8e7;font-size:clamp(6px,.57vw,9px);white-space:nowrap;flex-shrink:0}
+.telemetry-action:hover,.telemetry-action:focus-visible{background:rgba(33,107,190,.26);outline:1px solid rgba(118,205,255,.6)}
+.telemetry-line{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:clamp(4px,.55vw,9px) 0;border-bottom:1px solid rgba(108,166,236,.17)}
+.telemetry-line span{color:#a1c4df}.telemetry-line strong{font-size:var(--size);font-weight:650;text-align:right;word-break:break-word;color:#dcecff}
+.telemetry-line.telemetry-good strong{color:#9fd8ff}
+.telemetry-line.telemetry-pending strong{color:#a8bdd7;border-bottom:1px dashed #8cadd3}
+.telemetry-bar-row{display:grid;grid-template-columns:28% 1fr 25px;gap:5px;align-items:center;padding:clamp(4px,.58vw,9px) 0}
+.telemetry-bar-row span{font-size:clamp(7px,.62vw,10px);color:#bcd8f5}
+.telemetry-bar-row strong{font-size:clamp(8px,.65vw,11px);text-align:right}
+.telemetry-track{height:7px;background:#071b37;border:1px solid #254f82;border-radius:5px;overflow:hidden}
+.telemetry-fill{display:block;height:100%;background:linear-gradient(90deg,#2364cc,#85cfff);box-shadow:0 0 8px #368beb;border-radius:5px}
+.telemetry-note{font-weight:700;letter-spacing:.09em;color:#ddeeff}
+.telemetry-help{color:#8caed0;font-size:clamp(7px,.62vw,10px);line-height:1.45;margin:3px 0 6px}
+.live-panels[data-status="unverified"] .telemetry-panel {border-style:dashed}
+@media(max-width:850px){
+ .telemetry-panel{padding:4px;--size:7px}
+ .telemetry-heading{font-size:6px;letter-spacing:.03em;padding-bottom:2px;margin-bottom:2px}
+ .telemetry-action{padding:2px 1px;font-size:7px}
+ .telemetry-action small{font-size:6px}
+ .telemetry-track{height:4px}
+ .telemetry-line,.telemetry-bar-row{padding:2px 0;font-size:6px}
+ .telemetry-help{font-size:6px}
+ .telemetry-count{font-size:7px}
+}
+@media(max-width:580px){
+  .live-panels{display:none!important}
+  /* On phones all verified information is already available in the drawer;
+     preserving the readable original image is more useful than tiny text. */
+}
