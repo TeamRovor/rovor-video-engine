@@ -221,7 +221,7 @@ def main(argv=None):
                 attempt=int(os.environ.get("GITHUB_RUN_ATTEMPT", "0")),
                 observed_at=datetime.now(timezone.utc))
             args.receipt_file.write_text(
-                json.dumps(evidence, indent=2, sort_keys=True) + "\\n", encoding="utf-8")
+                json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         except (ValueError, OSError, TypeError):
             print(json.dumps({"status": "needs_review",
                               "errors": ["receipt_provenance_or_source_invalid"]}),
