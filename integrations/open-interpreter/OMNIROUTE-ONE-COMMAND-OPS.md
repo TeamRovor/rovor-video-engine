@@ -1,6 +1,6 @@
 # OmniRoute — one-command operations snapshot, ROVOR HUD-ready
 
-No new launchd service, scheduler, worker, model call, model route change, SQLite mutation, credential read, or reinstall.
+No new launchd service, scheduler, worker, model inference call, model route change, SQLite mutation, or reinstall. The inspector itself never opens credentials; the installed OmniRoute CLI may load its own private environment while servicing metadata commands. All CLI output is captured and filtered, never copied raw.
 
 ## The one safe Mac command
 
