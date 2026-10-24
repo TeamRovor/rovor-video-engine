@@ -1,0 +1,44 @@
+name: OmniRoute free dispatch permit offline regression
+
+on:
+  push:
+    paths:
+      - 'tools/omniroute_dispatch_permit.py'
+      - 'tools/omniroute_reasoning_admission.py'
+      - 'tests/test_omniroute_dispatch_permit.py'
+      - '.github/workflows/omniroute-dispatch-permit.yml'
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+  pull_request:
+    paths:
+      - 'tools/omniroute_dispatch_permit.py'
+      - 'tools/omniroute_reasoning_admission.py'
+      - 'tests/test_omniroute_dispatch_permit.py'
+      - '.github/workflows/omniroute-dispatch-permit.yml'
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Verify permit and admission regressions
+        run: |
+          python -m unittest discover -s tests -p 'test_omniroute_dispatch_permit.py' -v
+          python -m unittest discover -s tests -p 'test_omniroute_reasoning_admission.py' -v
+      - name: Verify shared ownership and routing
+        run: |
+          python tools/project_loop.py check
+          python tools/task_routing_pair.py --check
