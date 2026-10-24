@@ -100,3 +100,59 @@ def feed_parallel(conn, state, root, *, limit=3):
     return {"status": "submitted" if added else (
                 "role_review_blocked" if blocked else "plan_exhausted_review_required"),
             "submitted": len(added), "job_ids": added, "blocked_roles": blocked}
+
+# Recovery wave v2 is an explicit separate opt-in. It never reuses a failed v1
+# queue job ID, receipt folder or dedupe key. Only the new canary is eligible
+# until it yields a saved, review-ready private draft.
+RECOVERY_CANARY = ("walter-v2-recovery-proof", "walter-public-v2-recovery-proof")
+RECOVERY_ROLES = (
+    ("mike", "walter-v2-mike-worker-guard"),
+    ("jane", "walter-v2-jane-editor-handoff"),
+    ("jesse", "walter-v2-jesse-animation-qa"),
+    ("gale", "walter-v2-gale-render-qa"),
+    ("gus", "walter-v2-gus-business-ops"),
+    ("saul", "walter-v2-saul-review-ops"),
+    ("hank", "walter-v2-hank-evidence-audit"),
+)
+
+
+def feed_recovery(conn, state, root, *, limit=3):
+    """Release one v2 canary, then seven new distinct packets only if ready.
+
+    No model invocation here and no clearing of the model failure circuit.
+    The normal SQLite claim guard continues to enforce STOP, free-route call
+    budget and failed-model protection. No v1 job is replayed or mutated.
+    """
+    if type(limit) is not int or not 1 <= limit <= 3:
+        raise ValueError("recovery feed limit must be 1..3")
+    if os.path.lexists(Path(state) / "STOP"):
+        return {"status": "stopped", "submitted": 0}
+    waiting=conn.execute("SELECT COUNT(*) FROM jobs WHERE kind=? "
+                         "AND status IN ('queued','running')",
+                         (worker.OMNI_KIND,)).fetchone()[0]
+    if waiting:
+        return {"status":"existing_work","submitted":0}
+    packet,key=RECOVERY_CANARY
+    existing=conn.execute("SELECT id FROM jobs WHERE dedupe_key=?", (key,)).fetchone()
+    if not existing:
+        workpack.load_packet(Path(root),packet)
+        if os.path.lexists(Path(state) / "STOP"):
+            return {"status":"stopped","submitted":0}
+        job=worker.enqueue(conn,worker.OMNI_KIND,{"packet":packet},key)
+        return {"status":"recovery_canary_queued","submitted":1,"job_ids":[job]}
+    if not _review_ready(conn,key):
+        return {"status":"recovery_canary_not_review_ready","submitted":0}
+    added=[]
+    for role,slug in RECOVERY_ROLES:
+        key="walter-public-v2-"+role+"-reviewed-recovery"
+        if conn.execute("SELECT 1 FROM jobs WHERE dedupe_key=?", (key,)).fetchone():
+            continue
+        workpack.load_packet(Path(root),slug)
+        if os.path.lexists(Path(state) / "STOP"):
+            return {"status":"stopped","submitted":len(added),"job_ids":added}
+        added.append(worker.enqueue(conn,worker.OMNI_KIND,{"packet":slug},key))
+        if len(added)>=limit:
+            break
+    return {"status": "recovery_followups_queued" if added else
+            "recovery_plan_exhausted_human_review_required",
+            "submitted":len(added),"job_ids":added}
