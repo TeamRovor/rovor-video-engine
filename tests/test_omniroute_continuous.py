@@ -219,11 +219,11 @@ class ContinuousTests(unittest.TestCase):
                             {'prompt_tokens':500,'completion_tokens':55,
                              'total_tokens':555})
                 with mock.patch.object(gateway,'verify_route',
-                                       return_value='rovor-fast-free-v1'), \\
-                     mock.patch.object(workpack,'access_key',
-                                       return_value='test-key'):
-                    result=continuous.execute(self.state,job,
-                        {'assignment':slug},catalog=[],completion=completion)
+                                       return_value='rovor-fast-free-v1'):
+                    with mock.patch.object(workpack,'access_key',
+                        return_value='test-key'):
+                        result=continuous.execute(self.state,job,
+                            {'assignment':slug},catalog=[],completion=completion)
                 self.assertEqual(result['review_status'],
                                  'draft_ready_for_human_review')
                 receipt=self.state/'omniroute-drafts'/job/(
