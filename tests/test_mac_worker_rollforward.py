@@ -93,6 +93,19 @@ class UpgradeChecks(unittest.TestCase):
         self.assertEqual(self.plist.read_bytes(), baseline)
         self.assertFalse((self.state / "STOP").exists())
 
+    def test_new_recovery_plan_is_separate_explicit_mac_upgrade_opt_in(self):
+        untouched=self.inspect()
+        self.assertNotIn("--approve-omniroute-recovery-plan",
+                         untouched["replacement"]["ProgramArguments"])
+        candidate=module.inspect(self.home,self.runtime,SHA,
+                                 platform="darwin",uid=lambda:501,
+                                 run=self.fake_run,approve_recovery=True)
+        arguments=candidate["replacement"]["ProgramArguments"]
+        self.assertEqual(arguments.count("--approve-omniroute-recovery-plan"),1)
+        self.assertNotIn("--approve-omniroute-recovery-plan",
+                         self.orig["ProgramArguments"])
+        self.assertEqual(arguments[0],self.orig["ProgramArguments"][0])
+
     def test_parallel_rollforward_is_an_explicit_separate_approval(self):
         normal = self.inspect()
         self.assertNotIn("--parallel-omniroute-workers",
