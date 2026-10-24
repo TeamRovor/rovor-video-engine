@@ -97,6 +97,7 @@ class ProbeTests(unittest.TestCase):
             "id": "walter-public-v1-moho-viseme-review",
             "status": "needs_review_no_auto_retry",
             "error_class": "ValueError",
+            "admission_code": "invalid_usage_shape",
             "elapsed_seconds": 3.4,
             "answer": "CONFIDENTIAL_OUTPUT_MUST_NOT_LEAK",
         }))
@@ -114,7 +115,8 @@ class ProbeTests(unittest.TestCase):
         self.assertEqual(got["nonready_reason_counts"], {
             "draft:needs_review_no_auto_retry": 1,
             "review:failed_needs_review": 1,
-            "exception:ValueError": 1})
+            "exception:ValueError": 1,
+            "admission:invalid_usage_shape": 1})
         self.assertEqual(got["nonready_elapsed_buckets"], {"1_to_15s":1})
         self.assertNotIn("CONFIDENTIAL_OUTPUT_MUST_NOT_LEAK", json.dumps(got))
         self.assertNotIn("/private/secret", json.dumps(got))
