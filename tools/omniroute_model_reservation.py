@@ -58,7 +58,7 @@ def _schema(conn):
     """)
 
 
-def _pool_slots(models, now):
+def _pool_slots(models, now, *, independent_pool_limits=False):
     """Verify shared-account quota evidence cannot conflict across models."""
     if not isinstance(models, (tuple, list)) or len(models) > 32:
         _reject("model_pool_catalog_invalid")
@@ -80,6 +80,20 @@ def _pool_slots(models, now):
                 or now - observed > 900):
             _reject("quota_pool_evidence_invalid_or_stale")
         identity = (remain, inflight, limit, observed)
+        if independent_pool_limits:
+            # The "9 connections" inventory does NOT attest to account-level
+            # free request ceilings. Missing or malformed host rate evidence
+            # must fail closed rather than silently remove global pacing.
+            pool_min = item.get("pool_min_interval_seconds")
+            pool_day = item.get("pool_max_claims_24h")
+            model_min = item.get("model_min_interval_seconds")
+            model_day = item.get("model_max_claims_24h")
+            if (type(pool_min) is not int or not 1 <= pool_min <= 86400
+                    or type(pool_day) is not int or not 1 <= pool_day <= 144
+                    or type(model_min) is not int or not 1 <= model_min <= 86400
+                    or type(model_day) is not int or not 1 <= model_day <= 144):
+                _reject("independent_pool_limits_unverified")
+            identity += (pool_min, pool_day)
         if pool_id in pools and pools[pool_id] != identity:
             _reject("quota_pool_conflicting_snapshots")
         pools[pool_id] = identity
@@ -88,7 +102,8 @@ def _pool_slots(models, now):
 
 def reserve(conn, job_id, task, models, *, now,
             stop_present=True, failure_circuit_open=True,
-            host_evidence_authenticated=False):
+            host_evidence_authenticated=False,
+            independent_pool_limits=False):
     """Atomic proposal and capacity hold inside EXISTING BEGIN IMMEDIATE.
 
     Never calls the gateway. Caller must claim the exact same queued job and
@@ -108,6 +123,8 @@ def reserve(conn, job_id, task, models, *, now,
         _reject("failure_circuit_open_or_unknown")
     if host_evidence_authenticated is not True:
         _reject("host_evidence_not_authenticated")
+    if type(independent_pool_limits) is not bool:
+        _reject("independent_pool_limits_invalid")
     if type(job_id) is not str or not re.fullmatch(
             r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", job_id):
         _reject("existing_job_identity_invalid")
@@ -121,7 +138,8 @@ def reserve(conn, job_id, task, models, *, now,
                     (job_id,)).fetchone():
         _reject("job_already_reserved_no_replay")
 
-    pool_evidence = _pool_slots(models, now)
+    pool_evidence = _pool_slots(
+        models, now, independent_pool_limits=independent_pool_limits)
     effective = []
     pool_candidates = {}
     for item in models:
@@ -131,7 +149,7 @@ def reserve(conn, job_id, task, models, *, now,
         if (not isinstance(ident, str)
                 or not re.fullmatch(r"[a-z0-9][a-z0-9._:/-]{2,159}", ident)):
             _reject("model_identity_invalid")
-        pool_remaining, pool_active, pool_max, pool_at = pool_evidence[pool_id]
+        pool_remaining, pool_active, pool_max, pool_at = pool_evidence[pool_id][:4]
         model_at = item.get("verified_at")
         if not _finite(model_at, 0, now + 30):
             _reject("model_snapshot_invalid")
@@ -158,6 +176,30 @@ def reserve(conn, job_id, task, models, *, now,
             slot["remaining_requests"] = 0
         slot["remaining_requests"] = min(
             slot["remaining_requests"], max(0, pool_remaining - used_pool))
+        if independent_pool_limits:
+            # Both provider/account and exact-model windows are enforced
+            # *inside* the existing BEGIN IMMEDIATE, including completed and
+            # failed attempts. A different eligible pool may replace a busy
+            # model immediately, while the same exhausted pool must wait.
+            pool_min, pool_day = pool_evidence[pool_id][4:]
+            model_min, model_day = (item["model_min_interval_seconds"],
+                                    item["model_max_claims_24h"])
+            cutoff = now - 86400
+            model_window = conn.execute(
+                "SELECT COUNT(*),MAX(reserved_at) FROM omni_model_reservations "
+                "WHERE model_id=? AND reserved_at>=?",
+                (ident, cutoff)).fetchone()
+            pool_window = conn.execute(
+                "SELECT COUNT(*),MAX(reserved_at) FROM omni_model_reservations "
+                "WHERE quota_pool_id=? AND reserved_at>=?",
+                (pool_id, cutoff)).fetchone()
+            if model_window[0] >= model_day or pool_window[0] >= pool_day:
+                slot["remaining_requests"] = 0
+            for last_at, minimum in ((model_window[1], model_min),
+                                     (pool_window[1], pool_min)):
+                if last_at is not None and last_at + minimum > now:
+                    slot["cooldown_until"] = max(
+                        slot["cooldown_until"] or 0, last_at + minimum)
         effective.append(slot)
         pool_candidates[ident] = pool_id
 

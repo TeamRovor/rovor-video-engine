@@ -24,7 +24,8 @@ FEEDS = ("existing_queue", "new_public_task_assignment_queued",
          "stop_requested")
 REASONS = ("stop_requested", "failure_circuit_requires_review",
            "existing_work_running", "no_queued_work", "rolling_quota",
-           "paced_wait", "eligible")
+           "paced_wait", "eligible",
+           "independent_pool_capacity_checked_per_claim")
 
 
 def valid_number(value):
@@ -171,7 +172,7 @@ def heartbeat(state, *, now):
             "last_tick_at": observed,
             "last_tick_executed_claim_or_job": (
                 item.get("executed") if type(item.get("executed")) is int
-                and item.get("executed") in (0, 1) else None),
+                and 0 <= item.get("executed") <= 9 else None),
             "last_tick_review_ready_draft": item.get("review_ready") is True,
             "last_tick_feed": item.get("feed")
                if item.get("feed") in FEEDS else "unknown",

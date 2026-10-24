@@ -157,6 +157,15 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
             not isinstance(omni_verified_fleet, dict) or
             omniroute_queue_job_id is None):
         raise ValueError('Verified fleet requires continuous exact-job claim')
+    if omni_verified_fleet is not None:
+        if ('independent_pool_limits' in omni_verified_fleet
+                and type(omni_verified_fleet['independent_pool_limits']) is not bool):
+            raise ValueError('Independent pool admission requires explicit boolean')
+        if (omni_verified_fleet.get('independent_pool_limits') is True
+                and omni_verified_fleet.get('host_evidence_authenticated') is not True):
+            raise ValueError('Independent pool admission requires authenticated host evidence')
+    verified_pool_mode = (omni_verified_fleet is not None
+                          and omni_verified_fleet.get('independent_pool_limits') is True)
     if type(omni_continuous) is not bool:
         raise ValueError('Continuous dispatch requires an explicit boolean')
     if omni_continuous and (not allow_omniroute_model_use or allow_model_use
@@ -233,7 +242,7 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         omni_enabled = (allow_omniroute_model_use and
                         omni_used < omni_max_24h and
                         (not omni_circuit_open or allow_recovery_canary))
-        if omni_continuous:
+        if omni_continuous and not verified_pool_mode:
             claims = [r[0] for r in conn.execute(
                 "SELECT e.timestamp FROM events e JOIN jobs j ON j.id=e.job_id "
                 "WHERE j.kind=? AND e.event='claimed' AND e.timestamp>=?",
@@ -284,7 +293,8 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
                 now=now, stop_present=os.path.lexists(
                     Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent / 'STOP'),
                 failure_circuit_open=omni_circuit_open,
-                host_evidence_authenticated=fleet.get('host_evidence_authenticated', False))
+                host_evidence_authenticated=fleet.get('host_evidence_authenticated', False),
+                independent_pool_limits=verified_pool_mode)
             if selection['chosen_model_id'] is None:
                 conn.execute('COMMIT')
                 return None
