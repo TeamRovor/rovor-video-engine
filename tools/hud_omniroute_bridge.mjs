@@ -76,23 +76,33 @@ export function createCollector(read,{clock=Date.now}={}){
   };
 }
 
-export function createBridge({collect,hud,adapter,pairCode=crypto.randomBytes(32).toString('hex'),port=0,clock=Date.now}){
+export function createBridge({collect,hud,adapter,pairCode=crypto.randomBytes(32).toString('hex'),port=0,clock=Date.now,viewerOrigin='https://teamrovor.github.io'}){
   const sessions=new Map(),allowedHosts=new Set();let pairingOpen=true;
   const reply=(res,status,body,type='application/json',extra={})=>{res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"frame-ancestors 'none'; base-uri 'none'",...extra});res.end(body);};
+  const externalTokens=new Map();
   const denied=res=>reply(res,401,JSON.stringify({error:'pairing_required'}));
   const server=http.createServer(async(req,res)=>{
     const host=req.headers.host;if(!allowedHosts.has(host))return reply(res,403,'{}');
-    if(req.headers['sec-fetch-site']==='cross-site')return reply(res,403,'{}');
+    const external=req.headers.origin===viewerOrigin;
+    if(req.headers.origin&&!external&&!['http://'+host,'https://'+host].includes(req.headers.origin))return reply(res,403,'{}');
+    if(external){res.setHeader('Access-Control-Allow-Origin',viewerOrigin);res.setHeader('Vary','Origin');}
+    if(req.headers['sec-fetch-site']==='cross-site'&&!external)return reply(res,403,'{}');
     const url=new URL(req.url,'http://'+host);
     const cookie=String(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('rovor_hud='))?.slice(10);
-    const authenticated=cookie&&sessions.has(cookie)&&sessions.get(cookie)>clock();
-    if(url.pathname==='/pair'&&req.method==='POST'){
+    const bearer=String(req.headers.authorization||'').replace(/^Bearer /,'');
+    const bearerOK=externalTokens.has(bearer)&&externalTokens.get(bearer)>clock();
+    const authenticated=!!(cookie&&sessions.has(cookie)&&sessions.get(cookie)>clock());
+    if(req.method==='OPTIONS'&&external&&['/pair/external','/api/hud/omniroute'].includes(url.pathname))return reply(res,204,'','application/json',{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Max-Age':'300'});
+    if(['/pair','/pair/external'].includes(url.pathname)&&req.method==='POST'){
+      const externalPair=url.pathname==='/pair/external';
+      if(externalPair&&!external)return reply(res,403,'{}');
       const origin=req.headers.origin;
-      if(!['http://'+host,'https://'+host].includes(origin))return reply(res,403,'{}');
+      if(!externalPair&&!['http://'+host,'https://'+host].includes(origin))return reply(res,403,'{}');
       if(Number(req.headers['content-length']||0)>256)return reply(res,413,'{}');
       let body='';try{for await(const chunk of req){body+=chunk;if(body.length>256){reply(res,413,'{}');return;}}}catch{return;}
       let supplied;try{supplied=JSON.parse(body).code;}catch{return denied(res);}
       if(!pairingOpen||!same(supplied,pairCode))return denied(res);
+      if(externalPair){pairingOpen=false;const token=crypto.randomBytes(32).toString('hex');externalTokens.set(token,clock()+86400000);return reply(res,200,JSON.stringify({token,scope:'read_hud_snapshot',expires_at:new Date(clock()+86400000).toISOString()}));}
       pairingOpen=false;const session=crypto.randomBytes(32).toString('hex');sessions.set(session,clock()+7*86400000);
       const secure=host.endsWith('.trycloudflare.com')?'; Secure':'';
       return reply(res,200,'{"paired":true}','application/json',{'Set-Cookie':`rovor_hud=${session}; HttpOnly; SameSite=Strict; Path=/; Max-Age=604800${secure}`});
@@ -102,8 +112,8 @@ export function createBridge({collect,hud,adapter,pairCode=crypto.randomBytes(32
       const login=`<!doctype html><meta name="viewport" content="width=device-width"><title>Pair ROVOR HUD</title><body style="background:#020916;color:#bde5ff;font:16px system-ui;padding:32px"><h1>ROVOR · Connect HUD</h1><p id="status">Pairing this device…</p><script>(async()=>{let code=new URLSearchParams(location.hash.slice(1)).get('pair');history.replaceState(null,'','/');if(!code){document.getElementById('status').textContent='Open the private pairing link printed on your Mac.';return}try{const r=await fetch('/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});document.getElementById('status').textContent=r.ok?'Connected. Opening HUD…':'Pairing failed or link already used.';if(r.ok)location.reload()}catch{document.getElementById('status').textContent='Connection failed.'}})();</script>`;
       return reply(res,200,login,'text/html');
     }
-    if(!authenticated)return denied(res);
-    if(url.pathname==='/')return reply(res,200,hud.replace('</body>','<script src="/hud-live.js"></script></body>'),'text/html');
+    if(!authenticated&&!(bearerOK&&url.pathname==='/api/hud/omniroute'))return denied(res);
+    if(url.pathname==='/')return reply(res,200,hud.replace('</body>','<script>window.ROVOR_START_OMNIROUTE?.();</script></body>'),'text/html');
     if(url.pathname==='/hud-live.js')return reply(res,200,adapter,'text/javascript');
     if(url.pathname==='/api/hud/omniroute'){
       const period=url.searchParams.get('period')||'24h';if(!WINDOWS[period])return reply(res,400,'{"error":"period_invalid"}');

@@ -4233,7 +4233,7 @@
       "id": "hud-omniroute-live-sync-20261024",
       "title": "Connect existing HUD to read-only live full OmniRoute inventory and measured request usage",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar live HUD bridge session",
       "branch": "fix/connect-published-hud",
       "scopes": [
@@ -4248,9 +4248,9 @@
         "dashboard/command-center/native-v8-9/connect-omniroute.js"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T11:13:19.901151+00:00",
-      "next_update": "After existing public URL browser-to-bridge integration checks",
-      "next_action": "Mac bridge actual startup now reports 1012 catalog IDs and 57 recorded requests. Owner requires existing published HUD URL, not private duplicate view. Add exact-origin CORS and snapshot-only bearer pairing plus public HUD Connect control. Existing Mac process must restart once on new source for CORS support.",
+      "updated_at": "2026-10-24T11:16:45.460603+00:00",
+      "next_update": "After restart of working Mac bridge and LINK pairing from existing published HUD",
+      "next_action": "Implemented public HUD LINK form, exact-Origin CORS, 24h read-snapshot-only bearer capability and same published URL live adapter. Eight bridge tests and 86 existing native HUD source checks pass locally. Hosted browser integration checks original viewer origin pairing to separate bridge. Actual current old Mac bridge must restart on new source, then paste fresh private link into LINK form without opening separate HUD. Real catalog 1012/57 request startup evidence exists; new public viewer pairing remains host-dependent.",
       "acceptance": "Dynamic full model list, measured window counts and request-share bars, stale/error states, secrets never reach browser, no arbitrary proxy; tested mocked gateway end to end, actual Mac connection separately verified.",
       "blocker": "This session has no Mac runtime or connected browser tool. Code can be reviewed/published here; actual localhost gateway authentication, catalog/usage counts and remote phone pairing require one startup on the Mac. No real Mac sync claimed.",
       "evidence": [

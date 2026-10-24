@@ -14,7 +14,7 @@ assert.equal((await fetch(base+'/pair',{method:'POST',headers:{Origin:'https://e
 assert.equal((await fetch(base+'/pair',{method:'POST',headers:{Origin:base},body:JSON.stringify({code:'é'.repeat(11)})})).status,401);
 const pair=await fetch(base+'/pair',{method:'POST',headers:{Origin:base},body:'{"code":"pair-secret"}'});assert.equal(pair.status,200);const cookie=pair.headers.get('set-cookie').split(';')[0];const headers={Cookie:cookie};
 assert.equal((await fetch(base+'/pair',{method:'POST',headers:{Origin:base},body:'{"code":"pair-secret"}'})).status,401);
-assert((await (await fetch(base+'/',{headers})).text()).includes('/hud-live.js'));
+assert((await (await fetch(base+'/',{headers})).text()).includes('ROVOR_START_OMNIROUTE'));
 const d=await (await fetch(base+'/api/hud/omniroute',{headers})).json();assert.equal(d.models.length,12);
 assert.equal((await fetch(base+'/api/providers',{headers})).status,404);
 assert.equal((await fetch(base+'/api/hud/omniroute',{method:'POST',headers})).status,405);
@@ -37,4 +37,22 @@ test('CLI starts through a linked directory and cannot silently exit before pref
       assert.match(child.stderr,/HUD bridge could not connect/);
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('published HUD origin pairs for snapshot-only bearer access; other origins and scopes denied',async t=>{
+ const origin='https://teamrovor.github.io';
+ const b=createBridge({collect:async()=>normalize(catalog,usage),hud:'<body>HUD</body>',adapter:'',pairCode:'read-only-pair'});
+ const port=await b.listen();t.after(()=>new Promise(r=>b.server.close(r)));const base='http://127.0.0.1:'+port;
+ const pre=await fetch(base+'/api/hud/omniroute',{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Headers':'authorization','Sec-Fetch-Site':'cross-site'}});
+ assert.equal(pre.status,204);assert.equal(pre.headers.get('access-control-allow-origin'),origin);
+ assert.equal((await fetch(base+'/pair/external',{method:'POST',headers:{Origin:'https://evil.example'},body:JSON.stringify({code:'read-only-pair'})})).status,403);
+ const paired=await fetch(base+'/pair/external',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({code:'read-only-pair'})});assert.equal(paired.status,200);
+ const data=await paired.json();assert.equal(data.scope,'read_hud_snapshot');assert.equal(paired.headers.get('set-cookie'),null);
+ const headers={Origin:origin,Authorization:'Bearer '+data.token};
+ const res=await fetch(base+'/api/hud/omniroute',{headers});assert.equal(res.status,200);assert.equal((await res.json()).inventory_count,12);
+ assert.equal((await fetch(base+'/hud-live.js',{headers})).status,401);
+ assert.equal((await fetch(base+'/api/hud/omniroute',{headers:{Origin:'https://evil.example',Authorization:'Bearer '+data.token}})).status,403);
+ assert.equal((await fetch(base+'/api/hud/omniroute',{method:'POST',headers})).status,405);
+ assert.equal((await fetch(base+'/pair/external',{method:'POST',headers:{Origin:origin},body:JSON.stringify({code:'read-only-pair'})})).status,401);
 });
