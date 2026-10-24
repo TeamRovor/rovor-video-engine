@@ -72,3 +72,28 @@ test('Homepage keeps native v8.9 as default, with opt-in Workforce deep link and
  assert.ok(fs.existsSync(path.join(root,'exact','index.html')));
  assert.equal((page.match(/data-detail="/g)||[]).length>=9,true);
 });
+
+test('Nested workforce modules provide BACK navigation without losing search or scroll state',()=>{
+ assert.match(page,/id="backDialog" hidden/);
+ assert.match(app,/function backDialog\(\)/);
+ assert.match(app,/state\.modalStack\.push\(\{title:/);
+ assert.match(app,/region\.replaceChildren\(\.\.\.prev\.nodes\)/);
+ assert.match(app,/region\.scrollTop=prev\.scrollTop/);
+ assert.match(app,/state\.returnFocus=document\.activeElement/);
+ assert.match(app,/if\(focus\?\.isConnected\)focus\.focus\(\)/);
+ assert.match(app,/\$\('backDialog'\)\.addEventListener\('click',backDialog\)/);
+});
+
+test('Workforce routing topology is an interactive planning view, never fake live telemetry',()=>{
+ assert.match(page,/data-detail="network"/);
+ assert.match(app,/function renderTopology\(n\)/);
+ assert.match(app,/openDetail\('employee',id\)/);
+ assert.match(app,/MODEL INVENTORY UNKNOWN/);
+ assert.match(app,/NO AUTHENTICATED ROUTING SNAPSHOT/);
+ assert.match(page,/Interactive planning map ONLY/);
+ assert.match(page,/NOT LIVE ROUTES/);
+ assert.match(page,/\.topology-roster/);
+ assert.match(page,/\.topology-providers/);
+ assert.match(page,/overflow-x:auto;overscroll-behavior-x:contain/);
+ assert.doesNotMatch(app,/method:\s*['"]POST|Authorization:\s*['"]Bearer/);
+});
