@@ -11,6 +11,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import threading
 
 LEGACY = ['exec', '--sandbox', 'read-only', '--ask-for-approval', 'untrusted', '--ephemeral', '-']
 
@@ -51,6 +52,8 @@ def main(argv=None):
     parser.add_argument('--run', action='store_true')
     parser.add_argument('--approve-model-use', action='store_true')
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--stop-file', type=Path)
+    parser.add_argument('--follow-up', action='store_true', help='Research the next automation test, rather than repeating basics')
     opts = parser.parse_args(args)
     check(binary)
     if not opts.run:
@@ -60,6 +63,8 @@ def main(argv=None):
         parser.error('--run requires --approve-model-use')
     if opts.output is None:
         parser.error('--output is required for receipts')
+    if opts.stop_file and os.path.lexists(opts.stop_file):
+        raise ValueError('STOP is present; no research dispatched')
     output = opts.output.expanduser().absolute()
     if output.exists():
         raise ValueError('Output already exists; refusing automatic replay. Inspect its receipt first.')
@@ -76,6 +81,12 @@ def main(argv=None):
             'Describe a disposable FCPXML validation/import test and what actual evidence is required before enabling an unattended editing worker.'
         ], 'source_files': []
     }
+    if opts.follow_up:
+        packet['questions'] = [
+            'ROVOR already verified FCPXML interchange research and a real Interpreter job. For installed Final Cut Pro 11.1.1, find official version-specific FCPXML schema/DTD evidence and specify a minimal synthetic exact-60fps landscape and portrait import fixture. Clearly mark missing compatibility evidence.',
+            'Using official Open Interpreter documentation and the source of DareDev256/fcp-mcp-server v0.27.2, identify the exact read-only MCP tool names and sandbox variables for inspecting only a disposable fixture; distinguish XML file access from live Final Cut control.',
+            'Give one ordered acceptance checklist with expected observable outputs for MCP initialization, synthetic XML read, outside-root refusal, disabling the server, and subsequent disposable Final Cut import; do no installation or app operation.'
+        ]
     (workspace / 'packet.json').write_text(json.dumps(packet, indent=2) + '\n')
     # GitHub contents downloads do not preserve executable mode. Make only
     # this private copy executable; leave the checked-out source unchanged.
@@ -85,9 +96,21 @@ def main(argv=None):
     # Preserve the existing tested timeout, STOP, output and replay controls.
     import interpreter_research_job as adapter
     packet, sha = adapter.read_packet(workspace, 'packet.json')
-    report = adapter.execute(workspace, state, packet, sha,
-                             adapter.make_prompt(workspace, packet),
-                             interpreter_binary=str(shim), timeout=300)
+    finished = threading.Event()
+    def watch_stop():
+        while not finished.wait(0.05):
+            if opts.stop_file and os.path.lexists(opts.stop_file):
+                (state / 'STOP').touch(mode=0o600, exist_ok=True)
+                return
+    watcher = threading.Thread(target=watch_stop, daemon=True)
+    watcher.start()
+    try:
+        report = adapter.execute(workspace, state, packet, sha,
+                                 adapter.make_prompt(workspace, packet),
+                                 interpreter_binary=str(shim), timeout=300)
+    finally:
+        finished.set()
+        watcher.join(timeout=1)
     print(json.dumps(report, indent=2))
     print('Answer and receipt:', state)
     return 0 if report['status'] == 'completed_unverified' else 2
