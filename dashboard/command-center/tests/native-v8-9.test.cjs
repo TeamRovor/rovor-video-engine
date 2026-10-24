@@ -28,7 +28,8 @@ test('all six cards are real scroll regions with an affordance and summary-count
  assert.match(html,/min-height:\s*44px/);
 });
 test('focus modules match cockpit style and preserve scroll positions',()=>{
- assert.match(html,/focus-shell/);
+ assert.match(html,/\.drawer\{isolation:isolate;/);
+ assert.match(html,/\.screen\{position:fixed;/);
  assert.match(html,/previewPositions/);
  assert.match(html,/aria-modal="true"/);
  assert.match(html,/Escape/);
