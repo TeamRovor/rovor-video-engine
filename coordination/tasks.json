@@ -4197,13 +4197,25 @@
         "subsystem:overnight-public-jane-media-acceptance"
       ],
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "TeamRovor / scheduled GitHub-only maintenance 2026-10-24 Jane acceptance",
       "branch": "docs/jane-public-media-acceptance-20261024",
       "depends_on": [],
       "updated_at": "2026-10-24T14:20:21Z",
-      "next_update": "After source-grounded public handoff draft is committed and PR evidence is recorded",
-      "next_action": "Produce a separate public-source-only acceptance checklist for source-asset identity, 1080p60 dual-format exports, caption/audio timing, 30s+ human review samples, and explicit Mac/FCP unknowns; no app/media operations."
+      "next_update": "When owner reviews PR #174 or a separately approved native FCP test produces evidence",
+      "next_action": "Owner: review draft PR #174. Before any native FCP media operation, independently verify a new isolated selected library on the Mac; keep legacy import disabled. This task delivered only a public-source acceptance contract, not media or runtime validation.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/174"
+      ],
+      "evidence": [
+        {
+          "commit": "b48645a01b676078d27a26075a404ba24db2a478",
+          "platform": "GitHub connector readback / source-only documentation review",
+          "check": "Read back exact committed markdown; nine required fields present; main...branch diff contains only one new document; source references pinned to inspected public PR revisions; queue/routing JSON parsed",
+          "result": "PASS: proposed two-format editorial acceptance checklist only. NOT run: project_loop.py check, hosted CI, Mac/FCP, media decode/export, private assets, or model API.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/174"
+        }
+      ]
     },
     {
       "id": "hud-real-model-evidence-20261024",
