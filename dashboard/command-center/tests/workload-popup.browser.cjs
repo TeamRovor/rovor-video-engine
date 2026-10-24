@@ -37,9 +37,9 @@ async function main(){
  for(const [width,height,name,mobile] of sizes){
   await cmd('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile});
   await cmd('Page.navigate',{url});
-  await poll(()=>evalJS('return !!window.ROVOR_NATIVE && document.querySelectorAll("#workloadPanel .wl-compact-row").length===9'));
+  await poll(()=>evalJS('return !!window.ROVOR_NATIVE && document.querySelectorAll("#workloadPanel .wl-compact-row").length===3'));
   const home=await evalJS('return {models:document.querySelectorAll("#workloadPanel .wl-compact-row").length,nav:document.querySelectorAll(".nav-item").length,panels:document.querySelectorAll(".rail .panel").length,hidden:document.querySelector("#screen").hidden,pageWidth:document.documentElement.scrollWidth,viewport:innerWidth}');
-  assert.equal(home.models,9,name+': 9 model rows');
+  assert.equal(home.models,3,name+': 3 observed model rows');
   assert.equal(home.nav,5,name+': dock preserved');
   assert.equal(home.panels,6,name+': HUD panels preserved');
   assert(home.hidden,name+': popup should start hidden');
@@ -50,17 +50,19 @@ async function main(){
    await screenshot(name+'-workload-card');
   }
   await evalJS('document.querySelector(".panel-expand[data-view=workload]").click();return true');
+  assert(await evalJS('return document.querySelector(".wl-outcomes").textContent.includes("31 JOB CLAIMS")'),name+': recorded outcome report missing');
+  await evalJS('document.querySelector("[data-wl-tab=matrix]").click();return true');
   const expanded=await evalJS('const d=document.querySelector(".drawer").getBoundingClientRect();return {open:!document.querySelector("#screen").hidden,title:document.querySelector("#drawerTitle").textContent,rows:document.querySelectorAll(".wl-matrix tbody tr").length,cols:document.querySelectorAll(".wl-matrix thead th").length,unverified:document.querySelector("#rovor-workload-popup").textContent.includes("NO VERIFIED LIVE MODEL TELEMETRY"),width:d.width,height:d.height}');
   assert(expanded.open,name+': popup must open');
   assert.equal(expanded.rows,8);
-  assert.equal(expanded.cols,10);
+  assert.equal(expanded.cols,4);
   assert(expanded.unverified,name+': unknown telemetry must be explicit');
   assert(expanded.width<=width+2&&expanded.height<=height+2,name+': modal overflow');
   if(name==='iphone-portrait'||name==='desktop')await screenshot(name+'-heatmap');
   await evalJS('document.querySelector("[data-wl-tab=models]").click();return true');
-  assert(await poll(()=>evalJS('return document.querySelectorAll(".wl-model-entry").length===9')),name+': model listing did not settle');
+  assert(await poll(()=>evalJS('return document.querySelectorAll(".wl-model-entry").length===3')),name+': model listing did not settle');
   await evalJS('window.ROVOR_NATIVE.open("workload");return true');
-  assert(await poll(()=>evalJS('return document.querySelectorAll(".wl-model-entry").length===9')),name+': popup view lost after refresh remount');
+  assert(await poll(()=>evalJS('return document.querySelectorAll(".wl-model-entry").length===3')),name+': popup view lost after refresh remount');
   await evalJS('document.querySelector("[data-wl-tab=routing]").click();return true');
   assert(await poll(()=>evalJS('return !!document.querySelector(".wl-route-chart")')),name+': routing chart not shown');
   await evalJS('document.querySelector("#screen .close").click();document.querySelector("[data-wl-compact-tab=employees]").click();return true');

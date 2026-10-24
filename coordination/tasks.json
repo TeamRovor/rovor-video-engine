@@ -65,7 +65,7 @@
         ".github/workflows/painting-video-qa.yml"
       ],
       "depends_on": [],
-      "next_action": "Review report on main reviews/painting-v11-v12-20261022.md and Issue #1 comment 6357019320. Source-video QA completed; 156s WIP is not accepted, ~90–92% sampled runtime unchanged V11 to V12. Fix P0 giant overlay 82s, weak physical hand/cloth 108s and tool/wall contact 120s in an independently owned renderer task, then produce one ≥30-second 1080p60 original-narration moving-art preview in landscape/portrait and seek normal-speed artistic approval. Do not overwrite active painting/rig module owners. Full 4:23 film unfinished.",
+      "next_action": "Review report on main reviews/painting-v11-v12-20261022.md and Issue #1 comment 6357019320. Source-video QA completed; 156s WIP is not accepted, ~90\u201392% sampled runtime unchanged V11 to V12. Fix P0 giant overlay 82s, weak physical hand/cloth 108s and tool/wall contact 120s in an independently owned renderer task, then produce one \u226530-second 1080p60 original-narration moving-art preview in landscape/portrait and seek normal-speed artistic approval. Do not overwrite active painting/rig module owners. Full 4:23 film unfinished.",
       "acceptance": "Record exact source commit, sample and timestamps, observed defect and the next bounded art/acting task. Engineering tests alone do not establish visual approval.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/1",
@@ -330,21 +330,21 @@
           "commit": "da7c412206ec20b74aa642a16cfb31fc6bd78df5",
           "platform": "ubuntu-latest",
           "check": "Three-run median synthetic reference renderer comparison against 4e1ef65135aaea8f09bf432e8768e380a8bf0d90",
-          "result": "PASS; cold wall 4.1766s→3.4398s (17.64% faster), process CPU 4.8422s→6.4113s, peak RSS 216.2→256.9 MiB; frame hashes identical.",
+          "result": "PASS; cold wall 4.1766s\u21923.4398s (17.64% faster), process CPU 4.8422s\u21926.4113s, peak RSS 216.2\u2192256.9 MiB; frame hashes identical.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39522990095"
         },
         {
           "commit": "da7c412206ec20b74aa642a16cfb31fc6bd78df5",
           "platform": "macos-latest",
           "check": "Three-run median synthetic reference renderer comparison against 4e1ef65135aaea8f09bf432e8768e380a8bf0d90",
-          "result": "PASS; cold wall 2.2608s→1.6359s (27.64% faster), process CPU 3.7258s→4.1049s, peak RSS 193.0→245.6 MiB; frame hashes identical.",
+          "result": "PASS; cold wall 2.2608s\u21921.6359s (27.64% faster), process CPU 3.7258s\u21924.1049s, peak RSS 193.0\u2192245.6 MiB; frame hashes identical.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39522990095"
         },
         {
           "commit": "da7c412206ec20b74aa642a16cfb31fc6bd78df5",
           "platform": "windows-latest",
           "check": "Three-run median synthetic reference renderer comparison against 4e1ef65135aaea8f09bf432e8768e380a8bf0d90",
-          "result": "PASS; cold wall 7.0930s→4.9840s (29.73% faster), process CPU 8.2346s→8.6724s, peak RSS 118.1→138.5 MiB; frame hashes identical.",
+          "result": "PASS; cold wall 7.0930s\u21924.9840s (29.73% faster), process CPU 8.2346s\u21928.6724s, peak RSS 118.1\u2192138.5 MiB; frame hashes identical.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39522990095"
         }
       ]
@@ -415,7 +415,7 @@
         "commands": [
           "python -m unittest -v test_continuous_diphthong (isolated source-equivalent copies of english_articulation, acoustic_weights, and new glide/test source)"
         ],
-        "result": "10/10 synthetic tests PASS locally, including duration sweep 12ms–600ms and unchanged bilabial contact",
+        "result": "10/10 synthetic tests PASS locally, including duration sweep 12ms\u2013600ms and unchanged bilabial contact",
         "knownDifference": "Isolated environment used a reduced support-module shim rather than the entire GitHub checkout; not GitHub CI or media verification.",
         "head_sha": "bf030a47b4e1fc3c422e2d175ae180c32582fe35"
       }
@@ -2478,13 +2478,13 @@
       ],
       "updated_at": "2026-10-23T04:23:57.005Z",
       "next_update": "At next owner-approved character rig and narration-aware story edit, not when more source unit tests pass",
-      "next_action": "The 30s original-voice dual 1080p60 audition replacing [81,87) was rendered, manually inspected, and rejected for artistic quality. Existing original V12 parents unchanged. GitHub PR #60 merged QA report at fd7a44344ead9826590ae60c77c9b58012e92678. Do not reuse the unapproved V18 insert or promote this WIP as final. Next independently owned artist/animation step: revise painter anatomy/prop grip, verify spoken words for 77–89, and produce one properly staged >=30s dual-view original-voice scene that fixes the actual website/gallery story; require actual normal-speed artistic approval.",
+      "next_action": "The 30s original-voice dual 1080p60 audition replacing [81,87) was rendered, manually inspected, and rejected for artistic quality. Existing original V12 parents unchanged. GitHub PR #60 merged QA report at fd7a44344ead9826590ae60c77c9b58012e92678. Do not reuse the unapproved V18 insert or promote this WIP as final. Next independently owned artist/animation step: revise painter anatomy/prop grip, verify spoken words for 77\u201389, and produce one properly staged >=30s dual-view original-voice scene that fixes the actual website/gallery story; require actual normal-speed artistic approval.",
       "acceptance": "One 30s each landscape/portrait source-faithful contact audition with original narration and no placeholder slate, exact 60fps validated and source frame range proof; full existing video unchanged; release quality remains not approved. Source stage is technically complete; artistic/release acceptance is EXPLICITLY REJECTED until redesigned.",
       "evidence": [
         {
           "commit": "fd7a44344ead9826590ae60c77c9b58012e92678",
           "platform": "Private artifact Linux/Python + FFmpeg source-media review; GitHub public-safe report only",
-          "check": "V12 source provenance and original MP3 SHA, 30.000s original narrated audition in both orientations at 1800x60fps frames, PTS step <0.7µs error, matched 16k PCM source vs AAC correlation 0.999964; visual frames checked",
+          "check": "V12 source provenance and original MP3 SHA, 30.000s original narrated audition in both orientations at 1800x60fps frames, PTS step <0.7\u00b5s error, matched 16k PCM source vs AAC correlation 0.999964; visual frames checked",
           "result": "TECHNICAL PASS; ARTISTIC FAIL; not a completed 4:23 film, not deployed to Mac; no media uploaded to public repo",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/blob/main/reviews/painting-82sec-contact-audition.md"
         }
@@ -3152,7 +3152,7 @@
         {
           "commit": "cc8174511954b288fd5875c68d7d675c100f6121",
           "platform": "GitHub hosted Ubuntu, Python 3.9/3.11; actual Mac receipt review at previous commit",
-          "check": "Unicode nonbreaking/en dash placeholder date parse and existing receipt QA tests; Mac log identified previously unrecognized Unicode `2024‑XX‑XX` report header",
+          "check": "Unicode nonbreaking/en dash placeholder date parse and existing receipt QA tests; Mac log identified previously unrecognized Unicode `2024\u2011XX\u2011XX` report header",
           "result": "PASS hosted Python 3.9 and 3.11; updated Unicode fix NOT YET Mac retested. Earlier Mac review correctly rejected failed job and near-limit drafts.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40039087477"
         }
@@ -4146,6 +4146,33 @@
       "updated_at": "2026-10-24T10:22:18.239Z",
       "next_update": "After first original Mac research draft is genuinely ready for private human review",
       "next_action": "Existing paced Mac public-task feeder may enqueue plan/checklist/tests/handoff drafts once per unique source-grounded task identity; do not label these as completed or eight independent model workers. Review private outputs and manually convert accepted findings to code/business deliverables; no paid/model-route/Mac-state actions."
+    },
+    {
+      "id": "hud-real-model-evidence-20261024",
+      "title": "Replace workload slot labels with observed model names and recorded Mac job outcomes",
+      "priority": 1,
+      "status": "done",
+      "owner": "Codex / Amar HUD evidence session 2026-10-24",
+      "branch": "fix/hud-real-model-names",
+      "scopes": [
+        "dashboard/command-center/native-v8-9",
+        "dashboard/command-center/tests/workload-popup.test.cjs",
+        "dashboard/command-center/tests/workload-popup.browser.cjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T10:31:20.891351+00:00",
+      "next_update": "After actual authenticated Mac transport and per-model receipt evidence become available",
+      "next_action": "Names/outcome correction implemented, 86 source checks pass. Live connection remains incomplete: this session exposes no Mac runtime/browser tool or configured authenticated collector. Need an actual Mac-initiated read-only telemetry transport and per-model attribution before live meters. No paid requests or worker changes performed.",
+      "acceptance": "No M01-M09 labels, actual three reported model IDs with provenance/time, 31 claim outcome bars separate from model usage, approved HUD geometry preserved; no fabricated live state.",
+      "evidence": [
+        {
+          "commit": "fix/hud-real-model-names",
+          "platform": "Linux / Node24",
+          "check": "node --test dashboard/command-center/tests/*.test.cjs dashboard/command-center/tests/*.test.js",
+          "result": "86 pass; new identities, historical counts, no unknown usage meters, preserved native UI. Browser responsive checks delegated to existing hosted CI; no new browser installed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382848776"
+        }
+      ]
     }
   ]
 }
