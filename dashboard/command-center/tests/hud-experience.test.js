@@ -71,8 +71,8 @@ test('keyboard, reduced motion, and renderer lifecycle are wired',()=>{
   assert.match(engine,/prefers-reduced-motion: reduce/);
   assert.match(engine,/webglcontextlost|createRenderer/);
   assert.match(engine,/DEFAULT_REVOLUTION_SECONDS/);
-  assert.match(engine,/earth-blue-marble\\.png/);
-  assert.match(engine,/earth-night\\.png/);
+  assert.ok(engine.includes('earth-blue-marble.png'));
+  assert.ok(engine.includes('earth-night.png'));
   assert.match(engine,/uNightMap/);
   assert.match(engine,/uHasNight/);
   assert.match(sw,/IMAGE_ASSETS/);
