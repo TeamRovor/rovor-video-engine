@@ -751,6 +751,13 @@
       ],
       "objective": "reduce-repeat-work"
     },
+    "walter-specialist-coverage-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
     "hud-omniroute-live-sync-20261024": {
       "lane": "efficiency",
       "requires": [
