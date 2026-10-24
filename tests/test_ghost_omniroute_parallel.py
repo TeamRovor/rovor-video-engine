@@ -113,6 +113,54 @@ class ParallelClaims(unittest.TestCase):
             worker.claim(self.db,"invalid",allow_omniroute_model_use=True,
                          omni_max_24h=21)
 
+    def test_three_consecutive_inference_failures_open_atomic_claim_circuit(self):
+        import time
+        now = time.time()
+        for i in range(4):
+            worker.enqueue(self.db, worker.OMNI_KIND,
+                           {"packet": "runner-blocker"}, "circuit-" + str(i),
+                           now=now + i * 0.01)
+        for i in range(3):
+            claimed = worker.claim(self.db, "failed-provider",
+                                   now=now + 0.1 + i * 0.01,
+                                   allow_omniroute_model_use=True,
+                                   omni_max_24h=14)
+            self.assertIsNotNone(claimed)
+            self.db.execute("UPDATE jobs SET status='needs_review',result=? WHERE id=?",
+                            (json.dumps({"draft_status":"needs_review_no_auto_retry",
+                                         "review_status":"failed_needs_review"}),
+                             claimed["id"]))
+        refused = worker.claim(self.db, "fourth",
+                               now=now + 1,
+                               allow_omniroute_model_use=True, omni_max_24h=14)
+        self.assertIsNone(refused)
+        self.assertEqual(self.db.execute(
+            "SELECT COUNT(*) FROM jobs WHERE status='queued'").fetchone()[0],1)
+        self.assertEqual(self.db.execute(
+            "SELECT COUNT(*) FROM events WHERE event='claimed'").fetchone()[0],3)
+
+    def test_review_ready_receipt_breaks_three_failures_streak(self):
+        import time
+        now = time.time()
+        for i in range(4):
+            worker.enqueue(self.db, worker.OMNI_KIND,
+                           {"packet":"runner-blocker"}, "reset-" + str(i),
+                           now=now + i * 0.01)
+        for i in range(3):
+            claimed=worker.claim(self.db,"proof",now=now+0.1+i*0.01,
+                                 allow_omniroute_model_use=True,omni_max_24h=14)
+            self.assertIsNotNone(claimed)
+            self.db.execute("UPDATE jobs SET status='needs_review',result=? WHERE id=?",
+                            (json.dumps({
+                                "draft_status": ("draft_completed_needs_review" if i==1
+                                                 else "needs_review_no_auto_retry"),
+                                "review_status": ("draft_ready_for_human_review" if i==1
+                                                  else "failed_needs_review")}),
+                             claimed["id"]))
+        self.assertIsNotNone(worker.claim(
+            self.db,"fourth",now=now+1,allow_omniroute_model_use=True,
+            omni_max_24h=14))
+
     def test_existing_stop_refuses_all_new_parallel_work(self):
         (self.state / "STOP").write_text("stop")
         report = loop.poll(self.db, ROOT, self.state, worker_id="stop",
