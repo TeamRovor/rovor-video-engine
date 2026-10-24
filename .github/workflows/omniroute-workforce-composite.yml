@@ -1,0 +1,77 @@
+name: OmniRoute workforce composite — offline integration
+
+on:
+  pull_request:
+    paths:
+      - 'tools/ghost_worker.py'
+      - 'tools/ghost_worker_loop.py'
+      - 'tools/ghost_omniroute_job.py'
+      - 'tools/ghost_omniroute_feed.py'
+      - 'tests/test_ghost_omniroute_parallel.py'
+      - 'tools/omniroute_employee_status.py'
+      - 'tests/test_omniroute_employee_status.py'
+      - 'tools/omniroute_provider_audit.py'
+      - 'tests/test_omniroute_provider_audit.py'
+      - 'tools/omniroute_readiness_audit.py'
+      - 'tests/test_omniroute_readiness_audit.py'
+      - 'tools/omniroute_single_free_probe.py'
+      - 'tools/omniroute_recovery_canary.py'
+      - 'tests/test_omniroute_recovery_canary.py'
+      - 'tests/test_omniroute_single_free_probe.py'
+      - 'tools/mac_worker_rollforward.py'
+      - 'tests/test_mac_worker_rollforward.py'
+      - 'tests/test_ghost_omniroute_feed.py'
+      - 'tools/omniroute_workpack_runner.py'
+      - 'tools/omniroute_reasoning_admission.py'
+      - 'tests/test_omniroute_reasoning_admission.py'
+      - 'tools/omniroute_draft_review.py'
+      - 'coordination/omniroute-workpacks/**'
+      - 'tests/test_omniroute_workforce_composite.py'
+      - '.github/workflows/omniroute-workforce-composite.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 7
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Offline real-module composite tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_workforce_composite.py' -v
+      - name: Offline operator-only Mac rollforward checks
+        run: python -m unittest discover -s tests -p 'test_mac_worker_rollforward.py' -v
+      - name: Offline one-shot new canary no-replay circuit tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_recovery_canary.py' -v
+      - name: Offline single bounded free-route model probe tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_single_free_probe.py' -v
+      - name: Offline no-inference OmniRoute route and provider readiness tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_readiness_audit.py' -v
+      - name: Offline credential-redacted OmniRoute provider inventory tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_provider_audit.py' -v
+      - name: Offline private OmniRoute crew evidence tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_employee_status.py' -v
+      - name: Offline separate specialist claims and quota tests
+        run: python -m unittest discover -s tests -p 'test_ghost_omniroute_parallel.py' -v
+      - name: Offline specialist autonomous-feed tests
+        run: python -m unittest discover -s tests -p 'test_ghost_omniroute_feed.py' -v
+      - name: Offline focused SQLite OmniRoute queue tests
+        run: python -m unittest discover -s tests -p 'test_ghost_omniroute_job.py' -v
+      - name: Offline strict reasoning-response admission tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_reasoning_admission.py' -v
+      - name: Offline OmniRoute workpack safety tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_workpack_runner.py' -v
+      - name: Offline private receipt review tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_draft_review.py' -v

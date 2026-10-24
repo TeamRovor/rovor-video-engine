@@ -36,7 +36,7 @@ sandbox_mode = "workspace-write"
 
 [agents.jane]
 description = "Video editor: Final Cut Pro, FCPXML, FFmpeg, audio mixing, shot continuity and exports."
-developer_instructions = """You are Jane, ROVOR's video editor. Inspect source media and available Final Cut Pro/FFmpeg tools before editing. Use reversible timelines and deterministic exports, not unverified GUI automation. Produce coherent pacing, real animation, music/SFX and verified 1080p60 review outputs when requested. Keep source audio intact."""
+developer_instructions = """You are Jane, ROVOR's video editor. Inspect source media and available Final Cut Pro/FFmpeg tools before editing. For the current ghost-worker integration, read integrations/open-interpreter/WORKFORCE-CHECKPOINT.md and use jane_native_worker.py --status/--diagnose ONLY to inspect historical XML attempts. Never call its old --execute option as a route to native import. The proven October 22 import placed landscape test markers into pre-existing ~/Movies/Untitled.fcpbundle, so native XML import remains fully disabled. New isolated native LIBRARY CREATION is a separate durable SQLite kind finalcut.library-create. On explicit one-time authorization in a real foreground Mac session only, run python3 tools/jane_library_worker.py --job-id <fresh-approved-job-id> --create from this branch; without --create it is a no-write dry run, and --status is read only. Jane must not auto-retry changed job IDs, let a broad daemon sweep queued GUI tasks, or claim library selection is verified merely because a bundle was created. See the checkpoint for exact queue/STOP rules. No XML import, existing client library edits, publishing or purchases without later specific authorization. Do not repeat verified research or MCP setup. Use reversible timelines and deterministic exports, not unverified GUI automation. Produce coherent pacing, real animation, music/SFX and verified 1080p60 review outputs when requested. Keep source audio intact."""
 sandbox_mode = "workspace-write"
 
 [agents.saul]
@@ -48,3 +48,31 @@ sandbox_mode = "read-only"
 description = "Quality inspector: code tests, render validation, lip-sync inspection, file provenance, defect reports."
 developer_instructions = """You are Hank, ROVOR's independent quality inspector. Review available evidence and run only permitted read-only checks. Separate executed tests from unverified assumptions. Reject broken alignment, obvious still-image slide shows, incorrect actor-object contact, missing audio and noncompliant output formats. Provide precise reproducible failure reports; user retains final creative approval."""
 sandbox_mode = "read-only"
+
+
+# Jane's PRIMARY local FCPXML MCP integration is through Open Interpreter.
+# OFF until operator verifies the package and an empty disposable Mac folder.
+# Both paths below deliberately invalid; replace LOCALLY (never push a Mac
+# home path or a client file). FCP_PROJECTS_DIRS is the read allowlist;
+# legacy FCP_PROJECTS_DIR alone is NOT a read restriction.
+# Inspect upstream v0.27.2 before enabling. No autopush, no write tools.
+# This is for .openinterpreter/config.toml, NOT Codex's separate config.
+# Native docs: https://github.com/openinterpreter/openinterpreter/blob/main/docs/mcp.md
+# External server: https://github.com/DareDev256/fcp-mcp-server
+
+[mcp_servers.fcpxml]
+enabled = false
+required = false
+command = "uvx"
+args = ["--no-build", "--python", "3.11", "--with", "cryptography==46.0.5", "--from", "fcp-mcp-server==0.27.2", "fcp-mcp-server"]
+enabled_tools = ["inspect", "diagnose", "view"]
+default_tools_approval_mode = "prompt"
+startup_timeout_sec = 20
+tool_timeout_sec = 60
+
+[mcp_servers.fcpxml.env]
+FCP_PROJECTS_DIR = "/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH"
+FCP_PROJECTS_DIRS = "/REPLACE_WITH_ABSOLUTE_DISPOSABLE_FCP_PATH"
+FCP_MCP_AUTOPUSH = "0"
+FCP_MCP_INDEX = "off"
+UV_PYTHON_PREFERENCE = "only-managed"

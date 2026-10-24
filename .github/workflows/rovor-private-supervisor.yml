@@ -1,0 +1,31 @@
+name: Private Mac supervisor offline safety checks
+on:
+  pull_request:
+    paths:
+      - 'tools/rovor_private_supervisor.py'
+      - 'tools/ghost_private_control.py'
+      - 'tools/ghost_private_control_loop.py'
+      - 'tools/ghost_worker.py'
+      - 'tests/test_rovor_private_supervisor.py'
+      - 'integrations/open-interpreter/ROVOR-LAUNCHAGENT-SUPERVISOR.md'
+      - '.github/workflows/rovor-private-supervisor.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify opt-in LaunchAgent does no actual Mac or private GitHub actions
+        run: python -m unittest discover -s tests -p test_rovor_private_supervisor.py -v

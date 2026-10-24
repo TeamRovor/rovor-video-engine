@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "slug": "overnight-acceptance",
+  "id": "omni-overnight-acceptance-checklist-v1",
+  "title": "Draft the first-night operating checklist for the existing ROVOR worker",
+  "role": "software-architecture",
+  "inputs": [
+    "integrations/open-interpreter/GHOST-OMNIROUTE-QUEUE.md",
+    "tools/omniroute_mac_once.py"
+  ],
+  "task": "Create a practical first-night operator checklist from the supplied public worker documentation and foreground launcher. This is a NEW operating checklist task, not a repeat of the prior supervisor architecture or launcher code-review tasks. Return at most eight checklist rows: condition, evidence the operator must inspect, and when to STOP. Include approved useful task, pinned runtime, free-only route, request cap, private output review, no replay, asleep/locked Mac limits, and stop/restart verification. Clearly mark unattended scheduling NOT VERIFIED and name any missing evidence. Do not assert facts about the user's live machine or provider billing. No code review, new architecture, executable commands, new scheduler, spending, messages or account changes. Keep the entire answer under 350 words and do not invent dates or completed tests.",
+  "deliverable": "A concise reusable first-night operations checklist requiring human review before scheduling.",
+  "acceptance": [
+    "At most eight actionable checklist rows and under 350 words",
+    "Separates documented controls from actual host evidence still required",
+    "Preserves STOP, no-replay, free-only and explicit approval boundaries",
+    "Does not claim unattended operation or upstream zero charges"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v2-mike-worker-guard",
+  "id": "walter-public-v2-mike-worker-guard",
+  "title": "ROVOR Mike v2 bounded recovery research",
+  "role": "evidence-triage",
+  "inputs": [
+    "coordination/omniroute-workpacks/walter-v1-omniroute-failure-boundaries.json"
+  ],
+  "task": "ROVOR Mike specialist. Review ONLY the attached public workpack specification. Define STOP, failed-claim streak, rollback and log-evidence acceptance criteria. Produce 120-220 words with exact file attribution and an explicit unknowns section. Do not claim to have run a Mac, made a model request, operated software, posted or contacted anyone. Do not enqueue additional jobs.",
+  "deliverable": "A bounded checklist for monitoring fail-closed worker recovery.",
+  "acceptance": [
+    "Cite the exact provided public workpack JSON path",
+    "Specify one measurable next read-only check and clearly label any assumptions",
+    "Do not assert host execution, external publishing or client contact"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

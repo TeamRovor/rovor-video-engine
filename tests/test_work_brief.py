@@ -75,6 +75,18 @@ class RoutingTests(unittest.TestCase):
         self.brief(rows)
         self.assertEqual(rows, before)
 
+    def test_registered_specialist_runtimes_do_not_grant_host_access(self):
+        for capability in ('blender-runtime', 'final-cut-runtime'):
+            with self.subTest(capability=capability):
+                rules={'a': {'lane': 'integration',
+                             'requires': ['local-exec', capability]}}
+                missing=self.brief([task('a')],rules=rules,lane='integration')
+                self.assertIsNone(missing['recommended'])
+                authorized=self.brief([task('a')],
+                    caps=['github-read','github-write','local-exec',capability],
+                    rules=rules,lane='integration')
+                self.assertEqual(authorized['recommended']['id'],'a')
+
     def test_invalid_rule_rejected(self):
         with self.assertRaises(ValueError):
             self.brief([task()], rules={'a': {'lane': 'efficiency', 'requires': ['magic']}})

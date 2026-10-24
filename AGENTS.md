@@ -4,6 +4,12 @@ When the user says **work**, read [ROVOR-AI-PLAN.md](ROVOR-AI-PLAN.md) and follo
 
 # Repository collaboration instructions
 
+For ongoing ghost-employee integration, read the latest PR #41 checkpoint at
+`integrations/open-interpreter/WORKFORCE-CHECKPOINT.md` when using that candidate
+checkout. It records the current Mac native-import failure and the consolidated
+check/status/diagnosis commands. Read it alongside fresh main coordination and
+current PR evidence; never substitute old setup instructions for a newer host receipt.
+
 **Parallel development boundary:** Read [ROVOR-MP3-FIRST-ENGINE.md](ROVOR-MP3-FIRST-ENGINE.md). Evan's GitHub-connected session should use the efficiency lane in WORK.md and select a currently eligible task from the live queue; never assume an old task suggestion is still available; do not assume he has actually claimed it or that his laptop is remotely controllable. Amar's animation-intelligence track owns phoneme/viseme accuracy and acting QA through the existing art workstreams and `tools/speech_plan_gate.py`; do not duplicate its files. A green QA report remains **not** a finished/approved MP3-to-cartoon film.
 
 **GitHub-only Evan/Windows handoff:** When the only confirmed access is Evan's ChatGPT GitHub connector, read [REMOTE-EVAN-GITHUB.md](REMOTE-EVAN-GITHUB.md) before choosing work. The [remote handoff workflow](https://github.com/TeamRovor/rovor-video-engine/actions/workflows/remote-handoff.yml) publishes a read-only task/owner/blocker summary from the shared queue. It does not access Evan's laptop. Never assume terminal, installer, narration, or runtime access merely because the GitHub connector works.

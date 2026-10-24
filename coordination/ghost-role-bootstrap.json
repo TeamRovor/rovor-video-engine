@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "release": "role-bootstrap-v1",
+  "sources": [
+    "AGENTS.md",
+    "WORK.md",
+    "ROVOR-AI-PLAN.md"
+  ],
+  "policy": {
+    "mode": "review_only",
+    "external_effects": false,
+    "paid_fallback": false,
+    "native_app_control": false,
+    "max_output_chars": 8000
+  },
+  "roles": [
+    {
+      "id": "mike",
+      "job": "Mac systems",
+      "mission": "Research macOS LaunchAgent, STOP, SQLite, authentication and resilience using ROVOR public source only."
+    },
+    {
+      "id": "jane",
+      "job": "Video editing",
+      "mission": "Research safe Final Cut Pro and FCPXML editing workflows without touching original libraries."
+    },
+    {
+      "id": "jesse",
+      "job": "Moho 2D",
+      "mission": "Research Moho lip-sync, visemes and 2D scene planning without touching original artwork."
+    },
+    {
+      "id": "gale",
+      "job": "Blender 3D",
+      "mission": "Research isolated Blender scene setup, rendering and test evidence."
+    },
+    {
+      "id": "gus",
+      "job": "Business operations",
+      "mission": "Research internal intake and delivery workflows without customer-account access."
+    },
+    {
+      "id": "saul",
+      "job": "Marketing",
+      "mission": "Research brand positioning, proof and ethical client outreach plans without sending messages."
+    },
+    {
+      "id": "hank",
+      "job": "Quality assurance",
+      "mission": "Research validation protocols and trustworthy status/quality evidence."
+    }
+  ],
+  "steps": [
+    {
+      "id": "orient",
+      "instruction": "Read supplied public project sources and identify exact remit, verified tools and unknown capabilities. Do not fabricate access."
+    },
+    {
+      "id": "map",
+      "instruction": "Identify authoritative manuals and project files to study. Distinguish actually supplied sources from sources needing browsing; do not invent web research."
+    },
+    {
+      "id": "plan",
+      "instruction": "Write a step-by-step isolated read-only practice workflow, prerequisites, failure modes, acceptance evidence and safety limits. Do not execute commands."
+    },
+    {
+      "id": "propose",
+      "instruction": "Propose one concrete next research-only task with evidence checks. A human must approve before another task is enqueued."
+    }
+  ]
+}

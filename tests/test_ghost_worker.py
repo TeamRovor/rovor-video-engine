@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "ghost_worker.py"
 spec = importlib.util.spec_from_file_location("ghost_worker", SCRIPT)
@@ -31,6 +32,42 @@ class GhostWorkerTests(unittest.TestCase):
         redirect.symlink_to(self.state, target_is_directory=True)
         with self.assertRaisesRegex(ValueError, "symlink"):
             ghost.connect(redirect)
+
+    def test_redirected_database_and_sidecars_refused_before_sqlite(self):
+        for suffix in ('', '-wal', '-shm'):
+            with self.subTest(suffix=suffix):
+                state = Path(self.tmp.name) / ('redirected' + suffix)
+                state.mkdir()
+                external = Path(self.tmp.name) / ('outside' + suffix)
+                external.write_bytes(b'preserve external file')
+                (state / ('jobs.sqlite3' + suffix)).symlink_to(external)
+                with mock.patch.object(ghost.sqlite3, 'connect',
+                                       side_effect=AssertionError('SQLite must not open')):
+                    with self.assertRaisesRegex(ValueError, 'symlink'):
+                        ghost.connect(state)
+                self.assertEqual(external.read_bytes(), b'preserve external file')
+
+    def test_broken_database_link_refused_without_creating_target(self):
+        state = Path(self.tmp.name) / 'broken-database'
+        state.mkdir()
+        external = Path(self.tmp.name) / 'missing-target'
+        (state / 'jobs.sqlite3').symlink_to(external)
+        with mock.patch.object(ghost.sqlite3, 'connect',
+                               side_effect=AssertionError('SQLite must not open')):
+            with self.assertRaisesRegex(ValueError, 'symlink'):
+                ghost.connect(state)
+        self.assertFalse(external.exists())
+
+    def test_nonregular_database_and_sidecars_refused_before_sqlite(self):
+        for suffix in ('', '-wal', '-shm'):
+            with self.subTest(suffix=suffix):
+                state = Path(self.tmp.name) / ('directory-db' + suffix)
+                state.mkdir()
+                (state / ('jobs.sqlite3' + suffix)).mkdir()
+                with mock.patch.object(ghost.sqlite3, 'connect',
+                                       side_effect=AssertionError('SQLite must not open')):
+                    with self.assertRaisesRegex(ValueError, 'regular file'):
+                        ghost.connect(state)
 
     def test_ping_job_succeeds(self):
         job = ghost.enqueue(self.conn, "system.ping", {}, "ping-1", now=100)

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v2-gus-business-ops",
+  "id": "walter-public-v2-gus-business-ops",
+  "title": "ROVOR Gus v2 bounded recovery research",
+  "role": "evidence-triage",
+  "inputs": [
+    "coordination/omniroute-workpacks/walter-v1-business-delivery-checkpoints.json"
+  ],
+  "task": "ROVOR Gus specialist. Review ONLY the attached public workpack specification. Include privacy, owner approval and handoff acceptance boundaries. Produce 120-220 words with exact file attribution and an explicit unknowns section. Do not claim to have run a Mac, made a model request, operated software, posted or contacted anyone. Do not enqueue additional jobs.",
+  "deliverable": "A client-delivery operational checklist that does not contact customers.",
+  "acceptance": [
+    "Cite the exact provided public workpack JSON path",
+    "Specify one measurable next read-only check and clearly label any assumptions",
+    "Do not assert host execution, external publishing or client contact"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}
