@@ -215,7 +215,7 @@ def inspect(state, *, run=subprocess.run):
                                 if (isinstance(saved, dict)
                                         and saved.get("id") == (
                                             packet.replace("walter-v1-", "walter-public-v1-", 1)
-                                            .replace("walter-v2-", "walter-public-v2-", 1)))
+                                            .replace("walter-v2-", "walter-public-v2-", 1))
                                         and saved.get("status") == status):
                                     error_class = saved.get("error_class")
                                     # The receipt writer stores only
