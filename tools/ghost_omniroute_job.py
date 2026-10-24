@@ -46,6 +46,19 @@ WALTER_ROLE_ROUTES = {
     "walter-v1-free-route-usage-audit": ROUTES["runner-blocker"],
 }
 ROUTES.update(WALTER_ROLE_ROUTES)
+# Fresh recovery assignments, not replays of the v1 failed job IDs.
+# Every specialist uses the existing pinned free-only fast route.
+RECOVERY_ROUTES = {slug: ROUTES["runner-blocker"] for slug in (
+    "walter-v2-recovery-proof",
+    "walter-v2-mike-worker-guard",
+    "walter-v2-jane-editor-handoff",
+    "walter-v2-jesse-animation-qa",
+    "walter-v2-gale-render-qa",
+    "walter-v2-gus-business-ops",
+    "walter-v2-saul-review-ops",
+    "walter-v2-hank-evidence-audit",
+)}
+ROUTES.update(RECOVERY_ROUTES)
 
 MAX_24H = 5
 ROUTES['overnight-acceptance'] = ROUTES['provider-efficiency']
