@@ -143,6 +143,28 @@ class WalterResearchBacklogTests(unittest.TestCase):
         finally:
             temp.cleanup()
 
+    def test_integer_quota_policy_cannot_be_boolean(self):
+        temp, base, doc, manifest = self.staged()
+        try:
+            doc["policy"]["max_jobs_per_tick"] = True
+            manifest.write_text(json.dumps(doc), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                walter.validated(base)
+        finally:
+            temp.cleanup()
+
+    def test_symlinked_public_source_parent_rejected(self):
+        temp, base, doc, manifest = self.staged()
+        try:
+            source = base / "architecture"
+            moved = base / "architecture-original"
+            source.rename(moved)
+            source.symlink_to(moved, target_is_directory=True)
+            with self.assertRaises(ValueError):
+                walter.validated(base)
+        finally:
+            temp.cleanup()
+
     def test_private_source_not_allowed(self):
         temp, base, doc, manifest = self.staged()
         try:
