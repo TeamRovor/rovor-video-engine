@@ -602,6 +602,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "hybrid-cloud-provider-workforce-policy-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

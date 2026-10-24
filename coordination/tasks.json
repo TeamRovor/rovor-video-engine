@@ -3440,6 +3440,30 @@
           "result": "Source-only Python 3.9 and 3.11 PASS; 5 hosted workflows PASS. No Mac command executed."
         }
       ]
+    },
+    {
+      "id": "hybrid-cloud-provider-workforce-policy-20261023",
+      "title": "Record Walter/Breaking Bad roles and Gemini-Groq-NIM-Mistral-OpenRouter-Cloudflare routing as hybrid workforce policy",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar hybrid-provider-architecture 2026-10-23",
+      "branch": "feature/hybrid-cloud-provider-workforce-policy",
+      "scopes": [
+        "architecture/HYBRID-24-7-GHOST-WORKFORCE.md",
+        "coordination/ghost-provider-policy.json",
+        "tests/test_ghost_provider_policy.py",
+        ".github/workflows/ghost-provider-policy.yml",
+        "WORK.md",
+        "AGENTS.md",
+        "ROVOR-AI-PLAN.md"
+      ],
+      "depends_on": [
+        "ghost-self-research-bootstrap-20261023"
+      ],
+      "updated_at": "2026-10-24T01:44:27.807Z",
+      "next_update": "Review policy and hosted offline schema tests; publish handoff",
+      "next_action": "Translate owner's provider assignments and cloud scheduler proposal into one canonical source-of-truth doc/config and add links to Work entrypoints, with no new scheduled jobs or billable API calls; preserve existing Mac runtime/claim ownership.",
+      "acceptance": "Breaking Bad employee names stable and independent of provider; Gemini planning, Groq/NVIDIA NIM fast drafts, Mistral code review, OpenRouter guarded fallback, Cloudflare Cron + D1 control plane; documented strict free-only model/provider eligibility checks, retry/backoff and 3-attempt review, STOP/quota and privacy, persistent offline Mac queue. CI verifies complete roles/policy invariants. No secrets, Mac execution or real Cloudflare deployment claimed."
     }
   ]
 }
