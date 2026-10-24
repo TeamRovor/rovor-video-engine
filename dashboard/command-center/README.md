@@ -2,6 +2,14 @@
 
 This is an actual static browser dashboard, not a static mockup. It reads **public** source data from `TeamRovor/rovor-video-engine` and requires no secrets, extensions or server-side access.
 
+## Reference-accurate widescreen cockpit
+
+The first desktop/tablet landscape screen now uses a bounded, near-16:9 HUD composition: framed top header, verified source-status strip, left task/workload/activity cards, large orbital Earth/core, right health/analytics/source cards, bottom five-button dock, and engraved footer. The old, long scrolling reports are not placed below the cockpit on desktop; selecting a bottom tab opens an interactive workspace above it, and **Back to HUD** returns to the main view. Phones retain a vertically stacked layout.
+
+To preserve operational integrity the displayed values are **live public GitHub queue and routing data, when verified**. Resource bars display task distribution rather than fabricated Mac CPU/GPU load; system health denotes routing coverage, not overall private Mac uptime. Source Feed shows an Earth-at-night image as an illustration, accompanied by the real commit/status; it is **not** presented as a live camera.
+
+The 3D-look ROVOR emblem is drawn with a metallic CSS mask using the real logo SVG; it remains the working command-console button. The animated Earth remains controllable and respects reduced-motion settings. The header's **Tools** menu contains the existing refresh/export/focus/motion/fullscreen controls, and the bottom dock opens interactive data workspaces. Browser tests verify the displayed status changes appropriately when the source falls back to a historical snapshot.
+
 ## Cinematic interactive HUD (orbital Earth build)
 
 This build renders a **slowly rotating Earth and lower horizon** in WebGL using bundled NASA Blue Marble natural-color satellite imagery and NASA's Earth-at-Night city-light mosaic, instead of the previous low-detail procedural continent blobs. The images are downloaded and validated at *deployment time* into the static GitHub Pages artifact; browsers load them from the same ROVOR site, not from a remote image CDN. The globe is a visualization, **not** a live Earth satellite feed. The canvas is bounded in resolution, frame-capped (~24 fps), and pauses animation on reduced-motion preference, tab suspension or the existing Motion: Off toggle. If image assets or WebGL are unavailable, the original procedural/static fallback remains usable.

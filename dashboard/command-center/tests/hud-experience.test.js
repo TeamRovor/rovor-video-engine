@@ -21,7 +21,7 @@ test('kinetic HUD uses bundled scripts and accessible working controls, not imag
   }
   assert.ok(html.indexOf('orbital-earth.js')<html.indexOf('hud-experience.js'));
   assert.ok(html.indexOf('hud-experience.js')<html.indexOf('app.js'));
-  assert.match(sw,/rovor-command-center-shell-v5/);
+  assert.match(sw,/rovor-command-center-shell-v6/);
   assert.match(html,/aria-modal="true"/);
   assert.match(style,/prefers-reduced-motion:reduce/);
   assert.ok(!source.includes('https://cdn.') && !source.includes('https://unpkg.com') && !source.includes('https://cdnjs.'));
