@@ -83,7 +83,7 @@
       "approved_for_proposal": true,
       "dedupe_key": "walter-public-v1-blender-isolation-plan",
       "sources": [
-        "WORK.md",
+        "AGENTS.md",
         "ROVOR-AI-PLAN.md"
       ],
       "task": "Define a disposable Blender scene research protocol that distinguishes source review from actual Blender execution.",
@@ -203,7 +203,7 @@
       "approved_for_proposal": true,
       "dedupe_key": "walter-public-v1-animation-checkpoints",
       "sources": [
-        "WORK.md",
+        "AGENTS.md",
         "ROVOR-AI-PLAN.md"
       ],
       "task": "Plan an auditable MP3-to-2D animation release process with source preservation and no invented 1080p60 render claims.",
@@ -244,7 +244,7 @@
       "dedupe_key": "walter-public-v1-business-delivery-checkpoints",
       "sources": [
         "ROVOR-AI-PLAN.md",
-        "WORK.md"
+        "AGENTS.md"
       ],
       "task": "Draft an operational work queue for small-client digital projects using only the public ROVOR roadmap.",
       "deliverable": "A finite stage/owner/approval matrix; no access to any client record.",
