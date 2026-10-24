@@ -44,7 +44,7 @@ jobs:
           node --check dashboard/command-center/cinematic-layout.js
           node --check dashboard/command-center/app.js
           node --check dashboard/command-center/service-worker.js
-          node --test dashboard/command-center/tests/live-data.test.js dashboard/command-center/tests/request-budget.test.js dashboard/command-center/tests/reference-hud.test.js dashboard/command-center/tests/hud-experience.test.js dashboard/command-center/tests/cinematic-layout.test.js
+          node --test dashboard/command-center/tests/live-data.test.js dashboard/command-center/tests/request-budget.test.js dashboard/command-center/tests/reference-hud.test.js dashboard/command-center/tests/hud-experience.test.js dashboard/command-center/tests/cinematic-layout.test.js dashboard/command-center/tests/electric-blue-theme.test.js
 
       - name: Prepare and verify NASA Earth textures
         run: bash dashboard/command-center/tools/prepare-earth-textures.sh

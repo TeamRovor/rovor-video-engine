@@ -1,5 +1,12 @@
 # ROVOR Command Center — live GitHub HUD
 
+## Electric-blue-only visual theme
+
+The public HUD uses icy white, electric blue, steel blue, and deep navy. **No green, teal-green, yellow, orange, or red status lights** are intentionally displayed. A verified/live connection glows bright blue, pending/ready is medium steel blue, and blocked/error is identified by an explicit label with a pale outlined or dashed marker (not only by color). This change is presentation-only: GitHub data, freshness warnings, task semantics, API request budget, and unattended-worker security boundaries are unchanged.
+
+`electric-blue-theme.css` loads **after** all existing styles and is precached in the v7 offline shell. The source-backed visual states remain legible and distinguishable without the green status dots in the initial screenshot. If data is stale, its text still reads HISTORICAL/OFFLINE; blue styling does not change its meaning.
+
+
 This is an actual static browser dashboard, not a static mockup. It reads **public** source data from `TeamRovor/rovor-video-engine` and requires no secrets, extensions or server-side access.
 
 ## Reference-accurate widescreen cockpit

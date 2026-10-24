@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'rovor-command-center-shell-v6';
+const CACHE_NAME = 'rovor-command-center-shell-v7';
 const SHELL = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const SHELL = [
   './reference-hud.css',
   './hud-experience.css',
   './cinematic-layout.css',
+  './electric-blue-theme.css',
   './live-data.js',
   './app.js',
   './reference-hud.js',
@@ -55,7 +56,7 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   const path = url.pathname;
-  const isShellAsset = /\/(index\.html|styles\.css|reference-hud\.css|hud-experience\.css|cinematic-layout\.css|live-data\.js|reference-hud\.js|orbital-earth\.js|hud-experience\.js|cinematic-layout\.js|app\.js|manifest\.webmanifest|hud-icon\.svg|rovor-mark\.svg|snapshot\.json|)$/.test(path);
+  const isShellAsset = /\/(index\.html|styles\.css|reference-hud\.css|hud-experience\.css|cinematic-layout\.css|electric-blue-theme\.css|live-data\.js|reference-hud\.js|orbital-earth\.js|hud-experience\.js|cinematic-layout\.js|app\.js|manifest\.webmanifest|hud-icon\.svg|rovor-mark\.svg|snapshot\.json|)$/.test(path);
   if (!isShellAsset) return;
 
   event.respondWith(
