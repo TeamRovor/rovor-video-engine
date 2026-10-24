@@ -1,0 +1,27 @@
+name: OmniRoute honest workforce HUD telemetry
+on:
+  pull_request:
+    paths:
+      - 'tools/omniroute_workforce_telemetry.py'
+      - 'tests/test_omniroute_workforce_telemetry.py'
+      - '.github/workflows/omniroute-workforce-telemetry.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  telemetry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run offline private-data-containment tests
+        run: python -m unittest discover -s tests -p test_omniroute_workforce_telemetry.py -v
