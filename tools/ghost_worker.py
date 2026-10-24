@@ -152,7 +152,11 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
 def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
           jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False,
           omni_max_24h=OMNI_MAX_24H, allow_recovery_canary=False,
-          omni_continuous=False, omni_pace_seconds=0):
+          omni_continuous=False, omni_pace_seconds=0, omni_verified_fleet=None):
+    if omni_verified_fleet is not None and (not omni_continuous or
+            not isinstance(omni_verified_fleet, dict) or
+            omniroute_queue_job_id is None):
+        raise ValueError('Verified fleet requires continuous exact-job claim')
     if type(omni_continuous) is not bool:
         raise ValueError('Continuous dispatch requires an explicit boolean')
     if omni_continuous and (not allow_omniroute_model_use or allow_model_use
@@ -266,6 +270,27 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
                     or json.loads(job["payload"]) !=
                     {"packet": "walter-v2-recovery-proof"}):
                 raise ValueError("Recovery canary ID is not the one reviewed packet")
+        fleet_selected = None
+        if job and omni_verified_fleet is not None:
+            # Atomic with existing BEGIN IMMEDIATE and never a prior job.
+            from omniroute_model_reservation import reserve
+            import omniroute_fleet_binding as binding
+            fleet = omni_verified_fleet
+            selection = reserve(
+                conn, job['id'], fleet['task'], fleet['models'],
+                now=now, stop_present=os.path.lexists(
+                    Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent / 'STOP'),
+                failure_circuit_open=omni_circuit_open,
+                host_evidence_authenticated=fleet.get('host_evidence_authenticated', False))
+            if selection['chosen_model_id'] is None:
+                conn.execute('COMMIT')
+                return None
+            combo = binding.verify_binding(
+                selection['chosen_model_id'], fleet['routes'], fleet['catalog'])
+            fleet_selected = {
+                'model_id': selection['chosen_model_id'],
+                'pool_id': selection['quota_pool_id'],
+                'combo': combo}
         if job:
             if (not omni_continuous and job['kind'] == OMNI_KIND
                     and set(json.loads(job['payload'])) in ({'assignment'}, {'public_task'})):
@@ -275,6 +300,8 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
                          (owner, now + (420 if job['kind'] in {NATIVE_KIND, LIBRARY_KIND} else 360 if job["kind"] in {RESEARCH_KIND, OMNI_KIND} else LEASE_SECONDS), now, job["id"]))
             _event(conn, job["id"], "claimed", {"worker": owner, "attempt": job["attempts"]+1}, now)
         conn.execute("COMMIT")
+        if job and fleet_selected is not None:
+            return {**dict(job), 'omni_capacity': fleet_selected}
         return dict(job) if job else None
     except Exception:
         conn.execute("ROLLBACK")
@@ -344,7 +371,7 @@ def macos_version_probe(*, run=subprocess.run, platform=None) -> dict:
 def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
              jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False,
              omni_max_24h=OMNI_MAX_24H, allow_recovery_canary=False,
-             omni_continuous=False, omni_pace_seconds=0):
+             omni_continuous=False, omni_pace_seconds=0, omni_verified_fleet=None):
     state = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
     if os.path.lexists(state / "STOP"):
         return None
@@ -357,7 +384,8 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
                  allow_terminal_probe=allow_terminal_probe,
                  omni_max_24h=omni_max_24h,
                  allow_recovery_canary=allow_recovery_canary,
-                 omni_continuous=omni_continuous, omni_pace_seconds=omni_pace_seconds)
+                 omni_continuous=omni_continuous, omni_pace_seconds=omni_pace_seconds,
+                  omni_verified_fleet=omni_verified_fleet)
     if not job:
         return None
     job_id, kind = job["id"], job["kind"]
@@ -392,7 +420,8 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
                 if not omni_continuous:
                     raise ValueError('Continuous assignment needs its own dispatch approval')
                 import omniroute_continuous
-                result = omniroute_continuous.execute(state, job_id, payload)
+                result = omniroute_continuous.execute(
+                    state, job_id, payload, capacity_route=job.get('omni_capacity'))
             else:
                 result = ghost_omniroute_job.execute(
                     state, job_id, payload, stop_path=state / 'STOP')
@@ -408,6 +437,9 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
                 raise ValueError('Lost OmniRoute job ownership')
             _event(conn, job_id, 'needs_review',
                    {'kind': kind, 'draft_status': result['draft_status']}, t)
+            if job.get('omni_capacity') is not None:
+                from omniroute_model_reservation import release_finished_slot
+                release_finished_slot(conn, job_id, now=t)
             conn.execute('COMMIT')
             return {'id': job_id, 'status': 'needs_review', 'result': result}
         elif kind == "files.inventory":
