@@ -429,6 +429,21 @@ class WorkerAtomicFleetTests(unittest.TestCase):
                         verified_fleet_provider=lambda job,payload,t:
                             self.independent(job), max_verified_jobs_per_tick=n)
 
+    def test_single_verified_mode_heartbeat_does_not_claim_global_paced_wait(self):
+        with mock.patch.object(continuous,"latest_public_tasks",
+                               side_effect=ValueError("offline")):
+            with mock.patch.object(worker,"run_once",
+                return_value={"result":{"review_status":
+                    "draft_ready_for_human_review"}}):
+                result=continuous.tick(self.state,self.workspace,now=NOW,
+                    verified_fleet_provider=lambda jid,payload,when:
+                        self.independent(jid))
+        self.assertEqual(result["executed"],1)
+        self.assertEqual(result["dispatch_mode"],
+                         "verified_independent_pool_opt_in")
+        self.assertEqual(result["dispatch"]["reason"],
+                         "independent_pool_capacity_checked_per_claim")
+
     def test_fleet_mode_cannot_run_on_legacy_unbounded_claim(self):
         job=self.queue()
         with self.assertRaisesRegex(ValueError, "requires continuous"):
