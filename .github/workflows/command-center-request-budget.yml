@@ -26,5 +26,8 @@ jobs:
       - name: Check native v8.6 instrument previews and routing regression
         run: node --test dashboard/command-center/tests/native-v8-5.test.cjs dashboard/command-center/tests/native-v8-6.test.cjs dashboard/command-center/tests/native-v8-7.test.cjs dashboard/command-center/tests/default-exact.test.cjs
 
+      - name: Test native v8.9 scrolling and rollback contract
+        run: node --test dashboard/command-center/tests/native-v8-9.test.cjs dashboard/command-center/tests/default-exact.test.cjs
+
       - name: Test actual browser script with mocked GitHub data for one hour
         run: node --check dashboard/command-center/exact/app.js && node --check dashboard/command-center/exact/service-worker.js && node --check dashboard/command-center/orbital-earth.js && node --check dashboard/command-center/hud-experience.js && node --check dashboard/command-center/cinematic-layout.js && node --check dashboard/command-center/reference-hud.js && node --test dashboard/command-center/tests/request-budget.test.js dashboard/command-center/tests/reference-hud.test.js dashboard/command-center/tests/hud-experience.test.js dashboard/command-center/tests/cinematic-layout.test.js dashboard/command-center/tests/default-exact.test.cjs dashboard/command-center/tests/electric-blue-theme.test.js dashboard/command-center/tests/exact-reference.test.js dashboard/command-center/tests/exact-hud.test.cjs

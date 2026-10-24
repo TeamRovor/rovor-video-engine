@@ -6,11 +6,11 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=(name)=>fs.readFileSync(path.join(root,name),'utf8');
 
-test('main ROVOR HUD launches native v8.5 before any old style or script executes',()=>{
+test('main ROVOR HUD launches native v8.9 before any old style or script executes',()=>{
  const html=read('index.html');
  assert.match(html,/location\.replace\(next\.href\)/);
- assert.match(html,/new URL\('\.\/native\/', location\.href\)/);
- assert.match(html,/<noscript><meta http-equiv="refresh" content="0;url=\.\/native\/" \/><\/noscript>/);
+ assert.match(html,/new URL\('\.\/native-v8-9\/', location\.href\)/);
+ assert.match(html,/<noscript><meta http-equiv="refresh" content="0;url=\.\/native-v8-9\/" \/><\/noscript>/);
  assert.ok(html.indexOf('location.replace(next.href)')<html.indexOf('<link rel="stylesheet"'),'redirect should run before old CSS');
 });
 

@@ -1,5 +1,18 @@
 # ROVOR Command Center — live GitHub HUD
 
+## Current default: Native HUD v8.9 (scrollable instrument previews)
+
+The default GitHub Pages route now redirects to `./native-v8-9/`. This release preserves the original layout while making the six compact instrument panels **independently scrollable**. The active-task card initially shows all verified unfinished tasks and includes an **OPEN / ALL** switch to browse the complete verified archive without expanding. Overflowing cards show a small blue **SCROLL ↓** cue, which disappears at the bottom. Real task rows remain at least 40–44px tall rather than compressing into unreadable lines.
+
+Expanded modules now remain within the same blue/angular HUD visual system. They support Escape-to-close, keyboard focus, and returning to preserved preview scroll positions. Counts and labels are never fabricated; the GitHub queue and routing remain commit-pinned and source-verified. The source currently has 104 tasks (15 unfinished), but the app displays actual values at refresh rather than hard-coded numbers.
+
+Rollback without a force push: `./native/` is the previous deployed v8.5 native build, and `./exact/` is the preserved pixel-reference build. Change the early redirect in `index.html` if reverting default behavior is necessary.
+
+QA: Chromium tests exercised four screen categories with a representative 104-task queue, confirming true overflow, OPEN/ALL filtering, touch-height rows, navigation/expanded views, refresh preservation and no runtime errors. Native Safari/iPadOS rendering is not independently certified. Browser integration checks use mocked GitHub API results.
+
+---
+
+
 ## Native HUD v8.8 — genuinely scrollable mini instruments
 
 The compact panels **scroll their real content within the frame** instead of compressing it or requiring the user to open the focus view. When the queue is verified, Active Tasks shows an **OPEN / ALL** switch: OPEN lists unfinished tasks, ALL includes completed/archived tasks. Recent Activity shows the full timestamped queue history. Workload now includes real priority groups; System Health includes actual source-backed task counters; API Quota and Source Feed display measured GitHub/session details (no invented Mac usage).
