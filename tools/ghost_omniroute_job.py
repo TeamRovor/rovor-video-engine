@@ -29,6 +29,7 @@ ROUTES = {
 }
 MAX_24H = 5
 ROUTES['overnight-acceptance'] = ROUTES['provider-efficiency']
+ROUTES['unattended-readiness'] = ROUTES['provider-efficiency']
 
 
 def validate_payload(payload):

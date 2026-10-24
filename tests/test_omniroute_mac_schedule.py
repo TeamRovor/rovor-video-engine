@@ -40,6 +40,14 @@ class ScheduleTests(unittest.TestCase):
                 self.assertTrue(self.stop.is_file())
                 self.assertEqual(plistlib.loads(self.path.read_bytes()),self.original)
 
+    def test_work_plan_is_separate_opt_in_and_keeps_same_service(self):
+        self.assertNotIn('--approve-omniroute-work-plan',self.config['ProgramArguments'])
+        config=schedule.build_config(self.original,self.base/'python',self.base/'runtime',
+                                     self.base/'state',self.base/'workspace',enable_work_plan=True)
+        self.assertEqual(config['Label'],schedule.LABEL)
+        self.assertIn('--approve-omniroute-work-plan',config['ProgramArguments'])
+        self.assertEqual(config['StartInterval'],300)
+
     def test_stop_is_present_until_service_is_verified_then_removed(self):
         def run(cmd,**kwargs):
             self.assertTrue(self.stop.is_file())

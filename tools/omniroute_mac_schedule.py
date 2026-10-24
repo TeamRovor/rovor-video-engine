@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Activate only the existing approved-draft queue service after host checks.
 
-No enqueue, inference, second scheduler, dependency install, native app control,
-or automatic approval. Uses the already installed, immutable source runtime.
+No inference, second scheduler, dependency install, native app control, or
+automatic approval. An explicit finite work-plan flag enables later submission
+by the existing service. Uses an immutable source runtime.
 """
 import argparse
 import json
@@ -28,7 +29,7 @@ def pause_existing_service(run=subprocess.run):
         raise ValueError('Existing service could not be paused')
 
 
-def build_config(original, python, runtime, state, workspace):
+def build_config(original, python, runtime, state, workspace, *, enable_work_plan=False):
     if original.get('Label') != LABEL:
         raise ValueError('Unexpected existing service label')
     result=dict(original)
@@ -37,6 +38,8 @@ def build_config(original, python, runtime, state, workspace):
         '--worker-id','rovor-launchd-approved-drafts','--max-jobs','1',
         '--max-seconds','2','--poll-seconds','2','--approve-omniroute-model-use'],
         RunAtLoad=True,KeepAlive=False,StartInterval=300)
+    if enable_work_plan:
+        result['ProgramArguments'].append('--approve-omniroute-work-plan')
     return result
 
 
@@ -86,6 +89,8 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--enable-approved-draft-queue',action='store_true')
     parser.add_argument('--verify-background-access',action='store_true')
+    parser.add_argument('--enable-work-plan',action='store_true',
+                        help='Enable one finite released setup-acceptance job, without replay')
     args=parser.parse_args(argv)
     if not args.enable_approved_draft_queue:
         print(json.dumps({'status':'dry_run_no_activation','model_requests':0}))
@@ -121,7 +126,7 @@ def main(argv=None):
             raise ValueError('Existing job is running; STOP retained')
         domain=subprocess.run(['launchctl','print',f'gui/{os.getuid()}'],capture_output=True,text=True,timeout=10)
         if not once.service_absent_from_domain(domain):
-            if not args.verify_background_access:
+            if not (args.verify_background_access or args.enable_work_plan):
                 raise ValueError('Existing service must be positively confirmed unloaded')
             pause_existing_service()
             domain=subprocess.run(['launchctl','print',f'gui/{os.getuid()}'],capture_output=True,text=True,timeout=10)
@@ -143,7 +148,19 @@ def main(argv=None):
         catalog=omni.read_combo_catalog()
         for packet in omni.ROUTES:omni.verify_route(packet,catalog)
         runner.access_key()
-        config=build_config(plistlib.loads(path.read_bytes()),python,runtime,state,workspace)
+        if args.enable_work_plan:
+            import ghost_omniroute_feed as feed
+            for packet, key in feed.PLAN:
+                runner.load_packet(runtime,packet)
+            if conn.execute('SELECT 1 FROM jobs WHERE dedupe_key=?',(BACKGROUND_PROOF_KEY,)).fetchone() is None:
+                raise ValueError('Background authentication proof required before enabling work plan')
+            row=conn.execute('SELECT status,result FROM jobs WHERE dedupe_key=?',(BACKGROUND_PROOF_KEY,)).fetchone()
+            proof_result=json.loads(row['result'] or '{}')
+            if row['status']!='succeeded' or not all(proof_result.get(k) is True for k in
+                    ('free_routes_verified','endpoint_key_available','loopback_auth_verified')):
+                raise ValueError('Successful background authentication proof required')
+        config=build_config(plistlib.loads(path.read_bytes()),python,runtime,state,workspace,
+                            enable_work_plan=args.enable_work_plan)
         proof=subprocess.run(config['ProgramArguments'],capture_output=True,text=True,timeout=10)
         if proof.returncode:raise ValueError('STOP proof failed')
         paused=json.loads(proof.stdout)
@@ -157,7 +174,8 @@ def main(argv=None):
         activate(path,config,stop,ensure_stop=once.ensure_stop)
         print(json.dumps({'status':'existing_queue_service_loaded','interval_seconds':300,
              'max_jobs_per_tick':1,'max_AI_attempts_per_24h':5,'model_requests_this_setup':0,
-             'auto_enqueue':False,'native_and_interpreter_enabled':False,
+             'auto_enqueue':args.enable_work_plan,'work_plan':'finite_once' if args.enable_work_plan else None,
+             'native_and_interpreter_enabled':False,
              'raw_AI_output_approved':False,'STOP_verified':True,
              'background_diagnostic_job_id':diagnostic,
              'note':'Only approved queued drafts; no claim of overnight endurance yet'}))

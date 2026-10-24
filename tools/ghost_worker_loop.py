@@ -88,13 +88,16 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
          poll_seconds: float = 1.0, monotonic=time.monotonic,
          sleeper=time.sleep, allow_model_use=False, allow_native_import=False,
          allow_jane_library_create=False, jane_queue_job_id=None,
-         allow_omniroute_model_use=False) -> dict:
+         allow_omniroute_model_use=False, allow_omniroute_work_plan=False) -> dict:
     """Poll bounded jobs with explicit opt-ins, observing STOP between operations.
 
     Limits are cooperative: a synchronous adapter cannot be interrupted mid-call.
     The underlying SQLite claim transaction prevents duplicate claimed jobs.
     """
     validate_limits(max_jobs=max_jobs, max_seconds=max_seconds, poll_seconds=poll_seconds)
+    if allow_omniroute_work_plan and (not allow_omniroute_model_use or allow_model_use
+                                    or allow_native_import or allow_jane_library_create):
+        raise ValueError('Work plan requires OmniRoute-only approval')
     if allow_jane_library_create and (not jane_queue_job_id or max_jobs != 1):
         raise ValueError('Jane native creation requires one exact queue job ID and max-jobs=1')
     if jane_queue_job_id and not allow_jane_library_create:
@@ -104,6 +107,10 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
     # Resolve/check before executing any work. Never create a state directory here.
     _state_dir(state)
     start = monotonic()
+    feed_result = None
+    if allow_omniroute_work_plan:
+        import ghost_omniroute_feed
+        feed_result = ghost_omniroute_feed.feed(conn, state, Path(__file__).resolve().parent.parent)
     executed = succeeded = failed = idle_polls = 0
     while True:
         if stop_requested(state):
@@ -147,6 +154,7 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
         if remaining > 0:
             sleeper(min(poll_seconds, remaining))
     return {"stop_reason": reason, "executed": executed, "succeeded": succeeded,
+            "work_plan": feed_result,
             "failed": failed, "idle_polls": idle_polls,
             "elapsed_seconds": round(max(0, monotonic() - start), 3),
             "read_only": not (allow_model_use or allow_omniroute_model_use or allow_jane_library_create),
@@ -169,6 +177,8 @@ def main() -> None:
     run.add_argument("--approve-model-use", action="store_true")
     run.add_argument("--approve-omniroute-model-use", action="store_true",
                      help="Enable separately approved capped OmniRoute research jobs")
+    run.add_argument("--approve-omniroute-work-plan", action="store_true",
+                     help="Feed the finite released draft plan once; never replay completed jobs")
     run.add_argument("--allow-native-import", action="store_true")
     run.add_argument("--approve-jane-library-create", action="store_true",
                      help="One exact approved native library job; no XML import")
@@ -187,6 +197,7 @@ def main() -> None:
                           poll_seconds=args.poll_seconds, allow_model_use=args.approve_model_use,
                           allow_native_import=args.allow_native_import,
                           allow_omniroute_model_use=args.approve_omniroute_model_use,
+                          allow_omniroute_work_plan=args.approve_omniroute_work_plan,
                           allow_jane_library_create=args.approve_jane_library_create,
                           jane_queue_job_id=args.jane_queue_job_id)
     elif args.command == "stop":

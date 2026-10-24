@@ -306,7 +306,8 @@ class OmniRouteWorkpackTests(unittest.TestCase):
                          '--route','runner-blocker=groq/verified-fast',
                          '--route','supervisor-resilience=mistral/verified-code',
                          '--route','provider-efficiency=gemini/verified-reason',
-                         '--route','overnight-acceptance=gemini/verified-reason'])
+                         '--route','overnight-acceptance=gemini/verified-reason',
+                         '--route','unattended-readiness=gemini/verified-reason'])
         self.assertEqual(rc,0)
         self.assertEqual(set(records),{'groq/verified-fast',
                                       'mistral/verified-code',

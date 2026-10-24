@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "slug": "unattended-readiness",
+  "id": "rovor-scheduled-unattended-readiness-v1",
+  "title": "Identify remaining unattended executor gaps from released code",
+  "role": "software-architecture",
+  "inputs": ["tools/ghost_worker_loop.py", "tools/ghost_omniroute_feed.py", "tools/ghost_omniroute_job.py"],
+  "task": "Review ONLY this released public code. Produce a short operator runbook for the existing five-minute LaunchAgent using the approved work-plan flag. Explain what happens when the plan is empty, a draft needs review, STOP appears, a model fails, or the Mac sleeps/logs out. Distinguish timer recurrence, real scheduled inference, quality acceptance, tool execution and unlimited autonomous task selection. Identify the smallest next code gap for useful ongoing work without repeating a finished request or adding a second scheduler. Cite exact functions. Do not claim live host observations, web research, app control, factual review or billing proof. Do not propose unlimited retries or paid fallback. This is one new setup-acceptance draft, not a repeat of the prior overnight checklist.",
+  "deliverable": "Concise runbook and ranked remaining executor gaps, each with a concrete verification method.",
+  "acceptance": ["Distinguishes available code from verified host behavior", "Identifies finite-plan exhaustion and review gates", "No credential requests, paid fallback, automatic execution or fabricated measurements"],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}
