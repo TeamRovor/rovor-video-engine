@@ -4677,11 +4677,11 @@
       "id": "hud-persistent-telemetry-20261024",
       "title": "Add durable private HUD telemetry ingestion and outbound collector without temporary tunnel links",
       "priority": 1,
-      "status": "blocked",
+      "status": "active",
       "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
-      "updated_at": "2026-10-24T22:15:14.208Z",
-      "next_update": "After the next independently recorded cloud shift is exported and Pages redeploys, or a cloud inference runtime and credential path become available.",
-      "branch": "feature/hud-cloud-activity-20261024",
+      "updated_at": "2026-10-24T22:25:24.956Z",
+      "next_update": "After durable pass/fail hosted checks, Pages deployment and cloud role scheduling",
+      "branch": "feature/hud-owner-reviews-20261024",
       "scopes": [
         "integrations/hud-cloud",
         "tools/hud_telemetry_publisher.mjs",
@@ -4690,10 +4690,13 @@
         "tests/test_hud_sites.mjs",
         ".github/workflows/deploy-command-center-pages.yml",
         "coordination/cloud-shifts/walter-pr184.json",
-        "tests/test_hud_cloud_activity.mjs"
+        "tests/test_hud_cloud_activity.mjs",
+        ".github/workflows/hud-cloud-reviews.yml",
+        "coordination/cloud-reviews",
+        "tests/test_hud_cloud_reviews.mjs"
       ],
       "depends_on": [],
-      "next_action": "PR185 merged at 3c07a28b5984b52f3c9024c7925dbec0c10611fe. Existing public HUD now includes recorded cloud work in Recent Activity and its drawer via artifact-only injection, preserving exact native-v8-9 source. Pages run40137087982 SUCCESS: full Command Center release checks, workforce no-dispatch/source gates, ten cloud-activity tests, actual PR184/CI readback, artifact creation and deployment all passed. 39 focused tests PASS locally and hosted. Published https://teamrovor.github.io/rovor-video-engine/ with one separately attested Walter completion; model/tokens unknown and human review not recorded. Existing Walter automation prompt updated (hourly schedule unchanged) to export a previously completed matched run as a unique scoped immutable receipt and watch evidence/Pages checks; next automatic export is not yet verified. Browser QA attempted but tool returned Tab 1 is not part of this browser session after an infrastructure timeout; no rendered-screen approval claimed. Next: verify a newly published cloud receipt, then stage one approved zero-cost provider call in a cloud runtime with private credentials and durable usage/review storage. Do not label historical completions as online state or ChatGPT cloud as OmniRoute inference.",
+      "next_action": "Implement authenticated owner-submitted PASS/FAIL via GitHub confirmation and immutable issue-event review ledger, then publish saved decisions to the existing HUD. Configure bounded Mac-independent cloud role shifts within task limits. Never invent human decisions, online state or model quota.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
@@ -4737,8 +4740,7 @@
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40131970730",
         "https://github.com/TeamRovor/rovor-video-engine/pull/183",
         "https://github.com/TeamRovor/rovor-video-engine/pull/185"
-      ],
-      "blocker": "Cloud completion tracking is deployed through existing public Pages. Full nine-provider cloud inference, private real-time usage/queue storage, human pass/fail review writes and the first new automatically exported cloud-shift receipt remain unverified. Separate private Site source upload is still blocked by managed source-host DNS; browser attachment also failed."
+      ]
     },
     {
       "id": "walter-citation-code-context-20261024",
