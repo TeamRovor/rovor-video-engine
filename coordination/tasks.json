@@ -4782,7 +4782,7 @@
       "id": "hank-cloud-audit-receipts-20261024",
       "title": "Emit durable bounded Hank GitHub cloud QA execution receipts on the existing workflow",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / GitHub cloud QA evidence shift 2026-10-24",
       "branch": "feature/hank-cloud-audit-receipts-20261024",
       "scopes": [
@@ -4792,10 +4792,37 @@
         "subsystem:hank-cloud-audit-receipts"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T22:20:14.478Z",
-      "next_update": "After PR hosted checks and actual GitHub Actions artifact readback",
-      "next_action": "Add a sanitized per-run JSON receipt to existing scheduled Hank GitHub Action, with input digests, observed time, exact revision and run provenance; upload bounded artifact, test refusal and success cases, then verify CI and update this claim. No model inference or Mac operation.",
-      "acceptance": "The existing Hank GitHub Actions QA execution writes a bounded content-free immutable-per-run JSON artifact with GitHub commit/run provenance, observed_at, source input digests, exact status and count/error codes; artifact uploads on audit failures; missing/invalid provenance fails closed. Focused tests plus project_loop.py check and paired routing CI pass. No new scheduler, provider calls, private content, model/token claims, or Mac deployment."
+      "updated_at": "2026-10-24T22:22:44.900Z",
+      "next_update": "Completed and merged source; next scheduled GitHub-hosted Hank run must be separately observed.",
+      "next_action": "PR #186 squash-merged at f53f9cdce126ca3642425d9e36e01c7e5ac152c8. Existing Hank scheduled GitHub Actions job now emits bounded public-source SHA256/commit/run/UTC/status QA receipt as a 90-day artifact, including failed audits. PR run 40138231206 completed SUCCESS: 17 focused Python 3.11 tests, live public queue/safety audit, artifact upload; artifact 12577132476 (790 bytes, expires 2027-01-22). Atomic claim commit b71937d0e8cd4fb1705d6a2ff03dea19f25f0d76 passed shared project_loop and paired routing CI. Actual hosted PR QA execution verified, not a provider model call or OmniRoute inference. No Mac access, provider spending, private receipts, or human approval. Next: inspect next existing scheduled Hank run and its artifact, do not infer cron continuity from a PR run.",
+      "acceptance": "The existing Hank GitHub Actions QA execution writes a bounded content-free immutable-per-run JSON artifact with GitHub commit/run provenance, observed_at, source input digests, exact status and count/error codes; artifact uploads on audit failures; missing/invalid provenance fails closed. Focused tests plus project_loop.py check and paired routing CI pass. No new scheduler, provider calls, private content, model/token claims, or Mac deployment.",
+      "evidence": [
+        {
+          "commit": "216aa547fa1811a79ada15a4c0851851c8998201",
+          "platform": "GitHub Actions Ubuntu Python 3.11 (pull_request run)",
+          "check": "python -m unittest discover -s tests -p test_hank_cloud_watchdog.py -v (17 tests); python tools/hank_cloud_watchdog.py --summary-file ... --receipt-file ...; actions/upload-artifact@v4",
+          "result": "PASS: all 17 tests and actual Hank public queue/safety audit, upload-artifact succeeded. 790-byte per-run artifact ID 12577132476 expires 2027-01-22. This proves GitHub-hosted deterministic QA execution only, not scheduled recurrence, model inference, Mac operation or human review.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40138231206"
+        },
+        {
+          "commit": "f53f9cdce126ca3642425d9e36e01c7e5ac152c8",
+          "platform": "GitHub squash merge to main",
+          "check": "PR #186 source merge; existing Hank workflow unchanged cron and read-only permissions",
+          "result": "MERGED: bounded source and hosted artifact behavior; no new scheduler or paid provider. Main push run pending separate verification.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/186"
+        },
+        {
+          "commit": "b71937d0e8cd4fb1705d6a2ff03dea19f25f0d76",
+          "platform": "GitHub Actions Ubuntu",
+          "check": "Shared project_loop.py check; task_routing_pair.py --check on atomic 133-task/133-route claim",
+          "result": "PASS: existing queue/routing checks on main, no ownership conflicts reported.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40138121663"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/186",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40138231206"
+      ]
     }
   ]
 }
