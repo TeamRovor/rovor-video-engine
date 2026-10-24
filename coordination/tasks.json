@@ -3408,6 +3408,30 @@
           "result": "PASS 2/2 matrix jobs; source code merged, no live private GitHub repository creation or Mac execution."
         }
       ]
+    },
+    {
+      "id": "private-mac-terminal-probe-20261023",
+      "title": "Provide first opt-in real terminal subprocess proof for private Mac bridge",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar isolated Mac terminal probe 2026-10-23",
+      "branch": "feature/private-terminal-probe-optin",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tools/ghost_private_control.py",
+        "tests/test_ghost_private_control.py",
+        "tests/test_private_terminal_probe.py",
+        "integrations/open-interpreter/PRIVATE-TERMINAL-PROBE.md",
+        ".github/workflows/private-terminal-probe.yml"
+      ],
+      "depends_on": [
+        "private-mac-control-repo-bootstrap-20261023",
+        "private-mac-control-bridge-v1"
+      ],
+      "updated_at": "2026-10-24T01:37:08.821Z",
+      "next_update": "After hosted Python 3.9/3.11 mock end-to-end tests",
+      "next_action": "Add only an explicit Mac-local-approved terminal.probe (fixed /usr/bin/sw_vers -productVersion, no shell or remote arguments) to private bridge and shared SQLite worker, with private sanitized command receipt. Must remain disabled under scheduled supervisor and ordinary worker. No GitHub-private repo or Mac activation in this session.",
+      "acceptance": "Unapproved/unknown job types never create state or execute; fixed command only; non-Darwin refused; bounded timeout/sanitized version/no path/token leakage; private job performed exactly once with STOP and receipt no replay. Separate source-only PR based on existing PR41 integration branch; no active OmniRoute edits."
     }
   ]
 }

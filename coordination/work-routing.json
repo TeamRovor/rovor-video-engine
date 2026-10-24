@@ -595,6 +595,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "private-mac-terminal-probe-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
