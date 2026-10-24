@@ -4677,10 +4677,10 @@
       "id": "hud-persistent-telemetry-20261024",
       "title": "Add durable private HUD telemetry ingestion and outbound collector without temporary tunnel links",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
-      "updated_at": "2026-10-24T21:32:19.128Z",
-      "next_update": "After offline private-Sites adapter and self-contained Worker build validation",
+      "updated_at": "2026-10-24T21:37:29.839Z",
+      "next_update": "When authorized network-enabled execution can synchronize the existing Site source repository.",
       "branch": "feature/hud-sites-adapter-20261024",
       "scopes": [
         "integrations/hud-cloud",
@@ -4690,7 +4690,7 @@
         "tests/test_hud_sites.mjs"
       ],
       "depends_on": [],
-      "next_action": "Finish independent Sites platform-identity adapter, service-access reporting header, and deterministic original-HUD Worker bundle with schema-only migrations. Publish source and verify focused checks; source synchronization and live deployment remain blocked on the managed network.",
+      "next_action": "PR #183 merged at 60e96fb774914f7cc0623f9e5c400439b95ee19d. Private Sites identity adapter, separate service-auth reporter header, immutable schema migration generation and deterministic original-HUD ESM bundle complete. 29 local tests and hosted runs 40134981077/40134978646 PASS; generated 1,333,046-byte Worker passes the Sites artifact validator. Reuse Site appgprj_6add1e2cc8c08191839344b34d7dbf50; do not create another. Existing local rovor-hud-site contains generated worker, DB/MCP manifest and migration; implementation source can regenerate it via integrations/hud-cloud/build-sites.mjs. Next: use approved Site source helper from authorized network-enabled execution, configure writer secret and supported service access, publish privately, validate real D1 binding/migration and live browser/report delivery, then install Mac reporter and verify generated MCP plugin connection. Current HUD and worker service unchanged; no actual cloud report or online employee proof.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
@@ -4706,12 +4706,21 @@
           "check": "Registered one private hosting target; persisted exact project_id; attempted approved site-workflow opening with credential via hidden stdin",
           "result": "Hosting registration succeeded. Source helper exited 128: Could not resolve host git.chatgpt-team.site. No source push, publication, Mac service installation, model call or billing action.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/182"
+        },
+        {
+          "commit": "60e96fb774914f7cc0623f9e5c400439b95ee19d",
+          "platform": "macOS Node24.22.0 and GitHub Actions Ubuntu Node24",
+          "check": "node --test tests/test_hud_cloud.mjs tests/test_hud_sites.mjs; build-sites.mjs; Sites validate-artifact.mjs",
+          "result": "29 tests PASS locally and hosted; original HUD verified against Git blob 008332a2a6f00d78017c5a866a32be7a5c0fdd8d; self-contained Worker valid ESM. Source merged only, not live.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40134981077"
         }
       ],
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/182",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40131970730"
-      ]
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40131970730",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/183"
+      ],
+      "blocker": "Managed execution cannot resolve the registered private Site's source Git host. The finished Sites adapter/bundle has not been pushed to the Site repository or deployed. Permanent Mac reporting and the ChatGPT reader connection remain pending."
     }
   ]
 }
