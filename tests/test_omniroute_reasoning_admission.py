@@ -132,10 +132,36 @@ class ResponseTests(unittest.TestCase):
     def test_rejects_non_string_content(self):
         self.assert_blocked("invalid_response_shape", completed(content=["private"]))
 
-    def test_rejects_malformed_reasoning_usage(self):
+    def test_inconsistent_provider_reasoning_counter_does_not_hide_complete_visible_answer(self):
+        # Exact accounting anomaly observed on owner's macOS OmniRoute:
+        # prompt=27, completion=52, reasoning=59, total=79.
+        usage={"prompt_tokens": 27, "completion_tokens": 52,
+               "total_tokens": 79,
+               "completion_tokens_details": {"reasoning_tokens": 59}}
+        self.assertEqual(extract_review_text(completed("READY", usage=usage)),
+                         "READY")
+
+    def test_inconsistent_usage_still_rejects_truncation_and_blank_answers(self):
+        usage={"prompt_tokens": 27, "completion_tokens": 52,
+               "total_tokens": 79,
+               "completion_tokens_details": {"reasoning_tokens": 59}}
+        self.assert_blocked("incomplete_length_stop",
+                            completed("Partial", "length", usage))
+        self.assert_blocked("incomplete_length_stop",
+                            completed("", "length", usage))
+        self.assert_blocked("empty_visible_output",
+                            completed("   ", "stop", usage))
+        self.assert_blocked("unapproved_finish_reason",
+                            completed("READY", "content_filter", usage))
+
+    def test_rejects_genuinely_malformed_reasoning_usage(self):
+        for value in (-1, True, "59"):
+            self.assert_blocked("invalid_usage_shape", completed(
+                "READY", usage={"completion_tokens": 52,
+                               "completion_tokens_details": {"reasoning_tokens": value}}))
         self.assert_blocked("invalid_usage_shape", completed(
-            "Answer", usage={"completion_tokens": 3,
-                             "completion_tokens_details": {"reasoning_tokens": 4}}))
+            "READY", usage={"completion_tokens": 52,
+                            "completion_tokens_details": "PRIVATE_INVALID_DATA"}))
 
     def test_rejects_boolean_usage(self):
         self.assert_blocked("invalid_usage_shape", completed(
