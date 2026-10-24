@@ -15,6 +15,7 @@ test('Workload Distribution opens only existing native focus popup, never a new 
   assert.match(html,/if\(view==='workload'\)\{/);
   assert.match(html,/ROVOR_WORKLOAD\.mount\(host\)/);
   assert.match(html,/ROVOR_WORKLOAD\.mountPreview\(w,/);
+  assert.match(html,/if\(!w\.querySelector\('\.wl-compact'\)\)/);
   assert.doesNotMatch(html,/const w=\$\('workloadPanel'\);w\.replaceChildren\(\);if\(ok\)/);
   assert.match(html,/class="nav" aria-label="Main navigation"/);
   assert.match(html,/R O V O R &nbsp; D I G I T A L/);
