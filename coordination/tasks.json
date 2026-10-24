@@ -4679,7 +4679,7 @@
       "priority": 1,
       "status": "active",
       "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
-      "updated_at": "2026-10-24T22:25:24.956Z",
+      "updated_at": "2026-10-24T22:27:05.648Z",
       "next_update": "After durable pass/fail hosted checks, Pages deployment and cloud role scheduling",
       "branch": "feature/hud-owner-reviews-20261024",
       "scopes": [
@@ -4693,10 +4693,11 @@
         "tests/test_hud_cloud_activity.mjs",
         ".github/workflows/hud-cloud-reviews.yml",
         "coordination/cloud-reviews",
-        "tests/test_hud_cloud_reviews.mjs"
+        "tests/test_hud_cloud_reviews.mjs",
+        "coordination/cloud-shifts/walter-pr186.json"
       ],
       "depends_on": [],
-      "next_action": "Implement authenticated owner-submitted PASS/FAIL via GitHub confirmation and immutable issue-event review ledger, then publish saved decisions to the existing HUD. Configure bounded Mac-independent cloud role shifts within task limits. Never invent human decisions, online state or model quota.",
+      "next_action": "Finish durable owner PASS/FAIL, clearly flag the hard-coded archived Mac observation as disconnected, and publish the freshly verified Walter PR186 cloud completion. Expand bounded independent cloud role shifts within quota.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
