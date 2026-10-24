@@ -17,9 +17,10 @@ def candidate(role="gale", task="task-gale-0001", key=None, priority=1):
 
 
 def outcome(role="gale", key="packet-prior-0001", job="job-prior-0001",
-            status="review_accepted", at=NOW-200):
+            status="review_accepted", at=NOW-200, status_at=None):
     return {"role": role, "dedupe_key": key, "job_id": job,
-            "status": status, "claimed_at": at}
+            "status": status, "claimed_at": at,
+            "status_at": at if status_at is None else status_at}
 
 
 def select(candidates=None, outcomes=None, seen=None, **kwargs):
@@ -167,6 +168,18 @@ class SelectionTests(unittest.TestCase):
         result = select(outcomes=[outcome(status="model_failed")])
         self.assertEqual(result["status"], "candidate_only_not_enqueued")
         self.assertFalse(result["coverage"]["gale"]["failure_cooldown"])
+
+    def test_delayed_failure_cooldown_uses_status_time_not_claim(self):
+        history = [outcome(key="packet-fail-0001", job="job-fail-0001",
+                           status="model_failed", at=NOW-10000, status_at=NOW-200),
+                   outcome(key="packet-fail-0002", job="job-fail-0002",
+                           status="model_failed", at=NOW-9000, status_at=NOW-20)]
+        self.assertEqual(select(outcomes=history)["status"], "failure_cooldown")
+
+    def test_status_time_before_claim_rejected(self):
+        with self.assertRaises(CoverageError) as cm:
+            select(outcomes=[outcome(status="model_failed", at=NOW-20, status_at=NOW-30)])
+        self.assertEqual(str(cm.exception), "invalid_outcome_record")
 
     def test_two_recent_failures_cooldown_role(self):
         history = [outcome("gale", "packet-fail-0001", "job-fail-0001", "model_failed", NOW-120),
