@@ -153,19 +153,66 @@ void main() {
     const doc=options.document||(typeof document!=='undefined'?document:null);
     const map=doc?createTexture(doc):null;
     if(!map)return null;
+    // NASA Blue Marble and Earth-at-night maps are self-hosted with the Pages build.
+    // The procedural map stays in place if assets fail to load (e.g. local preview).
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
     const texture=gl.createTexture();gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,map);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    const nightTexture=gl.createTexture();
+    gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,nightTexture);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
     const sizeLoc=gl.getUniformLocation(program,'uSize');
     const angleLoc=gl.getUniformLocation(program,'uAngle');
     const cloudLoc=gl.getUniformLocation(program,'uCloud');
+    const nightLoc=gl.getUniformLocation(program,'uHasNight');
     gl.uniform1i(gl.getUniformLocation(program,'uMap'),0);
+    gl.uniform1i(gl.getUniformLocation(program,'uNightMap'),1);
+    gl.uniform1f(nightLoc,0);
     let angle=0,cloud=0,lastTime=0,lastDraw=0,frame=0,speed=1,stopped=false,manualPause=false;
     const environment=options.environment||root;
     const motionQuery=environment.matchMedia&&environment.matchMedia('(prefers-reduced-motion: reduce)');
+    let hasNight=false;
+    // URL paths are fixed local assets; never load arbitrary remote origins.
+    function loadMap(path,unit,tex,ready) {
+      const ImageType=options.ImageClass||environment.Image;
+      if(typeof ImageType!=='function')return;
+      const image=new ImageType();
+      image.onload=()=>{
+        if(stopped)return;
+        const w=image.naturalWidth||image.width,h=image.naturalHeight||image.height;
+        if(!w||!h||w>4096||h>2048)return;
+        try {
+          gl.activeTexture(gl.TEXTURE0+unit);
+          gl.bindTexture(gl.TEXTURE_2D,tex);
+          gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+          gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+          // Both published maps have power-of-two dimensions.
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+          ready();
+          lastDraw=0;
+        } catch (_) { /* Keep local fallback on image/texture error. */ }
+      };
+      image.onerror=()=>{/* Preserve fallback when developing without built assets. */};
+      image.src=path;
+    }
+    loadMap('./earth-blue-marble.png',0,texture,()=>{
+      if(canvas.dataset)canvas.dataset.texture='nasa-blue-marble';
+    });
+    loadMap('./earth-night.png',1,nightTexture,()=>{
+      hasNight=true;
+      if(canvas.dataset)canvas.dataset.nightLights='nasa-night';
+    });
     const isStopped=()=>manualPause || !!motionQuery?.matches ||
       !!doc?.hidden || !!doc?.body?.classList?.contains('motion-paused');
     function resize() {
@@ -192,6 +239,7 @@ void main() {
         gl.uniform2f(sizeLoc,canvas.width,canvas.height);
         gl.uniform1f(angleLoc,angle);
         gl.uniform1f(cloudLoc,cloud);
+        gl.uniform1f(nightLoc,hasNight?1:0);
         gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
         lastDraw=time;
       }
@@ -206,7 +254,7 @@ void main() {
       isPaused(){return isStopped();},
       nudge(degrees){angle=(angle+Number(degrees||0)*Math.PI/180)%(2*Math.PI);lastDraw=0;},
       reset(){angle=0;cloud=0;lastDraw=0;},
-      stop(){stopped=true;environment.cancelAnimationFrame?.(frame);gl.deleteTexture(texture);gl.deleteProgram(program);gl.deleteBuffer(buffer);},
+      stop(){stopped=true;environment.cancelAnimationFrame?.(frame);gl.deleteTexture(texture);gl.deleteTexture(nightTexture);gl.deleteProgram(program);gl.deleteBuffer(buffer);},
     };
   }
   function boot(doc,environment) {
