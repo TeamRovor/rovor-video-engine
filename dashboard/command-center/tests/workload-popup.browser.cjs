@@ -60,7 +60,7 @@ async function main(){
   await evalJS('document.querySelector("[data-wl-tab=models]").click();return true');
   assert.equal(await evalJS('return document.querySelectorAll(".wl-model-entry").length'),9);
   await evalJS('document.querySelector("[data-wl-tab=routing]").click();return true');
-  assert(await evalJS('return !!document.querySelector(".wl-route-chart")'));
+  assert(await poll(()=>evalJS('return !!document.querySelector(".wl-route-chart")')),name+': routing chart not shown');
   await evalJS('document.querySelector("#screen .close").click();document.querySelector("[data-wl-compact-tab=employees]").click();return true');
   assert.equal(await evalJS('return document.querySelectorAll("#workloadPanel .wl-compact-row").length'),8);
   await evalJS('document.querySelectorAll("#workloadPanel .wl-compact-row")[2].click();return true');
