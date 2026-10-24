@@ -194,6 +194,53 @@ class TestOneShot(unittest.TestCase):
         self.assertEqual(view["distinct_claimed_jobs_last_24h"],27)
         self.assertFalse(view["human_accepted_deliverables_verified"])
 
+    def test_live_wal_worker_is_readable_without_touching_authoritative_files(self):
+        # Recreate macOS worker SQLite WAL with committed, uncheckpointed jobs.
+        # A separate live connection keeps the WAL sidecar present.
+        writer = sqlite3.connect(self.db)
+        try:
+            self.assertEqual(writer.execute("PRAGMA journal_mode=WAL").fetchone()[0], "wal")
+            writer.execute("INSERT INTO jobs VALUES(?,?,?,NULL)",
+                           ("job-wal-new", "research.omniroute", "queued"))
+            writer.commit()
+            wal = self.state / "jobs.sqlite3-wal"
+            self.assertTrue(wal.is_file())
+            before = {name: ops._safe_db_signature(self.state / name)
+                      for name in ("jobs.sqlite3", "jobs.sqlite3-wal")}
+            result = ops._sqlite_snapshot(self.state, now=NOW)
+            after = {name: ops._safe_db_signature(self.state / name)
+                     for name in ("jobs.sqlite3", "jobs.sqlite3-wal")}
+            self.assertEqual(result["status"], "consistent_read_only_snapshot")
+            self.assertEqual(result["claims_last_24h"], 27)
+            self.assertEqual(result["outcomes_total"]["queued"], 2)
+            self.assertEqual(before, after)
+        finally:
+            writer.close()
+
+    def test_wal_or_shared_memory_redirect_is_blocked(self):
+        for sidecar in ("jobs.sqlite3-wal", "jobs.sqlite3-shm"):
+            with self.subTest(sidecar=sidecar):
+                pointer = self.state / sidecar
+                pointer.symlink_to(Path(self.tmp.name) / "private-target")
+                self.assertEqual(ops._sqlite_snapshot(self.state, now=NOW),
+                                 {"status":"snapshot_unavailable"})
+                pointer.unlink()
+
+    def test_active_wal_snapshot_never_claims_actual_model_usage(self):
+        live = sqlite3.connect(self.db)
+        try:
+            live.execute("PRAGMA journal_mode=WAL")
+            live.execute("INSERT INTO jobs VALUES (?,?,?,NULL)",
+                         ("wal-job-2", "research.omniroute", "queued"))
+            live.commit()
+            report = ops.inspect(self.state, "/mock", now=NOW, run=FakeCLI())
+            self.assertEqual(report["worker"]["status"], "consistent_read_only_snapshot")
+            self.assertEqual(report["priority"], "improve_draft_readiness_before_increasing_claim_rate")
+            self.assertFalse(report["nine_verified_active_models"])
+            self.assertEqual(report["recent_review_ready_rate_percent"], 37)
+        finally:
+            live.close()
+
     def test_no_completed_provider_posts_are_claimed(self):
         data=ops.inspect(self.state,"/mock",now=NOW,run=FakeCLI())
         self.assertEqual(data["gateway_completion_requests"],0)
