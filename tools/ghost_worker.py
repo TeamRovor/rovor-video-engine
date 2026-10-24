@@ -15,7 +15,7 @@ import sys
 import time
 import uuid
 
-ALLOWED = frozenset({"system.ping", "files.inventory"})
+ALLOWED = frozenset({"system.ping", "system.omniroute-preflight", "files.inventory"})
 FUTURE_DISABLED = frozenset({
     "blender.scene", "moho.animate", "finalcut.timeline", "email.read",
     "email.send", "social.publish", "files.move", "files.delete",
@@ -99,7 +99,7 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
     if kind == OMNI_KIND:
         import ghost_omniroute_job
         ghost_omniroute_job.validate_payload(payload)
-    if kind in {"system.ping", RESEARCH_KIND} and payload:
+    if kind in {"system.ping", "system.omniroute-preflight", RESEARCH_KIND} and payload:
         raise ValueError("This fixed job does not accept parameters")
     if kind == LIBRARY_KIND:
         # Only stable slug; no arbitrary app commands, target paths or XML.
@@ -251,6 +251,9 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
         payload = json.loads(job["payload"])
         if kind == "system.ping":
             result = {"ok": True, "read_only": True}
+        elif kind == "system.omniroute-preflight":
+            import ghost_omniroute_job
+            result = ghost_omniroute_job.background_preflight()
         elif kind == RESEARCH_KIND:
             import interpreter_host_job
             output = state / ("research-" + job_id)

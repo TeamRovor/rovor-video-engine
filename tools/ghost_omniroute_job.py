@@ -127,3 +127,29 @@ def execute(state, job_id, payload, *, stop_path=None, catalog=None):
         # Do not persist upstream errors or arbitrary provider response data
         # in the SQLite worker's world-readable status channel.
         raise ValueError('OmniRoute draft requires private review; no automatic retry') from None
+
+
+def background_preflight():
+    """Read fixed local auth/catalog only. No completion, prompt or model call."""
+    from urllib import request
+    import omniroute_workpack_runner as workpack
+    try:
+        catalog=read_combo_catalog()
+        for packet in ROUTES:verify_route(packet,catalog)
+    except Exception:
+        raise ValueError('background_route_catalog_unavailable') from None
+    try:
+        key=workpack.access_key()
+    except Exception:
+        raise ValueError('background_endpoint_key_unavailable') from None
+    try:
+        req=request.Request('http://127.0.0.1:20128/v1/models',
+             headers={'Authorization':'Bearer '+key,'Accept':'application/json'},method='GET')
+        with workpack.safe_local_open(req,timeout=10) as response:
+            if response.status!=200:raise ValueError('unauthorized')
+            # Status is enough; do not read or persist model catalog/body.
+    except Exception:
+        raise ValueError('background_gateway_auth_unavailable') from None
+    return {'ok':True,'read_only':True,'free_routes_verified':True,
+            'endpoint_key_available':True,'loopback_auth_verified':True,
+            'model_requests':0,'provider_inference_verified':False}

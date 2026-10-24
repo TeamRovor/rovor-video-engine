@@ -40,6 +40,38 @@ class GhostOmniRouteJobTests(unittest.TestCase):
         return ghost_worker.enqueue(self.conn, ghost_worker.OMNI_KIND,
                                     {'packet': packet}, 'omni-fixture-' + str(index))
 
+    def test_background_preflight_uses_get_and_never_calls_completion(self):
+        import omniroute_workpack_runner as runner
+        response=mock.MagicMock();response.__enter__.return_value.status=200
+        with mock.patch.object(omni,'read_combo_catalog',return_value=catalog()), \
+             mock.patch.object(runner,'access_key',return_value='private-fixture-key'), \
+             mock.patch.object(runner,'safe_local_open',return_value=response) as get, \
+             mock.patch.object(runner,'http_completion') as completion:
+            jid=ghost_worker.enqueue(self.conn,'system.omniroute-preflight',{},'background-proof')
+            result=ghost_worker.run_once(self.conn,self.workspace)
+        self.assertEqual(result['id'],jid)
+        self.assertEqual(result['status'],'succeeded')
+        self.assertEqual(result['result']['model_requests'],0)
+        req=get.call_args.args[0]
+        self.assertEqual(req.get_method(),'GET')
+        self.assertEqual(req.full_url,'http://127.0.0.1:20128/v1/models')
+        self.assertIsNone(req.data)
+        self.assertEqual(get.call_args.kwargs['timeout'],10)
+        completion.assert_not_called()
+        self.assertNotIn('private-fixture-key',json.dumps(result))
+
+    def test_background_preflight_fails_without_disclosing_key_and_refuses_payload(self):
+        import omniroute_workpack_runner as runner
+        with self.assertRaises(ValueError):
+            ghost_worker.enqueue(self.conn,'system.omniroute-preflight',{'url':'https://other'},'bad')
+        with mock.patch.object(omni,'read_combo_catalog',return_value=catalog()), \
+             mock.patch.object(runner,'access_key',side_effect=ValueError('private-fixture-key')):
+            jid=ghost_worker.enqueue(self.conn,'system.omniroute-preflight',{},'failed-proof')
+            result=ghost_worker.run_once(self.conn,self.workspace)
+        self.assertEqual(result['status'],'failed')
+        self.assertEqual(result['error'],'background_endpoint_key_unavailable')
+        self.assertNotIn('private-fixture-key',json.dumps(result))
+
     def test_reject_unknown_model_route_and_arbitrary_payload(self):
         for payload in ({}, {'packet':'untrusted'},
                         {'packet':'provider-efficiency','shell':'whoami'},
