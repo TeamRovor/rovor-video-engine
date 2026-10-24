@@ -3735,6 +3735,26 @@
       "next_update": "After integrated claim, backlog, STOP and rollback tests",
       "next_action": "Extend unclaimed executor with explicitly opted-in paced claims; new scheduled tick reuses existing SQLite queue and approved free-route inference helpers. Add distinct public-source task catalogue, no-replay receipts and same-LaunchAgent installer; do not modify overlapping ghost_worker_loop/feed/workpack modules. Host activation outside writable roots remains final executable handoff.",
       "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation."
+    },
+    {
+      "id": "walter-public-citation-evidence-gate-20261024",
+      "title": "Validate line-specific public-source citations in unattended specialist drafts before review",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 citation evidence shift",
+      "branch": "feature/walter-public-citation-evidence-v1",
+      "scopes": [
+        "tools/walter_source_citation_gate.py",
+        "tests/test_walter_source_citation_gate.py",
+        ".github/workflows/walter-source-citation-gate.yml",
+        "subsystem:walter-public-source-citation-evidence"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T06:48:00Z",
+      "next_update": "After isolated Python 3.9/3.11 hosted tests and PR checks",
+      "next_action": "Implement a standalone read-only citation gate for the 14 public Walter workpacks: validate source hashes and exact line references, reject fabricated/malformed/out-of-range citations without exposing draft text, and provide a content-free human-review verdict. No edits to existing PR41 worker or live model calls.",
+      "acceptance": "New stdlib-only module and CLI use the existing approved Walter public packet release, source digest binding, strict [[source:PATH#Lx-Ly]] syntax, bounded private stdin and content-free verdict. Reject forged source paths, mismatched source hashes, missing citations, malformed ranges, private-path redirects and unsupported formats; never claim factual correctness or approve a draft. Focused offline Python3.9/3.11 tests and shared queue/routing CI. No Mac, network, inference, scheduler or queue writes.",
+      "evidence": []
     }
   ]
 }

@@ -669,6 +669,13 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "walter-public-citation-evidence-gate-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
