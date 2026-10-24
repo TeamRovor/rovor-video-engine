@@ -1,4 +1,4 @@
-"""Ten actual mouth/face planes driven by the unchanged narration planner.
+"""Ten actual mouth/face planes driven by the shared narration planner.
 
 Review construction only: pressure is a thickness proxy, corner/overlap guides
 are authored, and jaw/cap artwork remains unapproved. No defaults.

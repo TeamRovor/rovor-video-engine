@@ -95,12 +95,12 @@ def acoustic_weights(t,plan,fallback,*,energy_weighting=True):
         base=g['phone'].rstrip('012')
         radius=max(.055,min(.14,(b-a)/2+.045))
         distance=abs((t+.018-center)/radius)
-        if base in VOWELS:
-            # Sustain a long vowel instead of pulsing only at its midpoint.
+        if base in VOWELS or base=='W':
+            # W carries visible rounding through its assigned span, like vowels.
             strength=float(ease((t-(a-.035))/.060))*(1-float(ease((t-(b-.020))/.065)))
         else:
             strength=(1-distance*distance)**2 if distance<1 else 0.
-        salience=1 if base in VOWELS or symbol in 'AGH' else .40
+        salience=1 if base in VOWELS or base=='W' or symbol in 'AGH' else .40
         out['XABCDEFGH'.index(symbol)]+=salience*strength
         envelope=float(ease((t-(a-.045))/.060))*(1-float(ease((t-(b-.010))/.065)))
         if symbol=='A':contact=max(contact,envelope)

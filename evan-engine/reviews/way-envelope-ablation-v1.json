@@ -373,5 +373,8 @@
   "renderScope": "Only way context850..897 was rendered; other three assigned W spans have geometry/control checks only.",
   "patchSha256": "988d9e80a240ca1afed64d373e7601764a8d04c62839c2155b4272b8e6668846",
   "sourcePlannerFileSha256": "f64d82bf0984c658eeb960ac6a2ae47e0c8f8e21dd2d6429a75fcaa87a40035e",
-  "polishedMilestoneReady": false
+  "polishedMilestoneReady": false,
+  "historicalPartialControlTrial": true,
+  "correction": "Old monkeypatch changed jaw planner but not the direct imported rounded_cartoon_head.acoustic_weights alias. Render/geometry results are partial-control evidence only. Root silence/energy ablation remains valid.",
+  "supersededBy": "CARTOON-EVAN-SUSTAINED-W.md"
 }

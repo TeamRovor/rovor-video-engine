@@ -1,0 +1,173 @@
+{
+  "comparisons": [
+    {
+      "label": "Website",
+      "sourceFrames": [
+        24,
+        72
+      ],
+      "sourceSamples": [
+        8000,
+        24000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "8d8d09447f84c4b832ea4513b978b3d40e88167449999389ab7d64fab2773853"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "72f97af4e35013c2dd75eed76844a076cba043ffd09022a1f3481943c11cff20"
+        }
+      },
+      "upper288Exact": 48,
+      "minimumJaw": 32.61553955078125
+    },
+    {
+      "label": "Website-Again",
+      "sourceFrames": [
+        812,
+        848
+      ],
+      "sourceSamples": [
+        270667,
+        282667
+      ],
+      "audio": {
+        "sourcePcm16Samples": 12000,
+        "decodedPcm16Samples": 12000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 36,
+          "sha256": "3de1a6e03ab127a53349923f6ce49f098cf8bc7f823143595475930a9ecede47"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 144,
+          "sha256": "fa370f4278e3aea974f7a59b10810977509b761057f65c459bccd87567636579"
+        }
+      },
+      "upper288Exact": 36,
+      "minimumJaw": 34.450775146484375
+    },
+    {
+      "label": "Way",
+      "sourceFrames": [
+        850,
+        898
+      ],
+      "sourceSamples": [
+        283333,
+        299333
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "d643e30239cb7f292544ed9486a3c46eebb1c5acda6cf1a2208d0b62d0c5f363"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "32f65f9f8adbecdc9c9e16b205a38bf1365628ec8b2d9555db322777b74327c0"
+        }
+      },
+      "upper288Exact": 48,
+      "minimumJaw": 27.790542602539062
+    },
+    {
+      "label": "We",
+      "sourceFrames": [
+        924,
+        960
+      ],
+      "sourceSamples": [
+        308000,
+        320000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 12000,
+        "decodedPcm16Samples": 12000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 36,
+          "sha256": "b3b042c4f5306be50c4521de4d41aa3e562b12b16d4e0a579bc9ea99df1283d9"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 144,
+          "sha256": "5d90b46b178a492eb79a03a19c1110e9ae603cef277d74a57df9608365057275"
+        }
+      },
+      "upper288Exact": 36,
+      "minimumJaw": 28.78266143798828
+    }
+  ],
+  "metrics": {
+    "width": {
+      "currentMaximumStep": 13.84722900390625,
+      "trialMaximumStep": 13.84722900390625,
+      "currentP95Step": 6.23684844970703,
+      "trialP95Step": 6.732852935791016,
+      "maximumPositionChange": 33.97538757324219,
+      "largerStepByOverOnePixel": 53
+    },
+    "lowerY": {
+      "currentMaximumStep": 14.667755126953125,
+      "trialMaximumStep": 14.667755126953125,
+      "currentP95Step": 6.19515380859375,
+      "trialP95Step": 6.100123596191404,
+      "maximumPositionChange": 11.28289794921875,
+      "largerStepByOverOnePixel": 7
+    },
+    "chinY": {
+      "currentMaximumStep": 2.301361083984375,
+      "trialMaximumStep": 2.301361083984375,
+      "currentP95Step": 1.171139526367187,
+      "trialP95Step": 1.171139526367187,
+      "maximumPositionChange": 0.6170654296875,
+      "largerStepByOverOnePixel": 0
+    }
+  },
+  "geometrySamples": 1307,
+  "failures": 0,
+  "minimumJaw": 27.78942108154297,
+  "freshModuleImports": true,
+  "sharedRoundingAndJawFunction": true,
+  "phoneTimingChanged": false,
+  "artworkChanged": false,
+  "independentListeningVerified": false,
+  "animationAccepted": false,
+  "baselineCommit": "1b00550491df7b19a001e1e9da563ed847c7563f",
+  "developmentControlIntegrated": true,
+  "performanceAccepted": false,
+  "testsPassed": 49,
+  "regressionTestsFailOnOldPlanner": 2,
+  "sourceAudioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "plannerAstMatchesRenderedCandidate": true,
+  "priorMonkeypatchOnlyChangedJaw": true,
+  "priorReviewCorrected": true,
+  "nativePairsInspected": 168,
+  "selectedDesignCompared": true,
+  "completeStagedSceneUpdated": false,
+  "polishedMilestoneReady": false
+}

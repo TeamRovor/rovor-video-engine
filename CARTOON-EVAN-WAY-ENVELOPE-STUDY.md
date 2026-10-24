@@ -1,5 +1,7 @@
 # Assigned W: isolate the control loss before changing timing
 
+Historical partial-control trial. CORRECTION: the old in-memory patch did not replace the function already imported by rounded_cartoon_head. See CARTOON-EVAN-SUSTAINED-W.md for corrected fresh-import renders, the full-control follow-up and current development behavior. Measurements below belong to the earlier partial trial, not the complete archived source patch.
+
 The near-rest mouth inside the assigned `way/W` interval is primarily caused by the capped midpoint consonant pulse. It is **not caused by a silence gate** in this recording window. The assigned W boundary itself remains unverified. This finding rules out removing silence protection as a fix.
 
 At 18.225s, current rounded F weight is 0.000264596 and rest X is 0.999735404. Removing all explicit silence intervals changes no weight anywhere 17.7–18.5s; none intersects that window. Disabling energy modulation leaves F at 0.000321883. The non-vowel kernel uses a radius capped at 140ms, centered 18ms early; it has almost expired here despite the assigned W continuing until 18.27s. W salience is also 0.4, so even its peak retains substantial rest. The existing waveform/spectrogram shows weak periodic energy rather than proving a silent pause. Neither amplitude nor these ablations establishes an exact sound boundary.
