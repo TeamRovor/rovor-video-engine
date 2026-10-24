@@ -3796,7 +3796,7 @@
       "id": "walter-reviewed-finding-handoff-20261024",
       "title": "Convert human-reviewed specialist research findings into deduplicated, testable code handoff candidates",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 finding handoff shift",
       "branch": "feature/walter-reviewed-finding-handoff-v1",
       "scopes": [
@@ -3806,11 +3806,26 @@
         "subsystem:reviewed-research-to-testable-code-task"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T07:08:00Z",
-      "next_update": "After focused hosted Python 3.9/3.11 CI and shared routing checks.",
-      "next_action": "Implement an offline human-review-gated adapter that binds a concrete code finding to request-time public citation digests, exact target SHA, focused test path and deterministic no-repeat task identity; reject duplicate/overlapping claims, vague outputs and unreviewed model text. No auto-enqueue, inference, host writes, private draft publication or worker changes.",
+      "updated_at": "2026-10-24T07:14:00Z",
+      "next_update": "No further Walter action on this source-only task; existing Mac runtime owner may review optional integration.",
+      "next_action": "PR #138 merged to main at ca942a5efd526f807a0e24d11e2a81c94f8576e7. New tools/walter_reviewed_finding_handoff.py accepts only separately human-approved, exact source-line/digest-grounded, pinned code-target and test-path findings; produces deterministic duplicate-safe private metadata proposals, refusing active/blocked/ready overlapping claims, generic/unreviewed/unsafe inputs and malformed model fields. 39 focused offline tests passed on Python 3.9/3.11, with shared task/routing checks, in GitHub run 40073171806. This is source-only: no Mac integration, inference, human review performed here, queue mutation from generated findings, or automatic code execution. Owner should authenticate actual private review and source fingerprints before any integration; never auto-claim model-generated findings.",
       "acceptance": "Pure stdlib helper accepts only independently human-approved, exact-source-grounded actionable findings and pinned public repository target SHA; emits deterministic private review-only candidate and refuses duplicate or overlapping active claims, generic/blank tasks, missing test path, unverified citation or untrusted queue. Hosted Python3.9/3.11 focused tests and shared coordination checks; existing Mac worker owner retains exclusive integration.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "ca942a5efd526f807a0e24d11e2a81c94f8576e7",
+          "platform": "GitHub-hosted Ubuntu / Python 3.9 and 3.11",
+          "check": "39 offline reviewed-finding handoff regressions, shared project_loop.py check and task_routing_pair.py --check",
+          "result": "PASS both Python versions; no network, model, private receipt, Mac or SQLite action",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40073171806"
+        },
+        {
+          "commit": "ca942a5efd526f807a0e24d11e2a81c94f8576e7",
+          "platform": "GitHub PR #138",
+          "check": "Independent source module, focused tests and CI; PR137/PR41 runtime files unchanged",
+          "result": "MERGED source-only; requires separately authenticated human review and queue ownership before optional Mac integration",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/138"
+        }
+      ]
     }
   ]
 }
