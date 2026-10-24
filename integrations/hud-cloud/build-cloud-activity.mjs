@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {validateCloudFeed, validateCloudReceipt} from './cloud-activity.mjs';
+import {latestOwnerReviews} from './cloud-reviews.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
@@ -34,12 +35,23 @@ export function readCloudReceipts() {
 }
 
 export function buildCloudActivity(target, now = Date.now()) {
-  const feed = compileCloudActivity(readCloudReceipts(), now);
+  const receipts = readCloudReceipts(), feed = compileCloudActivity(receipts, now);
+  const reviewDir = path.join(root, 'coordination/cloud-reviews');
+  const names = fs.existsSync(reviewDir) ? fs.readdirSync(reviewDir).filter(n => /^issue-[1-9]\d*\.json$/.test(n)) : [];
+  if (names.length > 2000) throw Error('Archive older owner reviews');
+  const rows = names.map(name => {
+    const file = path.join(reviewDir, name), stat = fs.lstatSync(file);
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 8192) throw Error('Invalid owner review file');
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  });
+  const reviews = latestOwnerReviews(rows, receipts, now).filter(r => feed.receipts.some(x => x.id === r.receipt_id));
   const native = path.join(path.resolve(target), 'native-v8-9');
   const index = path.join(native, 'index.html'), original = fs.readFileSync(index, 'utf8');
   const html = injectCloudActivity(original);
   fs.writeFileSync(path.join(native, 'cloud-activity.json'), JSON.stringify(feed, null, 2) + '\n');
+  fs.writeFileSync(path.join(native, 'cloud-reviews.json'), JSON.stringify({schema_version: 1, source: 'github_owner_review_ledger', reviews}, null, 2) + '\n');
   fs.copyFileSync(path.join(here, 'cloud-activity.mjs'), path.join(native, 'cloud-activity.mjs'));
+  fs.copyFileSync(path.join(here, 'cloud-reviews.mjs'), path.join(native, 'cloud-reviews.mjs'));
   fs.writeFileSync(index, html);
   return {receipts: feed.receipts.length, original_hud_bytes: Buffer.byteLength(original), artifact_hud_bytes: Buffer.byteLength(html)};
 }

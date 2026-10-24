@@ -6,12 +6,12 @@ The GitHub Pages release now builds a sanitized cloud-activity feed and adds a
 small module hook to a copied publication artifact. The original native-v8-9
 source HTML, logo, orientation rules and panel structure are untouched. Cloud
 entries appear in the existing Recent Activity scroll area and its drawer.
-They say **recorded completion**, with human review not recorded; they never
+They say **recorded completion**, with the latest saved owner review if available; they never
 claim a currently online employee or measured OmniRoute usage.
 
 Receipt source files live under `coordination/cloud-shifts/`. Before
 publication, the release validates the bounded schema and reads back the
-referenced merged PR, exact merge commit and successful CI result on the same
+referenced merged result or open reviewable PR head, exact commit and successful CI result on that
 source revision. These checks establish the public GitHub result, not the
 underlying model, private prompts, or human acceptance. The first Walter
 receipt was separately matched to the platform's recorded completed shift.
@@ -30,10 +30,36 @@ The Pages workflow watches new receipt files, so publishing a verified record
 does not depend on an open HUD or an awake Mac. The open HUD reads the static
 feed once per minute and pauses while hidden. The feed contains at most 200
 recent records; source parsing is bounded at 1,000 files. This is a completion
-ledger, not live in-progress tracking, cloud model dispatch or a review writer.
+ledger, not live in-progress tracking or cloud model dispatch.
 It does not activate the separate unpublished private Site or migrate the nine
 provider keys. The existing public Pages HUD exposes only these sanitized
 public repository completion records.
+
+## Saved owner PASS / FAIL
+
+Recent Activity opens result cards with PASS and FAIL links. These open a native
+GitHub confirmation, binding the decision to the receipt and exact output commit.
+Amar must submit while signed in as TeamRovor. The issue and optional reason are
+public. Clicking a link alone never saves or claims approval. The issues-opened
+workflow accepts only that account's original issue event, writes an immutable
+`coordination/cloud-reviews/issue-N.json`, then invokes the existing Pages release
+at the actual saved commit. This explicit call avoids depending on a workflow
+token push to trigger another workflow. All existing release gates remain.
+
+New reviews supersede older decisions for that output. Editing or closing an
+old issue does not change its recorded decision. Employees must never submit
+owner reviews or write this ledger. FAIL requests a new linked bounded rework
+task; it does not replay an old job. PASS does not deploy or execute output.
+Keep reviewable output commits immutable: make revisions in a new linked PR and
+receipt, rather than replacing an already reviewed head. Account authentication
+is not a hardware-backed proof of who operated that account.
+
+The built-in Mac observation is archived. Unless the actual live adapter reports
+CONNECTED, the workload summary labels Mac telemetry disconnected and points to
+recorded cloud completions. Feed fetch time, publication time and task completion
+time remain distinct. No static completion record proves someone is working now.
+The first real owner submission and its complete deployed readback still require
+runtime verification; tests do not stand in for Amar's decision.
 
 ## Connected private Sites deployment
 
