@@ -1,0 +1,27 @@
+name: OmniRoute atomic existing SQLite model reservation tests
+on:
+  pull_request:
+    paths:
+      - 'tools/omniroute_model_reservation.py'
+      - 'tests/test_omniroute_model_reservation.py'
+      - '.github/workflows/omniroute-model-reservation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  atomic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Test model and shared-pool atomic reservation on existing worker schema
+        run: python -m unittest discover -s tests -p test_omniroute_model_reservation.py -v
