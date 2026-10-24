@@ -10,7 +10,8 @@ const popup=fs.readFileSync(path.join(root,'native-v8-9','workload-popup.js'),'u
 const css=fs.readFileSync(path.join(root,'native-v8-9','workload-popup.css'),'utf8');
 
 test('Workload Distribution opens only existing native focus popup, never a new HUD',()=>{
-  assert.match(html,/WORKLOAD DISTRIBUTION<button[^>]*data-view="workload"/);
+  assert.match(html,/class="workload-open-title" data-view="workload" aria-label="Open Workload Distribution details">WORKLOAD DISTRIBUTION<\/button>/);
+  assert.match(html,/class="panel-expand" data-view="workload" title="Expand workload distribution"/);
   assert.match(html,/function renderDrawer\(view\)\{/);
   assert.match(html,/if\(view==='workload'\)\{/);
   assert.match(html,/ROVOR_WORKLOAD\.mount\(host\)/);
@@ -71,4 +72,11 @@ test('Popup interaction switches between heatmap, model list, routing and sample
   assert.match(host.child.innerHTML,/Conceptual routing diagram/);
   interact({wlDemo:''});
   assert.match(host.child.innerHTML,/NO VERIFIED LIVE MODEL TELEMETRY/);
+});
+
+test('An open popup is not reset by unrelated GitHub status refreshes',()=>{
+  assert.match(html,/if\(host\.firstElementChild\?\.id !== 'rovor-workload-popup'\)\{/);
+  assert.match(popup,/priorLeft=root\.querySelector\?\.\('\.wl-matrix-scroll'\)\?\.scrollLeft/);
+  assert.match(popup,/next\.focus\(\{preventScroll:true\}\)/);
+  assert.match(css,/\.panel-header \.workload-open-title/);
 });
