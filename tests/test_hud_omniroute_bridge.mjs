@@ -21,3 +21,20 @@ assert.equal((await fetch(base+'/api/hud/omniroute',{method:'POST',headers})).st
 assert.equal((await fetch(base+'/api/hud/omniroute?period=bad',{headers})).status,400);
 broken=true;const failed=await fetch(base+'/api/hud/omniroute',{headers});assert.equal(failed.status,503);assert(!(await failed.text()).includes('SECRET'));
 });
+
+
+test('CLI starts through a linked directory and cannot silently exit before preflight',async()=>{
+  const {mkdtempSync,symlinkSync,rmSync}=await import('node:fs');
+  const {tmpdir}=await import('node:os');
+  const {join,resolve}=await import('node:path');
+  const {spawnSync}=await import('node:child_process');
+  const dir=mkdtempSync(join(tmpdir(),'rovor-linked-start-'));
+  try{
+    symlinkSync(resolve('tools'),join(dir,'linked-tools'),'dir');
+    for(const script of [resolve('tools/hud_omniroute_bridge.mjs'),join(dir,'linked-tools/hud_omniroute_bridge.mjs')]){
+      const child=spawnSync(process.execPath,[script],{cwd:dir,env:{...process.env,HOME:dir,PATH:'',OMNIROUTE_CLI:''},encoding:'utf8',timeout:5000});
+      assert.equal(child.status,1,'Missing gateway/CLI must visibly fail, not silently skip main');
+      assert.match(child.stderr,/HUD bridge could not connect/);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

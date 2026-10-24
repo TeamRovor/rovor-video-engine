@@ -152,4 +152,7 @@ async function main(){
   }else console.log(`PRIVATE LOCAL PAIRING LINK (one use): http://127.0.0.1:${port}/#pair=${bridge.pairCode}`);
   for(const sig of ['SIGINT','SIGTERM'])process.on(sig,()=>{tunnel?.kill();bridge.server.close(()=>process.exit(0));});
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(()=>{console.error('HUD bridge could not connect. Check that OmniRoute is running on this Mac, local CLI authentication works, and the saved endpoint key can list models. No worker or authentication settings were changed.');process.exitCode=1;});
+export function isEntrypoint(argvPath=process.argv[1],moduleUrl=import.meta.url){
+  try{return !!argvPath&&fs.realpathSync(argvPath)===fs.realpathSync(fileURLToPath(moduleUrl));}catch{return false;}
+}
+if(isEntrypoint())main().catch(()=>{console.error('HUD bridge could not connect. Check that OmniRoute is running on this Mac, local CLI authentication works, and the saved endpoint key can list models. No worker or authentication settings were changed.');process.exitCode=1;});

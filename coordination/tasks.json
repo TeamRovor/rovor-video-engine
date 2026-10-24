@@ -4235,7 +4235,7 @@
       "priority": 1,
       "status": "blocked",
       "owner": "Codex / Amar live HUD bridge session",
-      "branch": "feature/hud-omniroute-live-bridge",
+      "branch": "fix/hud-mac-symlink-startup",
       "scopes": [
         "tools/hud_omniroute_bridge.mjs",
         "dashboard/command-center/native-v8-9/live-omniroute.js",
@@ -4246,9 +4246,9 @@
         ".github/workflows/hud-omniroute-live-sync.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T10:52:45.701975+00:00",
-      "next_update": "After real Mac startup and phone pairing; hosted mocked browser evidence separately recorded",
-      "next_action": "Run sh tools/start_hud_live_sync.sh from exact reviewed source on actual Mac, then open the single-use private phone link. Verify model names/counts and real usage against OmniRoute, then stop gateway and verify cleared bars. Existing public Pages URL remains static; private live view serves identical approved HUD source.",
+      "updated_at": "2026-10-24T11:08:54.775500+00:00",
+      "next_update": "After canonical-path startup on the actual Mac produces connection output",
+      "next_action": "Silent exit reproduced locally: linked module path returned exit0 with no stdout/stderr before main. Fixed entrypoint comparison with fs.realpathSync; seven bridge tests pass, including direct/linked executable launch and visible failure without installed CLI. Resume existing downloaded checkout via resolved canonical launcher path, no source re-download required. Actual model/analytics auth and phone pairing remain host-unverified.",
       "acceptance": "Dynamic full model list, measured window counts and request-share bars, stale/error states, secrets never reach browser, no arbitrary proxy; tested mocked gateway end to end, actual Mac connection separately verified.",
       "blocker": "This session has no Mac runtime or connected browser tool. Code can be reviewed/published here; actual localhost gateway authentication, catalog/usage counts and remote phone pairing require one startup on the Mac. No real Mac sync claimed.",
       "evidence": [
@@ -4258,6 +4258,13 @@
           "check": "node --test tests/test_hud_omniroute_bridge.mjs; existing native HUD regression tests; JS and shell syntax",
           "result": "6 bridge tests and 86 existing regression checks PASS. Real HTTP auth/pairing and source failure tested with mock data; actual Mac NOT reached.",
           "reference": "integrations/open-interpreter/HUD-LIVE-SYNC.md"
+        },
+        {
+          "commit": "fix/hud-mac-symlink-startup",
+          "platform": "Linux Node24 / owner Mac transcript",
+          "check": "Reproduce symlink CLI silent exit, then seven bridge regressions including child-process direct and linked directory startup",
+          "result": "Before: exit0, empty stdout/stderr. After: both actual CLI entrypoints execute preflight and report a visible failure when CLI unavailable. Source regression PASS; actual Mac startup pending.",
+          "reference": "tests/test_hud_omniroute_bridge.mjs"
         }
       ]
     }
