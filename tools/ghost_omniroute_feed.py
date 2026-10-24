@@ -65,3 +65,38 @@ def feed(conn, state, root):
         return {"status": "submitted", "submitted": 1, "job_id": job}
     return {"status": "role_review_blocked" if blocked else "plan_exhausted_review_required",
             "submitted": 0, "blocked_roles": blocked}
+
+def feed_parallel(conn, state, root, *, limit=3):
+    """Seed up to three independent approved jobs, preserving all old IDs.
+
+    No models are invoked here. Existing queued/running OmniRoute work is
+    preserved, never replayed or reordered. A STOP interrupts each admission.
+    """
+    if type(limit) is not int or not 2 <= limit <= 3:
+        raise ValueError("parallel admission limit must be 2 or 3")
+    if os.path.lexists(Path(state) / "STOP"):
+        return {"status": "stopped", "submitted": 0}
+    waiting = conn.execute("SELECT COUNT(*) FROM jobs "
+                           "WHERE kind=? AND status IN ('queued','running')",
+                           (worker.OMNI_KIND,)).fetchone()[0]
+    if waiting:
+        return {"status": "existing_work", "submitted": 0}
+    added = []
+    blocked = 0
+    for packet, key in PLAN:
+        if conn.execute("SELECT 1 FROM jobs WHERE dedupe_key=?", (key,)).fetchone():
+            continue
+        prior = DEPENDENCIES.get(packet)
+        if prior and not _review_ready(conn, prior):
+            blocked += 1
+            continue
+        workpack.load_packet(Path(root), packet)
+        if os.path.lexists(Path(state) / "STOP"):
+            return {"status": "stopped", "submitted": len(added),
+                    "job_ids": added}
+        added.append(worker.enqueue(conn, worker.OMNI_KIND, {"packet": packet}, key))
+        if len(added) >= limit:
+            break
+    return {"status": "submitted" if added else (
+                "role_review_blocked" if blocked else "plan_exhausted_review_required"),
+            "submitted": len(added), "job_ids": added, "blocked_roles": blocked}
