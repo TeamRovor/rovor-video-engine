@@ -1,0 +1,31 @@
+name: Hybrid ghost workforce policy checks
+on:
+  pull_request:
+    paths:
+      - 'coordination/ghost-provider-policy.json'
+      - 'tests/test_ghost_provider_policy.py'
+      - 'architecture/HYBRID-24-7-GHOST-WORKFORCE.md'
+      - 'WORK.md'
+      - 'AGENTS.md'
+      - 'ROVOR-AI-PLAN.md'
+      - '.github/workflows/ghost-provider-policy.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Check role/provider/budget boundaries offline
+        run: python -m unittest discover -s tests -p test_ghost_provider_policy.py -v

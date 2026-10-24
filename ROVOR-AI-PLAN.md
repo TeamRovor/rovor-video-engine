@@ -5,6 +5,10 @@ Future mode: selected workloads on Amar's own hardware, then verified unattended
 This is the canonical direction for both Amar's and Evan's sessions. It is a plan, not evidence that
 all listed capabilities, connections, local models or background workers are installed.
 
+## Updated hybrid inference and always-available workforce direction (Oct 23, 2026)
+
+The owner has selected the Breaking Bad-named Walter-led roster with provider-specialized task routing: Gemini for planning/long context, Groq and NVIDIA NIM for fast repetitive tasks, Mistral for code/review, and checked free-only OpenRouter as fallback. Cloudflare Workers Cron + D1 is the **proposed** globally scheduled control/state plane while the existing Mac launchd/SQLite worker remains the only host executor for macOS apps and terminal. Read [architecture/HYBRID-24-7-GHOST-WORKFORCE.md](architecture/HYBRID-24-7-GHOST-WORKFORCE.md) and [coordination/ghost-provider-policy.json](coordination/ghost-provider-policy.json) for the source of truth. This updates provider preferences and cloud scheduling target **without claiming any provider key, cloud deployment, private Mac channel or unattended AI loop exists yet**. Default authorization is zero spend; on quotas/connection failure keep durable state and stop, not paid fallback or infinite retry.
+
 ## Mission and current decision
 
 Build a practical Rovor Digital business assistant that can research, plan, create, test and coordinate

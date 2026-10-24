@@ -5,6 +5,8 @@ The goal is a multi-capability Rovor Digital AI, **ChatGPT-first now**, with sel
 For video work, preserve approved source art and original narration. Final video previews target 1080p60 and at least 30 seconds;
 technical test success is separate from Amar's visual approval.
 
+**Hybrid workforce provider policy (owner direction, Oct 23, 2026):** Read [architecture/HYBRID-24-7-GHOST-WORKFORCE.md](architecture/HYBRID-24-7-GHOST-WORKFORCE.md) and [coordination/ghost-provider-policy.json](coordination/ghost-provider-policy.json) before choosing AI providers or claiming unattended work. Preserve Walter and the seven Breaking Bad employee names; Gemini plans, Groq/NVIDIA NIM handle fast tasks, Mistral specializes in code, OpenRouter is **verified-free-only fallback**, and Cloudflare Cron+D1 is the proposed cloud coordinator. This is **not deployed** and does not confer Mac access. Respect provider eligibility, $0 default spend, privacy limits, persistent STOP and existing task ownership; do not add a second Mac scheduler.
+
 ## One-time instruction for Evan's ChatGPT
 
 > Work on TeamRovor/rovor-video-engine. Whenever I say “work”, read the latest main WORK.md and AGENTS.md through GitHub, then follow that startup, claim, verification and handoff workflow. Use the efficiency lane unless I give another priority; when it has no eligible work, inspect other capability-matched tasks under the shared roadmap. Verify your actual access; do not assume you can control this computer. Continue useful non-overlapping work and publish a precise handoff before stopping.
