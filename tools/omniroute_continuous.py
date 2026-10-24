@@ -176,7 +176,8 @@ def seed(conn, state, public_source=None):
     return 'catalogue_exhausted_new_work_required'
 
 
-def execute(state, job_id, payload, *, root=None, completion=None, catalog=None):
+def execute(state, job_id, payload, *, root=None, completion=None, catalog=None,
+            capacity_route=None):
     assignment = (public_assignment(payload) if set(payload) == {'public_task'}
                   else validate_assignment(payload))
     import ghost_omniroute_job as gateway
@@ -193,7 +194,12 @@ def execute(state, job_id, payload, *, root=None, completion=None, catalog=None)
     if os.path.lexists(state / 'STOP'):
         raise ValueError('STOP requested')
     packet = assignment['packet']
-    route = gateway.verify_route(packet, gateway.read_combo_catalog() if catalog is None else catalog)
+    combo_catalog = gateway.read_combo_catalog() if catalog is None else catalog
+    if capacity_route is None:
+        route = gateway.verify_route(packet, combo_catalog)
+    else:
+        import omniroute_fleet_binding as binding
+        route = binding.verify_before_completion(capacity_route, combo_catalog)
     # Existing vetted public sources and existing free-only route remain the boundary.
     workpack.load_packet(root, packet)
     private = workpack.safe_private_root(out)
@@ -229,6 +235,8 @@ def execute(state, job_id, payload, *, root=None, completion=None, catalog=None)
     return {'assignment': assignment_id, 'role': assignment['role'], 'packet': packet, 'route': route,
             'assignment_sha256': hashlib.sha256(manifest.read_bytes()).hexdigest(),
             'draft_status': result['status'], 'review_status': verdict['status'],
+            'selected_model_config_id': (capacity_route or {}).get('model_id'),
+            'responding_upstream_model_verified': False,
             'receipt': str(out / (packet + '.receipt.json')),
             'user_review_required': True, 'facts_verified': False,
             'mac_app_control_verified': False}
@@ -260,7 +268,8 @@ def queue_health(conn, state, *, max_claims=144, interval=601, now=None):
     return result
 
 
-def tick(state, workspace, *, max_claims=144, interval=601, now=None):
+def tick(state, workspace, *, max_claims=144, interval=601, now=None,
+         verified_fleet_provider=None):
     if (type(max_claims) is not int or not 1 <= max_claims <= 144
             or type(interval) is not int
             or interval < pacing.recommended_interval(max_claims)):
@@ -277,12 +286,19 @@ def tick(state, workspace, *, max_claims=144, interval=601, now=None):
         except Exception:
             public_source, refresh = None, 'public_refresh_unavailable'
         feed = seed(conn, state, public_source)
-        queued = conn.execute("SELECT id FROM jobs WHERE kind=? AND status='queued' "
+        queued = conn.execute("SELECT id,payload FROM jobs WHERE kind=? AND status='queued' "
                               "ORDER BY created_at,id LIMIT 1", (worker.OMNI_KIND,)).fetchone()
+        # Opt-in internal API only: real Mac operator must pass a current
+        # independently authenticated model/quota provider. No CLI shortcut
+        # accepts arbitrary unverified JSON as free provider evidence.
+        fleet = (verified_fleet_provider(queued['id'], json.loads(queued['payload']),
+                                         time.time() if now is None else now)
+                 if queued and verified_fleet_provider is not None else None)
         result = (worker.run_once(conn, Path(workspace), owner='rovor-continuous-research',
                     now=now, allow_omniroute_model_use=True,
                     omniroute_queue_job_id=queued['id'], omni_max_24h=max_claims,
-                    omni_continuous=True, omni_pace_seconds=interval) if queued else None)
+                    omni_continuous=True, omni_pace_seconds=interval,
+                    omni_verified_fleet=fleet) if queued else None)
         # Never put raw model text or private errors in a status/heartbeat.
         output = {'status': 'tick_complete', 'feed': feed,
                   'executed': int(result is not None), 'public_source': refresh,
