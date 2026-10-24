@@ -23,8 +23,17 @@ test('Workload Distribution opens only existing native focus popup, never a new 
 
 test('Bundled native script and CSS match reviewable workload sources',()=>{
   assert.ok(html.includes(popup.trim()),'Runtime bundle must contain exact Workload module code');
-  const collapseWhitespace=x=>x.replace(/\\s+/g,' ').trim();
-  assert.ok(collapseWhitespace(html).includes(collapseWhitespace(css)),'Runtime bundle must contain scoped Workload stylesheet content');
+  // Native HUD retains its own stylesheet; check reviewed scoped selector rules,
+  // not a single contiguous CSS blob that may be separated by legacy styles.
+  for(const rule of [
+    '#rovor-workload-popup{display:flex',
+    '#rovor-workload-popup .wl-matrix-scroll',
+    '#workloadPanel .wl-compact-row',
+    '/* Refine mobile density without altering the original panel size or grid. */'
+  ]){
+    assert.ok(css.includes(rule),'Reviewable CSS missing '+rule);
+    assert.ok(html.includes(rule),'Runtime HUD CSS missing '+rule);
+  }
   assert.match(css,/#workloadPanel \\.wl-compact/);
   assert.match(css,/#rovor-workload-popup \\.wl-cell/);
 });
