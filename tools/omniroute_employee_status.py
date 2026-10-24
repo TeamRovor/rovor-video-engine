@@ -189,6 +189,27 @@ def inspect(state, *, run=subprocess.run):
                     "SELECT COUNT(*) FROM events e JOIN jobs j ON j.id=e.job_id "
                     "WHERE j.kind='research.omniroute' AND e.event='claimed' "
                     "AND e.timestamp>=?",(since,)).fetchone()[0]
+                recent = conn.execute(
+                    "SELECT j.status,j.result FROM events e JOIN jobs j "
+                    "ON j.id=e.job_id WHERE j.kind='research.omniroute' "
+                    "AND e.event='claimed' AND e.timestamp>=? "
+                    "ORDER BY e.timestamp DESC,e.id DESC LIMIT 3",
+                    (since,)).fetchall()
+                failed_recent = 0
+                for previous in recent:
+                    try:
+                        outcome = (json.loads(previous["result"])
+                                   if previous["result"] else {})
+                    except (TypeError, ValueError):
+                        outcome = {}
+                    if (previous["status"] == "failed" or
+                            (isinstance(outcome, dict) and
+                             outcome.get("draft_status") == "needs_review_no_auto_retry")):
+                        failed_recent += 1
+                    else:
+                        break
+                result["consecutive_recorded_inference_failures"] = failed_recent
+                result["inference_claim_guard_would_block"] = failed_recent >= 3
                 result["database_status"] = "snapshot_readable"
             finally:
                 conn.close()
