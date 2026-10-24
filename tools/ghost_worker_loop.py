@@ -7,6 +7,7 @@ Only the adapters currently permitted by ghost_worker.py can execute.
 from __future__ import annotations
 
 import argparse
+from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor
 import sqlite3
 from contextlib import closing
@@ -134,8 +135,8 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
         def one(index):
             if stop_requested(state):
                 return None
-            with sqlite3.connect(str(state_db), timeout=20,
-                                 isolation_level=None) as scoped:
+            with closing(sqlite3.connect(str(state_db), timeout=20,
+                                         isolation_level=None)) as scoped:
                 scoped.row_factory = sqlite3.Row
                 scoped.execute("PRAGMA busy_timeout=20000")
                 return ghost_worker.run_once(
@@ -146,7 +147,15 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
         nonempty = [receipt for receipt in receipts if receipt is not None]
         return {"stop_reason": "parallel_tick_complete", "executed": len(nonempty),
                 "succeeded": sum(x["status"] == "succeeded" for x in nonempty),
-                "failed": sum(x["status"] != "succeeded" for x in nonempty),
+                "failed": sum(x["status"] == "failed" or
+                              (x.get("result") or {}).get("draft_status") == "needs_review_no_auto_retry"
+                              for x in nonempty),
+                "review_ready": sum((x.get("result") or {}).get("draft_status")
+                                    == "draft_completed_needs_review" and
+                                    (x.get("result") or {}).get("review_status")
+                                    == "draft_ready_for_human_review"
+                                    for x in nonempty),
+                "needs_review": sum(x["status"] == "needs_review" for x in nonempty),
                 "work_plan": feed_result, "parallel_workers": parallel_omniroute_workers,
                 "read_only": False, "native_import_enabled": False,
                 "model_use_enabled": False, "omniroute_model_use_enabled": True,
