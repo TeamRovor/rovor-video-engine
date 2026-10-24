@@ -58,7 +58,7 @@ async function main(){
   assert(expanded.width<=width+2&&expanded.height<=height+2,name+': modal overflow');
   if(name==='iphone-portrait'||name==='desktop')await screenshot(name+'-heatmap');
   await evalJS('document.querySelector("[data-wl-tab=models]").click();return true');
-  assert.equal(await evalJS('return document.querySelectorAll(".wl-model-entry").length'),9);
+  assert(await poll(()=>evalJS('return document.querySelectorAll(".wl-model-entry").length===9')),name+': model listing did not settle');
   await evalJS('document.querySelector("[data-wl-tab=routing]").click();return true');
   assert(await poll(()=>evalJS('return !!document.querySelector(".wl-route-chart")')),name+': routing chart not shown');
   await evalJS('document.querySelector("#screen .close").click();document.querySelector("[data-wl-compact-tab=employees]").click();return true');
