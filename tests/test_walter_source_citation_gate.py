@@ -140,9 +140,66 @@ class CitationTests(unittest.TestCase):
                  mock.patch("walter_workpack_compile.compile_packets",
                             return_value={"walter-v1-test": {"inputs": [NAME]}}):
                 result = inspect_packet(root, "walter-v1-test",
-                                        "[[source:WORK.md#L2]]", {NAME: HASH})
+                                        ("The public workflow describes a verified STOP "
+                                         "check before each task dispatch. Reviewers must "
+                                         "separately authenticate the source snapshot and "
+                                         "the worker's receipt before accepting a finding. "
+                                         "This offline test does not contact a Mac or "
+                                         "run any inference. [[source:WORK.md#L2]]"),
+                                        {NAME: HASH})
             self.assertEqual(result["reference_count"], 1)
             release.assert_called_once()
+
+    def test_research_draft_rejects_citation_only_answer(self):
+        from walter_source_citation_gate import _research_draft_quality
+        with self.assertRaises(CitationError) as error:
+            _research_draft_quality("[[source:WORK.md#L2]]")
+        self.assertEqual(str(error.exception), "draft_not_substantive")
+        # The low-level citation binding used by reviewed findings remains valid.
+        self.assertEqual(check("[[source:WORK.md#L2]]")["reference_count"], 1)
+
+    def test_research_draft_rejects_uncited_second_paragraph(self):
+        from walter_source_citation_gate import _research_draft_quality
+        first = ("The source describes the current dispatch STOP check and requires "
+                 "fresh verification before another task is proposed to a specialist. "
+                 "[[source:WORK.md#L2]]")
+        second = ("This additional unsupported paragraph claims that the worker "
+                  "is constantly productive and all models have been verified "
+                  "throughout the day despite no new independent evidence.")
+        with self.assertRaises(CitationError) as error:
+            _research_draft_quality(first + "\\n\\n" + second)
+        self.assertEqual(str(error.exception), "draft_paragraph_missing_citation")
+
+    def test_research_draft_rejects_single_citation_padding(self):
+        from walter_source_citation_gate import _research_draft_quality
+        prose = ("This proposed workflow uses documented task identity and source "
+                 "verification before any specialist draft is considered for review. " * 9)
+        with self.assertRaises(CitationError) as error:
+            _research_draft_quality(prose + " [[source:WORK.md#L2]]")
+        self.assertEqual(str(error.exception), "draft_citation_density_insufficient")
+
+    def test_research_draft_rejects_repetitive_generic_filler(self):
+        from walter_source_citation_gate import _research_draft_quality
+        prose = ("The worker should improve results with a better process. " * 5)
+        with self.assertRaises(CitationError) as error:
+            _research_draft_quality(prose + " [[source:WORK.md#L2]]")
+        self.assertEqual(str(error.exception), "draft_not_substantive")
+
+    def test_research_draft_accepts_two_grounded_paragraphs(self):
+        from walter_source_citation_gate import _research_draft_quality
+        answer = (
+            "The dispatch workflow must verify its STOP state before selecting "
+            "another grounded task. This is a proposed code-review check rather "
+            "than proof of live host operation. [[source:WORK.md#L2]]\\n\\n"
+            "The research packet should preserve its source fingerprint and "
+            "separate any model-authored conclusions from authenticated evidence. "
+            "A reviewer can then evaluate the proposed regression tests before "
+            "approving further engineering work. [[source:WORK.md#L3]]"
+        )
+        result = _research_draft_quality(answer)
+        self.assertTrue(result["draft_quality_checked"])
+        self.assertEqual(result["cited_prose_blocks"], 2)
+        self.assertGreaterEqual(result["prose_word_count"], 30)
 
     def test_unknown_packet_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -156,7 +213,13 @@ class CitationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / NAME).write_text(TEXT)
-            answer = "VERY_PRIVATE_MODEL_ANSWER [[source:WORK.md#L2]]"
+            answer = ("VERY_PRIVATE_MODEL_ANSWER: The existing public worker "
+                      "source requires a STOP check before each dispatch. "
+                      "A human reviewer should independently inspect the "
+                      "claimed task identity, verified source fingerprint, "
+                      "and receipt status before any new work is approved. "
+                      "No Mac or provider execution is asserted here. "
+                      "[[source:WORK.md#L2]]")
             fake_stdin = io.TextIOWrapper(io.BytesIO(answer.encode()), encoding="utf-8")
             stdout = io.StringIO()
             with mock.patch("sys.stdin", fake_stdin), contextlib.redirect_stdout(stdout), \
@@ -168,6 +231,23 @@ class CitationTests(unittest.TestCase):
             self.assertEqual(status, 0)
             self.assertNotIn("VERY_PRIVATE", stdout.getvalue())
             self.assertIn("citation_format_verified_needs_human_review", stdout.getvalue())
+
+    def test_cli_rejects_citation_only_draft_without_leaking_text(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / NAME).write_text(TEXT)
+            answer = "PRIVATE_CITATION_ONLY [[source:WORK.md#L2]]"
+            fake_stdin = io.TextIOWrapper(io.BytesIO(answer.encode()), encoding="utf-8")
+            stdout = io.StringIO()
+            with mock.patch("sys.stdin", fake_stdin), contextlib.redirect_stdout(stdout), \\
+                 mock.patch("walter_workpack_compile.verify_checked_in"), \\
+                 mock.patch("walter_workpack_compile.compile_packets",
+                            return_value={"walter-v1-test": {"inputs": [NAME]}}):
+                status = main(["--repo", tmp, "--packet", "walter-v1-test",
+                               "--expected-sha256", NAME + "=" + HASH])
+            self.assertEqual(status, 2)
+            self.assertNotIn("PRIVATE_CITATION_ONLY", stdout.getvalue())
+            self.assertIn("citation_gate_refused", stdout.getvalue())
 
     def test_cli_mismatch_is_content_free(self):
         fake_stdin = io.TextIOWrapper(io.BytesIO(b"SECRET_UNTRUSTED"), encoding="utf-8")
