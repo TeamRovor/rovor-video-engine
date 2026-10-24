@@ -3236,9 +3236,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:24:15.671Z",
-      "next_update": "After existing-service activation command and live loaded/STOP/idle verification",
-      "next_action": "Successful draft runtime0716b657 verified, one attempt202fdb8c and19.653s. Manual QA corrections recorded; raw AI unapproved. Enable EXISTING LaunchAgent only using pinned helperd87022619545027bee30b648d26596678ad59df5 --enable-approved-draft-queue; source69 tests PASS and bytes verified, preservesbackup/STOP failure. It checks idle eligible queue, noautoenqueue, fixed :free routes,5 attempts/24h, noInterpreter/native. Then inspect actual launchd, log, STOP and no-model idle operation. No overnight-endurance claim.",
+      "updated_at": "2026-10-24T00:28:59.247Z",
+      "next_update": "After second natural300s timer tick, then useful approved-task enqueue",
+      "next_action": "Existing com.rovor.ghost-worker.readonly is now loaded against pinned0716b657 runtime. Verify next natural scheduled tick and unchanged AI attempts; keep same service/SQLite/no-replay controls. Then prepare genuinely useful bounded public-metadata draft task for explicit queue approval; no automatic task creation or replay. Old Final Cut queued jobs remain disabled. Do not rerun one-shot or activation scripts.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -3309,9 +3309,16 @@
           "check": "Private job202fdb8c receipt and manual QA; gatewayHTTP200; AC sleep0;69 focused tests both versions; activation helper byte readback",
           "result": "Live draft completed19.653s/one attempt; raw text has2 source-correctable factual errors and remains unapproved. Activation helper tested source-only; no service/state changes or new inference performed here.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/d87022619545027bee30b648d26596678ad59df5"
+        },
+        {
+          "commit": "d87022619545027bee30b648d26596678ad59df5",
+          "platform": "ACTUAL Mac user Terminal activation + independent launchctl/plist/log/SQLite readback",
+          "check": "Helper checksum; existing label loaded, interval300s, pinned0716b657, runs1 last_exit0; first idle summary; STOP cleared only after verification; backup exists; queue inspected",
+          "result": "LOADED and first idle tick PASS; no model request during activation. Empty eligible queue. One successful prior AI draft; failed job preserved. Overnight/second natural tick/remote dispatch not yet verified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/41"
         }
       ],
-      "blocker": "Source activation helper prepared; Work cannot write user LaunchAgents/state. Requires user Terminal invocation to activate same existing service; currently STOP on and service unloaded."
+      "blocker": "No approved eligible local jobs queued. Existing service loaded and first idle tick verified; recurring timer/overnight endurance and remote dispatch remain unverified."
     }
   ]
 }
