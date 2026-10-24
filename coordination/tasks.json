@@ -3690,7 +3690,7 @@
       "id": "omniroute-paced-runtime-health-20261024",
       "title": "Implement paced dispatch decisions and truthful runtime quota/backlog health",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar paced-runtime session 2026-10-24",
       "branch": "fix/omniroute-paced-runtime-health",
       "scopes": [
@@ -3700,10 +3700,19 @@
         "integrations/open-interpreter/OMNIROUTE-DISPATCH-PACING.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T06:28:00Z",
-      "next_update": "After focused tests and a read-only live Mac quota diagnosis",
-      "next_action": "Build and test pacing and exact rolling-quota wake-up decisions in independent files; inspect live worker without changing installed service or overlapping PR41 modules.",
-      "acceptance": "Per-claim pacing prevents early quota exhaustion; exact release times, STOP, running jobs, circuit and queue exhaustion remain distinct. Simulated rolling-day tests and read-only host diagnosis; no model calls or installed service edits."
+      "updated_at": "2026-10-24T06:32:00Z",
+      "next_update": "Source complete; runtime integration must be claimed with the existing PR41 owner",
+      "next_action": "Review PR135 commit499ec517440bf6056d141a1ca072072761b4da51. 12 local Mac tests and live read-only quota probe passed. Integrate dispatch_decision inside existing atomic claim, configure owner-approved sustainable rate, then activate same LaunchAgent and verify new queued-job receipt. No runtime deployment or new inference performed; current Mac quota first frees 2026-10-25T00:06:10Z. Existing finite backlog remains separate work. Installed LaunchAgent and SQLite state are outside this session's writable roots; no attempt to bypass those restrictions.",
+      "acceptance": "Per-claim pacing prevents early quota exhaustion; exact release times, STOP, running jobs, circuit and queue exhaustion remain distinct. Simulated rolling-day tests and read-only host diagnosis; no model calls or installed service edits.",
+      "evidence": [
+        {
+          "commit": "499ec517440bf6056d141a1ca072072761b4da51",
+          "platform": "Amar Mac / local Python / isolated writable workspace",
+          "check": "12 focused pacing/health tests; paired task routing; live read-only quota probe",
+          "result": "PASS. Simulated seven days at 14/20/144 claims daily; actual installed worker 14/14, 3 queued, 0 running. No model requests, no deployment.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/135"
+        }
+      ]
     }
   ]
 }
