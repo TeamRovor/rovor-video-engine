@@ -34,7 +34,7 @@ for file_name, expected in (
         raise SystemExit(f"Missing texture: {file_name}")
     with source.open("rb") as stream:
         hdr = stream.read(24)
-    if len(hdr) < 24 or hdr[:8] != b"\\x89PNG\\r\\n\\x1a\\n" or hdr[12:16] != b"IHDR":
+    if len(hdr) < 24 or hdr[:8] != bytes((137, 80, 78, 71, 13, 10, 26, 10)) or hdr[12:16] != b"IHDR":
         raise SystemExit(f"Invalid PNG signature: {file_name}")
     actual = struct.unpack(">II", hdr[16:24])
     if actual != expected:
