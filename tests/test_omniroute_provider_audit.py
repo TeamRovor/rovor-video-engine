@@ -22,6 +22,15 @@ class ProbeTests(unittest.TestCase):
         self.assertNotIn("PRIVATE_EMAIL",json.dumps(got))
         self.assertFalse(got["billing_eligibility_verified"])
         self.assertEqual(got["model_requests"],0)
+    def test_unexpected_nonsecret_json_shape_is_classified_without_dumping(self):
+        class Reply:
+            returncode = 0
+            stdout = '{"unexpected": {"secret": "PRIVATE_VALUE"}}'
+        got = probe.audit(run=lambda *args, **kwargs: Reply())
+        self.assertEqual(got["omniroute_cli_inventory"], "unavailable")
+        self.assertEqual(got["sanitized_blocker"], "cli_json_shape_unrecognized")
+        self.assertNotIn("PRIVATE_VALUE", json.dumps(got))
+
     def test_bad_cli_is_only_sanitized_unavailable(self):
         class Reply:
             returncode=2
