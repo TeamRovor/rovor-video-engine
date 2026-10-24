@@ -3920,6 +3920,29 @@
       "next_action": "Implement an offline, private-only, source-citation-verified triage that detects duplicate or generic specialist drafts, enforces actionable evidence/change/test/uncertainty sections and preserves all private content outside GitHub. No Mac runtime or PR137 files touched.",
       "acceptance": "Standalone Python3.9-compatible standard-library module verifies independently pinned source digests and citation line spans using existing citation gate, enforces concrete action/test sections and role/deliverable alignment, detects exact and near-duplicate drafts against separately supplied private history, returns sanitized bounded metrics only, requires human review. Focused adversarial tests and hosted CI with shared task/routing checks. No live inference, no Mac writes or auto-approval.",
       "evidence": []
+    },
+    {
+      "id": "omniroute-model-atomic-claim-20261024",
+      "title": "Reserve verified OmniRoute model slots and quota atomically alongside existing SQLite job claims",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar isolated GitHub per-model reservation implementation 2026-10-24",
+      "branch": "feature/omniroute-atomic-model-reservation",
+      "scopes": [
+        "tools/omniroute_model_reservation.py",
+        "tests/test_omniroute_model_reservation.py",
+        ".github/workflows/omniroute-model-reservation.yml",
+        "integrations/open-interpreter/OMNIROUTE-MODEL-RESERVATIONS.md"
+      ],
+      "depends_on": [
+        "omniroute-proportional-capacity-20261024"
+      ],
+      "updated_at": "2026-10-24T08:37:43.102Z",
+      "next_update": "After hosted Python matrix and host integration handoff",
+      "next_action": "Implement a source-only SQLite reservation helper that is usable *inside* the existing worker's BEGIN IMMEDIATE claim transaction: verified model fit, bounded per-model in-flight, local request-count decrement after attestations, unique job ID, conservative final-slot concurrency, no auto reuse/refunds, STOP/circuit. No separate scheduler, no host deployment, no upstream inference. Transfer to current PR #137 owner for reviewed use before worker commit.",
+      "acceptance": "Race-proof in-memory SQLite concurrent reservation tests; preserves historical reservations after completion for quota accounting, refuses duplicate/replay, expired pending not silently released, paid/unverified/private task rejected; zero network/inference, 3.9/3.11 CI.",
+      "links": [],
+      "evidence": []
     }
   ]
 }
