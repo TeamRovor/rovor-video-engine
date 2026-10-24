@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="reference-hud.css" />
   <link rel="stylesheet" href="hud-experience.css" />
+  <link rel="stylesheet" href="cinematic-layout.css" />
 </head>
 <body>
   <div class="scanlines"></div>
@@ -30,7 +31,8 @@
       </div>
       </div>
       <div class="header-status"><span class="header-status-led"></span><span id="headerConnection">VERIFYING SOURCE</span><span class="header-clock"><strong id="hudClock">--:--</strong><small id="hudDate">—</small></span></div>
-      <div class="top-actions">
+      <button id="hudToolsBtn" class="hud-tools-toggle" aria-expanded="false" aria-controls="hudTools" type="button" title="Display tools and controls">TOOLS <span aria-hidden="true">⌄</span></button>
+      <div class="top-actions" id="hudTools">
         <button id="hudCommandBtn" class="hud-btn hud-command-button" type="button" aria-haspopup="dialog" aria-controls="hudCommandDialog">⌘ Command</button>
         <button id="hudFullscreenBtn" class="hud-btn alt" type="button">Fullscreen</button>
         <button id="motionBtn" class="hud-btn alt" type="button" aria-pressed="true">Motion: On</button>
@@ -49,18 +51,18 @@
     <section class="reference-console" aria-label="ROVOR interactive operations dashboard">
       <div class="console-rail console-left">
         <section class="hud-panel reference-panel quick-tasks">
-          <div class="reference-panel-head"><h2 class="panel-title">TASK COMMAND</h2><span class="panel-counter" id="activeTaskCount">—</span></div>
+          <div class="reference-panel-head"><h2 class="panel-title">ACTIVE TASKS</h2><span class="panel-counter" id="activeTaskCount">—</span></div>
           <p class="source-caption">GitHub queue · claimed does not mean running</p>
           <div class="quick-task-list" id="activeTaskPreview" aria-live="polite"><p class="muted">Loading public task queue…</p></div>
           <button type="button" class="micro-link" data-open-view="tasks">VIEW COMPLETE QUEUE <span aria-hidden="true">↗</span></button>
         </section>
         <section class="hud-panel reference-panel workload-panel">
-          <h2 class="panel-title">TASK WORKLOAD</h2>
+          <h2 class="panel-title">TASK DISTRIBUTION</h2>
           <div class="workload-bars" id="workloadBars"><p class="muted">Awaiting task counts…</p></div>
           <p class="source-caption">Queue distribution · not CPU / GPU / Mac metrics</p>
         </section>
         <section class="hud-panel reference-panel activity-panel">
-          <h2 class="panel-title">VERIFIED ACTIVITY</h2>
+          <h2 class="panel-title">RECENT ACTIVITY</h2>
           <div class="evidence-list" id="recentEvidence"><p class="muted">Waiting for source evidence…</p></div>
         </section>
       </div>
@@ -69,7 +71,7 @@
         <div class="reactor-stage" id="reactorStage" aria-label="ROVOR orbital Earth command center">
           <canvas id="earthCanvas" class="earth-canvas" aria-hidden="true"></canvas>
           <div class="hud-scan-overlay" aria-hidden="true"></div>
-          <div class="core-banner">R O V O R &nbsp; D I G I T A L</div>
+          <div class="core-banner">R O V O R &nbsp; D I G I T A L <span aria-hidden="true" class="core-banner-bars">▰▰▰</span></div>
           <div class="reactor-grid"></div>
           <div class="reactor-halo halo-outer"></div><div class="reactor-halo halo-mid"></div><div class="reactor-halo halo-inner"></div>
           <div class="orbit-deck orbit-deck-outer" aria-hidden="true"></div><div class="orbit-deck orbit-deck-inner" aria-hidden="true"></div>
@@ -85,7 +87,7 @@
 
       <div class="console-rail console-right">
         <section class="hud-panel reference-panel ring-panel">
-          <div class="reference-panel-head"><h2 class="panel-title">ROUTING HEALTH</h2><button id="routingInspectBtn" class="hud-inspect-btn" type="button" title="Inspect routing coverage" aria-haspopup="dialog" aria-controls="hudDrawer">Details ↗</button></div>
+          <div class="reference-panel-head"><h2 class="panel-title">SYSTEM HEALTH</h2><button id="routingInspectBtn" class="hud-inspect-btn" type="button" title="Inspect routing coverage" aria-haspopup="dialog" aria-controls="hudDrawer">Details ↗</button></div>
           <div class="health-topline">
             <div class="ring-wrap">
               <svg viewBox="0 0 220 220" class="status-ring" role="img" aria-label="Percent of queued tasks with routing rules">
@@ -105,19 +107,29 @@
           <div class="tiny-grid" id="snapshotMeta"></div>
         </section>
         <section class="hud-panel reference-panel metrics-panel">
-          <h2 class="panel-title">GITHUB TELEMETRY</h2>
+          <h2 class="panel-title">GITHUB ANALYTICS</h2>
           <div class="metrics" id="metrics"></div>
           <div class="barline"><div class="bar-label">QUEUE STATUS DISTRIBUTION</div><div id="statusBars" class="status-bars"></div></div>
           <p class="source-caption">Public repository metadata only · no API quota measurement</p>
         </section>
-        <section class="hud-panel reference-panel warning-panel">
-          <h2 class="panel-title">EXECUTION BOUNDARY</h2>
-          <div class="warning-box">
-            <div class="warning-led" aria-hidden="true"></div>
-            <div><div class="warning-head">NATIVE APP EXECUTION UNVERIFIED</div>
-              <p>Public GitHub status is not proof that a Mac, Final Cut, Blender, or Moho is executing tasks.</p></div>
+        <section class="hud-panel reference-panel warning-panel source-preview-panel">
+          <div class="reference-panel-head"><h2 class="panel-title">SOURCE FEED</h2><span class="source-live-pill" id="sourceFeedMode">VERIFYING</span></div>
+          <div class="source-feed-body">
+            <div class="feed-preview" aria-label="NASA Earth-at-night satellite imagery used as a decorative visual">
+              <img src="./earth-night.png" alt="NASA Earth-at-night imagery" loading="lazy" />
+              <div class="feed-wave" aria-hidden="true"></div>
+            </div>
+            <div class="feed-telemetry">
+              <strong>GITHUB SOURCE</strong>
+              <span id="sourceFeedState">Checking repository</span>
+              <small id="sourceFeedCommit">Commit not yet verified</small>
+              <button type="button" class="micro-link" data-open-view="repo">INSPECT SOURCE ↗</button>
+            </div>
           </div>
-          <details class="boundary-details"><summary>Source limitations</summary><ul id="notesList" class="notes-list"></ul></details>
+          <details class="boundary-details source-boundaries"><summary>Data and executor limitations</summary>
+            <p>GitHub status does not prove the Mac, video engine, or ghost employees are running.</p>
+            <ul id="notesList" class="notes-list"></ul>
+          </details>
         </section>
       </div>
     </section>
@@ -130,6 +142,12 @@
       <button class="tab" id="tab-button-workers" role="tab" aria-selected="false" aria-controls="tab-workers" tabindex="-1" data-tab="workers"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="m18 9 2-2-3-3-2 2a8 8 0 0 0-3-1l-.5-2h-4L7 5a8 8 0 0 0-2.8 1l-2-1.7-2 3.3L2 9a8 8 0 0 0 0 6l-1.8 1.4 2 3.3 2.1-1.7A8 8 0 0 0 7 19l.5 2h4l.5-2a8 8 0 0 0 3-1l2 2 3-3-2-2a8 8 0 0 0 0-6z"/></svg><span>Workers</span></button>
     </nav>
 
+    <footer class="hud-bottom-rail" aria-label="ROVOR Digital footer">
+      <div class="footer-brand"><img src="./rovor-mark.svg" alt="" /> ROVOR DIGITAL</div>
+      <span class="footer-ornament" aria-hidden="true"></span>
+      <span>INNOVATION &nbsp; // &nbsp; EFFICIENCY &nbsp; // &nbsp; FREEDOM</span>
+    </footer>
+    <button type="button" id="hudWorkspaceClose" class="hud-workspace-close" aria-label="Close active workspace" hidden>← Back to HUD</button>
     <main>
       <section class="tab-view active" id="tab-overview" role="tabpanel" aria-labelledby="tab-button-overview" tabindex="0">
         <div class="section-grid two-thirds">
@@ -252,6 +270,7 @@
   <script src="reference-hud.js"></script>
   <script src="orbital-earth.js"></script>
   <script src="hud-experience.js"></script>
+  <script src="cinematic-layout.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
