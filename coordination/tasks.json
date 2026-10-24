@@ -4846,7 +4846,7 @@
       "id": "nine-provider-cloud-dispatch-20261024",
       "title": "Implement Mac-independent nine-provider cloud execution and durable usage receipts",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar nine-provider cloud execution session",
       "branch": "feature/nine-provider-cloud-dispatch-20261024",
       "scopes": [
@@ -4855,10 +4855,30 @@
         ".github/workflows/ghost-cloud.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T22:33:56.242Z",
-      "next_update": "After bounded cloud runtime tests and deployment-readiness review",
-      "next_action": "Implement independent cloud provider adapters, D1 atomic job claims, STOP, quota admission and authenticated status with actual inference receipts. Integrate no existing owner files.",
-      "acceptance": "All nine fixed HTTPS adapters execute through injected fetch; durable single-attempt claims enforce concurrency and quota, fail closed on unknown eligibility, reject blank output, retain actual usage and review status. Focused tests pass. Live provisioning remains separate and must be truthfully reported."
+      "updated_at": "2026-10-24T22:39:52.502Z",
+      "next_update": "Source implementation merged; live activation requires independent runtime evidence.",
+      "next_action": "PR188 merged at 14def7f853fc08c84bb59578a53048dfd4f1cb97. Compose integrations/ghost-cloud into the existing private Site appgprj_6add1e2cc8c08191839344b34d7dbf50 through the persistent-HUD owner's deployment, append namespaced schema migration, provision nine server-side provider secrets and distinct read/write credentials, verify exact models/zero-cost eligibility/quotas/real canaries, register unattended trigger, enqueue canonical approved public tasks and bind authenticated /api/ghost/status into existing HUD. Existing Site source-push connectivity remains unresolved. Eligibility renewal and queue replenishment are not implemented here. No live inference, source upload, cloud deployment, real D1 binding, nine-provider execution or 24h continuity claimed. Do not recreate the module, duplicate Sites or replace Mac worker.",
+      "acceptance": "All nine fixed HTTPS adapters execute through injected fetch; durable single-attempt claims enforce concurrency and quota, fail closed on unknown eligibility, reject blank output, retain actual usage and review status. Focused tests pass. Live provisioning remains separate and must be truthfully reported.",
+      "evidence": [
+        {
+          "commit": "9eabec7d5b88bb0879444ddb712a63a8209c046a",
+          "platform": "macOS Node24.22.0 and GitHub Actions Ubuntu Node24",
+          "check": "node --test tests/test_ghost_cloud.mjs (19 tests); python3 tools/project_loop.py check; python3 tools/task_routing_pair.py --check",
+          "result": "PASS local and hosted: real SQLite admission/status tests plus mocked transport for all nine adapters; no model credentials or live inference.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40139432522"
+        },
+        {
+          "commit": "14def7f853fc08c84bb59578a53048dfd4f1cb97",
+          "platform": "GitHub squash merge PR188",
+          "check": "Pinned PR head 9eabec7d5b88bb0879444ddb712a63a8209c046a merged after focused CI",
+          "result": "MERGED SOURCE ONLY: bounded direct provider runtime, D1 claims/quotas/STOP/circuit, private drafts and authenticated sanitized HUD status. Activation and live nine-provider proof remain unimplemented.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/188"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/188",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40139432522"
+      ]
     }
   ]
 }
