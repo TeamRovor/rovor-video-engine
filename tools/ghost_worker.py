@@ -276,6 +276,9 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
             from omniroute_model_reservation import reserve
             import omniroute_fleet_binding as binding
             fleet = omni_verified_fleet
+            if (not isinstance(fleet.get('task'), dict)
+                    or fleet['task'].get('id') != job['id']):
+                raise ValueError('Verified model task must match exact queued job')
             selection = reserve(
                 conn, job['id'], fleet['task'], fleet['models'],
                 now=now, stop_present=os.path.lexists(
