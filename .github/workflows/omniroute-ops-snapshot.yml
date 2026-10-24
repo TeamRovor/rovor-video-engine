@@ -1,0 +1,27 @@
+name: OmniRoute one-command operator snapshot (offline)
+on:
+  pull_request:
+    paths:
+      - 'tools/omniroute_ops_snapshot.py'
+      - 'tests/test_omniroute_ops_snapshot.py'
+      - '.github/workflows/omniroute-ops-snapshot.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify snapshot correctness and no raw private exposure
+        run: python -m unittest discover -s tests -p test_omniroute_ops_snapshot.py -v
