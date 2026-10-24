@@ -199,7 +199,10 @@ class ProbeTests(unittest.TestCase):
         for role in ("mike","jane","jesse"):
             self.assertEqual(report["v2_recovery_specialists"][role],
                              {"job_status":"running","review_ready":False,
-                              "failed_no_retry":False})
+                              "failed_no_retry":False,
+                              "review_state":"not_available",
+                              "failure_class":"not_available",
+                              "admission_code":"not_available"})
         self.assertEqual(report["v2_recovery_specialists"]["gale"]["job_status"],
                          "not_queued")
         with sqlite3.connect(str(self.state/"jobs.sqlite3")) as db:
@@ -223,6 +226,43 @@ class ProbeTests(unittest.TestCase):
         self.assertTrue(after["v2_recovery_specialists"]["mike"]["review_ready"])
         self.assertTrue(after["v2_recovery_specialists"]["jane"]["failed_no_retry"])
         self.assertNotIn("SECRET_DRAFT_DONT_PRINT",json.dumps(after))
+        self.assertEqual(after["v2_recovery_specialists"]["mike"]["review_state"],
+                         "draft_ready_for_human_review")
+        self.assertEqual(after["v2_recovery_specialists"]["jane"]["review_state"],
+                         "failed_needs_review")
+
+    def test_v2_failure_receipt_is_matched_and_sanitized_with_public_v2_id(self):
+        uid="9a111111-2222-3333-4444-555555555555"
+        slug="walter-v2-jane-editor-handoff"
+        folder=self.state/"omniroute-drafts"/uid
+        folder.mkdir(parents=True)
+        (folder/(slug+".receipt.json")).write_text(json.dumps({
+            "id":"walter-public-v2-jane-editor-handoff",
+            "status":"needs_review_no_auto_retry",
+            "error_class":"GatewayTruncatedAnswer",
+            "admission_code":"incomplete_length_stop",
+            "elapsed_seconds":24,
+            "private_gateway_error":"DONT_SHOW_PROVIDER_RAW_TEXT"
+        }))
+        db=sqlite3.connect(str(self.state/"jobs.sqlite3"))
+        db.execute("INSERT INTO jobs VALUES(?,?,?,?,?)",
+                   (uid,"research.omniroute","needs_review",
+                    json.dumps({"packet":slug}),
+                    json.dumps({"draft_status":"needs_review_no_auto_retry",
+                                "review_status":"failed_needs_review",
+                                "private_answer":"DONT_SHOW_PRIVATE_DRAFT"})))
+        db.commit()
+        db.close()
+        got=status.inspect(self.state,run=lambda *args,**kwargs:
+                           type("R",(),{"returncode":0,"stdout":"runs = 3"})())
+        v2=got["v2_recovery_specialists"]["jane"]
+        self.assertEqual(v2["review_state"],"failed_needs_review")
+        self.assertEqual(v2["failure_class"],"GatewayTruncatedAnswer")
+        self.assertEqual(v2["admission_code"],"incomplete_length_stop")
+        self.assertEqual(got["nonready_reason_counts"]["admission:incomplete_length_stop"],1)
+        self.assertEqual(got["v2_recovery_summary"]["failed_no_retry"],1)
+        self.assertNotIn("DONT_SHOW_PRIVATE_DRAFT",json.dumps(got))
+        self.assertNotIn("DONT_SHOW_PROVIDER_RAW_TEXT",json.dumps(got))
 
     def test_stop_reported_without_resuming_worker(self):
         (self.state/"STOP").write_text("owner stopped")
