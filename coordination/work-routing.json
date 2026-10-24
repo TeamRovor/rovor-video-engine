@@ -837,6 +837,14 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "hud-persistent-telemetry-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ]
     }
   }
 }

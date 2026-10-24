@@ -4672,6 +4672,25 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/181",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40129898906"
       ]
+    },
+    {
+      "id": "hud-persistent-telemetry-20261024",
+      "title": "Add durable private HUD telemetry ingestion and outbound collector without temporary tunnel links",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
+      "updated_at": "2026-10-24T20:49:08.291Z",
+      "next_update": "After focused offline integration tests and publication of the cloud transport source",
+      "branch": "feature/hud-persistent-telemetry-20261024",
+      "scopes": [
+        "integrations/hud-cloud",
+        "tools/hud_telemetry_publisher.mjs",
+        "tests/test_hud_cloud.mjs",
+        ".github/workflows/hud-cloud.yml"
+      ],
+      "depends_on": [],
+      "next_action": "Implement authenticated cloud snapshot retention and read-only MCP status, outbound Mac collector, and tests. Preserve existing HUD and worker service. Deployment requires an authenticated cloud target and one-time service installation.",
+      "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed."
     }
   ]
 }
