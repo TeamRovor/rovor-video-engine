@@ -4323,7 +4323,7 @@
       "id": "walter-cross-revision-task-dedupe-20261024",
       "title": "Prevent repeat specialist research for the same public task after source or dedupe changes",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 task identity shift",
       "branch": "feature/walter-cross-revision-task-dedupe-v1",
       "scopes": [
@@ -4334,11 +4334,33 @@
         "subsystem:verified-specialist-task-attempt-identity"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T12:09:36.659Z",
-      "next_update": "Complete source-only identity dedupe implementation, hosted Python 3.9/3.11 tests and shared coordination checks; hand off without Mac deployment.",
-      "next_action": "Add optional independently authenticated SQLite job-to-public-task mapping to receipt bridge and coverage selector. Reject same task_id already attempted or queued even if new dedupe/source digest; fail closed when mapping is supplied but untrusted. Preserve existing source-only behavior and STOP/owner gates. Test synthetic evidence; do not operate Mac or model.",
+      "updated_at": "2026-10-24T12:11:38.637Z",
+      "next_update": "Source merged and verified; host integration requires existing PR137 owner opt-in and authenticated private job-to-task mapping.",
+      "next_action": "PR #170 merged as 5db3e202e8394e01811d837f50c3b0695b3f4ffa. All 3 GitHub Actions workflows passed Python 3.9/3.11 and shared queue/routing checks (runs 40092866283, 40092866294, 40092866303). New optional complete authenticated job_id->public task_id map includes queued jobs; coverage selector refuses repeated task_id even when source SHA/dedupe changes; unverified legacy proposals explicitly require task identity check. Existing PR137 Mac owner must independently derive and verify a COMPLETE mapping from a consistent private SQLite snapshot, pass job_tasks/trusted_task_mapping into bridge.prepare and attempted_task_ids into coverage.choose, then test offline under STOP/quota/atomic-claim gates before any opt-in deployment. No live inference, host access, private receipt publication, or automatic retry.",
       "acceptance": "A pure Python3.9-compatible source-only guard binds complete job-to-task mapping to copied SQLite job IDs, refuses incomplete/invalid/duplicate mapping, blocks repeat task_id even when dedupe/source digest differs, preserves distinct tasks, keeps private job IDs out of output, and retains all existing STOP/approval/role/quota constraints. Add focused tests and hosted Python3.9/3.11 plus shared coordination validation; no Mac deployment, paid calls, or automatic retries.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "9807feb09b40b79eb1d233c5cfedd28f4f0f7008",
+          "platform": "GitHub Actions Ubuntu Python 3.9 and 3.11",
+          "check": "Walter task identity replay guard: receipt bridge and coverage regressions; project_loop.py check; task_routing_pair.py --check",
+          "result": "PASS on both Python versions, including new cross-revision and queued-job identity tests",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40092866283"
+        },
+        {
+          "commit": "9807feb09b40b79eb1d233c5cfedd28f4f0f7008",
+          "platform": "GitHub Actions Ubuntu Python 3.9 and 3.11",
+          "check": "Existing receipt bridge and specialist coverage workflows",
+          "result": "PASS on both Python versions, runs 40092866294 and 40092866303",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40092866294"
+        },
+        {
+          "commit": "5db3e202e8394e01811d837f50c3b0695b3f4ffa",
+          "platform": "GitHub PR #170 / main",
+          "check": "Source-only task identity dedupe guard",
+          "result": "MERGED; no Mac installation, model inference or live host verification",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/170"
+        }
+      ]
     }
   ]
 }
