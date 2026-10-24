@@ -4538,7 +4538,7 @@
       "id": "walter-snapshot-continuity-20261024",
       "title": "Detect dropped, backfilled or rewritten OmniRoute receipts between consecutive private worker snapshots",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 snapshot continuity shift",
       "branch": "feature/walter-snapshot-continuity-20261024",
       "scopes": [
@@ -4548,10 +4548,26 @@
         "subsystem:walter-cross-shift-receipt-continuity"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T17:09:18.351Z",
-      "next_update": "After focused Python3.9/3.11 CI and shared coordination checks, then independent Hank review.",
-      "next_action": "Implement read-only cross-snapshot receipt/heartbeat continuity verifier; reject vanished or backfilled claims, immutable identity edits, invalid review transitions and missing overlapping heartbeats; add focused offline regressions. No Mac host, model calls, queue dispatch or scheduler edits.",
-      "acceptance": "Python3.9 standard-library pure verifier compares independently authenticated consecutive bounded copied Mac ledger snapshots with explicit overlap, checks job immutability, monotonic human-review transitions, receipt/heartbeat retention and no backfilled claims, returns content-free codes only; focused Python3.9/3.11 hosted CI and shared queue/routing checks; no Mac access, provider calls or private output."
+      "updated_at": "2026-10-24T17:11:49.433Z",
+      "next_update": "Source merged and verified; Mac owner or Hank may choose separately authorized offline snapshot comparison.",
+      "next_action": "PR #178 merged at 2fd9b9522a5071733148f8ee33fa63ab76cc86a2. New read-only tools/walter_snapshot_continuity.py detects missing/backfilled claimed jobs and heartbeats, changed immutable account/model attribution, review-status regressions and insufficient overlapping history across independently authenticated private worker snapshots. 25 focused synthetic tests passed on Python3.9/3.11 plus project_loop.py check and task_routing_pair.py --check in run 40114962718. Existing PR137 Mac owner/Hank must independently obtain TWO consistent complete private SQLite/heartbeat snapshots, authenticate provenance, and run offline before trusting continuity. No live Mac access, inference, receipt verification, automatic deployment or completed 24h soak.",
+      "acceptance": "Python3.9 standard-library pure verifier compares independently authenticated consecutive bounded copied Mac ledger snapshots with explicit overlap, checks job immutability, monotonic human-review transitions, receipt/heartbeat retention and no backfilled claims, returns content-free codes only; focused Python3.9/3.11 hosted CI and shared queue/routing checks; no Mac access, provider calls or private output.",
+      "evidence": [
+        {
+          "commit": "2fd9b9522a5071733148f8ee33fa63ab76cc86a2",
+          "platform": "GitHub Actions Ubuntu / Python 3.9 and 3.11",
+          "check": "25 focused cross-snapshot continuity regression tests, canonical project_loop.py check and task_routing_pair.py --check",
+          "result": "PASS both matrix jobs in final run; initial test-fixture failures were corrected and rerun successfully. No network/model/SQLite/Mac calls.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40114962718"
+        },
+        {
+          "commit": "2fd9b9522a5071733148f8ee33fa63ab76cc86a2",
+          "platform": "GitHub PR #178",
+          "check": "New isolated read-only source verifier, adversarial tests and hosted workflow; existing Mac worker and provider routing untouched",
+          "result": "MERGED into main source only. Actual host continuity and 24-hour operation not verified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/178"
+        }
+      ]
     }
   ]
 }
