@@ -161,7 +161,13 @@ def inspect(state, *, run=subprocess.run):
                                     error_class = saved.get("error_class")
                                     allowed_errors = {"ValueError", "TimeoutError",
                                         "HTTPError", "URLError", "OSError",
-                                        "IndexError", "RuntimeError", "TypeError"}
+                                        "IndexError", "RuntimeError", "TypeError",
+                                        "GatewayRateLimited", "GatewayUpstreamFailure",
+                                        "GatewayAuthorizationFailure",
+                                        "GatewayTransportFailure",
+                                        "GatewayReasoningExhausted",
+                                        "GatewayTruncatedAnswer",
+                                        "GatewayEmptyAnswer", "GatewayInvalidCompletion"}
                                     if error_class in allowed_errors:
                                         failure_states["exception:" + error_class] += 1
                                     seconds = saved.get("elapsed_seconds")
