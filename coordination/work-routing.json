@@ -630,6 +630,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "omniroute-reasoning-admission-gate-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

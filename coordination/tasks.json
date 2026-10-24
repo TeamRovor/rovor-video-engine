@@ -3580,6 +3580,26 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40057857541"
         }
       ]
+    },
+    {
+      "id": "omniroute-reasoning-admission-gate-20261023",
+      "title": "Reject reasoning-only OmniRoute completions and build supported zero-reasoning request profiles",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-23",
+      "branch": "feature/walter-reasoning-admission-v1",
+      "scopes": [
+        "tools/omniroute_reasoning_admission.py",
+        "tests/test_omniroute_reasoning_admission.py",
+        ".github/workflows/omniroute-reasoning-admission.yml",
+        "subsystem:omniroute-reasoning-eligibility-policy"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T03:33:00Z",
+      "next_update": "After hosted Python 3.9/3.11 CI and PR review",
+      "next_action": "Implement an offline, explicit model-capability admission gate and response classifier to prevent 2400-token reasoning-only drafts from being treated as successful. No edits to Mac runtime, existing worker, route catalog or live job ledger; integration only by current PR41 owner.",
+      "acceptance": "New stdlib-only module accepts reasoning-off request profiles only when exact free model metadata explicitly supports none and is nonmandatory; rejects mandatory/unknown reasoning, paid/dynamic models, blank/length-exhausted responses, and malformed usage without leaking provider content. Focused Python3.9/3.11 tests and CI; no network, model requests, Mac state or scheduler writes.",
+      "evidence": []
     }
   ]
 }
