@@ -14,7 +14,7 @@ let server,chrome,socket,tmp,serial=0;
 const pending=new Map();
 const cmd=(method,params={})=>new Promise((resolve,reject)=>{const id=++serial;pending.set(id,{resolve,reject});socket.send(JSON.stringify({id,method,params}))});
 const evalJS=async source=>{const r=await cmd('Runtime.evaluate',{expression:'(()=>{'+source+'})()',returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error('Browser JS error: '+JSON.stringify(r.exceptionDetails));return r.result.value};
-const poll=async fn=>{for(let i=0;i<180;i++){try{const v=await fn();if(v)return v}catch{}await delay(100)}throw Error('Browser operation timed out')};
+const poll=async fn=>{for(let i=0;i<600;i++){try{const v=await fn();if(v)return v}catch{}await delay(100)}throw Error('Browser operation timed out')};
 async function screenshot(name){const r=await cmd('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync(path.join(output,name+'.png'),Buffer.from(r.data,'base64'))}
 async function main(){
  fs.mkdirSync(output,{recursive:true});
