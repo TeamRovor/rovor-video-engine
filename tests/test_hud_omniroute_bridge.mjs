@@ -11,6 +11,7 @@ test('HTTP pairing, auth, whitelist, no proxy, no stale fallback, no mutations',
 assert.equal((await fetch(base+'/api/hud/omniroute')).status,401);
 assert.equal(await new Promise((resolve,reject)=>{const req=http.get(base+'/',{headers:{Host:'evil.example'}},res=>{res.resume();resolve(res.statusCode)});req.on('error',reject)}),403);
 assert.equal((await fetch(base+'/pair',{method:'POST',headers:{Origin:'https://evil.example'},body:'{"code":"pair-secret"}'})).status,403);
+assert.equal((await fetch(base+'/pair',{method:'POST',headers:{Origin:base},body:JSON.stringify({code:'é'.repeat(11)})})).status,401);
 const pair=await fetch(base+'/pair',{method:'POST',headers:{Origin:base},body:'{"code":"pair-secret"}'});assert.equal(pair.status,200);const cookie=pair.headers.get('set-cookie').split(';')[0];const headers={Cookie:cookie};
 assert.equal((await fetch(base+'/pair',{method:'POST',headers:{Origin:base},body:'{"code":"pair-secret"}'})).status,401);
 assert((await (await fetch(base+'/',{headers})).text()).includes('/hud-live.js'));
