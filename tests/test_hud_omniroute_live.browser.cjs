@@ -24,7 +24,7 @@ async function main(){
  publicServer=http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/html'});let page=fs.readFileSync(file,'utf8');page=page.replace("const trusted=url=>url.protocol==='https:'","const trusted=url=>url.origin==='"+publicOriginHolder.bridge+"'||url.protocol==='https:'");res.end(page);});
  await new Promise(r=>publicServer.listen(0,'127.0.0.1',r));
  const publicOrigin='http://127.0.0.1:'+publicServer.address().port;
- const b=createBridge({viewerOrigin:publicOrigin,hud:fs.readFileSync(file,'utf8'),adapter:fs.readFileSync(path.join(root,'native-v8-9/live-omniroute.js'),'utf8'),pairCode:'test-only',collect:async period=>{if(offline)throw Error('offline');return {schema_version:1,source:'local_omniroute_read_only_bridge',snapshot_at:new Date().toISOString(),period,inventory_count:12,request_count:10,usage_coverage:'complete_aggregate',models:Array.from({length:12},(_,i)=>({id:'provider/model-'+i,name:'provider/model-'+i,provider:'provider',requests:i===0?requests:null,tokens:i===0?70:null,request_share_percent:i===0?requests*10:null}))};}});
+ const b=createBridge({viewerOrigin:publicOrigin,hud:fs.readFileSync(file,'utf8'),adapter:fs.readFileSync(path.join(root,'native-v8-9/live-omniroute.js'),'utf8'),pairCode:'test-only',collect:async period=>{if(offline)throw Error('offline');return {schema_version:1,source:'local_omniroute_read_only_bridge',snapshot_at:new Date().toISOString(),period,inventory_count:12,request_count:10,usage_coverage:'complete_aggregate',models:Array.from({length:12},(_,i)=>({id:'provider/model-'+i,name:'provider/model-'+i,provider:'provider',requests:i===0?requests:0,tokens:i===0?70:0,request_share_percent:i===0?requests*10:0}))};}});
  const port=await b.listen();server=b.server;
  const origin='http://127.0.0.1:'+port;publicOriginHolder.bridge=origin;
  const paired=await fetch(origin+'/pair',{method:'POST',headers:{Origin:origin},body:'{"code":"test-only"}'});
@@ -66,10 +66,10 @@ async function main(){
  await evalJS('document.getElementById("connectOmniRoute").click();return true');
  assert(await evalJS('return !!document.getElementById("omniBridgeLink")'));
  await evalJS('document.getElementById("omniBridgeLink").value='+JSON.stringify(publicOriginHolder.bridge+'/#pair='+'a'.repeat(64))+';document.getElementById("omniConnectForm").requestSubmit();return true');
- await poll(()=>evalJS('return document.querySelectorAll("#workloadPanel [data-live-model]").length===12'));
+ await poll(()=>evalJS('return document.querySelectorAll("#workloadPanel [data-live-model]").length===1'));
  assert.equal(await evalJS('return location.origin'),publicOrigin);
  assert(await evalJS('return document.querySelector("#workloadPanel").textContent.includes("CONNECTED")'));
- console.log('PASS public HUD cross-origin pairing → bearer snapshot → 12 live model rows at original origin.');
+ console.log('PASS public HUD cross-origin pairing → bearer snapshot → 1 recorded model row at original origin.');
  console.log('PASS live adapter: 12 models, five responsive sizes, 70→80% measured update, disconnected meters cleared. Mocked gateway, not real Mac evidence.');
 }
 main().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>{try{socket?.close()}catch{};try{chrome?.kill()}catch{};try{server?.close();publicServer?.close();externalServer?.close()}catch{};if(tmp){try{fs.rmSync(tmp,{recursive:true,force:true,maxRetries:8,retryDelay:200})}catch{}}});
