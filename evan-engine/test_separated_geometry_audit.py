@@ -1,10 +1,21 @@
 """Captured targets must equal actual raster pipeline targets."""
 import unittest,cv2,numpy as np
+from types import SimpleNamespace
+from unittest.mock import Mock
 from separated_oral_review import SeparatedOralReview
-from audit_separated_geometry import GeometryCapture,capture,audit
+from audit_separated_geometry import GeometryCapture,GeometryCaptured,capture,audit
 from english_articulation import phone_gestures
+from cartoon_head import POINTS
 
 class GeometryAuditTests(unittest.TestCase):
+ def test_oral_foldover_and_nonfinite_points_fail_even_with_valid_jaw(self):
+  oral=POINTS['C'].copy();head=SimpleNamespace(at=Mock(side_effect=GeometryCaptured),current_oral=oral,exposure_skin=oral.copy(),current_fv=0.)
+  rig=SimpleNamespace(head=head,jaw_target=Mock(return_value=(np.ones((169,2)),1.)))
+  self.assertGreater(capture(rig,0,{})['minimumOralTriangleArea2'],0)
+  oral[[17,18]]=oral[[18,17]]
+  with self.assertRaisesRegex(ValueError,'Oral mesh triangle foldover'):capture(rig,0,{})
+  oral[18,1]=np.nan
+  with self.assertRaisesRegex(ValueError,'Non-finite oral geometry'):capture(rig,0,{})
  def test_capture_matches_full_pipeline_with_contact_and_open_pose(self):
   cv2.setNumThreads(1);real=SeparatedOralReview();fast=SeparatedOralReview();fast.head=GeometryCapture()
   for phone,value in [('F','G'),('AO','E')]:

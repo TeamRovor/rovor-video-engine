@@ -19,6 +19,15 @@ from speech_planner import VOWELS
 from english_articulation import PHONE_CATALOG
 from duration_cartoon_head import duration_jaw_weights
 from rounded_cartoon_head import RoundedCartoonHead,rounding_identity
+from cartoon_head import TRIANGLES,area
+
+ORAL_TRIANGLES=[ids for ids in TRIANGLES if max(ids)<32]
+
+def check_oral_mesh(oral):
+ if not np.isfinite(oral).all():raise ValueError('Non-finite oral geometry')
+ minimum=min(area(oral,ids) for ids in ORAL_TRIANGLES)
+ if minimum<=0:raise ValueError(f'Oral mesh triangle foldover: {minimum}')
+ return minimum
 
 def corner_signature(plan):
  rows=lambda ps:tuple((p['start'],p['end'],p['phone'],p['value']) for p in ps)
@@ -131,7 +140,7 @@ class SeparatedOralReview:
   jaw_oral=oral.copy();jaw_oral[:9,1]=np.interp(oral[:9,0],edge[:,0],edge[:,1])
   return contour_target_mesh(jaw_oral,self.head.exposure_skin)
  def assemble(self,baseline):
-  oral=self.head.current_oral;upper=inner_arch(oral,True);lower=inner_arch(oral)
+  oral=self.head.current_oral;oral_minimum=check_oral_mesh(oral);upper=inner_arch(oral,True);lower=inner_arch(oral)
   target,minimum=self.jaw_target()
   if upper[:,1].min()<310:raise ValueError('Mouth crossed protected upper-face guard')
   jaw=cv2.resize(cv2.remap(self.jaw,*corresponding_fields(self.source_points,target),cv2.INTER_LINEAR,borderMode=cv2.BORDER_CONSTANT),(512,512),interpolation=cv2.INTER_AREA)
@@ -151,4 +160,4 @@ class SeparatedOralReview:
   image=Image.fromarray(np.rint(straight(result)).astype('uint8'));self.last_parts=parts;self.last_target=target;self.baseline=baseline
   before=np.array(baseline);after=np.array(image);nose=int(abs(before[288:310,190:280].astype(int)-after[288:310,190:280].astype(int)).max())
   if nose>1:raise ValueError(f'Protected nose changed: {nose}')
-  return image,dict(roundingStrength=rounding,minimumTriangleArea2=minimum,fv=float(self.head.current_fv),width=float(oral[0,0]-oral[8,0]),lowerY=float(oral[20,1]),noseMaximumChange=nose,upper288Exact=bool(np.array_equal(before[:288],after[:288])),planes=list(parts),bakedMouthInUpperCarrier=False,defaultChanged=False,anatomyAccepted=False)
+  return image,dict(roundingStrength=rounding,minimumTriangleArea2=minimum,minimumOralTriangleArea2=oral_minimum,fv=float(self.head.current_fv),width=float(oral[0,0]-oral[8,0]),lowerY=float(oral[20,1]),noseMaximumChange=nose,upper288Exact=bool(np.array_equal(before[:288],after[:288])),planes=list(parts),bakedMouthInUpperCarrier=False,defaultChanged=False,anatomyAccepted=False)

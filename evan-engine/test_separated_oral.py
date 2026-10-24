@@ -7,6 +7,12 @@ class SeparatedOralTests(unittest.TestCase):
  def setUpClass(cls):cv2.setNumThreads(1);cls.rig=SeparatedOralReview()
  def pose(self,fv):
   w=np.eye(9)[3]*(1-fv)+np.eye(9)[7]*fv;baseline=self.rig.head.weights(w);return self.rig.assemble(baseline)
+ def test_assembly_rejects_folded_oral_mesh_before_returning_pixels(self):
+  self.pose(.4);oral=self.rig.head.current_oral.copy()
+  try:
+   self.rig.head.current_oral[[17,18]]=oral[[18,17]]
+   with self.assertRaisesRegex(ValueError,'Oral mesh triangle foldover'):self.rig.assemble(self.rig.baseline)
+  finally:self.rig.head.current_oral=oral
  def test_original_skin_extraction_preserves_color_chin_and_source(self):
   source=self.rig.head.layers['face-skin'];before=source.copy();jaw=original_jaw_skin(source)
   np.testing.assert_array_equal(source,before)

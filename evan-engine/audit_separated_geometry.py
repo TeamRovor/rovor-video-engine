@@ -3,11 +3,12 @@
 Stops the actual head pipeline immediately after its oral and skin targets.
 Every48fps sample and every phone midpoint is checked, including brief phones
 that fall between output frames. Failures stay explicit; no geometry fallback.
+Oral triangle orientation uses the same gate as the final layered assembly.
 """
 import argparse,hashlib,json,math,wave
 from pathlib import Path
 import numpy as np
-from separated_oral_review import SeparatedOralReview,MaterialCapture,inner_arch
+from separated_oral_review import SeparatedOralReview,MaterialCapture,inner_arch,check_oral_mesh
 
 class GeometryCaptured(Exception):pass
 
@@ -21,8 +22,9 @@ def capture(rig,t,plan):
  except GeometryCaptured:pass
  else:raise RuntimeError('Geometry capture did not reach skin target')
  target,minimum=rig.jaw_target();oral=rig.head.current_oral;upper=inner_arch(oral,True)
+ oral_minimum=check_oral_mesh(oral)
  if upper[:,1].min()<310:raise ValueError('Mouth crossed protected upper-face guard')
- return dict(time=float(t),minimumTriangleArea2=minimum,width=float(oral[0,0]-oral[8,0]),lowerY=float(oral[20,1]),chinY=float(rig.head.exposure_skin[46,1]),fv=rig.head.current_fv,upperGuardMinimumY=float(upper[:,1].min()),targetFinite=bool(np.isfinite(target).all()))
+ return dict(time=float(t),minimumTriangleArea2=minimum,minimumOralTriangleArea2=oral_minimum,width=float(oral[0,0]-oral[8,0]),lowerY=float(oral[20,1]),chinY=float(rig.head.exposure_skin[46,1]),fv=rig.head.current_fv,upperGuardMinimumY=float(upper[:,1].min()),targetFinite=bool(np.isfinite(target).all()))
 
 def audit(plan,duration):
  if not np.isfinite(duration) or duration<=0:raise ValueError('Recording duration must be positive and finite')
