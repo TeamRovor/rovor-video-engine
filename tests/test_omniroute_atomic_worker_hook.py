@@ -201,6 +201,45 @@ class WorkerAtomicFleetTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             binding.verify_binding(MODEL, ROUTES, [{**CATALOG[0],"isHidden":True}])
 
+    def test_host_live_route_changed_after_reservation_never_posts(self):
+        job = self.queue()
+        changed = [{
+            "name": COMBO, "strategy": "priority", "isHidden": False,
+            "models": [CATALOG[0]["models"][0], CATALOG[0]["models"][0]]
+        }]
+        import omniroute_workpack_runner as workpack
+        with mock.patch("ghost_omniroute_job.read_combo_catalog", return_value=changed), \
+             mock.patch.object(workpack, "http_completion",
+                               side_effect=AssertionError("No gateway POST permitted")) as completion:
+            result = worker.run_once(self.conn, self.workspace,
+                owner="rovor-continuous-research", now=NOW,
+                allow_omniroute_model_use=True, omniroute_queue_job_id=job,
+                omni_max_24h=144, omni_continuous=True,
+                omni_pace_seconds=601, omni_verified_fleet=fleet(job))
+        completion.assert_not_called()
+        self.assertEqual(result["status"], "needs_review")
+        self.assertEqual(self.conn.execute(
+            "SELECT status FROM omni_model_reservations WHERE job_id=?",
+            (job,)).fetchone()[0], "reserved")
+
+    def test_ticked_worker_accepts_only_explicit_internal_fleet_provider(self):
+        with mock.patch.object(continuous, "latest_public_tasks",
+                               side_effect=ValueError("offline")), \
+             mock.patch.object(worker, "run_once") as run:
+            run.return_value = {"result": {"review_status": "draft_ready_for_human_review"}}
+            supplied = []
+            def supplier(job, payload, when):
+                supplied.append(job)
+                self.assertEqual(set(payload), {"assignment"})
+                self.assertEqual(when, NOW)
+                return fleet(job)
+            output = continuous.tick(self.state, self.workspace, now=NOW,
+                                     verified_fleet_provider=supplier)
+        self.assertEqual(len(supplied), 1)
+        self.assertTrue(output["review_ready"])
+        self.assertEqual(run.call_args.kwargs["omni_verified_fleet"]["task"]["id"],
+                         supplied[0])
+
     def test_fleet_mode_cannot_run_on_legacy_unbounded_claim(self):
         job=self.queue()
         with self.assertRaisesRegex(ValueError, "requires continuous"):
