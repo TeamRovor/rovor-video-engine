@@ -23,6 +23,8 @@ PATH = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,159}$")
 MAX_TASKS = 500
 MAX_SOURCES = 500
 MAX_BYTES = 4000000
+SCOPE_PATH = re.compile(r"^[A-Za-z0-9._/-]{1,160}$")
+SCOPE_SUBSYSTEM = re.compile(r"^subsystem:[a-z][a-z0-9-]{7,79}$")
 
 
 def _refuse(reason):
@@ -55,32 +57,49 @@ def _verified_sources(source_bytes, source_digests):
     return True
 
 
+def _valid_scope(value):
+    """Treat bare directory names as scopes; refuse ambiguous path syntax."""
+    if type(value) is not str or not value or value != value.strip():
+        return False
+    if value.startswith("subsystem:"):
+        return SCOPE_SUBSYSTEM.fullmatch(value) is not None
+    path = value[:-1] if value.endswith("/") else value
+    return (SCOPE_PATH.fullmatch(path) is not None
+            and all(part not in ("", ".", "..", ".git")
+                    and not part.startswith(".env")
+                    for part in path.split("/")))
+
+
 def _scope_overlap(target, queue):
-    """A ready task cannot silently use another unfinished owner's scope."""
+    """Reject path-segment ancestor/descendant claims, even without '/' suffix.
+
+    Directory ownership is commonly recorded as 'tools' or 'coordination'
+    rather than 'tools/'. A suffix-dependent check lets a child file slip
+    through another active owner's scope. Subsystem scopes remain exact-only.
+    """
     scopes = target.get("scopes")
-    if not isinstance(scopes, list) or any(type(s) is not str for s in scopes):
+    if type(scopes) is not list or not scopes or any(
+            not _valid_scope(scope) for scope in scopes):
         return True
-    own = set(scopes)
     for other in queue["tasks"]:
         if other["id"] == target["id"] or other.get("status") == "done":
             continue
         other_scopes = other.get("scopes")
-        if not isinstance(other_scopes, list) or any(type(s) is not str
-                                                     for s in other_scopes):
+        if type(other_scopes) is not list or not other_scopes or any(
+                not _valid_scope(scope) for scope in other_scopes):
             return True
-        for a in own:
-            for b in other_scopes:
-                if a == b:
-                    return True
-                # Treat a directory scope as overlapping a nested file scope.
-                if (not a.startswith("subsystem:") and
-                        not b.startswith("subsystem:") and
-                        (a.endswith("/") or b.endswith("/")) and
-                        (a.startswith(b.rstrip("/") + "/") or
-                         b.startswith(a.rstrip("/") + "/"))):
+        for own in scopes:
+            for reserved in other_scopes:
+                if own.startswith("subsystem:") or reserved.startswith("subsystem:"):
+                    if own == reserved:
+                        return True
+                    continue
+                own_path, reserved_path = own.rstrip("/"), reserved.rstrip("/")
+                if (own_path == reserved_path
+                        or own_path.startswith(reserved_path + "/")
+                        or reserved_path.startswith(own_path + "/")):
                     return True
     return False
-
 
 def admit(payload, queue, routing, *, commit, source_bytes, source_digests,
           seen_dedupe, attempted_task_ids, claimed_role,
