@@ -219,6 +219,57 @@ class HandoffTests(unittest.TestCase):
                              {"id": "other-task", "status": "ready",
                               "scopes": ["subsystem:example-worker-regression"]}]})
 
+    def test_active_directory_ancestor_blocks_target(self):
+        self.check_block("existing_task_scope_overlap",
+                         kwargs={"existing_tasks": [
+                             {"id": "owner", "status": "active",
+                              "scopes": ["tools/"]}]})
+
+    def test_blocked_directory_ancestor_blocks_test(self):
+        self.check_block("existing_task_scope_overlap",
+                         kwargs={"existing_tasks": [
+                             {"id": "owner", "status": "blocked",
+                              "scopes": ["tests/"]}]})
+
+    def test_ready_directory_without_trailing_slash_blocks(self):
+        self.check_block("existing_task_scope_overlap",
+                         kwargs={"existing_tasks": [
+                             {"id": "owner", "status": "ready",
+                              "scopes": ["tools"]}]})
+
+    def test_descendant_scope_blocks_ancestor_target(self):
+        self.check_block("existing_task_scope_overlap",
+                         kwargs={"existing_tasks": [
+                             {"id": "owner", "status": "active",
+                              "scopes": [TARGET + "/nested/"]}]})
+
+    def test_sibling_filename_prefix_does_not_block(self):
+        finding, params = fixture()
+        params["existing_tasks"] = [
+            {"id": "other", "status": "active",
+             "scopes": ["tools/example_worker_extra.py",
+                        "tests/test_example_worker_extra.py",
+                        "subsystem:example-worker-regression-extra"]}]
+        self.assertEqual(propose(finding, **params)["status"],
+                         "reviewed_candidate_requires_separate_claim")
+
+    def test_malformed_queue_scope_rejected_closed(self):
+        for bad in ("", " tools/", "tools//", "tools/../private.py",
+                    "tools/./example_worker.py", ".git/config",
+                    "subsystem:", "subsystem:tiny", None, 17):
+            with self.subTest(scope=bad):
+                self.check_block("queue_snapshot_unverified",
+                                 kwargs={"existing_tasks": [
+                                     {"id": "other", "status": "active",
+                                      "scopes": [bad]}]})
+
+    def test_done_directory_scope_does_not_block(self):
+        finding, params = fixture()
+        params["existing_tasks"] = [
+            {"id": "older", "status": "done", "scopes": ["tools/"]}]
+        self.assertEqual(propose(finding, **params)["status"],
+                         "reviewed_candidate_requires_separate_claim")
+
     def test_done_scope_does_not_block_new_finding(self):
         finding, params = fixture()
         params["existing_tasks"] = [
