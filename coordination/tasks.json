@@ -3950,7 +3950,8 @@
           "result": "IMPLEMENTED, UNMERGED due shared CI blocker; no model requests, private receipt writes, automatic approval or Mac deployment",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/145"
         }
-      ]
+      ],
+      "blocker": "PR #145 remains unmerged pending passing shared queue validation and independent review. This blocked claim was missing its required blocker field, making all shared CI fail; preserve ownership and review the new CI result before merging. No Mac deployment."
     },
     {
       "id": "omniroute-model-atomic-claim-20261024",
