@@ -3731,11 +3731,11 @@
         "integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T09:33:00Z",
-      "next_update": "After one combined real Mac operations snapshot, or an independent source task with CI; do not require repeated setup prompts.",
-      "next_action": "Use already-merged main tools/omniroute_ops_snapshot.py (PR152) as ONE non-mutating host check of actual job quality + model route IDs + provider count + installed 3.8.52 models/quota metadata (read-only). Source passes Python3.9/3.11 12 tests each. Consume its one JSON result and then implement the highest-value correction; stop repeating separate Mac audits or installers. Proportional model selection+atomic quota reservation already merged to PR137 development source, but not on active Mac. Before enabling multi-model, require independently verified per-model $0 entitlement/remaining quota and one single-model canary/route; improve recent 10/27 draft readiness before increasing claims.",
+      "updated_at": "2026-10-24T09:48:08Z",
+      "next_update": "After a single actual Mac execution of corrected unified ops snapshot, interpret review outcomes and continue task sizing; do not reinstall current worker.",
+      "next_action": "PR153 merged reliable consistent main+WAL clone for tools/omniroute_ops_snapshot.py after actual Mac host reported snapshot_unavailable on PR152. New reader duplicates the older verified-working Mac telemetry snapshot method; 15 tests PASS Python3.9/3.11 incl. active WAL and no live database writes. One-command observer now should be retested once on Mac; cannot claim confirmed Mac fix before rerun. Existing installed 24/7 launchd worker remains untouched. Continue improving review-ready output and safe role-specific model routing based on factual quota entitlement once exact model evidence exists.",
       "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation.",
-      "blocker": "Nine configured provider connection entries DO NOT equal nine routable/eligible models. Real Mac currently routes 3 distinct models and all 8 roles via fast combo. Need verified provider/model/account metadata, $0 entitlement and quota reset evidence; 17/27 claims are not review-ready. Mac PR137 pinned worker still lacks optional atomic model selection in installed runtime.",
+      "blocker": "Unified ops report PR152 had worker SQL snapshot_unavailable even though heartbeat recent; PR153 addresses copied WAL snapshot and is hosted-CI verified, awaiting real Mac confirmation. Current nine configured connections only three distinct routed IDs; all roles use same fast combo; independent account $0 quotas and nine valid model completions unverified.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/137",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40072143609",
@@ -3744,7 +3744,8 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382472095",
         "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382529114",
         "https://github.com/TeamRovor/rovor-video-engine/pull/152",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40083045997"
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40083045997",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/153"
       ],
       "evidence": [
         {
@@ -3795,6 +3796,13 @@
           "check": "12 offline tests per Python version for standalone combined SQLite heartbeat/model combo/provider model catalogue/quota snapshot; no private data leakage, no inference/service modifications",
           "result": "PASS and PR152 merged. Does not prove real Mac output for this NEW tool until first one-shot run.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/152"
+        },
+        {
+          "commit": "565b1d6a2cf59c3108eb9552f843be9c71e39d95",
+          "platform": "GitHub PR153 / Python 3.9 and 3.11 CI",
+          "check": "Correct consistent Mac SQLite main+WAL read-only snapshot, unchanged live signature and symlink protections",
+          "result": "15 offline tests pass in each Python environment; merged main. Host CLI+heartbeat did work before fix; live DB reporting on latest commit still awaits the first new host run.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/153"
         }
       ]
     },
