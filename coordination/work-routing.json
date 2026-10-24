@@ -717,6 +717,12 @@
         "hosted-ci"
       ],
       "objective": "safe-atomic-multi-model-capacity"
+    },
+    "walter-public-task-grounding-20261024": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }

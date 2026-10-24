@@ -3987,6 +3987,25 @@
         }
       ],
       "blocker": "Host evidence and trusted quota/provider API adapter for all nine resource identities not yet present; PR147 tested source hook has no default CLI activation and Mac currently runs earlier pinned PR137 revision. External access to Mac state unavailable from this session."
+    },
+    {
+      "id": "walter-public-task-grounding-20261024",
+      "title": "Ground unattended public task research in an eligible owner-safe code target, not generic drafts",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 public task grounding shift",
+      "branch": "feature/walter-public-task-grounding-v1",
+      "scopes": [
+        "tools/walter_public_task_grounding.py",
+        "tests/test_walter_public_task_grounding.py",
+        ".github/workflows/walter-public-task-grounding.yml",
+        "subsystem:public-task-grounding-policy"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T09:20:00Z",
+      "next_update": "After focused hosted CI and shared queue/routing validation; hand off as source-only to PR137 owner.",
+      "next_action": "Implement independent read-only public task admission helper: accept only exact commit-pinned paired queue/routing and code source fingerprints; reject blocked, dependency-blocked, host-only, ambiguous-role and unconsented owned tasks; emit one deduped, source-grounded research proposal instead of four generic variants. Tests Python3.9/3.11; do not edit PR137 or Mac state.",
+      "acceptance": "Pure Python3.9 stdlib module with explicit trusted source/queue attestation, deterministic role classification and source SHA256, no default Mike fallback, status/dependency/ownership gates, one task per identity, no model/host/queue writes, sanitized errors. Adversarial hosted tests and shared CI."
     }
   ]
 }
