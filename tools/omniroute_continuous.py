@@ -392,8 +392,19 @@ def tick(state, workspace, *, max_claims=144, interval=601, now=None,
                   'observed_at': time.time() if now is None else now,
                   'review_ready': bool(result and (result.get('result') or {}).get(
                       'review_status') == 'draft_ready_for_human_review')}
-        output['dispatch'] = queue_health(conn, state, max_claims=max_claims,
-                                          interval=interval, now=now)
+        if (isinstance(fleet, dict)
+                and fleet.get('independent_pool_limits') is True):
+            output['dispatch_mode'] = 'verified_independent_pool_opt_in'
+            output['dispatch'] = {
+                'reason': 'independent_pool_capacity_checked_per_claim',
+                'queued': conn.execute(
+                    "SELECT COUNT(*) FROM jobs WHERE kind=? AND status='queued'",
+                    (worker.OMNI_KIND,)).fetchone()[0],
+                'model_requests_confirmed_by_heartbeat': False,
+            }
+        else:
+            output['dispatch'] = queue_health(conn, state, max_claims=max_claims,
+                                              interval=interval, now=now)
         import omniroute_workpack_runner as workpack
         workpack.write_receipt(state / 'continuous-status.json', output, replace=True)
         return output
