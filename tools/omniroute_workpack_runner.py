@@ -21,7 +21,8 @@ import time
 from urllib import request, error
 
 GATEWAY = 'http://127.0.0.1:20128/v1/chat/completions'
-PACKETS = ('runner-blocker', 'supervisor-resilience', 'provider-efficiency', 'overnight-acceptance', 'unattended-readiness',
+PACKETS = ('runner-blocker', 'supervisor-resilience', 'provider-efficiency', 'overnight-acceptance', 'unattended-readiness')
+SPECIALIST_PACKETS = (
     "walter-v1-mac-worker-stop-recovery",
     "walter-v1-finalcut-source-first-process",
     "walter-v1-moho-viseme-review",
@@ -37,6 +38,7 @@ PACKETS = ('runner-blocker', 'supervisor-resilience', 'provider-efficiency', 'ov
     "walter-v1-social-content-safety",
     "walter-v1-free-route-usage-audit",
 )
+ALLOWED_PACKETS = PACKETS + SPECIALIST_PACKETS
 ROLES = ('evidence-triage','software-architecture','inference-routing')
 MAX_INPUT = 28000
 MAX_RESPONSE = 131072
@@ -86,7 +88,7 @@ def read_public_file(root, relative, maximum):
 
 
 def load_packet(root, slug):
-    if slug not in PACKETS:
+    if slug not in ALLOWED_PACKETS:
         raise ValueError('Unapproved OmniRoute packet')
     rel = 'coordination/omniroute-workpacks/' + slug + '.json'
     raw = read_public_file(root, rel, MAX_PACKET)
@@ -301,7 +303,7 @@ def run_packet(repo_root,receipt_root,slug,model,key,
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo',type=Path,default=Path.cwd())
-    parser.add_argument('--packet',choices=PACKETS)
+    parser.add_argument('--packet',choices=ALLOWED_PACKETS)
     parser.add_argument('--all',action='store_true')
     parser.add_argument('--model',help='Explicit verified model/route for all packets')
     parser.add_argument('--route',action='append',default=[],
@@ -332,7 +334,7 @@ def main(argv=None):
             if not isinstance(item,str) or '=' not in item:
                 raise ValueError('Expected --route approved-packet=verified-model')
             slug,chosen=item.split('=',1)
-            if slug not in PACKETS or slug in routes or not MODEL.fullmatch(chosen):
+            if slug not in ALLOWED_PACKETS or slug in routes or not MODEL.fullmatch(chosen):
                 raise ValueError('Unsafe or repeated per-packet model override')
             routes[slug]=chosen
         route_for={slug:routes.get(slug,args.model) for slug in slugs}

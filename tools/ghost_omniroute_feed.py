@@ -21,7 +21,10 @@ ROLE_PLAN = (
     ("saul", (("walter-v1-outreach-draft-review", "walter-public-v1-outreach-draft-review"), ("walter-v1-social-content-safety", "walter-public-v1-social-content-safety"))),
     ("hank", (("walter-v1-proof-before-done", "walter-public-v1-proof-before-done"), ("walter-v1-free-route-usage-audit", "walter-public-v1-free-route-usage-audit"))),
 )
-PLAN = LEGACY_PLAN + tuple(job for _role, stages in ROLE_PLAN for job in stages)
+# Round-robin first-stage release so every role can start independently.
+# Only then release each role's second stage after its own first draft is ready.
+PLAN = (LEGACY_PLAN + tuple(stages[0] for _role, stages in ROLE_PLAN)
+        + tuple(stages[1] for _role, stages in ROLE_PLAN))
 DEPENDENCIES = {stages[1][0]: stages[0][1] for _role, stages in ROLE_PLAN}
 
 
