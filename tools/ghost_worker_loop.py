@@ -193,7 +193,8 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
         elif allow_model_use or allow_omniroute_model_use:
             receipt = ghost_worker.run_once(conn, workspace, owner=worker_id,
                                            allow_model_use=allow_model_use,
-                                           allow_omniroute_model_use=allow_omniroute_model_use)
+                                           allow_omniroute_model_use=allow_omniroute_model_use,
+                                           omni_max_24h=omni_max_24h)
         else:
             receipt = ghost_worker.run_once(conn, workspace, owner=worker_id)
         if receipt is not None:
