@@ -1805,6 +1805,7 @@ function openTask(t){state.selected=t;open('task',document.activeElement?.closes
 function card(heading,body){return `<div class="card"><h3>${safe(heading)}</h3>${body}</div>`}
 function renderDrawer(view){
  state.view=view;
+ if(view==='workload'&&document.getElementById('omniConnectForm'))return;
  const footnote=$('screen').querySelector('.drawer-footnote');
  if(footnote)footnote.textContent=view==='workload'
    ?'OMNIROUTE / GHOST EMPLOYEE USAGE: NOT CONNECTED. SAMPLE MODE IS SYNTHETIC; NO WORKER OR MODEL CALLS ARE IMPLIED.'
