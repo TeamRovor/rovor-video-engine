@@ -131,6 +131,10 @@ class ContinuityTests(unittest.TestCase):
     def test_insufficient_overlap_fails_closed(self):
         old, new = fixture()
         new["retained_from"] = old["captured_at"] - 899
+        new["jobs"] = [x for x in new["jobs"]
+                       if x["claimed_at"] >= new["retained_from"]]
+        new["heartbeats"] = [x for x in new["heartbeats"]
+                             if x >= new["retained_from"]]
         self.assertEqual(check(old, new)["status"], "insufficient_history_overlap")
 
     def test_no_new_heartbeat_detects_stalled_evidence(self):
@@ -148,6 +152,10 @@ class ContinuityTests(unittest.TestCase):
     def test_capture_time_must_move_forward(self):
         old, new = fixture()
         new["captured_at"] = old["captured_at"]
+        new["jobs"] = [x for x in new["jobs"]
+                       if x["claimed_at"] <= new["captured_at"]]
+        new["heartbeats"] = [x for x in new["heartbeats"]
+                             if x <= new["captured_at"]]
         self.assertEqual(check(old, new)["status"], "invalid_snapshot_order")
 
     def test_capture_gap_cannot_exceed_day(self):
