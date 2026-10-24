@@ -26,7 +26,7 @@ TICK_FEED = frozenset((
 TICK_REASONS = frozenset((
     "stop_requested", "failure_circuit_requires_review", "existing_work_running",
     "no_queued_work", "rolling_quota", "paced_wait", "eligible",
-    "quota_exhausted"))
+    "quota_exhausted", "independent_pool_capacity_checked_per_claim"))
 VERSION = re.compile(r"(?<![\d.])(\d{1,3}\.\d{1,3}\.\d{1,4})(?![\d.])")
 
 
@@ -296,7 +296,13 @@ def _heartbeat(state, *, now):
             "recent": age <= 1200,
             "age_seconds": age,
             "last_tick_executed": item.get("executed") if type(item.get("executed")) is int
-                and item["executed"] in (0, 1) else None,
+                and 0 <= item["executed"] <= 9 else None,
+            "last_tick_review_ready_count": item.get("review_ready_count")
+                if type(item.get("review_ready_count")) is int
+                and 0 <= item.get("review_ready_count") <= 9
+                and type(item.get("executed")) is int
+                and 0 <= item["executed"] <= 9
+                and item["review_ready_count"] <= item["executed"] else None,
             "last_tick_feed": item.get("feed") if type(item.get("feed")) is str
                 and item.get("feed") in TICK_FEED else "unknown",
             "last_tick_dispatch": dispatch.get("reason")
