@@ -9,6 +9,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
+import subprocess
 from pathlib import Path
 import sqlite3
 import sys
@@ -22,6 +24,7 @@ FUTURE_DISABLED = frozenset({
 })
 RESEARCH_KIND = "research.finalcut"
 OMNI_KIND = "research.omniroute"
+TERMINAL_KIND = "terminal.probe"
 OMNI_MAX_24H = 5
 NATIVE_KIND = "finalcut.import-diagnostic"
 LIBRARY_KIND = "finalcut.library-create"
@@ -92,14 +95,14 @@ def _event(conn: sqlite3.Connection, job_id: str, name: str, details: dict, now:
 
 def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
             dedupe_key: str, now: float | None = None) -> str:
-    if kind not in ALLOWED | {RESEARCH_KIND, OMNI_KIND, NATIVE_KIND, LIBRARY_KIND}:
+    if kind not in ALLOWED | {RESEARCH_KIND, OMNI_KIND, NATIVE_KIND, LIBRARY_KIND, TERMINAL_KIND}:
         raise ValueError(f"Adapter disabled or unknown: {kind}")
     if not isinstance(payload, dict) or not isinstance(dedupe_key, str) or not (1 <= len(dedupe_key) <= 200):
         raise ValueError("A JSON-object payload and nonempty dedupe key (max 200) are required")
     if kind == OMNI_KIND:
         import ghost_omniroute_job
         ghost_omniroute_job.validate_payload(payload)
-    if kind in {"system.ping", "system.omniroute-preflight", RESEARCH_KIND} and payload:
+    if kind in {"system.ping", "system.omniroute-preflight", RESEARCH_KIND, TERMINAL_KIND} and payload:
         raise ValueError("This fixed job does not accept parameters")
     if kind == LIBRARY_KIND:
         # Only stable slug; no arbitrary app commands, target paths or XML.
@@ -140,7 +143,7 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
 
 
 def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
-          jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None):
+          jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False):
     if omniroute_queue_job_id is not None and (not allow_omniroute_model_use or jane_library_only or jane_queue_job_id is not None):
         raise ValueError('Exact OmniRoute selector requires separate OmniRoute-only approval')
     if jane_queue_job_id is not None and not jane_library_only:
@@ -155,7 +158,7 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         # Expired leases are safe to replay ONLY because the allowlist is read-only.
         expired = conn.execute("SELECT id,kind,attempts FROM jobs WHERE status='running' AND lease_until<=?", (now,)).fetchall()
         for row in expired:
-            if row["kind"] in {RESEARCH_KIND, OMNI_KIND, NATIVE_KIND, LIBRARY_KIND} or row["attempts"] >= MAX_ATTEMPTS:
+            if row["kind"] in {RESEARCH_KIND, OMNI_KIND, NATIVE_KIND, LIBRARY_KIND, TERMINAL_KIND} or row["attempts"] >= MAX_ATTEMPTS:
                 conn.execute("UPDATE jobs SET status='needs_review',lease_owner=NULL,lease_until=NULL,updated_at=? WHERE id=?",
                              (now, row["id"]))
                 _event(conn, row["id"], "exhausted_lease", {}, now)
@@ -173,7 +176,8 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         kinds = sorted(ALLOWED | ({RESEARCH_KIND} if allow_model_use else set())
                        | ({OMNI_KIND} if omni_enabled else set())
                        | ({NATIVE_KIND} if allow_native_import else set())
-                       | ({LIBRARY_KIND} if allow_jane_library_create else set()))
+                       | ({LIBRARY_KIND} if allow_jane_library_create else set())
+                       | ({TERMINAL_KIND} if allow_terminal_probe else set()))
         if jane_library_only:
             kinds = [LIBRARY_KIND]
         if omniroute_queue_job_id is not None:
@@ -232,8 +236,30 @@ def inventory(workspace: Path, subpath: str) -> dict:
             "read_only": True, "truncated_depth": MAX_DEPTH}
 
 
+def macos_version_probe(*, run=subprocess.run, platform=None) -> dict:
+    """One fixed, bounded, read-only macOS subprocess; never a remote shell."""
+    host_platform = sys.platform if platform is None else platform
+    if host_platform != "darwin":
+        raise ValueError("Terminal probe requires the actual macOS host")
+    try:
+        proc = run(["/usr/bin/sw_vers", "-productVersion"],
+                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                   stdin=subprocess.DEVNULL, cwd="/",
+                   env={"PATH": "/usr/bin:/bin"}, timeout=8, check=False,
+                   text=True)
+    except (OSError, subprocess.TimeoutExpired):
+        raise ValueError("Fixed macOS version probe failed") from None
+    if proc.returncode != 0 or not isinstance(proc.stdout, str):
+        raise ValueError("Fixed macOS version probe was unsuccessful")
+    version = proc.stdout.strip()
+    if len(version) > 32 or re.fullmatch(r"[0-9]{1,3}(?:\.[0-9]{1,3}){1,2}", version) is None:
+        raise ValueError("Invalid sanitized macOS version result")
+    return {"ok": True, "read_only": True, "command_id": "macos-version",
+            "macos_version": version, "terminal_subprocess_verified": True}
+
+
 def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
-             jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None):
+             jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False):
     state = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
     if os.path.lexists(state / "STOP"):
         return None
@@ -242,7 +268,8 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
                 jane_library_only=jane_library_only,
                 jane_queue_job_id=jane_queue_job_id,
                 allow_omniroute_model_use=allow_omniroute_model_use,
-                omniroute_queue_job_id=omniroute_queue_job_id)
+                omniroute_queue_job_id=omniroute_queue_job_id,
+                 allow_terminal_probe=allow_terminal_probe)
     if not job:
         return None
     job_id, kind = job["id"], job["kind"]
@@ -251,6 +278,10 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
         payload = json.loads(job["payload"])
         if kind == "system.ping":
             result = {"ok": True, "read_only": True}
+        elif kind == TERMINAL_KIND:
+            if not allow_terminal_probe or os.path.lexists(state / "STOP"):
+                raise ValueError("Terminal probe not approved or stopped")
+            result = macos_version_probe()
         elif kind == "system.omniroute-preflight":
             import ghost_omniroute_job
             result = ghost_omniroute_job.background_preflight()
@@ -330,7 +361,7 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
         if conn.in_transaction:
             conn.execute("ROLLBACK")
         conn.execute("BEGIN IMMEDIATE")
-        terminal = 'needs_review' if kind in {NATIVE_KIND, LIBRARY_KIND, OMNI_KIND} else 'failed'
+        terminal = 'needs_review' if kind in {NATIVE_KIND, LIBRARY_KIND, OMNI_KIND, TERMINAL_KIND} else 'failed'
         conn.execute("UPDATE jobs SET status=?,error=?,lease_owner=NULL,lease_until=NULL,updated_at=? "
                      "WHERE id=? AND status='running' AND lease_owner=?", (terminal, str(exc), t, job_id, owner))
         _event(conn, job_id, terminal, {"error": type(exc).__name__}, t)
