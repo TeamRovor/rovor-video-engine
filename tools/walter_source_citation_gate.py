@@ -52,6 +52,11 @@ def verify(answer, sources, expected_sha256):
     if (type(answer) is not str or not answer.strip()
             or len(answer) > MAX_ANSWER_CHARS or "\x00" in answer):
         _reject("invalid_or_oversized_draft")
+    try:
+        if len(answer.encode("utf-8")) > MAX_ANSWER_BYTES:
+            _reject("invalid_or_oversized_draft")
+    except UnicodeError:
+        _reject("invalid_or_oversized_draft")
     if (not isinstance(sources, dict) or not 1 <= len(sources) <= MAX_SOURCES
             or not isinstance(expected_sha256, dict)
             or set(expected_sha256) != set(sources)):
@@ -105,6 +110,51 @@ def verify(answer, sources, expected_sha256):
 MIN_DRAFT_WORDS = 30
 MIN_DISTINCT_WORDS = 16
 MAX_WORDS_PER_CITATION = 85
+FENCE_OPEN = re.compile(r"^ {0,3}(\x60{3,}|~{3,})(?:[^\n]*)$")
+INLINE_CODE = re.compile(r"(\x60+)([^\n]*?)\1")
+
+
+def _research_prose(answer):
+    """Exclude Markdown code from draft prose; never credit code citations.
+
+    This is deliberately a conservative structural filter, not a Markdown
+    renderer or a claim-truth checker. Code examples may remain in a draft,
+    but their tokens and citations cannot satisfy the research evidence gate.
+    """
+    lines = []
+    fence = None
+    for line in answer.splitlines():
+        if fence is not None:
+            if CITATION_START.search(line):
+                _reject("draft_citation_in_code")
+            closing = (r"^ {0,3}" + re.escape(fence[0]) +
+                       "{" + str(len(fence)) + r",}[ \t]*$")
+            if re.fullmatch(closing, line):
+                fence = None
+            lines.append("")
+            continue
+        opener = FENCE_OPEN.fullmatch(line)
+        if opener is not None:
+            if CITATION_START.search(line):
+                _reject("draft_citation_in_code")
+            fence = opener.group(1)
+            lines.append("")
+            continue
+        if line.startswith(("    ", "\t")):
+            if CITATION_START.search(line):
+                _reject("draft_citation_in_code")
+            lines.append("")
+            continue
+
+        def replace_inline(match):
+            if CITATION_START.search(match.group(0)):
+                _reject("draft_citation_in_code")
+            return ""
+
+        lines.append(INLINE_CODE.sub(replace_inline, line))
+    if fence is not None:
+        _reject("draft_unclosed_code_fence")
+    return "\n".join(lines)
 
 
 def _research_draft_quality(answer):
@@ -116,7 +166,7 @@ def _research_draft_quality(answer):
     """
     all_words = []
     cited_blocks = 0
-    for block in re.split(r"\n\s*\n", answer.strip()):
+    for block in re.split(r"\n\s*\n", _research_prose(answer).strip()):
         prose = CITATION.sub("", block)
         words = re.findall(r"[A-Za-z0-9_]+", prose)
         all_words.extend(word.lower() for word in words)
