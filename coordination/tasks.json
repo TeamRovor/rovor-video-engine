@@ -3377,6 +3377,28 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40049010815"
         }
       ]
+    },
+    {
+      "id": "private-mac-control-repo-bootstrap-20261023",
+      "title": "Prepare safe idempotent private GitHub control-channel bootstrap for ROVOR Mac",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar private-channel bootstrap 2026-10-23",
+      "branch": "feature/private-control-repo-bootstrap",
+      "scopes": [
+        "tools/private_control_repo_bootstrap.py",
+        "tests/test_private_control_repo_bootstrap.py",
+        "integrations/open-interpreter/PRIVATE-CONTROL-REPO-BOOTSTRAP.md",
+        ".github/workflows/private-control-repo-bootstrap.yml"
+      ],
+      "depends_on": [
+        "private-mac-control-bounded-poller-v1",
+        "private-mac-control-readiness-preflight"
+      ],
+      "updated_at": "2026-10-24T01:24:06.212Z",
+      "next_update": "After GitHub-hosted Python3.9/3.11 acceptance tests and draft PR review",
+      "next_action": "Build one-pass Mac-operator tool that validates actual TeamRovor ownership and repo privacy, creates PRIVATE repo+ping/queue/issue only with explicit --apply, never writes secrets, idempotently rejects conflicting existing files; prepare exact Mac supervisor activation path. Does not install or activate services.",
+      "acceptance": "Default read-only dry run; refuse personal/organization owner mismatch, public existing repo, missing authenticated gh credential and conflicting queue/jobs; safe private repo provisioning with one fixed ping packet, fail-closed re-runs, simulated HTTP tests, no access to Mac nor billing or second scheduler."
     }
   ]
 }

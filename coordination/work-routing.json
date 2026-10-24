@@ -588,6 +588,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "private-mac-control-repo-bootstrap-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
