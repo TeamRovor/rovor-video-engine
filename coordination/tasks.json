@@ -3214,7 +3214,7 @@
       "id": "omniroute-workforce-composite-20261023",
       "title": "Combine the tested OmniRoute workpacks and ghost queue into one isolated source candidate",
       "priority": 1,
-      "status": "blocked",
+      "status": "active",
       "owner": "Codex / Amar Mac composite repair 2026-10-23",
       "branch": "feature/ghost-native-import-queue",
       "scopes": [
@@ -3234,9 +3234,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:09:07.998Z",
-      "next_update": "After a separately approved fresh task is defined; do not rerun failed dedupe",
-      "next_action": "Use PR41 comment6377293741. Repair c67542388f9245d9e9d96f03b81480735697c080 raises single-request timeout to120s, below360s lease;62 tests PASS on3.9/3.12. Preserve original source runtime, failed receipt/job9fdb17db-124f-4ca3-9920-0b871c9ca428, dedupe and STOP. Review current failure and define a genuinely new useful bounded task with explicit approval before another model request. No schedule activation until successful useful private receipt review.",
+      "updated_at": "2026-10-24T00:13:10.197Z",
+      "next_update": "After focused Mac tests and fresh job Terminal handoff",
+      "next_action": "User requested continued24/7 setup: prepare new fixed overnight-acceptance checklist task (not replay of failed supervisor code review), repair launcher positively verified already-unloaded state, preserve old dedupe and receipt. Tests and pinned Terminal handoff; no unattended inference or model call here.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
