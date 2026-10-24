@@ -11,6 +11,7 @@
 <meta name="description" content="Reference-accurate interactive ROVOR DIGITAL HUD with independently verified GitHub task controls.">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="live-panels.css">
+<link rel="stylesheet" href="earth-motion.css">
 </head>
 <body>
 <div class="cockpit-app" id="app">
@@ -19,6 +20,7 @@
    <div class="stage" id="stage">
     <img class="reference-art" id="referenceArt" src="reference.png" alt="ROVOR Digital cinematic futuristic HUD artwork. The example task counts, health, quotas, and camera in this artwork are illustrative, not live system measurements." draggable="false">
     <div class="atmosphere" aria-hidden="true"><div class="globe-band"></div><div class="earth-horizon-sweep"></div><div class="scan-orbit"></div></div>
+    <div class="earth-motion" id="earthMotion" hidden aria-hidden="true"><div class="earth-motion-globe"></div><div class="earth-motion-night"></div></div>
     <div id="livePanels" class="live-panels" hidden aria-label="Verified repository overlays"></div>
     <button type="button" class="hotspot" style="--x:1.2%;--y:11.3%;--w:29.4%;--h:30.9%" data-view="tasks" aria-label="Open verified active tasks"></button>
     <button type="button" class="hotspot" style="--x:1.1%;--y:43.7%;--w:29.4%;--h:22.3%" data-view="resources" aria-label="Open resource data and task distribution"></button>
