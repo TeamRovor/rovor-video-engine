@@ -4634,6 +4634,25 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/180"
         }
       ]
+    },
+    {
+      "id": "walter-citation-draft-quality-20261024",
+      "title": "Reject citation-only and citation-dumped OmniRoute research drafts before human review",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 draft-quality shift",
+      "branch": "feature/walter-citation-draft-quality-20261024",
+      "scopes": [
+        "tools/walter_source_citation_gate.py",
+        "tests/test_walter_source_citation_gate.py",
+        "subsystem:walter-draft-citation-density"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T20:25:41.966Z",
+      "next_update": "After focused Python 3.9/3.11 CI and PR review",
+      "next_action": "Implement a strict public research-draft quality check in the existing citation CLI, preserving the lower-level citation format verifier used by reviewed handoff. Reject citation-only drafts, long uncited paragraphs and single-citation padding without auto-approval; add focused adversarial tests.",
+      "acceptance": "Existing source citation CLI must fail closed on citation-only/low-information drafts and unsupported long paragraphs while accepting specific multi-paragraph sourced research. Preserve low-level verify() citation binding for existing reviewed-finding handoff. Python 3.9/3.11 hosted tests and shared coordination checks; no inference, private data, Mac execution or automated approval.",
+      "evidence": []
     }
   ]
 }
