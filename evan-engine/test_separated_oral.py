@@ -25,6 +25,26 @@ class SeparatedOralTests(unittest.TestCase):
    else:self.assertGreater(float(parts['Rigid upper incisors'][:,:,3].sum()),0,name)
   invalid=POINTS['C'].copy();invalid[[17,18]]=invalid[[18,17]]
   with self.assertRaises(ValueError):inner_oral_coverage(invalid)
+ def test_carrier_guard_covers_cap_overshoot_without_covering_opening_or_jaw(self):
+  from separated_oral_review import upper_lip_carrier_guard
+  self.rig.assemble(self.rig.head.weights(np.eye(9)[5]));oral=self.rig.head.current_oral
+  carrier=np.full((512,512,4),255,np.float32);face=carrier.copy();carrier[300,300]=[20,30,40,100];guard=upper_lip_carrier_guard(face,oral,carrier)
+  x=round(float(oral[28,0]));top=float(oral[28,1])
+  self.assertEqual(float(guard[int(top)-3,x,3]),255)
+  self.assertEqual(float(guard[int(top)+3,x,3]),0)
+  np.testing.assert_array_equal(guard[:310],carrier[:310])
+  self.assertEqual(float(guard[370,181,3]),0)
+  for index in [5,6]:
+   self.rig.assemble(self.rig.head.weights(np.eye(9)[index]));oral=self.rig.head.current_oral
+   from separated_oral_review import inner_arch
+   upper=inner_arch(oral,True);xs=np.arange(np.ceil(upper[0,0])+2,np.floor(upper[-1,0])-1).astype(int)
+   ys=np.floor(np.interp(xs,upper[:,0],upper[:,1])).astype(int)-2
+   actual=self.rig.last_parts['Upper lip carrier guard'][ys,xs,3]
+   expected=np.floor(self.rig.head.clean_face[ys,xs,3])
+   np.testing.assert_array_equal(actual,expected)
+  names=list(self.rig.last_parts)
+  self.assertLess(names.index('Upper face and cheeks'),names.index('Drawn jaw skin'))
+  self.assertGreater(names.index('Upper lip carrier guard'),names.index('Independent upper-lip cap'))
  def test_original_skin_extraction_preserves_color_chin_and_source(self):
   source=self.rig.head.layers['face-skin'];before=source.copy();jaw=original_jaw_skin(source)
   np.testing.assert_array_equal(source,before)
@@ -55,7 +75,7 @@ class SeparatedOralTests(unittest.TestCase):
   for pair in [(0,1e-7),(1-1e-7,1)]:
    images=[]
    for fv in pair:
-    self.rig.head.last_painted_target=np.full((48,2),np.nan);im,row=self.pose(fv);images.append(np.array(im).astype(int));self.assertGreater(row['minimumTriangleArea2'],0);self.assertEqual(len(row['planes']),10);self.assertFalse(row['bakedMouthInUpperCarrier'])
+    self.rig.head.last_painted_target=np.full((48,2),np.nan);im,row=self.pose(fv);images.append(np.array(im).astype(int));self.assertGreater(row['minimumTriangleArea2'],0);self.assertEqual(len(row['planes']),11);self.assertFalse(row['bakedMouthInUpperCarrier'])
    self.assertLessEqual(int(abs(images[0]-images[1]).max()),2)
   np.testing.assert_array_equal(source,self.rig.lower.source)
  def test_crown_is_clipped_geometrically_and_upper_identity_preserved(self):

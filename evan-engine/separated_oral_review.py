@@ -129,6 +129,19 @@ def face_ownership(target,upper):
  cv2.fillPoly(mask,[np.rint(polygon*3*256).astype('int32')],255,lineType=cv2.LINE_AA,shift=8)
  return cv2.resize(mask,(512,512),interpolation=cv2.INTER_AREA).astype('float32')/255
 
+def upper_lip_carrier_guard(face,oral,carrier):
+ # Use uncut face paint: the clipped cheek carrier leaves triangular cap gaps.
+ upper=inner_arch(oral,True)
+ if not np.isfinite(upper).all() or np.any(np.diff(upper[:,0])<=0):raise ValueError('Expected finite ordered upper lip arch')
+ x=np.arange(512,dtype=np.float32);y=x[:,None];left,right=oral[[8,0],0]
+ # shortcut: 4px side allowance is authored; replace with approved cap ownership.
+ horizontal=np.clip((x-left+4)/2,0,1)*np.clip((right+4-x)/2,0,1)
+ top=np.interp(x,upper[:,0],upper[:,1])
+ vertical=np.clip(top[None,:]+1-y,0,1)*(y>=310)
+ guard=face*(horizontal[None,:]*vertical)[:,:,None].astype('float32')
+ guard[:310]=carrier[:310]
+ return guard
+
 def original_jaw_skin(source):
  # Keep the chin through the neck split; the ear belongs to the upper face.
  polygon=np.vstack([POLYGON[:9],[[329,448],[128,448],[128,315]]])
@@ -166,7 +179,9 @@ class SeparatedOralReview:
   expression=self.head.repair|(self.head.forehead>0);face[expression]=finished[expression]
   underpaint=np.zeros_like(self.head.clean_face);underpaint[305:365,190:285]=self.head.clean_face[305:365,190:285]
   rounding=self.head.current_round_material;cap=arch_surface(self.cap,self.cap_edge,upper)*(1-rounding)+arch_surface(self.round_cap,self.round_edge,upper)*rounding
-  parts={'Neck backing':self.neck.copy(),'Drawn skin underlap':underpaint,'Painted cavity':self.head.current_backing.copy(),'Narration tongue':self.head.review_tongue.copy(),'Rigid upper incisors':self.head.review_teeth.copy(),'Front dental tongue tip':self.head.review_dental_tip.copy(),'Drawn jaw skin':jaw,'Independent lower lip':self.lower.pose(lower,self.head.current_fv),'Independent upper-lip cap':cap,'Upper face and cheeks':face*face_ownership(target,upper)[:,:,None]}
+  # Restore the protected upper face once in front; the jaw owns the lower silhouette.
+  carrier=face*face_ownership(target,upper)[:,:,None];behind=carrier.copy();behind[:310]=0
+  parts={'Neck backing':self.neck.copy(),'Drawn skin underlap':underpaint,'Painted cavity':self.head.current_backing.copy(),'Narration tongue':self.head.review_tongue.copy(),'Rigid upper incisors':self.head.review_teeth.copy(),'Front dental tongue tip':self.head.review_dental_tip.copy(),'Upper face and cheeks':behind,'Drawn jaw skin':jaw,'Independent lower lip':self.lower.pose(lower,self.head.current_fv),'Independent upper-lip cap':cap,'Upper lip carrier guard':upper_lip_carrier_guard(face,oral,carrier)}
   result=np.zeros_like(jaw)
   for part in parts.values():result=over(result,part)
   image=Image.fromarray(np.rint(straight(result)).astype('uint8'));self.last_parts=parts;self.last_target=target;self.baseline=baseline

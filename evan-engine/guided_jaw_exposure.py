@@ -53,7 +53,8 @@ def contour_target_mesh(oral,skin):
  """
  arch=np.asarray(oral[:9][::-1],dtype=np.float32)
  if arch.shape!=(9,2) or not np.isfinite(arch).all() or np.any(np.diff(arch[:,0])<=0):raise ValueError('Lower oral arch must be finite and ordered left to right')
- target,_=target_mesh(oral,skin);x,y=SOURCE.T
+ target,_=target_mesh(oral,skin);target[:,0]=SOURCE[:,0];x,y=SOURCE.T
+ # Lip rounding belongs to the lip planes, not the jaw silhouette.
  horizontal=smooth((x-164)/30)*smooth((329-x)/66)
  # Linear depth falloff preserves ordering under deep openings; cubic can fold.
  upper=1-np.clip((y-335)/59,0,1)

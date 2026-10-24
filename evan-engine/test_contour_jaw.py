@@ -15,6 +15,12 @@ class ContourJawTests(unittest.TestCase):
   np.testing.assert_array_equal(old,legacy)
   self.assertGreater(float(np.max(abs(a-b))),1)
   np.testing.assert_array_equal(a[SOURCE[:,1]>=394],b[SOURCE[:,1]>=394])
+ def test_lip_rounding_does_not_squeeze_jaw_skin_sideways(self):
+  baseline,_=contour_target_mesh(self.oral,self.skin);edges=(SOURCE[:,0]<=181)|(SOURCE[:,0]>=298)
+  for width,offset in [(69,0),(40,-3),(24,3)]:
+   oral=self.oral.copy();oral[:,0]=228.5+offset+(oral[:,0]-228.5)*width/69
+   target,minimum=contour_target_mesh(oral,self.skin)
+   np.testing.assert_array_equal(target[:,0],SOURCE[:,0]);np.testing.assert_allclose(target[edges],baseline[edges],atol=.00004);self.assertGreater(minimum,0)
  def test_actual_center_is_not_clipped_to_two_pose_release_range(self):
   center=np.flatnonzero((SOURCE[:,0]==228.5)&(SOURCE[:,1]==328.5))[0]
   for lower in [323,332,340,368,374]:
