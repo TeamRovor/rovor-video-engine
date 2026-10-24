@@ -39,8 +39,9 @@ test('native controls are real elements and inline JavaScript is syntactically v
 });
 test('root defaults to native without removing the older /exact/ rollback',()=>{
  const rootHtml=fs.readFileSync(path.join(root,'index.html'),'utf8');
- assert.match(rootHtml,/new URL\('\.\/native\/', location\.href\)/);
- assert.match(rootHtml,/url=\.\/native\//);
+ assert.match(rootHtml,/new URL\('\.\/native-v8-9\/', location\.href\)/);
+ assert.match(rootHtml,/url=\.\/native-v8-9\//);
+ assert.ok(fs.existsSync(path.join(root,'native','index.html')),'Preserve the original v8.5 HUD at /native/');
  assert.ok(rootHtml.indexOf('location.replace(next.href)')<rootHtml.indexOf('<link rel="stylesheet"'));
  assert.ok(fs.existsSync(path.join(root,'exact','index.html')));
 });
