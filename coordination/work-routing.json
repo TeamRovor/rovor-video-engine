@@ -854,6 +854,15 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "hank-cloud-audit-receipts-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

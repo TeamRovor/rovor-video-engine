@@ -4777,6 +4777,25 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/184",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40135524309"
       ]
+    },
+    {
+      "id": "hank-cloud-audit-receipts-20261024",
+      "title": "Emit durable bounded Hank GitHub cloud QA execution receipts on the existing workflow",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / GitHub cloud QA evidence shift 2026-10-24",
+      "branch": "feature/hank-cloud-audit-receipts-20261024",
+      "scopes": [
+        "tools/hank_cloud_watchdog.py",
+        "tests/test_hank_cloud_watchdog.py",
+        ".github/workflows/hank-cloud-watchdog.yml",
+        "subsystem:hank-cloud-audit-receipts"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T22:20:14.478Z",
+      "next_update": "After PR hosted checks and actual GitHub Actions artifact readback",
+      "next_action": "Add a sanitized per-run JSON receipt to existing scheduled Hank GitHub Action, with input digests, observed time, exact revision and run provenance; upload bounded artifact, test refusal and success cases, then verify CI and update this claim. No model inference or Mac operation.",
+      "acceptance": "The existing Hank GitHub Actions QA execution writes a bounded content-free immutable-per-run JSON artifact with GitHub commit/run provenance, observed_at, source input digests, exact status and count/error codes; artifact uploads on audit failures; missing/invalid provenance fails closed. Focused tests plus project_loop.py check and paired routing CI pass. No new scheduler, provider calls, private content, model/token claims, or Mac deployment."
     }
   ]
 }
