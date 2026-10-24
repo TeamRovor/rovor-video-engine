@@ -2,10 +2,10 @@
 
 This candidate replaces the existing scheduled tick, not the executor or SQLite
 queue. The same `com.rovor.ghost-worker.readonly` LaunchAgent invokes
-`omniroute_continuous.py` every 300 seconds. One tick admits at most one model
+`omniroute_continuous.py` every 301 seconds. One tick admits at most one model
 job. Atomic SQLite pacing requires at least **601 seconds between claims**,
 with a ceiling of **144 claims per rolling day**. A five-minute schedule usually
-produces a lower rate because its ticks do not align to 601-second boundaries.
+previously underfilled the limit when 300-second ticks missed the 601-second boundary. The reviewed 301-second cadence permits the second subsequent tick (~602 seconds) to clear the minimum gate under ideal no-lag scheduling; actual launchd runtime and provider availability can still lower throughput.
 Existing defaults remain unchanged unless continuous dispatch is explicitly
 enabled. An actual provider's free quota can be lower than the local allowance.
 
