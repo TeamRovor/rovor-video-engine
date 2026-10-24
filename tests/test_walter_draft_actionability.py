@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
-from walter_draft_actionability import TriageError, triage
+from walter_draft_actionability import DRAFT_FORMAT_INSTRUCTIONS, TriageError, triage
 
 SOURCE = "first\nThe WORK guide requires bounded research and a human review handoff.\nthird\n"
 DIGEST = hashlib.sha256(SOURCE.encode("utf-8")).hexdigest()
@@ -238,6 +238,19 @@ class TriageTests(unittest.TestCase):
 
     def test_rejects_oversized_draft(self):
         self.blocked("draft_invalid", answer=render() + "A" * 22000)
+
+    def test_prompt_contract_exposes_exact_required_sections(self):
+        for heading in SECTIONS:
+            self.assertIn("## " + heading, DRAFT_FORMAT_INSTRUCTIONS)
+        self.assertIn("[[source:PATH#LNUMBER]]", DRAFT_FORMAT_INSTRUCTIONS)
+        self.assertIn("human", DRAFT_FORMAT_INSTRUCTIONS)
+
+    def test_rejects_invalid_utf8_surrogate(self):
+        self.blocked("draft_invalid", answer=render() + "\ud800")
+
+    def test_rejects_invalid_private_history_surrogate(self):
+        self.blocked("private_history_unverified",
+                     previous_private_drafts=[prior("invalid\ud800")])
 
     def test_never_echoes_private_text_in_errors(self):
         secret = "PRIVATE_SECRET_DO_NOT_ECHO"
