@@ -87,6 +87,7 @@ def _validate(candidates, outcomes, seen_dedupe, now):
 
 
 def choose(candidates, outcomes, *, now, seen_dedupe=None,
+           attempted_task_ids=None, trusted_task_mapping=False,
            trusted_candidates=False, trusted_outcomes=False,
            authoritative_ledger=False, stop_present=True,
            other_job_running=True, owner_opt_in=False):
@@ -104,6 +105,16 @@ def choose(candidates, outcomes, *, now, seen_dedupe=None,
             or authoritative_ledger is not True or owner_opt_in is not True
             or other_job_running is not False):
         return {"status": "unverified_authority", "candidate": None}
+    # An independently authenticated COMPLETE job-to-task ledger is required
+    # for cross-revision replay protection. An absent mapping preserves the
+    # legacy inert proposal but is explicitly marked unsafe for dispatch.
+    if attempted_task_ids is not None or trusted_task_mapping:
+        if (trusted_task_mapping is not True
+                or not isinstance(attempted_task_ids, (set, frozenset))
+                or len(attempted_task_ids) > 100000
+                or any(not _key(task_id) for task_id in attempted_task_ids)):
+            return {"status": "task_identity_ledger_unverified", "candidate": None,
+                    "model_calls": 0, "queue_writes": 0}
     _validate(candidates, outcomes, seen_dedupe, now)
     if any(row["status"] == "running" for row in outcomes):
         return {"status": "running_outcome_requires_reconciliation",
@@ -145,15 +156,19 @@ def choose(candidates, outcomes, *, now, seen_dedupe=None,
         return {"status": "global_review_backpressure", "candidate": None,
                 "coverage": summary, "model_calls": 0, "queue_writes": 0}
     unseen = [c for c in candidates if c["dedupe_key"] not in seen_dedupe]
-    eligible = [c for c in unseen if c["role"] not in cooldown
+    unattempted = [c for c in unseen if attempted_task_ids is None
+                   or c["task_id"] not in attempted_task_ids]
+    eligible = [c for c in unattempted if c["role"] not in cooldown
                 and counts[c["role"]]["awaiting_review"] < MAX_PENDING_PER_ROLE]
     if not eligible:
         if not unseen:
             reason = "no_unattempted_candidates"
-        elif all(c["role"] in cooldown for c in unseen):
+        elif not unattempted:
+            reason = "task_already_attempted"
+        elif all(c["role"] in cooldown for c in unattempted):
             reason = "failure_cooldown"
         elif all(counts[c["role"]]["awaiting_review"] >= MAX_PENDING_PER_ROLE
-                 for c in unseen):
+                 for c in unattempted):
             reason = "role_review_backpressure"
         else:
             reason = "no_eligible_candidate"
@@ -166,4 +181,6 @@ def choose(candidates, outcomes, *, now, seen_dedupe=None,
             "candidate": dict(chosen), "coverage": summary,
             "requires_atomic_sqlite_claim": True,
             "requires_independent_review": True,
+            "task_identity_ledger_verified": attempted_task_ids is not None,
+            "requires_verified_task_identity": attempted_task_ids is None,
             "model_calls": 0, "queue_writes": 0}

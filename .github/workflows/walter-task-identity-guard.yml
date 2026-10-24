@@ -1,0 +1,41 @@
+name: Walter task identity replay guard
+on:
+  push:
+    branches: [main, "feature/walter-cross-revision-task-dedupe-v1"]
+    paths:
+      - "tools/walter_real_receipt_bridge.py"
+      - "tools/walter_specialist_coverage.py"
+      - "tests/test_walter_real_receipt_bridge.py"
+      - "tests/test_walter_specialist_coverage.py"
+      - "coordination/tasks.json"
+      - "coordination/work-routing.json"
+      - ".github/workflows/walter-task-identity-guard.yml"
+  pull_request:
+    paths:
+      - "tools/walter_real_receipt_bridge.py"
+      - "tools/walter_specialist_coverage.py"
+      - "tests/test_walter_real_receipt_bridge.py"
+      - "tests/test_walter_specialist_coverage.py"
+      - "coordination/tasks.json"
+      - "coordination/work-routing.json"
+      - ".github/workflows/walter-task-identity-guard.yml"
+jobs:
+  offline-guard:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Task identity and receipt bridge regression
+        run: |
+          python -m unittest discover -s tests -p 'test_walter_real_receipt_bridge.py' -v
+          python -m unittest discover -s tests -p 'test_walter_specialist_coverage.py' -v
+      - name: Shared queue and routing validation
+        run: |
+          python tools/project_loop.py check
+          python tools/task_routing_pair.py --check
