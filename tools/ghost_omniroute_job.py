@@ -9,6 +9,8 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
+import sys
 
 # Exact free-only combo members observed on the user's Mac 2026-10-23.
 # Fail closed if local routes change; this does not prove upstream quota,
@@ -58,6 +60,22 @@ def validate_payload(payload):
     return payload['packet']
 
 
+def installed_cli(*, host_platform=None, home=None, which=shutil.which):
+    """Resolve the known user CLI from a LaunchAgent's reduced PATH safely.
+
+    The user's Mac has OmniRoute at ~/.local/bin/omniroute. launchd need not
+    inherit interactive shell PATH; prefer the existing executable with its
+    exact pathname, never a shell expansion or arbitrary command string.
+    """
+    if host_platform is None:
+        host_platform = sys.platform
+    if host_platform == "darwin":
+        local = (Path.home() if home is None else Path(home)) / ".local/bin/omniroute"
+        if local.is_file() and os.access(local, os.X_OK):
+            return str(local)
+    return which("omniroute") or "omniroute"
+
+
 def read_combo_catalog(run=subprocess.run):
     """Consult installed CLI without making an inference request.
 
@@ -66,7 +84,7 @@ def read_combo_catalog(run=subprocess.run):
     Never expose CLI errors or stdout, which may contain private metadata.
     """
     try:
-        p = run(['omniroute', 'combo', 'list', '--json'], capture_output=True,
+        p = run([installed_cli(), 'combo', 'list', '--json'], capture_output=True,
                 text=True, timeout=15, check=False)
         if p.returncode or not isinstance(p.stdout, str):
             raise ValueError('OmniRoute route catalog unavailable')
