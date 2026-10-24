@@ -300,7 +300,7 @@ def http_completion(model, prompt, key, opener=None):
     # empty/reasoning-only output, unsafe response shapes and unknown finishes.
     # This is response validation, not permission to disable model reasoning:
     # such requests require independent current capability/billing evidence.
-    from omniroute_reasoning_admission import extract_review_text
+    from omniroute_reasoning_admission import extract_review_text, AdmissionError
     try:
         answer=extract_review_text(obj)
     except ValueError as exc:
@@ -311,7 +311,8 @@ def http_completion(model, prompt, key, opener=None):
             'empty_visible_output': GatewayEmptyAnswer,
         }
         kind=kinds.get(code,GatewayInvalidCompletion)
-        raise kind(code if code in kinds else 'invalid_model_completion') from None
+        raise kind(code if isinstance(exc, AdmissionError) else
+                   'invalid_model_completion') from None
     return answer, sanitized_usage(obj.get('usage'))
 
 
