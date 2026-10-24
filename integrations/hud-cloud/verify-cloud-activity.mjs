@@ -7,8 +7,11 @@ import {compileCloudActivity, readCloudReceipts} from './build-cloud-activity.mj
 export async function verifyCloudEvidence(receipt, read, now = Date.now()) {
   const r = validateCloudReceipt(receipt, now);
   const pr = await read('/pulls/' + r.artifact_url.split('/').at(-1));
-  if (pr.merged !== true || pr.merge_commit_sha !== r.commit_sha || pr.html_url !== r.artifact_url) throw Error('Cloud result does not match merged GitHub artifact');
-  if (!Number.isFinite(Date.parse(pr.merged_at)) || Date.parse(pr.merged_at) > Date.parse(r.completed_at)) throw Error('Result merged after recorded completion');
+  const mergeResult = pr.merged === true && pr.merge_commit_sha === r.commit_sha;
+  const reviewableHead = (pr.merged === true || pr.state === 'open') && pr.head?.sha === r.commit_sha;
+  if ((!mergeResult && !reviewableHead) || pr.html_url !== r.artifact_url) throw Error('Cloud result does not match GitHub artifact');
+  const resultTime = Date.parse(mergeResult ? pr.merged_at : pr.created_at);
+  if (!Number.isFinite(resultTime) || resultTime > Date.parse(r.completed_at)) throw Error('Result unavailable at recorded completion');
   const run = await read('/actions/runs/' + r.checks_url.split('/').at(-1));
   if (run.status !== 'completed' || run.conclusion !== 'success' || run.html_url !== r.checks_url ||
     run.repository?.full_name !== 'TeamRovor/rovor-video-engine' ||
