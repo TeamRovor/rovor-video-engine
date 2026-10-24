@@ -7,9 +7,10 @@
        Redirect before legacy scripts load. -->
   <script>
     (() => {
-      const next = new URL('./native-v8-9/', location.href);
-      next.search = location.search;
-      next.hash = location.hash;
+      const workforce = new URLSearchParams(location.search).get('workforce') === '1' || location.hash === '#workforce';
+      const next = new URL(workforce ? './workforce/' : './native-v8-9/', location.href);
+      if (!workforce) next.search = location.search;
+      if (!workforce) next.hash = location.hash;
       location.replace(next.href);
     })();
   </script>
