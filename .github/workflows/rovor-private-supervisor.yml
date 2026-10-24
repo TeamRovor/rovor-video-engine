@@ -3,6 +3,9 @@ on:
   pull_request:
     paths:
       - 'tools/rovor_private_supervisor.py'
+      - 'tools/ghost_private_control.py'
+      - 'tools/ghost_private_control_loop.py'
+      - 'tools/ghost_worker.py'
       - 'tests/test_rovor_private_supervisor.py'
       - 'integrations/open-interpreter/ROVOR-LAUNCHAGENT-SUPERVISOR.md'
       - '.github/workflows/rovor-private-supervisor.yml'
