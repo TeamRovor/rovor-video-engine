@@ -103,6 +103,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         report=json.loads(Path(first['receipt']).read_text())
         self.assertEqual(report['answer'],
                          'Unverified assumptions; collect Mac runner status')
+        self.assertEqual(report['completion_token_limit'],worker.MAX_COMPLETION_TOKENS)
         self.assertTrue(report['user_review_required'])
         self.assertFalse(report['source_edits'])
         self.assertFalse(report['mac_control_verified'])
@@ -128,6 +129,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
                                  'rovor-fast-free-v1','test-key',completion=failed)
         saved=json.loads(Path(result['receipt']).read_text())
         self.assertEqual(saved['status'],'needs_review_no_auto_retry')
+        self.assertEqual(saved['completion_token_limit'],worker.MAX_COMPLETION_TOKENS)
         self.assertEqual(saved['error_class'],'GatewayInvalidCompletion')
         self.assertEqual(saved['admission_code'],'invalid_usage_shape')
         self.assertIsNone(worker.safe_admission_code(
