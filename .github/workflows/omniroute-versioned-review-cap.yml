@@ -1,0 +1,31 @@
+name: OmniRoute versioned review cap quality regression
+on:
+  pull_request:
+    paths:
+      - 'tools/omniroute_workpack_runner.py'
+      - 'tools/omniroute_draft_review.py'
+      - 'tests/test_omniroute_workpack_runner.py'
+      - 'tests/test_omniroute_draft_review.py'
+      - '.github/workflows/omniroute-versioned-review-cap.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  private-draft-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Review historical and new token ceilings without inference
+        run: |
+          python -m unittest discover -s tests -p test_omniroute_draft_review.py -v
+          python -m unittest discover -s tests -p test_omniroute_workpack_runner.py -v
