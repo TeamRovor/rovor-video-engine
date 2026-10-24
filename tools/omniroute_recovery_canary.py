@@ -11,6 +11,7 @@ import argparse
 from contextlib import closing
 import json
 import os
+import sqlite3
 from pathlib import Path
 
 import ghost_worker as worker
@@ -39,7 +40,8 @@ def run(*, approve=False, acknowledge_circuit=False,
               "previous_receipts_modified": False,
               "automatic_publication": False,
               "status": "requires_both_owner_approvals",
-              "source_revision_only": True}
+              "source_revision_only": True,
+              "maximum_single_gateway_completion_posts": 1}
     if not (approve and acknowledge_circuit):
         return result
     state = Path(state)
@@ -103,9 +105,12 @@ def run(*, approve=False, acknowledge_circuit=False,
             result["new_claim_recorded"] = True
             result["draft_status"] = draft if draft in CLEAN else "unavailable"
             result["review_status"] = review if review in REVIEW else "unavailable"
-            result["model_request_count"] = 1
+            # Claim/receipt proves one bounded adapter invocation, but
+            # local combo routing can choose among providers. Do not imply
+            # we independently counted every upstream request.
+            result["one_new_sqlite_claim_recorded"] = True
             return result
-    except (OSError, ValueError, TypeError):
+    except (OSError, ValueError, TypeError, sqlite3.Error):
         result["status"] = "canary_blocked_or_unavailable"
         return result
 
