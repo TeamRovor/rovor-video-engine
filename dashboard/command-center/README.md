@@ -4,11 +4,18 @@ This is an actual static browser dashboard, not a static mockup. It reads **publ
 
 ## Cinematic interactive HUD (orbital Earth build)
 
-This build adds a **real, slowly rotating procedural Earth** and a second Earth horizon rendered using WebGL, directly in the shipped page—not a static screenshot or a remote video. The planet texture is created locally and moves across a spherical shader projection; this is a visualization, **not** a live Earth satellite feed. The canvas is bounded in resolution, frame-capped (~24 fps), and pauses animation on reduced-motion preference, tab suspension or the existing Motion: Off toggle. Without WebGL, the established static horizon remains as a fallback.
+This build renders a **slowly rotating Earth and lower horizon** in WebGL using bundled NASA Blue Marble natural-color satellite imagery and NASA's Earth-at-Night city-light mosaic, instead of the previous low-detail procedural continent blobs. The images are downloaded and validated at *deployment time* into the static GitHub Pages artifact; browsers load them from the same ROVOR site, not from a remote image CDN. The globe is a visualization, **not** a live Earth satellite feed. The canvas is bounded in resolution, frame-capped (~24 fps), and pauses animation on reduced-motion preference, tab suspension or the existing Motion: Off toggle. If image assets or WebGL are unavailable, the original procedural/static fallback remains usable.
 
 The central ROVOR logo is an actual **Command** button. Press it, or press **⌘/Ctrl+K**, to search tasks, switch views, refresh GitHub or export a JSON snapshot. Use **1–5** for dashboard navigation, **?** for keyboard help, or Esc to close. Task and system cards open source-grounded inspectors; queue status bars are clickable filters. The orbit can be **dragged horizontally** or controlled using **Earth · Slow/Normal/Fast**, **Pause Earth**, and **Reset**. Fullscreen is exposed where the browser permits it.
 
 These are browser-only controls, never Mac remote execution. Task owners remain *claims*, and system categories remain *GitHub-sourced descriptions*, not live pings. Earth animation requires no paid server, credentials or third-party asset CDN. GitHub polling and the existing data integrity boundaries remain unchanged.
+
+### Earth imagery attribution / reproducible build
+
+- **Day surface:** NASA/GSFC Scientific Visualization Studio, [Blue Marble](https://svs.gsfc.nasa.gov/2915), based on Blue Marble imagery by Reto Stöckli (NASA/GSFC), NASA's Earth Observatory.
+- **Night lights:** NASA/GSFC Scientific Visualization Studio, [Earth at Night](https://svs.gsfc.nasa.gov/2916), imagery by Craig Mayhew and Robert Simmon, based on DMSP/OLS city-light observations.
+- `tools/prepare-earth-textures.sh` validates expected PNG file dimensions and signatures. GitHub Pages builds fetch the map files before packaging, and the offline service worker caches the published maps. A local checkout can run the same script before testing the realistic globe. The fallback works without image files.
+- NASA imagery is used as Earth visualization data, with no implication of NASA affiliation or endorsement.
 
 ## Reference-style interactive command deck (October 23, 2026)
 
