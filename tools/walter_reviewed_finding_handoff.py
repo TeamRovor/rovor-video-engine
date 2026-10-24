@@ -61,6 +61,25 @@ def _specific(value, minimum):
     return len(words) >= 8 and len(set(w.lower() for w in words)) >= 6
 
 
+def _valid_scope(scope):
+    """Reject malformed queue scopes rather than silently skipping conflicts."""
+    if type(scope) is not str or not scope or scope != scope.strip():
+        return False
+    if scope.startswith("subsystem:"):
+        return KEY.fullmatch(scope[len("subsystem:"):]) is not None
+    path = scope[:-1] if scope.endswith("/") else scope
+    return _path(path) and ".git" not in path.split("/")
+
+
+def _scope_collides(left, right):
+    """Match directory boundaries, not textual prefixes or subsystem labels."""
+    if left.startswith("subsystem:") or right.startswith("subsystem:"):
+        return left == right
+    left, right = left.rstrip("/"), right.rstrip("/")
+    return (left == right or left.startswith(right + "/")
+            or right.startswith(left + "/"))
+
+
 def _queue_conflict(tasks, task_id, scopes):
     if not isinstance(tasks, list):
         _fail("queue_snapshot_unverified")
@@ -70,12 +89,14 @@ def _queue_conflict(tasks, task_id, scopes):
                 or task["id"] in seen
                 or task.get("status") not in ("active", "blocked", "ready", "done")
                 or not isinstance(task.get("scopes"), list)
-                or any(type(s) is not str for s in task["scopes"])):
+                or any(not _valid_scope(s) for s in task["scopes"])):
             _fail("queue_snapshot_unverified")
         seen.add(task["id"])
         if task["id"] == task_id:
             _fail("finding_already_recorded")
-        if task["status"] != "done" and scopes.intersection(task["scopes"]):
+        if (task["status"] != "done" and
+                any(_scope_collides(owned, proposed)
+                    for owned in task["scopes"] for proposed in scopes)):
             _fail("existing_task_scope_overlap")
 
 
