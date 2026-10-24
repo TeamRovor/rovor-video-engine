@@ -1,5 +1,59 @@
 # Persistent private HUD reporting
 
+## Connected private Sites deployment
+
+The registered owner-private target is `appgprj_6add1e2cc8c08191839344b34d7dbf50`.
+Reuse this identity; it has no published version yet. Do not create another Site.
+Source upload currently fails because the managed execution environment cannot
+resolve the registered hosting Git server. Native publication requires a real
+source push; do not substitute the GitHub implementation commit as a Site
+source commit.
+
+`sites-adapter.mjs` delegates to the existing receiver behind Sites' private
+access boundary. Browser/MCP readers require platform-supplied user identity;
+they do not enter or save a second HUD viewing key. Model/worker uploads still
+require the separate writer credential. The adapter is only appropriate while
+the Site remains owner-private, with Sites dispatch in front of it.
+
+From the implementation repository, prepare the existing registered Site checkout:
+
+```
+node integrations/hud-cloud/build-sites.mjs /absolute/path/to/registered-site-checkout
+```
+
+The builder embeds the original native-v8-9 HUD and the existing receiver into
+one dependency-free ESM Worker. It preserves the Site ID, declares `DB` and
+MCP, and writes the first schema-only migration plus its journal. Rebuilding
+is deterministic; conflicting existing migrations stop the build before files
+are changed. Local tests verify this source/build behavior; the binding and
+migration still require validation by a real Sites deployment.
+
+When source synchronization works, use the Sites source workflow to push and
+package these exact files, then publish the resulting exact source commit and
+archive through owner-private deployment. Configure `HUD_WRITER_TOKEN` as a
+runtime secret before publishing; a second reader key is unnecessary in this
+platform-specific variant. Check the deployed D1 schema, owner sign-in,
+anonymous denial and authenticated uploads before installing the Mac reporter.
+
+For this private target the reporter also needs the Site's supported service
+access credential. Keep it in Keychain as `rovordigital.hud.service` (or the
+controlled environment variable `ROVOR_HUD_SERVICE_TOKEN`). It is sent only to
+the configured Site origin as `OAI-Sites-Authorization`; normal writer
+authentication uses the separate `Authorization` header. Redirects remain
+disabled. Never publish the origin credential in code, a plist or logs. Platform
+service access must not be replaced by making the Site public.
+
+With `mcp` declared, Sites can provision its own reader plugin on publication.
+Verify the actual connection before claiming ChatGPT can read status by name.
+No plugin has been provisioned or connected by this local build.
+
+Private-Sites checks: `node --test tests/test_hud_cloud.mjs tests/test_hud_sites.mjs`
+runs 29 tests, including original-HUD byte preservation in the response,
+platform identity/read permissions, upload isolation, MCP, deterministic bundle
+import, immutable migration handling and separate service authentication.
+
+## Standalone Cloudflare variant
+
 Status: implemented and locally tested, **not deployed, not installed on Mac,
 not connected as a ChatGPT tool**. No cloud account credentials were available
 in this session. The current temporary tunnel is not converted merely by
