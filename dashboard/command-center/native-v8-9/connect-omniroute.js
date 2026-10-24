@@ -5,6 +5,7 @@
  const trusted=url=>url.protocol==='https:'&&/^[a-z0-9-]+\.trycloudflare\.com$/.test(url.hostname)&&!url.username&&!url.password&&!url.port;
  function connectionForm(){
   window.ROVOR_NATIVE.open('workload');
+  window.ROVOR_WORKLOAD?.resetPopup?.();
   const host=document.getElementById('drawerBody');
   host.innerHTML='<div id="rovor-workload-popup"><section class="wl-card"><h3>CONNECT OMNIROUTE</h3><p class="wl-empty">Paste the private bridge link printed on your Mac. This connects live usage to this existing HUD address. The Mac bridge must stay running.</p><form id="omniConnectForm"><input class="tool-input" id="omniBridgeLink" type="password" autocomplete="off" aria-label="Private Mac bridge link" placeholder="Private bridge link"><button class="wl-button" type="submit">CONNECT TO THIS HUD</button><button class="wl-button" type="button" id="omniDisconnect">DISCONNECT</button></form><p class="wl-empty" id="omniConnectStatus" role="status"></p></section></div>';
   document.getElementById('omniDisconnect').onclick=()=>{sessionStorage.removeItem(KEY);location.reload()};

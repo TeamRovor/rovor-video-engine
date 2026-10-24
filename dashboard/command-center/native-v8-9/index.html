@@ -1805,6 +1805,7 @@ function openTask(t){state.selected=t;open('task',document.activeElement?.closes
 function card(heading,body){return `<div class="card"><h3>${safe(heading)}</h3>${body}</div>`}
 function renderDrawer(view){
  state.view=view;
+ if(view==='workload'&&document.getElementById('omniConnectForm'))return;
  const footnote=$('screen').querySelector('.drawer-footnote');
  if(footnote)footnote.textContent=view==='workload'
    ?'OMNIROUTE / GHOST EMPLOYEE USAGE: NOT CONNECTED. SAMPLE MODE IS SYNTHETIC; NO WORKER OR MODEL CALLS ARE IMPLIED.'
@@ -2024,6 +2025,7 @@ window.ROVOR_START_OMNIROUTE=()=>{
  const trusted=url=>url.protocol==='https:'&&/^[a-z0-9-]+\.trycloudflare\.com$/.test(url.hostname)&&!url.username&&!url.password&&!url.port;
  function connectionForm(){
   window.ROVOR_NATIVE.open('workload');
+  window.ROVOR_WORKLOAD?.resetPopup?.();
   const host=document.getElementById('drawerBody');
   host.innerHTML='<div id="rovor-workload-popup"><section class="wl-card"><h3>CONNECT OMNIROUTE</h3><p class="wl-empty">Paste the private bridge link printed on your Mac. This connects live usage to this existing HUD address. The Mac bridge must stay running.</p><form id="omniConnectForm"><input class="tool-input" id="omniBridgeLink" type="password" autocomplete="off" aria-label="Private Mac bridge link" placeholder="Private bridge link"><button class="wl-button" type="submit">CONNECT TO THIS HUD</button><button class="wl-button" type="button" id="omniDisconnect">DISCONNECT</button></form><p class="wl-empty" id="omniConnectStatus" role="status"></p></section></div>';
   document.getElementById('omniDisconnect').onclick=()=>{sessionStorage.removeItem(KEY);location.reload()};
