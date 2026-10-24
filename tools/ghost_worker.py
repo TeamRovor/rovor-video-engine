@@ -140,7 +140,9 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
 
 
 def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
-          jane_queue_job_id=None, allow_omniroute_model_use=False):
+          jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None):
+    if omniroute_queue_job_id is not None and (not allow_omniroute_model_use or jane_library_only or jane_queue_job_id is not None):
+        raise ValueError('Exact OmniRoute selector requires separate OmniRoute-only approval')
     if jane_queue_job_id is not None and not jane_library_only:
         raise ValueError('Job ID filter requires Jane library-only mode')
     if jane_library_only and not allow_jane_library_create:
@@ -174,9 +176,12 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
                        | ({LIBRARY_KIND} if allow_jane_library_create else set()))
         if jane_library_only:
             kinds = [LIBRARY_KIND]
+        if omniroute_queue_job_id is not None:
+            kinds = [OMNI_KIND] if omni_enabled else []
+        selected_id = omniroute_queue_job_id if omniroute_queue_job_id is not None else jane_queue_job_id
         marks = ",".join("?" for _ in kinds)
-        job_filter = " AND id=?" if jane_queue_job_id is not None else ""
-        args = [*kinds, jane_queue_job_id] if jane_queue_job_id is not None else kinds
+        job_filter = " AND id=?" if selected_id is not None else ""
+        args = [*kinds, selected_id] if selected_id is not None else kinds
         job = conn.execute(f"SELECT * FROM jobs WHERE status='queued' AND kind IN ({marks}){job_filter} ORDER BY created_at,id LIMIT 1", args).fetchone()
         if job:
             conn.execute("UPDATE jobs SET status='running',attempts=attempts+1,lease_owner=?,lease_until=?,updated_at=? WHERE id=?",
@@ -228,7 +233,7 @@ def inventory(workspace: Path, subpath: str) -> dict:
 
 
 def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
-             jane_queue_job_id=None, allow_omniroute_model_use=False):
+             jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None):
     state = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
     if os.path.lexists(state / "STOP"):
         return None
@@ -236,7 +241,8 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
                 allow_jane_library_create=allow_jane_library_create,
                 jane_library_only=jane_library_only,
                 jane_queue_job_id=jane_queue_job_id,
-                allow_omniroute_model_use=allow_omniroute_model_use)
+                allow_omniroute_model_use=allow_omniroute_model_use,
+                omniroute_queue_job_id=omniroute_queue_job_id)
     if not job:
         return None
     job_id, kind = job["id"], job["kind"]
