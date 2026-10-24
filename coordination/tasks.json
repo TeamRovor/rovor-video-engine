@@ -3234,9 +3234,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:13:10.197Z",
-      "next_update": "After focused Mac tests and fresh job Terminal handoff",
-      "next_action": "User requested continued24/7 setup: prepare new fixed overnight-acceptance checklist task (not replay of failed supervisor code review), repair launcher positively verified already-unloaded state, preserve old dedupe and receipt. Tests and pinned Terminal handoff; no unattended inference or model call here.",
+      "updated_at": "2026-10-24T00:15:05.638Z",
+      "next_update": "After user runs the pinned new checklist task and its private receipt is reviewed",
+      "next_action": "Use pinned0716b657c4f2f16d1ef87d1df0ad69042fc26cc1 tools/omniroute_mac_once.py --packet overnight-acceptance --approve-one-free-job from user Terminal after64 tests. New fixed useful checklist task, not retry of failed supervisor review. Existing service absence verified safely;120s single request; STOP restored and scheduling stays off. Preserve failed job and prior runtime. Await actual output before unattended activation.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -3293,9 +3293,16 @@
           "check": "62 focused OmniRoute tests each interpreter; explicit one-request TimeoutError and120s bound regressions; live gateway499/receipt read-only failure diagnosis",
           "result": "PASS source repair; original live attempt FAILED after55.065s, attempts1. No response or retry. STOP restored and LaunchAgent unloaded. Repair source-only, no further model request.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/41#issuecomment-6377293741"
+        },
+        {
+          "commit": "0716b657c4f2f16d1ef87d1df0ad69042fc26cc1",
+          "platform": "Actual macOS15.8.1 / Python3.9.6 and installed3.12",
+          "check": "64 focused tests both versions; actual read-only launchd domain absence observation; public packet loader bounds/provenance; no-model default",
+          "result": "PASS; next fixed checklist job source and command ready. Failed previous job preserved; no new inference, scheduler or installation in this chat.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/41#issuecomment-6377370230"
         }
       ],
-      "blocker": "First approved live job timed out at55s, needs_review attempts1, no response. Source timeout repair tested/pushed but not installed; one-job authorization consumed. STOP remains on and LaunchAgent unloaded. No automatic or same-job retry permitted."
+      "blocker": "Awaiting user Terminal invocation outside Work DB/Keychain access limitations; new task not executed here."
     }
   ]
 }
