@@ -4427,6 +4427,29 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/173"
         }
       ]
+    },
+    {
+      "id": "walter-public-queue-admission-20261024",
+      "title": "Validate exact pinned public task seed before queuing specialist research",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 public admission shift",
+      "branch": "feature/walter-public-queue-admission-v1",
+      "scopes": [
+        "tools/walter_public_queue_admission.py",
+        "tests/test_walter_public_queue_admission.py",
+        ".github/workflows/walter-public-queue-admission.yml",
+        "subsystem:verified-public-task-seed-gate"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T14:44:27.786Z",
+      "next_update": "After Python 3.9/3.11 hosted focused tests and shared coordination validation",
+      "next_action": "Implement a pure fail-closed pre-enqueue validator for existing PR137 public_task jobs: require exact pinned queue/source identity, ready or separately approved active ownership, done dependencies, complete attempted task ledger, STOP/owner consent, valid form, and no fallback/blocked/generic assignments. New independent files only; no live worker edits or inference.",
+      "acceptance": "Offline Python 3.9 stdlib gate produces an inert exact public_task payload only for a source-grounded eligible task; refuses blocked/done/host-only/unowned or overlapping work, stale title/acceptance/commit/source hashes, duplicate tasks and generic fallback packets, never mutates queue or SQLite, and includes adversarial focused tests and hosted Python 3.9/3.11 shared checks.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/173"
+      ]
     }
   ]
 }
