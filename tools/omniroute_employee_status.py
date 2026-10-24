@@ -47,19 +47,41 @@ def inspect(state, *, run=subprocess.run):
     if db.is_symlink() or not db.is_file():
         result["database_status"] = "database_missing_or_redirected"
         return result
+    # WAL sidecars are expected for a running SQLite worker. Their presence
+    # must not hide the very receipts we are trying to verify. Never copy
+    # the live WAL/main files independently, as that could silently omit
+    # committed jobs. An online, read-only SQLite backup is consistent.
+    sidecars = []
     for suffix in ("-wal", "-shm"):
-        if (state / ("jobs.sqlite3" + suffix)).exists():
-            result["database_status"] = "active_wal_sidecars_read_only_probe_declined"
+        side = state / ("jobs.sqlite3" + suffix)
+        if side.is_symlink() or (side.exists() and not side.is_file()):
+            result["database_status"] = "unsafe_database_sidecar"
             return result
+        sidecars.append(side.exists())
+    if any(sidecars) and not all(sidecars):
+        result["database_status"] = "incomplete_wal_sidecars"
+        return result
     try:
-        before = db.stat()
         with tempfile.TemporaryDirectory(prefix="rovor-status-") as tmp:
             snapshot = Path(tmp) / "snapshot.sqlite3"
-            shutil.copyfile(db, snapshot)
-            after = db.stat()
-            if (before.st_mtime_ns, before.st_size) != (after.st_mtime_ns, after.st_size):
-                result["database_status"] = "database_changed_during_snapshot"
-                return result
+            if all(sidecars):
+                # Never write to live DB. A read-only source connection copies
+                # one transactionally consistent view into a private temp DB.
+                with sqlite3.connect(db.as_uri() + "?mode=ro",
+                                     uri=True, timeout=6) as source:
+                    source.execute("PRAGMA query_only=ON")
+                    with sqlite3.connect(str(snapshot), timeout=6) as destination:
+                        source.backup(destination, pages=64, sleep=0.05)
+            else:
+                # With no WAL sidecars the historical worker snapshot is
+                # safely copyable. Preserve the existing no-write fallback,
+                # including WAL-header databases with no live sidecars.
+                before = db.stat()
+                shutil.copyfile(db, snapshot)
+                after = db.stat()
+                if (before.st_mtime_ns, before.st_size) != (after.st_mtime_ns, after.st_size):
+                    result["database_status"] = "database_changed_during_snapshot"
+                    return result
             conn = sqlite3.connect(str(snapshot))
             conn.row_factory = sqlite3.Row
             try:
