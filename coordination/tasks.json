@@ -3731,15 +3731,16 @@
         "integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T08:17:16.209Z",
-      "next_update": "After observing a scheduled post-activation tick and new private model receipt; keep existing service running",
-      "next_action": "The pinned same-service continuous installer was successfully applied on the real Mac twice on October 24 (do NOT reinstall). Read-only inspect current launchctl status/config, continuous-status.json timestamp/feed/dispatch reason, existing SQLite claim timestamps and saved private model/draft receipts AFTER activation. Verify a scheduled non-replayed accepted model draft and STOP/failure/quota behavior; then measure 24h. Respect max144 claims/rolling24h, min601s pace, existing free-only models; distinguish claimed requests, failures, human-review-ready drafts and approved outputs. No fake nine-model success claim.",
+      "updated_at": "2026-10-24T09:14:59.534Z",
+      "next_update": "After Mac operator runs one read-only sanitized telemetry observer; report new claim/review-ready/nonready and preserve installed service",
+      "next_action": "Mac activation complete at pinned b736610 and heartbeat recorded 22 claims/24h, but 22 needs_review jobs alone do not prove completed useful work. New tools/omniroute_workforce_telemetry.py source from PR150 is merged to PR137 at 7e49765; run read-only using pinned git show command in linked PR137 comment without reinstalling. Verify fresh review-ready vs failed results and later exact model receipt IDs; stage current PR147 routing only after verified providers, zero-cost quota, exact single-model combo/canary.",
       "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation.",
-      "blocker": "Post-activation heartbeat and a new model completion have not been seen in the provided Terminal transcript; ChatGPT/GitHub does not yet have a live authenticated read of the Mac private worker state. Mac activation is complete; live result verification remains.",
+      "blocker": "Installed LaunchAgent activation succeeded and previous live heartbeat observed; actual fresh per-model response/accepted work and new read-only post-merge Mac telemetry are still unverified by connected GitHub. Nine configured provider entries != nine eligible working models.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/137",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40072143609",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6381898438"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6381898438",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382406783"
       ],
       "evidence": [
         {
@@ -3762,6 +3763,13 @@
           "check": "Pinned exact-commit installer apply on actual Mac, repeated after successful dry-run",
           "result": "Host installer twice reported same_service_activated_receipt_pending, first_tick_requested=true, second_service_created=false, max_claims_24h=144 and min_interval_seconds=601. No post-activation completion was shown or claimed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6381898438"
+        },
+        {
+          "commit": "7e49765dd06e5907baeeb8efe7a4cd4a5bdbb02e",
+          "platform": "GitHub-hosted Linux Python3.9/3.11 on PR#150",
+          "check": "Read-only consistent SQLite/WAL workforce telemetry, 12 focused offline tests per version, secret and provider-text nonexposure, real ready/not-ready classification",
+          "result": "PASS. Merged source into existing PR137 worker branch; installed Mac service unchanged. Await real host read-only telemetry run.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/150"
         }
       ]
     },
