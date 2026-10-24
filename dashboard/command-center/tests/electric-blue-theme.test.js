@@ -16,7 +16,7 @@ test('Blue-only theme loads after all legacy styles and is part of offline shell
   positions.forEach((n,i)=>assert.ok(n>0,files[i]));
   positions.slice(1).forEach((n,i)=>assert.ok(n>positions[i],'Must load last: '+files[i+1]));
   assert.ok(worker.includes("'./electric-blue-theme.css'"));
-  assert.match(worker,/electric-blue-theme\\.css/);
+  assert.ok(worker.includes('electric-blue-theme'));
   assert.match(worker,/rovor-command-center-shell-v7/);
 });
 
