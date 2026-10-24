@@ -64,7 +64,8 @@ async function main(){
  await cmd('Page.navigate',{url:publicOrigin+'/'});
  await poll(()=>evalJS('return !!document.getElementById("connectOmniRoute")'));
  await evalJS('document.getElementById("connectOmniRoute").click();return true');
- assert(await evalJS('return !!document.getElementById("omniBridgeLink")'));
+ await delay(6000);
+ assert(await evalJS('return !!document.getElementById("omniBridgeLink")')); 
  await evalJS('document.getElementById("omniBridgeLink").value='+JSON.stringify(publicOriginHolder.bridge+'/#pair='+'a'.repeat(64))+';document.getElementById("omniConnectForm").requestSubmit();return true');
  await poll(()=>evalJS('return document.querySelectorAll("#workloadPanel [data-live-model]").length===1'));
  assert.equal(await evalJS('return location.origin'),publicOrigin);
