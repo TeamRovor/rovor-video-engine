@@ -114,6 +114,7 @@
   // existing ROVOR HUD frame are untouched.
   let compactTab='models';
   let compactPick=null;
+  let retainedPopup=null;
   function mountPreview(container,openDetails){
     if(!container)return;
     container.replaceChildren();
@@ -151,13 +152,18 @@
   }
   function mount(container) {
     if(!container)return;
+    const carriedLeft=container.querySelector?.('.wl-matrix-scroll')?.scrollLeft??0;
     container.replaceChildren();
     const root=document.createElement('div');
     root.id='rovor-workload-popup';
-    const state={view:compactPick?.view||'matrix',period:'24H',demo:false,employee:compactPick?.employee??0,model:compactPick?.model??0};
+    const state=retainedPopup
+      ? {...retainedPopup}
+      : {view:'matrix',period:'24H',demo:false,employee:0,model:0};
+    if(compactPick)Object.assign(state,compactPick);
     compactPick=null;
     const paint=()=>{
       const previousLeft=root.querySelector?.('.wl-matrix-scroll')?.scrollLeft??0;
+      retainedPopup={...state};
       root.innerHTML=makeUI(state);
       const nextScroll=root.querySelector?.('.wl-matrix-scroll');
       if(nextScroll)nextScroll.scrollLeft=previousLeft;
@@ -178,6 +184,9 @@
     });
     container.append(root);
     paint();
+    const matrix=root.querySelector?.('.wl-matrix-scroll');
+    if(matrix)matrix.scrollLeft=carriedLeft;
   }
-  window.ROVOR_WORKLOAD={mount,mountPreview};
+  function resetPopup(){retainedPopup=null;}
+  window.ROVOR_WORKLOAD={mount,mountPreview,resetPopup};
 })();
