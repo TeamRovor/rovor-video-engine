@@ -40,6 +40,19 @@ class GhostOmniRouteJobTests(unittest.TestCase):
         return ghost_worker.enqueue(self.conn, ghost_worker.OMNI_KIND,
                                     {'packet': packet}, 'omni-fixture-' + str(index))
 
+    def test_launchagent_resolves_user_omniroute_from_reduced_path(self):
+        local = self.home / ".local/bin/omniroute"
+        local.parent.mkdir(parents=True)
+        local.write_text("#!/bin/sh\\nexit 0\\n")
+        local.chmod(0o700)
+        resolved = omni.installed_cli(host_platform="darwin", home=self.home,
+                                      which=lambda name: None)
+        self.assertEqual(resolved, str(local))
+        local.chmod(0o600)
+        fallback = omni.installed_cli(host_platform="darwin", home=self.home,
+                                       which=lambda name: "/usr/local/bin/omniroute")
+        self.assertEqual(fallback, "/usr/local/bin/omniroute")
+
     def test_background_preflight_uses_get_and_never_calls_completion(self):
         import omniroute_workpack_runner as runner
         response=mock.MagicMock();response.__enter__.return_value.status=200
