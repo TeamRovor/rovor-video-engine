@@ -3655,7 +3655,7 @@
       "id": "walter-staged-dispatch-proposal-20261024",
       "title": "Prepare safe, staged OmniRoute specialist request proposals from reviewed public workpacks",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24",
       "branch": "feature/walter-staged-dispatch-proposal-v1",
       "scopes": [
@@ -3665,11 +3665,26 @@
         "subsystem:walter-staged-dispatch-review-gate"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T05:16:00Z",
-      "next_update": "After hosted Python 3.9/3.11 checks and PR review",
-      "next_action": "Implement pure public specialist workpack-to-request candidate composition from existing validated 14 staged packets and existing dispatch permit; gate stage two on seven independently reviewed stage-one receipts. No edits to PR41 worker, no Mac writes, inference, new scheduler or replay.",
+      "updated_at": "2026-10-24T05:23:00Z",
+      "next_update": "Merged source and hosted tests verified; existing Mac owner decides if/when to integrate.",
+      "next_action": "PR #129 merged at a04a13a3dcf2066a6d6d5067163706ff612779e1. tools/walter_staged_dispatch.py now builds one inert request proposal from the existing 14 staged public specialist packets, checks workpack/source integrity, source SHA256, STOP/ledger/dedupe/quota and exact free-only model permit; stage two blocked until all seven stage-one receipts have independently reviewed status from trusted Mac reviewer. CI Python3.9/3.11 and queue/routing passed in run 40065665341. Current PR41 Mac owner may integrate only after verifying private receipt statuses, exact local model route/account attestations, atomic SQLite claim and separate opt-in; no live Mac deployment, inference, queue writes or specialist drafts proven. Never replay failed job.",
       "acceptance": "New stdlib-only module combines exact checked-in public workpacks, authoritative ledger snapshot, explicit reviewed-receipt evidence and existing zero-cost dispatch permit into one inert bounded request candidate with source fingerprints. No stage-two proposal until seven stage-one receipts reviewed; fail closed on STOP, ledger uncertainty, quota, provider attestation and source drift. Hosted Python3.9/3.11 tests and shared queue/routing CI; no live inference.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "a04a13a3dcf2066a6d6d5067163706ff612779e1",
+          "platform": "GitHub-hosted Ubuntu / Python 3.9 and 3.11",
+          "check": "14 offline staged specialist proposal tests, 28 free-dispatch permit tests, 25 reasoning-admission tests; workpack compiler; project_loop and paired routing",
+          "result": "PASS both versions; 14 public staged workpacks validated; no model calls, SQLite writes, Mac access or live inference.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40065665341"
+        },
+        {
+          "commit": "a04a13a3dcf2066a6d6d5067163706ff612779e1",
+          "platform": "GitHub PR #129",
+          "check": "Independent module, test and workflow scope; existing Mac PR41-owned files untouched",
+          "result": "MERGED source-only into main; specialist workpack requests remain inert until Mac owner integrates.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/129"
+        }
+      ]
     }
   ]
 }
