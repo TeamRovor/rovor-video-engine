@@ -4932,10 +4932,10 @@
       "id": "walter-ghost-cloud-approved-feed-20261024",
       "title": "Enqueue explicitly approved canonical public tasks into the existing cloud nine-provider job ledger",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Walter / cloud migration feed shift 2026-10-24",
-      "updated_at": "2026-10-24T23:11:08.027Z",
-      "next_update": "After focused Node tests and GitHub Actions verification",
+      "updated_at": "2026-10-24T23:13:24.183Z",
+      "next_update": "After saved owner PASS/FAIL on PR191 exact head and fresh CI readback",
       "branch": "feature/walter-ghost-cloud-approved-feed-20261024",
       "scopes": [
         "integrations/ghost-cloud/approved-feed.mjs",
@@ -4945,8 +4945,29 @@
       "depends_on": [
         "nine-provider-cloud-dispatch-20261024"
       ],
-      "next_action": "Implement immutable-source canonical task admission with private operator allowlist, deterministic no-replay job IDs, bounded one-shot writer integration and STOP preservation; no auto deployment or provider inference.",
-      "acceptance": "No new task manager or scheduler; feed accepts only source-pinned active canonical public tasks with explicit cloud packet and private operator approval; rejects stale/unknown/malformed/unowned/duplicate/unsafe work, caps batches, submits to existing authenticated cloud job endpoint, and has adversarial tests plus hosted CI. No live provider or Mac access claimed."
+      "next_action": "PR191 at head 142eb00cedd3a03dc9a279184faaa40b886aa8e0 awaits Amar's saved PASS/FAIL. PASS plus fresh green checks permits a separately authorized merge; FAIL requires new linked bounded rework task, never replay. Persistent-HUD owner later composes this optional one-shot feeder into existing unpublished private Site, configures secret allowlist + immutable canonical commit and approved public cloud_inference packets. No cloud provider secrets/canaries/hosting deployment yet; do not infer nine-provider execution.",
+      "acceptance": "No new task manager or scheduler; feed accepts only source-pinned active canonical public tasks with explicit cloud packet and private operator approval; rejects stale/unknown/malformed/unowned/duplicate/unsafe work, caps batches, submits to existing authenticated cloud job endpoint, and has adversarial tests plus hosted CI. No live provider or Mac access claimed.",
+      "blocker": "Source-only tested PR awaiting explicit exact-commit owner review; private Site source publication, nine provider secrets, verified free eligibility/quotas/canaries, and unattended cloud trigger not available in this shift.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/191",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40141808572"
+      ],
+      "evidence": [
+        {
+          "commit": "142eb00cedd3a03dc9a279184faaa40b886aa8e0",
+          "platform": "GitHub Actions Ubuntu / Node24, Python3",
+          "check": "node --test tests/test_ghost_cloud_feed.mjs; python3 tools/project_loop.py check; python3 tools/task_routing_pair.py --check",
+          "result": "PASS 26/26 focused tests; canonical task/routing checks pass. Only mocked public fetch and existing writer; no live Site, secrets, model canary, inference, Mac, owner approval, or deployment.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40141808572"
+        },
+        {
+          "commit": "142eb00cedd3a03dc9a279184faaa40b886aa8e0",
+          "platform": "GitHub Actions Ubuntu",
+          "check": "Shared PR test check",
+          "result": "SUCCESS; PR191 remains OPEN awaiting saved owner PASS on immutable head. No automatic merge.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40141808694"
+        }
+      ]
     }
   ]
 }
