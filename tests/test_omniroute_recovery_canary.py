@@ -55,7 +55,8 @@ class RecoveryTests(unittest.TestCase):
             "review_status":"draft_ready_for_human_review"}) as model:
             result=self.run_canary(approve=True,acknowledge_circuit=True)
             self.assertEqual(result["status"],"completed_requires_human_review")
-            self.assertEqual(result["model_request_count"],1)
+            self.assertEqual(result["maximum_single_gateway_completion_posts"],1)
+            self.assertTrue(result["one_new_sqlite_claim_recorded"])
             model.assert_called_once()
             # Calling the command twice must NEVER trigger a second request.
             repeated=self.run_canary(approve=True,acknowledge_circuit=True)
