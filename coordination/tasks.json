@@ -3731,9 +3731,9 @@
         "integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T09:23:07Z",
-      "next_update": "After verifying installed OmniRoute version and sanitized provider-to-model/quota/cost mapping on Mac, then approved route-to-specialist capability matrix",
-      "next_action": "The real Mac read-only fleet inspector VERIFIED nine provider connection entries but only THREE distinct IDs across FOUR ROVOR combos; all EIGHT Walter/specialist packets bind to ONE rovor-fast-free-v1 priority combo (north-mini-code then nemotron-3.5-super-vl). No differentiated per-role model selection, cost/usage proof or private receipt attribution. Continue existing scheduler without changes. Read-only verify installed CLI version/models/quota help, then safely audit which additional distinct model IDs are configured, account-level free entitlements, quotas, capability/skills and successful receipts before staging PR147 callback and single-model combo bindings. Prior 27 claims: 10 ready, 12 nonready, 5 pending/failed; improve valid output rate before claim ceiling.",
+      "updated_at": "2026-10-24T09:33:00Z",
+      "next_update": "After one combined real Mac operations snapshot, or an independent source task with CI; do not require repeated setup prompts.",
+      "next_action": "Use already-merged main tools/omniroute_ops_snapshot.py (PR152) as ONE non-mutating host check of actual job quality + model route IDs + provider count + installed 3.8.52 models/quota metadata (read-only). Source passes Python3.9/3.11 12 tests each. Consume its one JSON result and then implement the highest-value correction; stop repeating separate Mac audits or installers. Proportional model selection+atomic quota reservation already merged to PR137 development source, but not on active Mac. Before enabling multi-model, require independently verified per-model $0 entitlement/remaining quota and one single-model canary/route; improve recent 10/27 draft readiness before increasing claims.",
       "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation.",
       "blocker": "Nine configured provider connection entries DO NOT equal nine routable/eligible models. Real Mac currently routes 3 distinct models and all 8 roles via fast combo. Need verified provider/model/account metadata, $0 entitlement and quota reset evidence; 17/27 claims are not review-ready. Mac PR137 pinned worker still lacks optional atomic model selection in installed runtime.",
       "links": [
@@ -3742,7 +3742,9 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6381898438",
         "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382406783",
         "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382472095",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382529114"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382529114",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/152",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40083045997"
       ],
       "evidence": [
         {
@@ -3786,6 +3788,13 @@
           "check": "Read-only merged PR141 omniroute_model_fleet.py --expected-models 9, actual installed provider and combo catalogs",
           "result": "9 connection entries, 4 ROVOR combos, 3 distinct routed model IDs; all 8 worker roles use rovor-fast-free-v1 (2 models). Free suffix but upstream billing/quota and successful provider inference unverified; no model calls or installed routing changes.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382529114"
+        },
+        {
+          "commit": "1a4c054c50ec1565be5d99f7e6a45bd33e9e36c7",
+          "platform": "GitHub main / Actions Linux Python3.9,3.11",
+          "check": "12 offline tests per Python version for standalone combined SQLite heartbeat/model combo/provider model catalogue/quota snapshot; no private data leakage, no inference/service modifications",
+          "result": "PASS and PR152 merged. Does not prove real Mac output for this NEW tool until first one-shot run.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/152"
         }
       ]
     },
