@@ -7,7 +7,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {fileURLToPath,pathToFileURL} from 'node:url';
-import {spawn,spawnSync} from 'node:child_process';
+import {spawn,spawnSync,execFile} from 'node:child_process';
+import {promisify} from 'node:util';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const ID=/^[a-zA-Z0-9][a-zA-Z0-9._:/+@-]{0,199}$/;
@@ -164,9 +165,27 @@ async function installedReader(){
   };
 }
 
+export function createWorkerReader(run=promisify(execFile),clock=Date.now){
+  let previous=null,at=0,pending=null;
+  return async()=>{
+    if(previous&&clock()-at<5000)return previous;
+    if(pending)return pending;
+    pending=(async()=>{
+      try{
+        const result=await run('python3',[path.join(ROOT,'tools/hud_employee_snapshot.py')],{timeout:8000,maxBuffer:262144,env:process.env});
+        const doc=JSON.parse(result.stdout);
+        if(!['existing_worker_sqlite_read_only','worker_state_unavailable'].includes(doc.source)||!Array.isArray(doc.employees)||doc.employees.length!==8)throw Error();
+        previous=doc;at=clock();return doc;
+      }catch{previous=null;return {source:'worker_state_unavailable',employees:[],heartbeat:{available:false}};}
+      finally{pending=null;}
+    })();return pending;
+  };
+}
+
 async function main(){
   const remote=process.argv.includes('--remote');
-  const reader=await installedReader(),collect=createCollector(reader);
+  const reader=await installedReader(),readModels=createCollector(reader),readWorkers=createWorkerReader();
+  const collect=async period=>({...await readModels(period),workforce:await readWorkers()});
   const first=await collect('24h');
   const bridge=createBridge({collect,port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8')});
   const port=await bridge.listen();

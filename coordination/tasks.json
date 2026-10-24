@@ -4245,7 +4245,7 @@
       "id": "hud-omniroute-live-sync-20261024",
       "title": "Connect existing HUD to read-only live full OmniRoute inventory and measured request usage",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar live HUD bridge session",
       "branch": "feature/hud-employee-live-status",
       "scopes": [
@@ -4262,9 +4262,9 @@
         "tests/test_hud_employee_snapshot.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T11:34:23.576471+00:00",
-      "next_update": "After actual Mac bridge update returns configured connection inventory and existing HUD reflects it",
-      "next_action": "Owner requests live employee tasks and model attribution. Add read-only role status from existing SQLite/WAL copy and heartbeat; public task titles only from canonical repo queue; route/configured model vs actual upstream model explicitly distinct. Do not touch active worker source/scheduler.",
+      "updated_at": "2026-10-24T11:38:18.935809+00:00",
+      "next_update": "After Mac runs reviewed bridge update and existing HUD employee view shows actual records",
+      "next_action": "Live employee read-only adapter implemented: bounded existing SQLite/WAL copy, eight roles, public titles only, lease/heartbeat freshness, queued/running/last work, recorded route and configured-model separate from unknown actual upstream model. Unattributed jobs count is explicit. Three Python employee tests, ten Node bridge tests and 86 native regressions pass locally. Hosted browser checks eight employee cards across responsive sizes. Actual updated Mac bridge must run to verify state path, role coverage and source fields; no worker source/service modifications.",
       "acceptance": "Dynamic full model list, measured window counts and request-share bars, stale/error states, secrets never reach browser, no arbitrary proxy; tested mocked gateway end to end, actual Mac connection separately verified.",
       "blocker": "This session has no Mac runtime or connected browser tool. Code can be reviewed/published here; actual localhost gateway authentication, catalog/usage counts and remote phone pairing require one startup on the Mac. No real Mac sync claimed.",
       "evidence": [
