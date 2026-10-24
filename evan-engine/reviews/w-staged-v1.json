@@ -1,0 +1,110 @@
+{
+  "runtimeSourceCommit": "442a4dc813d3541bbae0c4af8e72c28699102827",
+  "sourceFrames": [
+    696,
+    936
+  ],
+  "sourceSamples": [
+    232000,
+    312000
+  ],
+  "audio": {
+    "sourcePcm16Samples": 80000,
+    "decodedPcm16Samples": 80000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "films": {
+    "Normal": {
+      "decodedFrames": 240,
+      "sha256": "94a502975d9b975839892d214fe66d8f1080ae2dd66634d7a8f22f916f1f330c"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 960,
+      "sha256": "163ddce8b271c7dea4cb2696587f1584d0e3b5ff4e447476b49dfd62983bde2d"
+    }
+  },
+  "upper288Exact": 240,
+  "noseMaximumChange": 0,
+  "minimumJaw": 27.790542602539062,
+  "minimumArms": {
+    "left": 494.6158370879494,
+    "right": 135.35149457940372
+  },
+  "fallbacks": [
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    }
+  ],
+  "phonemeTimingChanged": false,
+  "artworkChanged": false,
+  "independentListeningOrRealTimePlaybackAccepted": false,
+  "polishedMilestoneReady": false,
+  "nativeMouthFramesInspected": 240,
+  "fullFramesInspected": [
+    828,
+    868,
+    888,
+    935
+  ],
+  "layers": [
+    {
+      "file": "Body-Pixel-Layers-868.psd",
+      "layers": [
+        "neck",
+        "torso",
+        "hand-left",
+        "arm-left",
+        "arm-right",
+        "head"
+      ],
+      "meanPremultipliedError": 0.0071201469562807975,
+      "nativeMohoBones": false
+    },
+    {
+      "file": "Native-Oral-Layers-868.psd",
+      "layers": [
+        "Neck backing",
+        "Drawn skin underlap",
+        "Painted cavity",
+        "Narration tongue",
+        "Rigid upper incisors",
+        "Front dental tongue tip",
+        "Drawn jaw skin",
+        "Independent lower lip",
+        "Independent upper-lip cap",
+        "Upper face and cheeks"
+      ],
+      "meanPremultipliedError": 0.003173824385100718,
+      "nativeMohoBones": false
+    }
+  ],
+  "animationAccepted": false,
+  "currentCodeTestsPassed": 49,
+  "sourceAlphaSpecksRetained": true,
+  "noNewArtwork": true,
+  "noNewRuntimeBehavior": true,
+  "followUp": "Continuous vertical oral-arch phase trajectories with exact contact holds; compare more and up/all against original audio."
+}
