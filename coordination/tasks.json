@@ -3351,7 +3351,7 @@
       "id": "ghost-self-research-bootstrap-20261023",
       "title": "Prepare zero-training, resumable self-research missions for ROVOR ghost employees",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar ghost-role-bootstrap 2026-10-23",
       "branch": "feature/ghost-role-onboarding-v1",
       "scopes": [
@@ -3364,10 +3364,19 @@
       "depends_on": [
         "ghost-omniroute-queue-adapter-20261023"
       ],
-      "updated_at": "2026-10-24T01:13:05.312Z",
-      "next_update": "After independent offline validation and CI; publish exact review PR and handoff to active Mac OmniRoute owner without changing their files",
-      "next_action": "Implement a tiny deterministic role/step/checkpoint protocol, no new daemon or autonomous model use; separately offer safe adapter integration once scheduled inference issue is fixed.",
-      "acceptance": "Named specialist roles have bounded research-first steps; deterministic next-step and stable no-replay dedupe across restart; no sensitive or personal inputs, no autonomous execution, no paid fallback or broad Mac authority; independent Python3.9/3.11 offline tests and CI; remain source-only until Mac owner verifies deployment."
+      "updated_at": "2026-10-24T01:16:47.062Z",
+      "next_update": "After separately claimed Mac adapter integration and live unattended role receipt; source portion complete",
+      "next_action": "PR #115 (head 8eb82208925a836c0e9abf46ca614afe9472865f) source tests passed Linux Python3.9/3.11. Review/merge this independent role protocol; after active OmniRoute task fixes scheduled HTTP502 and host-verifies a NEW successful private draft, separately claim integration into EXISTING LaunchAgent/SQLite queue. Never replay failed scheduled 4e23d50c or add a second scheduler. No role inference or 24/7 specialist execution was activated here.",
+      "acceptance": "Named specialist roles have bounded research-first steps; deterministic next-step and stable no-replay dedupe across restart; no sensitive or personal inputs, no autonomous execution, no paid fallback or broad Mac authority; independent Python3.9/3.11 offline tests and CI; remain source-only until Mac owner verifies deployment.",
+      "evidence": [
+        {
+          "commit": "8eb82208925a836c0e9abf46ca614afe9472865f",
+          "platform": "GitHub-hosted Ubuntu Python 3.9 and 3.11, no Mac access",
+          "check": "Role manifest, deterministic replay/STOP/approval tests and CLI preview",
+          "result": "PASS both CI matrix jobs; 8 focused unit tests per interpreter and read-only preview. Source only; no inference, host deployment or Mac execution.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40049010815"
+        }
+      ]
     }
   ]
 }
