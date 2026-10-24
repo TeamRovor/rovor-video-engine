@@ -3236,9 +3236,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:39:39.446Z",
-      "next_update": "After zero-inference background-auth diagnostic is consumed by existing scheduler",
-      "next_action": "Scheduled system.ping succeeded once under launchd; next setup-only diagnostic verifies background Keychain/catalog/auth via loopback GET, with NO inference and no specialist assignments. Extend same worker/service, preserve successful/failed jobs and5-AI cap, test and provide pinned update command.",
+      "updated_at": "2026-10-24T00:42:27.998Z",
+      "next_update": "After scheduled background-auth proof result",
+      "next_action": "OS foundation proved: same service naturally completed system.ping bd8d0bb3 once. Next setup-only check: user Terminal deploy runtime53dee10e14e8ed8e537e275b9f138eca88f9db63 and helper235456e6a198221167ba9bd4ec7fdd785275a743 --enable-approved-draft-queue --verify-background-access. Inspect scheduled system.omniroute-preflight job stablekeyrovor-background-auth-proof-v1 for catalog/key/loopback GET auth without inference. No Final Cut/Moho assignments or research packets. Do not replay AI jobs or add scheduler.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -3316,9 +3316,16 @@
           "check": "Helper checksum; existing label loaded, interval300s, pinned0716b657, runs1 last_exit0; first idle summary; STOP cleared only after verification; backup exists; queue inspected",
           "result": "LOADED and first idle tick PASS; no model request during activation. Empty eligible queue. One successful prior AI draft; failed job preserved. Overnight/second natural tick/remote dispatch not yet verified.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/41"
+        },
+        {
+          "commit": "235456e6a198221167ba9bd4ec7fdd785275a743",
+          "platform": "Actual Mac natural scheduled ping +3.9/3.12 offline source tests",
+          "check": "system.ping automatic pickup/success/attempt1;72 focused tests both Python versions;186 combined ghost/OmniRoute tests on3.9",
+          "result": "Unattended OS queue execution PASS; source-only background auth diagnostic prepared. No model call or new service changes in this chat.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/41#issuecomment-6377626073"
         }
       ],
-      "blocker": "No approved eligible local jobs queued. Existing service loaded and first idle tick verified; recurring timer/overnight endurance and remote dispatch remain unverified."
+      "blocker": "Background AI credential access not yet verified; zero-inference diagnostic source tested and awaiting user Terminal update of same service."
     }
   ]
 }
