@@ -1,6 +1,12 @@
 # ROVOR Command Center — live GitHub HUD
 
-## Current deployment: native interactive HUD v8.6
+## Native HUD v8.7 — scroll affordance and refresh stability
+
+Each compact instrument now shows a small blue downward cue only while content remains below its scroll viewport; the cue disappears at the bottom. GitHub refresh keeps scroll position for all six panes, including quota and source details. The centered cinematic focus state, real data verification, portrait/landscape geometry, and prior /exact/ rollback are unchanged.
+
+Browser QA with mocked GitHub responses covered a 29-task queue, three viewport shapes for overflow cues and scroll preservation during refresh, plus desktop/tablet/phone interaction regressions. No additional network polling or privileged Mac actions were introduced.
+
+## Previous release: native interactive HUD v8.6
 
 The six compact home panels are miniature scrollable instruments: real queue/activity rows can be scrolled in place (no forced entry). Header expand controls open a centered neon instrument workspace that uses the same blue frame and keeps the reactor visible behind the scrim. The old edge-to-edge drawer is replaced. Desktop, iPad portrait/landscape and iPhone browser tests ran with mocked GitHub data including a 26-task queue and confirmed scroll positions survive module entry/exit. The live GitHub/source state remains read-only and is never mistaken for Mac runtime state.
 
