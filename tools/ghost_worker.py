@@ -143,7 +143,8 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
 
 
 def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
-          jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False):
+          jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False,
+          omni_max_24h=OMNI_MAX_24H):
     if omniroute_queue_job_id is not None and (not allow_omniroute_model_use or jane_library_only or jane_queue_job_id is not None):
         raise ValueError('Exact OmniRoute selector requires separate OmniRoute-only approval')
     if jane_queue_job_id is not None and not jane_library_only:
@@ -152,6 +153,8 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         raise ValueError('Jane-only selector requires specific library creation approval')
     if not owner or len(owner) > 128:
         raise ValueError("Worker identifier required")
+    if type(omni_max_24h) is not int or not 1 <= omni_max_24h <= 20:
+        raise ValueError("OmniRoute rolling claim budget must be 1 to 20")
     now = time.time() if now is None else now
     conn.execute("BEGIN IMMEDIATE")
     try:
@@ -172,7 +175,7 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
             "SELECT COUNT(*) FROM events e JOIN jobs j ON e.job_id=j.id "
             "WHERE j.kind=? AND e.event='claimed' AND e.timestamp>=?",
             (OMNI_KIND, now - 86400)).fetchone()[0]
-        omni_enabled = allow_omniroute_model_use and omni_used < OMNI_MAX_24H
+        omni_enabled = allow_omniroute_model_use and omni_used < omni_max_24h
         kinds = sorted(ALLOWED | ({RESEARCH_KIND} if allow_model_use else set())
                        | ({OMNI_KIND} if omni_enabled else set())
                        | ({NATIVE_KIND} if allow_native_import else set())
@@ -259,7 +262,8 @@ def macos_version_probe(*, run=subprocess.run, platform=None) -> dict:
 
 
 def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
-             jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False):
+             jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False,
+             omni_max_24h=OMNI_MAX_24H):
     state = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
     if os.path.lexists(state / "STOP"):
         return None
@@ -269,7 +273,8 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
                 jane_queue_job_id=jane_queue_job_id,
                 allow_omniroute_model_use=allow_omniroute_model_use,
                 omniroute_queue_job_id=omniroute_queue_job_id,
-                 allow_terminal_probe=allow_terminal_probe)
+                 allow_terminal_probe=allow_terminal_probe,
+                 omni_max_24h=omni_max_24h)
     if not job:
         return None
     job_id, kind = job["id"], job["kind"]
