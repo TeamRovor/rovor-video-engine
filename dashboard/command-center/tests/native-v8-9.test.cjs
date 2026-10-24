@@ -43,6 +43,7 @@ test('focus modules match cockpit style and preserve scroll positions',()=>{
 });
 test('new route is default but older pages still exist',()=>{
  const home=fs.readFileSync(path.join(base,'index.html'),'utf8');
- assert.match(home,/new URL\('\.\/native-v8-9\/', location\.href\)/);
+ assert.match(home,/workforce \? '\.\/workforce\/' : '\.\/native-v8-9\/'/);
+ assert.match(home,/new URLSearchParams\(location\.search\)/);
  assert.match(home,/url=\.\/native-v8-9\//);
 });
