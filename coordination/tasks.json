@@ -4143,13 +4143,25 @@
         "subsystem:overnight-public-saul-business-offer"
       ],
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "TeamRovor / scheduled GitHub-only maintenance 2026-10-24 Saul offer",
       "branch": "docs/saul-offer-intake-20261024",
       "depends_on": [],
-      "updated_at": "2026-10-24T11:21:06.109Z",
-      "next_update": "After source-grounded landing page/intake draft PR and verification; no automatic publication",
-      "next_action": "Draft a complementary, source-cited landing-page structure, lead-qualification gate, explicit unknowns and test/handoff checklist in a new public documentation file. No real prospect/client details or publication."
+      "updated_at": "2026-10-24T11:22:14.396Z",
+      "next_update": "Owner review of draft PR #165; website implementation requires separate claim and approval",
+      "next_action": "Owner review PR #165 for ROVOR service inquiry copy, approved brand/contact channels, lead intake route and proposed scope. The draft is complete, but no page, form, live integration, client acceptance or publication exists.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/165"
+      ],
+      "evidence": [
+        {
+          "commit": "6985c1e011c488d283ee2f405c1d8b7bd2d7fbc9",
+          "platform": "GitHub connector (no local Mac or hosted CI)",
+          "check": "Read-back of draft PR file; source links, scope, privacy, unknowns and acceptance matrix checked; queue/route/dependency/overlap gates validated with connector-side JS",
+          "result": "Proposed draft complete in PR #165; no web/form tests run, no client approval, no publication",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/165"
+        }
+      ]
     },
     {
       "id": "a-overnight-04-jane-fcp-handoff",
