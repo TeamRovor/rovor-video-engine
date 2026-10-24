@@ -1,0 +1,15 @@
+{
+  "name": "rovor-hud-telemetry",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-24",
+  "assets": {
+    "directory": "../../dashboard/command-center/native-v8-9",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "rovor-hud-telemetry",
+    "database_id": "REPLACE_WITH_PROVISIONED_D1_ID"
+  }]
+}
