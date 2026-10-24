@@ -257,9 +257,11 @@ def _heartbeat(state, *, now):
             "age_seconds": age,
             "last_tick_executed": item.get("executed") if type(item.get("executed")) is int
                 and item["executed"] in (0, 1) else None,
-            "last_tick_feed": item.get("feed") if item.get("feed") in TICK_FEED else "unknown",
+            "last_tick_feed": item.get("feed") if type(item.get("feed")) is str
+                and item.get("feed") in TICK_FEED else "unknown",
             "last_tick_dispatch": dispatch.get("reason")
-                if dispatch.get("reason") in TICK_REASONS else "unknown",
+                if type(dispatch.get("reason")) is str
+                and dispatch.get("reason") in TICK_REASONS else "unknown",
         }
     except (OSError, ValueError, UnicodeError):
         return {"available": False}
