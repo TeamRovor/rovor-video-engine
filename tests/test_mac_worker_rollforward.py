@@ -63,7 +63,7 @@ class UpgradeChecks(unittest.TestCase):
         self.plist.write_bytes(plistlib.dumps(self.orig))
         self.calls = []
 
-    def run(self, argv, **kwargs):
+    def fake_run(self, argv, **kwargs):
         self.calls.append(argv)
         if argv[:3] == ["git", "-C", str(self.runtime)]:
             if argv[-1] == "HEAD": return MockResult(SHA)
@@ -72,7 +72,7 @@ class UpgradeChecks(unittest.TestCase):
 
     def inspect(self):
         return module.inspect(self.home, self.runtime, SHA,
-                              platform="darwin", uid=lambda: 501, run=self.run)
+                              platform="darwin", uid=lambda: 501, run=self.fake_run)
 
     def test_read_only_finds_loaded_existing_schedule_without_modifying_it(self):
         baseline = self.plist.read_bytes()
@@ -86,7 +86,7 @@ class UpgradeChecks(unittest.TestCase):
     def test_bad_checkout_and_existing_stop_are_refused(self):
         with self.assertRaisesRegex(module.Blocked, "candidate_commit_mismatch"):
             module.inspect(self.home, self.runtime, "2" * 40, platform="darwin",
-                           uid=lambda: 501, run=self.run)
+                           uid=lambda: 501, run=self.fake_run)
         (self.state / "STOP").write_text("owner")
         with self.assertRaisesRegex(module.Blocked, "owner_stop_present"):
             self.inspect()
