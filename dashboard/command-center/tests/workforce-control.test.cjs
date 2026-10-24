@@ -72,3 +72,29 @@ test('Homepage keeps native v8.9 as default, with opt-in Workforce deep link and
  assert.ok(fs.existsSync(path.join(root,'exact','index.html')));
  assert.equal((page.match(/data-detail="/g)||[]).length>=9,true);
 });
+
+test('Workforce HUD uses the actual ROVOR mark rather than a generic letter',()=>{
+ const style=fs.readFileSync(path.join(root,'workforce','responsive-brand.css'),'utf8');
+ assert.match(page,/class="brand-lockup"[^>]*href="\.\.\/"/);
+ assert.equal((page.match(/src="\.\.\/rovor-mark\.svg"/g)||[]).length,2);
+ assert.match(page,/class="core-logo"/);
+ assert.doesNotMatch(page,/<div class="mark"><b>R<\/b>/);
+ assert.doesNotMatch(page,/<div class="center-core"><strong>R<\/strong>/);
+ assert.match(style,/\.brand-lockup img/);
+ assert.match(style,/\.center-core \.core-logo/);
+ assert.ok(fs.existsSync(path.join(root,'rovor-mark.svg')),'Authentic logo asset missing');
+});
+
+test('Workforce responsive modules preserve approved portrait and landscape geometry',()=>{
+ const style=fs.readFileSync(path.join(root,'workforce','responsive-brand.css'),'utf8');
+ assert.match(page,/href="\.\/responsive-brand\.css"/);
+ assert.match(style,/@media\(min-width:901px\) and \(orientation:landscape\) and \(min-height:650px\)/);
+ assert.match(style,/grid-template-columns:minmax\(0,1fr\) minmax\(0,1\.22fr\) minmax\(0,1fr\)/);
+ assert.match(style,/@media\(orientation:portrait\) and \(min-width:700px\) and \(max-width:1100px\)/);
+ assert.match(style,/grid-template-areas:"center center" "left right"/);
+ assert.match(style,/@media\(max-width:699px\)/);
+ assert.match(style,/grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
+ assert.match(style,/overscroll|scrollbar-gutter:stable/);
+ assert.match(style,/\.center-nav\{position:absolute;bottom:/);
+ assert.match(style,/overflow:hidden/);
+});
