@@ -1,0 +1,90 @@
+import importlib.util
+import json
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+spec = importlib.util.spec_from_file_location('jobs', Path(__file__).resolve().parents[1]/'tools/render_jobs.py')
+j = importlib.util.module_from_spec(spec); spec.loader.exec_module(j)
+
+class Jobs(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name); self.audio = self.root/'input.mp3'; self.audio.write_bytes(b'synthetic')
+    def submit(self):
+        with patch.object(j, 'probe', return_value={'format':{'duration':'31'}, 'streams':[{'codec_type':'audio','codec_name':'mp3'}]}):
+            return j.submit(self.root, self.audio)
+    def test_missing_adapter_blocks_without_render(self):
+        ident = self.submit(); j.run(self.root, ident, None)
+        self.assertEqual(json.loads((self.root/ident/'status.json').read_text())['state'], 'blocked')
+        with self.assertRaises(ValueError): j.artifact(self.root, ident, self.root/'out.mp4')
+        with self.assertRaises(ValueError): j.run(self.root, ident, None)
+    def test_reject_traversal(self):
+        with self.assertRaises(ValueError): j.job(self.root, '../outside')
+    def test_source_mutation(self):
+        ident = self.submit(); (self.root/ident/'source.mp3').write_bytes(b'changed')
+        with self.assertRaises(ValueError): j.run(self.root, ident, None)
+        self.assertFalse((self.root/'.worker-lock').exists())
+    def test_serial_worker(self):
+        ident = self.submit(); (self.root/'.worker-lock').mkdir()
+        with self.assertRaises(FileExistsError): j.run(self.root, ident, None)
+    def test_duration_limit(self):
+        with patch.object(j, 'probe', return_value={'format':{'duration':'61'},'streams':[]}):
+            with self.assertRaises(ValueError): j.submit(self.root, self.audio)
+    def test_mock_transport_roundtrip_and_tamper(self):
+        ident = self.submit(); path = self.root/ident
+        config = self.root/'adapter.json'; config.write_text('["trusted-adapter"]')
+        def adapter(*args, **kwargs): (path/'render.mp4').write_bytes(b'mock video')
+        with patch.object(j.subprocess, 'run', side_effect=adapter), patch.object(j, 'verify', side_effect=lambda p,r,*args:dict(name='render.mp4',sha256=j.digest(p/'render.mp4'),bytes=10)):
+            j.run(self.root, ident, config)
+        j.artifact(self.root, ident, self.root/'out.mp4')
+        self.assertEqual((self.root/'out.mp4').read_bytes(), b'mock video')
+        (path/'render.mp4').write_bytes(b'tampered')
+        with self.assertRaises(ValueError): j.artifact(self.root, ident, self.root/'other.mp4')
+    def test_estimated_speech_fails_before_media_probe(self):
+        ident = self.submit(); path = self.root/ident
+        (path/'speech-audit.json').write_text('{"status":"review_required"}')
+        with patch.object(j, 'probe') as probe:
+            with self.assertRaises(ValueError): j.verify(path, {})
+            probe.assert_not_called()
+    def test_verify_requires_nonblack_nonfrozen_frames(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)
+            (path/'render.mp4').write_bytes(b'mock video')
+            request = {'sourceSha256':'a'*64, 'duration':31}
+            (path/'speech-audit.json').write_text(json.dumps({'status':'technical_pass_pending_visual_review',
+                'alignmentSource':'acoustic','provenance':'source-WAV header read','fps':60,'errors':[],'reviewFlags':[]}))
+            (path/'moho-evidence.json').write_text(json.dumps({'renderer':'Moho Pro 14',
+                'sourceSha256':request['sourceSha256'],'disposableProjectVerified':True,'rigSha256':'b'*64}))
+            media = {'format':{'duration':'31'},'streams':[{'codec_type':'video','width':1920,
+                'height':1080,'avg_frame_rate':'60/1'},{'codec_type':'audio'}]}
+            for invalid in ('NaN', 'Infinity', '-Infinity', '0', '-1'):
+                with self.subTest(duration=invalid), patch.object(j, 'probe',
+                        return_value=dict(media, format={'duration': invalid})), \
+                     patch.object(j, 'video_quality') as frame_check:
+                    with self.assertRaisesRegex(ValueError, 'Invalid source or artifact duration'):
+                        j.verify(path, request)
+                    frame_check.assert_not_called()
+            for invalid in (float('nan'), float('inf'), 0, -1, True):
+                with self.subTest(source_duration=invalid), patch.object(j, 'probe', return_value=media), \
+                     patch.object(j, 'video_quality') as frame_check:
+                    with self.assertRaisesRegex(ValueError, 'Invalid source or artifact duration'):
+                        j.verify(path, dict(request, duration=invalid))
+                    frame_check.assert_not_called()
+            cases = [
+                ({'sampleCount':12,'distinctFrameCount':12,'blackFrameCount':2}, 'black'),
+                ({'sampleCount':12,'distinctFrameCount':1,'blackFrameCount':0}, 'frozen'),
+                ({'sampleCount':12,'distinctFrameCount':12,'blackFrameCount':0}, None),
+                ({'sampleCount':12,'distinctFrameCount':12,'blackFrameCount':1}, None),
+            ]
+            for quality, error in cases:
+                with self.subTest(quality=quality), patch.object(j, 'probe', return_value=media), \
+                     patch.object(j, 'video_quality', return_value=quality):
+                    if error:
+                        with self.assertRaisesRegex(ValueError, 'frozen, mostly black'):
+                            j.verify(path, request)
+                    else:
+                        self.assertEqual(j.verify(path, request)['name'], 'render.mp4')
+
+if __name__ == '__main__': unittest.main()
