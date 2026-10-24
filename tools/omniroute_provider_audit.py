@@ -16,6 +16,7 @@ ALLOWED_PROVIDER_NAMES = {
 def audit(*, run=subprocess.run):
     result = {
         "omniroute_cli_inventory": "unavailable",
+        "sanitized_blocker": "not_checked",
         "raw_credentials_disclosed": False,
         "model_requests": 0,
         "billing_eligibility_verified": False,
@@ -25,16 +26,23 @@ def audit(*, run=subprocess.run):
         p = run(["omniroute", "providers", "list", "--json"],
                 capture_output=True, text=True, timeout=15, check=False)
     except (OSError, subprocess.TimeoutExpired):
+        result["sanitized_blocker"] = "cli_not_executable_or_timed_out"
         return result
-    if p.returncode != 0 or not isinstance(p.stdout, str) or len(p.stdout) > MAX_OUTPUT:
+    if p.returncode != 0:
+        result["sanitized_blocker"] = "cli_nonzero_exit"
+        return result
+    if not isinstance(p.stdout, str) or len(p.stdout) > MAX_OUTPUT:
+        result["sanitized_blocker"] = "cli_output_invalid_or_too_large"
         return result
     raw = p.stdout
     starts = [pos for pos in (raw.find("{"),raw.find("[")) if pos >= 0]
     if not starts:
+        result["sanitized_blocker"] = "cli_output_not_json"
         return result
     try:
         obj = json.loads(raw[min(starts):])
     except (ValueError, TypeError):
+        result["sanitized_blocker"] = "cli_json_parse_failed"
         return result
     if isinstance(obj, list):
         entries = obj
@@ -44,10 +52,12 @@ def audit(*, run=subprocess.run):
     else:
         entries = None
     if not isinstance(entries, list) or len(entries) > 200:
+        result["sanitized_blocker"] = "cli_json_shape_unrecognized"
         return result
     buckets = {}
     for item in entries:
         if not isinstance(item, dict):
+            result["sanitized_blocker"] = "cli_connection_entries_invalid"
             return result
         raw_provider = None
         for field in ("providerId", "provider", "providerType", "type"):
@@ -58,6 +68,7 @@ def audit(*, run=subprocess.run):
         buckets[provider] = buckets.get(provider, 0) + 1
     result.update({
         "omniroute_cli_inventory": "parsed_safely",
+        "sanitized_blocker": None,
         "configured_connections_count": len(entries),
         "provider_connection_counts": buckets,
         "note": "Connections are model resources, not employee identities or live model-call proof",
