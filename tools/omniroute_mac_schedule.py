@@ -15,7 +15,7 @@ import subprocess
 import sys
 import tempfile
 
-REVISION='53dee10e14e8ed8e537e275b9f138eca88f9db63'
+REVISION='0a2fcde9b88e68917103a8831ab17c273180b689'
 LABEL='com.rovor.ghost-worker.readonly'
 RECEIPT_JOB='202fdb8c-149a-401e-b1e2-8b7e001ab46b'
 BACKGROUND_PROOF_KEY='rovor-background-auth-proof-v1'
