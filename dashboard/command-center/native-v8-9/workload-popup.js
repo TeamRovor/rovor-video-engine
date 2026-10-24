@@ -128,7 +128,18 @@
         const [r,m]=b.dataset.wlCell.split('-').map(Number);
         state.employee=r;state.model=m;
       }else return;
+      // Keep the matrix's horizontal position and keyboard focus when a cell is
+      // selected; re-rendering should not bounce mobile users back to model 01.
+      const priorLeft=root.querySelector?.('.wl-matrix-scroll')?.scrollLeft ?? 0;
+      const focusKey=Object.keys(b.dataset).find(key=>key.startsWith('wl'));
+      const focusValue=focusKey?b.dataset[focusKey]:null;
       paint();
+      const scroll=root.querySelector?.('.wl-matrix-scroll');
+      if(scroll)scroll.scrollLeft=priorLeft;
+      if(focusKey && root.querySelectorAll){
+        const next=Array.from(root.querySelectorAll('button')).find(x=>x.dataset[focusKey]===focusValue);
+        if(next?.focus)next.focus({preventScroll:true});
+      }
     });
     container.append(root);
     paint();
