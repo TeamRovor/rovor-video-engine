@@ -180,59 +180,99 @@ def _group(status, result):
     return "unverified_other"
 
 
+def _safe_db_signature(path):
+    """Match the known-working worker snapshot guard; no following symlinks."""
+    import stat
+    info = path.lstat()
+    if not stat.S_ISREG(info.st_mode) or info.st_size > 256 * 1024 * 1024:
+        raise ValueError("unsafe_or_oversized_worker_database")
+    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns
+
+
+def _consistent_worker_copy(state):
+    """Create the same stable main+WAL temp copy used by existing pacing audit.
+
+    A live SQLite online backup opened with mode=ro/query_only was unreliable on
+    the actual Intel Mac. Do NOT open the authoritative live db with SQLite,
+    ever; this only reads/copies its regular files to a temporary directory.
+    """
+    from contextlib import contextmanager
+    import shutil
+    import tempfile
+
+    @contextmanager
+    def clone():
+        root = Path(state).expanduser()
+        if root.is_symlink() or not root.is_dir():
+            raise ValueError("worker_state_invalid")
+        main = root / "jobs.sqlite3"
+        wal = root / "jobs.sqlite3-wal"
+        shm = root / "jobs.sqlite3-shm"
+        if shm.is_symlink() or (shm.exists() and not shm.is_file()):
+            raise ValueError("unsafe_worker_sidecar")
+        paths = (main, wal)
+        with tempfile.TemporaryDirectory(prefix="rovor-ops-readonly-") as folder:
+            before = tuple(_safe_db_signature(p) if p.exists() or p.is_symlink()
+                           else None for p in paths)
+            if before[0] is None:
+                raise ValueError("worker_database_missing")
+            for path, signature in zip(paths, before):
+                if signature is not None:
+                    shutil.copyfile(path, Path(folder) / path.name)
+            after = tuple(_safe_db_signature(p) if p.exists() or p.is_symlink()
+                          else None for p in paths)
+            if before != after:
+                raise ValueError("worker_database_changed_during_copy")
+            conn = sqlite3.connect(str(Path(folder) / main.name))
+            try:
+                if conn.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+                    raise ValueError("worker_database_copy_invalid")
+                yield conn
+            finally:
+                conn.close()
+
+    return clone()
+
+
 def _sqlite_snapshot(state, *, now):
-    state = Path(state).expanduser()
-    db = state / "jobs.sqlite3"
-    if (state.is_symlink() or not state.is_dir()
-            or db.is_symlink() or not db.is_file()):
-        return {"status": "snapshot_unavailable"}
-    for suffix in ("-wal", "-shm"):
-        side = state / ("jobs.sqlite3" + suffix)
-        if side.is_symlink() or (side.exists() and not side.is_file()):
-            return {"status": "snapshot_unavailable"}
-    # Consistent online backup: no SELECTs against an active writer's
-    # transaction, no copying SQLite WAL+main independently, and no DB writes.
-    dest = sqlite3.connect(":memory:")
+    # The earlier read-only on-disk snapshot already proved compatible with
+    # the user's live WAL-mode worker on macOS. Reuse that exact strategy.
     try:
-        uri = db.absolute().as_uri() + "?mode=ro"
-        with sqlite3.connect(uri, uri=True, timeout=4) as source:
-            source.execute("PRAGMA query_only=ON")
-            source.backup(dest, pages=128, sleep=0.05)
-        rows = dest.execute(
-            "SELECT id,status,result FROM jobs WHERE kind='research.omniroute'"
-        ).fetchall()
-        claims = dest.execute(
-            "SELECT e.job_id,e.timestamp FROM events e "
-            "JOIN jobs j ON e.job_id=j.id "
-            "WHERE j.kind='research.omniroute' AND e.event='claimed' "
-            "AND e.timestamp>=? AND e.timestamp<=?",
-            (now - 86400, now)).fetchall()
-        categories = {job: _group(status, result) for job, status, result in rows}
-        totals = Counter(categories.values())
-        distinct = {row[0] for row in claims}
-        recent = Counter(categories.get(job, "unknown") for job in distinct)
-        has_reservations = bool(dest.execute(
-            "SELECT 1 FROM sqlite_master WHERE type='table' "
-            "AND name='omni_model_reservations'").fetchone())
-        model_count = dest.execute(
-            "SELECT COUNT(*) FROM omni_model_reservations").fetchone()[0] if has_reservations else 0
-        return {
-            "status": "consistent_read_only_snapshot",
-            "claims_last_24h": len(claims),
-            "distinct_claimed_jobs_last_24h": len(distinct),
-            "last_claim_at": max((t for _, t in claims), default=None),
-            "outcomes_total": dict(sorted(totals.items())),
-            "recent_claim_outcomes": dict(sorted(recent.items())),
-            "review_ready_drafts_total": totals["draft_ready_for_human_review"],
-            "human_accepted_deliverables_verified": False,
-            "model_reservations_present": has_reservations,
-            "model_reservations_total": model_count,
-            "all_nine_models_used_verified": False,
-        }
+        with _consistent_worker_copy(state) as conn:
+            rows = conn.execute(
+                "SELECT id,status,result FROM jobs WHERE kind='research.omniroute'"
+            ).fetchall()
+            claims = conn.execute(
+                "SELECT e.job_id,e.timestamp FROM events e "
+                "JOIN jobs j ON e.job_id=j.id "
+                "WHERE j.kind='research.omniroute' AND e.event='claimed' "
+                "AND e.timestamp>=? AND e.timestamp<=?",
+                (now - 86400, now)).fetchall()
+            categories = {job: _group(status, result) for job, status, result in rows}
+            totals = Counter(categories.values())
+            distinct = {row[0] for row in claims}
+            recent = Counter(categories.get(job, "unknown") for job in distinct)
+            has_reservations = bool(conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' "
+                "AND name='omni_model_reservations'").fetchone())
+            model_count = conn.execute(
+                "SELECT COUNT(*) FROM omni_model_reservations").fetchone()[0] if has_reservations else 0
+            return {
+                "status": "consistent_read_only_snapshot",
+                "claims_last_24h": len(claims),
+                "distinct_claimed_jobs_last_24h": len(distinct),
+                "last_claim_at": max((t for _, t in claims), default=None),
+                "outcomes_total": dict(sorted(totals.items())),
+                "recent_claim_outcomes": dict(sorted(recent.items())),
+                "review_ready_drafts_total": totals["draft_ready_for_human_review"],
+                "human_accepted_deliverables_verified": False,
+                "model_reservations_present": has_reservations,
+                "model_reservations_total": model_count,
+                "all_nine_models_used_verified": False,
+            }
+
     except (sqlite3.Error, OSError, UnicodeError, ValueError):
         return {"status": "snapshot_unavailable"}
-    finally:
-        dest.close()
 
 
 def _heartbeat(state, *, now):
