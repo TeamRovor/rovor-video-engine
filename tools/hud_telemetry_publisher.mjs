@@ -55,16 +55,18 @@ async function localReader() {
   };
 }
 
-export async function publishOnce({origin, token, collect, workers, send = fetch}) {
+export async function publishOnce({origin, token, serviceToken, collect, workers, send = fetch}) {
   origin = validateTarget(origin);
   if (typeof token !== 'string' || token.length < 32 || token.length > 200 || /[\r\n]/.test(token)) throw Error('writer_token_missing');
+  if (serviceToken !== undefined && (typeof serviceToken !== 'string' || !serviceToken || serviceToken.length > 4096 || /[\r\n]/.test(serviceToken))) throw Error('service_token_invalid');
   const workforce = await workers();
   for (const period of ['24h', '1h', '7d']) {
     const snapshot = {...await collect(period), workforce};
     const body = JSON.stringify(snapshot);
     if (Buffer.byteLength(body) > 32768) throw Error('snapshot_too_large');
     const result = await send(origin + '/api/hud/ingest', {method: 'POST', headers: {
-      Authorization: 'Bearer ' + token, 'Content-Type': 'application/json'}, body,
+      Authorization: 'Bearer ' + token, 'Content-Type': 'application/json',
+      ...(serviceToken ? {'OAI-Sites-Authorization': 'Bearer ' + serviceToken} : {})}, body,
       redirect: 'error', signal: AbortSignal.timeout(10000)});
     if (!result.ok) throw Error('cloud_report_rejected');
   }
@@ -73,13 +75,14 @@ export async function publishOnce({origin, token, collect, workers, send = fetch
 async function main() {
   const origin = validateTarget(process.env.ROVOR_HUD_ORIGIN);
   const token = process.env.ROVOR_HUD_WRITER_TOKEN || await keychain('rovordigital.hud.writer');
+  const serviceToken = process.env.ROVOR_HUD_SERVICE_TOKEN || await keychain('rovordigital.hud.service') || undefined;
   const collect = createCollector(await localReader()), workers = createWorkerReader();
   const stop = new AbortController();
   for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => stop.abort());
   let failures = 0;
   do {
     try {
-      await publishOnce({origin, token, collect, workers});
+      await publishOnce({origin, token, serviceToken, collect, workers});
       failures = 0;
       console.log(new Date().toISOString() + ' HUD report delivered.');
     } catch {
