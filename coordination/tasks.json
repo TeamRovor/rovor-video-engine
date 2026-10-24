@@ -3480,6 +3480,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40051399177"
         }
       ]
+    },
+    {
+      "id": "hank-hosted-unattended-qa-watchdog-20261023",
+      "title": "Operate first real unattended cloud QA employee Hank on hosted GitHub Actions, read-only",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar hosted-Hank QA deployment 2026-10-23",
+      "branch": "feature/hank-hosted-cloud-watchdog",
+      "scopes": [
+        "tools/hank_cloud_watchdog.py",
+        "tests/test_hank_cloud_watchdog.py",
+        ".github/workflows/hank-cloud-watchdog.yml",
+        "integrations/open-interpreter/HANK-CLOUD-WATCHDOG.md"
+      ],
+      "depends_on": [
+        "ghost-self-research-bootstrap-20261023"
+      ],
+      "updated_at": "2026-10-24T02:34:14.033Z",
+      "next_update": "After PR checks, merge and verify first hosted push workflow run",
+      "next_action": "Implement first actually recurring QA worker using standard public GitHub-hosted runner, not the Mac or a new AI provider. Read task queue, routing, role manifest and provider safety policy, publish sanitized GitHub Actions check summary; scheduled twice hourly off boundary; no model/API keys or public/private runtime data. Verify push event hosted execution then observe eventual scheduled trigger separately.",
+      "acceptance": "Hourly or half-hourly hosted schedule installed on main with read-only permissions, no local Mac/paid model credentials, no task queue mutation; summary reports actionable inconsistent task/role policy and stale claim counts, fails on actual broken safety invariants, warns on aged claims without taking ownership. Offline Python3.9/3.11 tests and first post-merge hosted push workflow run pass. Schedule wakeup not claimed until observed."
     }
   ]
 }

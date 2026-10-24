@@ -609,6 +609,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "hank-hosted-unattended-qa-watchdog-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
