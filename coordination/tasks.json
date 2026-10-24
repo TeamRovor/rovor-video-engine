@@ -3382,7 +3382,7 @@
       "id": "private-mac-control-repo-bootstrap-20261023",
       "title": "Prepare safe idempotent private GitHub control-channel bootstrap for ROVOR Mac",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar private-channel bootstrap 2026-10-23",
       "branch": "feature/private-control-repo-bootstrap",
       "scopes": [
@@ -3395,10 +3395,19 @@
         "private-mac-control-bounded-poller-v1",
         "private-mac-control-readiness-preflight"
       ],
-      "updated_at": "2026-10-24T01:24:06.212Z",
-      "next_update": "After GitHub-hosted Python3.9/3.11 acceptance tests and draft PR review",
-      "next_action": "Build one-pass Mac-operator tool that validates actual TeamRovor ownership and repo privacy, creates PRIVATE repo+ping/queue/issue only with explicit --apply, never writes secrets, idempotently rejects conflicting existing files; prepare exact Mac supervisor activation path. Does not install or activate services.",
-      "acceptance": "Default read-only dry run; refuse personal/organization owner mismatch, public existing repo, missing authenticated gh credential and conflicting queue/jobs; safe private repo provisioning with one fixed ping packet, fail-closed re-runs, simulated HTTP tests, no access to Mac nor billing or second scheduler."
+      "updated_at": "2026-10-24T01:27:22.816Z",
+      "next_update": "Await exact Mac owner-authenticated deployment and private issue receipt; GitHub source-only work complete",
+      "next_action": "PR #117 merged to main at 7f863b6272149d13d39f0fea8dc87eee052472d5. The Mac owner must run `python3 tools/private_control_repo_bootstrap.py` for read-only check and explicitly `--apply` using locally authorized gh account to create TeamRovor/rovor-mac-control, initial private ping and issue. Separately provision restricted Mac Keychain token, grant GitHub plugin this private repo, stage/activate existing PR41 supervisor, then verify real private issue roundtrip. This source-only CI does not establish remote terminal control. No new model calls, second scheduler or old job replay.",
+      "acceptance": "Default read-only dry run; refuse personal/organization owner mismatch, public existing repo, missing authenticated gh credential and conflicting queue/jobs; safe private repo provisioning with one fixed ping packet, fail-closed re-runs, simulated HTTP tests, no access to Mac nor billing or second scheduler.",
+      "evidence": [
+        {
+          "pr": "https://github.com/TeamRovor/rovor-video-engine/pull/117",
+          "merge_commit": "7f863b6272149d13d39f0fea8dc87eee052472d5",
+          "ci": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40049797497",
+          "platform": "GitHub-hosted Ubuntu Python 3.9 and 3.11",
+          "result": "PASS 2/2 matrix jobs; source code merged, no live private GitHub repository creation or Mac execution."
+        }
+      ]
     }
   ]
 }
