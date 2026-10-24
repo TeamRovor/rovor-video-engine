@@ -3413,7 +3413,7 @@
       "id": "private-mac-terminal-probe-20261023",
       "title": "Provide first opt-in real terminal subprocess proof for private Mac bridge",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar isolated Mac terminal probe 2026-10-23",
       "branch": "feature/private-terminal-probe-optin",
       "scopes": [
@@ -3428,10 +3428,18 @@
         "private-mac-control-repo-bootstrap-20261023",
         "private-mac-control-bridge-v1"
       ],
-      "updated_at": "2026-10-24T01:37:08.821Z",
-      "next_update": "After hosted Python 3.9/3.11 mock end-to-end tests",
-      "next_action": "Add only an explicit Mac-local-approved terminal.probe (fixed /usr/bin/sw_vers -productVersion, no shell or remote arguments) to private bridge and shared SQLite worker, with private sanitized command receipt. Must remain disabled under scheduled supervisor and ordinary worker. No GitHub-private repo or Mac activation in this session.",
-      "acceptance": "Unapproved/unknown job types never create state or execute; fixed command only; non-Darwin refused; bounded timeout/sanitized version/no path/token leakage; private job performed exactly once with STOP and receipt no replay. Separate source-only PR based on existing PR41 integration branch; no active OmniRoute edits."
+      "updated_at": "2026-10-24T01:41:01.503Z",
+      "next_update": "Completed: source-only code integrated, host proof not yet run",
+      "next_action": "PR118 merged into existing PR41 branch at 41930d9048b98fb078ce50018631331aa6432773; hosted private terminal tests Python 3.9/3.11 and four broader workflows passed. Remote terminal command is NOT deployed: private TeamRovor Mac control repo is still missing from linked account. Owner must provision private repo/token, then run explicit one-time approved terminal probe on Mac and verify sanitized private issue receipt. Existing scheduler remains disabled for terminal command; no arbitrary shell or 24/7 command control.",
+      "acceptance": "Unapproved/unknown job types never create state or execute; fixed command only; non-Darwin refused; bounded timeout/sanitized version/no path/token leakage; private job performed exactly once with STOP and receipt no replay. Separate source-only PR based on existing PR41 integration branch; no active OmniRoute edits.",
+      "evidence": [
+        {
+          "pr": "https://github.com/TeamRovor/rovor-video-engine/pull/118",
+          "merge_commit": "41930d9048b98fb078ce50018631331aa6432773",
+          "ci": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40050811549",
+          "result": "Source-only Python 3.9 and 3.11 PASS; 5 hosted workflows PASS. No Mac command executed."
+        }
+      ]
     }
   ]
 }
