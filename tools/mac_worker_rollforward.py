@@ -102,7 +102,7 @@ def state_snapshot(state):
 
 
 def inspect(home, checkout, expected, *, run=subprocess.run, platform=sys.platform, uid=os.getuid,
-            approve_parallel=False):
+            approve_parallel=False, approve_free_budget=False):
     if platform != "darwin":
         raise Blocked("mac_gui_session_required")
     home = checked(home, directory=True)
@@ -149,6 +149,10 @@ def inspect(home, checkout, expected, *, run=subprocess.run, platform=sys.platfo
     revised = dict(current)
     revised["ProgramArguments"] = list(args)
     revised["ProgramArguments"][1] = str(script)
+    if approve_free_budget:
+        if not approve_parallel:
+            raise Blocked("higher_daily_budget_requires_parallel_approval")
+        revised["ProgramArguments"].extend(["--max-omniroute-claims-per-day", "14"])
     if approve_parallel:
         if "--max-jobs" not in args or args.count("--max-jobs") != 1:
             raise Blocked("parallel_job_limit_not_explicit")
@@ -234,11 +238,14 @@ def main(argv=None):
     parser.add_argument("--expected-commit", required=True)
     parser.add_argument("--approve-rollforward", action="store_true")
     parser.add_argument("--approve-parallel-free-research", action="store_true",
-                        help="Up to three concurrent preapproved research jobs; same free-only daily cap")
+                        help="Up to three concurrent preapproved research jobs")
+    parser.add_argument("--approve-up-to-14-free-research-calls", action="store_true",
+                        help="Raise only the current fixed :free routes rolling claim cap from 5 to 14")
     args = parser.parse_args(argv)
     try:
         info = inspect(Path.home(), args.candidate, args.expected_commit,
-                       approve_parallel=args.approve_parallel_free_research)
+                       approve_parallel=args.approve_parallel_free_research,
+                       approve_free_budget=args.approve_up_to_14_free_research_calls)
         if not args.approve_rollforward:
             result = {"status": "read_only_candidate_ready",
                       "state_integrity_verified": True, "old_service_loaded": True,
