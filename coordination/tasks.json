@@ -4392,7 +4392,7 @@
       "id": "walter-grounded-coverage-pipeline-20261024",
       "title": "Join pinned public task grounding and complete private receipt history into one safe specialist proposal",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 grounded coverage shift",
       "branch": "feature/walter-grounded-coverage-pipeline-v1",
       "scopes": [
@@ -4402,10 +4402,19 @@
         "subsystem:verified-public-grounding-to-private-coverage"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T13:28:03.766Z",
-      "next_update": "After focused Python 3.9/3.11 CI and shared queue checks",
-      "next_action": "Implement an inert end-to-end source-grounded specialist proposal using existing public grounding, private receipt bridge and coverage selector; require complete authenticated job-to-task mapping and strict STOP/opt-in gates; no host actions.",
-      "acceptance": "Python 3.9 stdlib integration builds bounded, deduplicated pinned-source candidate set, reconciles complete copied private job/task ledger, chooses one fair unattempted specialist or fixed refusal, preserves review/STOP/ownership/zero-cost boundaries, emits no private data and never dispatches. Focused tests for replay, missing trust, backpressure, role fairness and errors; hosted Python 3.9/3.11 plus shared coordination checks."
+      "updated_at": "2026-10-24T13:30:17.227Z",
+      "next_update": "Source merged; existing PR137 Mac owner may review for separately authorized integration",
+      "next_action": "PR #173 merged to main at 5fa0025a7d1db68b685177facca9ba1e8508af23. New pure public grounding + complete private receipt coverage adapter produces one inert, fairly selected specialist proposal with strict authenticated task-ID replay prevention and STOP/opt-in/review gates. All 21 focused synthetic tests plus project_loop.py check and task_routing_pair.py --check PASS on GitHub Actions Python 3.9/3.11 run 40098357878. Source-only; no Mac access, live model inference, host installation, paid route or 24h soak. Existing PR137 owner must authenticate exact pinned public Git tree and complete copied private SQLite jobs/claims/role/task/human-review mapping, run offline integration, independently review candidate, recheck STOP/free billing/quota and atomic SQLite claim before any explicit same-service opt-in. Never replay failed job.",
+      "acceptance": "Python 3.9 stdlib integration builds bounded, deduplicated pinned-source candidate set, reconciles complete copied private job/task ledger, chooses one fair unattempted specialist or fixed refusal, preserves review/STOP/ownership/zero-cost boundaries, emits no private data and never dispatches. Focused tests for replay, missing trust, backpressure, role fairness and errors; hosted Python 3.9/3.11 plus shared coordination checks.",
+      "evidence": [
+        {
+          "commit": "5fa0025a7d1db68b685177facca9ba1e8508af23",
+          "platform": "GitHub Actions Ubuntu Python 3.9 and 3.11",
+          "check": "21 synthetic focused unittest cases; python tools/project_loop.py check; python tools/task_routing_pair.py --check",
+          "result": "PASS in run 40098357878; source-only, no private host snapshot, no model calls, no Mac deployment",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/173"
+        }
+      ]
     }
   ]
 }
