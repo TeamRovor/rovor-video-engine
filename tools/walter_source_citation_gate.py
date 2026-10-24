@@ -38,7 +38,7 @@ def _reject(code):
 
 def _valid_name(name):
     return (type(name) is str and SOURCE_NAME.fullmatch(name) is not None
-            and all(part not in ("", ".", "..") for part in name.split("/"))
+            and all(part not in ("", ".", "..") for part in name.split("/")))
 
 
 def verify(answer, sources, expected_sha256):
