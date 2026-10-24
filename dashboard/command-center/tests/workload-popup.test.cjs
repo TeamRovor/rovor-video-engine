@@ -21,6 +21,13 @@ test('Workload Distribution opens only existing native focus popup, never a new 
   assert.doesNotMatch(html,/data-view="workload"[^>]*class="nav-item"/);
 });
 
+test('Bundled native script and CSS match reviewable workload sources',()=>{
+  assert.ok(html.includes(popup.trim()),'Runtime bundle must contain exact Workload module code');
+  assert.ok(html.includes(css.trim()),'Runtime bundle must contain exact scoped Workload stylesheet');
+  assert.match(css,/#workloadPanel \\.wl-compact/);
+  assert.match(css,/#rovor-workload-popup \\.wl-cell/);
+});
+
 test('Popup JavaScript and existing inline HUD script compile',()=>{
   assert.doesNotThrow(()=>new vm.Script(popup,{filename:'workload-popup.js'}));
   const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
