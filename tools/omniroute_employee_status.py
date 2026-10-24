@@ -159,17 +159,20 @@ def inspect(state, *, run=subprocess.run):
                                         and saved.get("id") == packet.replace("walter-v1-", "walter-public-v1-")
                                         and saved.get("status") == status):
                                     error_class = saved.get("error_class")
-                                    allowed_errors = {"ValueError", "TimeoutError",
-                                        "HTTPError", "URLError", "OSError",
-                                        "IndexError", "RuntimeError", "TypeError",
-                                        "GatewayRateLimited", "GatewayUpstreamFailure",
-                                        "GatewayAuthorizationFailure",
-                                        "GatewayTransportFailure",
-                                        "GatewayReasoningExhausted",
-                                        "GatewayTruncatedAnswer",
-                                        "GatewayEmptyAnswer", "GatewayInvalidCompletion"}
-                                    if error_class in allowed_errors:
+                                    # The receipt writer stores only
+                                    # type(exc).__name__, not an exception
+                                    # message or provider response. An
+                                    # allowlist hid most real Mac failures:
+                                    # display any *strictly valid* bounded
+                                    # Python class identifier instead, with
+                                    # no provider-controlled punctuation.
+                                    if (type(error_class) is str
+                                            and 1 <= len(error_class) <= 48
+                                            and error_class.isascii()
+                                            and error_class.isidentifier()):
                                         failure_states["exception:" + error_class] += 1
+                                    else:
+                                        failure_states["exception:unavailable"] += 1
                                     seconds = saved.get("elapsed_seconds")
                                     if type(seconds) in (int, float) and 0 <= seconds <= 3600:
                                         bucket = ("under_1s" if seconds < 1 else
