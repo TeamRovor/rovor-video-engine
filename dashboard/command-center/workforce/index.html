@@ -80,6 +80,33 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 @media(max-width:1120px){.dashboard{grid-template-columns:minmax(0,1fr) minmax(260px,1.05fr) minmax(0,1fr)}.rail{grid-template-rows:repeat(3,minmax(200px,1fr))}.rowline{padding:6px 0}}
 @media(orientation:portrait) and (min-width:700px) and (max-width:1100px){.dashboard{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"center center" "left right"}.rail{grid-template-rows:repeat(3,240px)}.rail:first-child{grid-area:left}.rail:last-child{grid-area:right}.center{grid-area:center;min-height:480px}.reactor{width:370px}}
 @media(max-width:699px){.shell{padding:8px;padding-bottom:calc(75px + env(safe-area-inset-bottom))}.topbar{align-items:start;flex-direction:column;padding:14px}.mark{font-size:18px}.eyebrow{font-size:9px}.hero h1{font-size:16px;letter-spacing:.2em}.dashboard{display:flex;flex-direction:column}.center{order:-1;min-height:385px;padding:10px}.reactor{max-width:315px}.rail{display:flex;flex-direction:column}.rail .panel{height:240px;flex:none}.dock{position:fixed;left:7px;right:7px;bottom:calc(6px + env(safe-area-inset-bottom));z-index:12;justify-content:center;background:#020e24f8}.dock p{display:none}.dock .tabs{justify-content:center}.dock .tabs button{padding:7px}.dialog{padding:8px}.dialog-body{height:calc(100svh - 22px);padding:13px}.formgrid{grid-template-columns:1fr}.field.span2{grid-column:auto}}
+
+/* Consistent angular instrument language in the expanded workforce modules. */
+.dialog-toolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.dialog-back[hidden]{display:none}
+.topology{display:grid;gap:15px;margin:15px auto;max-width:760px;text-align:center}
+.topology-root,.topology-gateway,.topology-node{border:1px solid #5098e4a8;background:linear-gradient(135deg,#102f53,#071527);color:var(--ice);padding:12px;min-width:0}
+.topology-root{width:min(100%,310px);justify-self:center;box-shadow:0 0 21px #3f9dff36;letter-spacing:.13em;font-weight:700}
+.topology-root small,.topology-node small{display:block;color:#9fc4e0;font-weight:400;letter-spacing:.03em;margin-top:4px}
+.topology-gateway{justify-self:center;width:min(100%,360px);border-style:dashed;color:#b9d7f1}
+.topology-link{width:1px;height:23px;justify-self:center;border-left:2px dashed #4388c0a6}
+.topology-roster,.topology-providers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.topology-node{cursor:pointer;min-height:74px;font-weight:700;letter-spacing:.08em}
+.topology-node:hover,.topology-root:hover{border-color:#d5f2ff;background:#15406d}
+.topology-providers{grid-template-columns:repeat(3,minmax(0,1fr))}
+.topology-providers .topology-node{min-height:60px}
+.topology-label{font-size:10px;letter-spacing:.14em;color:#92bfe6;text-transform:uppercase}
+@media(max-width:699px){
+ .shell{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+ .center{min-height:330px}.reactor{max-width:265px}
+ .dock .tabs{width:100%;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;padding-bottom:3px}
+ .dock .tabs button{flex:0 0 auto;min-height:36px}
+ .topology-roster,.topology-providers{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .topology-node{min-height:65px}
+ .dialog-top h2{letter-spacing:.07em}
+ .dialog-toolbar .action{padding:8px}
+}
+@media(orientation:portrait) and (min-width:700px) and (max-width:1100px){.center{min-height:430px}.reactor{width:310px}}
 </style></head>
 <body>
 <div class="shell">
@@ -94,18 +121,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 <article class="panel"><div class="panel-head"><h2>MACHINE & COST</h2><button class="micro" data-detail="machine" type="button">↗</button></div><div class="panel-scroll" id="machinePreview" tabindex="0"></div><div class="scrollcue" id="machineCue"></div></article>
 <article class="panel"><div class="panel-head"><h2>MISSION TIMELINE</h2><button class="micro" data-detail="timeline" type="button">↗</button></div><div class="panel-scroll" id="timelinePreview" tabindex="0"></div><div class="scrollcue" id="timelineCue"></div></article>
 </section>
-<section class="center" aria-label="ROVOR operations core"><div class="eyebrow">WALTER / MISSION CONTROL</div><div class="reactor" aria-hidden="true"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="center-core"><strong>R</strong><small>ROVOR</small></div></div><div class="hero-status"><b>EXECUTION LINK: NOT VERIFIED</b>Development-task claims are not live worker sessions. Mac, OmniRoute and Cloudflare status require authenticated runtime receipts.</div><div class="center-nav"><button class="action primary" id="newJob" type="button">＋ NEW JOB DRAFT</button><button class="action" data-detail="fleet" type="button">VIEW EMPLOYEES</button></div></section>
+<section class="center" aria-label="ROVOR operations core"><div class="eyebrow">WALTER / MISSION CONTROL</div><div class="reactor" aria-hidden="true"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="center-core"><strong>R</strong><small>ROVOR</small></div></div><div class="hero-status"><b>EXECUTION LINK: NOT VERIFIED</b>Development-task claims are not live worker sessions. Mac, OmniRoute and Cloudflare status require authenticated runtime receipts.</div><div class="center-nav"><button class="action primary" id="newJob" type="button">＋ NEW JOB DRAFT</button><button class="action" data-detail="fleet" type="button">VIEW EMPLOYEES</button><button class="action" data-detail="network" type="button">ROUTING MAP</button></div></section>
 <section class="rail">
 <article class="panel"><div class="panel-head"><h2>AI FLEET</h2><button class="micro" data-detail="fleet" type="button">↗</button></div><div class="panel-scroll" id="fleetPreview" tabindex="0"></div><div class="scrollcue" id="fleetCue"></div></article>
 <article class="panel"><div class="panel-head"><h2>MODEL ROUTER</h2><button class="micro" data-detail="models" type="button">↗</button></div><div class="panel-scroll" id="modelsPreview" tabindex="0"></div><div class="scrollcue" id="modelsCue"></div></article>
 <article class="panel"><div class="panel-head"><h2>RESULTS VAULT</h2><button class="micro" data-detail="results" type="button">↗</button></div><div class="panel-scroll" id="resultsPreview" tabindex="0"></div><div class="scrollcue" id="resultsCue"></div></article>
 </section>
 </main>
-<div class="dock"><p>REAL SOURCE // VERIFIED STATE // NO PHANTOM WORKERS</p><div class="tabs"><button class="micro" data-detail="queue">JOBS</button><button class="micro" data-detail="fleet">EMPLOYEES</button><button class="micro" data-detail="models">MODELS</button><button class="micro" data-detail="timeline">ACTIVITY</button><button class="micro" id="dockDraft">NEW JOB</button></div></div>
+<div class="dock"><p>REAL SOURCE // VERIFIED STATE // NO PHANTOM WORKERS</p><div class="tabs" aria-label="Module shortcuts; swipe sideways for more"><button class="micro" data-detail="queue">JOBS</button><button class="micro" data-detail="network">NETWORK</button><button class="micro" data-detail="fleet">EMPLOYEES</button><button class="micro" data-detail="models">MODELS</button><button class="micro" data-detail="timeline">ACTIVITY</button><button class="micro" id="dockDraft">NEW JOB</button></div></div>
 <div class="footer-note" id="verificationFooter">GitHub public source ≠ private Mac runtime. Queue creation is not enabled on the public website.</div>
 </div>
 <div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" aria-hidden="true">
-  <div class="dialog-body"><div class="dialog-top"><div><div class="eyebrow" id="dialogEyebrow">ROVOR SYSTEM</div><h2 id="dialogTitle">MODULE</h2></div><button class="action" type="button" id="closeDialog">✕ CLOSE</button></div><div id="detailScroll" class="detail-scroll" tabindex="0"></div></div>
+  <div class="dialog-body"><div class="dialog-top"><div><div class="eyebrow" id="dialogEyebrow">ROVOR SYSTEM</div><h2 id="dialogTitle">MODULE</h2></div><div class="dialog-toolbar"><button class="action dialog-back" type="button" id="backDialog" hidden>← BACK</button><button class="action" type="button" id="closeDialog">✕ CLOSE</button></div></div><div id="detailScroll" class="detail-scroll" tabindex="0"></div></div>
 </div>
 <script>
 'use strict';
@@ -115,7 +142,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
  const ROLE_ORDER=['walter','mike','jane','jesse','gale','gus','saul','hank'];
  const ROLE_LABEL={walter:'Supervisor / planning',mike:'Mac systems',jane:'Final Cut editing',jesse:'Moho 2D animation',gale:'Blender 3D',gus:'Business operations',saul:'Marketing',hank:'Quality assurance'};
  const MODEL_PROVIDER=['Gemini','Groq','NVIDIA NIM','Mistral','OpenRouter','Cloudflare Workers AI'];
- const state={mode:'unverified',sha:null,lastChecked:null,tasks:[],routing:{},roles:[],policy:null,queueMode:'open',drafts:[],view:null,returnFocus:null,loading:false};
+ const state={mode:'unverified',sha:null,lastChecked:null,tasks:[],routing:{},roles:[],policy:null,queueMode:'open',drafts:[],view:null,returnFocus:null,modalStack:[],priorOverflow:'',loading:false};
  const $=id=>document.getElementById(id);
  const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n};
  const clear=n=>n.replaceChildren();
@@ -175,12 +202,53 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
  }
  async function getRaw(path,sha,signal){const u='https://raw.githubusercontent.com/'+OWNER+'/'+REPO+'/'+sha+'/'+path;const r=await fetch(u,{signal,cache:'no-store'});if(!r.ok)throw Error('Pinned source '+r.status);return r.json()}
  function openDialog(title,eyebrow,content){
-  state.returnFocus=document.activeElement;$('dialogTitle').textContent=title;$('dialogEyebrow').textContent=eyebrow;const region=$('detailScroll');clear(region);if(typeof content==='function')content(region);else region.append(node('p','empty','No authenticated data currently available'));
+  const region=$('detailScroll');
+  if($('dialog').hasAttribute('open')){
+   state.modalStack.push({title:$('dialogTitle').textContent,eyebrow:$('dialogEyebrow').textContent,nodes:[...region.childNodes],scrollTop:region.scrollTop,focused:document.activeElement});
+  }else{
+   state.modalStack=[];state.returnFocus=document.activeElement;state.priorOverflow=document.body.style.overflow;
+  }
+  $('dialogTitle').textContent=title;$('dialogEyebrow').textContent=eyebrow;clear(region);region.scrollTop=0;
+  if(typeof content==='function')content(region);else region.append(node('p','empty','No authenticated data currently available'));
+  $('backDialog').hidden=state.modalStack.length===0;
   $('dialog').setAttribute('open','');$('dialog').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';$('closeDialog').focus();
  }
- function closeDialog(){$('dialog').removeAttribute('open');$('dialog').setAttribute('aria-hidden','true');document.body.style.overflow='';state.returnFocus?.focus?.()}
+ function backDialog(){
+  const prev=state.modalStack.pop();if(!prev){closeDialog();return}
+  $('dialogTitle').textContent=prev.title;$('dialogEyebrow').textContent=prev.eyebrow;
+  const region=$('detailScroll');region.replaceChildren(...prev.nodes);region.scrollTop=prev.scrollTop;
+  $('backDialog').hidden=state.modalStack.length===0;
+  if(prev.focused?.isConnected)prev.focused.focus();else $('closeDialog').focus();
+ }
+ function closeDialog(){
+  if(!$('dialog').hasAttribute('open'))return;
+  const focus=state.returnFocus;
+  $('dialog').removeAttribute('open');$('dialog').setAttribute('aria-hidden','true');
+  document.body.style.overflow=state.priorOverflow;state.modalStack=[];state.returnFocus=null;$('backDialog').hidden=true;
+  if(focus?.isConnected)focus.focus();
+ }
  function info(n,text){n.append(node('p','note',text))}
  function detailRow(n,label,value){line(n,label,String(value??'UNKNOWN'))}
+
+ function renderTopology(n){
+  info(n,'Interactive planning map ONLY — dashed connectors show intended coordination, not live worker sessions or verified OmniRoute model routes.');
+  const diagram=node('div','topology');
+  const heading=node('div','topology-label','SUPERVISION / ROLE CHARTER');diagram.append(heading);
+  const walter=node('button','topology-root','WALTER / COORDINATOR');walter.type='button';
+  walter.append(node('small','','Runtime UNVERIFIED · inspect role'));walter.addEventListener('click',()=>openDetail('employee','walter'));diagram.append(walter);
+  diagram.append(node('div','topology-link'));
+  const roster=node('div','topology-roster');
+  for(const id of ROLE_ORDER.filter(x=>x!=='walter')){
+   const b=node('button','topology-node',id.toUpperCase());b.type='button';
+   b.append(node('small','',ROLE_LABEL[id]),node('small','','UNVERIFIED'));
+   b.addEventListener('click',()=>openDetail('employee',id));roster.append(b);
+  }
+  diagram.append(roster,node('div','topology-link'),node('div','topology-gateway','OMNIROUTE / NO AUTHENTICATED ROUTING SNAPSHOT'),node('div','topology-label','POTENTIAL PROVIDER FAMILIES · NOT LIVE ROUTES'));
+  const providers=node('div','topology-providers');
+  for(const p of MODEL_PROVIDER){const b=node('button','topology-node',p);b.type='button';b.append(node('small','','MODEL INVENTORY UNKNOWN'));b.addEventListener('click',()=>openDetail('models'));providers.append(b)}
+  diagram.append(providers);n.append(diagram);
+  info(n,'Actual worker → provider links, per-model quotas, queue depth, active sessions and availability will require the authenticated Mac telemetry bridge. No worker can be started from this public chart.');
+ }
  function openDetail(view,arg){
   state.view=view;
   if(view==='new'){newJobDialog();return}
@@ -194,9 +262,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
    for(const [a,b] of [['ID',t.id],['Status',t.status],['Owner claim',t.owner],['Priority',t.priority],['Updated',fmt(t.updated_at)],['Next action',t.next_action],['Blocker',t.blocker||'Not recorded']])detailRow(n,a,b);
    info(n,'This is a GitHub DEVELOPMENT task, not a live OmniRoute runtime job.');const link=node('a','action','View source on GitHub ↗');link.href=DOCS+'/blob/'+state.sha+'/coordination/tasks.json';link.target='_blank';link.rel='noopener noreferrer';n.append(link)
   });return}
-  const titles={queue:'JOB QUEUE',fleet:'AI FLEET',models:'MODEL ROUTER',timeline:'MISSION TIMELINE',machine:'MACHINE & COST',results:'RESULTS VAULT'};
+  const titles={network:'WORKFORCE TOPOLOGY',queue:'JOB QUEUE',fleet:'AI FLEET',models:'MODEL ROUTER',timeline:'MISSION TIMELINE',machine:'MACHINE & COST',results:'RESULTS VAULT'};
   openDialog(titles[view]||'WORKFORCE SYSTEM','ROVOR / COMMAND MODULE',n=>{
-   if(view==='queue'){
+   if(view==='network'){renderTopology(n)}
+   else if(view==='queue'){
     info(n,'Verified GitHub development claims are listed below. Private Mac runtime jobs are NOT connected or dispatchable.');
     if(checked()){const input=node('input');input.placeholder='Filter development tasks';input.setAttribute('aria-label','Search development tasks');input.style.width='100%';input.style.marginBottom='10px';n.append(input);const list=node('div');n.append(list);const update=()=>{clear(list);for(const t of state.tasks.filter(t=>(t.title+' '+t.id+' '+t.owner).toLowerCase().includes(input.value.toLowerCase())))list.append(taskButton(t))};input.addEventListener('input',update);update()}else info(n,'Source unverified.');
    }else if(view==='fleet'){
@@ -245,7 +314,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
  }
  $('newJob').addEventListener('click',()=>newJobDialog());$('dockDraft').addEventListener('click',()=>newJobDialog());$('refresh').addEventListener('click',refresh);$('queueOpen').addEventListener('click',()=>{state.queueMode='open';renderQueue()});$('queueAll').addEventListener('click',()=>{state.queueMode='all';renderQueue()});
  for(const b of document.querySelectorAll('[data-detail]'))b.addEventListener('click',()=>openDetail(b.dataset.detail));
- $('closeDialog').addEventListener('click',closeDialog);
+ $('closeDialog').addEventListener('click',closeDialog);$('backDialog').addEventListener('click',backDialog);
  $('dialog').addEventListener('click',e=>{if(e.target===$('dialog'))closeDialog()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('dialog').hasAttribute('open'))closeDialog();if(e.key==='Tab'&&$('dialog').hasAttribute('open')){const focusables=[...$('dialog').querySelectorAll('button:not([disabled]),a[href],input,textarea,select')];if(focusables.length){const first=focusables[0],last=focusables.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});
  for(const id of ['queue','fleet','machine','models','timeline','results'])watched(id);loadRoles();render();refresh();
