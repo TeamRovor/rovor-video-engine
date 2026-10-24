@@ -3214,7 +3214,7 @@
       "id": "omniroute-workforce-composite-20261023",
       "title": "Combine the tested OmniRoute workpacks and ghost queue into one isolated source candidate",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar Mac composite repair 2026-10-23",
       "branch": "feature/ghost-native-import-queue",
       "scopes": [
@@ -3234,9 +3234,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:08:20.541Z",
-      "next_update": "After user runs pinned foreground Terminal command and returns sanitized output",
-      "next_action": "Real pinned Mac one-shot completed one attempted gateway request, failed at exact55s local timeout (gateway499), STOP restored and service unloaded; private receipt requires review and no response. Repair bounded request timeout for future explicitly approved jobs; NEVER replay existing job9fdb17db-124f-4ca3-9920-0b871c9ca428 or change dedupe to hide failure.",
+      "updated_at": "2026-10-24T00:09:07.998Z",
+      "next_update": "After a separately approved fresh task is defined; do not rerun failed dedupe",
+      "next_action": "Use PR41 comment6377293741. Repair c67542388f9245d9e9d96f03b81480735697c080 raises single-request timeout to120s, below360s lease;62 tests PASS on3.9/3.12. Preserve original source runtime, failed receipt/job9fdb17db-124f-4ca3-9920-0b871c9ca428, dedupe and STOP. Review current failure and define a genuinely new useful bounded task with explicit approval before another model request. No schedule activation until successful useful private receipt review.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -3286,9 +3286,16 @@
           "check": "User command61/61 tests PASS; exact SQLite job9fdb17db-124f-4ca3-9920-0b871c9ca428, private receipt review, launchctl, read-only gateway call/usage/cost logs",
           "result": "Host execution verified: one attempt, needs_review, receipt needs_review_no_auto_retry after55.065s; gateway499 at55046ms, no response body, zero recorded token counts, cost ledger has no matching record (NOT proof of upstream zero charge). STOP present; existing service unloaded. No successful AI draft, no retry, no scheduling activation.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/41"
+        },
+        {
+          "commit": "c67542388f9245d9e9d96f03b81480735697c080",
+          "platform": "Actual macOS15.8.1 / Python3.9.6 and installed Python3.12",
+          "check": "62 focused OmniRoute tests each interpreter; explicit one-request TimeoutError and120s bound regressions; live gateway499/receipt read-only failure diagnosis",
+          "result": "PASS source repair; original live attempt FAILED after55.065s, attempts1. No response or retry. STOP restored and LaunchAgent unloaded. Repair source-only, no further model request.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/41#issuecomment-6377293741"
         }
       ],
-      "blocker": "Awaiting unrestricted user Terminal invocation for existing gateway CLI/database and Keychain access; no model request or actual deployment verified here."
+      "blocker": "First approved live job timed out at55s, needs_review attempts1, no response. Source timeout repair tested/pushed but not installed; one-job authorization consumed. STOP remains on and LaunchAgent unloaded. No automatic or same-job retry permitted."
     }
   ]
 }
