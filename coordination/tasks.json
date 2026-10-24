@@ -4108,16 +4108,17 @@
       "title": "Hank QA audit: find testable causes of OmniRoute research drafts failing review",
       "acceptance": "Review the PUBLIC repository paths tools/omniroute_workpack_runner.py, tools/omniroute_reasoning_admission.py, tools/omniroute_draft_review.py and the continuous worker documentation. Produce a role-specific review-only failure taxonomy distinguishing reasoning-only/empty answers, finish_reason length, safe admission rejections, public source overflow, unsupported execution claims, and stale date headers. Identify one minimal, independently testable code change that could improve the review-ready rate, with exact public paths and validation steps. Do not pretend to inspect private Mac receipts, assert actual provider causes, retry failed job IDs, change STOP/pacing, or claim tests ran.",
       "scopes": [
-        "subsystem:overnight-public-hank-research-quality"
+        "subsystem:overnight-public-hank-research-quality",
+        "reviews/omniroute-hank-quality-triage-20261024.md"
       ],
       "priority": 1,
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "ChatGPT / ROVOR GitHub-only maintenance 2026-10-24 Hank QA",
+      "branch": "docs/hank-omniroute-review-20261024",
       "depends_on": [],
-      "updated_at": "2026-10-24T10:22:18.237Z",
-      "next_update": "After first original Mac research draft is genuinely ready for private human review",
-      "next_action": "Existing paced Mac public-task feeder may enqueue plan/checklist/tests/handoff drafts once per unique source-grounded task identity; do not label these as completed or eight independent model workers. Review private outputs and manually convert accepted findings to code/business deliverables; no paid/model-route/Mac-state actions."
+      "updated_at": "2026-10-24T12:18:06.425Z",
+      "next_update": "After pinned public-source QA report and draft PR are published; no Mac or private receipt operations",
+      "next_action": "Audit pinned PR #137 public OmniRoute runner, admission, draft review and continuous-worker docs; publish bounded source-only failure taxonomy and one independent testable improvement in reviews/omniroute-hank-quality-triage-20261024.md. No changes to worker code or private receipts."
     },
     {
       "id": "a-overnight-02-mike-same-worker-rollout",
