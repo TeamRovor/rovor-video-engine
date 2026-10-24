@@ -3718,7 +3718,7 @@
       "id": "omniroute-continuous-runtime-20261024",
       "title": "Integrate paced continuous research ticks, larger distinct backlog and same-service rollout",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar continuous-runtime session 2026-10-24",
       "branch": "fix/omniroute-continuous-runtime",
       "scopes": [
@@ -3731,10 +3731,31 @@
         "integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T06:42:18Z",
-      "next_update": "After integrated claim, backlog, STOP and rollback tests",
-      "next_action": "Extend unclaimed executor with explicitly opted-in paced claims; new scheduled tick reuses existing SQLite queue and approved free-route inference helpers. Add distinct public-source task catalogue, no-replay receipts and same-LaunchAgent installer; do not modify overlapping ghost_worker_loop/feed/workpack modules. Host activation outside writable roots remains final executable handoff.",
-      "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation."
+      "updated_at": "2026-10-24T06:58:00Z",
+      "next_update": "After Amar runs the pinned same-service installer; read actual new receipt before declaring live operation",
+      "next_action": "Activate immutable candidate b7366103dfb6576e522648d8b6472d8259527a35 with tools/install_continuous_worker.py --expected-commit b7366103dfb6576e522648d8b6472d8259527a35 --apply on the Mac. Then read continuous-status.json, current LaunchAgent and a new private draft/assignment manifest. Verify background completion, STOP, provider/quota pauses and a 24h soak. Source reuses existing queue/executor; max144/rolling24h, min601s, one research job/tick, live pinned public-task replenishment plus168 fallback assignments. Research drafts only; no native app control, public posting, failed-ID replay or paid route changes.",
+      "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation.",
+      "blocker": "Source and tests complete. The installed LaunchAgents plist and existing private SQLite state are outside this ChatGPT session's permitted write roots. Host activation must run in Amar's Terminal; no source test or loaded label establishes a real new background completion.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40072143609"
+      ],
+      "evidence": [
+        {
+          "commit": "b7366103dfb6576e522648d8b6472d8259527a35",
+          "platform": "Amar Mac / Python3.9 focused tests and Python3.12.14 workforce suite",
+          "check": "288 existing workforce tests +15 runtime +6 installer +12 pacing; candidate dry run and read-only current queue inspection",
+          "result": "PASS. New runtime admission tested with14 existing claims; concurrent pacing, STOP, failure circuit, task replenishment, public-source validation, no replay and rollback verified offline. Existing installed worker remains unchanged.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137"
+        },
+        {
+          "commit": "b7366103dfb6576e522648d8b6472d8259527a35",
+          "platform": "GitHub-hosted Linux Python3.9/3.11 and macOS Python3.11",
+          "check": "Continuous runtime workflow matrix,321 tests per platform",
+          "result": "PASS all three matrix jobs. Existing ghost worker safety, supervisor, terminal-proof and workforce workflows also passed; no host rollout or model completion claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40072143609"
+        }
+      ]
     },
     {
       "id": "walter-public-citation-evidence-gate-20261024",
