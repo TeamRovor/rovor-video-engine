@@ -84,7 +84,7 @@ class UpgradeChecks(unittest.TestCase):
         self.assertFalse((self.state / "STOP").exists())
 
     def test_bad_checkout_and_existing_stop_are_refused(self):
-        with self.assertRaisesRegex(module.Blocked, "candidate_commit_mismatch"):
+        with self.assertRaisesRegex(module.Blocked, "candidate_name_not_isolated"):
             module.inspect(self.home, self.runtime, "2" * 40, platform="darwin",
                            uid=lambda: 501, run=self.fake_run)
         (self.state / "STOP").write_text("owner")
