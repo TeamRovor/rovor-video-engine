@@ -190,5 +190,147 @@ class SoakEvidenceTests(unittest.TestCase):
         self.assertNotIn("job-mike-002", repr(result))
 
 
+
+def independent_fixture():
+    data = fixture()
+    data["independent_pool_mode"] = True
+    data["trusted_pool_reservations"] = True
+    data["pool_policy"] = {
+        "pools": [
+            {"pool_id": "account-a", "min_interval_seconds": 120,
+             "max_claims_24h": 100},
+            {"pool_id": "account-b", "min_interval_seconds": 120,
+             "max_claims_24h": 100}],
+        "models": [
+            {"pool_id": pool, "model_id": model,
+             "min_interval_seconds": 60, "max_claims_24h": 100}
+            for pool in ("account-a", "account-b")
+            for model in ("openrouter/fast:free", "groq/medium:free")]}
+    for row, pool in zip(data["claims"], ("account-a", "account-b")):
+        row["pool_id"] = pool
+        row["model_id"] = "openrouter/fast:free"
+    return data
+
+
+class IndependentPoolSoakTests(unittest.TestCase):
+    def test_same_second_independent_accounts_do_not_trigger_legacy_601s(self):
+        data = independent_fixture()
+        data["claims"][1]["claimed_at"] = data["claims"][0]["claimed_at"]
+        result = audit(**data)
+        self.assertEqual(result["status"], "source_only_evidence_consistent")
+        self.assertEqual(result["claim_safety"], "pacing_and_cap_consistent")
+        self.assertEqual(result["claims_24h"], 2)
+
+    def test_same_account_same_second_is_pool_and_model_violation(self):
+        data = independent_fixture()
+        data["claims"][1]["pool_id"] = "account-a"
+        data["claims"][1]["claimed_at"] = data["claims"][0]["claimed_at"]
+        result = audit(**data)
+        self.assertIn("pool_spacing_violation", result["issues"])
+        self.assertIn("model_spacing_violation", result["issues"])
+        self.assertEqual(result["claim_safety"], "violation")
+
+    def test_two_models_same_account_still_share_pool_spacing(self):
+        data = independent_fixture()
+        data["claims"][1]["pool_id"] = "account-a"
+        data["claims"][1]["model_id"] = "groq/medium:free"
+        data["claims"][1]["claimed_at"] = data["claims"][0]["claimed_at"]
+        result = audit(**data)
+        self.assertIn("pool_spacing_violation", result["issues"])
+        self.assertNotIn("model_spacing_violation", result["issues"])
+
+    def test_same_model_two_accounts_have_independent_limits(self):
+        data = independent_fixture()
+        data["claims"][1]["claimed_at"] = data["claims"][0]["claimed_at"]
+        self.assertEqual(audit(**data)["claim_safety"], "pacing_and_cap_consistent")
+
+    def test_pool_rolling_cap_enforced_even_after_completion(self):
+        data = independent_fixture()
+        data["pool_policy"]["pools"][0]["max_claims_24h"] = 1
+        data["claims"][1]["pool_id"] = "account-a"
+        result = audit(**data)
+        self.assertIn("pool_rolling_cap_exceeded", result["issues"])
+
+    def test_model_rolling_cap_enforced_within_account(self):
+        data = independent_fixture()
+        data["pool_policy"]["models"][0]["max_claims_24h"] = 1
+        data["claims"][1]["pool_id"] = "account-a"
+        result = audit(**data)
+        self.assertIn("model_rolling_cap_exceeded", result["issues"])
+
+    def test_global_emergency_cap_remains_even_with_independent_pools(self):
+        data = independent_fixture()
+        data["claims"] = []
+        for i in range(145):
+            data["claims"].append({
+                "job_id": "job-%04d" % i, "claimed_at": START + 1000 + i * 100,
+                "role": "gale", "outcome": "model_failed",
+                "pool_id": "account-a" if i % 2 == 0 else "account-b",
+                "model_id": "openrouter/fast:free"})
+        result = audit(**data)
+        self.assertIn("rolling_claim_cap_exceeded", result["issues"])
+        self.assertEqual(result["claims_24h"], 145)
+
+    def test_model_interval_enforced_independently_of_pool_interval(self):
+        data = independent_fixture()
+        data["pool_policy"]["pools"][0]["min_interval_seconds"] = 1
+        data["claims"][1]["pool_id"] = "account-a"
+        data["claims"][1]["claimed_at"] = data["claims"][0]["claimed_at"] + 30
+        result = audit(**data)
+        self.assertIn("model_spacing_violation", result["issues"])
+        self.assertNotIn("pool_spacing_violation", result["issues"])
+
+    def test_unverified_reservations_fail_closed(self):
+        data = independent_fixture()
+        data["trusted_pool_reservations"] = False
+        self.assertEqual(audit(**data)["status"],
+                         "unverified_independent_pool_evidence")
+
+    def test_incomplete_claim_to_pool_attribution_refused(self):
+        data = independent_fixture()
+        del data["claims"][0]["pool_id"]
+        self.assertEqual(audit(**data)["status"],
+                         "invalid_or_duplicate_claim_evidence")
+
+    def test_unlisted_model_or_account_refused(self):
+        for field, value in (("pool_id", "unlisted-account"),
+                             ("model_id", "unlisted/model:free")):
+            with self.subTest(field=field):
+                data = independent_fixture()
+                data["claims"][0][field] = value
+                self.assertEqual(audit(**data)["status"],
+                                 "invalid_or_incomplete_pool_claim_evidence")
+
+    def test_duplicate_or_orphan_policy_rejected(self):
+        data = independent_fixture()
+        data["pool_policy"]["pools"].append(
+            copy.deepcopy(data["pool_policy"]["pools"][0]))
+        self.assertEqual(audit(**data)["status"], "invalid_pool_policy")
+        data = independent_fixture()
+        data["pool_policy"]["models"][0]["pool_id"] = "unlisted-account"
+        self.assertEqual(audit(**data)["status"], "invalid_pool_policy")
+
+    def test_boolean_and_zero_limits_rejected(self):
+        for field, value in (("min_interval_seconds", True),
+                             ("max_claims_24h", 0),
+                             ("max_claims_24h", 145)):
+            with self.subTest(field=field, value=value):
+                data = independent_fixture()
+                data["pool_policy"]["pools"][0][field] = value
+                self.assertEqual(audit(**data)["status"], "invalid_pool_policy")
+
+    def test_legacy_evidence_does_not_accept_pool_policy_injection(self):
+        data = fixture()
+        data["trusted_pool_reservations"] = True
+        self.assertEqual(audit(**data)["status"], "unexpected_pool_evidence")
+
+    def test_output_never_contains_private_pool_or_model_ids(self):
+        data = independent_fixture()
+        result = audit(**data)
+        self.assertNotIn("account-a", repr(result))
+        self.assertNotIn("openrouter/fast:free", repr(result))
+        self.assertFalse(result["model_inference_proven_by_this_function"])
+
+
 if __name__ == "__main__":
     unittest.main()
