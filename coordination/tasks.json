@@ -4677,20 +4677,23 @@
       "id": "hud-persistent-telemetry-20261024",
       "title": "Add durable private HUD telemetry ingestion and outbound collector without temporary tunnel links",
       "priority": 1,
-      "status": "blocked",
+      "status": "active",
       "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
-      "updated_at": "2026-10-24T21:52:16.699Z",
-      "next_update": "When authorized network-enabled execution can synchronize the existing Site source repository.",
-      "branch": "feature/hud-sites-adapter-20261024",
+      "updated_at": "2026-10-24T21:59:07.955Z",
+      "next_update": "After cloud activity evidence feed, untouched-HUD artifact injection and Pages deployment verification",
+      "branch": "feature/hud-cloud-activity-20261024",
       "scopes": [
         "integrations/hud-cloud",
         "tools/hud_telemetry_publisher.mjs",
         "tests/test_hud_cloud.mjs",
         ".github/workflows/hud-cloud.yml",
-        "tests/test_hud_sites.mjs"
+        "tests/test_hud_sites.mjs",
+        ".github/workflows/deploy-command-center-pages.yml",
+        "coordination/cloud-shifts/walter-pr184.json",
+        "tests/test_hud_cloud_activity.mjs"
       ],
       "depends_on": [],
-      "next_action": "PR #183 merged at 60e96fb774914f7cc0623f9e5c400439b95ee19d. Private Sites identity adapter, separate service-auth reporter header, immutable schema migration generation and deterministic original-HUD ESM bundle complete. 29 local tests and hosted runs 40134981077/40134978646 PASS; generated 1,333,046-byte Worker passes the Sites artifact validator. Reuse Site appgprj_6add1e2cc8c08191839344b34d7dbf50; do not create another. Existing local rovor-hud-site contains generated worker, DB/MCP manifest and migration; implementation source can regenerate it via integrations/hud-cloud/build-sites.mjs. Next: use approved Site source helper from authorized network-enabled execution, configure writer secret and supported service access, publish privately, validate real D1 binding/migration and live browser/report delivery, then install Mac reporter and verify generated MCP plugin connection. Current HUD and worker service unchanged; no actual cloud report or online employee proof. Research update 2026-10-24: two enabled ChatGPT cloud automations already perform GitHub-only work independently of the Mac execution path. Walter's matched completed run produced merged PR184 at d1145fe1ced42d1cdb30b421d40fb352d8541b36; this is ChatGPT cloud source engineering, not OmniRoute inference. Existing Walter prompt was updated to prioritize Mac-independent cloud work while preserving its hourly schedule, and one immediate run was requested (no new completion yet). A read-only local metadata audit found nine active provider connections, all auth_type=apikey with a stored key flag and no access/refresh-token flags: cloudflare-ai, cohere, gemini, groq, huggingface, mistral, nvidia, openrouter, sambanova. This makes direct cloud-provider adapters worth staging; key presence does not establish validity, entitlement, remaining quota or cloud request success. Next goal: durable cloud employee receipts distinct from Mac telemetry, followed by one approved $0 cloud inference with secure cloud credentials and human-review delivery. A cloud router can call eligible APIs directly without a continuously running full OmniRoute server; if preserving the full gateway, official VM/Docker hosting is supported, but no cloud host has been provisioned. Keep current Mac baseline and all earlier deployment blockers explicit.",
+      "next_action": "Add public sanitized cloud shift evidence to the existing GitHub Pages HUD Recent Activity panel via build-time injection; preserve original source/branding. Show historical completion and unrecorded human review distinctly from model usage/online state. Verify own tests, Pages release checks and real deployment.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
@@ -4726,8 +4729,7 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/182",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40131970730",
         "https://github.com/TeamRovor/rovor-video-engine/pull/183"
-      ],
-      "blocker": "Managed execution cannot resolve the registered private Site's source Git host. The finished Sites adapter/bundle has not been pushed to the Site repository or deployed. Permanent Mac reporting and the ChatGPT reader connection remain pending."
+      ]
     },
     {
       "id": "walter-citation-code-context-20261024",
