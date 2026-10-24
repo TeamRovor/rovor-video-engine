@@ -124,7 +124,7 @@ def inspect(state, *, run=subprocess.run):
                             if packet in ROLE_PACKET[role]:
                                 role_counts[role][row["status"]] += 1
                                 break
-                    if packet in v2_slug_to_role:
+                    if isinstance(packet, str) and packet in v2_slug_to_role:
                         role=v2_slug_to_role[packet]
                         evidence=(
                             isinstance(outcome,dict) and
