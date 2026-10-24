@@ -119,6 +119,27 @@ class ProbeTests(unittest.TestCase):
         self.assertNotIn("CONFIDENTIAL_OUTPUT_MUST_NOT_LEAK", json.dumps(got))
         self.assertNotIn("/private/secret", json.dumps(got))
 
+    def test_reporting_matches_three_failure_claim_circuit_without_model_calls(self):
+        import time
+        db = sqlite3.connect(str(self.state/"jobs.sqlite3"))
+        now = time.time()
+        for i in range(3):
+            uid = "test-" + str(i)
+            db.execute("INSERT INTO jobs VALUES(?,?,?,?,?)",
+                       (uid,"research.omniroute","needs_review",
+                        json.dumps({"packet":"walter-v1-mac-worker-stop-recovery"}),
+                        json.dumps({"draft_status":"needs_review_no_auto_retry",
+                                    "review_status":"failed_needs_review"})))
+            db.execute("INSERT INTO events VALUES(?,?,?)",
+                       (uid,"claimed",now - 20 + i))
+        db.commit()
+        db.close()
+        result = status.inspect(self.state, run=lambda *a, **k:
+                                type("R",(),{"returncode":1})())
+        self.assertEqual(result["consecutive_recorded_inference_failures"],3)
+        self.assertTrue(result["inference_claim_guard_would_block"])
+        self.assertEqual(result["ai_claims_last_24h"],3)
+
     def test_stop_reported_without_resuming_worker(self):
         (self.state/"STOP").write_text("owner stopped")
         obj=status.inspect(self.state,run=lambda *args,**kwargs: type("X",(),{"returncode":1})())
