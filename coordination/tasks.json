@@ -4879,6 +4879,24 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/188",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40139432522"
       ]
+    },
+    {
+      "id": "mike-cloud-retry-after-20261024",
+      "title": "Honor provider Retry-After beyond one day without early cloud dispatch",
+      "priority": 1,
+      "status": "active",
+      "owner": "Mike / cloud pool cooldown reliability 2026-10-24",
+      "updated_at": "2026-10-24T22:42:28.303Z",
+      "next_update": "After focused Node tests and actual hosted PR checks",
+      "branch": "fix/mike-cloud-retry-after-20261024",
+      "scopes": [
+        "integrations/ghost-cloud/runtime.mjs",
+        "integrations/ghost-cloud/README.md",
+        "tests/test_ghost_cloud.mjs"
+      ],
+      "depends_on": [],
+      "next_action": "Correct confirmed 90000-second provider cooldown being truncated to86400seconds; preserve safe bounded timestamps and test pool admission before/at reset. Open PR without merge/deployment; no model calls.",
+      "acceptance": "Valid Retry-After seconds and HTTP-date deadlines beyond24hours retained without early dispatch; malformed or unrepresentable values remain conservative and fail safe. Focused runtime tests and shared coordination checks pass. No live provider, secret, Mac or paid operation."
     }
   ]
 }

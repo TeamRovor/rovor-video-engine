@@ -871,6 +871,14 @@
         "github-write"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "mike-cloud-retry-after-20261024": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
     }
   }
 }
