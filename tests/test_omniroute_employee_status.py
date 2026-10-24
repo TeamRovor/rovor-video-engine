@@ -173,6 +173,57 @@ class ProbeTests(unittest.TestCase):
         self.assertIn("exception:unavailable",bad["nonready_reason_counts"])
         self.assertNotIn("PRIVATE_METADATA",json.dumps(bad))
 
+    def test_three_v2_running_are_not_misreported_as_deliverables(self):
+        # Mirrors the owner's real Mac report at 14/14 rolling claims:
+        # three new jobs claimed by the automated launchd tick; neither
+        # a claim nor a 'running' row is a finished AI deliverable.
+        slugs = ("walter-v2-mike-worker-guard",
+                 "walter-v2-jane-editor-handoff",
+                 "walter-v2-jesse-animation-qa")
+        with sqlite3.connect(str(self.state/"jobs.sqlite3")) as db:
+            for i, slug in enumerate(slugs):
+                db.execute("INSERT INTO jobs VALUES(?,?,?,?,?)",
+                           ("v2-job-"+str(i), "research.omniroute",
+                            "running",json.dumps({"packet":slug}),
+                            None))
+                db.execute("INSERT INTO events VALUES(?,?,?)",
+                           ("v2-job-"+str(i), "claimed",
+                            __import__("time").time()))
+            db.commit()
+        report=status.inspect(self.state,run=lambda *a,**k:
+                              type("R",(),{"returncode":0,"stdout":"runs = 2"})())
+        self.assertEqual(report["ai_claims_last_24h"],3)
+        self.assertEqual(report["v2_recovery_summary"],{
+            "queued":0,"running":3,"review_ready":0,
+            "failed_no_retry":0,"not_queued":4})
+        for role in ("mike","jane","jesse"):
+            self.assertEqual(report["v2_recovery_specialists"][role],
+                             {"job_status":"running","review_ready":False,
+                              "failed_no_retry":False})
+        self.assertEqual(report["v2_recovery_specialists"]["gale"]["job_status"],
+                         "not_queued")
+        with sqlite3.connect(str(self.state/"jobs.sqlite3")) as db:
+            db.execute("UPDATE jobs SET status=?,result=? WHERE id=?",
+                       ("needs_review",json.dumps({
+                           "draft_status":"draft_completed_needs_review",
+                           "review_status":"draft_ready_for_human_review",
+                           "answer":"SECRET_DRAFT_DONT_PRINT"}),
+                        "v2-job-0"))
+            db.execute("UPDATE jobs SET status=?,result=? WHERE id=?",
+                       ("needs_review",json.dumps({
+                           "draft_status":"needs_review_no_auto_retry",
+                           "review_status":"failed_needs_review"}),
+                        "v2-job-1"))
+            db.commit()
+        after=status.inspect(self.state,run=lambda *a,**k:
+                             type("R",(),{"returncode":0,"stdout":"runs = 2"})())
+        self.assertEqual(after["v2_recovery_summary"],{
+            "queued":0,"running":1,"review_ready":1,
+            "failed_no_retry":1,"not_queued":4})
+        self.assertTrue(after["v2_recovery_specialists"]["mike"]["review_ready"])
+        self.assertTrue(after["v2_recovery_specialists"]["jane"]["failed_no_retry"])
+        self.assertNotIn("SECRET_DRAFT_DONT_PRINT",json.dumps(after))
+
     def test_stop_reported_without_resuming_worker(self):
         (self.state/"STOP").write_text("owner stopped")
         obj=status.inspect(self.state,run=lambda *args,**kwargs: type("X",(),{"returncode":1})())
