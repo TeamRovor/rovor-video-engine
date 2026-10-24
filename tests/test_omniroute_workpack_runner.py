@@ -21,7 +21,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
     def setUp(self):
         tmp=tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
-        self.base=Path(tmp.name)
+        self.base=Path(tmp.name).resolve()
         self.repo=self.base/'rovor-public'
         self.repo.mkdir()
         self.out=self.base/'private-receipts'
@@ -69,6 +69,22 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         self.assertEqual(rc,2)
         self.assertFalse(self.out.exists())
         self.assertNotIn('non-secret',output.getvalue())
+
+    def test_direct_api_refuses_receipts_in_ancestor_checkout(self):
+        outer=self.base/'outer-checkout'
+        outer.mkdir()
+        (outer/'.git').mkdir()
+        nested=outer/'tools'/'nested-rovor'
+        nested.parent.mkdir()
+        shutil.copytree(self.repo,nested)
+        out=outer/'private-receipts'
+        called=[]
+        with self.assertRaisesRegex(ValueError,'inside Git checkout'):
+            worker.run_packet(nested,out,'runner-blocker',
+                'groq/openai/gpt-oss-120b','private-key',
+                completion=lambda *args:called.append(args))
+        self.assertEqual(called,[])
+        self.assertFalse(out.exists())
 
     def test_complete_private_receipt_once_no_replay(self):
         called=[]
@@ -315,6 +331,37 @@ class OmniRouteWorkpackTests(unittest.TestCase):
                             for x in answer['results']))
         self.assertFalse(answer['host_app_control_verified'])
         self.assertFalse(answer['paid_fallback_attempted'])
+
+
+
+    def test_direct_api_refuses_receipts_inside_checkout_before_completion(self):
+        alias = self.base / 'repo-alias'
+        alias.symlink_to(self.repo, target_is_directory=True)
+        destinations = (
+            self.repo,
+            self.repo / 'private-receipts',
+            alias,
+            alias / 'nested-private-receipts',
+        )
+
+        def must_not_call(*args, **kwargs):
+            self.fail('completion must not run for a public-checkout destination')
+
+        for destination in destinations:
+            with self.subTest(destination=str(destination)):
+                with self.assertRaisesRegex(
+                        ValueError, 'inside Git checkout or redirected'):
+                    worker.run_packet(
+                        self.repo, destination, 'runner-blocker',
+                        'explicit/route', 'fixture-key',
+                        completion=must_not_call,
+                    )
+                if destination == alias:
+                    self.assertTrue(alias.is_symlink(), 'existing alias must not be removed')
+                elif destination != self.repo:
+                    self.assertFalse(destination.exists())
+        self.assertFalse((self.repo / 'private-receipts').exists())
+        self.assertFalse((self.repo / 'nested-private-receipts').exists())
 
 
 if __name__=='__main__':

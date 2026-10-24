@@ -230,8 +230,28 @@ def write_receipt(path, payload, *, replace=False):
 
 def run_packet(repo_root,receipt_root,slug,model,key,
                completion=None):
-    packet,prompt,provenance=load_packet(repo_root,slug)
-    private=safe_private_root(receipt_root)
+    # The public-checkout boundary applies to every entry point, not merely
+    # main(). Other future workers may import and invoke run_packet directly.
+    # Canonicalize even nonexistent output folders to catch aliased parents.
+    source=Path(repo_root).expanduser().resolve(strict=True)
+    requested=Path(receipt_root).expanduser().absolute()
+    if requested.is_symlink() or any(parent.is_symlink() for parent in requested.parents):
+        raise ValueError('Private model receipts inside Git checkout or redirected are refused')
+    destination=requested.resolve(strict=False)
+    # Imported callers may pass a nested worktree/subproject as repo_root.
+    # Refuse destinations inside any enclosing Git checkout too, otherwise a
+    # nested source root could write private receipts into its public parent.
+    checkout_roots=[]
+    for candidate in (source, *source.parents):
+        marker=candidate/'.git'
+        if marker.exists() or marker.is_symlink():
+            checkout_roots.append(candidate)
+    if (destination==source or source in destination.parents or
+            any(destination==root or root in destination.parents
+                for root in checkout_roots)):
+        raise ValueError('Private model receipts inside Git checkout or redirected are refused')
+    packet,prompt,provenance=load_packet(source,slug)
+    private=safe_private_root(destination)
     receipt_file=private/(slug+'.receipt.json')
     if receipt_file.exists() or receipt_file.is_symlink():
         return {'id':packet['id'],'status':'previous_attempt_not_replayed',
