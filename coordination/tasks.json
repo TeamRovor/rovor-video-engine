@@ -4288,7 +4288,7 @@
       "id": "walter-real-receipt-coverage-bridge-20261024",
       "title": "Normalize real Mac SQLite research receipts into trustworthy private specialist coverage outcomes",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 receipt bridge shift",
       "branch": "feature/walter-real-receipt-coverage-bridge-v1",
       "scopes": [
@@ -4298,11 +4298,26 @@
         "subsystem:private-sqlite-outcomes-to-specialist-coverage"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T11:52:27.763Z",
-      "next_update": "After focused Python 3.9/3.11 CI and shared queue checks; never operate the Mac from GitHub.",
-      "next_action": "Implement a source-only, read-only adapter for existing research.omniroute SQLite job/claimed-event snapshots and separately authenticated human review decisions; normalize UUID job IDs and SHA256 dedupe keys for the existing Walter specialist coverage selector. Preserve privacy, at-most-once history, and fail-closed review semantics. No worker changes or model calls.",
+      "updated_at": "2026-10-24T11:55:46.614Z",
+      "next_update": "Source merged; existing PR137 owner may opt in after independently authenticated Mac snapshot and human review evidence.",
+      "next_action": "PR #169 merged to main at 5d031ff94e1ac64e7ccf1db2c95b2fba88780fb0. Pure bridge converts actual SQLite UUID IDs/64-hex dedupe and claimed events into private coverage outcomes, preserves queued seen ledger, refuses replay/invalid timelines and model-forged approval; 27 focused synthetic tests and shared queue/routing checks PASS on hosted Python3.9/3.11 (runs 40091804191, 40091805969). Source-only; no Mac access, no private receipts, no live model calls. Existing PR137 owner: obtain a consistent private SQLite snapshot, independently verify role map and human review receipts, invoke bridge.prepare then walter_specialist_coverage.choose under STOP/quota/atomic-claim gates; first test offline on Mac, do not auto-deploy.",
       "acceptance": "Pure Python3.9 stdlib bridge accepts independently trusted complete copied SQLite job/event snapshots, authenticated job-role map and human review receipts, rejects missing/duplicate claims, replayed dedupe, invalid status transitions and spoofed model approval; emits no raw private result/path, normalizes UUID and SHA256 identities for existing specialist coverage chooser. At least 15 offline regression tests and hosted Python3.9/3.11 plus shared queue checks. Source-only; no Mac execution or auto approval.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "211ec8b00be823c62481aa4704e160af527ec719",
+          "platform": "GitHub Actions Ubuntu Python 3.9 and 3.11",
+          "check": "27 focused synthetic unittest cases incl existing coverage integration; project_loop.py check; task_routing_pair.py --check",
+          "result": "PASS both Python versions; no real private receipts, inference, or Mac operations",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40091804191"
+        },
+        {
+          "commit": "5d031ff94e1ac64e7ccf1db2c95b2fba88780fb0",
+          "platform": "GitHub PR #169",
+          "check": "New read-only in-memory bridge and tests; no worker integration",
+          "result": "MERGED to main, source-only",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/169"
+        }
+      ]
     }
   ]
 }
