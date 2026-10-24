@@ -1,0 +1,32 @@
+name: Private Mac terminal proof offline tests
+on:
+  pull_request:
+    paths:
+      - "tools/ghost_worker.py"
+      - "tools/ghost_private_control.py"
+      - "tests/test_private_terminal_probe.py"
+      - "integrations/open-interpreter/PRIVATE-TERMINAL-PROBE.md"
+      - ".github/workflows/private-terminal-probe.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Offline command authorization, private receipts, no-replay
+        run: |
+          python -m unittest discover -s tests -p test_private_terminal_probe.py -v
+          python -m unittest discover -s tests -p test_ghost_private_control.py -v
+          python -m py_compile tools/ghost_worker.py tools/ghost_private_control.py
