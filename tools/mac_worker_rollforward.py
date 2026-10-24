@@ -122,13 +122,14 @@ def inspect(home, checkout, expected, *, run=subprocess.run, platform=sys.platfo
     args = current.get("ProgramArguments")
     if not isinstance(args, list) or len(args) < 8 or not all(isinstance(x, str) for x in args):
         raise Blocked("unexpected_existing_program_arguments")
-    python = checked(args[0], regular=True)
+    python = Path(args[0])
+    if not python.is_file() or not os.access(python, os.X_OK):
+        raise Blocked("original_python_unavailable")
     oldscript = checked(args[1], regular=True)
     if oldscript.resolve() == script.resolve() or oldscript.name != "ghost_worker_loop.py":
         raise Blocked("source_runtime_not_distinct")
-    if (oldscript.parent.name != "tools" or
-            not oldscript.parent.parent.name.startswith("worker-runtime-")):
-        raise Blocked("old_runtime_not_isolated")
+    if oldscript.parent.name != "tools":
+        raise Blocked("old_runtime_layout_unexpected")
     if args.count("--state") != 1 or args.count("--workspace") != 1 or args.count("run") != 1:
         raise Blocked("program_arguments_not_unique")
     if any(args.count(flag) != 1 for flag in REQUIRED_FLAGS):
