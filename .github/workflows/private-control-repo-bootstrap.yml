@@ -1,0 +1,27 @@
+name: Private control repo bootstrap (offline)
+on:
+  pull_request:
+    paths:
+      - 'tools/private_control_repo_bootstrap.py'
+      - 'tests/test_private_control_repo_bootstrap.py'
+      - '.github/workflows/private-control-repo-bootstrap.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Offline private repo creation and idempotence simulation
+        run: python -m unittest discover -s tests -p test_private_control_repo_bootstrap.py -v
