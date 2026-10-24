@@ -3234,9 +3234,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:05:10.660Z",
+      "updated_at": "2026-10-24T00:08:20.541Z",
       "next_update": "After user runs pinned foreground Terminal command and returns sanitized output",
-      "next_action": "Run pinned e21ea94f07d3bef6c06e4b606e567eb4470bf92a tools/omniroute_mac_once.py --approve-one-free-job from existing Mac Terminal after offline tests. It uses existing state, pauses existing LaunchAgent, restores STOP and never enables scheduling. Inspect private receipt quality and one attempt before considering unattended activation. Do not replay on failure or change dedupe. Original PR66/71 branches untouched; their reviewed security changes integrated only into PR41 composition.",
+      "next_action": "Real pinned Mac one-shot completed one attempted gateway request, failed at exact55s local timeout (gateway499), STOP restored and service unloaded; private receipt requires review and no response. Repair bounded request timeout for future explicitly approved jobs; NEVER replay existing job9fdb17db-124f-4ca3-9920-0b871c9ca428 or change dedupe to hide failure.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -3279,6 +3279,13 @@
           "check": "103 focused tests before packet refresh; 61 final OmniRoute tests on Python3.9.6 and3.12; default launcher no-approval; git diff --check",
           "result": "PASS; pinned foreground handoff prepared. New v2 packet reviews new launcher, not old architecture. STOP restoration, existing-service unload, no replay, exact UUID and old-job isolation tested offline. Live request and unattended activation NOT performed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/e21ea94f07d3bef6c06e4b606e567eb4470bf92a"
+        },
+        {
+          "commit": "e21ea94f07d3bef6c06e4b606e567eb4470bf92a",
+          "platform": "Actual Mac / installed Python3.12 / user's Terminal and read-only runtime inspection",
+          "check": "User command61/61 tests PASS; exact SQLite job9fdb17db-124f-4ca3-9920-0b871c9ca428, private receipt review, launchctl, read-only gateway call/usage/cost logs",
+          "result": "Host execution verified: one attempt, needs_review, receipt needs_review_no_auto_retry after55.065s; gateway499 at55046ms, no response body, zero recorded token counts, cost ledger has no matching record (NOT proof of upstream zero charge). STOP present; existing service unloaded. No successful AI draft, no retry, no scheduling activation.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/41"
         }
       ],
       "blocker": "Awaiting unrestricted user Terminal invocation for existing gateway CLI/database and Keychain access; no model request or actual deployment verified here."
