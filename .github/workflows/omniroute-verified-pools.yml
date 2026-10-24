@@ -5,9 +5,11 @@ on:
       - 'tools/ghost_worker.py'
       - 'tools/omniroute_continuous.py'
       - 'tools/omniroute_model_reservation.py'
+      - 'tools/omniroute_workforce_telemetry.py'
       - 'tests/test_omniroute_atomic_worker_hook.py'
       - 'tests/test_omniroute_model_reservation.py'
       - 'tests/test_omniroute_capacity_router.py'
+      - 'tests/test_omniroute_workforce_telemetry.py'
       - '.github/workflows/omniroute-verified-pools.yml'
   workflow_dispatch:
 permissions:
@@ -35,3 +37,4 @@ jobs:
           python -m unittest discover -s tests -p test_omniroute_atomic_worker_hook.py -v
           python -m unittest discover -s tests -p test_omniroute_continuous.py -v
           python -m unittest discover -s tests -p test_omniroute_workforce_composite.py -v
+          python -m unittest discover -s tests -p test_omniroute_workforce_telemetry.py -v
