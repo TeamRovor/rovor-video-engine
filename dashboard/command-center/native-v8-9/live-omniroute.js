@@ -1,5 +1,5 @@
 /* Loaded only by the authenticated local HUD bridge, never the public Pages HUD. */
-(()=>{
+window.ROVOR_START_OMNIROUTE=()=>{
   'use strict';
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const employees=['Walter','Mike','Jane','Jesse','Gale','Gus','Saul','Hank'];
@@ -36,7 +36,7 @@
     if(inFlight||document.hidden)return;
     inFlight=true;
     try{
-      const response=await fetch('/api/hud/omniroute?period='+period,{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)});
+      const response=await (window.ROVOR_OMNIROUTE_REQUEST||fetch)('/api/hud/omniroute?period='+period,{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)});
       if(!response.ok)throw Error('OmniRoute unavailable or pairing expired');
       const data=await response.json();
       if(data.source!=='local_omniroute_read_only_bridge'||data.period!==period||!Array.isArray(data.models)||data.models.length>10050||!Number.isFinite(Date.parse(data.snapshot_at)))throw Error('Invalid telemetry');
@@ -56,4 +56,4 @@
   window.ROVOR_WORKLOAD={mountPreview,mount,resetPopup(){popupHost=null;filter='';selected='';}};
   mountPreview(document.getElementById('workloadPanel'),()=>window.ROVOR_NATIVE.open('workload'));
   poll();
-})();
+};
