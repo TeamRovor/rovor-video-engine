@@ -1,21 +1,22 @@
 {
   "schema_version": 1,
   "slug": "supervisor-resilience",
-  "id": "omni-supervisor-resilience",
-  "title": "Audit the minimum stable always-on ROVOR Mac worker design",
+  "id": "omni-supervisor-foreground-review-v2",
+  "title": "Review the new bounded foreground OmniRoute launcher and its STOP recovery",
   "role": "software-architecture",
   "inputs": [
-    "WORK.md",
-    "AGENTS.md",
-    "integrations/open-interpreter/OMNIROUTE.md"
+    "tools/omniroute_mac_once.py",
+    "tests/test_omniroute_mac_once.py",
+    "tools/ghost_omniroute_job.py",
+    "integrations/open-interpreter/GHOST-OMNIROUTE-QUEUE.md"
   ],
-  "task": "Design the smallest reliable persistent Mac user-session supervisor using a launchd LaunchAgent, SQLite at-most-once job claims, heartbeats, process logging, STOP, bounded task durations, and a secure GitHub or private queue transport. Discuss lock screen, GUI sessions, sleep, crashes, process reboot, and pending approvals. Explain how existing ROVOR Jane queue should plug in without rebuilding jobs or allowing FCPXML wrong-library import. Return an implementable 5-step sequence with deterministic tests. Do not claim Mac native GUI access. Flag assumptions.",
-  "deliverable": "Concrete minimal architecture and failure-mode tests, not another entire rewrite proposal.",
+  "task": "Perform a narrow read-only code review of the NEW foreground launcher and tests supplied here. This replaces the old general supervisor design task; do not repeat an architecture proposal. Identify concrete bugs in exact-job selection, preflight-before-claim order, pausing the existing LaunchAgent, restoring STOP after errors, crash/interrupt behavior, dedupe/no-replay and output review. Distinguish verified code observations from unknown runtime behavior. Rank at most five actionable findings with source/function evidence and one deterministic regression per finding. If worker internals or upstream billing policy are not supplied, explicitly mark them unknown rather than guessing. Do not generate executable shell commands, suggest another queue/scheduler, or claim to have run anything. Keep the memo under 700 words to avoid the previous token cutoff.",
+  "deliverable": "A bounded code-review memo for the new foreground launcher, suitable for human review; no redesign or automatic execution.",
   "acceptance": [
-    "Reuses current worker and GitHub task metadata instead of inventing duplicate queues",
-    "Separates always-on background tasks from unlocked GUI work",
-    "Provides safe at-most-once recovery for native GUI actions",
-    "No secret storage in GitHub or unattended shell commands"
+    "Reviews the new supplied launcher and its tests rather than repeating the previous supervisor architecture memo",
+    "Every finding identifies a concrete failure path and a focused regression test",
+    "Flags hard-crash STOP recovery and missing upstream billing evidence if unproven",
+    "No claims of actual Mac execution, approvals, paid routing, or external actions"
   ],
   "visibility": "public-repository-metadata-only",
   "output_mode": "draft_review_only",
