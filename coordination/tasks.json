@@ -4884,10 +4884,10 @@
       "id": "mike-cloud-retry-after-20261024",
       "title": "Honor provider Retry-After beyond one day without early cloud dispatch",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Mike / cloud pool cooldown reliability 2026-10-24",
-      "updated_at": "2026-10-24T22:42:28.303Z",
-      "next_update": "After focused Node tests and actual hosted PR checks",
+      "updated_at": "2026-10-24T22:44:32.949Z",
+      "next_update": "After owner review of PR189; do not modify the tested output commit",
       "branch": "fix/mike-cloud-retry-after-20261024",
       "scopes": [
         "integrations/ghost-cloud/runtime.mjs",
@@ -4895,8 +4895,22 @@
         "tests/test_ghost_cloud.mjs"
       ],
       "depends_on": [],
-      "next_action": "Correct confirmed 90000-second provider cooldown being truncated to86400seconds; preserve safe bounded timestamps and test pool admission before/at reset. Open PR without merge/deployment; no model calls.",
-      "acceptance": "Valid Retry-After seconds and HTTP-date deadlines beyond24hours retained without early dispatch; malformed or unrepresentable values remain conservative and fail safe. Focused runtime tests and shared coordination checks pass. No live provider, secret, Mac or paid operation."
+      "next_action": "Review PR189 at d49a81d408ee3bb0cd1b40b12ddb6797fddaf866; both hosted Node24 runs40139798352/40139795536 SUCCESS, 21 tests each plus shared queue/routing checks. Do not merge from specialist shift or fabricate owner PASS. A later genuinely completed platform run may produce a separately scoped immutable HUD receipt; current run must not attest its own completion. Keep original failed attempts unchanged. Deployment belongs to persistent-HUD owner.",
+      "acceptance": "Valid Retry-After seconds and HTTP-date deadlines beyond24hours retained without early dispatch; malformed or unrepresentable values remain conservative and fail safe. Focused runtime tests and shared coordination checks pass. No live provider, secret, Mac or paid operation.",
+      "blocker": "Source fix awaits owner review/merge. Cloud runtime itself remains undeployed; no live model calls or provider canaries verified by this shift.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/189",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40139798352"
+      ],
+      "evidence": [
+        {
+          "commit": "d49a81d408ee3bb0cd1b40b12ddb6797fddaf866",
+          "platform": "Cloud Linux Node24.22.1 and GitHub-hosted Ubuntu Node24",
+          "check": "Reproduced90000-second Retry-After recorded as86400seconds on main; node --test tests/test_ghost_cloud.mjs; python3 tools/project_loop.py check; python3 tools/task_routing_pair.py --check",
+          "result": "21/21 tests PASS locally and in both actual hosted runs. Fixed long numeric/date cooldowns, safe oversized-delay saturation and shared-pool exact reset boundary after evidence renewal. PR189 OPEN, not merged/deployed/accepted; no live inference, secrets, Mac access, paid APIs or human approval.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40139798352"
+        }
+      ]
     }
   ]
 }
