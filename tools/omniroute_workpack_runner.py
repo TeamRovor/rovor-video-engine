@@ -227,6 +227,38 @@ def sanitized_usage(usage):
     return counts or None
 
 
+class GatewayRateLimited(ValueError):
+    """Sanitized HTTP 429, no provider body retained."""
+
+
+class GatewayUpstreamFailure(ValueError):
+    """Sanitized HTTP 5xx, no provider body retained."""
+
+
+class GatewayAuthorizationFailure(ValueError):
+    """Sanitized HTTP 401/403, no credential retained."""
+
+
+class GatewayTransportFailure(ValueError):
+    """Sanitized timeout/connection failure."""
+
+
+class GatewayReasoningExhausted(ValueError):
+    """Response consumed completion budget without visible text."""
+
+
+class GatewayTruncatedAnswer(ValueError):
+    """Response was interrupted by token cap."""
+
+
+class GatewayEmptyAnswer(ValueError):
+    """Response finished without visible content."""
+
+
+class GatewayInvalidCompletion(ValueError):
+    """Response structure, stop reason, or usage failed validation."""
+
+
 def http_completion(model, prompt, key, opener=None):
     if not isinstance(model,str) or not MODEL.fullmatch(model):
         raise ValueError('Unsafe or unspecified OmniRoute model')
@@ -248,8 +280,16 @@ def http_completion(model, prompt, key, opener=None):
             if status != 200:
                 raise ValueError('OmniRoute response was not HTTP 200')
             raw=response.read(MAX_RESPONSE+1)
-    except (OSError,error.URLError,TimeoutError) as exc:
-        raise ValueError('Local inference failed or timed out: '+type(exc).__name__)
+    except error.HTTPError as exc:
+        if exc.code == 429:
+            raise GatewayRateLimited('OmniRoute rate limited') from None
+        if exc.code in (401, 403):
+            raise GatewayAuthorizationFailure('OmniRoute authorization refused') from None
+        if 500 <= exc.code < 600:
+            raise GatewayUpstreamFailure('OmniRoute upstream unavailable') from None
+        raise GatewayInvalidCompletion('OmniRoute unexpected HTTP status') from None
+    except (OSError, error.URLError, TimeoutError):
+        raise GatewayTransportFailure('OmniRoute transport or timeout failure') from None
     if len(raw)>MAX_RESPONSE:
         raise ValueError('Inference response exceeds safety limit')
     try:
@@ -261,7 +301,17 @@ def http_completion(model, prompt, key, opener=None):
     # This is response validation, not permission to disable model reasoning:
     # such requests require independent current capability/billing evidence.
     from omniroute_reasoning_admission import extract_review_text
-    answer=extract_review_text(obj)
+    try:
+        answer=extract_review_text(obj)
+    except ValueError as exc:
+        code=str(exc)
+        kinds = {
+            'reasoning_budget_exhausted': GatewayReasoningExhausted,
+            'incomplete_length_stop': GatewayTruncatedAnswer,
+            'empty_visible_output': GatewayEmptyAnswer,
+        }
+        kind=kinds.get(code,GatewayInvalidCompletion)
+        raise kind(code if code in kinds else 'invalid_model_completion') from None
     return answer, sanitized_usage(obj.get('usage'))
 
 
