@@ -7,6 +7,8 @@ Only the adapters currently permitted by ghost_worker.py can execute.
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
+import sqlite3
 from contextlib import closing
 import json
 import os
@@ -88,13 +90,21 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
          poll_seconds: float = 1.0, monotonic=time.monotonic,
          sleeper=time.sleep, allow_model_use=False, allow_native_import=False,
          allow_jane_library_create=False, jane_queue_job_id=None,
-         allow_omniroute_model_use=False, allow_omniroute_work_plan=False) -> dict:
+         allow_omniroute_model_use=False, allow_omniroute_work_plan=False,
+         parallel_omniroute_workers=1) -> dict:
     """Poll bounded jobs with explicit opt-ins, observing STOP between operations.
 
     Limits are cooperative: a synchronous adapter cannot be interrupted mid-call.
     The underlying SQLite claim transaction prevents duplicate claimed jobs.
     """
     validate_limits(max_jobs=max_jobs, max_seconds=max_seconds, poll_seconds=poll_seconds)
+    if (type(parallel_omniroute_workers) is not int or not 1 <= parallel_omniroute_workers <= 3):
+        raise ValueError('Parallel worker count must be 1 to 3')
+    if parallel_omniroute_workers > 1 and (
+            not allow_omniroute_work_plan or not allow_omniroute_model_use
+            or allow_model_use or allow_native_import or allow_jane_library_create
+            or jane_queue_job_id or max_jobs < parallel_omniroute_workers):
+        raise ValueError('Parallel work requires separately approved OmniRoute-only research')
     if allow_omniroute_work_plan and (not allow_omniroute_model_use or allow_model_use
                                     or allow_native_import or allow_jane_library_create):
         raise ValueError('Work plan requires OmniRoute-only approval')
@@ -110,7 +120,37 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
     feed_result = None
     if allow_omniroute_work_plan:
         import ghost_omniroute_feed
-        feed_result = ghost_omniroute_feed.feed(conn, state, Path(__file__).resolve().parent.parent)
+        if parallel_omniroute_workers > 1:
+            feed_result = ghost_omniroute_feed.feed_parallel(
+                conn, state, Path(__file__).resolve().parent.parent,
+                limit=parallel_omniroute_workers)
+        else:
+            feed_result = ghost_omniroute_feed.feed(
+                conn, state, Path(__file__).resolve().parent.parent)
+    if parallel_omniroute_workers > 1:
+        # Each thread owns a connection. SQLite's BEGIN IMMEDIATE atomically
+        # claims the job and enforces the existing five/24h model claim limit.
+        state_db = _state_dir(state) / "jobs.sqlite3"
+        def one(index):
+            if stop_requested(state):
+                return None
+            with sqlite3.connect(str(state_db), timeout=20,
+                                 isolation_level=None) as scoped:
+                scoped.row_factory = sqlite3.Row
+                scoped.execute("PRAGMA busy_timeout=20000")
+                return ghost_worker.run_once(
+                    scoped, workspace, owner=worker_id + "/specialist-" + str(index),
+                    allow_omniroute_model_use=True)
+        with ThreadPoolExecutor(max_workers=parallel_omniroute_workers) as pool:
+            receipts = list(pool.map(one, range(parallel_omniroute_workers)))
+        nonempty = [receipt for receipt in receipts if receipt is not None]
+        return {"stop_reason": "parallel_tick_complete", "executed": len(nonempty),
+                "succeeded": sum(x["status"] == "succeeded" for x in nonempty),
+                "failed": sum(x["status"] != "succeeded" for x in nonempty),
+                "work_plan": feed_result, "parallel_workers": parallel_omniroute_workers,
+                "read_only": False, "native_import_enabled": False,
+                "model_use_enabled": False, "omniroute_model_use_enabled": True,
+                "worker_id": worker_id}
     executed = succeeded = failed = idle_polls = 0
     while True:
         if stop_requested(state):
@@ -177,6 +217,8 @@ def main() -> None:
     run.add_argument("--approve-model-use", action="store_true")
     run.add_argument("--approve-omniroute-model-use", action="store_true",
                      help="Enable separately approved capped OmniRoute research jobs")
+    run.add_argument("--parallel-omniroute-workers", type=int, default=1,
+                     help="Opt-in one to three independent bounded OmniRoute research claims")
     run.add_argument("--approve-omniroute-work-plan", action="store_true",
                      help="Feed the finite released draft plan once; never replay completed jobs")
     run.add_argument("--allow-native-import", action="store_true")
@@ -198,6 +240,7 @@ def main() -> None:
                           allow_native_import=args.allow_native_import,
                           allow_omniroute_model_use=args.approve_omniroute_model_use,
                           allow_omniroute_work_plan=args.approve_omniroute_work_plan,
+                          parallel_omniroute_workers=args.parallel_omniroute_workers,
                           allow_jane_library_create=args.approve_jane_library_create,
                           jane_queue_job_id=args.jane_queue_job_id)
     elif args.command == "stop":
