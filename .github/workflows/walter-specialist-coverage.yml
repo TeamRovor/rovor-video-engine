@@ -1,0 +1,30 @@
+name: Walter specialist coverage offline regression
+on:
+  pull_request:
+    paths:
+      - tools/walter_specialist_coverage.py
+      - tests/test_walter_specialist_coverage.py
+      - .github/workflows/walter-specialist-coverage.yml
+      - coordination/tasks.json
+      - coordination/work-routing.json
+  push:
+    branches: [main]
+    paths:
+      - tools/walter_specialist_coverage.py
+      - tests/test_walter_specialist_coverage.py
+      - .github/workflows/walter-specialist-coverage.yml
+jobs:
+  specialist-coverage:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m unittest discover -s tests -p 'test_walter_specialist_coverage.py' -v
+      - run: python tools/project_loop.py check
+      - run: python tools/task_routing_pair.py --check
