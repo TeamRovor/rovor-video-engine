@@ -4137,16 +4137,17 @@
       "title": "Mike restart recovery: one-service Mac worker rollout and verified rollback acceptance",
       "acceptance": "Review PUBLIC source tools/install_continuous_worker.py, tools/ghost_worker.py, tools/omniroute_continuous.py and integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md. Produce a safe implementation plan, acceptance checklist, negative tests and handoff for migrating the already-installed single LaunchAgent to the later reviewed PR137 branch only after explicit real Mac approval. Account for active leases, private SQLite state and backup, STOP, three-failure circuit, pinned model combos, existing 601-second gap, 144/day cap, source version and rollback. Clearly label actions not executed and all host-dependent unknowns. Do not recommend a second service, overwriting private state, paid provider inference or automatic reruns of failed jobs.",
       "scopes": [
-        "subsystem:overnight-public-mike-safe-rollout"
+        "subsystem:overnight-public-mike-safe-rollout",
+        "reviews/mike-one-service-rollout-20261024.md"
       ],
       "priority": 1,
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "TeamRovor / scheduled GitHub-only maintenance 2026-10-24 Mike rollout",
+      "branch": "docs/mike-one-service-rollout-20261024",
       "depends_on": [],
-      "updated_at": "2026-10-24T10:22:18.239Z",
-      "next_update": "After first original Mac research draft is genuinely ready for private human review",
-      "next_action": "Existing paced Mac public-task feeder may enqueue plan/checklist/tests/handoff drafts once per unique source-grounded task identity; do not label these as completed or eight independent model workers. Review private outputs and manually convert accepted findings to code/business deliverables; no paid/model-route/Mac-state actions."
+      "updated_at": "2026-10-24T13:19:46.641Z",
+      "next_update": "After source-only review draft PR is published and linked with evidence; host activation remains owner-approved only",
+      "next_action": "Prepare source-pinned single-service Mac rollout acceptance and rollback review for PR #137; documentation only, no host changes."
     },
     {
       "id": "a-overnight-03-saul-business-draft",
