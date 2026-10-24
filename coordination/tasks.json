@@ -3346,6 +3346,28 @@
         }
       ],
       "blocker": "Working baseline service preserved at53dee10. New feeder not yet deployed: Work session cannot write existing LaunchAgent/state outside writable roots. User Terminal handoff required. Scheduled live inference and overnight endurance still unverified."
+    },
+    {
+      "id": "ghost-self-research-bootstrap-20261023",
+      "title": "Prepare zero-training, resumable self-research missions for ROVOR ghost employees",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar ghost-role-bootstrap 2026-10-23",
+      "branch": "feature/ghost-role-onboarding-v1",
+      "scopes": [
+        "tools/ghost_role_bootstrap.py",
+        "tests/test_ghost_role_bootstrap.py",
+        "coordination/ghost-role-bootstrap.json",
+        ".github/workflows/ghost-role-bootstrap.yml",
+        "integrations/open-interpreter/GHOST-ROLE-BOOTSTRAP.md"
+      ],
+      "depends_on": [
+        "ghost-omniroute-queue-adapter-20261023"
+      ],
+      "updated_at": "2026-10-24T01:13:05.312Z",
+      "next_update": "After independent offline validation and CI; publish exact review PR and handoff to active Mac OmniRoute owner without changing their files",
+      "next_action": "Implement a tiny deterministic role/step/checkpoint protocol, no new daemon or autonomous model use; separately offer safe adapter integration once scheduled inference issue is fixed.",
+      "acceptance": "Named specialist roles have bounded research-first steps; deterministic next-step and stable no-replay dedupe across restart; no sensitive or personal inputs, no autonomous execution, no paid fallback or broad Mac authority; independent Python3.9/3.11 offline tests and CI; remain source-only until Mac owner verifies deployment."
     }
   ]
 }

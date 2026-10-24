@@ -581,6 +581,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "ghost-self-research-bootstrap-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
