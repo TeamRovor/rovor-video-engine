@@ -150,5 +150,5 @@
   });
   document.addEventListener('rovor:source', update);
   setEnabled(false);
-  window.ROVOR_LIVE_PANELS = { setEnabled, update };
+  window.ROVOR_LIVE_PANELS = { setEnabled, update, get enabled() { return enabled; } };
 })();
