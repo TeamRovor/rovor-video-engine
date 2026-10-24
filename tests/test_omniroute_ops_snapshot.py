@@ -248,6 +248,35 @@ class TestOneShot(unittest.TestCase):
         self.assertFalse(data["worker"]["all_nine_models_used_verified"])
         self.assertFalse(data["fleet"]["working_model_completions_verified"])
 
+    def test_verified_pool_batch_count_is_visible_without_private_model_info(self):
+        (self.state/"continuous-status.json").write_text(json.dumps({
+            "observed_at":NOW-5, "executed":3,
+            "review_ready_count":2,
+            "dispatch":{"reason":"independent_pool_capacity_checked_per_claim",
+                        "account_key":SECRET},
+            "private":SECRET,
+        }))
+        result=ops.inspect(self.state,"/mock",now=NOW,run=FakeCLI())
+        heartbeat=result["worker"]["heartbeat"]
+        self.assertEqual(heartbeat["last_tick_executed"],3)
+        self.assertEqual(heartbeat["last_tick_review_ready_count"],2)
+        self.assertEqual(heartbeat["last_tick_dispatch"],
+                         "independent_pool_capacity_checked_per_claim")
+        self.assertFalse(result["nine_verified_active_models"])
+        self.assertNotIn(SECRET,json.dumps(result))
+
+    def test_invalid_batch_heartbeat_fields_fail_closed(self):
+        (self.state/"continuous-status.json").write_text(json.dumps({
+            "observed_at":NOW-3,"executed":3,"review_ready_count":4}))
+        self.assertIsNone(ops._heartbeat(self.state,now=NOW)
+                          ["last_tick_review_ready_count"])
+        (self.state/"continuous-status.json").write_text(json.dumps({
+            "observed_at":NOW-3,"executed":True,"review_ready_count":1}))
+        self.assertIsNone(ops._heartbeat(self.state,now=NOW)["last_tick_executed"])
+        (self.state/"continuous-status.json").write_text(json.dumps({
+            "observed_at":NOW-3,"executed":10,"review_ready_count":2}))
+        self.assertIsNone(ops._heartbeat(self.state,now=NOW)["last_tick_executed"])
+
     def test_heartbeat_with_unexpected_nested_input_is_not_ever_echoed(self):
         (self.state/"continuous-status.json").write_text(json.dumps({
             "observed_at":NOW-4,"feed":{"secret":SECRET},
