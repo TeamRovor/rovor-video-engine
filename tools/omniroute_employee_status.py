@@ -94,9 +94,13 @@ def inspect(state, *, run=subprocess.run):
                     {"kind":row["kind"],"status":row["status"],"count":row["n"]}
                     for row in counts]
                 stats = Counter()
+                # Sanitized evidence only: never show raw model text, saved
+                # receipt paths, user prompts, arbitrary errors, or API keys.
+                failure_states = Counter()
+                failure_elapsed = Counter()
                 role_counts = {r:Counter() for r in ROLES}
                 for row in conn.execute(
-                        "SELECT payload,status,result FROM jobs WHERE kind='research.omniroute'"):
+                        "SELECT id,payload,status,result FROM jobs WHERE kind='research.omniroute'"):
                     try:
                         payload = json.loads(row["payload"])
                         outcome = json.loads(row["result"]) if row["result"] else {}
@@ -114,7 +118,63 @@ def inspect(state, *, run=subprocess.run):
                         stats["review_ready"] += 1
                     elif isinstance(outcome, dict) and outcome.get("draft_status"):
                         stats["model_attempt_not_review_ready"] += 1
+                        status = outcome.get("draft_status")
+                        review = outcome.get("review_status")
+                        approved_status = {"needs_review_no_auto_retry",
+                                           "previous_attempt_not_replayed",
+                                           "concurrent_attempt_not_replayed"}
+                        approved_review = {"failed_needs_review",
+                                           "incomplete_needs_review",
+                                           "invalid_receipt", "stale_source",
+                                           "content_quality_needs_review",
+                                           "execution_claim_needs_review",
+                                           "sensitive_draft_blocked"}
+                        if status in approved_status:
+                            failure_states["draft:" + status] += 1
+                        else:
+                            failure_states["draft:other_nonready"] += 1
+                        if review in approved_review:
+                            failure_states["review:" + review] += 1
+                        elif review:
+                            failure_states["review:other_nonready"] += 1
+                        # Read only the exact job's fixed-name private receipt.
+                        # Whitelist values, not attacker/provider-controlled data.
+                        uid = row["id"]
+                        if (isinstance(uid, str) and len(uid) == 36
+                                and all(ch in "0123456789abcdef-" for ch in uid)
+                                and isinstance(packet, str)
+                                and packet in {slug for group in ROLE_PACKET.values()
+                                               for slug in group}):
+                            folder = state / "omniroute-drafts" / uid
+                            receipt = folder / (packet + ".receipt.json")
+                            if (not folder.is_symlink() and folder.is_dir()
+                                    and not receipt.is_symlink()
+                                    and receipt.is_file()
+                                    and receipt.stat().st_size <= 60000):
+                                try:
+                                    saved = json.loads(receipt.read_bytes())
+                                except (OSError, ValueError, UnicodeError):
+                                    saved = None
+                                if (isinstance(saved, dict)
+                                        and saved.get("id") == packet.replace("walter-v1-", "walter-public-v1-")
+                                        and saved.get("status") == status):
+                                    error_class = saved.get("error_class")
+                                    allowed_errors = {"ValueError", "TimeoutError",
+                                        "HTTPError", "URLError", "OSError",
+                                        "IndexError", "RuntimeError", "TypeError"}
+                                    if error_class in allowed_errors:
+                                        failure_states["exception:" + error_class] += 1
+                                    seconds = saved.get("elapsed_seconds")
+                                    if type(seconds) in (int, float) and 0 <= seconds <= 3600:
+                                        bucket = ("under_1s" if seconds < 1 else
+                                                  "1_to_15s" if seconds < 15 else
+                                                  "15_to_60s" if seconds < 60 else
+                                                  "60_to_120s" if seconds < 120 else
+                                                  "over_120s")
+                                        failure_elapsed[bucket] += 1
                 result["omniroute_draft_counts"] = dict(stats)
+                result["nonready_reason_counts"] = dict(failure_states)
+                result["nonready_elapsed_buckets"] = dict(failure_elapsed)
                 result["specialists"] = {
                     role:dict(counts) for role,counts in role_counts.items()
                 }
