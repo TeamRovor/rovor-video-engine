@@ -39,6 +39,9 @@ SPECIALIST_PACKETS = (
     "walter-v1-free-route-usage-audit",
 )
 ALLOWED_PACKETS = PACKETS + SPECIALIST_PACKETS
+# Deterministic, explicitly labeled context excerpts are permitted only for
+# these previously approved packets whose vetted public sources may grow.
+EXCERPT_PACKETS = frozenset(("unattended-readiness",) + SPECIALIST_PACKETS)
 ROLES = ('evidence-triage','software-architecture','inference-routing')
 MAX_INPUT = 28000
 MAX_RESPONSE = 131072
@@ -114,14 +117,54 @@ def load_packet(root, slug):
             len(packet['task'])>3800 or not isinstance(packet['acceptance'],list)):
         raise ValueError('Malformed bounded work packet')
     source_sections = []
+    source_items = []
     fingerprints = {}
     for relpath in packet['inputs']:
-        data = read_public_file(root, relpath, 19000)
+        # Do not change the source allowlist. Larger read boundaries apply
+        # only to approved packets and are still bounded and public-only.
+        data = read_public_file(root, relpath,
+                                64000 if slug in EXCERPT_PACKETS else 19000)
         fingerprints[relpath]=sha(data.encode())
+        source_items.append((relpath, data))
         source_sections.append('--- PUBLIC SOURCE: '+relpath+' ---\n'+data)
     context = '\n\n'.join(source_sections)
+    excerpts = None
     if len(context)>MAX_INPUT:
-        raise ValueError('Combined source too large; no silent truncation')
+        if slug not in EXCERPT_PACKETS:
+            raise ValueError('Combined source too large; no silent truncation')
+        # No model decides the excerpts. Share a fixed, documented character
+        # budget fairly across public sources, redistributing unused capacity.
+        budget = MAX_INPUT - 2000
+        lengths = [len(data) for _path, data in source_items]
+        allocations = [0] * len(lengths)
+        remaining = budget
+        pending = set(range(len(lengths)))
+        while pending and remaining:
+            share = max(1, remaining // len(pending))
+            for index in sorted(pending):
+                allot = min(share, lengths[index] - allocations[index], remaining)
+                allocations[index] += allot
+                remaining -= allot
+            pending = {i for i in pending if allocations[i] < lengths[i]}
+        source_sections = []
+        excerpts = {}
+        for (relpath, data), included in zip(source_items, allocations):
+            omitted = len(data) - included
+            label = ('--- PUBLIC SOURCE EXCERPT: '+relpath+
+                     ' (included '+str(included)+' of '+str(len(data))+
+                     ' characters; full source SHA256 '+fingerprints[relpath]+') ---\n')
+            excerpt = data[:included]
+            if omitted:
+                excerpt += ('\n[VISIBLE SOURCE EXCERPT END: '+str(omitted)+
+                            ' characters intentionally omitted; do not assume'
+                            ' the rest was reviewed]')
+            source_sections.append(label + excerpt)
+            excerpts[relpath] = {'included_chars':included,
+                                 'total_chars':len(data),
+                                 'omitted_chars':omitted}
+        context = '\n\n'.join(source_sections)
+        if len(context)>MAX_INPUT:
+            raise ValueError('Bounded excerpt still exceeds public source budget')
     prompt = ('PUBLIC REPOSITORY REVIEW PACKET\n'
               + json.dumps({k:packet[k] for k in ('id','title','role','task',
                 'deliverable','acceptance')},ensure_ascii=False,sort_keys=True)
@@ -130,7 +173,10 @@ def load_packet(root, slug):
                 'next read-only validation. Never assert actual execution.')
     if len(prompt) > 38000:
         raise ValueError('Prompt too large')
-    return packet, prompt, {'packet_sha256':sha(raw.encode()),'sources':fingerprints}
+    provenance = {'packet_sha256':sha(raw.encode()),'sources':fingerprints}
+    if excerpts is not None:
+        provenance['explicit_source_excerpts'] = excerpts
+    return packet, prompt, provenance
 
 
 def access_key(lookup=subprocess.run):
