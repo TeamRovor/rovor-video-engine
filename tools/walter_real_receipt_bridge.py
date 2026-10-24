@@ -90,7 +90,8 @@ def _status(job, result):
 def prepare(jobs, claims, job_roles, human_reviews, candidates, *, now,
             trusted_sqlite_copy=False, trusted_role_mapping=False,
             trusted_human_reviews=False, complete_ledger=False,
-            trusted_grounded_candidates=False):
+            trusted_grounded_candidates=False,
+            job_tasks=None, trusted_task_mapping=False):
     """Return private, in-memory inputs for walter_specialist_coverage.choose.
 
     Trust flags are caller attestations, not authentication performed here.
@@ -139,6 +140,17 @@ def prepare(jobs, claims, job_roles, human_reviews, candidates, *, now,
     if set(job_roles) != set(by_claim) or any(
             type(role) is not str or role not in ROLES for role in job_roles.values()):
         _deny("unverified_job_role_mapping")
+    # Task identity is stable across a new source SHA, prompt or provider route.
+    # Map EVERY copied SQLite job (including unclaimed queued jobs) to its
+    # independently authenticated public task ID; never infer from model text.
+    attempted_task_ids = None
+    if job_tasks is not None or trusted_task_mapping:
+        if (trusted_task_mapping is not True or type(job_tasks) is not dict
+                or set(job_tasks) != set(by_id)
+                or any(type(task_id) is not str or KEY.fullmatch(task_id) is None
+                       for task_id in job_tasks.values())):
+            _deny("unverified_job_task_mapping")
+        attempted_task_ids = frozenset(job_tasks.values())
     by_review = {}
     for review in human_reviews:
         if (type(review) is not dict or set(review) != {
@@ -175,4 +187,6 @@ def prepare(jobs, claims, job_roles, human_reviews, candidates, *, now,
                                 "dedupe_key": normalize_dedupe(candidate["dedupe_key"])})
     return {"candidates": safe_candidates, "outcomes": outcomes,
             "seen_dedupe": frozenset(dedupes),
+            "attempted_task_ids": attempted_task_ids,
+            "task_mapping_verified": attempted_task_ids is not None,
             "model_calls": 0, "queue_writes": 0, "mac_execution": False}

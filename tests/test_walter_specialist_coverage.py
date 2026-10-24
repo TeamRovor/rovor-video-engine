@@ -130,6 +130,44 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(result["model_calls"], 0)
         self.assertEqual(result["queue_writes"], 0)
 
+
+    def test_revised_source_digest_cannot_replay_same_task(self):
+        revised = candidate(key="packet-new-digest-0001")
+        decision = select(candidates=[revised], seen=set(),
+                          attempted_task_ids=frozenset({"task-gale-0001"}),
+                          trusted_task_mapping=True)
+        self.assertEqual(decision["status"], "task_already_attempted")
+        self.assertIsNone(decision["candidate"])
+
+    def test_queued_task_identity_blocks_even_without_claimed_outcome(self):
+        decision = select(seen={"sha-" + "a" * 64},
+                          attempted_task_ids={"task-gale-0001"},
+                          trusted_task_mapping=True)
+        self.assertEqual(decision["status"], "task_already_attempted")
+
+    def test_other_task_selected_when_one_was_attempted(self):
+        options = [candidate("gale", "task-gale-0001"),
+                   candidate("jane", "task-jane-0001")]
+        decision = select(candidates=options, attempted_task_ids={"task-gale-0001"},
+                          trusted_task_mapping=True)
+        self.assertEqual(decision["candidate"]["task_id"], "task-jane-0001")
+        self.assertTrue(decision["task_identity_ledger_verified"])
+        self.assertFalse(decision["requires_verified_task_identity"])
+
+    def test_unverified_or_invalid_task_mapping_fails_closed(self):
+        for ids, trusted in (({"task-gale-0001"}, False),
+                             ({"bad"}, True), ({"task-gale-0001"}, None),
+                             (["task-gale-0001"], True), (None, True)):
+            with self.subTest(ids=ids, trusted=trusted):
+                decision = select(attempted_task_ids=ids, trusted_task_mapping=trusted)
+                self.assertEqual(decision["status"], "task_identity_ledger_unverified")
+                self.assertIsNone(decision["candidate"])
+
+    def test_legacy_proposal_requires_task_identity_check(self):
+        decision = select()
+        self.assertFalse(decision["task_identity_ledger_verified"])
+        self.assertTrue(decision["requires_verified_task_identity"])
+
     def test_seen_dedupe_never_replayed(self):
         self.assertEqual(select(seen={"packet-task-gale-0001"})["status"],
                          "no_unattempted_candidates")

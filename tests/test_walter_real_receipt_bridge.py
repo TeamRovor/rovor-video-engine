@@ -169,6 +169,58 @@ class ReceiptBridgeTests(unittest.TestCase):
         with self.assertRaises(BridgeError):
             normalize_dedupe("../../private")
 
+
+    def test_complete_job_task_mapping_includes_queued_jobs(self):
+        parts = fixture()
+        queued = {"id": "223e4567-e89b-12d3-a456-426614174000",
+                  "kind": "research.omniroute", "dedupe_key": "d" * 64,
+                  "status": "queued", "updated_at": NOW - 30, "result": None}
+        parts[0].append(queued)
+        mapping = {JOB: "task-gale-stable", queued["id"]: "task-mike-queued"}
+        result = prepare(*parts[:5], now=NOW, **parts[5],
+                         job_tasks=mapping, trusted_task_mapping=True)
+        self.assertEqual(result["attempted_task_ids"],
+                         frozenset(("task-gale-stable", "task-mike-queued")))
+        self.assertTrue(result["task_mapping_verified"])
+        self.assertNotIn(JOB, repr(result))
+        self.assertNotIn(queued["id"], repr(result))
+
+    def test_missing_task_identity_evidence_is_explicit(self):
+        result = run()
+        self.assertIsNone(result["attempted_task_ids"])
+        self.assertFalse(result["task_mapping_verified"])
+
+    def test_incomplete_or_untrusted_job_task_mapping_rejected(self):
+        parts = fixture()
+        def mapped(mapping, trusted=True):
+            return prepare(*parts[:5], now=NOW, **parts[5],
+                           job_tasks=mapping, trusted_task_mapping=trusted)
+        for mapping, trusted in (({}, True), ({JOB: "task-valid-0001"}, False),
+                                 ({JOB: "bad"}, True),
+                                 ({JOB: "task-valid-0001", "extra": "task-other-0001"}, True),
+                                 ({JOB: ["task-valid-0001"]}, True)):
+            with self.subTest(mapping=mapping, trusted=trusted):
+                with self.assertRaises(BridgeError) as error:
+                    mapped(mapping, trusted)
+                self.assertEqual(str(error.exception), "unverified_job_task_mapping")
+
+    def test_cross_revision_same_task_cannot_be_selected(self):
+        from walter_specialist_coverage import choose
+        parts = fixture()
+        parts[4][0]["task_id"] = "task-gale-stable"
+        result = prepare(*parts[:5], now=NOW, **parts[5],
+                         job_tasks={JOB: "task-gale-stable"},
+                         trusted_task_mapping=True)
+        decision = choose(result["candidates"], result["outcomes"], now=NOW,
+                          seen_dedupe=result["seen_dedupe"],
+                          attempted_task_ids=result["attempted_task_ids"],
+                          trusted_task_mapping=result["task_mapping_verified"],
+                          trusted_candidates=True, trusted_outcomes=True,
+                          authoritative_ledger=True, stop_present=False,
+                          other_job_running=False, owner_opt_in=True)
+        self.assertEqual(decision["status"], "task_already_attempted")
+        self.assertIsNone(decision["candidate"])
+
     def test_existing_coverage_selector_accepts_normalized_receipts(self):
         from walter_specialist_coverage import choose
         output = run()
