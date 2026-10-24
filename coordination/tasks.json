@@ -3228,15 +3228,17 @@
         "coordination/tasks.json",
         "coordination/work-routing.json",
         "tests/test_omniroute_draft_review.py",
-        "subsystem:pr41-reviewed-omniroute-security-integration"
+        "subsystem:pr41-reviewed-omniroute-security-integration",
+        "tools/omniroute_mac_schedule.py",
+        "tests/test_omniroute_mac_schedule.py"
       ],
       "depends_on": [
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:15:05.638Z",
+      "updated_at": "2026-10-24T00:21:20.970Z",
       "next_update": "After user runs the pinned new checklist task and its private receipt is reviewed",
-      "next_action": "Use pinned0716b657c4f2f16d1ef87d1df0ad69042fc26cc1 tools/omniroute_mac_once.py --packet overnight-acceptance --approve-one-free-job from user Terminal after64 tests. New fixed useful checklist task, not retry of failed supervisor review. Existing service absence verified safely;120s single request; STOP restored and scheduling stays off. Preserve failed job and prior runtime. Await actual output before unattended activation.",
+      "next_action": "Checklist job202fdb8c-149a-401e-b1e2-8b7e001ab46b completed in19.653s on free-model route, attempts1, private receipt source-fresh and structurally reviewable. Manual review found incorrect Keychain item and nonexistent claimed_at field; record corrections before use. Prepare bounded activation of EXISTING LaunchAgent with pinned runtime, no Interpreter/native flags, STOP/idle proof and5-per24h cap. No new model request.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
