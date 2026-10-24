@@ -4677,10 +4677,10 @@
       "id": "hud-persistent-telemetry-20261024",
       "title": "Add durable private HUD telemetry ingestion and outbound collector without temporary tunnel links",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
-      "updated_at": "2026-10-24T21:07:38.668Z",
-      "next_update": "After trying connected private Sites hosting and its source synchronization",
+      "updated_at": "2026-10-24T21:10:20.501Z",
+      "next_update": "After authorized execution can reach the registered Site source repository.",
       "branch": "feature/hud-persistent-telemetry-20261024",
       "scopes": [
         "integrations/hud-cloud",
@@ -4689,7 +4689,7 @@
         ".github/workflows/hud-cloud.yml"
       ],
       "depends_on": [],
-      "next_action": "Continue the existing task through connected private Sites hosting if supported, preserving HUD and collectors. Verify source push and deployment before claiming a live receiver. Do not install reporting until cloud ingestion is verified.",
+      "next_action": "Reuse private Site appgprj_6add1e2cc8c08191839344b34d7dbf50 (ROVOR Private HUD); do not create another Site. Its expected origin https://rovor-private-hud.mm98z652cq.chatgpt.site is not a live publication. A source credential was available through the connected service, but site-workflow opening failed with Could not resolve host: git.chatgpt-team.site. Local scaffold/identity is in the current HUD session's rovor-hud-site folder; no source commit was pushed and no version was saved/deployed. Finish private Sites adaptation (platform sign-in/service access, D1 schema/bindings, original HUD embedding), then use its approved source helper from network-enabled authorized execution, publish and verify before installing the Mac reporter or connecting MCP. Existing tested generic Cloudflare receiver in merged PR182 remains available; existing HUD and worker services unchanged.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
@@ -4698,12 +4698,20 @@
           "check": "node --test tests/test_hud_cloud.mjs; plutil -lint integrations/hud-cloud/launchagent.plist.example",
           "result": "18 tests PASS locally and hosted; plist OK. Source merged, not deployed, not installed, not connected to ChatGPT.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/182"
+        },
+        {
+          "commit": "3b22147df623e92804d46a3420c66ae9454b88b7",
+          "platform": "macOS managed Work execution and connected private Sites",
+          "check": "Registered one private hosting target; persisted exact project_id; attempted approved site-workflow opening with credential via hidden stdin",
+          "result": "Hosting registration succeeded. Source helper exited 128: Could not resolve host git.chatgpt-team.site. No source push, publication, Mac service installation, model call or billing action.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/182"
         }
       ],
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/182",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40131970730"
-      ]
+      ],
+      "blocker": "Connected private Sites hosting was registered, but the approved source workflow cannot resolve git.chatgpt-team.site from the managed execution environment. Source was not uploaded or deployed. Mac reporter and ChatGPT reader remain uninstalled/unconnected."
     }
   ]
 }
