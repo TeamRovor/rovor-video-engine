@@ -4387,6 +4387,25 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/170"
         }
       ]
+    },
+    {
+      "id": "walter-grounded-coverage-pipeline-20261024",
+      "title": "Join pinned public task grounding and complete private receipt history into one safe specialist proposal",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 grounded coverage shift",
+      "branch": "feature/walter-grounded-coverage-pipeline-v1",
+      "scopes": [
+        "tools/walter_grounded_coverage_pipeline.py",
+        "tests/test_walter_grounded_coverage_pipeline.py",
+        ".github/workflows/walter-grounded-coverage-pipeline.yml",
+        "subsystem:verified-public-grounding-to-private-coverage"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T13:28:03.766Z",
+      "next_update": "After focused Python 3.9/3.11 CI and shared queue checks",
+      "next_action": "Implement an inert end-to-end source-grounded specialist proposal using existing public grounding, private receipt bridge and coverage selector; require complete authenticated job-to-task mapping and strict STOP/opt-in gates; no host actions.",
+      "acceptance": "Python 3.9 stdlib integration builds bounded, deduplicated pinned-source candidate set, reconciles complete copied private job/task ledger, chooses one fair unattempted specialist or fixed refusal, preserves review/STOP/ownership/zero-cost boundaries, emits no private data and never dispatches. Focused tests for replay, missing trust, backpressure, role fairness and errors; hosted Python 3.9/3.11 plus shared coordination checks."
     }
   ]
 }
