@@ -42,6 +42,6 @@ test('all repository telemetry remains read-only, pinned and never impersonates 
   assert.match(js,/coordination\/work-routing\.json/);
   assert.match(js,/NOT MONITORED/);
   assert.match(js,/NOT CONNECTED/);
-  assert.match(js,/task claim is not a live computer session/i);
+  assert.match(html,/A CLAIMED TASK IS NOT A RUNNING MAC WORKER/);
   assert.doesNotMatch(js,/method\s*:\s*['"](?:POST|PATCH|DELETE)['"]/i);
 });
