@@ -1,5 +1,8 @@
 # ROVOR Workforce Control Center — product and architecture specification
 
+> **Implementation update (2026-10-24):** The public source-only Workforce Control HUD prototype now exists at `dashboard/command-center/workforce/index.html`; see `WORKFORCE_HUD_IMPLEMENTATION_CHECKPOINT.md`. Worker heartbeat, private job queue, OmniRoute model inventory and approve/dispatch remain **unconnected**, not live.
+
+
 **Status:** Proposed / not deployed. 2026-10-24. This document preserves an implementation direction for Amar and Evan; it is **not** an active cloud worker, proof of Mac access, model connection, spending approval, or authority to dispatch.
 
 ## North star
