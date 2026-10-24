@@ -3650,6 +3650,26 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/126"
         }
       ]
+    },
+    {
+      "id": "walter-staged-dispatch-proposal-20261024",
+      "title": "Prepare safe, staged OmniRoute specialist request proposals from reviewed public workpacks",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24",
+      "branch": "feature/walter-staged-dispatch-proposal-v1",
+      "scopes": [
+        "tools/walter_staged_dispatch.py",
+        "tests/test_walter_staged_dispatch.py",
+        ".github/workflows/walter-staged-dispatch.yml",
+        "subsystem:walter-staged-dispatch-review-gate"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T05:16:00Z",
+      "next_update": "After hosted Python 3.9/3.11 checks and PR review",
+      "next_action": "Implement pure public specialist workpack-to-request candidate composition from existing validated 14 staged packets and existing dispatch permit; gate stage two on seven independently reviewed stage-one receipts. No edits to PR41 worker, no Mac writes, inference, new scheduler or replay.",
+      "acceptance": "New stdlib-only module combines exact checked-in public workpacks, authoritative ledger snapshot, explicit reviewed-receipt evidence and existing zero-cost dispatch permit into one inert bounded request candidate with source fingerprints. No stage-two proposal until seven stage-one receipts reviewed; fail closed on STOP, ledger uncertainty, quota, provider attestation and source drift. Hosted Python3.9/3.11 tests and shared queue/routing CI; no live inference.",
+      "evidence": []
     }
   ]
 }
