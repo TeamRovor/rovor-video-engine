@@ -1,0 +1,27 @@
+# Evan cartoon: current checkpoint
+
+## Direction and safeguards
+
+Entertaining expressive2D CARTOON. Follow CARTOON-EVAN-DIRECTION.md and evan-character/cartoon-v1/source/design-sheet-v1.png. Photo is loose identity only; realistic painted direction superseded. Preserve dark tousled hair, sunglasses, navy shirt/black tie, official Rovor branding. No photo crops, geometric mouth stickers or flattened character swaps.
+
+Repo work/engine; development/evan-painted-rig (legacy name), draftPR#4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits/pushes authorized. NEVER merge/deploy without explicit approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62, V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/symlinks/updater/native projects. Do NOT launch/restart/probe Moho unattended after its crash.
+
+Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful review milestone/failure/completion/required action only; disable when actually ready. Routine decisions need no question.
+
+## Latest: oral-mesh gate integrated; vertical-motion candidates REJECTED
+
+Read CARTOON-EVAN-VERTICAL-PHASE-STUDY.md and evan-engine/reviews/vertical-phase-study-v1.json. No new motion/artwork/phone timing integrated. SeparatedOralReview.assemble and numeric capture now share check_oral_mesh: finite points and positive signed native oral triangle areas, in addition to existing jaw guard. Invalid lip geometry raises before final pixels return; no clamp/silent fallback. Runtime metadata includes minimumOralTriangleArea2.15 focused face/audit tests pass. Current staged868 remains pixel EXACT; real known-bad prototype687 now raises instead of returning pixels.
+
+Trial1 used288 semantic gap keys from actual vowel/diphthong/W/contact/silence targets.180contact sample Y values, allX/upperarch/skin/chin/FV retained. Old jaw-only audit passed1307; lowerYmax14.66776→12.09052,p956.10012→4.96342, but64individual steps worsened>1px. Two voiced native A/B clips (more864:912,up/all960:1008) plus slow:96normal/384slow fully decode; each originalPCM/AAC16000samples exact. All96native mouth pairs/fullheads and original waveform/spectrogram-vs-trajectory figures inspected; no independent listening/real-time acceptance.
+
+Full oral check found12 failed samples, minOralArea2−13.67194, outside those targeted clips. Native687 looked superficially plausible with ZERO rounded fallback counters despite inversion. Variant2 same-X outer displacement failed88 samples; variant3 independent aperture into existing oral builder failed65. All REJECTED, not production. Failed frames include685..692,936..937,1045 and phone midpoint14.335. Never infer valid oral topology from jaw areas/fallback counters. outputs/evan-cartoon-vertical-phase retains prototypes, original checker, legacy jaw-only metrics, complete failure reports, sound figures and rejected renders. Current full baseline BOTH oral+jaw audit1307pass, minOral.04441152/minJaw27.78942.
+
+NEXT: test paced rounded-AO release THROUGH the existing geometry-weight path (RoundedDuration control plus consistent target-points/aperture), not by independently moving lower contour or overriding aperture after selecting the pose. Preserve complete P/B/M/F/V holds, W controls, independent chin and original recording boundaries. Avoid forcing opening into near-rest/consonant poses. First check failed685..692/936..937/1045 and whole-recording BOTH oral+jaw topology; only then native/normal/slow compare more and up/all. All/AO is190ms after220msP; do not blindly change amplitude/durations to hide drawings. No pending jobs.
+
+## Retained animation and limits
+
+442a4dc sustained/full-visible W remains in shared acoustic planner, source audio/plan unchanged. Historical partial W monkeypatch alias error corrected; latest W proofs used fresh imports. Current voiced visual proof is outputs/evan-cartoon-w-staged (runtime442a4dc, reviewe1da3f7):240normal/960slow source696:936, PCM232000:312000/AAC80000; upper288exact240/nose0,minJaw27.79054,arms494.61584/135.35149,allfallback0. All240native staged mouths/full828/868/888/935 inspected;6body/10oral PSD868 reopen .00712015/.00317382 error per255. Pre-globalroll/nativecoords, NOT Moho bones. New gate leaves valid geometry/pixels unchanged. Older corner-phase scene is PRE-W.
+
+Selected cartoon design-sheet identity/palette retained. Ten oral planes, independent shoulders/elbows/wrists/hands and official Rovor stage retained. Jaw55c58b8 uses registered original/generated construction skin, not recovered anatomy. Phonetic corner trajectories7d7e7a6 remain opt-in; source annulus/alpha unchanged. No new imagegen artwork this turn. Thin closures, vertical pops, limited cheeks/eyes/fingers/legs and isolated native neck alpha specks remain. Artist cleanup/animator acting may still be needed; faster hardware cannot fix drawings/acting. Native512/8GiB CPU limit detail/throughput.
+
+49 prior full-control tests and15 current focused tests are engineering checks, NOT performance acceptance. Original18 flagged regions plus3 quiet-phone warnings remain unverified for exact listening/boundaries; waveform/spectrogram evidence retained. Previous checkpoint PAINTED-EVAN-HISTORY-2026-10-24-C.md. PlanSHAaf01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e unchanged. Main/V3/V4/releases/updater/nativeMoho preserved. No Moho probe/merge/deploy. Polished milestone NOT ready; automation ACTIVE. Review-Evidence records final clean/pushed commit.
