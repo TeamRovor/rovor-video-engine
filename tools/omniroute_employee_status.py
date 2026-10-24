@@ -99,6 +99,18 @@ def inspect(state, *, run=subprocess.run):
                 failure_states = Counter()
                 failure_elapsed = Counter()
                 role_counts = {r:Counter() for r in ROLES}
+                v2_states = {}
+                v2_slug_to_role = {
+                    "walter-v2-" + role + suffix:role
+                    for role,suffix in (
+                        ("mike","-worker-guard"),
+                        ("jane","-editor-handoff"),
+                        ("jesse","-animation-qa"),
+                        ("gale","-render-qa"),
+                        ("gus","-business-ops"),
+                        ("saul","-review-ops"),
+                        ("hank","-evidence-audit"))
+                }
                 for row in conn.execute(
                         "SELECT id,payload,status,result FROM jobs WHERE kind='research.omniroute'"):
                     try:
@@ -112,6 +124,26 @@ def inspect(state, *, run=subprocess.run):
                             if packet in ROLE_PACKET[role]:
                                 role_counts[role][row["status"]] += 1
                                 break
+                    if packet in v2_slug_to_role:
+                        role=v2_slug_to_role[packet]
+                        evidence=(
+                            isinstance(outcome,dict) and
+                            outcome.get("draft_status") == "draft_completed_needs_review" and
+                            outcome.get("review_status") == "draft_ready_for_human_review")
+                        failed=(
+                            row["status"] == "failed" or
+                            (isinstance(outcome,dict) and
+                             outcome.get("draft_status") == "needs_review_no_auto_retry"))
+                        # A running job is never a completed model result.
+                        # This view covers only the new v2 wave, not the older
+                        # needs_review v1 failures which share these role names.
+                        v2_states[role] = {
+                            "job_status": row["status"] if row["status"] in (
+                                "queued","running","needs_review",
+                                "succeeded","failed") else "unavailable",
+                            "review_ready":bool(evidence),
+                            "failed_no_retry":bool(failed),
+                        }
                     if packet == "walter-v2-recovery-proof":
                         result["recovery_canary"] = {
                             "status": row["status"] if row["status"] in
@@ -208,6 +240,18 @@ def inspect(state, *, run=subprocess.run):
                 result["nonready_elapsed_buckets"] = dict(failure_elapsed)
                 result["specialists"] = {
                     role:dict(counts) for role,counts in role_counts.items()
+                }
+                result["v2_recovery_specialists"] = {
+                    role:v2_states.get(role,{"job_status":"not_queued",
+                                             "review_ready":False,
+                                             "failed_no_retry":False})
+                    for role in ROLES}
+                result["v2_recovery_summary"] = {
+                    "queued":sum(x["job_status"]=="queued" for x in v2_states.values()),
+                    "running":sum(x["job_status"]=="running" for x in v2_states.values()),
+                    "review_ready":sum(x["review_ready"] for x in v2_states.values()),
+                    "failed_no_retry":sum(x["failed_no_retry"] for x in v2_states.values()),
+                    "not_queued":len(ROLES)-len(v2_states),
                 }
                 since=time.time()-86400
                 result["ai_claims_last_24h"] = conn.execute(
