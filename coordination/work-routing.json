@@ -623,6 +623,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "walter-backlog-runtime-workpack-compile-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
