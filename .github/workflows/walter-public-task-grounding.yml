@@ -1,0 +1,39 @@
+name: Walter public task grounding offline regression
+
+on:
+  push:
+    paths:
+      - tools/walter_public_task_grounding.py
+      - tests/test_walter_public_task_grounding.py
+      - .github/workflows/walter-public-task-grounding.yml
+      - coordination/tasks.json
+      - coordination/work-routing.json
+  pull_request:
+    paths:
+      - tools/walter_public_task_grounding.py
+      - tests/test_walter_public_task_grounding.py
+      - .github/workflows/walter-public-task-grounding.yml
+      - coordination/tasks.json
+      - coordination/work-routing.json
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Focused grounded public task admission tests
+        run: python -m unittest discover -s tests -p test_walter_public_task_grounding.py -v
+      - name: Shared task queue validation
+        run: python tools/project_loop.py check
+      - name: Shared routing parity validation
+        run: python tools/task_routing_pair.py --check
