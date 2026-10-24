@@ -370,3 +370,14 @@ body.hud-workspace-open .hud-workspace-close{display:block}
  .footer-brand{display:none}
 }
 @media(prefers-reduced-motion:reduce){.reactor-stage::before{animation:none!important}}
+
+/* Popover is a sibling of the clipped frame; it must float above the viewport. */
+.app-shell > .top-actions {
+  position:fixed!important;top:clamp(68px,8vh,84px);right:clamp(14px,1.8vw,30px);
+  left:auto;bottom:auto;z-index:60;max-height:75svh;overflow-y:auto
+}
+.topbar {overflow:visible!important}
+.source-preview-panel .feed-preview img[src="./earth-night.png"] {object-position:center 46%}
+@media (max-width:759px) {
+ .app-shell > .top-actions{top:120px;right:9px;max-width:calc(100vw - 18px)}
+}
