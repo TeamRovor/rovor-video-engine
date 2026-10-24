@@ -3826,26 +3826,6 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/138"
         }
       ]
-    },
-    {
-      "id": "gus-hosted-operations-briefing-20261024",
-      "title": "Schedule Gus' independent hosted operations briefs while chat and Mac are offline",
-      "priority": 1,
-      "status": "active",
-      "owner": "ChatGPT / Amar Gus hosted scheduling 2026-10-24",
-      "branch": "feature/gus-hosted-operations-briefing",
-      "scopes": [
-        ".github/workflows/gus-cloud-ops.yml",
-        "tests/test_gus_cloud_ops_schedule.py",
-        "integrations/open-interpreter/GUS-CLOUD-OPS.md"
-      ],
-      "depends_on": [],
-      "updated_at": "2026-10-24T07:30:00Z",
-      "next_update": "After focused hosted CI and first independently observed schedule wakeup",
-      "next_action": "Add isolated read-only scheduled GitHub Actions executor for existing ops_worker.py; produce retained source-fingerprinted report artifacts every 30 minutes; test no task claims, no model requests, no client messages; record push proof then scheduled proof.",
-      "acceptance": "On default branch, GitHub scheduled workflow wakes without chat/Mac, checks shared queue, runs existing bounded operations worker, writes fingerprint-bound markdown/json receipt, uploads artifact and summary; contents read only, timeout, no secrets, model or Mac tools. Validate PR CI and independently observe one scheduled run before claiming recurrence.",
-      "links": [],
-      "evidence": []
     }
   ]
 }

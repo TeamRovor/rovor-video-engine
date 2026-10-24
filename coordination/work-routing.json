@@ -683,15 +683,6 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
-    },
-    "gus-hosted-operations-briefing-20261024": {
-      "lane": "operations",
-      "requires": [
-        "github-read",
-        "github-write",
-        "hosted-ci"
-      ],
-      "objective": "reduce-repeat-work"
     }
   }
 }
