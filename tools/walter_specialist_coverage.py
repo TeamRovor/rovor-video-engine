@@ -67,12 +67,14 @@ def _validate(candidates, outcomes, seen_dedupe, now):
     dedupes = set()
     for row in outcomes:
         if (type(row) is not dict or set(row) != {
-                "job_id", "role", "dedupe_key", "claimed_at", "status"}
+                "job_id", "role", "dedupe_key", "claimed_at", "status_at", "status"}
                 or not _key(row["job_id"]) or type(row["role"]) is not str
                 or row["role"] not in ROLE_SET
                 or not _key(row["dedupe_key"])
                 or type(row["claimed_at"]) is not int
                 or not 1700000000 <= row["claimed_at"] <= now
+                or type(row["status_at"]) is not int
+                or not row["claimed_at"] <= row["status_at"] <= now
                 or type(row["status"]) is not str or row["status"] not in STATUSES):
             _deny("invalid_outcome_record")
         if row["job_id"] in jobs or row["dedupe_key"] in dedupes:
@@ -121,13 +123,14 @@ def choose(candidates, outcomes, *, now, seen_dedupe=None,
                 counts[role]["failed_24h"] += 1
             if status == "review_accepted":
                 counts[role]["accepted_24h"] += 1
-            recent[role].append((when, row["job_id"], status))
+        if row["status_at"] >= now - WINDOW:
+            recent[role].append((row["status_at"], row["job_id"], status))
         last[role] = max(last[role], when)
     cooldown = set()
     for role in ROLES:
         ordered = sorted(recent[role], key=lambda row: (row[0], row[1]))
-        # Ambiguous simultaneous claims cannot establish a safe ordering for
-        # the two-failure streak: fail closed for that role for one hour.
+        # Use independently verified status timestamps, not claim timestamps:
+        # a long-running job may fail hours after its initial claim.
         if len(ordered) >= 2 and ordered[-1][2] in FAILED and ordered[-2][2] in FAILED:
             if now - ordered[-1][0] < COOLDOWN:
                 cooldown.add(role)
