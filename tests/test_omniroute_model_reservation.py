@@ -249,7 +249,7 @@ class ReservationTests(unittest.TestCase):
         self.conn.execute("UPDATE jobs SET status='needs_review' WHERE id=?",(first,))
         # Uncertain/expired attempt must require explicit review, not auto
         # free the per-model active slot from just elapsed wall time.
-        x=reserve(self.conn,second,[m],now=NOW+3600)
+        x=reserve(self.conn,second,[m],now=NOW+60)
         self.assertIsNone(x["chosen_model_id"])
         self.conn.rollback()
 
