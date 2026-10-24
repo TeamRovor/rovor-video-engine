@@ -38,8 +38,11 @@ test('focus modules match cockpit style and preserve scroll positions',()=>{
  assert.match(html,/coordination\/work-routing\.json/);
  assert.match(html,/state\.mode='verified'/);
  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
- assert.equal(scripts.length,1);
- assert.doesNotThrow(()=>new vm.Script(scripts[0][1]));
+ const inline=scripts.filter(m=>!m[0].includes(' src='));
+ assert.equal(inline.length,1,'original native HUD must retain exactly one inline application script');
+ assert.equal(scripts.length,2,'only one scoped external workload popup script is permitted');
+ assert.match(html,/<script src="\.\/workload-popup\.js"><\/script>/);
+ assert.doesNotThrow(()=>new vm.Script(inline[0][1]));
 });
 test('new route is default but older pages still exist',()=>{
  const home=fs.readFileSync(path.join(base,'index.html'),'utf8');
