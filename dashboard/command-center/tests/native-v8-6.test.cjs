@@ -30,6 +30,8 @@ test('expanded panels use same cinematic blue frame, with keyboard and motion sa
   assert.match(head,/\.drawer\{isolation:isolate/);
   assert.match(head,/\.drawer-inner\{flex:1 1 auto;min-height:0;overflow-y:auto/);
   assert.match(head,/class="drawer-footnote"/);
+  assert.match(head,/\.drawer \.drawer-footnote\{flex:0 0 auto;position:relative;padding:/);
+  assert.ok(!head.includes('\\\\n\\n.drawer .drawer-footnote'),'Literal escape sequence must not disable footnote styling');
   assert.match(js,/const origin = source \|\| document\.activeElement/);
   assert.match(js,/prefers-reduced-motion: reduce/);
   assert.match(js,/focusAnimation=drawer\.animate/);
