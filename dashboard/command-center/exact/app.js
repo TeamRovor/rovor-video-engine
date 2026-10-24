@@ -53,7 +53,7 @@
       state.tasks=tasks;state.routes=routing.tasks;state.sha=sha;state.missing=missing;state.stale=stale;
       state.lastVerified=Date.now();state.lastError='';state.mode='verified';
    }catch(error){state.lastError=error?.name==='AbortError'?'Request timed out':String(error.message||error);state.mode='error';}
-   finally{clearTimeout(timeout);state.busy=false;cacheStatus();if(!$('overlay').hidden)renderView();}
+   finally{clearTimeout(timeout);state.busy=false;cacheStatus();document.dispatchEvent(new CustomEvent('rovor:source',{detail:{mode:state.mode,verified:state.mode==='verified'}}));if(!$('overlay').hidden)renderView();}
  }
  const fmtDate=v=>{const d=new Date(v);return isNaN(d.getTime())?'Not recorded':d.toLocaleString()};
  function counts(){const c=Object.fromEntries(statuses.map(k=>[k,0]));state.tasks.forEach(t=>c[t.status]++);return c;}
