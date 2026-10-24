@@ -173,6 +173,19 @@ def inspect(state, *, run=subprocess.run):
                                         failure_states["exception:" + error_class] += 1
                                     else:
                                         failure_states["exception:unavailable"] += 1
+                                    # Fixed source-code error keys only; never
+                                    # render raw gateway or provider messages.
+                                    reason = saved.get("admission_code")
+                                    allowed_reason = {
+                                        "invalid_response_shape", "invalid_usage_shape",
+                                        "reasoning_budget_exhausted",
+                                        "incomplete_length_stop",
+                                        "unapproved_finish_reason",
+                                        "empty_visible_output",
+                                        "output_exceeds_review_limit",
+                                        "invalid_model_completion"}
+                                    if type(reason) is str and reason in allowed_reason:
+                                        failure_states["admission:" + reason] += 1
                                     seconds = saved.get("elapsed_seconds")
                                     if type(seconds) in (int, float) and 0 <= seconds <= 3600:
                                         bucket = ("under_1s" if seconds < 1 else
