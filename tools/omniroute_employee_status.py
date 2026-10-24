@@ -107,11 +107,20 @@ def inspect(state, *, run=subprocess.run):
                     except (ValueError, TypeError):
                         continue
                     packet = payload.get("packet") if isinstance(payload, dict) else None
-                    if isinstance(packet, str) and packet.startswith("walter-v1-"):
+                    if isinstance(packet, str) and packet.startswith(("walter-v1-", "walter-v2-")):
                         for role in ROLES:
                             if packet in ROLE_PACKET[role]:
                                 role_counts[role][row["status"]] += 1
                                 break
+                    if packet == "walter-v2-recovery-proof":
+                        result["recovery_canary"] = {
+                            "status": row["status"] if row["status"] in
+                                      ("queued", "running", "needs_review",
+                                       "succeeded", "failed") else "unavailable",
+                            "review_ready": (
+                                isinstance(outcome, dict) and
+                                outcome.get("draft_status") == "draft_completed_needs_review" and
+                                outcome.get("review_status") == "draft_ready_for_human_review")}
                     if (isinstance(outcome, dict)
                             and outcome.get("draft_status") == "draft_completed_needs_review"
                             and outcome.get("review_status") == "draft_ready_for_human_review"):
@@ -235,13 +244,14 @@ def inspect(state, *, run=subprocess.run):
 
 
 ROLE_PACKET = {
-    "mike": ("walter-v1-mac-worker-stop-recovery", "walter-v1-omniroute-failure-boundaries"),
-    "jane": ("walter-v1-finalcut-source-first-process", "walter-v1-fcpxml-handoff-acceptance"),
-    "jesse": ("walter-v1-moho-viseme-review", "walter-v1-animation-checkpoints"),
-    "gale": ("walter-v1-blender-isolation-plan", "walter-v1-render-confidence-rubric"),
-    "gus": ("walter-v1-safe-client-intake", "walter-v1-business-delivery-checkpoints"),
-    "saul": ("walter-v1-outreach-draft-review", "walter-v1-social-content-safety"),
-    "hank": ("walter-v1-proof-before-done", "walter-v1-free-route-usage-audit"),
+    "mike": ("walter-v1-mac-worker-stop-recovery", "walter-v1-omniroute-failure-boundaries", "walter-v2-mike-worker-guard"),
+    "jane": ("walter-v1-finalcut-source-first-process", "walter-v1-fcpxml-handoff-acceptance", "walter-v2-jane-editor-handoff"),
+    "jesse": ("walter-v1-moho-viseme-review", "walter-v1-animation-checkpoints", "walter-v2-jesse-animation-qa"),
+    "gale": ("walter-v1-blender-isolation-plan", "walter-v1-render-confidence-rubric", "walter-v2-gale-render-qa"),
+    "gus": ("walter-v1-safe-client-intake", "walter-v1-business-delivery-checkpoints", "walter-v2-gus-business-ops"),
+    "saul": ("walter-v1-outreach-draft-review", "walter-v1-social-content-safety", "walter-v2-saul-review-ops"),
+    "hank": ("walter-v1-proof-before-done", "walter-v1-free-route-usage-audit",
+             "walter-v2-hank-evidence-audit"),
 }
 
 
