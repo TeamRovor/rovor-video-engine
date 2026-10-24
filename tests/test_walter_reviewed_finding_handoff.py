@@ -179,6 +179,14 @@ class HandoffTests(unittest.TestCase):
         self.check_block("finding_identity_invalid",
                          finding={"change_type": "shell-command"})
 
+    def test_unhashable_change_type_is_rejected(self):
+        self.check_block("finding_identity_invalid",
+                         finding={"change_type": ["bugfix"]})
+
+    def test_malformed_unicode_in_private_summary_is_rejected(self):
+        self.check_block("non_actionable_finding",
+                         finding={"problem": PROBLEM + "\\ud800"})
+
     def test_extra_model_supplied_field(self):
         finding, params = fixture()
         finding["run_command"] = "rm -rf /"
