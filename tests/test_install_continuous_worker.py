@@ -39,6 +39,35 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(self.proposed['StartInterval'], 301)
         self.assertFalse(self.proposed['KeepAlive'])
 
+    def test_301_tick_aligns_with_601_pace_without_extra_daily_claims(self):
+        import omniroute_dispatch_pacing as pacing
+        proposed = self.proposed
+        self.assertEqual(proposed['StartInterval'], 301)
+        self.assertIn('--min-interval-seconds', proposed['ProgramArguments'])
+        self.assertEqual(proposed['ProgramArguments'][
+            proposed['ProgramArguments'].index('--min-interval-seconds')+1], '601')
+
+        # Old 300-second cadence missed the 601-second gate at 10 minutes.
+        self.assertFalse(pacing.dispatch_decision(
+            now=600,claims=[0],max_claims=144,queued=1,
+            pace_seconds=601)['allowed'])
+        # New second subsequent tick lands after 601 seconds, not at 900.
+        self.assertTrue(pacing.dispatch_decision(
+            now=602,claims=[0],max_claims=144,queued=1,
+            pace_seconds=601)['allowed'])
+
+        # In a full rolling day no claim bypasses the exact daily cap.
+        claims = []
+        for now in range(0, 86401, proposed['StartInterval']):
+            if pacing.dispatch_decision(
+                    now=now,claims=claims,max_claims=144,queued=1,
+                    pace_seconds=601)['allowed']:
+                claims.append(now)
+        self.assertEqual(claims[:4],[0,602,1204,1806])
+        self.assertLessEqual(len(claims),144)
+        self.assertTrue(all(claims[n]-claims[n-1] >= 601
+                            for n in range(1,len(claims))))
+
     def test_success_activates_one_label_and_clears_only_its_own_stop(self):
         result = installer.activate(self.plist, self.proposed, self.state, run=self.fake, uid=123)
         self.assertEqual(result['status'], 'same_service_activated_receipt_pending')
