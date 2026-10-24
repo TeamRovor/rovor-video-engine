@@ -3826,6 +3826,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/138"
         }
       ]
+    },
+    {
+      "id": "omniroute-nine-model-coverage-20261024",
+      "title": "Inspect actual nine OmniRoute model resources and seven specialist/Walter route coverage",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar OmniRoute fleet source audit 2026-10-24",
+      "branch": "feature/omniroute-nine-model-coverage",
+      "scopes": [
+        "tools/omniroute_model_fleet.py",
+        "tests/test_omniroute_model_fleet.py",
+        ".github/workflows/omniroute-model-fleet.yml",
+        "integrations/open-interpreter/OMNIROUTE-MODEL-FLEET.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T07:40:22.624Z",
+      "next_update": "After hosted CI and exact Mac model roster evidence",
+      "next_action": "Validate real OmniRoute CLI-shaped model catalog and routed worker packets with independent Python 3.9/3.11 GitHub tests. Report role-to-model gaps without guessing cost or sending requests. Hand off to existing PR137 Mac operator for approved integration and live completion proof.",
+      "acceptance": "New isolated CLI inspector reads installed providers/combos, distinguishes model connection count from routed model IDs and proof of completed inference, detects route drift and malformed/paid entries, sanitizes stdout and does not call models or change scheduler; CI Python 3.9/3.11 pass.",
+      "links": [],
+      "evidence": []
     }
   ]
 }

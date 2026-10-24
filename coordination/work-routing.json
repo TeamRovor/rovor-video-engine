@@ -683,6 +683,15 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "omniroute-nine-model-coverage-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
