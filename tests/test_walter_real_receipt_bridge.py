@@ -149,6 +149,19 @@ class ReceiptBridgeTests(unittest.TestCase):
         self.blocked("duplicate_or_unsafe_private_job",
                      lambda p: p[0][0].update(kind="terminal.probe"))
 
+    def test_malformed_claim_id_fails_closed(self):
+        self.blocked("duplicate_or_unmatched_claim",
+                     lambda p: p[1][0].update(job_id=[]))
+
+    def test_malformed_review_id_fails_closed(self):
+        self.blocked("invalid_independent_review",
+                     lambda p: p[3].append({"job_id": [], "decision": "accepted",
+                                            "decided_at": NOW - 10}))
+
+    def test_extreme_timestamp_fails_closed(self):
+        self.blocked("invalid_private_timestamp",
+                     lambda p: p[1][0].update(timestamp=10 ** 1000))
+
     def test_bogus_uuid_rejected(self):
         self.blocked("invalid_private_job_id", lambda p: p[0][0].update(id="../../private"))
 
