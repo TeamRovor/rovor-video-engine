@@ -20,6 +20,7 @@ function syncView() {
   document.getElementById('refreshBtn').disabled = state.busy;
   document.getElementById('refreshBtn').textContent = state.busy ? 'Syncing…' : 'Refresh GitHub';
   if (globalThis.RovorReferenceHud) globalThis.RovorReferenceHud.sync(state);
+  if (globalThis.RovorCinematicHUD) globalThis.RovorCinematicHUD.refresh(state.raw,state);
 }
 
 async function syncGitHub(forceExtras = false) {
@@ -102,6 +103,7 @@ function renderAll() {
   renderSystems(); renderRepoBars(); renderRepoMeta(); renderWorkers();
   if (globalThis.RovorReferenceHud) globalThis.RovorReferenceHud.render(state.raw, state);
   if (globalThis.RovorExperience) globalThis.RovorExperience.render(state.raw, state);
+  if (globalThis.RovorCinematicHUD) globalThis.RovorCinematicHUD.refresh(state.raw,state);
 }
 
 function renderMeta() {
