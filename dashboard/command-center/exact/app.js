@@ -6,7 +6,7 @@
  const RAW=`https://raw.githubusercontent.com/${REPO}`;
  const $=id=>document.getElementById(id);
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const state={immersive:false,mode:'unverified',tasks:[],routes:{},sha:'',lastVerified:0,rateLimit:null,rateReset:null,view:'dashboard',motion:true,artMode:'exact',busy:false,focus:null,dialogOrigin:null,commandSearch:'',lastError:''};
+ const state={immersive:window.matchMedia('(min-width: 1024px) and (min-aspect-ratio: 3/2)').matches,mode:'unverified',tasks:[],routes:{},sha:'',lastVerified:0,rateLimit:null,rateReset:null,view:'dashboard',motion:true,artMode:'exact',busy:false,focus:null,dialogOrigin:null,commandSearch:'',lastError:''};
  const statuses=['active','ready','blocked','done'];
  const title={tasks:'ACTIVE TASKS',resources:'RESOURCE USAGE',activity:'RECENT ACTIVITY',systems:'SYSTEM HEALTH',quota:'API QUOTA',media:'MEDIA / SOURCE FEED',github:'GITHUB CONTROL',settings:'HUD SETTINGS',command:'COMMAND CORE',dashboard:'DASHBOARD',task:'TASK INSPECTOR'};
  const taskUrl=id=>`https://github.com/${REPO}/blob/${state.sha||'main'}/coordination/tasks.json`;
