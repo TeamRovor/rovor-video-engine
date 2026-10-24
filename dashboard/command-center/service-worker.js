@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'rovor-command-center-shell-v4';
+const CACHE_NAME = 'rovor-command-center-shell-v5';
 const SHELL = [
   './',
   './index.html',
@@ -18,10 +18,15 @@ const SHELL = [
   './snapshot.json'
 ];
 
+// Optional on local preview, bundled in published Pages artifact.
+const IMAGE_ASSETS = ['./earth-blue-marble.png','./earth-night.png'];
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(SHELL))
+      .then(cache => cache.addAll(SHELL).then(() =>
+        Promise.allSettled(IMAGE_ASSETS.map(url => cache.add(url)))
+      ))
       .then(() => self.skipWaiting())
   );
 });
