@@ -293,6 +293,7 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
             fleet_selected = {
                 'model_id': selection['chosen_model_id'],
                 'pool_id': selection['quota_pool_id'],
+                'provider_id': fleet['routes'][selection['chosen_model_id']]['provider_id'],
                 'combo': combo}
         if job:
             if (not omni_continuous and job['kind'] == OMNI_KIND
