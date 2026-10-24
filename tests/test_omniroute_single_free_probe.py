@@ -74,6 +74,44 @@ class ProbeTests(unittest.TestCase):
         self.assertNotIn("SECRET",json.dumps(response))
         self.assertEqual(response["request_count"],1)
 
+    def test_real_mac_counter_mismatch_can_admit_one_valid_visible_response(self):
+        calls=[]
+        def one(req, timeout):
+            calls.append(req)
+            return Reply({"choices":[{"message":{"content":"READY"},
+                                      "finish_reason":"stop"}],
+                          "usage":{"prompt_tokens":27,"completion_tokens":52,
+                                   "total_tokens":79,
+                                   "completion_tokens_details":{"reasoning_tokens":59}}})
+        result=probe.diagnose(
+            approve_one_call=True,acknowledge_open_circuit=True,
+            read_status=lambda path:state(),read_catalog=catalog,
+            get_key=lambda:"credential-hidden",open_local=one)
+        self.assertEqual(len(calls),1)
+        self.assertEqual(result["request_count"],1)
+        self.assertEqual(result["status"],"completed_visible_ready")
+        self.assertTrue(result["model_output_verified"])
+        self.assertEqual(result["usage"]["reasoning_tokens"],59)
+        self.assertNotIn("credential-hidden",json.dumps(result))
+
+    def test_real_mac_counter_mismatch_does_not_admit_truncated_response(self):
+        calls=[]
+        def one(req, timeout):
+            calls.append(req)
+            return Reply({"choices":[{"message":{"content":"Partial"},
+                                      "finish_reason":"length"}],
+                          "usage":{"prompt_tokens":27,"completion_tokens":52,
+                                   "total_tokens":79,
+                                   "completion_tokens_details":{"reasoning_tokens":59}}})
+        result=probe.diagnose(
+            approve_one_call=True,acknowledge_open_circuit=True,
+            read_status=lambda path:state(),read_catalog=catalog,
+            get_key=lambda:"hidden",open_local=one)
+        self.assertEqual(result["status"],"admission_incomplete_length_stop")
+        self.assertEqual(result["request_count"],1)
+        self.assertEqual(len(calls),1)
+        self.assertFalse(result["model_output_verified"])
+
     def test_exhausted_reasoning_is_classified_and_not_retried(self):
         count=[]
         def one(req,timeout):
