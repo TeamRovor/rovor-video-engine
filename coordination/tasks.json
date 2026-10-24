@@ -4001,7 +4001,7 @@
       "id": "walter-public-task-grounding-20261024",
       "title": "Ground unattended public task research in an eligible owner-safe code target, not generic drafts",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 public task grounding shift",
       "branch": "feature/walter-public-task-grounding-v1",
       "scopes": [
@@ -4011,10 +4011,26 @@
         "subsystem:public-task-grounding-policy"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T09:20:00Z",
-      "next_update": "After focused hosted CI and shared queue/routing validation; hand off as source-only to PR137 owner.",
-      "next_action": "Implement independent read-only public task admission helper: accept only exact commit-pinned paired queue/routing and code source fingerprints; reject blocked, dependency-blocked, host-only, ambiguous-role and unconsented owned tasks; emit one deduped, source-grounded research proposal instead of four generic variants. Tests Python3.9/3.11; do not edit PR137 or Mac state.",
-      "acceptance": "Pure Python3.9 stdlib module with explicit trusted source/queue attestation, deterministic role classification and source SHA256, no default Mike fallback, status/dependency/ownership gates, one task per identity, no model/host/queue writes, sanitized errors. Adversarial hosted tests and shared CI."
+      "updated_at": "2026-10-24T09:26:00Z",
+      "next_update": "Source-only task complete; existing PR137 Mac owner may review optional integration after host/ledger verification.",
+      "next_action": "PR #151 merged to main at 881c6e01c211c13789b41ef0025b2b942a6edb25. New pure tools/walter_public_task_grounding.py selects one source-digest-grounded eligible public task, refuses blocked/unmet dependency/host-only/unapproved active tasks, ambiguous roles, stale sources and repeats. 42 focused Python3.9/3.11 tests and shared queue/routing checks PASS in GitHub runs 40081812598 and 40081816227. Existing PR137 owner must independently verify pinned public Git tree/file digests, exact source scopes, STOP, authenticated owner opt-in, and SQLite dedupe before any integration. No Mac deployment, inference, private receipts, or 24-hour soak verified. Also fixed missing blocker metadata on separate Walter PR145 task in main ca2c88d without altering its owner/status; PR145 remains unmerged pending its own green CI.",
+      "acceptance": "Pure Python3.9 stdlib module with explicit trusted source/queue attestation, deterministic role classification and source SHA256, no default Mike fallback, status/dependency/ownership gates, one task per identity, no model/host/queue writes, sanitized errors. Adversarial hosted tests and shared CI.",
+      "evidence": [
+        {
+          "commit": "881c6e01c211c13789b41ef0025b2b942a6edb25",
+          "platform": "GitHub Actions Ubuntu / Python 3.9 and 3.11",
+          "check": "42 focused grounded public task selection regressions; project_loop.py check; task_routing_pair.py --check",
+          "result": "PASS both Python versions in two completed hosted runs; source-only, no model calls or Mac access",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40081812598"
+        },
+        {
+          "commit": "881c6e01c211c13789b41ef0025b2b942a6edb25",
+          "platform": "GitHub PR #151",
+          "check": "Pure public task source/role/dependency/owner/dedupe gate, no edits to PR137 Mac runtime",
+          "result": "MERGED to main; integration and real model use remain separate owner-controlled tasks",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/151"
+        }
+      ]
     }
   ]
 }
