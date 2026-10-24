@@ -200,6 +200,40 @@ class ContinuousTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 continuous.execute(self.state, job, payload, catalog=[], completion=completion)
 
+    def test_concise_deliverables_use_proportional_reviewed_source_budgets(self):
+        import ghost_omniroute_job as gateway
+        import omniroute_workpack_runner as workpack
+        cases = [('checklist',9000,250),('handoff',9000,300),
+                 ('plan',11000,350),('tests',14500,450)]
+        seen=[]
+        for form,budget,words in cases:
+            with self.subTest(form=form):
+                slug='continuous-v1-mike-0-'+form
+                job=str(uuid.uuid4())
+                def completion(model,prompt,key):
+                    self.assertIn('under '+str(words)+' words',prompt)
+                    self.assertLess(len(prompt),28000)
+                    seen.append(form)
+                    return ('Proposed public-source checklist for review; '
+                            'tests have not been run.',
+                            {'prompt_tokens':500,'completion_tokens':55,
+                             'total_tokens':555})
+                with mock.patch.object(gateway,'verify_route',
+                                       return_value='rovor-fast-free-v1'):
+                    with mock.patch.object(workpack,'access_key',
+                        return_value='test-key'):
+                        result=continuous.execute(self.state,job,
+                            {'assignment':slug},catalog=[],completion=completion)
+                self.assertEqual(result['review_status'],
+                                 'draft_ready_for_human_review')
+                receipt=self.state/'omniroute-drafts'/job/(
+                    'walter-v2-mike-worker-guard.receipt.json')
+                stored=json.loads(receipt.read_text())
+                self.assertEqual(stored['source_budget_chars'],budget)
+                self.assertEqual(stored['provenance']['source_budget_chars'],budget)
+                self.assertFalse(stored['mac_control_verified'])
+        self.assertEqual(seen,[x[0] for x in cases])
+
     def test_pre_inference_errors_are_recorded_and_trip_circuit_after_three_attempts(self):
         keys = list(continuous.assignments())
         for key in keys[:4]:

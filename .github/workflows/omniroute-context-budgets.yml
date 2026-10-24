@@ -1,0 +1,36 @@
+name: OmniRoute proportionate context sizing (offline)
+on:
+  pull_request:
+    paths:
+      - 'tools/omniroute_continuous.py'
+      - 'tools/omniroute_workpack_runner.py'
+      - 'tools/omniroute_draft_review.py'
+      - 'tests/test_omniroute_workpack_runner.py'
+      - 'tests/test_omniroute_continuous.py'
+      - 'tests/test_omniroute_draft_review.py'
+      - '.github/workflows/omniroute-context-budgets.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  proportional:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Real continuous deliverable source budgets (offline)
+        run: |
+          python -m unittest discover -s tests -p test_omniroute_workpack_runner.py -v
+          python -m unittest discover -s tests -p test_omniroute_draft_review.py -v
+          python -m unittest discover -s tests -p test_omniroute_continuous.py -v
+          python -m unittest discover -s tests -p test_omniroute_workforce_composite.py -v
