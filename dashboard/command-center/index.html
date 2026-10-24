@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- The user's approved exact-reference HUD is now the default experience.
-       This redirect intentionally occurs before the old cockpit styles/scripts load.
-       The old view remains in source for rollback and regression coverage. -->
+  <!-- Native interactive HUD v8.5 is the default. The prior exact-reference 
+       experience remains reachable at ./exact/ as a non-destructive rollback.
+       This redirect executes before legacy cockpit CSS and scripts load. -->
   <script>
     (() => {
-      const next = new URL('./exact/', location.href);
+      const next = new URL('./native/', location.href);
       next.search = location.search;
       next.hash = location.hash;
       location.replace(next.href);
     })();
   </script>
-  <noscript><meta http-equiv="refresh" content="0;url=./exact/" /></noscript>
+  <noscript><meta http-equiv="refresh" content="0;url=./native/" /></noscript>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#04111f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
