@@ -31,6 +31,33 @@ class ProbeTests(unittest.TestCase):
         self.assertEqual(got["sanitized_blocker"], "cli_json_shape_unrecognized")
         self.assertNotIn("PRIVATE_VALUE", json.dumps(got))
 
+    def test_colored_cli_header_and_trailing_notice_parse_without_leaking(self):
+        class Reply:
+            returncode = 0
+            stdout = (
+                "\\x1b[36mOmniRoute providers\\x1b[0m\\n"
+                + '{"providers":['
+                + '{"provider":"openrouter","access_token":"DO_NOT_PRINT"},'
+                + '{"providerId":"groq","apiKey":"SECRET_MUST_NOT_PRINT"}'
+                + ']}\\nReady [local context]')
+        result = probe.audit(run=lambda *args, **kwargs: Reply())
+        self.assertEqual(result["omniroute_cli_inventory"],"parsed_safely")
+        self.assertEqual(result["configured_connections_count"],2)
+        self.assertEqual(result["provider_connection_counts"],
+                         {"openrouter":1,"groq":1})
+        self.assertNotIn("DO_NOT_PRINT",json.dumps(result))
+        self.assertNotIn("SECRET_MUST_NOT_PRINT",json.dumps(result))
+
+    def test_nested_list_envelope_parses_without_billing_claim(self):
+        class Reply:
+            returncode = 0
+            stdout = 'CLI initialized\\n' + json.dumps({
+                "data":{"connections":[{"provider":"mistral","apiKey":"PRIVATE"}]}})
+        result = probe.audit(run=lambda *args, **kwargs: Reply())
+        self.assertEqual(result["configured_connections_count"],1)
+        self.assertEqual(result["provider_connection_counts"],{"mistral":1})
+        self.assertFalse(result["billing_eligibility_verified"])
+
     def test_bad_cli_is_only_sanitized_unavailable(self):
         class Reply:
             returncode=2
