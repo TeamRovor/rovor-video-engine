@@ -201,7 +201,10 @@ def load_packet(root, slug, *, source_budget_chars=None):
                 'next read-only validation. Never assert actual execution.')
     if len(prompt) > 38000:
         raise ValueError('Prompt too large')
-    provenance = {'packet_sha256':sha(raw.encode()),'sources':fingerprints}
+    provenance={'packet_sha256':sha(raw.encode()),'sources':fingerprints}
+    if source_budget_chars is not None:
+        # Bind even no-excerpt small contexts to their exact review profile.
+        provenance['source_budget_chars'] = source_budget_chars
     if excerpts is not None:
         provenance['explicit_source_excerpts'] = excerpts
     return packet, prompt, provenance
