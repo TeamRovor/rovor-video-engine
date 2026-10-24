@@ -4568,6 +4568,24 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/178"
         }
       ]
+    },
+    {
+      "id": "walter-reviewed-handoff-scope-guard-20261024",
+      "title": "Reject ancestor and descendant scope conflicts in reviewed research-to-code handoffs",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 scope-guard shift",
+      "branch": "feature/walter-reviewed-handoff-scope-guard",
+      "scopes": [
+        "tools/walter_reviewed_finding_handoff.py",
+        "tests/test_walter_reviewed_finding_handoff.py"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T18:07:52.086Z",
+      "next_update": "After focused Python 3.9/3.11 CI and queue/routing checks on the scoped PR.",
+      "next_action": "Fix the existing reviewed finding handoff gate's exact-only scope overlap so active directory scopes block descendant code/test targets, and nested descendant scopes block ancestor target proposals; add adversarial regressions without changing Mac runtime or human approval.",
+      "acceptance": "Pure source-only handoff gate rejects active/blocked/ready ancestor-directory and descendant-directory scope conflicts, including sibling prefix traps; done scopes do not block. Reject malformed scope strings fail-closed. Focused Python 3.9/3.11 CI and shared queue/routing checks pass; no automatic model approval or Mac effects.",
+      "evidence": []
     }
   ]
 }
