@@ -72,3 +72,13 @@
 #workloadPanel .wl-compact-foot{border-top:1px solid #3d709c5c;padding-top:6px;font-size:8px}
 #workloadPanel .wl-compact-foot span{color:#d1eeff}
 @media(max-width:780px){#workloadPanel .wl-compact-row{min-height:33px;grid-template-columns:minmax(57px,72px) minmax(0,1fr) 25px}#workloadPanel .wl-compact-tabs button{min-height:34px}}
+
+/* Refine mobile density without altering the original panel size or grid. */
+@media(max-width:780px){
+ #workloadPanel .wl-compact{gap:3px}
+ #workloadPanel .wl-compact-tabs button{min-height:27px}
+ #workloadPanel .wl-compact-meta{font-size:8px}
+ #workloadPanel .wl-compact-foot{display:none}
+ #workloadPanel .wl-compact-row{min-height:36px}
+ #rovor-workload-popup .wl-cell,#rovor-workload-popup .wl-row-select{min-height:44px}
+}
