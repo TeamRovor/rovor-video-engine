@@ -155,6 +155,23 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'Unsafe'):
             worker.load_packet(self.repo,'runner-blocker')
 
+    def test_approved_packet_growth_has_explicit_bounded_public_excerpt(self):
+        slug = 'unattended-readiness'
+        manifest = json.loads((self.repo/'coordination'/'omniroute-workpacks'/
+                               (slug+'.json')).read_text())
+        for rel in manifest['inputs']:
+            (self.repo/rel).write_text(('Public source ' + rel + ' ') * 850)
+        packet, prompt, provenance = worker.load_packet(self.repo, slug)
+        self.assertEqual(packet['slug'], slug)
+        self.assertIn('PUBLIC SOURCE EXCERPT', prompt)
+        self.assertIn('characters intentionally omitted', prompt)
+        self.assertIn('explicit_source_excerpts', provenance)
+        self.assertLess(len(prompt), 38000)
+        self.assertTrue(all(v['included_chars'] <= v['total_chars']
+                            for v in provenance['explicit_source_excerpts'].values()))
+        self.assertTrue(any(v['omitted_chars'] > 0
+                            for v in provenance['explicit_source_excerpts'].values()))
+
     def test_combined_input_limit_refuses_silent_truncation(self):
         f=self.repo/'coordination'/'hosted-runner-diagnosis.md'
         f.write_text('A'*19000)
