@@ -27,3 +27,24 @@ jobs:
         run: |
           node --check dashboard/command-center/native-v8-9/workload-popup.js
           node --test dashboard/command-center/tests/workload-popup.test.cjs
+
+  browser-responsive-workload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exercise existing HUD Workload popup in headless Chrome
+        run: node dashboard/command-center/tests/workload-popup.browser.cjs
+      - name: Save responsive screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workload-popup-responsive-evidence
+          path: dashboard/command-center/qa-screenshots/workload-popup/
+          if-no-files-found: warn
+          retention-days: 7
