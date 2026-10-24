@@ -103,7 +103,9 @@ def check_receipt(obj,expected_id,expected_provenance):
     keys=BASE | (SUCCESS_FIELDS if state==SUCCESS
                    else ERROR_FIELDS if state=='needs_review_no_auto_retry'
                    else frozenset())
-    if set(obj)!=keys:
+    extra_admission = (state == 'needs_review_no_auto_retry' and
+                       set(obj) == keys | {'admission_code'})
+    if set(obj)!=keys and not extra_admission:
         return 'invalid_receipt', ['schema_fields_mismatch'], False, False
     if (obj.get('schema_version')!=1
             or obj.get('id')!=expected_id
@@ -120,6 +122,10 @@ def check_receipt(obj,expected_id,expected_provenance):
     if state=='reserved_no_retry':
         return 'incomplete_needs_review', ['model_job_reserved_or_interrupted'], True, False
     if state=='needs_review_no_auto_retry':
+        if ('admission_code' in obj and
+                (type(obj['admission_code']) is not str or
+                 obj['admission_code'] not in worker.SAFE_ADMISSION_CODES)):
+            return 'invalid_receipt',['invalid_safe_admission_code'],True,False
         if (not isinstance(obj.get('error_class'),str)
                 or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,79}',
                                     obj['error_class'])
