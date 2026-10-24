@@ -4726,7 +4726,7 @@
       "id": "walter-citation-code-context-20261024",
       "title": "Reject Markdown code-block citation laundering and oversized Unicode drafts in OmniRoute review gate",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 code-context shift",
       "branch": "feature/walter-citation-code-context-20261024",
       "scopes": [
@@ -4735,11 +4735,30 @@
         "subsystem:walter-citation-code-context"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T21:42:59.373Z",
-      "next_update": "2026-10-24T22:42:59.373Z",
-      "next_action": "Implement source-only code-fence/inline-code citation-context protection and UTF-8 byte limit in the existing Walter draft citation CLI; add adversarial offline tests, verify Python 3.9/3.11 hosted CI and shared routing checks; do not deploy to Mac or approve private drafts.",
+      "updated_at": "2026-10-24T21:44:58.397Z",
+      "next_update": "Completed source-only and merged; Mac owner/Hank integration review remains separate.",
+      "next_action": "PR #184 squash-merged into main at d1145fe1ced42d1cdb30b421d40fb352d8541b36. Existing Walter citation CLI now excludes fenced/indented/inline Markdown code from research prose scoring, rejects code-embedded citations and unclosed fences, and enforces 50,000 UTF-8 bytes even for direct verify() callers. 44 offline tests PASS on Python 3.9 and 3.11 in GitHub Actions runs 40135511120 (push) and 40135524309 (PR); shared project_loop.py check and task_routing_pair.py --check PASS (132 tasks / 132 routes). Source-only: not deployed to Mac, no private research receipts, live inference, human approval or 24h soak. Mac owner/Hank must independently test representative redacted drafts with authenticated pinned source/receipt history before opt-in integration; do not replay failed jobs or auto-deploy.",
       "acceptance": "The strict CLI review path rejects citations embedded only in fenced or inline code, does not count code tokens toward research prose, and rejects >50KB UTF-8 drafts through both API and CLI. Valid cited prose remains accepted; low-level verify() continues to bind independently reviewed single citations. Python 3.9/3.11 focused CI and project_loop.py check pass. No Mac/inference/paid API/deployment.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "0dd0bbdc32db1bfd82980f437775358cc79a2005",
+          "platform": "GitHub Actions Ubuntu Python 3.9 and 3.11",
+          "check": "44 focused offline citation-gate tests on each Python; python tools/project_loop.py check; python tools/task_routing_pair.py --check",
+          "result": "PASS in both push run 40135511120 and PR run 40135524309; paired queue/routing valid 132 tasks / 132 rules. No Mac or provider access.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40135524309"
+        },
+        {
+          "commit": "d1145fe1ced42d1cdb30b421d40fb352d8541b36",
+          "platform": "GitHub PR #184 squash merge to main",
+          "check": "Code-context citation laundering, code-token exclusion, UTF-8 size guard and eight adversarial tests",
+          "result": "MERGED source-only. No deployment, live worker evidence, model inference or private data.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/184"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/184",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40135524309"
+      ]
     }
   ]
 }
