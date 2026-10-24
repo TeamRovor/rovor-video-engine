@@ -61,5 +61,13 @@ class ScheduleTests(unittest.TestCase):
             self.assertEqual(schedule.main([]),0)
             activate.assert_not_called()
 
+    def test_pause_requires_positive_service_observation_and_successful_bootout(self):
+        for codes in ([113],[0,1]):
+            run=mock.Mock(side_effect=[subprocess.CompletedProcess([],x) for x in codes])
+            with self.assertRaises(ValueError):schedule.pause_existing_service(run)
+        run=mock.Mock(side_effect=[subprocess.CompletedProcess([],0),subprocess.CompletedProcess([],0)])
+        schedule.pause_existing_service(run)
+        self.assertEqual(run.call_args.args[0],['launchctl','bootout',f'gui/{__import__("os").getuid()}/{schedule.LABEL}'])
+
 
 if __name__=='__main__':unittest.main()

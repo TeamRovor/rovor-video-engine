@@ -14,9 +14,18 @@ import subprocess
 import sys
 import tempfile
 
-REVISION='0716b657c4f2f16d1ef87d1df0ad69042fc26cc1'
+REVISION='53dee10e14e8ed8e537e275b9f138eca88f9db63'
 LABEL='com.rovor.ghost-worker.readonly'
 RECEIPT_JOB='202fdb8c-149a-401e-b1e2-8b7e001ab46b'
+BACKGROUND_PROOF_KEY='rovor-background-auth-proof-v1'
+
+
+def pause_existing_service(run=subprocess.run):
+    target=f'gui/{os.getuid()}/{LABEL}'
+    seen=run(['launchctl','print',target],capture_output=True,timeout=10)
+    if seen.returncode:raise ValueError('Existing service not positively observed')
+    if run(['launchctl','bootout',target],capture_output=True,timeout=10).returncode:
+        raise ValueError('Existing service could not be paused')
 
 
 def build_config(original, python, runtime, state, workspace):
@@ -76,6 +85,7 @@ def activate(path, config, stop, *, ensure_stop, run=subprocess.run):
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--enable-approved-draft-queue',action='store_true')
+    parser.add_argument('--verify-background-access',action='store_true')
     args=parser.parse_args(argv)
     if not args.enable_approved_draft_queue:
         print(json.dumps({'status':'dry_run_no_activation','model_requests':0}))
@@ -105,11 +115,18 @@ def main(argv=None):
     import omniroute_draft_review as review
     import omniroute_mac_once as once
     once.ensure_stop(stop)
-    domain=subprocess.run(['launchctl','print',f'gui/{os.getuid()}'],capture_output=True,text=True,timeout=10)
-    if not once.service_absent_from_domain(domain):
-        raise ValueError('Existing service must be positively confirmed unloaded')
     conn=worker.connect(state)
     try:
+        if conn.execute("SELECT 1 FROM jobs WHERE status='running'").fetchone():
+            raise ValueError('Existing job is running; STOP retained')
+        domain=subprocess.run(['launchctl','print',f'gui/{os.getuid()}'],capture_output=True,text=True,timeout=10)
+        if not once.service_absent_from_domain(domain):
+            if not args.verify_background_access:
+                raise ValueError('Existing service must be positively confirmed unloaded')
+            pause_existing_service()
+            domain=subprocess.run(['launchctl','print',f'gui/{os.getuid()}'],capture_output=True,text=True,timeout=10)
+            if not once.service_absent_from_domain(domain):
+                raise ValueError('Existing service pause not verified')
         row=conn.execute('SELECT status,attempts,result FROM jobs WHERE id=?',(RECEIPT_JOB,)).fetchone()
         if not row or row['status']!='needs_review' or row['attempts']!=1:
             raise ValueError('Successful host job evidence missing')
@@ -132,11 +149,17 @@ def main(argv=None):
         paused=json.loads(proof.stdout)
         if paused.get('stop_reason')!='stop_requested' or paused.get('executed')!=0:
             raise ValueError('STOP did not block the worker')
+        diagnostic=None
+        if args.verify_background_access:
+            if conn.execute('SELECT 1 FROM jobs WHERE dedupe_key=?',(BACKGROUND_PROOF_KEY,)).fetchone():
+                raise ValueError('Background proof already submitted; inspect instead of replay')
+            diagnostic=worker.enqueue(conn,'system.omniroute-preflight',{},BACKGROUND_PROOF_KEY)
         activate(path,config,stop,ensure_stop=once.ensure_stop)
         print(json.dumps({'status':'existing_queue_service_loaded','interval_seconds':300,
              'max_jobs_per_tick':1,'max_AI_attempts_per_24h':5,'model_requests_this_setup':0,
              'auto_enqueue':False,'native_and_interpreter_enabled':False,
              'raw_AI_output_approved':False,'STOP_verified':True,
+             'background_diagnostic_job_id':diagnostic,
              'note':'Only approved queued drafts; no claim of overnight endurance yet'}))
         return 0
     finally:conn.close()
