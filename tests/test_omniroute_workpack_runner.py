@@ -121,6 +121,24 @@ class OmniRouteWorkpackTests(unittest.TestCase):
             completion=lambda *_:self.fail('retry'))['status'],
             'previous_attempt_not_replayed')
 
+    def test_future_failed_receipt_records_only_safe_admission_code(self):
+        def failed(*args):
+            raise worker.GatewayInvalidCompletion("invalid_usage_shape")
+        result=worker.run_packet(self.repo,self.out,'runner-blocker',
+                                 'rovor-fast-free-v1','test-key',completion=failed)
+        saved=json.loads(Path(result['receipt']).read_text())
+        self.assertEqual(saved['status'],'needs_review_no_auto_retry')
+        self.assertEqual(saved['error_class'],'GatewayInvalidCompletion')
+        self.assertEqual(saved['admission_code'],'invalid_usage_shape')
+        self.assertIsNone(worker.safe_admission_code(
+            worker.GatewayInvalidCompletion("SECRET_NOT_ALLOWED")))
+        self.assertIsNone(worker.safe_admission_code(
+            ValueError("PRIVATE_PROVIDER_TEXT")))
+        self.assertEqual(worker.run_packet(
+            self.repo,self.out,'runner-blocker','rovor-fast-free-v1',
+            'test-key',completion=lambda *_:self.fail("replayed"))['status'],
+            'previous_attempt_not_replayed')
+
     def test_incomplete_reserved_receipt_prevents_rerun(self):
         self.out.mkdir()
         (self.out/'runner-blocker.receipt.json').write_text('{"status":"reserved_no_retry"}')
