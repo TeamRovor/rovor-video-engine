@@ -3731,11 +3731,11 @@
         "integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T09:53:41Z",
-      "next_update": "After one reviewed upgrade of already-running Mac worker PR137 and first private receipt with versioned completion_token_limit=4096; continue reducing 12 model nonready+8 review/pending rather than raising 144 claims/day.",
-      "next_action": "Actual Mac unified ops report FIX VERIFIED: SQLite snapshot consistent, 31 distinct claims/24h, 10 review-ready,12 nonready,8 pending/failed,1 running; scheduler fed fresh queue and paced_wait, 9 connections/3 distinct routed models/4 combos; quota and actual model response unverified. PR154 merged opt-in source quality fix to PR137: future workpack receipt records requested 4096 tokens; reviewer uses versioned near-cap threshold 3968 for those only, legacy receipts still 2390, no replays/autoapproval. Hosted full Mac+Ubuntu Python3.9/3.11 composite PASS. Next stop repetitive host audit, stage controlled same-service runtime integration with real quota+route attestation and verify new useful output quality, without new scheduler or claim/pacing changes.",
+      "updated_at": "2026-10-24T10:15:00Z",
+      "next_update": "After a controlled same-service Mac rollout and verified new private review receipts using new proportional source-context budgets; measure before/after draft readiness instead of claim counts.",
+      "next_action": "PR155 merged into existing PR137 development branch at 896ffd2: actual continuous workpack execution now uses context budgets 9000 (checklist,handoff)/11000(plan)/14500(tests) source chars with 250/300/350/450 requested words; full source hashes, deterministic disclosed excerpts, fixed receipt profile, later review integrity; no replays, no extra gateway requests. Mac installed original pinned b736610 is untouched. Seven suites passed including macOS+Ubuntu Python3.9/3.11. Next, verified safe same-service integration and real A/B outcomes by form + capability/zero-cost provider evidence; continue no-loops and avoid requesting multiple redundant Terminal scripts.",
       "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation.",
-      "blocker": "No real host output using versioned 4096 receipt yet; current Mac installed worker pinned b736610, not latest PR137 development. 12 nonready+8 pending/failed out of 31 claims; need sanitized cause breakdown and exact model quota eligibility. Nine provider connections do not represent nine verified running models.",
+      "blocker": "Source code integrated/tested but current real Mac installed worker is still original pinned b736610. Live improvement from shorter prompts not yet measured; 31 claim snapshots had 10 ready/12 nonready/8 pending review/1 running, provider quota/9 distinct model activation still unverified.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/137",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40072143609",
@@ -3747,7 +3747,9 @@
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40083045997",
         "https://github.com/TeamRovor/rovor-video-engine/pull/153",
         "https://github.com/TeamRovor/rovor-video-engine/pull/154",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382848776"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382848776",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/155",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382986377"
       ],
       "evidence": [
         {
@@ -3812,6 +3814,13 @@
           "check": "Verified live WAL snapshot 31 jobs and throughput outcomes; version-aware completion limit per fresh private receipt, historical review protection, secret safety, no extra requests; all PR154 suites passed.",
           "result": "Mac monitoring fixed and working. New-source quality gate fix merged into PR137, not installed. 31 jobs current,10 review-ready,12 not-ready,8 review/pending,1 running, 9 connection entries but only 3 distinct ROVOR-route models.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382848776"
+        },
+        {
+          "commit": "896ffd2b5b778044776d5dca2899921620a21fd6",
+          "platform": "Hosted GitHub Actions Python 3.9/3.11, macOS and Ubuntu",
+          "check": "Continuous run_packet reduced context by deliverable, pinned full source SHA256, omitted counts, private review provenance compatibility, historical receipts unchanged, no-retry and STOP; seven suites green after test syntax fix.",
+          "result": "PR155 merged into PR137 existing development branch; new source-only job sizing prepared, installed Mac worker remains untouched; actual useful output rate improvement not yet verified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382986377"
         }
       ]
     },
