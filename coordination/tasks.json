@@ -4459,6 +4459,26 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/175"
         }
       ]
+    },
+    {
+      "id": "walter-24h-soak-evidence-20261024",
+      "title": "Audit authenticated 24-hour OmniRoute heartbeat and claim evidence without claiming live success",
+      "priority": 2,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 24h evidence shift",
+      "updated_at": "2026-10-24T15:36:14.289Z",
+      "next_update": "After focused Python 3.9/3.11 hosted CI and source-only PR review",
+      "branch": "feature/walter-24h-soak-evidence-gate",
+      "scopes": [
+        "tools/walter_soak_evidence_gate.py",
+        "tests/test_walter_soak_evidence_gate.py",
+        ".github/workflows/walter-soak-evidence-gate.yml",
+        "subsystem:walter-independent-24h-soak-evidence"
+      ],
+      "depends_on": [],
+      "next_action": "Implement a read-only fail-closed 24-hour evidence auditor that detects missing heartbeat coverage, duplicate claims, 601-second pacing violations, rolling-day quota breaches and role/review coverage; add synthetic adversarial tests and hosted CI; no host access or model calls.",
+      "acceptance": "Pure Python3.9 standard-library auditor for independently attested copied Mac evidence; separate heartbeat coverage, pacing, claim counts, role outcomes and human approval; reject malformed, duplicate, stale and incomplete evidence without printing private data; never claim runtime verification from synthetic input. At least 15 focused regression tests plus hosted Python3.9/3.11 coordination checks.",
+      "evidence": []
     }
   ]
 }
