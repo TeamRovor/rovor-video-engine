@@ -346,6 +346,26 @@ def write_receipt(path, payload, *, replace=False):
         with path.open('xb') as f: f.write(blob)
 
 
+# Only constant, source-defined response-validation codes can ever enter
+# private receipts. Do not persist arbitrary exception messages or provider
+# error bodies, even when a model or gateway supplies them.
+SAFE_ADMISSION_CODES = frozenset((
+    "invalid_response_shape", "invalid_usage_shape",
+    "reasoning_budget_exhausted", "incomplete_length_stop",
+    "unapproved_finish_reason", "empty_visible_output",
+    "output_exceeds_review_limit", "invalid_model_completion",
+))
+
+
+def safe_admission_code(exc):
+    if isinstance(exc, (GatewayInvalidCompletion, GatewayReasoningExhausted,
+                        GatewayTruncatedAnswer, GatewayEmptyAnswer)):
+        code = str(exc)
+        if code in SAFE_ADMISSION_CODES:
+            return code
+    return None
+
+
 def run_packet(repo_root,receipt_root,slug,model,key,
                completion=None):
     # The public-checkout boundary applies to every entry point, not merely
@@ -395,6 +415,9 @@ def run_packet(repo_root,receipt_root,slug,model,key,
         final={**base,'status':'needs_review_no_auto_retry',
                'error_class':type(exc).__name__,
                'elapsed_seconds':round(time.monotonic()-start,3)}
+        code = safe_admission_code(exc)
+        if code is not None:
+            final['admission_code'] = code
     write_receipt(receipt_file,final,replace=True)
     return {'id':packet['id'],'status':final['status'],
             'receipt':str(receipt_file)}
