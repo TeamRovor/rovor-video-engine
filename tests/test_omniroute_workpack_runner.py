@@ -240,6 +240,48 @@ class OmniRouteWorkpackTests(unittest.TestCase):
                                            opener=opener)
                 self.assertEqual(called, [worker.GATEWAY])
 
+    def test_gateway_failures_have_fixed_safe_classes_for_future_receipts(self):
+        class HTTPResult:
+            def __init__(self, code): self.code = code
+        for code, expected in (
+                (429, worker.GatewayRateLimited),
+                (502, worker.GatewayUpstreamFailure),
+                (503, worker.GatewayUpstreamFailure),
+                (401, worker.GatewayAuthorizationFailure)):
+            def opener(req, timeout):
+                raise worker.error.HTTPError(worker.GATEWAY, code,
+                                             "SECRET_PROVIDER_RESPONSE", None, None)
+            with self.subTest(code=code):
+                with self.assertRaises(expected) as raised:
+                    worker.http_completion("rovor-code-free-v1",
+                                           "bounded public context", "test-key",
+                                           opener=opener)
+                self.assertNotIn("SECRET_PROVIDER_RESPONSE",
+                                 str(raised.exception))
+        class Response:
+            status=200
+            def __init__(self, payload): self.payload=payload
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self, n): return json.dumps(self.payload).encode()
+        for payload, expected in (
+                ({"choices":[{"message":{"content":""},
+                              "finish_reason":"length"}],
+                  "usage":{"completion_tokens":2400,
+                           "completion_tokens_details":{"reasoning_tokens":2400}}},
+                 worker.GatewayReasoningExhausted),
+                ({"choices":[{"message":{"content":"Partial"},
+                              "finish_reason":"length"}]},
+                 worker.GatewayTruncatedAnswer),
+                ({"choices":[{"message":{"content":""},
+                              "finish_reason":"stop"}]},
+                 worker.GatewayEmptyAnswer)):
+            with self.subTest(error=expected.__name__):
+                with self.assertRaises(expected):
+                    worker.http_completion("rovor-code-free-v1", "public",
+                                           "key", opener=lambda req,timeout:
+                                           Response(payload))
+
     def test_timeout_is_terminal_without_second_http_request(self):
         calls=[]
         def opener(req,timeout):
