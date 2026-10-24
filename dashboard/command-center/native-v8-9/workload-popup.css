@@ -1,3 +1,6 @@
+/* The home card title is an invisible-style click target. Its visual geometry stays the same. */
+.panel-header .workload-open-title{all:unset;display:inline;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;min-width:0}
+.panel-header .workload-open-title:focus-visible{outline:2px solid #d9f2ff;outline-offset:3px}
 
 /* ROVOR Workload Distribution popup only. No global HUD geometry changes. */
 #rovor-workload-popup{display:flex;flex-direction:column;gap:14px;min-width:0;width:100%;font:inherit;color:#d8efff}
