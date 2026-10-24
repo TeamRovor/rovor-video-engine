@@ -367,6 +367,68 @@ class WorkerAtomicFleetTests(unittest.TestCase):
         del alternate["independent_pool_limits"]
         self.assertIsNone(self.claim(second,alternate))
 
+    def test_one_service_can_feed_three_distinct_verified_pool_jobs_in_a_tick(self):
+        calls=[]
+        def supply(job_id,payload,when):
+            self.assertTrue(set(payload) == {"assignment"})
+            self.assertEqual(when,NOW)
+            return self.independent(job_id,two_pools=True)
+        def complete(_conn,_workspace,**kwargs):
+            target=kwargs["omniroute_queue_job_id"]
+            self.assertTrue(kwargs["omni_verified_fleet"]["independent_pool_limits"])
+            self.assertEqual(kwargs["omni_max_24h"],144)
+            self.assertEqual(kwargs["omni_pace_seconds"],601)
+            self.assertNotIn(target,calls)
+            calls.append(target)
+            _conn.execute("UPDATE jobs SET status='needs_review' WHERE id=?",(target,))
+            return {"result":{"review_status":"draft_ready_for_human_review"}}
+        with mock.patch.object(continuous,"latest_public_tasks",
+                               side_effect=ValueError("offline")), \\
+             mock.patch.object(worker,"run_once",side_effect=complete):
+            summary=continuous.tick(self.state,self.workspace,now=NOW,
+                verified_fleet_provider=supply,max_verified_jobs_per_tick=3)
+        self.assertEqual(summary["executed"],3)
+        self.assertEqual(summary["review_ready_count"],3)
+        self.assertEqual(len(calls),3)
+        self.assertEqual(summary["dispatch_mode"],"verified_independent_pool_opt_in")
+        self.assertFalse(summary["dispatch"]["model_requests_confirmed_by_heartbeat"])
+        self.assertNotIn("paced_wait",json.dumps(summary))
+
+    def test_batch_without_trusted_host_adapter_never_attempts_model(self):
+        with self.assertRaisesRegex(ValueError,"trusted provider callback"):
+            continuous.tick(self.state,self.workspace,now=NOW,
+                            max_verified_jobs_per_tick=2)
+        with mock.patch.object(worker,"run_once",
+                               side_effect=AssertionError("no model allowed")) as called:
+            with self.assertRaisesRegex(ValueError,"independently verified pools"):
+                continuous.tick(self.state,self.workspace,now=NOW,
+                    max_verified_jobs_per_tick=2,
+                    verified_fleet_provider=lambda job,payload,clock:fleet(job))
+        called.assert_not_called()
+
+    def test_stop_while_batch_active_prevents_next_model(self):
+        calls=[]
+        def complete(_conn,_workspace,**kwargs):
+            calls.append(kwargs["omniroute_queue_job_id"])
+            (self.state/"STOP").touch()
+            return {"result":{"review_status":"draft_ready_for_human_review"}}
+        with mock.patch.object(continuous,"latest_public_tasks",
+                               side_effect=ValueError("offline")), \\
+             mock.patch.object(worker,"run_once",side_effect=complete):
+            output=continuous.tick(self.state,self.workspace,now=NOW,
+                verified_fleet_provider=lambda jid,payload,t:self.independent(jid),
+                max_verified_jobs_per_tick=5)
+        self.assertEqual(len(calls),1)
+        self.assertEqual(output["executed"],1)
+
+    def test_batch_limit_is_bounded_and_boolean_rejected(self):
+        for n in (True,0,10,"9",None):
+            with self.subTest(bad=n):
+                with self.assertRaisesRegex(ValueError,"Verified multi-pool batch"):
+                    continuous.tick(self.state,self.workspace,now=NOW,
+                        verified_fleet_provider=lambda job,payload,t:
+                            self.independent(job), max_verified_jobs_per_tick=n)
+
     def test_fleet_mode_cannot_run_on_legacy_unbounded_claim(self):
         job=self.queue()
         with self.assertRaisesRegex(ValueError, "requires continuous"):
