@@ -4679,8 +4679,8 @@
       "priority": 1,
       "status": "active",
       "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
-      "updated_at": "2026-10-24T22:27:05.648Z",
-      "next_update": "After durable pass/fail hosted checks, Pages deployment and cloud role scheduling",
+      "updated_at": "2026-10-24T22:38:26.182Z",
+      "next_update": "After real owner issue submission/deployed review readback, or private cloud hosting activation",
       "branch": "feature/hud-owner-reviews-20261024",
       "scopes": [
         "integrations/hud-cloud",
@@ -4697,7 +4697,7 @@
         "coordination/cloud-shifts/walter-pr186.json"
       ],
       "depends_on": [],
-      "next_action": "Finish durable owner PASS/FAIL, clearly flag the hard-coded archived Mac observation as disconnected, and publish the freshly verified Walter PR186 cloud completion. Expand bounded independent cloud role shifts within quota.",
+      "next_action": "Verify Amar's first real PASS/FAIL issue through save workflow and deployed HUD; never fabricate his decision. Continue the existing private cloud Site deployment when source-host DNS/account access is available. Real live OmniRoute cloud inference and in-progress telemetry remain unconfigured; do not re-clock archived data. Preserve scheduled cloud pools and existing Mac failure circuit.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
@@ -4734,13 +4734,22 @@
           "check": "39 focused tests; all existing Pages release checks; actual cloud PR/CI readback; artifact-only injection; GitHub Pages deployment",
           "result": "DEPLOYED existing HUD cloud completion feed with one attested Walter record. Run40137087982 and every step SUCCESS. Original native source unchanged; browser rendering not verified; no nine-provider cloud inference or human approval.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40137087982"
+        },
+        {
+          "commit": "64c19ae336045c073cd893e0cb5272bc56bd8c88",
+          "platform": "macOS Node24 and GitHub Actions Ubuntu Node22/24; cloud automation configuration readback",
+          "check": "49 focused tests; 5 PR checks; full Pages release run40139328091 with every step SUCCESS; fresh read-only Mac snapshot at2026-10-24T22:36:48Z; native schedules updated and immediate Mike/Gus shifts requested",
+          "result": "DEPLOYED immutable exact-commit owner PASS/FAIL confirmation controls, review ledger handler/reusable release, explicit archived/disconnected Mac label, feed-check/publication/completion separation, second verified Walter completion (PR186). First real owner submission and browser rendering NOT verified. Mac heartbeat recent but dispatch failure_circuit_requires_review, last tick0 executed; no live OmniRoute activity proof. Four hourly engineering schedules cover Walter,Hank,Mike/Gale,Gus/Jane/Jesse/Saul plus preserved delivery monitor at5-task cap; pooled roles are not simultaneous/continuous workers. Mike/Gus immediate requests accepted, completion not claimed. No cloud provider keys migrated.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40139328091"
         }
       ],
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/182",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40131970730",
         "https://github.com/TeamRovor/rovor-video-engine/pull/183",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/185"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/185",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/187",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40139328091"
       ]
     },
     {
