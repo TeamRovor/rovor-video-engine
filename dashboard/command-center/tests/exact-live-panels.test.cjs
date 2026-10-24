@@ -45,9 +45,15 @@ test('Panels never mark private executor, camera or provider quota online',()=>{
 });
 
 test('PWA updates offline HTML and data-layer shell, but does not cache raw GitHub',()=>{
-  assert.match(sw,/rovor-exact-hud-shell-v3/);
+  assert.match(sw,/rovor-exact-hud-shell-v4/);
   assert.ok(sw.includes("'./live-panels.js'"));
   assert.ok(sw.includes("'./live-panels.css'"));
+  assert.ok(sw.includes("'./earth-motion.css'"));
+  assert.match(read('earth-motion.css'),/earth-surface-turn 240s/);
+  assert.match(read('earth-motion.css'),/prefers-reduced-motion/);
+  assert.match(html,/id="earthMotion" hidden/);
+  assert.match(app,/earthMotion:false/);
+  assert.match(app,/id="earthMotionMode"/);
   assert.match(sw,/live-panels\\.js/);
   assert.match(sw,/live-panels\\.css/);
   assert.doesNotMatch(sw,/api\.github\.com|raw\.githubusercontent\.com/);
