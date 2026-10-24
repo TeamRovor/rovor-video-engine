@@ -3242,9 +3242,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:59:38.161Z",
-      "next_update": "After user Terminal applies pinned work-plan source to existing LaunchAgent; inspect real scheduled inference receipt",
-      "next_action": "Source runtime0a2fcde9 and activation helper0451fb5 published in PR41. Run immutable activation handoff with --enable-work-plan (not --verify-background-access) to update same existing label; one NEW scheduled unattended-readiness draft, no old-job replay. Then inspect exact queue job/private receipt and manual content QA. Source-only until host activation. Finite plan waits for review after exhaustion; broader autonomous task selection/app tooling remains unimplemented.",
+      "updated_at": "2026-10-24T01:03:11.660Z",
+      "next_update": "After source repair and sanitized scheduled failure evidence",
+      "next_action": "Host feeder activated; scheduled job4e23d50c failed once (gateway502: first route empty_choices; fallback consumed2400 reasoning tokens with no answer). Preserve job/no replay. Prepare minimal explicit reasoning-disabled request for future bounded drafts, retain2400 total cap and strict blank-output rejection; offline request-shape regression. No new model calls or host writes.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
