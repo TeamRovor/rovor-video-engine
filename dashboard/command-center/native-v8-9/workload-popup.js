@@ -60,6 +60,7 @@
     if(state.view==='matrix'){
       visual=`<section class="wl-card">
         <h3>EMPLOYEE × AI MODEL / REQUEST ACTIVITY</h3>
+        <div class="wl-scrollhint">SWIPE LEFT OR RIGHT FOR ALL NINE MODELS ↔</div>
         <div class="wl-matrix-scroll" tabindex="0" role="region" aria-label="Scrollable nine-model employee usage matrix">
           <table class="wl-matrix"><thead><tr><th scope="col">EMPLOYEE</th>${MODELS.map((m,j)=>`<th scope="col"><span title="OmniRoute model ID not yet verified">M${String(j+1).padStart(2,'0')}</span></th>`).join('')}</tr></thead>
           <tbody>${EMPLOYEES.map((emp,i)=>`<tr>
@@ -72,7 +73,6 @@
             return `<td><button class="wl-cell" type="button" data-wl-cell="${i}-${j}" data-active="${n!==null&&n>0?'yes':'no'}" aria-pressed="${selected}" style="--wl-intensity:${alpha.toFixed(2)}" aria-label="${emp[1]}, model ${j+1}, ${n===null?'unverified':n+' sample calls'}">${value}</button></td>`;
           }).join('')}</tr>`).join('')}</tbody></table>
         </div>
-        <div class="wl-scrollhint">SWIPE LEFT OR RIGHT FOR ALL NINE MODELS ↔</div>
         <div class="wl-key"><span>Blue intensity: relative calls (sample mode only)</span><span>— : no verified telemetry</span></div>
       </section>`;
     }else if(state.view==='models'){
@@ -156,7 +156,12 @@
     root.id='rovor-workload-popup';
     const state={view:compactPick?.view||'matrix',period:'24H',demo:false,employee:compactPick?.employee??0,model:compactPick?.model??0};
     compactPick=null;
-    const paint=()=>{root.innerHTML=makeUI(state)};
+    const paint=()=>{
+      const previousLeft=root.querySelector?.('.wl-matrix-scroll')?.scrollLeft??0;
+      root.innerHTML=makeUI(state);
+      const nextScroll=root.querySelector?.('.wl-matrix-scroll');
+      if(nextScroll)nextScroll.scrollLeft=previousLeft;
+    };
     root.addEventListener('click',ev=>{
       const b=ev.target.closest('button');
       if(!b||!root.contains(b))return;
