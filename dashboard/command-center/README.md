@@ -1,6 +1,14 @@
 # ROVOR Command Center — live GitHub HUD
 
-## Native HUD v8.7 — scroll affordance and refresh stability
+## Native HUD v8.8 — genuinely scrollable mini instruments
+
+The compact panels **scroll their real content within the frame** instead of compressing it or requiring the user to open the focus view. When the queue is verified, Active Tasks shows an **OPEN / ALL** switch: OPEN lists unfinished tasks, ALL includes completed/archived tasks. Recent Activity shows the full timestamped queue history. Workload now includes real priority groups; System Health includes actual source-backed task counters; API Quota and Source Feed display measured GitHub/session details (no invented Mac usage).
+
+Only panels with actual overflow display a noticeable **SCROLL ↓** tag at the **bottom-right**. Touch pan, mouse wheel, trackpad and keyboard scrolling all act on the inner preview. The indicator disappears on reaching the bottom; source refresh preserves scroll positions. Without source data, cards explicitly show unverified state rather than fabricated scrollable history.
+
+Browser tests verify a 104-record queue (15 unfinished, 89 complete), the OPEN/ALL switch, bottom-anchored indicator, independent scrolling, and other interactions across iPhone, iPad portrait/landscape and desktop. No additional API polling, Mac worker claims, or changes to the preserved `/exact/` rollback.
+
+## Prior release: native HUD v8.7 — scroll affordance and refresh stability
 
 Each compact instrument now shows a small blue downward cue only while content remains below its scroll viewport; the cue disappears at the bottom. GitHub refresh keeps scroll position for all six panes, including quota and source details. The centered cinematic focus state, real data verification, portrait/landscape geometry, and prior /exact/ rollback are unchanged.
 
@@ -12,7 +20,7 @@ The six compact home panels are miniature scrollable instruments: real queue/act
 
 
 
-The main GitHub Pages URL now redirects immediately to `./native/` — the **self-contained native v8.6 build** with real HTML/CSS/JavaScript interactions, embedded Earth/ROVOR artwork and the corrected reactor heading (no `.top-glyph`). This is a tested standalone prototype published as the live default at the user's request.
+The main GitHub Pages URL redirects immediately to `./native/` — the **self-contained native v8.8 build** with real HTML/CSS/JavaScript interactions, embedded Earth/ROVOR artwork and the corrected reactor heading (no `.top-glyph`). This is a tested standalone prototype published as the live default at the user's request.
 
 The prior pixel-matched, image-based HUD remains at `./exact/` for a non-destructive rollback. The older first-generation CSS cockpit source and tests are also preserved. **Do not remove `exact/` without an explicit request.**
 
