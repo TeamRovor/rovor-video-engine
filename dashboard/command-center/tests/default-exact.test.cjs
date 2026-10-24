@@ -43,3 +43,14 @@ test('exact PWA assets exist and never cache private or dynamic GitHub data',()=
  assert.equal(manifest.scope,'./');
  assert.equal(manifest.display,'standalone');
 });
+
+test('widescreen launches pixel-identical reference view without extra toolbar',()=>{
+ const app=read('exact/app.js');
+ const css=read('exact/style.css');
+ assert.ok(app.includes("immersive:window.matchMedia('(min-width: 1024px) and (min-aspect-ratio: 3/2)').matches"));
+ assert.ok(css.includes('.immersive .utility,.immersive .bottom-status,.immersive .mobile-nav{display:none!important}'));
+ assert.ok(css.includes('.immersive .atmosphere{display:none}'));
+ assert.ok(css.includes('width:min(100vw,calc(100svh * 1672 / 941))'));
+ assert.ok(app.includes("event.key.toLowerCase()==='i'"));
+ assert.ok(app.includes('state.immersive=false;applySettings()'));
+});

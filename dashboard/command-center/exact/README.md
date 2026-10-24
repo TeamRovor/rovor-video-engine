@@ -1,6 +1,6 @@
 # ROVOR DIGITAL — Exact Reference HUD
 
-This is the user's requested **1:1 reference-backed interactive HUD**. The `reference.png` asset contains the *unchanged original 1672×941* reference image; it is an illustrative scene, **not real telemetry**. A blue-only alternate image is selectable under Settings, but the default is the unmodified reference. Enter immersive mode through **1:1** or the **I** key to display just the artwork edge to edge at its native aspect ratio.
+This is the user's requested **1:1 reference-backed interactive HUD**. The `reference.png` asset contains the *unchanged original 1672×941* reference image; it is an illustrative scene, **not real telemetry**. A blue-only alternate image is selectable under Settings, but the default is the unmodified reference. On widescreen displays (at least 1024px wide, 3:2 aspect ratio or wider), immersive **1:1** mode now opens automatically without extra header/footer bars. Press **I** or **Esc** to reveal the normal toolbar; you can re-enter 1:1 mode there. Tablet portrait and phone layouts keep visible controls. The artwork retains its native 1672×941 aspect ratio without stretching.
 
 ## Interaction
 
