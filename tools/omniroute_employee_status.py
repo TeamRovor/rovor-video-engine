@@ -193,7 +193,7 @@ def inspect(state, *, run=subprocess.run):
                     "SELECT j.status,j.result FROM events e JOIN jobs j "
                     "ON j.id=e.job_id WHERE j.kind='research.omniroute' "
                     "AND e.event='claimed' AND e.timestamp>=? "
-                    "ORDER BY e.timestamp DESC,e.id DESC LIMIT 3",
+                    "ORDER BY e.timestamp DESC,e.rowid DESC LIMIT 3",
                     (since,)).fetchall()
                 failed_recent = 0
                 for previous in recent:
