@@ -78,6 +78,37 @@ class FeedTests(unittest.TestCase):
         self.assertIsNone(worker.claim(self.db, 'capped', allow_omniroute_model_use=True))
         self.assertEqual(self.db.execute("SELECT COUNT(*) FROM jobs WHERE status='queued'").fetchone()[0], 1)
 
+    def test_recovery_releases_one_new_canary_before_any_of_seven_fresh_roles(self):
+        first=feed.feed_recovery(self.db,self.state,ROOT,limit=3)
+        self.assertEqual(first["status"],"recovery_canary_queued")
+        self.assertEqual(first["submitted"],1)
+        again=feed.feed_recovery(self.db,self.state,ROOT,limit=3)
+        self.assertEqual(again["status"],"existing_work")
+        job=first["job_ids"][0]
+        self.db.execute("UPDATE jobs SET status='needs_review',result=? WHERE id=?",
+                        (json.dumps({"draft_status":"needs_review_no_auto_retry"}),job))
+        blocked=feed.feed_recovery(self.db,self.state,ROOT,limit=3)
+        self.assertEqual(blocked["status"],"recovery_canary_not_review_ready")
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM jobs").fetchone()[0],1)
+        self.db.execute("UPDATE jobs SET status='needs_review',result=? WHERE id=?",
+                        (json.dumps({"draft_status":"draft_completed_needs_review",
+                                     "review_status":"draft_ready_for_human_review"}),job))
+        counts=[]
+        for expected in (3,3,1):
+            response=feed.feed_recovery(self.db,self.state,ROOT,limit=3)
+            self.assertEqual(response["submitted"],expected)
+            counts.extend(response["job_ids"])
+            for jid in response["job_ids"]:
+                self.db.execute("UPDATE jobs SET status='needs_review',result=? WHERE id=?",
+                                (json.dumps({"draft_status":"draft_completed_needs_review",
+                                             "review_status":"draft_ready_for_human_review"}),jid))
+        self.assertEqual(len(counts),7)
+        self.assertEqual(len(set(counts)),7)
+        self.assertEqual(self.db.execute(
+            "SELECT COUNT(*) FROM jobs WHERE kind=?",(worker.OMNI_KIND,)).fetchone()[0],8)
+        self.assertEqual(feed.feed_recovery(self.db,self.state,ROOT)["status"],
+                         "recovery_plan_exhausted_human_review_required")
+
     def test_full_plan_to_private_receipt_and_review_with_mock_completion(self):
         catalog = [{'name': name, 'strategy': 'priority', 'isHidden': False,
                     'models': [{'kind': 'model', 'providerId': 'openrouter', 'model': m}
