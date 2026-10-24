@@ -146,11 +146,11 @@ class WorkerAtomicFleetTests(unittest.TestCase):
     def test_selected_route_rechecked_before_gateway_call(self):
         with self.assertRaisesRegex(ValueError, "changed_to_multi_model"):
             binding.verify_before_completion(
-                {"model_id": MODEL, "combo": COMBO, "pool_id": POOL},
+                {"model_id": MODEL, "combo": COMBO, "pool_id": POOL, "provider_id": "openrouter"},
                 [{"name": COMBO, "strategy": "priority", "isHidden": False,
                   "models": [CATALOG[0]["models"][0], CATALOG[0]["models"][0]]}])
         self.assertEqual(binding.verify_before_completion(
-            {"model_id": MODEL, "combo": COMBO, "pool_id": POOL}, CATALOG), COMBO)
+            {"model_id": MODEL, "combo": COMBO, "pool_id": POOL, "provider_id": "openrouter"}, CATALOG), COMBO)
 
     def test_capacity_selected_model_runs_same_public_packet_once_and_releases_slot(self):
         job = self.queue()
