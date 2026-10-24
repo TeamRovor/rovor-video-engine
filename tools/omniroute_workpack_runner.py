@@ -38,10 +38,20 @@ SPECIALIST_PACKETS = (
     "walter-v1-social-content-safety",
     "walter-v1-free-route-usage-audit",
 )
-ALLOWED_PACKETS = PACKETS + SPECIALIST_PACKETS
+RECOVERY_PACKETS = (
+    "walter-v2-recovery-proof",
+    "walter-v2-mike-worker-guard",
+    "walter-v2-jane-editor-handoff",
+    "walter-v2-jesse-animation-qa",
+    "walter-v2-gale-render-qa",
+    "walter-v2-gus-business-ops",
+    "walter-v2-saul-review-ops",
+    "walter-v2-hank-evidence-audit",
+)
+ALLOWED_PACKETS = PACKETS + SPECIALIST_PACKETS + RECOVERY_PACKETS
 # Deterministic, explicitly labeled context excerpts are permitted only for
 # these previously approved packets whose vetted public sources may grow.
-EXCERPT_PACKETS = frozenset(("unattended-readiness",) + SPECIALIST_PACKETS)
+EXCERPT_PACKETS = frozenset(("unattended-readiness",) + SPECIALIST_PACKETS + RECOVERY_PACKETS)
 ROLES = ('evidence-triage','software-architecture','inference-routing')
 MAX_INPUT = 28000
 MAX_RESPONSE = 131072
