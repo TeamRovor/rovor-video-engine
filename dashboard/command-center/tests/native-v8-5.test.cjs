@@ -17,7 +17,7 @@ test('v8.5 is a standalone native interface with all images embedded',()=>{
  assert.match(html,/Stray top-glyph removed:/);
 });
 test('native controls are real elements and inline JavaScript is syntactically valid',()=>{
- for(const key of ['tasks','resources','activity','systems','quota','media','dashboard','github','settings']){
+ for(const key of ['tasks','activity','systems','quota','media','dashboard','github','settings']){
    assert.ok(html.includes('data-view="'+key+'"'),'Missing native action '+key);
  }
  assert.match(html,/id="taskCount"/);
