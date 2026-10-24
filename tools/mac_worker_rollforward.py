@@ -118,7 +118,7 @@ def state_snapshot(state):
 
 
 def inspect(home, checkout, expected, *, run=subprocess.run, platform=sys.platform, uid=os.getuid,
-            approve_parallel=False, approve_free_budget=False):
+            approve_parallel=False, approve_free_budget=False, approve_recovery=False):
     if platform != "darwin":
         raise Blocked("mac_gui_session_required")
     home = checked(home, directory=True)
@@ -165,6 +165,10 @@ def inspect(home, checkout, expected, *, run=subprocess.run, platform=sys.platfo
     revised = dict(current)
     revised["ProgramArguments"] = list(args)
     revised["ProgramArguments"][1] = str(script)
+    if approve_recovery:
+        if "--approve-omniroute-recovery-plan" in args:
+            raise Blocked("recovery_plan_already_installed")
+        revised["ProgramArguments"].append("--approve-omniroute-recovery-plan")
     if approve_free_budget:
         if not approve_parallel:
             raise Blocked("higher_daily_budget_requires_parallel_approval")
@@ -256,6 +260,8 @@ def main(argv=None):
     parser.add_argument("--candidate", required=True, type=Path)
     parser.add_argument("--expected-commit", required=True)
     parser.add_argument("--approve-rollforward", action="store_true")
+    parser.add_argument("--approve-recovery-plan", action="store_true",
+                        help="Activate exactly one gated v2 recovery canary, then distinct reviewed specialist packets")
     parser.add_argument("--approve-parallel-free-research", action="store_true",
                         help="Up to three concurrent preapproved research jobs")
     parser.add_argument("--approve-up-to-14-free-research-calls", action="store_true",
@@ -264,7 +270,8 @@ def main(argv=None):
     try:
         info = inspect(Path.home(), args.candidate, args.expected_commit,
                        approve_parallel=args.approve_parallel_free_research,
-                       approve_free_budget=args.approve_up_to_14_free_research_calls)
+                       approve_free_budget=args.approve_up_to_14_free_research_calls,
+                       approve_recovery=args.approve_recovery_plan)
         if not args.approve_rollforward:
             result = {"status": "read_only_candidate_ready",
                       "state_integrity_verified": True, "old_service_loaded": True,
