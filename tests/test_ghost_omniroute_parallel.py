@@ -51,7 +51,9 @@ class ParallelClaims(unittest.TestCase):
                 parallel_omniroute_workers=3)
         self.assertEqual(report["executed"], 3)
         self.assertEqual(report["parallel_workers"], 3)
-        self.assertEqual(report["failed"], 3)  # Review != approval.
+        self.assertEqual(report["failed"], 0)
+        self.assertEqual(report["review_ready"], 3)
+        self.assertEqual(report["needs_review"], 3)
         self.assertEqual(len(seen), 3)
         self.assertEqual(len({j[0] for j in seen}), 3)
         self.assertEqual(len({j[1] for j in seen}), 3)
@@ -76,6 +78,7 @@ class ParallelClaims(unittest.TestCase):
                                allow_omniroute_work_plan=True,
                                parallel_omniroute_workers=3)
         self.assertEqual(result["executed"], 1)
+        self.assertEqual(result["review_ready"], 0)
         self.assertEqual(len(calls), 1)
         self.assertEqual(self.db.execute(
             "SELECT COUNT(*) FROM events WHERE event='claimed'").fetchone()[0], 5)
