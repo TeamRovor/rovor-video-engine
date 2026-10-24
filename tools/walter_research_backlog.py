@@ -36,7 +36,7 @@ def validated(root):
     """Validate one bounded release against immutable public source files."""
     root = Path(root).resolve(strict=True)
     path = root / MANIFEST
-    if path.is_symlink() or not path.is_file():
+    if path.is_symlink() or path.parent.is_symlink() or not path.is_file():
         raise ValueError("unsafe_manifest")
     if path.stat().st_size > 32000:
         raise ValueError("manifest_too_large")
@@ -48,7 +48,11 @@ def validated(root):
             doc["release"] != "walter-public-research-v1" or
             doc["visibility"] != "public-repository-metadata-only" or
             doc["status"] != "staged_not_integrated" or
-            doc["policy"] != EXPECTED_SAFETY):
+            not isinstance(doc["policy"], dict) or
+            set(doc["policy"]) != set(EXPECTED_SAFETY) or
+            any(type(doc["policy"][key]) is not type(value) or
+                doc["policy"][key] != value
+                for key, value in EXPECTED_SAFETY.items())):
         raise ValueError("unsafe_release_policy")
     jobs = doc["jobs"]
     if not isinstance(jobs, list) or len(jobs) != 14:
@@ -90,8 +94,12 @@ def validated(root):
         size = 0
         for rel in sources:
             file = root / rel
-            if (file.is_symlink() or not file.is_file() or
-                    file.resolve() != (root / rel).resolve()):
+            part = root
+            for segment in Path(rel).parts:
+                part = part / segment
+                if part.is_symlink():
+                    raise ValueError("unavailable_or_redirected_public_source")
+            if not file.is_file():
                 raise ValueError("unavailable_or_redirected_public_source")
             data = file.read_bytes()
             if len(data) > 19000:
