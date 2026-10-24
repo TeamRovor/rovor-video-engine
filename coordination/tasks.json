@@ -3740,7 +3740,7 @@
       "id": "walter-public-citation-evidence-gate-20261024",
       "title": "Validate line-specific public-source citations in unattended specialist drafts before review",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 citation evidence shift",
       "branch": "feature/walter-public-citation-evidence-v1",
       "scopes": [
@@ -3750,11 +3750,26 @@
         "subsystem:walter-public-source-citation-evidence"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T06:48:00Z",
-      "next_update": "After isolated Python 3.9/3.11 hosted tests and PR checks",
-      "next_action": "Implement a standalone read-only citation gate for the 14 public Walter workpacks: validate source hashes and exact line references, reject fabricated/malformed/out-of-range citations without exposing draft text, and provide a content-free human-review verdict. No edits to existing PR41 worker or live model calls.",
+      "updated_at": "2026-10-24T06:53:00Z",
+      "next_update": "Source merged and verified; only existing Mac worker owner may choose optional integration.",
+      "next_action": "PR #136 merged at 9282ed18c83bac4b5a7746f12c17aa13559547a4. New tools/walter_source_citation_gate.py provides read-only verify(answer, approved_public_sources, request_time_sha256) and CLI inspect_packet with private bounded stdin, structured [[source:PATH#Lx-Ly]] exact source-line checks, symlink and hash guards, content-free human-review verdict. 30 offline Python3.9/3.11 tests and shared project-loop/routing PASS in run 40071830513. PR41 Mac owner may integrate only after an actual approved new private draft and a trusted source fingerprint from request creation; prompt must explicitly request this citation syntax, legacy unstructured output fails. This is source-only, no Mac deployment, model inference, auto-approval, job replay or spending.",
       "acceptance": "New stdlib-only module and CLI use the existing approved Walter public packet release, source digest binding, strict [[source:PATH#Lx-Ly]] syntax, bounded private stdin and content-free verdict. Reject forged source paths, mismatched source hashes, missing citations, malformed ranges, private-path redirects and unsupported formats; never claim factual correctness or approve a draft. Focused offline Python3.9/3.11 tests and shared queue/routing CI. No Mac, network, inference, scheduler or queue writes.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "9282ed18c83bac4b5a7746f12c17aa13559547a4",
+          "platform": "GitHub-hosted Ubuntu / Python 3.9 and 3.11",
+          "check": "30 focused offline citation verifier/CLI tests, project_loop.py check and task_routing_pair.py --check",
+          "result": "PASS on both Python versions; no model, network, SQLite or native app calls.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40071830513"
+        },
+        {
+          "commit": "9282ed18c83bac4b5a7746f12c17aa13559547a4",
+          "platform": "GitHub PR #136",
+          "check": "New independent module, tests and workflow only; existing PR41 Mac worker and continuous-runtime files untouched",
+          "result": "MERGED source-only into main; no private model drafts reviewed and no Mac deployment.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/136"
+        }
+      ]
     }
   ]
 }
