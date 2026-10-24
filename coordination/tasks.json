@@ -3949,13 +3949,16 @@
       "depends_on": [
         "omniroute-nine-model-coverage-20261024"
       ],
-      "updated_at": "2026-10-24T08:33:01.007Z",
+      "updated_at": "2026-10-24T11:02:49.608Z",
       "next_update": "After authenticated Mac model identities, per-model zero-cost/quota evidence and host-level source integration; keep original LaunchAgent unchanged until reviewed",
-      "next_action": "Pure capacity-aware policy merged and tested in PR #144. Next integrate its decide() into existing PR137 atomic SQLite claim (NOT as new worker), attach verified live model IDs from PR141 Mac fleet inventory and remaining quotas, record actual chosen upstream model in private receipts, then run one approved zero-cost canary per model and prove safe fresh-job failover/cooldown/reset with STOP and global 144/day cap. Use per-model concurrency=1 initially. Preserve already running Mac service and 601s global pace until verified safe rollout; do not claim actual nine-model utilization now.",
+      "next_action": "PR161 merged opt-in independent per-model and account quota admission into PR137 existing worker source at c8510ad; exact SQLite job+model reservations, positive host-attested rolling-day and min-interval limits per model+shared pool, another independently verified pool can take a new job without global 601s delay, source-only bounded batch up to nine sequential jobs/tick with STOP/failure circuit/global144 ceiling unchanged. All 10 CI workflows PASS on final head. Remaining: REAL Mac trusted account/cost/quota/canary adapter, approved single-model route mappings, safe one-service rollout and private receipt telemetry; installed Mac still original pinned older service. Do not claim 9 running.",
       "acceptance": "Offline pure model-policy tests: proportional headroom, task capability fit, small/medium/deep model choice, cooldown/quota rollover, readiness verification, successful free canary, no paid/private request, STOP/circuit, fail-closed shape, concurrency. Python3.9/3.11 hosted CI; current mac rollout unchanged.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/144",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40078392674"
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40078392674",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/161",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40088003615",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6383413738"
       ],
       "evidence": [
         {
@@ -3964,9 +3967,16 @@
           "check": "16 no-network regression tests per Python version, proportional tier/context/output headroom, independent quota/cooldown, eligible model replacement, reset verification, privacy/zero-cost, STOP/failure circuit",
           "result": "PASS both hosted matrix jobs; merged into main source only, no new OmniRoute Mac inference or installed worker changes.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40078392674"
+        },
+        {
+          "commit": "c8510adb5534a2bb3304494ae43af8b84add3d85",
+          "platform": "GitHub Actions Python3.9,3.11 on macOS and Ubuntu",
+          "check": "Per-provider/account and model independent request windows inside SQLite BEGIN IMMEDIATE, same-second distinct pool claim, legacy global paced default, hard global144, STOP/failure circuit, optional bounded one-service batch and truthful model telemetry",
+          "result": "All 10 hosted workflows PASS; PR161 merged into existing PR137 development source. Not installed on Mac; no live nine-model utilization claim.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6383413738"
         }
       ],
-      "blocker": "Source-only policy finished; existing Mac runtime still lacks per-model attested budgets and integrated cross-model reservation. Need actual host-side verified model IDs, free eligibility and real outcome evidence before enabling automatic switching."
+      "blocker": "Host authentic zero-cost per-account/model limits and verified single-model routes are absent; no live Mac adapter or reviewed same-service rollout. Nine configured connection entries are only three distinct routed models in last actual audit. GitHub source-only merge does not change active Mac."
     },
     {
       "id": "walter-draft-actionability-20261024",
@@ -4020,15 +4030,18 @@
       "depends_on": [
         "omniroute-proportional-capacity-20261024"
       ],
-      "updated_at": "2026-10-24T09:01:30.874Z",
+      "updated_at": "2026-10-24T11:02:49.611Z",
       "next_update": "After existing Mac owner integrates atomic reservations into the running SQLite claim boundary and verifies host model account quotas",
-      "next_action": "PR #147 has merged capacity selector + atomic model/pool reservation into the existing PR137 source claim transaction. On real Mac, safely obtain audited fleet model IDs, provider/identity/zero-spend quota/canary snapshots and approved single-model OmniRoute combo map. Supply trusted host callback (existing CLI intentionally defaults legacy) and run one private controlled live canary/new job in isolated state before rolling forward same LaunchAgent. Verify exact model/provider binding before HTTP POST, no replay, cooldown and independent shared quota and real review-ready receipt. Do NOT reinstall currently active pinned b7366 service or assume tests prove nine live models.",
+      "next_action": "PR161 merged opt-in independent per-model and account quota admission into PR137 existing worker source at c8510ad; exact SQLite job+model reservations, positive host-attested rolling-day and min-interval limits per model+shared pool, another independently verified pool can take a new job without global 601s delay, source-only bounded batch up to nine sequential jobs/tick with STOP/failure circuit/global144 ceiling unchanged. All 10 CI workflows PASS on final head. Remaining: REAL Mac trusted account/cost/quota/canary adapter, approved single-model route mappings, safe one-service rollout and private receipt telemetry; installed Mac still original pinned older service. Do not claim 9 running.",
       "acceptance": "Race-proof in-memory SQLite concurrent reservation tests; preserves historical reservations after completion for quota accounting, refuses duplicate/replay, expired pending not silently released, paid/unverified/private task rejected; zero network/inference, 3.9/3.11 CI.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/146",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40079109395",
         "https://github.com/TeamRovor/rovor-video-engine/pull/147",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40080141853"
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40080141853",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/161",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40088003615",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6383413738"
       ],
       "evidence": [
         {
@@ -4044,9 +4057,16 @@
           "check": "Atomic claim integrated into existing worker, route/provider exactly verified again before HTTP, legacy default preserved; new and existing continuous safety suites",
           "result": "PR #147 merged into PR137 development branch. Hosted 7 workflows PASS at head 2cc508a9d732daffbc23f0a575d7c08b55d387f6; no Mac activation or new upstream inference performed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/147"
+        },
+        {
+          "commit": "c8510adb5534a2bb3304494ae43af8b84add3d85",
+          "platform": "GitHub Actions Python3.9,3.11 on macOS and Ubuntu",
+          "check": "Per-provider/account and model independent request windows inside SQLite BEGIN IMMEDIATE, same-second distinct pool claim, legacy global paced default, hard global144, STOP/failure circuit, optional bounded one-service batch and truthful model telemetry",
+          "result": "All 10 hosted workflows PASS; PR161 merged into existing PR137 development source. Not installed on Mac; no live nine-model utilization claim.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6383413738"
         }
       ],
-      "blocker": "Host evidence and trusted quota/provider API adapter for all nine resource identities not yet present; PR147 tested source hook has no default CLI activation and Mac currently runs earlier pinned PR137 revision. External access to Mac state unavailable from this session."
+      "blocker": "Host authentic zero-cost per-account/model limits and verified single-model routes are absent; no live Mac adapter or reviewed same-service rollout. Nine configured connection entries are only three distinct routed models in last actual audit. GitHub source-only merge does not change active Mac."
     },
     {
       "id": "walter-public-task-grounding-20261024",
