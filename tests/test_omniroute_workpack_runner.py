@@ -182,6 +182,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         self.assertEqual(usage,{'total_tokens':10})
         self.assertEqual(len(calls),1)
         req,timeout=calls[0]
+        self.assertEqual(timeout,120)
         self.assertEqual(req.full_url,worker.GATEWAY)
         self.assertIn('127.0.0.1',req.full_url)
         body=json.loads(req.data)
@@ -189,6 +190,15 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         self.assertFalse(body['stream'])
         self.assertEqual(len(body['messages']),2)
         self.assertNotIn('key-from-keychain',req.data.decode())
+
+    def test_timeout_is_terminal_without_second_http_request(self):
+        calls=[]
+        def opener(req,timeout):
+            calls.append(timeout)
+            raise TimeoutError('fixture')
+        with self.assertRaises(ValueError):
+            worker.http_completion('rovor-code-free-v1','public fixture','fixture-key',opener=opener)
+        self.assertEqual(calls,[120])
 
     def test_safe_local_open_disables_environment_proxies_and_redirects(self):
         captured=[]

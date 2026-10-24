@@ -27,6 +27,7 @@ MAX_INPUT = 28000
 MAX_RESPONSE = 131072
 MAX_OUTPUT = 22000
 MAX_PACKET = 10000
+REQUEST_TIMEOUT_SECONDS = 120
 JOB = re.compile(r'^[a-z0-9][a-z0-9_-]{2,55}$')
 MODEL = re.compile(r'^[A-Za-z0-9_.:/-]{2,120}$')
 SYSTEM = (
@@ -177,7 +178,7 @@ def http_completion(model, prompt, key, opener=None):
         'Authorization':'Bearer '+key,'Content-Type':'application/json',
         'Accept':'application/json'}, method='POST')
     try:
-        with opener(req,timeout=55) as response:
+        with opener(req,timeout=REQUEST_TIMEOUT_SECONDS) as response:
             status=getattr(response,'status',None)
             if status is None and callable(getattr(response,'getcode',None)):
                 status=response.getcode()
