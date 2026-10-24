@@ -845,6 +845,15 @@
         "github-write",
         "local-exec"
       ]
+    },
+    "walter-citation-code-context-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

@@ -4721,6 +4721,25 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/183"
       ],
       "blocker": "Managed execution cannot resolve the registered private Site's source Git host. The finished Sites adapter/bundle has not been pushed to the Site repository or deployed. Permanent Mac reporting and the ChatGPT reader connection remain pending."
+    },
+    {
+      "id": "walter-citation-code-context-20261024",
+      "title": "Reject Markdown code-block citation laundering and oversized Unicode drafts in OmniRoute review gate",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 code-context shift",
+      "branch": "feature/walter-citation-code-context-20261024",
+      "scopes": [
+        "tools/walter_source_citation_gate.py",
+        "tests/test_walter_source_citation_gate.py",
+        "subsystem:walter-citation-code-context"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T21:42:59.373Z",
+      "next_update": "2026-10-24T22:42:59.373Z",
+      "next_action": "Implement source-only code-fence/inline-code citation-context protection and UTF-8 byte limit in the existing Walter draft citation CLI; add adversarial offline tests, verify Python 3.9/3.11 hosted CI and shared routing checks; do not deploy to Mac or approve private drafts.",
+      "acceptance": "The strict CLI review path rejects citations embedded only in fenced or inline code, does not count code tokens toward research prose, and rejects >50KB UTF-8 drafts through both API and CLI. Valid cited prose remains accepted; low-level verify() continues to bind independently reviewed single citations. Python 3.9/3.11 focused CI and project_loop.py check pass. No Mac/inference/paid API/deployment.",
+      "evidence": []
     }
   ]
 }
