@@ -3731,16 +3731,17 @@
         "integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T09:14:59.534Z",
-      "next_update": "After Mac operator runs one read-only sanitized telemetry observer; report new claim/review-ready/nonready and preserve installed service",
-      "next_action": "Mac activation complete at pinned b736610 and heartbeat recorded 22 claims/24h, but 22 needs_review jobs alone do not prove completed useful work. New tools/omniroute_workforce_telemetry.py source from PR150 is merged to PR137 at 7e49765; run read-only using pinned git show command in linked PR137 comment without reinstalling. Verify fresh review-ready vs failed results and later exact model receipt IDs; stage current PR147 routing only after verified providers, zero-cost quota, exact single-model combo/canary.",
+      "updated_at": "2026-10-24T09:17:46Z",
+      "next_update": "After read-only nine-model roster on actual Mac and diagnosis of 12 nonready + 5 failed/pending review outcomes, then true per-model provider eligibility and routing",
+      "next_action": "Host telemetry now PROVEN: 27 distinct internal claims/24h, current outcomes 10 review-ready drafts,12 nonready model attempts,5 pending/failed review, one fresh public job queued and heartbeat 136s recent, paced_wait expected. Do not reinstall or requeue failed IDs. Next Mac audit actual model roster vs nine configured connections with merged omniroute_model_fleet.py read-only, classify failures safely, verify per-model $0 quotas/privacy/terms/canary and selected upstream before controlled PR147 opt-in atomic fleet integration. Preserve 601s spacing, 144 rolling/day, STOP/circuit.",
       "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation.",
-      "blocker": "Installed LaunchAgent activation succeeded and previous live heartbeat observed; actual fresh per-model response/accepted work and new read-only post-merge Mac telemetry are still unverified by connected GitHub. Nine configured provider entries != nine eligible working models.",
+      "blocker": "Working scheduler, host telemetry and feeder observed. 17 of 27 recent claimed jobs not review-ready; cause unknown without sanitized review/error classification. Zero exact model reservations on installed older worker; provider model identity, account quotas, usable canaries and human-accepted deliverables remain unverified.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/137",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40072143609",
         "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6381898438",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382406783"
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382406783",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382472095"
       ],
       "evidence": [
         {
@@ -3770,6 +3771,13 @@
           "check": "Read-only consistent SQLite/WAL workforce telemetry, 12 focused offline tests per version, secret and provider-text nonexposure, real ready/not-ready classification",
           "result": "PASS. Merged source into existing PR137 worker branch; installed Mac service unchanged. Await real host read-only telemetry run.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/150"
+        },
+        {
+          "commit": "7e49765dd06e5907baeeb8efe7a4cd4a5bdbb02e",
+          "platform": "Actual Intel Mac host / owner-provided 2026-10-24 04:17 CDT read-only telemetry",
+          "check": "tools/omniroute_workforce_telemetry.py executed against live existing Mac SQLite/WAL and heartbeat, no inference or state writes",
+          "result": "Consistent snapshot: 27 claims/24h; 10 review-ready drafts, 12 model-attempt-not-review-ready, 5 pending/failed-review among recently claimed jobs; 1 queued, 136-sec fresh heartbeat, feed=new_public_task_assignment_queued, dispatch=paced_wait, no per-model reservation table (0/27 exact model attributions). No proof of actual nine models or human-approved outputs.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382472095"
         }
       ]
     },
