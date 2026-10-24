@@ -13,56 +13,69 @@
   const FRAGMENT = `
 precision mediump float;
 uniform sampler2D uMap;
+uniform sampler2D uNightMap;
 uniform vec2 uSize;
 uniform float uAngle;
 uniform float uCloud;
-varying vec2 unusedVarying;
+uniform float uHasNight;
 
-float rnd(vec2 p) {
-  return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);
+float hash(vec2 p) {
+  return fract(sin(dot(p,vec2(41.23,277.17)))*43758.5453);
 }
-float noise2(vec2 p) {
-  vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
-  return mix(mix(rnd(i),rnd(i+vec2(1.,0.)),f.x),
-             mix(rnd(i+vec2(0.,1.)),rnd(i+vec2(1.,1.)),f.x),f.y);
+float smoothNoise(vec2 p) {
+  vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);
+  return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),f.x),
+             mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),f.x),f.y);
 }
-vec4 globe(vec2 pixel,vec2 center,float radius,float nightDim) {
+vec4 globe(vec2 pixel,vec2 center,float radius,float darkness) {
   vec2 p=(pixel-center)/radius;
-  float r2=dot(p,p);
-  if(r2>1.075) return vec4(0.);
-  if(r2>=1.0) {
-    float halo=(1.075-r2)/0.075;
-    return vec4(vec3(0.05,0.27,0.75),0.16*halo);
+  float r=length(p);
+  if(r>1.085) return vec4(0.0);
+
+  // Thin, soft atmospheric halo instead of the previous oversized electric ring.
+  if(r>=1.0) {
+    float falloff=pow(clamp(1.0-(r-1.0)/0.085,0.0,1.0),4.0);
+    return vec4(vec3(0.13,0.41,0.89)*falloff,falloff*0.48);
   }
-  vec3 n=vec3(p,sqrt(max(0.,1.-r2)));
-  float lon=atan(n.x,n.z)/6.2831853 + 0.5 + uAngle/6.2831853;
-  float lat=asin(clamp(n.y,-1.,1.))/3.1415926 + 0.5;
-  vec3 base=texture2D(uMap,vec2(fract(lon),lat)).rgb;
-  vec3 sun=normalize(vec3(-0.15,0.48,0.87));
-  float diffuse=max(dot(n,sun),0.);
-  float illumination=0.08+0.92*diffuse;
-  float cloud=noise2(vec2(lon*77.+uCloud*0.15,lat*33.));
-  cloud+=0.45*noise2(vec2(lon*172.+uCloud*0.29,lat*83.));
-  cloud=smoothstep(0.83,1.20,cloud)*0.39;
-  float limb=pow(1.0-max(0.,n.z),4.0);
-  vec3 col=base*(illumination*(1.0-nightDim*0.28));
-  col+=vec3(0.47,0.69,0.87)*cloud*illumination;
-  col+=vec3(0.06,0.31,0.75)*limb*1.28;
-  float blueRim=pow(1.-n.z,13.);
-  col+=vec3(0.22,0.56,1.0)*blueRim*1.15;
-  float edge=1.0-smoothstep(0.94,1.0,sqrt(r2));
-  return vec4(min(col,vec3(1.0)),edge);
+
+  vec3 normal=vec3(p,sqrt(max(0.0,1.0-r*r)));
+  float longitude=atan(normal.x,normal.z)/6.2831853 + 0.5 + uAngle/6.2831853;
+  float latitude=asin(clamp(normal.y,-1.0,1.0))/3.1415926 + 0.5;
+  vec2 coords=vec2(fract(longitude),latitude);
+  vec3 day=texture2D(uMap,coords).rgb;
+  vec3 night=texture2D(uNightMap,coords).rgb*uHasNight;
+
+  float light=max(dot(normal,normalize(vec3(0.55,0.37,0.77))),0.0);
+  // Low-key blue Earth, with real terrain and city lights where available.
+  vec3 daySide=day*(0.23+0.52*light);
+  vec3 nightSide=day*0.065 + night*(0.65+0.3*(1.0-light));
+  vec3 color=mix(daySide+night*0.18*(1.0-light),nightSide,darkness);
+
+  // Cloud wisps are subtle and secondary to NASA imagery.
+  float cloud=smoothNoise(coords*vec2(68.0,31.0)+vec2(uCloud*0.12,0.0));
+  cloud=smoothstep(0.70,0.88,cloud)*0.11;
+  color+=vec3(0.41,0.59,0.76)*cloud*light*(1.0-darkness*0.6);
+
+  float fresnel=pow(1.0-normal.z,5.0);
+  color+=vec3(0.055,0.29,0.76)*fresnel*1.75;
+  float rim=pow(1.0-normal.z,15.0);
+  color+=vec3(0.26,0.62,1.0)*rim*0.7;
+  float edge=1.0-smoothstep(0.987,1.0,r);
+  return vec4(clamp(color,0.0,1.0),edge);
 }
 void main() {
   vec2 pix=gl_FragCoord.xy;
-  float horizonRadius=min(uSize.x*0.98,uSize.y*0.75);
-  vec4 horizon=globe(pix,vec2(uSize.x*0.50,-uSize.y*0.19),horizonRadius,0.38);
-  float sphereRadius=min(uSize.x*0.315,uSize.y*0.275);
-  vec4 planet=globe(pix,vec2(uSize.x*0.50,uSize.y*0.56),sphereRadius,0.);
-  vec3 finalRgb=mix(horizon.rgb,planet.rgb,planet.a);
-  float alpha=horizon.a+planet.a*(1.-horizon.a);
-  gl_FragColor=vec4(finalRgb,alpha);
-}`;
+
+  // Horizon begins in the lower third, matching the reference composition.
+  float horizonRadius=min(uSize.x*1.20,uSize.y*0.78);
+  vec4 horizon=globe(pix,vec2(uSize.x*0.50,-uSize.y*0.39),horizonRadius,0.88);
+
+  float sphereRadius=min(uSize.x*0.325,uSize.y*0.275);
+  vec4 planet=globe(pix,vec2(uSize.x*0.50,uSize.y*0.56),sphereRadius,0.34);
+  vec3 result=mix(horizon.rgb,planet.rgb,planet.a);
+  gl_FragColor=vec4(result,horizon.a+planet.a*(1.0-horizon.a));
+}
+`;
   // A deterministic natural-color map with continent silhouettes; generated once,
   // moved as a real texture across a shader-projected 3D sphere every frame.
   const LAND = [
