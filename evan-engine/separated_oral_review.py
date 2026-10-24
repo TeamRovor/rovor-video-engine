@@ -96,18 +96,30 @@ class MaterialCapture(FaceCapture):
   self.current_oral=oral.copy();self.current_rounding=self.review_rounding;self.current_round_material=self.review_rounding*float(ease((aperture-3)/8));return oral
  def composite_oral(self,face,cavity,teeth,tongue,contact,closed,aperture,w):
   # Use the same rigid incisor parent at pure/mixed F/V; no material switch.
-  self.review_interior=self.current_backing[:,:,3:4]/255
+  self.review_interior=self.current_backing[:,:,3:4]/255*inner_oral_coverage(self.current_oral)
   crown,tip=self.rigid_teeth_parts(w,self.current_oral)
   self.review_teeth=crown*self.review_interior
   self.review_dental_tip=tip*self.review_interior
   visibility=max(float(ease((aperture-8)/12)),tongue_lift(w)*float(ease((aperture-1.2)/4)))
-  self.review_tongue=tongue.copy()*visibility
+  self.review_tongue=tongue.copy()*visibility*self.review_interior
   return super().composite_oral(face,cavity,teeth,tongue,contact,closed,aperture,w)
 
 def inner_arch(oral,upper=False):
  # Keep inner contour X and Y together; mixing outer X with clamped inner Y
  # flattens the corner spans and turns narrow rounded mouths into wedges.
  return (np.vstack([oral[24:32],oral[16]]) if upper else oral[16:25][::-1]).copy()
+
+def inner_oral_coverage(oral):
+ # Clip to the lumen, not the painted backing's outer lip rim.
+ upper,lower=inner_arch(oral,True),inner_arch(oral)
+ if any(not np.isfinite(a).all() or np.any(np.diff(a[:,0])<=0) for a in [upper,lower]):raise ValueError('Expected finite ordered inner lip arches')
+ x=np.arange(512,dtype=np.float32);y=x[:,None]
+ top=np.interp(x,upper[:,0],upper[:,1])+.5
+ bottom=np.interp(x,lower[:,0],lower[:,1])-.5
+ # shortcut: half-pixel ink inset is authored; replace with approved lip thickness.
+ coverage=np.clip(np.minimum(y+.5,bottom)-np.maximum(y-.5,top),0,1)
+ inside=(x>=max(upper[0,0],lower[0,0]))&(x<=min(upper[-1,0],lower[-1,0]))
+ return (coverage*inside)[:,:,None].astype('float32')
 
 def face_ownership(target,upper):
  boundary=mapped_interface(target)

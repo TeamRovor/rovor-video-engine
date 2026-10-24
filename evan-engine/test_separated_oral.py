@@ -13,6 +13,18 @@ class SeparatedOralTests(unittest.TestCase):
    self.rig.head.current_oral[[17,18]]=oral[[18,17]]
    with self.assertRaisesRegex(ValueError,'Oral mesh triangle foldover'):self.rig.assemble(self.rig.baseline)
   finally:self.rig.head.current_oral=oral
+ def test_closed_bilabial_hides_all_interior_paint_and_fv_retains_teeth(self):
+  from separated_oral_review import inner_oral_coverage
+  from cartoon_head import POINTS
+  for name,index in [('closed',1),('fv',7),('open',3)]:
+   image,row=self.rig.assemble(self.rig.head.weights(np.eye(9)[index]))
+   parts=self.rig.last_parts
+   if name=='closed':
+    for plane in ['Rigid upper incisors','Front dental tongue tip','Narration tongue']:
+     self.assertEqual(float(parts[plane][:,:,3].max()),0,name+' '+plane)
+   else:self.assertGreater(float(parts['Rigid upper incisors'][:,:,3].sum()),0,name)
+  invalid=POINTS['C'].copy();invalid[[17,18]]=invalid[[18,17]]
+  with self.assertRaises(ValueError):inner_oral_coverage(invalid)
  def test_original_skin_extraction_preserves_color_chin_and_source(self):
   source=self.rig.head.layers['face-skin'];before=source.copy();jaw=original_jaw_skin(source)
   np.testing.assert_array_equal(source,before)
