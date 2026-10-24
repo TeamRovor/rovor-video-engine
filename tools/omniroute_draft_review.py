@@ -116,7 +116,12 @@ def check_receipt(obj,expected_id,expected_provenance):
     if versioned and (type(obj['completion_token_limit']) is not int
                       or obj['completion_token_limit'] != CURRENT_SUPPORTED_COMPLETION_CAP):
         return 'invalid_receipt', ['invalid_completion_request_limit'], False, False
-    expected = keys | ({'completion_token_limit'} if versioned else set())
+    budgeted = 'source_budget_chars' in obj
+    if budgeted and (type(obj['source_budget_chars']) is not int
+                     or obj['source_budget_chars'] not in worker.SOURCE_CONTEXT_BUDGETS):
+        return 'invalid_receipt', ['invalid_source_context_budget'], False, False
+    expected = (keys | ({'completion_token_limit'} if versioned else set())
+                | ({'source_budget_chars'} if budgeted else set()))
     extra_admission = (state == 'needs_review_no_auto_retry'
                        and set(obj) == expected | {'admission_code'})
     if set(obj) != expected and not extra_admission:
@@ -183,7 +188,17 @@ def inspect(repo_root,receipt_root,slug):
     """Pure read-only: receipt output is explicitly content-free."""
     if slug not in worker.ALLOWED_PACKETS:
         raise ValueError('Unrecognized curated packet')
-    packet,_,provenance=worker.load_packet(repo_root,slug)
+    # Read the same immutable excerpt profile that was used for *this* job.
+    # Legacy receipts have none, so their original full-source provenance and
+    # conservative historical review behavior stay completely unchanged.
+    safe_root = _safe_directory(receipt_root)
+    obj = _read_receipt(receipt_root/(slug+'.receipt.json')) if safe_root else None
+    saved_budget = (obj.get('source_budget_chars')
+                    if isinstance(obj, dict) else None)
+    budget = (saved_budget if type(saved_budget) is int
+              and saved_budget in worker.SOURCE_CONTEXT_BUDGETS else None)
+    packet,_,provenance=worker.load_packet(
+        repo_root,slug,source_budget_chars=budget)
     result={
         'packet_id':packet['id'],
         'status':'missing_private_receipt',
@@ -194,12 +209,10 @@ def inspect(repo_root,receipt_root,slug):
         'evidence':'local_receipt_inspection_only',
         'reasons':[],
     }
-    if not _safe_directory(receipt_root):
+    if not safe_root:
         result['status']='private_receipt_root_unavailable'
         result['reasons']=['missing_or_redirected_private_folder']
         return result
-    path=receipt_root/(slug+'.receipt.json')
-    obj=_read_receipt(path)
     status,reasons,fresh,responded=check_receipt(obj,packet['id'],provenance)
     result.update(status=status,source_fresh=fresh,
                   response_present=responded,reasons=reasons)
