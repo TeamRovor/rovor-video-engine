@@ -143,6 +143,22 @@ def inspect(state, *, run=subprocess.run):
                                 "succeeded","failed") else "unavailable",
                             "review_ready":bool(evidence),
                             "failed_no_retry":bool(failed),
+                            "review_state": (
+                                outcome.get("review_status")
+                                if isinstance(outcome,dict)
+                                and outcome.get("review_status") in {
+                                    "draft_ready_for_human_review",
+                                    "failed_needs_review",
+                                    "incomplete_needs_review",
+                                    "invalid_receipt",
+                                    "stale_source",
+                                    "content_quality_needs_review",
+                                    "execution_claim_needs_review",
+                                    "sensitive_draft_blocked",
+                                }
+                                else "not_available"),
+                            "failure_class": "not_available",
+                            "admission_code": "not_available",
                         }
                     if packet == "walter-v2-recovery-proof":
                         result["recovery_canary"] = {
@@ -197,7 +213,9 @@ def inspect(state, *, run=subprocess.run):
                                 except (OSError, ValueError, UnicodeError):
                                     saved = None
                                 if (isinstance(saved, dict)
-                                        and saved.get("id") == packet.replace("walter-v1-", "walter-public-v1-")
+                                        and saved.get("id") == (
+                                            packet.replace("walter-v1-", "walter-public-v1-", 1)
+                                            .replace("walter-v2-", "walter-public-v2-", 1)))
                                         and saved.get("status") == status):
                                     error_class = saved.get("error_class")
                                     # The receipt writer stores only
@@ -212,6 +230,9 @@ def inspect(state, *, run=subprocess.run):
                                             and error_class.isascii()
                                             and error_class.isidentifier()):
                                         failure_states["exception:" + error_class] += 1
+                                        if packet in v2_slug_to_role:
+                                            v2_states[v2_slug_to_role[packet]][
+                                                "failure_class"] = error_class
                                     else:
                                         failure_states["exception:unavailable"] += 1
                                     # Fixed source-code error keys only; never
@@ -227,6 +248,9 @@ def inspect(state, *, run=subprocess.run):
                                         "invalid_model_completion"}
                                     if type(reason) is str and reason in allowed_reason:
                                         failure_states["admission:" + reason] += 1
+                                        if packet in v2_slug_to_role:
+                                            v2_states[v2_slug_to_role[packet]][
+                                                "admission_code"] = reason
                                     seconds = saved.get("elapsed_seconds")
                                     if type(seconds) in (int, float) and 0 <= seconds <= 3600:
                                         bucket = ("under_1s" if seconds < 1 else
@@ -244,7 +268,10 @@ def inspect(state, *, run=subprocess.run):
                 result["v2_recovery_specialists"] = {
                     role:v2_states.get(role,{"job_status":"not_queued",
                                              "review_ready":False,
-                                             "failed_no_retry":False})
+                                             "failed_no_retry":False,
+                                             "review_state":"not_available",
+                                             "failure_class":"not_available",
+                                             "admission_code":"not_available"})
                     for role in ROLES}
                 result["v2_recovery_summary"] = {
                     "queued":sum(x["job_status"]=="queued" for x in v2_states.values()),
