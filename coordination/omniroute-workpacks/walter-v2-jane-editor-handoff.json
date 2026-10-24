@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v2-jane-editor-handoff",
+  "id": "walter-public-v2-jane-editor-handoff",
+  "title": "ROVOR Jane v2 bounded recovery research",
+  "role": "evidence-triage",
+  "inputs": [
+    "coordination/omniroute-workpacks/walter-v1-fcpxml-handoff-acceptance.json"
+  ],
+  "task": "ROVOR Jane specialist. Review ONLY the attached public workpack specification. Separate real Mac application evidence from theoretical FCPXML checks; do not assert app control. Produce 120-220 words with exact file attribution and an explicit unknowns section. Do not claim to have run a Mac, made a model request, operated software, posted or contacted anyone. Do not enqueue additional jobs.",
+  "deliverable": "A review-only Final Cut handoff checklist for a future isolated editor library.",
+  "acceptance": [
+    "Cite the exact provided public workpack JSON path",
+    "Specify one measurable next read-only check and clearly label any assumptions",
+    "Do not assert host execution, external publishing or client contact"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}
