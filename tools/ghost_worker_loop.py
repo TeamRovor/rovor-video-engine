@@ -92,6 +92,7 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
          sleeper=time.sleep, allow_model_use=False, allow_native_import=False,
          allow_jane_library_create=False, jane_queue_job_id=None,
          allow_omniroute_model_use=False, allow_omniroute_work_plan=False,
+         allow_omniroute_recovery_plan=False,
          parallel_omniroute_workers=1, omni_max_24h=ghost_worker.OMNI_MAX_24H) -> dict:
     """Poll bounded jobs with explicit opt-ins, observing STOP between operations.
 
@@ -103,6 +104,9 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
         raise ValueError('OmniRoute rolling claim budget must be 1 to 20')
     if (type(parallel_omniroute_workers) is not int or not 1 <= parallel_omniroute_workers <= 3):
         raise ValueError('Parallel worker count must be 1 to 3')
+    if allow_omniroute_recovery_plan and (
+            not allow_omniroute_work_plan or not allow_omniroute_model_use):
+        raise ValueError('Recovery feed needs the original OmniRoute approvals')
     if parallel_omniroute_workers > 1 and (
             not allow_omniroute_work_plan or not allow_omniroute_model_use
             or allow_model_use or allow_native_import or allow_jane_library_create
@@ -123,7 +127,11 @@ def poll(conn, workspace: Path, state: Path, *, worker_id: str,
     feed_result = None
     if allow_omniroute_work_plan:
         import ghost_omniroute_feed
-        if parallel_omniroute_workers > 1:
+        if allow_omniroute_recovery_plan:
+            feed_result = ghost_omniroute_feed.feed_recovery(
+                conn, state, Path(__file__).resolve().parent.parent,
+                limit=parallel_omniroute_workers)
+        elif parallel_omniroute_workers > 1:
             feed_result = ghost_omniroute_feed.feed_parallel(
                 conn, state, Path(__file__).resolve().parent.parent,
                 limit=parallel_omniroute_workers)
@@ -238,6 +246,8 @@ def main() -> None:
                      help="Opt-in one to three independent bounded OmniRoute research claims")
     run.add_argument("--approve-omniroute-work-plan", action="store_true",
                      help="Feed the finite released draft plan once; never replay completed jobs")
+    run.add_argument("--approve-omniroute-recovery-plan", action="store_true",
+                     help="Separately approve a fresh gated v2 canary, then seven reviewed specialists")
     run.add_argument("--allow-native-import", action="store_true")
     run.add_argument("--approve-jane-library-create", action="store_true",
                      help="One exact approved native library job; no XML import")
@@ -257,6 +267,7 @@ def main() -> None:
                           allow_native_import=args.allow_native_import,
                           allow_omniroute_model_use=args.approve_omniroute_model_use,
                           allow_omniroute_work_plan=args.approve_omniroute_work_plan,
+                          allow_omniroute_recovery_plan=args.approve_omniroute_recovery_plan,
                           parallel_omniroute_workers=args.parallel_omniroute_workers,
                           omni_max_24h=args.max_omniroute_claims_per_day,
                           allow_jane_library_create=args.approve_jane_library_create,
