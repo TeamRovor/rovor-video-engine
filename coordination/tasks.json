@@ -3870,8 +3870,8 @@
       "id": "omniroute-proportional-capacity-20261024",
       "title": "Apply proportional verified model capacity, safe failover and quota reset routing across nine OmniRoute resources",
       "priority": 1,
-      "status": "active",
-      "owner": "ChatGPT / Amar isolated GitHub source policy 2026-10-24",
+      "status": "blocked",
+      "owner": "Mac OmniRoute runtime integration / Amar (existing PR137 worker)",
       "branch": "feature/omniroute-capacity-router",
       "scopes": [
         "tools/omniroute_capacity_router.py",
@@ -3882,12 +3882,24 @@
       "depends_on": [
         "omniroute-nine-model-coverage-20261024"
       ],
-      "updated_at": "2026-10-24T08:30:57.248Z",
-      "next_update": "After source CI and integration handoff to already-activated Mac worker",
-      "next_action": "Implement tested inert capability tier, size/headroom, per-provider/model budget and cooldown/recheck/automatic eligible replacement planning. Integrate ONLY into current PR137 Mac SQLite worker under atomic claim with trusted real capacity and actual nine-model route proofs; observe model success before raising concurrency or aggregate limit. No second scheduler or paid inference.",
+      "updated_at": "2026-10-24T08:33:01.007Z",
+      "next_update": "After authenticated Mac model identities, per-model zero-cost/quota evidence and host-level source integration; keep original LaunchAgent unchanged until reviewed",
+      "next_action": "Pure capacity-aware policy merged and tested in PR #144. Next integrate its decide() into existing PR137 atomic SQLite claim (NOT as new worker), attach verified live model IDs from PR141 Mac fleet inventory and remaining quotas, record actual chosen upstream model in private receipts, then run one approved zero-cost canary per model and prove safe fresh-job failover/cooldown/reset with STOP and global 144/day cap. Use per-model concurrency=1 initially. Preserve already running Mac service and 601s global pace until verified safe rollout; do not claim actual nine-model utilization now.",
       "acceptance": "Offline pure model-policy tests: proportional headroom, task capability fit, small/medium/deep model choice, cooldown/quota rollover, readiness verification, successful free canary, no paid/private request, STOP/circuit, fail-closed shape, concurrency. Python3.9/3.11 hosted CI; current mac rollout unchanged.",
-      "links": [],
-      "evidence": []
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/144",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40078392674"
+      ],
+      "evidence": [
+        {
+          "commit": "7f6097d86014c9df961f5a305680a1784f20719f",
+          "platform": "GitHub Actions Linux Python3.9 and 3.11",
+          "check": "16 no-network regression tests per Python version, proportional tier/context/output headroom, independent quota/cooldown, eligible model replacement, reset verification, privacy/zero-cost, STOP/failure circuit",
+          "result": "PASS both hosted matrix jobs; merged into main source only, no new OmniRoute Mac inference or installed worker changes.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40078392674"
+        }
+      ],
+      "blocker": "Source-only policy finished; existing Mac runtime still lacks per-model attested budgets and integrated cross-model reservation. Need actual host-side verified model IDs, free eligibility and real outcome evidence before enabling automatic switching."
     }
   ]
 }
