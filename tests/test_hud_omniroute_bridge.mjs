@@ -67,3 +67,11 @@ test('owned inventory uses configured connections and measured models, never adv
  const other=normalizeOwned({connections:[{provider:'gemini'}]},usage);assert.equal(other.models.length,0);assert.equal(other.connection_count,1);
  assert.throws(()=>normalizeOwned({},usage));
 });
+
+
+test('worker reader caches bounded private helper output and fails closed',async()=>{
+ const {createWorkerReader}=await import('../tools/hud_omniroute_bridge.mjs');let calls=0,now=10000;
+ const read=createWorkerReader(async()=>{calls++;return {stdout:JSON.stringify({source:'existing_worker_sqlite_read_only',employees:Array.from({length:8},()=>({}))})};},()=>now);
+ await read();await read();assert.equal(calls,1);now+=6000;await read();assert.equal(calls,2);
+ const bad=createWorkerReader(async()=>{throw Error('PRIVATE_FAILURE')});const result=await bad();assert.equal(result.source,'worker_state_unavailable');assert(!JSON.stringify(result).includes('PRIVATE_FAILURE'));
+});

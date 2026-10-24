@@ -52,6 +52,10 @@ async function main(){
   assert(await evalJS('return document.querySelector("[role=meter]").getAttribute("aria-valuenow")==="70"'));
   const geometry=await evalJS('const r=document.querySelector(".drawer").getBoundingClientRect();return {width:r.width,height:r.height}');assert(geometry.width<=width+2&&geometry.height<=height+2);
   if(name==='iphone-portrait'||name==='desktop')await screenshot(name+'-live-models');
+  await evalJS('document.querySelector("#rovor-workload-popup [data-live-tab=employees]").click();return true');
+  assert.equal(await evalJS('return document.querySelectorAll(".wl-employees-live .wl-card").length'),8);
+  assert(await evalJS('return document.querySelector(".wl-employees-live").textContent.includes("Actual upstream model")'));
+  await evalJS('document.querySelector("#rovor-workload-popup [data-live-tab=models]").click();return true');
  }
  requests=8;
  await poll(()=>evalJS('return document.querySelector("[role=meter]")?.getAttribute("aria-valuenow")==="80"'));
