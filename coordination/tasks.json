@@ -4494,6 +4494,29 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/176"
         }
       ]
+    },
+    {
+      "id": "walter-pool-soak-pacing-20261024",
+      "title": "Audit verified independent OmniRoute account/model pool pacing without false 601s violations",
+      "priority": 2,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 pool-soak shift",
+      "branch": "feature/walter-pool-soak-pacing",
+      "scopes": [
+        "tools/walter_soak_evidence_gate.py",
+        "tests/test_walter_soak_evidence_gate.py",
+        "subsystem:walter-independent-pool-soak-compatibility"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T16:52:11.337Z",
+      "next_update": "After hosted Python 3.9/3.11 checks and merge eligibility review in this shift.",
+      "next_action": "Add opt-in, fail-closed independently attested pool/model reservation audit to the existing read-only 24h evidence gate; retain legacy global pacing, enforce global 144 cap, require complete job attribution, test cross-pool same-second versus same-pool violations; no Mac deployment.",
+      "acceptance": "Inert standard-library Python3.9 verifier accepts exact independently authenticated pool/model reservation evidence only in explicit opt-in mode; permits same-second distinct verified account pools while detecting per-pool/per-model interval and rolling cap violations, global rolling cap, incomplete/malformed evidence; legacy global 601s behavior unchanged; focused offline tests and hosted Python3.9/3.11 checks; no host access or model calls.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/176",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/161"
+      ],
+      "evidence": []
     }
   ]
 }
