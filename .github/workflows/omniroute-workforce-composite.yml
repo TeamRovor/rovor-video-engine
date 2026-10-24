@@ -8,6 +8,8 @@ on:
       - 'tools/ghost_omniroute_job.py'
       - 'tools/ghost_omniroute_feed.py'
       - 'tests/test_ghost_omniroute_parallel.py'
+      - 'tools/omniroute_employee_status.py'
+      - 'tests/test_omniroute_employee_status.py'
       - 'tools/mac_worker_rollforward.py'
       - 'tests/test_mac_worker_rollforward.py'
       - 'tests/test_ghost_omniroute_feed.py'
@@ -43,6 +45,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_omniroute_workforce_composite.py' -v
       - name: Offline operator-only Mac rollforward checks
         run: python -m unittest discover -s tests -p 'test_mac_worker_rollforward.py' -v
+      - name: Offline private OmniRoute crew evidence tests
+        run: python -m unittest discover -s tests -p 'test_omniroute_employee_status.py' -v
       - name: Offline separate specialist claims and quota tests
         run: python -m unittest discover -s tests -p 'test_ghost_omniroute_parallel.py' -v
       - name: Offline specialist autonomous-feed tests
