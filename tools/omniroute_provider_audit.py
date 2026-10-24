@@ -35,24 +35,49 @@ def audit(*, run=subprocess.run):
         result["sanitized_blocker"] = "cli_output_invalid_or_too_large"
         return result
     raw = p.stdout
-    starts = [pos for pos in (raw.find("{"),raw.find("[")) if pos >= 0]
-    if not starts:
-        result["sanitized_blocker"] = "cli_output_not_json"
+    # OmniRoute versions may prepend banners, ANSI color sequences, and
+    # human-readable status before their JSON, or append an extra notice.
+    # Find an actual bounded JSON root rather than assuming the earliest
+    # '[' belongs to the JSON (ANSI itself uses '['). Never print raw text.
+    def connection_list(parsed):
+        if isinstance(parsed, list):
+            return parsed
+        if not isinstance(parsed, dict):
+            return None
+        for key in ("connections", "providers", "items", "data"):
+            value = parsed.get(key)
+            if isinstance(value, list):
+                return value
+            if key == "data" and isinstance(value, dict):
+                for inner in ("connections", "providers", "items"):
+                    if isinstance(value.get(inner), list):
+                        return value[inner]
+        return None
+
+    decoder = json.JSONDecoder()
+    entries = None
+    parsed_something = False
+    candidates = 0
+    for match in re.finditer(r"[\\[{]", raw):
+        candidates += 1
+        if candidates > 512:
+            break
+        try:
+            parsed, _end = decoder.raw_decode(raw, match.start())
+        except (ValueError, TypeError):
+            continue
+        parsed_something = True
+        proposed = connection_list(parsed)
+        if proposed is not None:
+            entries = proposed
+            break
+    if entries is None:
+        result["sanitized_blocker"] = (
+            "cli_json_shape_unrecognized" if parsed_something else
+            "cli_json_parse_failed")
         return result
-    try:
-        obj = json.loads(raw[min(starts):])
-    except (ValueError, TypeError):
-        result["sanitized_blocker"] = "cli_json_parse_failed"
-        return result
-    if isinstance(obj, list):
-        entries = obj
-    elif isinstance(obj, dict):
-        entries = next((obj[key] for key in ("connections", "providers", "items", "data")
-                       if isinstance(obj.get(key), list)), None)
-    else:
-        entries = None
-    if not isinstance(entries, list) or len(entries) > 200:
-        result["sanitized_blocker"] = "cli_json_shape_unrecognized"
+    if len(entries) > 200:
+        result["sanitized_blocker"] = "cli_connection_count_exceeds_limit"
         return result
     buckets = {}
     for item in entries:
