@@ -41,9 +41,15 @@ EXECUTION_CLAIMS = re.compile(
 )
 
 
-# The client in PR #51 limits responses to 2400 completion tokens but does
-# not save finish_reason. This threshold indicates *possible* truncation.
-NEAR_COMPLETION_CAP = 2390
+# Historical receipts lack the posted request token cap. Their old 2400-token
+# client may have truncated near 2390 and must stay conservatively flagged.
+# New receipts record the actual 4096-token request ceiling in immutable
+# per-job metadata, so a valid 2500-token draft is not misclassified based on
+# the old threshold. Completion finish_reason still must pass strict gateway
+# admission; metadata is not evidence of factual accuracy or human acceptance.
+LEGACY_NEAR_COMPLETION_CAP = 2390
+CURRENT_COMPLETION_CAP_MARGIN = 128
+CURRENT_SUPPORTED_COMPLETION_CAP = worker.MAX_COMPLETION_TOKENS
 REPORT_DATE_HEADER = re.compile(
     r'(?im)^[ \t]*(?:#{1,4}[ \t]*)?(?:\*{1,2})?'
     r'(?:analysis[ \t]+date|document[ \t]+date|date)'
@@ -103,9 +109,17 @@ def check_receipt(obj,expected_id,expected_provenance):
     keys=BASE | (SUCCESS_FIELDS if state==SUCCESS
                    else ERROR_FIELDS if state=='needs_review_no_auto_retry'
                    else frozenset())
-    extra_admission = (state == 'needs_review_no_auto_retry' and
-                       set(obj) == keys | {'admission_code'})
-    if set(obj)!=keys and not extra_admission:
+    # New source records one fixed request ceiling. Old receipts (missing
+    # completion_token_limit) keep the legacy conservative review threshold.
+    # Reject arbitrary future/greater limits until explicitly audited.
+    versioned = 'completion_token_limit' in obj
+    if versioned and (type(obj['completion_token_limit']) is not int
+                      or obj['completion_token_limit'] != CURRENT_SUPPORTED_COMPLETION_CAP):
+        return 'invalid_receipt', ['invalid_completion_request_limit'], False, False
+    expected = keys | ({'completion_token_limit'} if versioned else set())
+    extra_admission = (state == 'needs_review_no_auto_retry'
+                       and set(obj) == expected | {'admission_code'})
+    if set(obj) != expected and not extra_admission:
         return 'invalid_receipt', ['schema_fields_mismatch'], False, False
     if (obj.get('schema_version')!=1
             or obj.get('id')!=expected_id
@@ -150,7 +164,9 @@ def check_receipt(obj,expected_id,expected_provenance):
     usage=obj.get('usage_reported')
     if isinstance(usage,dict):
         count=usage.get('completion_tokens')
-        if type(count) is int and count >= NEAR_COMPLETION_CAP:
+        near_cap = (CURRENT_SUPPORTED_COMPLETION_CAP - CURRENT_COMPLETION_CAP_MARGIN
+                    if versioned else LEGACY_NEAR_COMPLETION_CAP)
+        if type(count) is int and count >= near_cap:
             concerns.append('near_completion_token_cap_truncation_unknown')
     report_date=REPORT_DATE_HEADER.search(text[:1800])
     if report_date:
