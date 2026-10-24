@@ -42,7 +42,7 @@ test('the verified GitHub data layer remains intact and no new API polling is in
 test('service worker installs actual cockpit files while preserving opt-in planet imagery',()=>{
   assert.ok(sw.includes("'./cinematic-layout.css'"));
   assert.ok(sw.includes("'./cinematic-layout.js'"));
-  assert.match(sw,/shell-v6/);
+  assert.match(sw,/shell-v7/);
   assert.ok(sw.includes('earth-blue-marble.png'));
   assert.ok(sw.includes('earth-night.png'));
 });
