@@ -99,6 +99,44 @@ def verify(answer, sources, expected_sha256):
             "reference_count": len(references), "references": references}
 
 
+# This is deliberately stricter than verify(): verify() is also used to
+# bind a single line reference in independently reviewed finding handoffs.
+# Only actual research drafts entering the CLI need this prose-quality gate.
+MIN_DRAFT_WORDS = 30
+MIN_DISTINCT_WORDS = 16
+MAX_WORDS_PER_CITATION = 85
+
+
+def _research_draft_quality(answer):
+    """Reject citation-only, citation-dumped and repeated filler drafts.
+
+    These are cheap structural signals, NOT factual validation or approval.
+    Human reviewers still decide whether a cited statement is true/useful.
+    No draft text is included in results or exceptions.
+    """
+    all_words = []
+    cited_blocks = 0
+    for block in re.split(r"\n\s*\n", answer.strip()):
+        prose = CITATION.sub("", block)
+        words = re.findall(r"[A-Za-z0-9_]+", prose)
+        all_words.extend(word.lower() for word in words)
+        references = len(CITATION.findall(block))
+        # Short headings are allowed, but any meaningful prose paragraph
+        # must carry its own checked citation (not one dumped at the end).
+        if len(words) >= 6 and references == 0:
+            _reject("draft_paragraph_missing_citation")
+        if references and len(words) > references * MAX_WORDS_PER_CITATION:
+            _reject("draft_citation_density_insufficient")
+        if references and words:
+            cited_blocks += 1
+    if (len(all_words) < MIN_DRAFT_WORDS
+            or len(set(all_words)) < MIN_DISTINCT_WORDS
+            or cited_blocks == 0):
+        _reject("draft_not_substantive")
+    return {"draft_quality_checked": True, "cited_prose_blocks": cited_blocks,
+            "prose_word_count": len(all_words)}
+
+
 def _public_source(root, name):
     if not _valid_name(name):
         _reject("invalid_public_source_name")
@@ -146,7 +184,9 @@ def inspect_packet(repo, slug, answer, expected):
         _reject("unapproved_packet")
     sources = {name: _public_source(root, name)
                for name in packets[slug]["inputs"]}
-    return verify(answer, sources, expected)
+    verdict = verify(answer, sources, expected)
+    verdict.update(_research_draft_quality(answer))
+    return verdict
 
 
 def main(argv=None):
