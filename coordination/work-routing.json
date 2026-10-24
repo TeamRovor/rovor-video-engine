@@ -743,6 +743,13 @@
       "lane": "animation",
       "requires": [],
       "objective": "deliver-promised-work"
+    },
+    "hud-real-model-evidence-20261024": {
+      "lane": "efficiency",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
