@@ -107,10 +107,19 @@ def extract_review_text(response):
                 _fail("invalid_usage_shape")
             reasoning_tokens = details.get("reasoning_tokens")
             if (reasoning_tokens is not None and
-                    (type(reasoning_tokens) is not int or reasoning_tokens < 0
-                     or completion_tokens is None
-                     or reasoning_tokens > completion_tokens)):
+                    (type(reasoning_tokens) is not int or reasoning_tokens < 0)):
                 _fail("invalid_usage_shape")
+            # OmniRoute may normalize usage reported by heterogeneous free
+            # providers with incomparable counters (observed: 59 reasoning
+            # vs 52 completion). This is unreliable *telemetry*, not proof
+            # that the visible model response is unsafe. Do not admit any
+            # blank, length-truncated or non-stop response because of it:
+            # discard only the inconsistent reasoning count before testing
+            # complete visible content below.
+            if (reasoning_tokens is not None and
+                    (completion_tokens is None or
+                     reasoning_tokens > completion_tokens)):
+                reasoning_tokens = None
     finish = choice.get("finish_reason")
     if finish == "length":
         if (not content.strip() and completion_tokens is not None
