@@ -7,6 +7,11 @@ on:
     paths:
       - "dashboard/command-center/**"
       - ".github/workflows/deploy-command-center-pages.yml"
+      - "coordination/cloud-shifts/**"
+      - "integrations/hud-cloud/cloud-activity.mjs"
+      - "integrations/hud-cloud/build-cloud-activity.mjs"
+      - "integrations/hud-cloud/verify-cloud-activity.mjs"
+      - "tests/test_hud_cloud_activity.mjs"
   workflow_dispatch:
 
 permissions:
@@ -52,6 +57,14 @@ jobs:
       - name: Verify workforce control center cannot dispatch and source is pinned
         run: node --test dashboard/command-center/tests/workforce-control.test.cjs
 
+      - name: Verify cloud completion evidence and original HUD preservation
+        run: node --test tests/test_hud_cloud_activity.mjs
+
+      - name: Read back actual cloud result commits and CI evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node integrations/hud-cloud/verify-cloud-activity.mjs
+
       - name: Prepare and verify NASA Earth textures
         run: bash dashboard/command-center/tools/prepare-earth-textures.sh
 
@@ -60,11 +73,19 @@ jobs:
         with:
           enablement: true
 
+      - name: Add recorded cloud work to the Pages artifact
+        run: |
+          ROVOR_PAGES_DIR="$RUNNER_TEMP/rovor-command-center-pages"
+          mkdir -p "$ROVOR_PAGES_DIR"
+          cp -R dashboard/command-center/. "$ROVOR_PAGES_DIR/"
+          node integrations/hud-cloud/build-cloud-activity.mjs "$ROVOR_PAGES_DIR"
+
       - name: Upload static Command Center
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dashboard/command-center
+          path: ${{ runner.temp }}/rovor-command-center-pages
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+

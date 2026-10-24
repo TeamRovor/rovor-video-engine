@@ -1,5 +1,40 @@
 # Persistent private HUD reporting
 
+## Cloud completions in the existing Pages HUD
+
+The GitHub Pages release now builds a sanitized cloud-activity feed and adds a
+small module hook to a copied publication artifact. The original native-v8-9
+source HTML, logo, orientation rules and panel structure are untouched. Cloud
+entries appear in the existing Recent Activity scroll area and its drawer.
+They say **recorded completion**, with human review not recorded; they never
+claim a currently online employee or measured OmniRoute usage.
+
+Receipt source files live under `coordination/cloud-shifts/`. Before
+publication, the release validates the bounded schema and reads back the
+referenced merged PR, exact merge commit and successful CI result on the same
+source revision. These checks establish the public GitHub result, not the
+underlying model, private prompts, or human acceptance. The first Walter
+receipt was separately matched to the platform's recorded completed shift.
+
+Future reporting should inspect a **previously completed** cloud run and match
+its recorded result to fresh GitHub evidence. Do not mark the currently
+executing reporting run completed. Publish a new immutable `<role>-pr<number>.json`
+using the exact fields in the first receipt, and add that specific new file to
+the reporting task's canonical scopes before writing it. Keep model/tokens
+null and human_review `not_recorded`: this feed does not provide those receipts.
+Never commit conversation IDs, prompts, credentials, private client work or
+raw automation output. Skip a record when runtime provenance or evidence is
+unavailable. Existing receipt IDs must not be reused for unrelated work.
+
+The Pages workflow watches new receipt files, so publishing a verified record
+does not depend on an open HUD or an awake Mac. The open HUD reads the static
+feed once per minute and pauses while hidden. The feed contains at most 200
+recent records; source parsing is bounded at 1,000 files. This is a completion
+ledger, not live in-progress tracking, cloud model dispatch or a review writer.
+It does not activate the separate unpublished private Site or migrate the nine
+provider keys. The existing public Pages HUD exposes only these sanitized
+public repository completion records.
+
 ## Connected private Sites deployment
 
 The registered owner-private target is `appgprj_6add1e2cc8c08191839344b34d7dbf50`.

@@ -1,10 +1,10 @@
 name: HUD persistent telemetry
 on:
   pull_request:
-    paths: ['integrations/hud-cloud/**', 'tools/hud_telemetry_publisher.mjs', 'tests/test_hud_cloud.mjs', 'tests/test_hud_sites.mjs', '.github/workflows/hud-cloud.yml']
+    paths: ['integrations/hud-cloud/**', 'coordination/cloud-shifts/**', 'tools/hud_telemetry_publisher.mjs', 'tests/test_hud_cloud.mjs', 'tests/test_hud_sites.mjs', 'tests/test_hud_cloud_activity.mjs', '.github/workflows/hud-cloud.yml']
   push:
-    branches: [main, feature/hud-persistent-telemetry-20261024, feature/hud-sites-adapter-20261024]
-    paths: ['integrations/hud-cloud/**', 'tools/hud_telemetry_publisher.mjs', 'tests/test_hud_cloud.mjs', 'tests/test_hud_sites.mjs', '.github/workflows/hud-cloud.yml']
+    branches: [main, feature/hud-persistent-telemetry-20261024, feature/hud-sites-adapter-20261024, feature/hud-cloud-activity-20261024]
+    paths: ['integrations/hud-cloud/**', 'coordination/cloud-shifts/**', 'tools/hud_telemetry_publisher.mjs', 'tests/test_hud_cloud.mjs', 'tests/test_hud_sites.mjs', 'tests/test_hud_cloud_activity.mjs', '.github/workflows/hud-cloud.yml']
 permissions:
   contents: read
 jobs:
@@ -15,4 +15,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node --test tests/test_hud_cloud.mjs tests/test_hud_sites.mjs
+      - run: node --test tests/test_hud_cloud.mjs tests/test_hud_sites.mjs tests/test_hud_cloud_activity.mjs
+      - name: Verify recorded cloud result against GitHub
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node integrations/hud-cloud/verify-cloud-activity.mjs
