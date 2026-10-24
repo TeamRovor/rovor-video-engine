@@ -3452,7 +3452,7 @@
       "id": "hybrid-cloud-provider-workforce-policy-20261023",
       "title": "Record Walter/Breaking Bad roles and Gemini-Groq-NIM-Mistral-OpenRouter-Cloudflare routing as hybrid workforce policy",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar hybrid-provider-architecture 2026-10-23",
       "branch": "feature/hybrid-cloud-provider-workforce-policy",
       "scopes": [
@@ -3467,10 +3467,19 @@
       "depends_on": [
         "ghost-self-research-bootstrap-20261023"
       ],
-      "updated_at": "2026-10-24T01:44:27.807Z",
-      "next_update": "Review policy and hosted offline schema tests; publish handoff",
-      "next_action": "Translate owner's provider assignments and cloud scheduler proposal into one canonical source-of-truth doc/config and add links to Work entrypoints, with no new scheduled jobs or billable API calls; preserve existing Mac runtime/claim ownership.",
-      "acceptance": "Breaking Bad employee names stable and independent of provider; Gemini planning, Groq/NVIDIA NIM fast drafts, Mistral code review, OpenRouter guarded fallback, Cloudflare Cron + D1 control plane; documented strict free-only model/provider eligibility checks, retry/backoff and 3-attempt review, STOP/quota and privacy, persistent offline Mac queue. CI verifies complete roles/policy invariants. No secrets, Mac execution or real Cloudflare deployment claimed."
+      "updated_at": "2026-10-24T01:48:43.193Z",
+      "next_update": "Source architecture complete; no provider/cloud or Mac runtime activation verified",
+      "next_action": "PR119 merged to main at 7d7b7022b6d7ad0a2f827d29b07640ce3c140b22; hybrid provider-routing and Cloudflare Cron+D1 architecture now read via WORK.md/AGENTS.md/ROVOR-AI-PLAN.md. No automatic provider calls, creds, cloud deployment or changes to existing launchd. Next live owner-authorized tasks: provision private Mac control repo, verify host ping/probe, repair failed OmniRoute inference in existing claimed Mac task, then separately configure free-eligible Gemini/Groq/Mistral/OpenRouter routes and Cloudflare D1 scheduling. Preserve NVIDIA NIM license gate and no-replay/STOP.",
+      "acceptance": "Breaking Bad employee names stable and independent of provider; Gemini planning, Groq/NVIDIA NIM fast drafts, Mistral code review, OpenRouter guarded fallback, Cloudflare Cron + D1 control plane; documented strict free-only model/provider eligibility checks, retry/backoff and 3-attempt review, STOP/quota and privacy, persistent offline Mac queue. CI verifies complete roles/policy invariants. No secrets, Mac execution or real Cloudflare deployment claimed.",
+      "evidence": [
+        {
+          "commit": "7d7b7022b6d7ad0a2f827d29b07640ce3c140b22",
+          "platform": "GitHub-hosted Linux / Python 3.9 and 3.11",
+          "check": "Hybrid ghost workforce policy checks; shared project loop; GitHub remote handoff",
+          "result": "All 3 workflows PASS, provider policy validated on Python3.9 and 3.11. Design source merged; no provider credentials, macOS/Cloudflare execution or 24/7 inference proven.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40051399177"
+        }
+      ]
     }
   ]
 }
