@@ -3235,15 +3235,16 @@
         "tests/test_ghost_omniroute_feed.py",
         "tools/ghost_worker_loop.py",
         "tools/ghost_omniroute_job.py",
-        "coordination/omniroute-workpacks/unattended-readiness.json"
+        "coordination/omniroute-workpacks/unattended-readiness.json",
+        "integrations/open-interpreter/OMNIROUTE-WORK-PLAN.md"
       ],
       "depends_on": [
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:56:05.489Z",
-      "next_update": "After feeder tests, published PR41 source and exact host activation handoff",
-      "next_action": "Implement opt-in finite approved work feeder inside existing loop; one new unattended-readiness packet, stable dedupe, STOP and queue/quota preservation. No duplicate service or model replay. Test before host handoff.",
+      "updated_at": "2026-10-24T00:59:38.161Z",
+      "next_update": "After user Terminal applies pinned work-plan source to existing LaunchAgent; inspect real scheduled inference receipt",
+      "next_action": "Source runtime0a2fcde9 and activation helper0451fb5 published in PR41. Run immutable activation handoff with --enable-work-plan (not --verify-background-access) to update same existing label; one NEW scheduled unattended-readiness draft, no old-job replay. Then inspect exact queue job/private receipt and manual content QA. Source-only until host activation. Finite plan waits for review after exhaustion; broader autonomous task selection/app tooling remains unimplemented.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -3335,9 +3336,16 @@
           "check": "system.omniroute-preflight8ae44146 succeeded attempts1; key/free catalog/local authenticatedGET verified; launchd elapsed3.907s executed1 succeeded1 failed0; same label/300s/pinnedruntime/STOPabsent",
           "result": "Core unattended timer+queue+background auth PASS,0 model calls. No scheduled provider inference or overnight endurance claim. No new research assignments or installer needed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/41#issuecomment-6377726401"
+        },
+        {
+          "commit": "0a2fcde9b88e68917103a8831ab17c273180b689",
+          "platform": "Actual Mac Python3.9.6 and pinned3.12; inference fully mocked",
+          "check": "80 focused OmniRoute tests on both interpreters;13 existing loop tests on3.9; git diff --check. Real feeder->SQLite->workpack->private receipt->review offline check, STOP/default-off/no-replay/quota/failed-call preservation.",
+          "result": "PASS source only. Same service unchanged at53dee10. One new finite approved setup-acceptance packet; no live request or new installer executed. Activation helper0451fb5 pins this runtime.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/0451fb5f5753c47298d17831235f0c9ba2716c65"
         }
       ],
-      "blocker": "Core unattended executor has no current setup blocker. Eligible queue empty. Scheduled provider inference and overnight endurance are still unverified, not failed."
+      "blocker": "Working baseline service preserved at53dee10. New feeder not yet deployed: Work session cannot write existing LaunchAgent/state outside writable roots. User Terminal handoff required. Scheduled live inference and overnight endurance still unverified."
     }
   ]
 }
