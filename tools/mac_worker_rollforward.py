@@ -72,19 +72,35 @@ def state_snapshot(state):
         raise Blocked("state_not_private")
     if checked(state / "STOP").exists():
         raise Blocked("owner_stop_present")
+    sidecars = []
     for side in ("jobs.sqlite3-wal", "jobs.sqlite3-shm"):
-        if (state / side).is_symlink():
+        candidate = state / side
+        if candidate.is_symlink() or (candidate.exists() and not candidate.is_file()):
             raise Blocked("database_sidecar_redirected")
-        if (state / side).exists():
-            raise Blocked("database_has_live_sidecar")
+        sidecars.append(candidate.exists())
+    if any(sidecars) and not all(sidecars):
+        raise Blocked("database_incomplete_wal_pair")
     db = checked(state / "jobs.sqlite3", regular=True)
-    before = db.stat()
     with tempfile.TemporaryDirectory(prefix="rovor-upgrade-check-") as folder:
         snap = Path(folder) / "jobs.sqlite3"
-        shutil.copyfile(db, snap)
-        after = db.stat()
-        if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
-            raise Blocked("database_changed_during_snapshot")
+        if all(sidecars):
+            # Read-only online backup captures the current committed SQLite
+            # state even when a WAL-mode worker is running. Never copy the
+            # main file while ignoring its WAL.
+            try:
+                with sqlite3.connect(db.as_uri() + "?mode=ro",
+                                     uri=True, timeout=6) as source:
+                    source.execute("PRAGMA query_only=ON")
+                    with sqlite3.connect(str(snap), timeout=6) as destination:
+                        source.backup(destination, pages=64, sleep=0.05)
+            except sqlite3.Error:
+                raise Blocked("database_snapshot_unreadable") from None
+        else:
+            before = db.stat()
+            shutil.copyfile(db, snap)
+            after = db.stat()
+            if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
+                raise Blocked("database_changed_during_snapshot")
         try:
             conn = sqlite3.connect(str(snap), timeout=5)
             try:
@@ -198,7 +214,10 @@ def rollforward(info, *, run=subprocess.run):
     path = info["plist"]
     domain = info["domain"]
     target = domain + "/" + LABEL
-    backup = path.with_name(path.name + ".pre-rollforward")
+    # Preserve the earlier legacy backup and create a distinct immutable
+    # rollback artifact for each new pinned revision. Never overwrite one.
+    backup = path.with_name(
+        path.name + ".pre-rollforward-to-" + info["candidate"].name)
     switched = False
     old_unloaded = False
     try:
