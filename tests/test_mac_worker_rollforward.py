@@ -138,7 +138,44 @@ class UpgradeChecks(unittest.TestCase):
             module.rollforward(info, run=fail_new)
         self.assertEqual(plistlib.loads(self.plist.read_bytes()), self.orig)
         self.assertTrue((self.state / "STOP").is_file())
-        self.assertTrue(self.plist.with_name(self.plist.name+".pre-rollforward").exists())
+        self.assertTrue(self.plist.with_name(
+            self.plist.name+".pre-rollforward-to-"+self.runtime.name).exists())
+
+    def test_existing_legacy_backup_does_not_block_revision_scoped_rollforward(self):
+        legacy = self.plist.with_name(self.plist.name + ".pre-rollforward")
+        legacy.write_bytes(b"PREVIOUS_VALID_OWNER_BACKUP")
+        info = self.inspect()
+        result = module.rollforward(info, run=lambda argv, **kwargs: MockResult())
+        self.assertEqual(result["status"], "new_candidate_loaded_existing_label")
+        self.assertEqual(legacy.read_bytes(), b"PREVIOUS_VALID_OWNER_BACKUP")
+        newer = self.plist.with_name(
+            self.plist.name + ".pre-rollforward-to-" + self.runtime.name)
+        self.assertTrue(newer.is_file())
+        self.assertEqual(plistlib.loads(newer.read_bytes()), self.orig)
+
+    def test_active_wal_safe_snapshot_without_pausing_worker_database(self):
+        database = self.state / "jobs.sqlite3"
+        with sqlite3.connect(str(database)) as writer:
+            self.assertEqual(writer.execute("PRAGMA journal_mode=WAL").fetchone()[0],
+                             "wal")
+            writer.execute("PRAGMA wal_autocheckpoint=0")
+            writer.execute("INSERT INTO jobs(id,status) VALUES(?,?)",
+                           ("idle-job", "needs_review"))
+            writer.commit()
+            self.assertTrue((self.state / "jobs.sqlite3-wal").exists())
+            self.assertTrue((self.state / "jobs.sqlite3-shm").exists())
+            self.assertTrue(module.state_snapshot(self.state))
+            self.assertFalse((self.state / "STOP").exists())
+
+    def test_running_job_still_blocks_upgrading_even_in_wal_mode(self):
+        database = self.state / "jobs.sqlite3"
+        with sqlite3.connect(str(database)) as writer:
+            writer.execute("PRAGMA journal_mode=WAL")
+            writer.execute("INSERT INTO jobs(id,status) VALUES(?,?)",
+                           ("active", "running"))
+            writer.commit()
+            with self.assertRaisesRegex(module.Blocked, "active_jobs_present"):
+                module.state_snapshot(self.state)
 
     def test_success_swaps_one_path_preserving_other_flags(self):
         info = self.inspect()
