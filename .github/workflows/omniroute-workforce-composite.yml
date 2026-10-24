@@ -7,6 +7,8 @@ on:
       - 'tools/ghost_worker_loop.py'
       - 'tools/ghost_omniroute_job.py'
       - 'tools/ghost_omniroute_feed.py'
+      - 'tools/mac_worker_rollforward.py'
+      - 'tests/test_mac_worker_rollforward.py'
       - 'tests/test_ghost_omniroute_feed.py'
       - 'tools/omniroute_workpack_runner.py'
       - 'tools/omniroute_reasoning_admission.py'
@@ -37,6 +39,8 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Offline real-module composite tests
         run: python -m unittest discover -s tests -p 'test_omniroute_workforce_composite.py' -v
+      - name: Offline operator-only Mac rollforward checks
+        run: python -m unittest discover -s tests -p 'test_mac_worker_rollforward.py' -v
       - name: Offline specialist autonomous-feed tests
         run: python -m unittest discover -s tests -p 'test_ghost_omniroute_feed.py' -v
       - name: Offline focused SQLite OmniRoute queue tests
