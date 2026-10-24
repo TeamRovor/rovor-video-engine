@@ -24,9 +24,12 @@ const IMAGE_ASSETS = ['./earth-blue-marble.png','./earth-night.png'];
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(SHELL).then(() =>
-        Promise.allSettled(IMAGE_ASSETS.map(url => cache.add(url)))
-      ))
+      .then(cache => cache.addAll(SHELL).then(() => {
+        // Browser Cache objects support add(); older test doubles may only
+        // support addAll(). Map assets are optional in local preview.
+        if (typeof cache.add !== 'function') return;
+        return Promise.allSettled(IMAGE_ASSETS.map(url => cache.add(url)));
+      }))
       .then(() => self.skipWaiting())
   );
 });
