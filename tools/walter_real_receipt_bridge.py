@@ -128,7 +128,8 @@ def prepare(jobs, claims, job_roles, human_reviews, candidates, *, now,
     by_claim = {}
     for event in claims:
         if (type(event) is not dict or set(event) != {"job_id", "event", "timestamp"}
-                or event["event"] != "claimed" or event["job_id"] not in by_id
+                or event["event"] != "claimed" or type(event["job_id"]) is not str
+                or event["job_id"] not in by_id
                 or event["job_id"] in by_claim):
             _deny("duplicate_or_unmatched_claim")
         by_claim[event["job_id"]] = _clock(event["timestamp"], now)
@@ -142,6 +143,7 @@ def prepare(jobs, claims, job_roles, human_reviews, candidates, *, now,
     for review in human_reviews:
         if (type(review) is not dict or set(review) != {
                 "job_id", "decision", "decided_at"}
+                or type(review["job_id"]) is not str
                 or review["job_id"] not in by_claim
                 or review["job_id"] in by_review
                 or review["decision"] not in ("accepted", "rejected")):
