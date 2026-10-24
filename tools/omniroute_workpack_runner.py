@@ -58,6 +58,12 @@ MAX_RESPONSE = 131072
 MAX_OUTPUT = 22000
 MAX_PACKET = 10000
 REQUEST_TIMEOUT_SECONDS = 120
+# The previous 2400 completion-token ceiling caused a real v2 Jane
+# response to end with finish_reason=length. A bounded 4096 ceiling
+# gives thinking-capable free routes room to finish a short memo, without
+# disabling strict nonempty/stop checks or allowing any automatic retries.
+# Changing this does not change the existing 14-claims/24h budget.
+MAX_COMPLETION_TOKENS = 4096
 JOB = re.compile(r'^[a-z0-9][a-z0-9_-]{2,55}$')
 MODEL = re.compile(r'^[A-Za-z0-9_.:/-]{2,120}$')
 SYSTEM = (
@@ -277,7 +283,8 @@ def http_completion(model, prompt, key, opener=None):
     body=json.dumps({'model':model,'messages':[
         {'role':'system','content':SYSTEM},
         {'role':'user','content':prompt}],
-        'temperature':0.1,'stream':False,'max_tokens':2400},
+        'temperature':0.1,'stream':False,
+        'max_tokens':MAX_COMPLETION_TOKENS},
         ensure_ascii=False).encode('utf-8')
     req=request.Request(GATEWAY, data=body, headers={
         'Authorization':'Bearer '+key,'Content-Type':'application/json',
