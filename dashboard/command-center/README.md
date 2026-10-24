@@ -1,5 +1,14 @@
 # ROVOR Command Center — live GitHub HUD
 
+## Workforce Control HUD — first implementation
+
+A new **ROVOR Workforce Control** module is available at `/workforce/` (also `/?workforce=1`). It shows Walter, Mike, Jane, Jesse, Gale, Gus, Saul and Hank, plus the source-verified development task queue, model-router overview, mission timeline, results and Mac connection status. It supports full HUD-style scrollable panels and local job draft copy/export. **It does not claim any employee is online or permit actual dispatch** until a private authenticated host/controller proves worker receipts and STOP/approval capabilities. The primary native v8.9 visual HUD remains the default.
+
+Source and next integration milestone: `design/hud/WORKFORCE_HUD_IMPLEMENTATION_CHECKPOINT.md`. The public GitHub development queue is not the private SQLite worker job queue.
+
+---
+
+
 ## Current default: Native HUD v8.9 (scrollable instrument previews)
 
 The default GitHub Pages route now redirects to `./native-v8-9/`. This release preserves the original layout while making the six compact instrument panels **independently scrollable**. The active-task card initially shows all verified unfinished tasks and includes an **OPEN / ALL** switch to browse the complete verified archive without expanding. Overflowing cards show a small blue **SCROLL ↓** cue, which disappears at the bottom. Real task rows remain at least 40–44px tall rather than compressing into unreadable lines.
