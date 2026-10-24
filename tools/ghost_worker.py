@@ -101,7 +101,14 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
         raise ValueError("A JSON-object payload and nonempty dedupe key (max 200) are required")
     if kind == OMNI_KIND:
         import ghost_omniroute_job
-        ghost_omniroute_job.validate_payload(payload)
+        if set(payload) == {'assignment'}:
+            import omniroute_continuous
+            omniroute_continuous.validate_assignment(payload)
+        elif set(payload) == {'public_task'}:
+            import omniroute_continuous
+            omniroute_continuous.public_assignment(payload)
+        else:
+            ghost_omniroute_job.validate_payload(payload)
     if kind in {"system.ping", "system.omniroute-preflight", RESEARCH_KIND, TERMINAL_KIND} and payload:
         raise ValueError("This fixed job does not accept parameters")
     if kind == LIBRARY_KIND:
@@ -144,7 +151,14 @@ def enqueue(conn: sqlite3.Connection, kind: str, payload: dict,
 
 def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
           jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False,
-          omni_max_24h=OMNI_MAX_24H, allow_recovery_canary=False):
+          omni_max_24h=OMNI_MAX_24H, allow_recovery_canary=False,
+          omni_continuous=False, omni_pace_seconds=0):
+    if type(omni_continuous) is not bool:
+        raise ValueError('Continuous dispatch requires an explicit boolean')
+    if omni_continuous and (not allow_omniroute_model_use or allow_model_use
+            or allow_native_import or allow_jane_library_create or allow_terminal_probe
+            or allow_recovery_canary or jane_queue_job_id is not None):
+        raise ValueError('Continuous dispatch requires OmniRoute-only approval')
     if allow_recovery_canary and (
             not allow_omniroute_model_use or not omniroute_queue_job_id
             or allow_model_use or allow_native_import or allow_jane_library_create
@@ -158,8 +172,15 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         raise ValueError('Jane-only selector requires specific library creation approval')
     if not owner or len(owner) > 128:
         raise ValueError("Worker identifier required")
-    if type(omni_max_24h) is not int or not 1 <= omni_max_24h <= 20:
+    if type(omni_max_24h) is not int or not 1 <= omni_max_24h <= (144 if omni_continuous else 20):
         raise ValueError("OmniRoute rolling claim budget must be 1 to 20")
+    if omni_continuous:
+        import omniroute_dispatch_pacing as pacing
+        if (type(omni_pace_seconds) is not int or
+                omni_pace_seconds < pacing.recommended_interval(omni_max_24h)):
+            raise ValueError('Continuous claims must be spread over the rolling day')
+    elif omni_pace_seconds != 0:
+        raise ValueError('Pacing requires continuous-dispatch approval')
     now = time.time() if now is None else now
     conn.execute("BEGIN IMMEDIATE")
     try:
@@ -208,6 +229,20 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         omni_enabled = (allow_omniroute_model_use and
                         omni_used < omni_max_24h and
                         (not omni_circuit_open or allow_recovery_canary))
+        if omni_continuous:
+            claims = [r[0] for r in conn.execute(
+                "SELECT e.timestamp FROM events e JOIN jobs j ON j.id=e.job_id "
+                "WHERE j.kind=? AND e.event='claimed' AND e.timestamp>=?",
+                (OMNI_KIND, now - 86400))]
+            waiting = conn.execute("SELECT count(*) FROM jobs WHERE kind=? AND status='queued'",
+                                   (OMNI_KIND,)).fetchone()[0]
+            running = conn.execute("SELECT count(*) FROM jobs WHERE kind=? AND status='running'",
+                                   (OMNI_KIND,)).fetchone()[0]
+            decision = pacing.dispatch_decision(
+                now=now, claims=claims, max_claims=omni_max_24h, queued=waiting,
+                running=running, circuit_open=omni_circuit_open,
+                pace_seconds=omni_pace_seconds)
+            omni_enabled = omni_enabled and decision['allowed']
         kinds = sorted(ALLOWED | ({RESEARCH_KIND} if allow_model_use else set())
                        | ({OMNI_KIND} if omni_enabled else set())
                        | ({NATIVE_KIND} if allow_native_import else set())
@@ -232,6 +267,10 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
                     {"packet": "walter-v2-recovery-proof"}):
                 raise ValueError("Recovery canary ID is not the one reviewed packet")
         if job:
+            if (not omni_continuous and job['kind'] == OMNI_KIND
+                    and set(json.loads(job['payload'])) in ({'assignment'}, {'public_task'})):
+                conn.execute('COMMIT')
+                return None
             conn.execute("UPDATE jobs SET status='running',attempts=attempts+1,lease_owner=?,lease_until=?,updated_at=? WHERE id=?",
                          (owner, now + (420 if job['kind'] in {NATIVE_KIND, LIBRARY_KIND} else 360 if job["kind"] in {RESEARCH_KIND, OMNI_KIND} else LEASE_SECONDS), now, job["id"]))
             _event(conn, job["id"], "claimed", {"worker": owner, "attempt": job["attempts"]+1}, now)
@@ -304,7 +343,8 @@ def macos_version_probe(*, run=subprocess.run, platform=None) -> dict:
 
 def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-worker", now: float | None = None, *, allow_model_use=False, allow_native_import=False, allow_jane_library_create=False, jane_library_only=False,
              jane_queue_job_id=None, allow_omniroute_model_use=False, omniroute_queue_job_id=None, allow_terminal_probe=False,
-             omni_max_24h=OMNI_MAX_24H, allow_recovery_canary=False):
+             omni_max_24h=OMNI_MAX_24H, allow_recovery_canary=False,
+             omni_continuous=False, omni_pace_seconds=0):
     state = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
     if os.path.lexists(state / "STOP"):
         return None
@@ -316,7 +356,8 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
                 omniroute_queue_job_id=omniroute_queue_job_id,
                  allow_terminal_probe=allow_terminal_probe,
                  omni_max_24h=omni_max_24h,
-                 allow_recovery_canary=allow_recovery_canary)
+                 allow_recovery_canary=allow_recovery_canary,
+                 omni_continuous=omni_continuous, omni_pace_seconds=omni_pace_seconds)
     if not job:
         return None
     job_id, kind = job["id"], job["kind"]
@@ -347,8 +388,14 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
             if not allow_omniroute_model_use:
                 raise ValueError('OmniRoute requires separate explicit approval')
             import ghost_omniroute_job
-            result = ghost_omniroute_job.execute(
-                state, job_id, payload, stop_path=state / 'STOP')
+            if set(payload) in ({'assignment'}, {'public_task'}):
+                if not omni_continuous:
+                    raise ValueError('Continuous assignment needs its own dispatch approval')
+                import omniroute_continuous
+                result = omniroute_continuous.execute(state, job_id, payload)
+            else:
+                result = ghost_omniroute_job.execute(
+                    state, job_id, payload, stop_path=state / 'STOP')
             # A provider-produced memo is never automatically approved. Even
             # an HTTP 200 / nonempty answer remains a review-required draft.
             conn.execute('BEGIN IMMEDIATE')
@@ -409,8 +456,13 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
             conn.execute("ROLLBACK")
         conn.execute("BEGIN IMMEDIATE")
         terminal = 'needs_review' if kind in {NATIVE_KIND, LIBRARY_KIND, OMNI_KIND, TERMINAL_KIND} else 'failed'
-        conn.execute("UPDATE jobs SET status=?,error=?,lease_owner=NULL,lease_until=NULL,updated_at=? "
-                     "WHERE id=? AND status='running' AND lease_owner=?", (terminal, str(exc), t, job_id, owner))
+        failure_result = (json.dumps({'draft_status': 'needs_review_no_auto_retry',
+                                     'error_class': 'ContinuousAssignmentFailure'})
+                          if kind == OMNI_KIND and omni_continuous else None)
+        conn.execute("UPDATE jobs SET status=?,error=?,result=COALESCE(?,result),"
+                     "lease_owner=NULL,lease_until=NULL,updated_at=? "
+                     "WHERE id=? AND status='running' AND lease_owner=?",
+                     (terminal, str(exc), failure_result, t, job_id, owner))
         _event(conn, job_id, terminal, {"error": type(exc).__name__}, t)
         conn.execute("COMMIT")
         return {"id": job_id, "status": terminal, "error": str(exc)}
