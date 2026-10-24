@@ -3791,6 +3791,26 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/136"
         }
       ]
+    },
+    {
+      "id": "walter-reviewed-finding-handoff-20261024",
+      "title": "Convert human-reviewed specialist research findings into deduplicated, testable code handoff candidates",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 finding handoff shift",
+      "branch": "feature/walter-reviewed-finding-handoff-v1",
+      "scopes": [
+        "tools/walter_reviewed_finding_handoff.py",
+        "tests/test_walter_reviewed_finding_handoff.py",
+        ".github/workflows/walter-reviewed-finding-handoff.yml",
+        "subsystem:reviewed-research-to-testable-code-task"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T07:08:00Z",
+      "next_update": "After focused hosted Python 3.9/3.11 CI and shared routing checks.",
+      "next_action": "Implement an offline human-review-gated adapter that binds a concrete code finding to request-time public citation digests, exact target SHA, focused test path and deterministic no-repeat task identity; reject duplicate/overlapping claims, vague outputs and unreviewed model text. No auto-enqueue, inference, host writes, private draft publication or worker changes.",
+      "acceptance": "Pure stdlib helper accepts only independently human-approved, exact-source-grounded actionable findings and pinned public repository target SHA; emits deterministic private review-only candidate and refuses duplicate or overlapping active claims, generic/blank tasks, missing test path, unverified citation or untrusted queue. Hosted Python3.9/3.11 focused tests and shared coordination checks; existing Mac worker owner retains exclusive integration.",
+      "evidence": []
     }
   ]
 }
