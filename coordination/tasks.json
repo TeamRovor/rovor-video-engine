@@ -4245,9 +4245,9 @@
       "id": "hud-omniroute-live-sync-20261024",
       "title": "Connect existing HUD to read-only live full OmniRoute inventory and measured request usage",
       "priority": 1,
-      "status": "blocked",
+      "status": "active",
       "owner": "Codex / Amar live HUD bridge session",
-      "branch": "fix/connect-published-hud",
+      "branch": "fix/hud-owned-connections",
       "scopes": [
         "tools/hud_omniroute_bridge.mjs",
         "dashboard/command-center/native-v8-9/live-omniroute.js",
@@ -4260,9 +4260,9 @@
         "dashboard/command-center/native-v8-9/connect-omniroute.js"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T11:16:45.460603+00:00",
-      "next_update": "After restart of working Mac bridge and LINK pairing from existing published HUD",
-      "next_action": "Implemented public HUD LINK form, exact-Origin CORS, 24h read-snapshot-only bearer capability and same published URL live adapter. Eight bridge tests and 86 existing native HUD source checks pass locally. Hosted browser integration checks original viewer origin pairing to separate bridge. Actual current old Mac bridge must restart on new source, then paste fresh private link into LINK form without opening separate HUD. Real catalog 1012/57 request startup evidence exists; new public viewer pairing remains host-dependent.",
+      "updated_at": "2026-10-24T11:26:09.028884+00:00",
+      "next_update": "After owned-inventory reducer and UI checks",
+      "next_action": "Owner rejects advertised 1012 catalog. Replace with actual configured provider connections and measured models under them, retaining eight employees. Label connections separately from models; never invent per-account usage for shared providers.",
       "acceptance": "Dynamic full model list, measured window counts and request-share bars, stale/error states, secrets never reach browser, no arbitrary proxy; tested mocked gateway end to end, actual Mac connection separately verified.",
       "blocker": "This session has no Mac runtime or connected browser tool. Code can be reviewed/published here; actual localhost gateway authentication, catalog/usage counts and remote phone pairing require one startup on the Mac. No real Mac sync claimed.",
       "evidence": [
