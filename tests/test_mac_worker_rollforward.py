@@ -93,6 +93,19 @@ class UpgradeChecks(unittest.TestCase):
         self.assertEqual(self.plist.read_bytes(), baseline)
         self.assertFalse((self.state / "STOP").exists())
 
+    def test_parallel_rollforward_is_an_explicit_separate_approval(self):
+        normal = self.inspect()
+        self.assertNotIn("--parallel-omniroute-workers",
+                         normal["replacement"]["ProgramArguments"])
+        parallel = module.inspect(self.home, self.runtime, SHA,
+                                  platform="darwin", uid=lambda: 501,
+                                  run=self.fake_run, approve_parallel=True)
+        args = parallel["replacement"]["ProgramArguments"]
+        self.assertEqual(args[args.index("--max-jobs") + 1], "3")
+        self.assertEqual(args[-2:], ["--parallel-omniroute-workers", "3"])
+        self.assertEqual(self.orig["ProgramArguments"][
+            self.orig["ProgramArguments"].index("--max-jobs") + 1], "1")
+
     def test_bad_checkout_and_existing_stop_are_refused(self):
         with self.assertRaisesRegex(module.Blocked, "candidate_name_not_isolated"):
             module.inspect(self.home, self.runtime, "2" * 40, platform="darwin",
