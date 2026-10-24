@@ -68,6 +68,13 @@ class SoakEvidenceTests(unittest.TestCase):
         self.assertIn("heartbeat_window_short", result["issues"])
         self.assertEqual(result["heartbeat_coverage"], "insufficient")
 
+    def test_more_than_one_day_window_rejected_instead_of_miscounted(self):
+        data = fixture()
+        data["window_end"] = END + 300
+        data["heartbeats"].append(END + 300)
+        self.assertEqual(audit(**data)["status"],
+                         "invalid_window_or_pinned_policy")
+
     def test_missing_start_heartbeat(self):
         data = fixture()
         data["heartbeats"] = data["heartbeats"][4:]
