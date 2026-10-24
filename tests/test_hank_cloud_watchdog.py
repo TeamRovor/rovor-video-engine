@@ -1,5 +1,10 @@
 """Offline, deterministic checks for the GitHub-hosted Hank employee."""
 import copy
+import hashlib
+import json
+import os
+import tempfile
+from unittest.mock import patch
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import sys
@@ -81,6 +86,123 @@ class HankTests(unittest.TestCase):
         docs = make()
         docs[2]["roles"].pop()
         self.assertIn("employee_roster_mismatch", self.inspect(docs)["errors"])
+
+
+    def receipt_fixture(self, base):
+        root = Path(base) / "coordination"
+        root.mkdir()
+        for name, value in zip(hank.RECEIPT_INPUTS, make()):
+            (root / name).write_text(json.dumps(value), encoding="utf-8")
+        return root
+
+    def create_receipt(self, root, report=None, **changes):
+        params = {"commit": "a" * 40, "run_id": "40140000000",
+                  "attempt": 1, "observed_at": NOW}
+        params.update(changes)
+        return hank.cloud_receipt(report or self.inspect(make()), root, **params)
+
+    def test_cloud_receipt_is_bounded_and_content_free(self):
+        with tempfile.TemporaryDirectory() as base:
+            root = self.receipt_fixture(base)
+            result = self.create_receipt(root)
+            self.assertEqual(result["employee"], "Hank")
+            self.assertEqual(result["execution_source"], "github_actions")
+            self.assertEqual(result["github_run_id"], "40140000000")
+            self.assertEqual(result["status"], "healthy")
+            self.assertEqual(result["human_review"], "not_recorded")
+            self.assertIsNone(result["model"])
+            self.assertIsNone(result["tokens"])
+            self.assertFalse(result["mac_runtime_verified"])
+            self.assertFalse(result["omniroute_inference_verified"])
+            self.assertEqual(result["public_input_sha256"]["tasks.json"],
+                             hashlib.sha256((root / "tasks.json").read_bytes()).hexdigest())
+            encoded = json.dumps(result)
+            self.assertLess(len(encoded.encode("utf-8")), 4096)
+            self.assertNotIn("worker", encoded)
+            self.assertNotIn(str(root), encoded)
+
+    def test_cloud_receipt_records_failed_audit_without_false_success(self):
+        with tempfile.TemporaryDirectory() as base:
+            root = self.receipt_fixture(base)
+            docs = make()
+            docs[3]["safety"]["default_paid_use_allowed"] = True
+            failed = self.inspect(docs)
+            result = self.create_receipt(root, failed)
+            self.assertEqual(result["status"], "needs_review")
+            self.assertIn("zero_spend_stop_or_scheduler_policy_changed", result["errors"])
+
+    def test_cloud_receipt_rejects_invalid_provenance(self):
+        with tempfile.TemporaryDirectory() as base:
+            root = self.receipt_fixture(base)
+            for override in (
+                {"commit": "a" * 39},
+                {"commit": "A" * 40},
+                {"run_id": "0"},
+                {"run_id": "1; rm -rf"},
+                {"attempt": 0},
+                {"attempt": True},
+                {"observed_at": NOW.replace(tzinfo=None)},
+            ):
+                with self.subTest(override=override):
+                    with self.assertRaisesRegex(ValueError, "receipt_provenance_invalid"):
+                        self.create_receipt(root, **override)
+
+    def test_cloud_receipt_rejects_injected_codes_and_counts(self):
+        with tempfile.TemporaryDirectory() as base:
+            root = self.receipt_fixture(base)
+            for patch_data in (
+                {"errors": ["private /home/user/secret"]},
+                {"warnings": ["\\nInjected"]},
+                {"counts": {"active": True}},
+                {"counts": {"custom": 1}},
+                {"tasks": -1},
+                {"status": "approved"},
+                {"status": "healthy", "errors": ["unknown_error"]},
+            ):
+                with self.subTest(patch_data=patch_data):
+                    report = dict(self.inspect(make()), **patch_data)
+                    with self.assertRaisesRegex(ValueError, "receipt_report_invalid"):
+                        self.create_receipt(root, report)
+
+    def test_cloud_receipt_rejects_redirected_or_oversized_source(self):
+        with tempfile.TemporaryDirectory() as base:
+            root = self.receipt_fixture(base)
+            original = root / "tasks.json"
+            original.unlink()
+            original.symlink_to(root / "work-routing.json")
+            with self.assertRaisesRegex(ValueError, "receipt_sources_invalid"):
+                self.create_receipt(root)
+            original.unlink()
+            original.write_bytes(b"x" * 5000001)
+            with self.assertRaisesRegex(ValueError, "receipt_sources_invalid"):
+                self.create_receipt(root)
+
+    def test_cloud_receipt_requires_source_digest_for_healthy_audit(self):
+        with tempfile.TemporaryDirectory() as base:
+            root = self.receipt_fixture(base)
+            (root / "tasks.json").unlink()
+            with self.assertRaisesRegex(ValueError, "receipt_sources_invalid"):
+                self.create_receipt(root)
+            failed = dict(self.inspect(make()), status="needs_review",
+                          errors=["source_unavailable"])
+            result = self.create_receipt(root, failed)
+            self.assertIsNone(result["public_input_sha256"]["tasks.json"])
+
+    def test_cli_writes_actual_hosted_receipt_only_with_actions_provenance(self):
+        with tempfile.TemporaryDirectory() as base:
+            root = self.receipt_fixture(base)
+            output = Path(base) / "hank.json"
+            env = {"GITHUB_ACTIONS": "true", "GITHUB_SHA": "b" * 40,
+                   "GITHUB_RUN_ID": "40140000001", "GITHUB_RUN_ATTEMPT": "2"}
+            with patch.dict(os.environ, env):
+                self.assertEqual(hank.main(["--root", base, "--receipt-file", str(output)]), 0)
+            receipt = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(receipt["github_run_attempt"], 2)
+            self.assertEqual(receipt["commit_sha"], "b" * 40)
+            output.unlink()
+            with patch.dict(os.environ, dict(env, GITHUB_ACTIONS="false")):
+                self.assertEqual(hank.main(["--root", base, "--receipt-file", str(output)]), 1)
+            self.assertFalse(output.exists())
 
     def test_real_repository_invariants(self):
         c = ROOT / "coordination"
