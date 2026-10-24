@@ -8,8 +8,8 @@ const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'native','index.html'),'utf8');
 const js=html.split('<script>')[1]?.split('</script>')[0];
 
-test('native v8.8 adds real overflow cues without altering dashboard cards',()=>{
-  assert.match(html,/<title>ROVOR DIGITAL — Interactive HUD v8\.8/);
+test('native v8.9 adds real overflow cues without altering dashboard cards',()=>{
+  assert.match(html,/<title>ROVOR DIGITAL — Interactive HUD v8\.9/);
   assert.ok((html.match(/class="panel-expand"/g)||[]).length===6);
   assert.match(html,/\.panel\.preview-has-more > \.panel-content::after/);
   assert.match(js,/const canScroll=node\.scrollHeight>node\.clientHeight\+4/);
@@ -33,7 +33,7 @@ test('refresh preserves positions for every preview and rediscovers overflow',()
 
 test('GitHub is read-only and inline application remains valid',()=>{
   assert.ok(js);
-  assert.doesNotThrow(()=>new vm.Script(js,{filename:'native-v8.8.js'}));
+  assert.doesNotThrow(()=>new vm.Script(js,{filename:'native-v8.9.js'}));
   assert.match(js,/coordination\/tasks\.json/);
   assert.match(js,/coordination\/work-routing\.json/);
   assert.match(html,/A CLAIMED TASK IS NOT A RUNNING MAC WORKER/);
