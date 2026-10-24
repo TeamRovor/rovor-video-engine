@@ -124,3 +124,31 @@ test('Compact preview contains nine models, eight named employees, no invented v
   sandbox.window.ROVOR_WORKLOAD.mount(host);
   assert.match(host.child.innerHTML,/JANE × MODEL 01/);
 });
+
+test('Workload selection survives unrelated refresh remount, resets after popup close',()=>{
+  const context={window:{},document:{createElement(){return{
+    innerHTML:'',handlers:{},contains(){return true},querySelector(){return null},
+    addEventListener(type,fn){this.handlers[type]=fn}
+  }}},Number,Math,Array,Object,String};
+  vm.runInNewContext(popup,context);
+  const host={child:null,replaceChildren(){},append(node){this.child=node},querySelector(){return null}};
+  context.window.ROVOR_WORKLOAD.mount(host);
+  const click=dataset=>host.child.handlers.click({target:{closest(){return{
+    dataset,hasAttribute(attr){
+      if(attr==='data-wl-tab')return Object.hasOwn(dataset,'wlTab');
+      if(attr==='data-wl-demo')return Object.hasOwn(dataset,'wlDemo');
+      return false;
+    }
+  }}}});
+  click({wlTab:'models'});
+  assert.equal((host.child.innerHTML.match(/wl-model-entry/g)||[]).length>0,true);
+  click({wlDemo:''});
+  assert.match(host.child.innerHTML,/DEMONSTRATION — SYNTHETIC NUMBERS/);
+  context.window.ROVOR_WORKLOAD.mount(host);
+  assert.match(host.child.innerHTML,/ALL NINE MODEL SLOTS/);
+  assert.match(host.child.innerHTML,/DEMONSTRATION — SYNTHETIC NUMBERS/);
+  context.window.ROVOR_WORKLOAD.resetPopup();
+  context.window.ROVOR_WORKLOAD.mount(host);
+  assert.match(host.child.innerHTML,/NO VERIFIED LIVE MODEL TELEMETRY/);
+  assert.match(host.child.innerHTML,/EMPLOYEE × AI MODEL/);
+});
