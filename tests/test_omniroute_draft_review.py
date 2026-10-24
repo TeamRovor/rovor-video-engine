@@ -178,6 +178,59 @@ class OmniRouteDraftReviewTests(unittest.TestCase):
         outcome=gate.inspect(self.repo,self.receipts,'provider-efficiency')
         self.assertEqual(outcome['status'],'draft_ready_for_human_review')
 
+    def test_new_4096_limit_receipt_not_wrongly_flagged_at_2400_tokens(self):
+        path,obj=self.make(answer='**Date:** 2026-10-23\\n'
+            'Public-source technical draft, with proposed checks only.')
+        obj['created_at']='2026-10-23T18:00:00-05:00'
+        obj['completion_token_limit']=worker.MAX_COMPLETION_TOKENS
+        obj['usage_reported']={'completion_tokens':2500,
+            'prompt_tokens':300,'total_tokens':2800}
+        path.write_text(json.dumps(obj))
+        verdict=gate.inspect(self.repo,self.receipts,'runner-blocker')
+        self.assertEqual(verdict['status'],'draft_ready_for_human_review')
+        self.assertFalse(verdict['approval_granted'])
+        self.assertFalse(verdict['actual_mac_execution_verified'])
+
+    def test_new_limit_near_real_request_ceiling_still_flags_truncation(self):
+        path,obj=self.make()
+        obj['completion_token_limit']=worker.MAX_COMPLETION_TOKENS
+        obj['usage_reported']={'completion_tokens':worker.MAX_COMPLETION_TOKENS-20}
+        path.write_text(json.dumps(obj))
+        verdict=gate.inspect(self.repo,self.receipts,'runner-blocker')
+        self.assertEqual(verdict['status'],'content_quality_needs_review')
+        self.assertEqual(verdict['reasons'],
+                         ['near_completion_token_cap_truncation_unknown'])
+
+    def test_old_legacy_2400_token_receipts_stay_conservatively_flagged(self):
+        path,obj=self.make()
+        obj['usage_reported']={'completion_tokens':2400}
+        path.write_text(json.dumps(obj))
+        verdict=gate.inspect(self.repo,self.receipts,'runner-blocker')
+        self.assertEqual(verdict['status'],'content_quality_needs_review')
+        self.assertEqual(verdict['reasons'],
+                         ['near_completion_token_cap_truncation_unknown'])
+
+    def test_forged_or_invalid_new_token_caps_fail_closed(self):
+        for invalid in (True,4097,2400,0,"4096",None):
+            with self.subTest(invalid=invalid):
+                path,obj=self.make()
+                obj['completion_token_limit']=invalid
+                path.write_text(json.dumps(obj))
+                verdict=gate.inspect(self.repo,self.receipts,'runner-blocker')
+                self.assertEqual(verdict['status'],'invalid_receipt')
+                self.assertEqual(verdict['reasons'],
+                                 ['invalid_completion_request_limit'])
+
+    def test_new_failed_receipt_still_no_retry_and_never_review_ready(self):
+        path,obj=self.make(status='needs_review_no_auto_retry')
+        obj['completion_token_limit']=worker.MAX_COMPLETION_TOKENS
+        obj['admission_code']='incomplete_length_stop'
+        path.write_text(json.dumps(obj))
+        verdict=gate.inspect(self.repo,self.receipts,'runner-blocker')
+        self.assertEqual(verdict['status'],'failed_needs_review')
+        self.assertFalse(verdict['response_present'])
+        self.assertFalse(verdict['approval_granted'])
+
     def test_no_header_and_missing_completion_usage_are_reviewable(self):
         self.make('provider-efficiency',answer='No report date or usage known.')
         self.assertEqual(gate.inspect(self.repo,self.receipts,
