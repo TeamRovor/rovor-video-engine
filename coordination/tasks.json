@@ -4573,7 +4573,7 @@
       "id": "walter-reviewed-handoff-scope-guard-20261024",
       "title": "Reject ancestor and descendant scope conflicts in reviewed research-to-code handoffs",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 scope-guard shift",
       "branch": "feature/walter-reviewed-handoff-scope-guard",
       "scopes": [
@@ -4581,11 +4581,26 @@
         "tests/test_walter_reviewed_finding_handoff.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T18:07:52.086Z",
-      "next_update": "After focused Python 3.9/3.11 CI and queue/routing checks on the scoped PR.",
-      "next_action": "Fix the existing reviewed finding handoff gate's exact-only scope overlap so active directory scopes block descendant code/test targets, and nested descendant scopes block ancestor target proposals; add adversarial regressions without changing Mac runtime or human approval.",
+      "updated_at": "2026-10-24T18:11:46.911Z",
+      "next_update": "Completed source-only; Mac owner may independently consider adopting handoff guard after verifying private review and queue state.",
+      "next_action": "PR #179 merged into main at 889e5a60fffe499c4c2c876e80c9ce35f109bb18. Existing reviewed research-to-code gate now refuses ancestor/descendant path-scope collisions and malformed queue scopes while allowing unrelated sibling filenames and completed scopes. GitHub Actions run 40119388116: 46 focused tests PASS on Python 3.9 and 3.11; shared project_loop.py check and task_routing_pair.py --check PASS. No Mac integration, live inference, private review, automated claims or deployment. Future integration must use authenticated queue snapshots and independent human approval.",
       "acceptance": "Pure source-only handoff gate rejects active/blocked/ready ancestor-directory and descendant-directory scope conflicts, including sibling prefix traps; done scopes do not block. Reject malformed scope strings fail-closed. Focused Python 3.9/3.11 CI and shared queue/routing checks pass; no automatic model approval or Mac effects.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "889e5a60fffe499c4c2c876e80c9ce35f109bb18",
+          "platform": "GitHub-hosted Ubuntu / Python 3.9 and 3.11",
+          "check": "46 focused reviewed-finding handoff regressions; project_loop.py check; task_routing_pair.py --check",
+          "result": "PASS both Python versions, run 40119388116. Source-only merged; no Mac runtime or model call.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40119388116"
+        },
+        {
+          "commit": "889e5a60fffe499c4c2c876e80c9ce35f109bb18",
+          "platform": "GitHub PR #179",
+          "check": "Owner-scope boundary regression; exact path segment collision checks; no existing Mac worker edits",
+          "result": "MERGED source-only; no live deployment or private data processing",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/179"
+        }
+      ]
     }
   ]
 }
