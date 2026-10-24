@@ -162,6 +162,63 @@ class PublicQueueAdmissionTests(unittest.TestCase):
             "lane": "operations", "requires": ["hosted-ci"]}
         self.assertEqual(admit(**args)["status"], "unfinished_scope_conflict")
 
+    def test_active_directory_without_trailing_slash_blocks_child_source(self):
+        # Previously 'tools' was treated as disjoint from 'tools/file.py'.
+        for scope in ("tools", "tools/", "tools/blender_example.py/child"):
+            with self.subTest(scope=scope):
+                args = fixture()
+                other = task("another-owner-directory", scope)
+                other.update(status="active", owner="Another worker")
+                args["queue"]["tasks"].append(other)
+                args["routing"]["tasks"][other["id"]] = {
+                    "lane": "operations", "requires": ["hosted-ci"]}
+                self.assertEqual(admit(**args)["status"],
+                                 "unfinished_scope_conflict")
+
+    def test_directory_boundary_does_not_block_unrelated_siblings(self):
+        for scope in ("tools/blender_example.py.bak",
+                      "tools/blender_example_extra.py", "tools-other"):
+            with self.subTest(scope=scope):
+                args = fixture()
+                other = task("another-owner-sibling", scope)
+                other.update(status="active", owner="Another worker")
+                args["queue"]["tasks"].append(other)
+                args["routing"]["tasks"][other["id"]] = {
+                    "lane": "operations", "requires": ["hosted-ci"]}
+                self.assertEqual(admit(**args)["status"],
+                                 "grounded_public_seed_review_only")
+
+    def test_invalid_other_owner_scope_fails_closed(self):
+        for scope in ("tools//blender_example.py",
+                      "tools/../blender_example.py",
+                      "tools/.git/private.py", "tools/.env.private",
+                      "subsystem:bad", " tools/blender_example.py",
+                      "tools/blender_example.py\\nsecret"):
+            with self.subTest(scope=scope):
+                args = fixture()
+                other = task("another-owner-invalid-scope", scope)
+                other.update(status="active", owner="Another worker")
+                args["queue"]["tasks"].append(other)
+                args["routing"]["tasks"][other["id"]] = {
+                    "lane": "operations", "requires": ["hosted-ci"]}
+                self.assertEqual(admit(**args)["status"],
+                                 "unfinished_scope_conflict")
+
+    def test_subsystem_scopes_match_only_exact_identity(self):
+        for scope, expected in (
+            ("subsystem:admission-owner", "unfinished_scope_conflict"),
+            ("subsystem:unrelated-owner", "grounded_public_seed_review_only")):
+            with self.subTest(scope=scope):
+                args = fixture()
+                args["queue"]["tasks"][1]["scopes"].append(
+                    "subsystem:admission-owner")
+                other = task("another-owner-subsystem", scope)
+                other.update(status="active", owner="Another worker")
+                args["queue"]["tasks"].append(other)
+                args["routing"]["tasks"][other["id"]] = {
+                    "lane": "operations", "requires": ["hosted-ci"]}
+                self.assertEqual(admit(**args)["status"], expected)
+
     def test_other_done_scope_does_not_block(self):
         args = fixture()
         other = task("older-done-gale-task", "tools/blender_example.py")
