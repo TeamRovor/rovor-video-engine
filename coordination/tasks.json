@@ -4082,6 +4082,70 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/151"
         }
       ]
+    },
+    {
+      "id": "a-overnight-01-hank-quality-triage",
+      "title": "Hank QA audit: find testable causes of OmniRoute research drafts failing review",
+      "acceptance": "Review the PUBLIC repository paths tools/omniroute_workpack_runner.py, tools/omniroute_reasoning_admission.py, tools/omniroute_draft_review.py and the continuous worker documentation. Produce a role-specific review-only failure taxonomy distinguishing reasoning-only/empty answers, finish_reason length, safe admission rejections, public source overflow, unsupported execution claims, and stale date headers. Identify one minimal, independently testable code change that could improve the review-ready rate, with exact public paths and validation steps. Do not pretend to inspect private Mac receipts, assert actual provider causes, retry failed job IDs, change STOP/pacing, or claim tests ran.",
+      "scopes": [
+        "subsystem:overnight-public-hank-research-quality"
+      ],
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "depends_on": [],
+      "updated_at": "2026-10-24T10:22:18.237Z",
+      "next_update": "After first original Mac research draft is genuinely ready for private human review",
+      "next_action": "Existing paced Mac public-task feeder may enqueue plan/checklist/tests/handoff drafts once per unique source-grounded task identity; do not label these as completed or eight independent model workers. Review private outputs and manually convert accepted findings to code/business deliverables; no paid/model-route/Mac-state actions."
+    },
+    {
+      "id": "a-overnight-02-mike-same-worker-rollout",
+      "title": "Mike restart recovery: one-service Mac worker rollout and verified rollback acceptance",
+      "acceptance": "Review PUBLIC source tools/install_continuous_worker.py, tools/ghost_worker.py, tools/omniroute_continuous.py and integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md. Produce a safe implementation plan, acceptance checklist, negative tests and handoff for migrating the already-installed single LaunchAgent to the later reviewed PR137 branch only after explicit real Mac approval. Account for active leases, private SQLite state and backup, STOP, three-failure circuit, pinned model combos, existing 601-second gap, 144/day cap, source version and rollback. Clearly label actions not executed and all host-dependent unknowns. Do not recommend a second service, overwriting private state, paid provider inference or automatic reruns of failed jobs.",
+      "scopes": [
+        "subsystem:overnight-public-mike-safe-rollout"
+      ],
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "depends_on": [],
+      "updated_at": "2026-10-24T10:22:18.239Z",
+      "next_update": "After first original Mac research draft is genuinely ready for private human review",
+      "next_action": "Existing paced Mac public-task feeder may enqueue plan/checklist/tests/handoff drafts once per unique source-grounded task identity; do not label these as completed or eight independent model workers. Review private outputs and manually convert accepted findings to code/business deliverables; no paid/model-route/Mac-state actions."
+    },
+    {
+      "id": "a-overnight-03-saul-business-draft",
+      "title": "Saul marketing: evidence-grounded ROVOR Digital small-business website offer and lead intake",
+      "acceptance": "Draft a concise and truthful ROVOR Digital website-service landing-page structure, lead qualification checklist, test cases and handoff using only verifiable public ROVOR source material and a clearly labeled proposed offer. Distinguish verified website, brand, logo, inquiry, booking and social deliverables from unconfirmed prices, integrations, client case studies, testimonials, legal promises or guaranteed results. Include next action for real owner approval and a client intake acceptance check; no emails, social posts, ads, sales messages or websites may be sent or published automatically. Cite specific public repository evidence where available; say unknown rather than fabricate.",
+      "scopes": [
+        "subsystem:overnight-public-saul-business-offer"
+      ],
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "depends_on": [],
+      "updated_at": "2026-10-24T10:22:18.239Z",
+      "next_update": "After first original Mac research draft is genuinely ready for private human review",
+      "next_action": "Existing paced Mac public-task feeder may enqueue plan/checklist/tests/handoff drafts once per unique source-grounded task identity; do not label these as completed or eight independent model workers. Review private outputs and manually convert accepted findings to code/business deliverables; no paid/model-route/Mac-state actions."
+    },
+    {
+      "id": "a-overnight-04-jane-fcp-handoff",
+      "title": "Jane FCP caption and export handoff: original-source-first landscape and portrait video QA",
+      "acceptance": "Using only public ROVOR engine/Final Cut integration documents, propose a source-preserving FCP media handoff and test checklist for 1920x1080 landscape, 1080x1920 portrait, 60fps, synced English narration, correct caption timing, real source-asset identifiers and independent 30-second-plus review samples. Give acceptance fields, failure/rollback checks and explicit unknowns for untested GUI/library operations. No real Mac or Final Cut access may be claimed; no media is created, modified, imported or published by this public research assignment. Preserve original narration and art and require owner visual approval.",
+      "scopes": [
+        "subsystem:overnight-public-jane-media-acceptance"
+      ],
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "main",
+      "depends_on": [],
+      "updated_at": "2026-10-24T10:22:18.239Z",
+      "next_update": "After first original Mac research draft is genuinely ready for private human review",
+      "next_action": "Existing paced Mac public-task feeder may enqueue plan/checklist/tests/handoff drafts once per unique source-grounded task identity; do not label these as completed or eight independent model workers. Review private outputs and manually convert accepted findings to code/business deliverables; no paid/model-route/Mac-state actions."
     }
   ]
 }
