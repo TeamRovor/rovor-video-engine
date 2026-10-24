@@ -115,9 +115,9 @@ class CoordinationTests(unittest.TestCase):
         data = {'version': 1, 'tasks': [
             task('ready-a', priority=1),
             task('ready-b', priority=2, scopes=['other']),
-            active('active-a'),
-            active('blocked-a', status='blocked', blocker='Needs external input'),
-            active('done-a', status='done', evidence=[dict(
+            active('active-a', scopes=['active-zone']),
+            active('blocked-a', status='blocked', blocker='Needs external input', scopes=['blocked-zone']),
+            active('done-a', status='done', scopes=['done-zone'], evidence=[dict(
                 commit='abc123', platform='Linux', check='unittest',
                 result='PASS', reference='https://example.invalid/evidence')]),
         ]}
