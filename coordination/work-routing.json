@@ -723,6 +723,26 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "a-overnight-01-hank-quality-triage": {
+      "lane": "operations",
+      "requires": [],
+      "objective": "improve-review-ready-rate"
+    },
+    "a-overnight-02-mike-same-worker-rollout": {
+      "lane": "operations",
+      "requires": [],
+      "objective": "avoid-unattended-runtime-outage"
+    },
+    "a-overnight-03-saul-business-draft": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "produce-reviewable-client-facing-work"
+    },
+    "a-overnight-04-jane-fcp-handoff": {
+      "lane": "animation",
+      "requires": [],
+      "objective": "produce-reviewable-video-handoff"
     }
   }
 }
