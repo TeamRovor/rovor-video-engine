@@ -109,12 +109,53 @@
     }
     return header+summary+visual+details;
   }
+
+  // Workload Distribution card content only. The parent panel dimensions and
+  // existing ROVOR HUD frame are untouched.
+  let compactTab='models';
+  let compactPick=null;
+  function mountPreview(container,openDetails){
+    if(!container)return;
+    container.replaceChildren();
+    const root=document.createElement('div');
+    root.className='wl-compact';
+    const paint=()=>{
+      const models=compactTab==='models';
+      root.innerHTML=`<div class="wl-compact-tabs" role="group" aria-label="Workload preview type">
+        <button type="button" data-wl-compact-tab="models" aria-pressed="${models}">AI MODELS <small>09</small></button>
+        <button type="button" data-wl-compact-tab="employees" aria-pressed="${!models}">EMPLOYEES <small>08</small></button>
+      </div>
+      <div class="wl-compact-meta" aria-label="OmniRoute live telemetry unavailable"><span class="wl-compact-dot"></span> TELEMETRY UNVERIFIED <span>USAGE</span></div>
+      <div class="wl-compact-items">${(models?MODELS:EMPLOYEES.map(e=>e[1])).map((label,i)=>`
+        <button type="button" class="wl-compact-row" data-wl-compact-row="${i}" aria-label="${label}, usage unknown, open workload details">
+          <span class="wl-compact-name">${models?'M'+String(i+1).padStart(2,'0'):htmlEscape(label)}</span>
+          <span class="wl-compact-track" aria-hidden="true"><i></i></span>
+          <span class="wl-compact-value">—</span>
+        </button>`).join('')}</div>
+      <div class="wl-compact-foot">— UNKNOWN · NOT ZERO <span>↗ DETAILS</span></div>`;
+    };
+    root.addEventListener('click',event=>{
+      const target=event.target.closest('button');
+      if(!target||!root.contains(target))return;
+      if(target.hasAttribute('data-wl-compact-tab')){
+        compactTab=target.dataset.wlCompactTab;
+        paint();
+      }else if(target.hasAttribute('data-wl-compact-row')){
+        const index=Number(target.dataset.wlCompactRow);
+        compactPick=compactTab==='models'?{view:'models',model:index}:{view:'matrix',employee:index};
+        if(typeof openDetails==='function')openDetails();
+      }
+    });
+    container.append(root);
+    paint();
+  }
   function mount(container) {
     if(!container)return;
     container.replaceChildren();
     const root=document.createElement('div');
     root.id='rovor-workload-popup';
-    const state={view:'matrix',period:'24H',demo:false,employee:0,model:0};
+    const state={view:compactPick?.view||'matrix',period:'24H',demo:false,employee:compactPick?.employee??0,model:compactPick?.model??0};
+    compactPick=null;
     const paint=()=>{root.innerHTML=makeUI(state)};
     root.addEventListener('click',ev=>{
       const b=ev.target.closest('button');
@@ -133,5 +174,5 @@
     container.append(root);
     paint();
   }
-  window.ROVOR_WORKLOAD={mount};
+  window.ROVOR_WORKLOAD={mount,mountPreview};
 })();
