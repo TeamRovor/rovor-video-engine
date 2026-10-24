@@ -3236,9 +3236,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:28:59.247Z",
-      "next_update": "After second natural300s timer tick, then useful approved-task enqueue",
-      "next_action": "Existing com.rovor.ghost-worker.readonly is now loaded against pinned0716b657 runtime. Verify next natural scheduled tick and unchanged AI attempts; keep same service/SQLite/no-replay controls. Then prepare genuinely useful bounded public-metadata draft task for explicit queue approval; no automatic task creation or replay. Old Final Cut queued jobs remain disabled. Do not rerun one-shot or activation scripts.",
+      "updated_at": "2026-10-24T00:32:50.220Z",
+      "next_update": "After natural timer proof and scheduled read-only diagnostic",
+      "next_action": "User explicitly prioritizes unattended runtime setup over specialist assignments. Do NOT add Final Cut/Moho research packets or enqueue research now. Verify natural300s timer recurrence and scheduled consumption of one harmless system.ping diagnostic in existing local queue; then background model/credential readiness. Current service loaded, one idle check observed; waiting for natural second tick, no kickstart. Preserve single existing scheduler and idle/free-only behavior.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
