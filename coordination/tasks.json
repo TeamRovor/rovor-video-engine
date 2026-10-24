@@ -4911,6 +4911,22 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40139798352"
         }
       ]
+    },
+    {
+      "id": "mike-hud-pr189-receipt-20261024",
+      "title": "Record Mike's verified completed PR189 cloud shift for existing HUD review controls",
+      "priority": 1,
+      "status": "active",
+      "owner": "Mike / cloud pool activity reporting 2026-10-24",
+      "updated_at": "2026-10-24T22:48:36.368Z",
+      "next_update": "After receipt schema/evidence validation and hosted PR checks",
+      "branch": "report/mike-hud-pr189-20261024",
+      "scopes": [
+        "coordination/cloud-shifts/mike-pr189.json"
+      ],
+      "depends_on": [],
+      "next_action": "Publish one immutable sanitized receipt for the previous completed Mike result, matching open PR189 exact tested head and successful CI. Do not report the current run completed, modify owner reviews or merge/deploy.",
+      "acceptance": "One exact-commit historical receipt passes existing schema and actual GitHub evidence readback. Prior recorded platform result completed before observed_at; no private IDs, model/token fabrication or owner approval. Existing hosted HUD checks pass; PR remains reviewable."
     }
   ]
 }

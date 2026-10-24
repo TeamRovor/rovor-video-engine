@@ -879,6 +879,14 @@
         "github-write",
         "hosted-ci"
       ]
+    },
+    "mike-hud-pr189-receipt-20261024": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
     }
   }
 }
