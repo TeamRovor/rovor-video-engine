@@ -25,7 +25,7 @@ class UpgradeChecks(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.home = Path(self.temp.name) / "home"
+        self.home = Path(self.temp.name).resolve() / "home"
         self.base = self.home / "Documents" / "Rovor"
         self.base.mkdir(parents=True)
         self.state = self.home / "Documents/Codex/2026-10-22/new-chat/jane-worker-state"
@@ -45,6 +45,7 @@ class UpgradeChecks(unittest.TestCase):
         (self.old / "tools/ghost_worker_loop.py").write_text("# old runtime")
         self.python = self.home / "python3"
         self.python.write_text("stub")
+        self.python.chmod(0o700)
         self.plist = self.home / "Library" / "LaunchAgents" / module.PLIST
         self.plist.parent.mkdir(parents=True)
         self.orig = {
@@ -73,6 +74,15 @@ class UpgradeChecks(unittest.TestCase):
     def inspect(self):
         return module.inspect(self.home, self.runtime, SHA,
                               platform="darwin", uid=lambda: 501, run=self.fake_run)
+
+    def test_existing_python_symlink_is_preserved(self):
+        target = self.home / "python-binary"
+        target.write_text("stub")
+        target.chmod(0o700)
+        self.python.unlink()
+        self.python.symlink_to(target)
+        info = self.inspect()
+        self.assertEqual(info["replacement"]["ProgramArguments"][0], str(self.python))
 
     def test_read_only_finds_loaded_existing_schedule_without_modifying_it(self):
         baseline = self.plist.read_bytes()
