@@ -1,8 +1,12 @@
 # ROVOR Command Center — live GitHub HUD
 
-## Current deployment: native interactive HUD v8.5
+## Current deployment: native interactive HUD v8.6
 
-The main GitHub Pages URL now redirects immediately to `./native/` — the **self-contained native v8.5 build** with real HTML/CSS/JavaScript interactions, embedded Earth/ROVOR artwork and the corrected reactor heading (no `.top-glyph`). This is a tested standalone prototype published as the live default at the user's request.
+The six compact home panels are miniature scrollable instruments: real queue/activity rows can be scrolled in place (no forced entry). Header expand controls open a centered neon instrument workspace that uses the same blue frame and keeps the reactor visible behind the scrim. The old edge-to-edge drawer is replaced. Desktop, iPad portrait/landscape and iPhone browser tests ran with mocked GitHub data including a 26-task queue and confirmed scroll positions survive module entry/exit. The live GitHub/source state remains read-only and is never mistaken for Mac runtime state.
+
+
+
+The main GitHub Pages URL now redirects immediately to `./native/` — the **self-contained native v8.6 build** with real HTML/CSS/JavaScript interactions, embedded Earth/ROVOR artwork and the corrected reactor heading (no `.top-glyph`). This is a tested standalone prototype published as the live default at the user's request.
 
 The prior pixel-matched, image-based HUD remains at `./exact/` for a non-destructive rollback. The older first-generation CSS cockpit source and tests are also preserved. **Do not remove `exact/` without an explicit request.**
 
