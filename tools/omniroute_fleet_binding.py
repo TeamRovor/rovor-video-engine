@@ -47,8 +47,10 @@ def verify_binding(model_id, approved_routes, catalog):
 
 def verify_before_completion(selected, installed_catalog):
     if (not isinstance(selected, dict)
-            or set(selected) != {"model_id", "pool_id", "combo"}
-            or type(selected["combo"]) is not str):
+            or set(selected) != {"model_id", "pool_id", "combo", "provider_id"}
+            or type(selected["combo"]) is not str
+            or type(selected["provider_id"]) is not str
+            or not PROVIDER.fullmatch(selected["provider_id"])):
         raise ValueError("no_verified_atomic_model_binding")
     # Re-read live Combo catalog and verify that a single-model route still
     # targets this exact model immediately before any network POST.
@@ -64,6 +66,7 @@ def verify_before_completion(selected, installed_catalog):
     x = c["models"][0]
     if (not isinstance(x, dict) or x.get("kind") != "model"
             or not isinstance(x.get("providerId"), str)
+            or x["providerId"] != selected["provider_id"]
             or not PROVIDER.fullmatch(x["providerId"])
             or x.get("model") != selected["model_id"]
             or not str(x.get("model", "")).endswith(":free")):
