@@ -41,6 +41,13 @@ DELIVERABLES = {
     'tests': 'A table of realistic failure scenarios, expected behavior and precise validation steps; label unrun tests.',
     'handoff': 'A reusable handoff template with scope, source identifiers, output artifacts, acceptance and next action.',
 }
+# A checklist/handoff is not an 18K+ source-analysis task. Bound the *actual*
+# context supplied to each new completion by output form, with source SHA256
+# and visibly marked omissions preserved in its private receipt.
+FORM_CONTEXT_BUDGETS = {'checklist': 9000, 'handoff': 9000,
+                        'plan': 11000, 'tests': 14500}
+FORM_WORD_LIMITS = {'checklist': 250, 'handoff': 300,
+                    'plan': 350, 'tests': 450}
 BASE_PACKETS = {
     'mike': 'walter-v2-mike-worker-guard', 'jane': 'walter-v2-jane-editor-handoff',
     'jesse': 'walter-v2-jesse-animation-qa', 'gale': 'walter-v2-gale-render-qa',
@@ -194,6 +201,12 @@ def execute(state, job_id, payload, *, root=None, completion=None, catalog=None,
     if os.path.lexists(state / 'STOP'):
         raise ValueError('STOP requested')
     packet = assignment['packet']
+    form = (payload['public_task']['form'] if 'public_task' in payload
+            else payload['assignment'].rsplit('-', 1)[-1])
+    if form not in FORM_CONTEXT_BUDGETS:
+        raise ValueError('Unapproved assignment deliverable form')
+    source_budget_chars = FORM_CONTEXT_BUDGETS[form]
+    word_limit = FORM_WORD_LIMITS[form]
     combo_catalog = gateway.read_combo_catalog() if catalog is None else catalog
     if capacity_route is None:
         route = gateway.verify_route(packet, combo_catalog)
@@ -201,7 +214,8 @@ def execute(state, job_id, payload, *, root=None, completion=None, catalog=None,
         import omniroute_fleet_binding as binding
         route = binding.verify_before_completion(capacity_route, combo_catalog)
     # Existing vetted public sources and existing free-only route remain the boundary.
-    workpack.load_packet(root, packet)
+    workpack.load_packet(root, packet,
+                         source_budget_chars=source_budget_chars)
     private = workpack.safe_private_root(out)
     assignment_id = (payload.get('assignment') or 'public-' + hashlib.sha256(
         json.dumps(payload, sort_keys=True).encode()).hexdigest()[:24])
@@ -214,7 +228,8 @@ def execute(state, job_id, payload, *, root=None, completion=None, catalog=None,
     prefix = ('Prepare this distinct ROVOR assignment using only the supplied public sources. '
               f"Role: {assignment['role']}. Topic: {assignment['topic']}. "
               f"Required deliverable: {assignment['deliverable']} "
-              'Keep the result under 650 words. Separate supported facts from proposals. '
+              f'Keep the result under {word_limit} words. '
+              'Separate supported facts from proposals. '
               'Do not claim an action was executed, a test passed, or a draft was approved. '
               'The following packet objective is background; deliver the assignment above.\n\n')
     if 'public_task' in assignment:
@@ -230,7 +245,9 @@ def execute(state, job_id, payload, *, root=None, completion=None, catalog=None,
             model, prefix + prompt, key)
 
     key = workpack.access_key()
-    result = workpack.run_packet(root, out, packet, route, key, completion=one_completion)
+    result = workpack.run_packet(
+        root, out, packet, route, key, completion=one_completion,
+        source_budget_chars=source_budget_chars)
     verdict = review.inspect(root, out, packet)
     return {'assignment': assignment_id, 'role': assignment['role'], 'packet': packet, 'route': route,
             'assignment_sha256': hashlib.sha256(manifest.read_bytes()).hexdigest(),
