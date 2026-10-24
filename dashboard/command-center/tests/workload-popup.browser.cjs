@@ -59,6 +59,8 @@ async function main(){
   if(name==='iphone-portrait'||name==='desktop')await screenshot(name+'-heatmap');
   await evalJS('document.querySelector("[data-wl-tab=models]").click();return true');
   assert(await poll(()=>evalJS('return document.querySelectorAll(".wl-model-entry").length===9')),name+': model listing did not settle');
+  await evalJS('window.ROVOR_NATIVE.open("workload");return true');
+  assert(await poll(()=>evalJS('return document.querySelectorAll(".wl-model-entry").length===9')),name+': popup view lost after refresh remount');
   await evalJS('document.querySelector("[data-wl-tab=routing]").click();return true');
   assert(await poll(()=>evalJS('return !!document.querySelector(".wl-route-chart")')),name+': routing chart not shown');
   await evalJS('document.querySelector("#screen .close").click();document.querySelector("[data-wl-compact-tab=employees]").click();return true');
