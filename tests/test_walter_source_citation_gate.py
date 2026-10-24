@@ -201,6 +201,81 @@ class CitationTests(unittest.TestCase):
         self.assertEqual(result["cited_prose_blocks"], 2)
         self.assertGreaterEqual(result["prose_word_count"], 30)
 
+    def test_direct_verifier_enforces_utf8_byte_limit(self):
+        # 13,000 astral symbols fit the character limit but exceed 50 KiB.
+        self.blocked("invalid_or_oversized_draft",
+                     "\U0001f600" * 13000 + " [[source:WORK.md#L2]]")
+
+    def test_direct_verifier_rejects_unencodable_surrogates(self):
+        self.blocked("invalid_or_oversized_draft",
+                     "\ud800 [[source:WORK.md#L2]]")
+
+    def test_fenced_citation_cannot_satisfy_research_gate(self):
+        from walter_source_citation_gate import _research_draft_quality
+        fence = chr(96) * 3
+        answer = (fence + "text\n" +
+                  "This code sample repeats apparently credible source claims. " * 7 +
+                  "\n[[source:WORK.md#L2]]\n" + fence)
+        with self.assertRaises(CitationError) as error:
+            _research_draft_quality(answer)
+        self.assertEqual(str(error.exception), "draft_citation_in_code")
+        # Low-level binding still supports independently reviewed citations.
+        self.assertEqual(check(answer)["reference_count"], 1)
+
+    def test_tilde_fenced_and_indented_citations_rejected(self):
+        from walter_source_citation_gate import _research_draft_quality
+        for answer in ("~~~python\n[[source:WORK.md#L2]]\n~~~",
+                       "    [[source:WORK.md#L2]]"):
+            with self.subTest(answer=answer):
+                with self.assertRaises(CitationError) as error:
+                    _research_draft_quality(answer)
+                self.assertEqual(str(error.exception), "draft_citation_in_code")
+
+    def test_inline_code_citation_cannot_launder_prose(self):
+        from walter_source_citation_gate import _research_draft_quality
+        marker = chr(96)
+        answer = ("This text discusses real operational checks but deliberately "
+                  "provides no normal prose citation despite numerous words. " * 3
+                  + marker + "[[source:WORK.md#L2]]" + marker)
+        with self.assertRaises(CitationError) as error:
+            _research_draft_quality(answer)
+        self.assertEqual(str(error.exception), "draft_citation_in_code")
+
+    def test_code_words_cannot_pad_short_cited_prose(self):
+        from walter_source_citation_gate import _research_draft_quality
+        fence = chr(96) * 3
+        answer = ("A STOP check is required. [[source:WORK.md#L2]]\n\n" +
+                  fence + "text\n" +
+                  "Many irrelevant source-free code words are repeated here. " * 12 +
+                  "\n" + fence)
+        with self.assertRaises(CitationError) as error:
+            _research_draft_quality(answer)
+        self.assertEqual(str(error.exception), "draft_not_substantive")
+
+    def test_valid_research_with_code_example_still_passes(self):
+        from walter_source_citation_gate import _research_draft_quality
+        fence = chr(96) * 3
+        answer = (
+            "The existing dispatch design requires a STOP check before "
+            "each new claim and separates candidate drafts from human "
+            "approval. A reviewer can verify the source digest and then "
+            "evaluate the proposed change without running any model. "
+            "[[source:WORK.md#L2]]\n\n" +
+            fence + "python\nprint('read-only example')\n" + fence)
+        result = _research_draft_quality(answer)
+        self.assertTrue(result["draft_quality_checked"])
+        self.assertEqual(result["cited_prose_blocks"], 1)
+        self.assertGreaterEqual(result["prose_word_count"], 30)
+
+    def test_unclosed_fence_rejected(self):
+        from walter_source_citation_gate import _research_draft_quality
+        answer = ("This source documents the STOP gate and human review. "
+                  "[[source:WORK.md#L2]]\n\n" + chr(96) * 3 +
+                  "python\nprint('unterminated')")
+        with self.assertRaises(CitationError) as error:
+            _research_draft_quality(answer)
+        self.assertEqual(str(error.exception), "draft_unclosed_code_fence")
+
     def test_unknown_packet_fails_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch("walter_workpack_compile.verify_checked_in"), \
