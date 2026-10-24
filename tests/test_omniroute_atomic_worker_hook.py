@@ -383,10 +383,10 @@ class WorkerAtomicFleetTests(unittest.TestCase):
             _conn.execute("UPDATE jobs SET status='needs_review' WHERE id=?",(target,))
             return {"result":{"review_status":"draft_ready_for_human_review"}}
         with mock.patch.object(continuous,"latest_public_tasks",
-                               side_effect=ValueError("offline")), \\
-             mock.patch.object(worker,"run_once",side_effect=complete):
-            summary=continuous.tick(self.state,self.workspace,now=NOW,
-                verified_fleet_provider=supply,max_verified_jobs_per_tick=3)
+                               side_effect=ValueError("offline")):
+            with mock.patch.object(worker,"run_once",side_effect=complete):
+                summary=continuous.tick(self.state,self.workspace,now=NOW,
+                    verified_fleet_provider=supply,max_verified_jobs_per_tick=3)
         self.assertEqual(summary["executed"],3)
         self.assertEqual(summary["review_ready_count"],3)
         self.assertEqual(len(calls),3)
@@ -413,11 +413,11 @@ class WorkerAtomicFleetTests(unittest.TestCase):
             (self.state/"STOP").touch()
             return {"result":{"review_status":"draft_ready_for_human_review"}}
         with mock.patch.object(continuous,"latest_public_tasks",
-                               side_effect=ValueError("offline")), \\
-             mock.patch.object(worker,"run_once",side_effect=complete):
-            output=continuous.tick(self.state,self.workspace,now=NOW,
-                verified_fleet_provider=lambda jid,payload,t:self.independent(jid),
-                max_verified_jobs_per_tick=5)
+                               side_effect=ValueError("offline")):
+            with mock.patch.object(worker,"run_once",side_effect=complete):
+                output=continuous.tick(self.state,self.workspace,now=NOW,
+                    verified_fleet_provider=lambda jid,payload,t:self.independent(jid),
+                    max_verified_jobs_per_tick=5)
         self.assertEqual(len(calls),1)
         self.assertEqual(output["executed"],1)
 
