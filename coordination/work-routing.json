@@ -700,7 +700,7 @@
         "github-write",
         "hosted-ci"
       ],
-      "objective": "maximize-reliable-omniroute-capacity"
+      "objective": "reduce-repeat-work"
     },
     "walter-draft-actionability-20261024": {
       "lane": "operations",
@@ -716,13 +716,33 @@
         "github-write",
         "hosted-ci"
       ],
-      "objective": "safe-atomic-multi-model-capacity"
+      "objective": "reduce-repeat-work"
     },
     "walter-public-task-grounding-20261024": {
       "lane": "coordination",
       "requires": [
         "hosted-ci"
       ]
+    },
+    "a-overnight-01-hank-quality-triage": {
+      "lane": "operations",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "a-overnight-02-mike-same-worker-rollout": {
+      "lane": "operations",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "a-overnight-03-saul-business-draft": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "a-overnight-04-jane-fcp-handoff": {
+      "lane": "animation",
+      "requires": [],
+      "objective": "deliver-promised-work"
     }
   }
 }
