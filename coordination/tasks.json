@@ -4318,6 +4318,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/169"
         }
       ]
+    },
+    {
+      "id": "walter-cross-revision-task-dedupe-20261024",
+      "title": "Prevent repeat specialist research for the same public task after source or dedupe changes",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 task identity shift",
+      "branch": "feature/walter-cross-revision-task-dedupe-v1",
+      "scopes": [
+        "tools/walter_real_receipt_bridge.py",
+        "tools/walter_specialist_coverage.py",
+        "tests/test_walter_real_receipt_bridge.py",
+        "tests/test_walter_specialist_coverage.py",
+        "subsystem:verified-specialist-task-attempt-identity"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T12:09:36.659Z",
+      "next_update": "Complete source-only identity dedupe implementation, hosted Python 3.9/3.11 tests and shared coordination checks; hand off without Mac deployment.",
+      "next_action": "Add optional independently authenticated SQLite job-to-public-task mapping to receipt bridge and coverage selector. Reject same task_id already attempted or queued even if new dedupe/source digest; fail closed when mapping is supplied but untrusted. Preserve existing source-only behavior and STOP/owner gates. Test synthetic evidence; do not operate Mac or model.",
+      "acceptance": "A pure Python3.9-compatible source-only guard binds complete job-to-task mapping to copied SQLite job IDs, refuses incomplete/invalid/duplicate mapping, blocks repeat task_id even when dedupe/source digest differs, preserves distinct tasks, keeps private job IDs out of output, and retains all existing STOP/approval/role/quota constraints. Add focused tests and hosted Python3.9/3.11 plus shared coordination validation; no Mac deployment, paid calls, or automatic retries.",
+      "evidence": []
     }
   ]
 }

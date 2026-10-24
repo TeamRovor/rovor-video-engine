@@ -772,6 +772,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "walter-cross-revision-task-dedupe-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
