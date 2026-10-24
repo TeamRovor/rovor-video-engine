@@ -3952,13 +3952,15 @@
       "depends_on": [
         "omniroute-proportional-capacity-20261024"
       ],
-      "updated_at": "2026-10-24T08:44:06.019Z",
+      "updated_at": "2026-10-24T09:01:30.874Z",
       "next_update": "After existing Mac owner integrates atomic reservations into the running SQLite claim boundary and verifies host model account quotas",
-      "next_action": "Merged PR #146 (new tools/omniroute_model_reservation.py, tests, notes) and 16 offline regression tests on each Python3.9/3.11. Integrate reserve() INSIDE ghost_worker.claim's existing BEGIN IMMEDIATE before marking a fresh OmniRoute job running; use authenticated Mac quota+cost+privacy evidence, map selected exact model ID to an approved installed OmniRoute route; reserve and claim the same job atomically. After a terminal private receipt, release_finished_slot() frees concurrency but never refunds request quota. Verify per-account shared pool counters and no-repeat on actual Mac; only then relax bottlenecks within owner-approved 144/day global cap and STOP/failure circuit. Installed service unchanged by source merge.",
+      "next_action": "PR #147 has merged capacity selector + atomic model/pool reservation into the existing PR137 source claim transaction. On real Mac, safely obtain audited fleet model IDs, provider/identity/zero-spend quota/canary snapshots and approved single-model OmniRoute combo map. Supply trusted host callback (existing CLI intentionally defaults legacy) and run one private controlled live canary/new job in isolated state before rolling forward same LaunchAgent. Verify exact model/provider binding before HTTP POST, no replay, cooldown and independent shared quota and real review-ready receipt. Do NOT reinstall currently active pinned b7366 service or assume tests prove nine live models.",
       "acceptance": "Race-proof in-memory SQLite concurrent reservation tests; preserves historical reservations after completion for quota accounting, refuses duplicate/replay, expired pending not silently released, paid/unverified/private task rejected; zero network/inference, 3.9/3.11 CI.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/146",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40079109395"
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40079109395",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/147",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40080141853"
       ],
       "evidence": [
         {
@@ -3967,9 +3969,16 @@
           "check": "16 focused fake SQLite concurrency/quota/STOP/no-retry tests per runtime incl. competing final provider request",
           "result": "PASS both matrix jobs; helper merged to main. No actual Mac model calls, installed LaunchAgent edit, private receipt or live model routing claimed.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40079109395"
+        },
+        {
+          "commit": "14a85f06bd8820f9a83ac58ffc0c2834884cf2b5",
+          "platform": "GitHub PR #147 / hosted Linux Python3.9 and 3.11",
+          "check": "Atomic claim integrated into existing worker, route/provider exactly verified again before HTTP, legacy default preserved; new and existing continuous safety suites",
+          "result": "PR #147 merged into PR137 development branch. Hosted 7 workflows PASS at head 2cc508a9d732daffbc23f0a575d7c08b55d387f6; no Mac activation or new upstream inference performed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/147"
         }
       ],
-      "blocker": "Requires host-side integration in PR #137 actively owned runtime and verified real Mac model/provider account identity, model-to-route mapping and quota/terms evidence. No direct Mac access from this GitHub session; source CI is NOT live nine-model utilization."
+      "blocker": "Host evidence and trusted quota/provider API adapter for all nine resource identities not yet present; PR147 tested source hook has no default CLI activation and Mac currently runs earlier pinned PR137 revision. External access to Mac state unavailable from this session."
     }
   ]
 }
