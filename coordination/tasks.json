@@ -3620,7 +3620,7 @@
       "id": "omniroute-free-dispatch-permit-20261024",
       "title": "Validate zero-cost, fresh OmniRoute route evidence before preparing unattended inference",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24",
       "branch": "feature/walter-omniroute-dispatch-permit-v1",
       "scopes": [
@@ -3630,10 +3630,26 @@
         "subsystem:omniroute-free-route-fresh-evidence"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T04:54:06.700Z",
-      "next_update": "After Python 3.9/3.11 hosted CI and shared routing checks",
-      "next_action": "Implement a stdlib-only, fail-closed offline dispatch permit that checks exact installed combo membership, provider/account free entitlement, quota, evidence freshness, STOP, public-source opt-in and reasoning-none support, composing the existing reasoning admission module. No live provider calls or Mac edits.",
-      "acceptance": "Produce a bounded review-only chat request only with a trusted fresh per-model zero-cost attestation, matching approved local combo and explicit owner opt-in. Reject stale/unknown/paid/unsupported fallback, insufficient quota, STOP, non-public content and malformed evidence. Focused Python3.9/3.11 tests and hosted CI; no network, new scheduler, inference, Mac runtime writes or old job replay."
+      "updated_at": "2026-10-24T04:56:05.784Z",
+      "next_update": "Source merged and verified; live Mac integration remains under the existing PR41 owner.",
+      "next_action": "PR #126 merged into main at c72bfac12fbcb3a4baae79e464ed061998e3c61d. Existing PR41 Mac owner may import build_candidate_request only after trusted live provider/account billing, quota and reasoning metadata are obtained and a new explicitly approved public-only job is admitted through the existing atomic SQLite claim. Do not infer that provided attestation JSON is genuine; do not replay failed job 4e23d50c, install a second scheduler, spend money, or bypass STOP. Source-only: no model calls, no Mac writes, no unattended specialist reports verified.",
+      "acceptance": "Produce a bounded review-only chat request only with a trusted fresh per-model zero-cost attestation, matching approved local combo and explicit owner opt-in. Reject stale/unknown/paid/unsupported fallback, insufficient quota, STOP, non-public content and malformed evidence. Focused Python3.9/3.11 tests and hosted CI; no network, new scheduler, inference, Mac runtime writes or old job replay.",
+      "evidence": [
+        {
+          "commit": "c72bfac12fbcb3a4baae79e464ed061998e3c61d",
+          "platform": "GitHub-hosted Ubuntu / Python 3.9 and 3.11",
+          "check": "28 focused dispatch permit tests + 25 reasoning admission tests, plus shared queue and routing checks",
+          "result": "PASS on both versions; 103 tasks/103 routes valid. Offline only, no provider requests or Mac runtime changes.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40064239232"
+        },
+        {
+          "commit": "c72bfac12fbcb3a4baae79e464ed061998e3c61d",
+          "platform": "GitHub PR #126",
+          "check": "Independent new files, exact route/cost/quota/STOP/ledger admission preflight; existing Mac owner files untouched",
+          "result": "MERGED into main. Trusted live host attestation, atomic claim and inference still pending.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/126"
+        }
+      ]
     }
   ]
 }
