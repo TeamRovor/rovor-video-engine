@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 import sys
 import unittest
+from unittest import mock
+import tempfile
 from urllib import error
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"tools"))
@@ -107,6 +109,22 @@ class ProbeTests(unittest.TestCase):
         self.assertEqual(probe.diagnose(
             approve_one_call=True,acknowledge_open_circuit=True,
             read_status=lambda path:s)["status"],"owner_stop_or_status_unknown")
+
+    def test_stop_arriving_after_preflight_blocks_the_only_inference(self):
+        with tempfile.TemporaryDirectory() as folder:
+            local = Path(folder)
+            touches = []
+            def auth():
+                (local / "STOP").write_text("owner control")
+                return "secret"
+            with mock.patch.object(probe, "STATE", local):
+                result=probe.diagnose(
+                    approve_one_call=True, acknowledge_open_circuit=True,
+                    read_status=lambda path:state(), read_catalog=catalog,
+                    get_key=auth, open_local=lambda *a,**k:touches.append("bad"))
+            self.assertEqual(result["status"],"owner_stop_requested_before_probe")
+            self.assertEqual(result["request_count"],0)
+            self.assertEqual(touches,[])
 
     def test_http_error_hides_raw_message_and_never_retries(self):
         calls=[]
