@@ -54,7 +54,7 @@ def build_config(original, runtime):
     result.update(ProgramArguments=[python, str(Path(runtime) / 'tools/omniroute_continuous.py'),
         '--state', state, '--workspace', workspace, '--max-claims-per-day', '144',
         '--min-interval-seconds', '601', '--approve-continuous-research'],
-        StartInterval=300, RunAtLoad=True, KeepAlive=False)
+        StartInterval=301, RunAtLoad=True, KeepAlive=False)
     return result, Path(state)
 
 
