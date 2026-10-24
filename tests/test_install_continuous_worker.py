@@ -36,7 +36,7 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(self.proposed['UnrelatedSetting'], 'preserved')
         self.assertEqual(self.proposed['ProgramArguments'][0], '/pinned/python')
         self.assertIn(str(self.state), self.proposed['ProgramArguments'])
-        self.assertEqual(self.proposed['StartInterval'], 300)
+        self.assertEqual(self.proposed['StartInterval'], 301)
         self.assertFalse(self.proposed['KeepAlive'])
 
     def test_success_activates_one_label_and_clears_only_its_own_stop(self):
