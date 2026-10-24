@@ -3236,9 +3236,9 @@
         "ghost-omniroute-queue-adapter-20261023",
         "omniroute-receipt-quality-verification-20261023"
       ],
-      "updated_at": "2026-10-24T00:21:20.970Z",
-      "next_update": "After user runs the pinned new checklist task and its private receipt is reviewed",
-      "next_action": "Checklist job202fdb8c-149a-401e-b1e2-8b7e001ab46b completed in19.653s on free-model route, attempts1, private receipt source-fresh and structurally reviewable. Manual review found incorrect Keychain item and nonexistent claimed_at field; record corrections before use. Prepare bounded activation of EXISTING LaunchAgent with pinned runtime, no Interpreter/native flags, STOP/idle proof and5-per24h cap. No new model request.",
+      "updated_at": "2026-10-24T00:24:15.671Z",
+      "next_update": "After existing-service activation command and live loaded/STOP/idle verification",
+      "next_action": "Successful draft runtime0716b657 verified, one attempt202fdb8c and19.653s. Manual QA corrections recorded; raw AI unapproved. Enable EXISTING LaunchAgent only using pinned helperd87022619545027bee30b648d26596678ad59df5 --enable-approved-draft-queue; source69 tests PASS and bytes verified, preservesbackup/STOP failure. It checks idle eligible queue, noautoenqueue, fixed :free routes,5 attempts/24h, noInterpreter/native. Then inspect actual launchd, log, STOP and no-model idle operation. No overnight-endurance claim.",
       "acceptance": "A single checkout imports queue adapter, runner and receipt reviewer together; hosted Python 3.9/3.11 tests exercise actual workpack->SQLite->review with mock inference, verify missing packet source fails without model call, at-most-once, STOP, and private receipts. No paid inference or native app control. Composite remains draft until security fixes are reviewed and Mac verification is complete.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/41",
@@ -3302,9 +3302,16 @@
           "check": "64 focused tests both versions; actual read-only launchd domain absence observation; public packet loader bounds/provenance; no-model default",
           "result": "PASS; next fixed checklist job source and command ready. Failed previous job preserved; no new inference, scheduler or installation in this chat.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/41#issuecomment-6377370230"
+        },
+        {
+          "commit": "d87022619545027bee30b648d26596678ad59df5",
+          "platform": "Actual Mac live draft + Python3.9.6/installed3.12 source tests",
+          "check": "Private job202fdb8c receipt and manual QA; gatewayHTTP200; AC sleep0;69 focused tests both versions; activation helper byte readback",
+          "result": "Live draft completed19.653s/one attempt; raw text has2 source-correctable factual errors and remains unapproved. Activation helper tested source-only; no service/state changes or new inference performed here.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/d87022619545027bee30b648d26596678ad59df5"
         }
       ],
-      "blocker": "Awaiting user Terminal invocation outside Work DB/Keychain access limitations; new task not executed here."
+      "blocker": "Source activation helper prepared; Work cannot write user LaunchAgents/state. Requires user Terminal invocation to activate same existing service; currently STOP on and service unloaded."
     }
   ]
 }
