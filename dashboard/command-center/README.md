@@ -1,6 +1,22 @@
 # ROVOR Command Center — live GitHub HUD
 
+## Current deployment: native interactive HUD v8.5
+
+The main GitHub Pages URL now redirects immediately to `./native/` — the **self-contained native v8.5 build** with real HTML/CSS/JavaScript interactions, embedded Earth/ROVOR artwork and the corrected reactor heading (no `.top-glyph`). This is a tested standalone prototype published as the live default at the user's request.
+
+The prior pixel-matched, image-based HUD remains at `./exact/` for a non-destructive rollback. The older first-generation CSS cockpit source and tests are also preserved. **Do not remove `exact/` without an explicit request.**
+
+All embedded visual resources are included in `native/index.html`; external GitHub information still requires a network connection and remains labeled as verified/unverified. GitHub deployment checks assert one valid native script, embedded assets, absence of the faulty glyph and preserved rollback route. No Mac worker connectivity or private system health is implied.
+
+### Rollback
+
+If the new native build fails, edit `index.html` to redirect `./exact/` again. You can always access the old version directly at `/rovor-video-engine/exact/`.
+
+---
+
 ## Default screen: pixel-matched original HUD (October 24, 2026)
+
+*Historical section below describes the prior exact-reference default (now preserved as the rollback).*
 
 **The main GitHub Pages address now opens `./exact/` by default.** The older CSS approximation is no longer the default. This preserves the user's original reference artwork, including its precise ROVOR emblem, planetary Earth, neon angular frames, labels, and navigation at native 1672×941 ratio. It is the existing, interactive `exact/` build, **not** a newly generated graphic.
 
