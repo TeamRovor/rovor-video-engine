@@ -113,6 +113,11 @@ def diagnose(*, approve_one_call=False, acknowledge_open_circuit=False,
                           headers={"Authorization":"Bearer "+key,
                                    "Content-Type":"application/json",
                                    "Accept":"application/json"})
+    # Honor an operator STOP that appears after the initial status check
+    # but before the one approved network request.
+    if os.path.lexists(STATE / "STOP"):
+        out["status"] = "owner_stop_requested_before_probe"
+        return out
     out["request_count"] = 1
     try:
         with open_local(req, timeout=75) as response:
