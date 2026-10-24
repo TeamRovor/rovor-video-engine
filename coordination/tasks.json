@@ -3585,7 +3585,7 @@
       "id": "omniroute-reasoning-admission-gate-20261023",
       "title": "Reject reasoning-only OmniRoute completions and build supported zero-reasoning request profiles",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-23",
       "branch": "feature/walter-reasoning-admission-v1",
       "scopes": [
@@ -3595,11 +3595,26 @@
         "subsystem:omniroute-reasoning-eligibility-policy"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T03:33:00Z",
-      "next_update": "After hosted Python 3.9/3.11 CI and PR review",
-      "next_action": "Implement an offline, explicit model-capability admission gate and response classifier to prevent 2400-token reasoning-only drafts from being treated as successful. No edits to Mac runtime, existing worker, route catalog or live job ledger; integration only by current PR41 owner.",
+      "updated_at": "2026-10-24T03:36:00Z",
+      "next_update": "Source merged and verified; Mac integration requires existing PR41 owner's separately claimed work.",
+      "next_action": "PR #123 merged to main at 9dfa6f1277159fb81973196acf67c76b71123586. 25 focused Python3.9/3.11 tests and shared coordination checks passed in hosted run40058884924. Existing PR41 owner can import prepare_request/extract_review_text only after verifying exact local free-only combo members and fresh model reasoning supported_efforts/mandatory fields; do not use unsupported Nemotron reasoning-none, replay failed job, or alter running Mac worker without host authority. Source-only; no live inference, Mac deployment or autonomous report proven by this task.",
       "acceptance": "New stdlib-only module accepts reasoning-off request profiles only when exact free model metadata explicitly supports none and is nonmandatory; rejects mandatory/unknown reasoning, paid/dynamic models, blank/length-exhausted responses, and malformed usage without leaking provider content. Focused Python3.9/3.11 tests and CI; no network, model requests, Mac state or scheduler writes.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "9dfa6f1277159fb81973196acf67c76b71123586",
+          "platform": "GitHub-hosted Ubuntu / Python 3.9 and 3.11",
+          "check": "25 focused admission/response tests and shared task/routing validation",
+          "result": "PASS both versions; fail-closed no-reasoning route eligibility and complete visible output guards merged. Source-only; zero model calls and no Mac writes.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40058884924"
+        },
+        {
+          "commit": "9dfa6f1277159fb81973196acf67c76b71123586",
+          "platform": "GitHub PR #123",
+          "check": "Independent scope, non-overlap with active PR41 Mac composite owner; squash merge",
+          "result": "MERGED into main; no existing worker modules modified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/123"
+        }
+      ]
     }
   ]
 }
