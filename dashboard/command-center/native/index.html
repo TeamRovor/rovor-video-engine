@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#020610"><title>ROVOR DIGITAL — Interactive HUD v8.8 — Polished scroll affordances and HUD focus</title>
+<meta name="theme-color" content="#020610"><title>ROVOR DIGITAL — Interactive HUD v8.9 — Legible mini-scroll panels</title>
 <style>
 :root{--blue:#65b9ff;--ice:#d4edff;--muted:#8eb5d7;--edge:#5798de;--deep:#030714;--panel:#050b18;--ui-scale:1;color-scheme:dark}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#010308;color:#e2f3ff;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
@@ -1363,6 +1363,25 @@ body{background:#01030a}
 #activityPanel .log-entry{min-height:26px;line-height:1.35;align-items:center;}
 #activityPanel .log-entry span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
 
+
+/* v8.9: prevent flex task/log rows collapsing on phones and tablets.
+   Keep the native mini-panels truly scrollable and legible. */
+.panel-body.preview-scroll > .task-entry,
+.panel-body.preview-scroll > .log-entry,
+.panel-body.preview-scroll > .metric-row,
+#systemsList > .service,
+.quota-details > .mini-telemetry,
+.feed-detail > .mini-telemetry {flex:0 0 auto!important;}
+.panel-body.preview-scroll{justify-content:flex-start!important;align-content:flex-start;}
+.panel-body.preview-scroll > .task-entry{min-height:40px!important;}
+.panel-body.preview-scroll > .log-entry{min-height:28px!important;}
+@media (pointer:coarse){
+ .panel-body.preview-scroll > .task-entry{min-height:44px!important;}
+ .panel-body.preview-scroll > .log-entry{min-height:34px!important;}
+ .preview-scroll{scrollbar-width:auto;}
+}
+.panel.preview-has-more > .panel-content::after{inset:auto 8px 2px auto!important;}
+.panel.preview-scrollable > .panel-content::before{inset:auto auto 3px 10px!important;}
 </style>
 </head>
 <body>
