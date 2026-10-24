@@ -175,7 +175,33 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
             "SELECT COUNT(*) FROM events e JOIN jobs j ON e.job_id=j.id "
             "WHERE j.kind=? AND e.event='claimed' AND e.timestamp>=?",
             (OMNI_KIND, now - 86400)).fetchone()[0]
-        omni_enabled = allow_omniroute_model_use and omni_used < omni_max_24h
+        # Fail closed after three consecutive, *recorded* failed OmniRoute
+        # inference jobs. The read is inside BEGIN IMMEDIATE, shared by all
+        # concurrent specialists; never retry old IDs or claim another job
+        # merely because provider responses are failing. A validated usable
+        # draft breaks the streak. An unknown review state does not falsely
+        # count as a gateway failure.
+        recent_omni = conn.execute(
+            "SELECT j.status,j.result FROM events e JOIN jobs j ON e.job_id=j.id "
+            "WHERE j.kind=? AND e.event='claimed' AND e.timestamp>=? "
+            "ORDER BY e.timestamp DESC, e.id DESC LIMIT 3",
+            (OMNI_KIND, now - 86400)).fetchall()
+        consecutive_failed = 0
+        for previous in recent_omni:
+            try:
+                outcome = json.loads(previous["result"]) if previous["result"] else {}
+            except (ValueError, TypeError):
+                outcome = {}
+            failed_attempt = (previous["status"] == "failed" or
+                              (isinstance(outcome, dict) and
+                               outcome.get("draft_status") ==
+                               "needs_review_no_auto_retry"))
+            if not failed_attempt:
+                break
+            consecutive_failed += 1
+        omni_circuit_open = consecutive_failed >= 3
+        omni_enabled = (allow_omniroute_model_use and
+                        omni_used < omni_max_24h and not omni_circuit_open)
         kinds = sorted(ALLOWED | ({RESEARCH_KIND} if allow_model_use else set())
                        | ({OMNI_KIND} if omni_enabled else set())
                        | ({NATIVE_KIND} if allow_native_import else set())
