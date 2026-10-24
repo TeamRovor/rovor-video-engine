@@ -1,0 +1,37 @@
+name: OmniRoute verified independent pool admission (offline)
+on:
+  pull_request:
+    paths:
+      - 'tools/ghost_worker.py'
+      - 'tools/omniroute_continuous.py'
+      - 'tools/omniroute_model_reservation.py'
+      - 'tests/test_omniroute_atomic_worker_hook.py'
+      - 'tests/test_omniroute_model_reservation.py'
+      - 'tests/test_omniroute_capacity_router.py'
+      - '.github/workflows/omniroute-verified-pools.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verified-pools:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ['3.9','3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Test atomic same-account pool gates and old continuous path
+        run: |
+          python -m unittest discover -s tests -p test_omniroute_capacity_router.py -v
+          python -m unittest discover -s tests -p test_omniroute_model_reservation.py -v
+          python -m unittest discover -s tests -p test_omniroute_atomic_worker_hook.py -v
+          python -m unittest discover -s tests -p test_omniroute_continuous.py -v
+          python -m unittest discover -s tests -p test_omniroute_workforce_composite.py -v
