@@ -3510,6 +3510,29 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40054927354"
         }
       ]
+    },
+    {
+      "id": "walter-approved-research-backlog-20261023",
+      "title": "Stage Walter's bounded multi-specialist public research backlog with no replay and free/STOP gates",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar independent Walter backlog release 2026-10-23",
+      "branch": "feature/walter-approved-research-backlog",
+      "scopes": [
+        "tools/walter_research_backlog.py",
+        "tests/test_walter_research_backlog.py",
+        "coordination/walter-approved-research-backlog.json",
+        ".github/workflows/walter-research-backlog.yml",
+        "integrations/open-interpreter/WALTER-RESEARCH-BACKLOG.md"
+      ],
+      "depends_on": [
+        "ghost-self-research-bootstrap-20261023",
+        "hybrid-cloud-provider-workforce-policy-20261023"
+      ],
+      "updated_at": "2026-10-24T03:05:47.939Z",
+      "next_update": "After hosted Python 3.9 and 3.11 tests and draft PR review",
+      "next_action": "Create pre-reviewed review-only research backlog for the seven persistent specialists and offline handoff selector. Release only immutable approved work IDs, fail closed without $0 route/quota/STOP and existing-dedupe evidence; never auto-replay prior failed AI work or touch Mac-owned feeder files. Verify source and CI; host integration remains separate with Mac owner.",
+      "acceptance": "At least 14 distinct useful specialist work packets with existing public sources and proof-based deliverables. Strict validation of sources, approval and unique IDs. Selector dispatches at most one new immutable task when free model, local STOP, quota, and authoritative seen ledger allow; declines when exhausted, unavailable or unsafe. Python3.9/3.11 hosted tests, no model calls, no Mac activation, no second scheduler."
     }
   ]
 }
