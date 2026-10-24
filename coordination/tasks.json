@@ -4143,13 +4143,13 @@
         "subsystem:overnight-public-saul-business-offer"
       ],
       "priority": 1,
-      "status": "ready",
-      "owner": null,
-      "branch": "main",
+      "status": "active",
+      "owner": "TeamRovor / scheduled GitHub-only maintenance 2026-10-24 Saul offer",
+      "branch": "docs/saul-offer-intake-20261024",
       "depends_on": [],
-      "updated_at": "2026-10-24T10:22:18.239Z",
-      "next_update": "After first original Mac research draft is genuinely ready for private human review",
-      "next_action": "Existing paced Mac public-task feeder may enqueue plan/checklist/tests/handoff drafts once per unique source-grounded task identity; do not label these as completed or eight independent model workers. Review private outputs and manually convert accepted findings to code/business deliverables; no paid/model-route/Mac-state actions."
+      "updated_at": "2026-10-24T11:21:06.109Z",
+      "next_update": "After source-grounded landing page/intake draft PR and verification; no automatic publication",
+      "next_action": "Draft a complementary, source-cited landing-page structure, lead-qualification gate, explicit unknowns and test/handoff checklist in a new public documentation file. No real prospect/client details or publication."
     },
     {
       "id": "a-overnight-04-jane-fcp-handoff",
