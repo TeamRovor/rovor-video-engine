@@ -1,0 +1,27 @@
+name: OmniRoute proportional capacity model routing
+on:
+  pull_request:
+    paths:
+      - 'tools/omniroute_capacity_router.py'
+      - 'tests/test_omniroute_capacity_router.py'
+      - '.github/workflows/omniroute-capacity-router.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Strict no-network capacity-selection tests
+        run: python -m unittest discover -s tests -p test_omniroute_capacity_router.py -v
