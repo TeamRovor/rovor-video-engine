@@ -286,11 +286,16 @@ def queue_health(conn, state, *, max_claims=144, interval=601, now=None):
 
 
 def tick(state, workspace, *, max_claims=144, interval=601, now=None,
-         verified_fleet_provider=None):
+         verified_fleet_provider=None, max_verified_jobs_per_tick=1):
     if (type(max_claims) is not int or not 1 <= max_claims <= 144
             or type(interval) is not int
             or interval < pacing.recommended_interval(max_claims)):
         raise ValueError('Invalid paced research budget')
+    if (type(max_verified_jobs_per_tick) is not int
+            or not 1 <= max_verified_jobs_per_tick <= 9
+            or (max_verified_jobs_per_tick > 1 and
+                not callable(verified_fleet_provider))):
+        raise ValueError('Verified multi-pool batch requires trusted provider callback')
     state = Path(state)
     if not state.is_dir() or not (state / 'jobs.sqlite3').is_file():
         raise ValueError('Existing initialized worker state is required')
@@ -303,6 +308,69 @@ def tick(state, workspace, *, max_claims=144, interval=601, now=None,
         except Exception:
             public_source, refresh = None, 'public_refresh_unavailable'
         feed = seed(conn, state, public_source)
+        if max_verified_jobs_per_tick > 1:
+            # This runs INSIDE the same existing LaunchAgent process: no
+            # second scheduler, no separate queue or unbounded host threads.
+            # Every next task rechecks STOP and independently authenticates
+            # provider/model/account quota at its exact new claim transaction.
+            outputs = []
+            for index in range(max_verified_jobs_per_tick):
+                if os.path.lexists(state / 'STOP'):
+                    break
+                if index:
+                    seed(conn, state, public_source)
+                queued = conn.execute(
+                    "SELECT id,payload FROM jobs WHERE kind=? AND status='queued' "
+                    "ORDER BY created_at,id LIMIT 1",
+                    (worker.OMNI_KIND,)).fetchone()
+                if queued is None:
+                    break
+                current = time.time() if now is None else now
+                verified = verified_fleet_provider(
+                    queued['id'], json.loads(queued['payload']), current)
+                if (not isinstance(verified, dict)
+                        or verified.get('independent_pool_limits') is not True
+                        or verified.get('host_evidence_authenticated') is not True):
+                    raise ValueError('Multi-job dispatch requires independently verified pools')
+                item = worker.run_once(
+                    conn, Path(workspace), owner='rovor-continuous-research',
+                    now=now, allow_omniroute_model_use=True,
+                    omniroute_queue_job_id=queued['id'],
+                    omni_max_24h=max_claims,
+                    omni_continuous=True, omni_pace_seconds=interval,
+                    omni_verified_fleet=verified)
+                if item is None:
+                    break
+                outputs.append(item)
+            output = {
+                'status': 'tick_complete', 'feed': feed,
+                'executed': len(outputs),
+                'review_ready_count': sum(1 for x in outputs
+                    if (x.get('result') or {}).get('review_status')
+                       == 'draft_ready_for_human_review'),
+                'review_ready': any((x.get('result') or {}).get('review_status')
+                    == 'draft_ready_for_human_review' for x in outputs),
+                'dispatch_mode': 'verified_independent_pool_opt_in',
+                'public_source': refresh,
+                'catalogue_assignments': len(assignments()),
+                'max_claims_24h': max_claims,
+                'min_interval_seconds': interval,
+                'observed_at': time.time() if now is None else now,
+            }
+            # Legacy queue_health is a *global paced* projection and cannot
+            # accurately describe independent verified account admission.
+            # Never output a misleading paced_wait for this new mode.
+            output['dispatch'] = {
+                'reason': 'independent_pool_capacity_checked_per_claim',
+                'queued': conn.execute(
+                    "SELECT COUNT(*) FROM jobs WHERE kind=? AND status='queued'",
+                    (worker.OMNI_KIND,)).fetchone()[0],
+                'model_requests_confirmed_by_heartbeat': False,
+            }
+            import omniroute_workpack_runner as workpack
+            workpack.write_receipt(
+                state / 'continuous-status.json', output, replace=True)
+            return output
         queued = conn.execute("SELECT id,payload FROM jobs WHERE kind=? AND status='queued' "
                               "ORDER BY created_at,id LIMIT 1", (worker.OMNI_KIND,)).fetchone()
         # Opt-in internal API only: real Mac operator must pass a current
