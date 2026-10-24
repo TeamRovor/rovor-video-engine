@@ -239,8 +239,8 @@ class CitationTests(unittest.TestCase):
             answer = "PRIVATE_CITATION_ONLY [[source:WORK.md#L2]]"
             fake_stdin = io.TextIOWrapper(io.BytesIO(answer.encode()), encoding="utf-8")
             stdout = io.StringIO()
-            with mock.patch("sys.stdin", fake_stdin), contextlib.redirect_stdout(stdout), \\
-                 mock.patch("walter_workpack_compile.verify_checked_in"), \\
+            with mock.patch("sys.stdin", fake_stdin), contextlib.redirect_stdout(stdout), \
+                 mock.patch("walter_workpack_compile.verify_checked_in"), \
                  mock.patch("walter_workpack_compile.compile_packets",
                             return_value={"walter-v1-test": {"inputs": [NAME]}}):
                 status = main(["--repo", tmp, "--packet", "walter-v1-test",
