@@ -64,7 +64,7 @@ async function main(){
   await evalJS('document.querySelector("#screen .close").click();document.querySelector("[data-wl-compact-tab=employees]").click();return true');
   assert.equal(await evalJS('return document.querySelectorAll("#workloadPanel .wl-compact-row").length'),8);
   await evalJS('document.querySelectorAll("#workloadPanel .wl-compact-row")[2].click();return true');
-  assert(await evalJS('return document.querySelector("#rovor-workload-popup").textContent.includes("JANE")'));
+  assert(await poll(()=>evalJS('return !!document.querySelector("#rovor-workload-popup")?.textContent.includes("JANE")')),name+': employee selection not shown');
   results.push({name,width,height,home,expanded,pass:true});
  }
  fs.writeFileSync(path.join(output,'results.json'),JSON.stringify(results,null,2));
