@@ -4178,7 +4178,7 @@
       "id": "walter-specialist-coverage-20261024",
       "title": "Select next grounded specialist fairly using reviewed outcomes and per-role backpressure",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 coverage shift",
       "branch": "feature/walter-specialist-coverage-v1",
       "scopes": [
@@ -4188,10 +4188,26 @@
         "subsystem:specialist-coverage-and-review-backpressure"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T10:52:16.731Z",
-      "next_update": "After source-only Python3.9/3.11 CI and review; do not deploy to Mac without existing PR137 owner approval.",
-      "next_action": "Implement a pure deterministic selector over independently admitted source-grounded candidate packets and authenticated private outcome summaries. Enforce one role's pending-review backlog limit, recent failures cooldown, role starvation prevention, and immutable dedupe/STOP; return only an inert candidate plus sanitized coverage evidence. Tests and hosted CI. No worker integration, model calls, private receipt export or scheduler change.",
-      "acceptance": "Stdlib Python3.9 pure function requires trusted candidate provenance, authoritative outcomes and dedupe ledger, STOP absent; rejects duplicate/invalid candidates, stale or future outcome records, unresolved private reviews, two-failure cooldown, unsafe model/task inference. Chooses the least-served eligible specialist deterministically, provides bounded per-role sanitized counters only, no automatic model call/queue mutation. At least 20 focused tests on Python3.9/3.11 plus project_loop and paired routing CI."
+      "updated_at": "2026-10-24T10:56:47.638Z",
+      "next_update": "Source task complete; existing PR137 owner may consider optional host integration only after independently verifying candidate and outcome evidence.",
+      "next_action": "PR #160 merged at ae6d7c112db2543202804b599762a67209012674. 43 focused offline tests plus project_loop.py check and task_routing_pair.py --check PASS in GitHub Actions Python 3.9 and 3.11 run 40087859774. Selector chooses one inert already-grounded role with 24h fairness, per-role/global pending-review backpressure, failure cooldown measured from authenticated status_at (not claim time), and no replay/STOP/owner-opt-in gates. Existing PR137 Mac owner may independently validate a trusted pinned-candidate adapter and private SQLite outcome adapter before opt-in integration; do not deploy source or grant model output command execution automatically. No live OmniRoute model call or Mac runtime verification.",
+      "acceptance": "Stdlib Python3.9 pure function requires trusted candidate provenance, authoritative outcomes and dedupe ledger, STOP absent; rejects duplicate/invalid candidates, stale or future outcome records, unresolved private reviews, two-failure cooldown, unsafe model/task inference. Chooses the least-served eligible specialist deterministically, provides bounded per-role sanitized counters only, no automatic model call/queue mutation. At least 20 focused tests on Python3.9/3.11 plus project_loop and paired routing CI.",
+      "evidence": [
+        {
+          "commit": "3d735a603bdb82ce514aff5b1897021004dd25d7",
+          "platform": "GitHub Actions Ubuntu Python 3.9 and 3.11",
+          "check": "43 focused unittest cases; project_loop.py check; task_routing_pair.py --check",
+          "result": "PASS both Python versions; no model, Mac, or private receipt operations",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40087859774"
+        },
+        {
+          "commit": "ae6d7c112db2543202804b599762a67209012674",
+          "platform": "GitHub PR #160",
+          "check": "One inert fair specialist proposal from trusted outcomes, pending review limits, dedupe and cooldown; no live integration",
+          "result": "MERGED to main; source-only and not deployed to existing LaunchAgent",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/160"
+        }
+      ]
     },
     {
       "id": "hud-omniroute-live-sync-20261024",
