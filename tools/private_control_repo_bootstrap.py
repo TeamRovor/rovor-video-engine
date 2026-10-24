@@ -152,20 +152,28 @@ def issue_number(api, apply):
     return created["number"], True
 
 
+def verify_file_contents(meta, expected):
+    """Trust exact decoded file content, not merely a successful GET."""
+    if (not isinstance(meta, dict) or meta.get("type") != "file"
+            or meta.get("encoding") != "base64" or not isinstance(meta.get("content"), str)):
+        raise Refused("existing_control_file_unreadable")
+    try:
+        raw = base64.b64decode(meta["content"].replace("\n", ""), validate=True)
+        declared = meta.get("size")
+        if declared is not None and (type(declared) is not int or declared != len(raw)):
+            raise Refused("existing_control_file_unreadable")
+        got = json.loads(raw)
+    except (ValueError, UnicodeError, TypeError, base64.binascii.Error):
+        raise Refused("existing_control_file_unreadable") from None
+    if got != expected:
+        raise Refused("existing_control_file_conflict")
+
+
 def ensure_file(api, path, expected, apply):
     endpoint = "/repos/" + REPO + "/contents/" + path
     code, meta = api("GET", endpoint + "?ref=main")
     if code == 200:
-        if (not isinstance(meta, dict) or meta.get("type") != "file"
-                or meta.get("encoding") != "base64" or not isinstance(meta.get("content"), str)):
-            raise Refused("existing_control_file_unreadable")
-        try:
-            data = base64.b64decode(meta["content"].replace("\n", ""), validate=True)
-            got = json.loads(data)
-        except (ValueError, UnicodeError, TypeError, base64.binascii.Error):
-            raise Refused("existing_control_file_unreadable") from None
-        if got != expected:
-            raise Refused("existing_control_file_conflict")
+        verify_file_contents(meta, expected)
         return False
     if code != 404:
         raise Refused("control_file_check_unavailable")
@@ -178,9 +186,10 @@ def ensure_file(api, path, expected, apply):
     if c != 201 or not isinstance(obj, dict) or not isinstance(obj.get("content"), dict):
         raise Refused("control_file_create_not_confirmed")
     # Independently read back; never declare a successful write from HTTP alone.
-    code, _info = api("GET", endpoint + "?ref=main")
+    code, readback = api("GET", endpoint + "?ref=main")
     if code != 200:
         raise Refused("control_file_readback_missing")
+    verify_file_contents(readback, expected)
     return True
 
 
