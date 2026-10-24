@@ -79,12 +79,12 @@ test('Panel toggle initially hidden, and verified event never creates API calls'
   els.liveDataButton.listeners.click();
   assert.equal(els.livePanels.hidden,false);
   assert.equal(els.liveDataButton.attrs['aria-pressed'],'true');
-  assert.equal(els.telemetryTasks.children.length,1);
+  assert.equal(els.livePanels.children[0].children[1].children.length,1);
   docsListeners['rovor:source']();
   assert.equal(calls,0);
   assert.equal(els.livePanels.dataset.status,'verified');
   state.mode='error';
   docsListeners['rovor:source']();
   assert.equal(els.livePanels.dataset.status,'unverified');
-  assert.ok(els.telemetryTasks.children.some(x=>x.textContent==='NO VERIFIED LIVE DATA'));
+  assert.ok(els.livePanels.children[0].children[1].children.some(x=>x.textContent==='NO VERIFIED LIVE DATA'));
 });
