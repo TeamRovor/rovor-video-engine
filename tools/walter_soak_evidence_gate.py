@@ -45,7 +45,7 @@ def audit(heartbeats, claims, *, window_start, window_end,
         return _refuse("unverified_host_ledger_or_policy")
     if (type(window_start) is not int or type(window_end) is not int
             or not 1700000000 <= window_start < window_end <= 4102444800
-            or window_end - window_start > 2 * DAY
+            or window_end - window_start > DAY
             or type(tick_seconds) is not int or not 30 <= tick_seconds <= 3600
             or type(allowed_gap_seconds) is not int
             or not tick_seconds <= allowed_gap_seconds <= 3600
