@@ -21,7 +21,7 @@ def catalog():
         {'name': route, 'strategy': 'priority', 'isHidden': False,
          'models': [{'kind': 'model', 'providerId': 'openrouter',
                      'model': name} for name in members]}
-        for route, members in omni.ROUTES.values()
+        for route, members in dict.fromkeys(omni.ROUTES.values())
     ]
 
 

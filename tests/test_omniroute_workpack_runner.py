@@ -305,12 +305,13 @@ class OmniRouteWorkpackTests(unittest.TestCase):
                          '--confirm-no-paid-fallback',
                          '--route','runner-blocker=groq/verified-fast',
                          '--route','supervisor-resilience=mistral/verified-code',
-                         '--route','provider-efficiency=gemini/verified-reason'])
+                         '--route','provider-efficiency=gemini/verified-reason',
+                         '--route','overnight-acceptance=gemini/verified-reason'])
         self.assertEqual(rc,0)
         self.assertEqual(set(records),{'groq/verified-fast',
                                       'mistral/verified-code',
                                       'gemini/verified-reason'})
-        self.assertEqual(sum(records.values()),3)
+        self.assertEqual(sum(records.values()),len(worker.PACKETS))
         self.assertFalse(json.loads(out.getvalue())['paid_fallback_attempted'])
 
     def test_reject_missing_role_routing_or_untrusted_model(self):
@@ -323,7 +324,7 @@ class OmniRouteWorkpackTests(unittest.TestCase):
         self.assertEqual(rc,2)
         self.assertFalse(self.out.exists())
 
-    def test_all_three_model_draft_jobs_via_mock_no_gui_or_github_write(self):
+    def test_all_model_draft_jobs_via_mock_no_gui_or_github_write(self):
         with mock.patch.object(worker,'http_completion',
                                side_effect=lambda m,p,k:('Audit only',None)) as llm:
             with mock.patch.dict(os.environ,{'OMNIROUTE_API_KEY':'mock-key'}):
@@ -334,9 +335,9 @@ class OmniRouteWorkpackTests(unittest.TestCase):
                                         '--approve-model-use',
                                         '--confirm-no-paid-fallback'])
         self.assertEqual(result,0)
-        self.assertEqual(llm.call_count,3)
+        self.assertEqual(llm.call_count,len(worker.PACKETS))
         answer=json.loads(out.getvalue())
-        self.assertEqual(len(answer['results']),3)
+        self.assertEqual(len(answer['results']),len(worker.PACKETS))
         self.assertTrue(all(x['status']=='draft_completed_needs_review'
                             for x in answer['results']))
         self.assertFalse(answer['host_app_control_verified'])

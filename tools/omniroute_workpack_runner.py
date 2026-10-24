@@ -21,7 +21,7 @@ import time
 from urllib import request, error
 
 GATEWAY = 'http://127.0.0.1:20128/v1/chat/completions'
-PACKETS = ('runner-blocker', 'supervisor-resilience', 'provider-efficiency')
+PACKETS = ('runner-blocker', 'supervisor-resilience', 'provider-efficiency', 'overnight-acceptance')
 ROLES = ('evidence-triage','software-architecture','inference-routing')
 MAX_INPUT = 28000
 MAX_RESPONSE = 131072

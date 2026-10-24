@@ -26,7 +26,7 @@ def fixed_catalog():
         {'name': name,'strategy':'priority','isHidden':False,
          'models':[{'kind':'model','providerId':'openrouter','model':m}
                    for m in models]}
-        for name,models in omni.ROUTES.values()
+        for name,models in dict.fromkeys(omni.ROUTES.values())
     ]
 
 

@@ -28,6 +28,7 @@ ROUTES = {
          'openrouter/nvidia/nemotron-3.5-super-vl:free')),
 }
 MAX_24H = 5
+ROUTES['overnight-acceptance'] = ROUTES['provider-efficiency']
 
 
 def validate_payload(payload):

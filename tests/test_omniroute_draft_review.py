@@ -78,7 +78,7 @@ class OmniRouteDraftReviewTests(unittest.TestCase):
         self.assertEqual(result,0)
         self.assertEqual(before,sorted(str(p) for p in self.home.rglob('*')))
         summary=json.loads(out.getvalue())
-        self.assertEqual(len(summary['results']),3)
+        self.assertEqual(len(summary['results']),len(worker.PACKETS))
         self.assertFalse(summary['external_effects_performed'])
         self.assertFalse(summary['automatic_task_approval'])
         self.assertTrue(all(x['status']=='draft_ready_for_human_review'

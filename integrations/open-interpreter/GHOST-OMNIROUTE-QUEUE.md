@@ -6,9 +6,10 @@ send emails, post social media, edit media, run shell commands from a model, or
 complete a GitHub project task.
 
 The job kind `research.omniroute` takes **only** `{"packet": "<known-packet>"}`.
-Allowed packets are `runner-blocker`, `supervisor-resilience`, and
-`provider-efficiency`. They are the fixed public-repository workpacks already
-specified in OmniRoute PR #51. No private documents, media, arbitrary task
+Allowed packets are `runner-blocker`, `supervisor-resilience`,
+`provider-efficiency`, and `overnight-acceptance`. The first three originate
+in OmniRoute PR #51; the last is a separate bounded first-night checklist,
+not a replay of the failed supervisor code-review attempt. No private documents, media, arbitrary task
 prompts, URLs, uploaded content, or extra job arguments are forwarded.
 
 ## Fail-closed prerequisites
@@ -53,6 +54,15 @@ STOP prevents job claiming and is checked again before inference, but does
 not interrupt an already running provider request.
 
 ## Output and approval
+
+The foreground `omniroute_mac_once.py --approve-one-free-job --packet
+overnight-acceptance` entrypoint uses the existing queue and a fixed task-specific
+dedupe key. It pauses the existing LaunchAgent, or positively confirms its absence
+from a complete current-user launchd services listing, and executes only its exact
+job UUID. STOP is restored on normal/error return and scheduling stays off.
+The prior supervisor attempt and its evidence remain untouched. A new task does
+not authorize replay of an old task. After a hard process kill, the service remains
+unloaded; inspect the queue/STOP before taking any recovery action.
 
 The reviewed workpack writes private per-SQLite-job receipts inside
 `<state>/omniroute-drafts/<job_uuid>/<packet>.receipt.json`.

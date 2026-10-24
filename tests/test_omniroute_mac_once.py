@@ -35,7 +35,7 @@ class OnceTests(unittest.TestCase):
         with self.assertRaises(ValueError): once.verify_queue(self.conn)
 
     def test_unconfirmed_or_failed_unload_never_runs(self):
-        for codes in ([1],[0,1],[0,0,0]):
+        for codes in ([1,1],[0,1],[0,0,0]):
             with self.subTest(codes=codes):
                 execute=mock.Mock()
                 with self.assertRaises(ValueError):
@@ -72,6 +72,25 @@ class OnceTests(unittest.TestCase):
         for jid in (old,first):
             self.assertEqual(tuple(self.conn.execute('SELECT status,attempts FROM jobs WHERE id=?',(jid,)).fetchone()),('queued',0))
         with self.assertRaises(ValueError): worker.claim(self.conn,'test',omniroute_queue_job_id=chosen)
+
+    def test_positive_domain_observation_allows_new_task_without_replaying_old(self):
+        old=worker.enqueue(self.conn,worker.OMNI_KIND,{'packet':once.PACKET},once.DEDUPE)
+        self.conn.execute("UPDATE jobs SET status='needs_review',attempts=1 WHERE id=?",(old,))
+        launch=mock.Mock(side_effect=[subprocess.CompletedProcess([],113),
+            subprocess.CompletedProcess([],0,stdout='gui/501 = {\n services = {\n 0 0 com.other.service\n }\n}')])
+        def execute(conn,workspace,**kwargs):
+            jid=kwargs['omniroute_queue_job_id']
+            self.assertNotEqual(jid,old)
+            self.assertEqual(conn.execute('SELECT dedupe_key FROM jobs WHERE id=?',(jid,)).fetchone()[0],once.JOBS['overnight-acceptance'])
+            return {'id':jid,'status':'needs_review'}
+        once.run_one(self.conn,self.state,self.base,run=launch,execute=execute,packet='overnight-acceptance')
+        self.assertEqual(launch.call_count,2)
+        self.assertTrue((self.state/'STOP').is_file())
+        self.assertEqual(tuple(self.conn.execute('SELECT status,attempts FROM jobs WHERE id=?',(old,)).fetchone()),('needs_review',1))
+
+    def test_domain_parser_rejects_missing_block_partial_output_and_existing_service(self):
+        for text in ('', 'services = {\n', 'services = {\n 1 0 '+once.LABEL+'\n}\n'):
+            self.assertFalse(once.service_absent_from_domain(subprocess.CompletedProcess([],0,stdout=text)))
 
 
 if __name__=='__main__': unittest.main()
