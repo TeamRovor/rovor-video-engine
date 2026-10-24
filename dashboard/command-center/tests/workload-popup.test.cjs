@@ -51,14 +51,16 @@ test('Popup defaults to unverified without network, keys or made-up model names'
   assert.ok(!html.includes('href="./workload-popup.css"'));
   assert.match(popup,/NO VERIFIED LIVE MODEL TELEMETRY/);
   assert.match(popup,/demo:false,employee:/);
-  assert.match(popup,/Array\.from\(\{length:9\}/);
+  assert.match(popup,/const MODEL_IDS=/);
+  assert.match(popup,/north-mini-code:free/);
+  assert.doesNotMatch(popup,/String\(j\+1\)\.padStart/);
   assert.match(popup,/EMPLOYEES\.map/);
   assert.match(popup,/VIEW SAMPLE LAYOUT/);
   assert.match(popup,/function mountPreview\(container,openDetails\)/);
-  assert.match(popup,/TELEMETRY UNVERIFIED/);
-  assert.match(popup,/— UNKNOWN · NOT ZERO/);
+  assert.match(popup,/LAST REPORT/);
+  assert.match(popup,/3 ROUTED \/ 9 CONNECTIONS/);
   assert.match(css,/#workloadPanel \.wl-compact-row/);
-  assert.doesNotMatch(popup,/(fetch\(|XMLHttpRequest|localStorage|sessionStorage|Authorization|Bearer|http:\/\/|https:\/\/)/);
+  assert.doesNotMatch(popup,/(fetch\(|XMLHttpRequest|localStorage|sessionStorage|Authorization|Bearer)/);
   assert.match(css,/#rovor-workload-popup/);
   assert.doesNotMatch(css,/(^|\n)\s*(html|body|\.hud|\.nav)\s*\{/);
 });
@@ -77,7 +79,7 @@ test('Popup interaction switches between heatmap, model list, routing and sample
   const host={replaceChildren(){},append(node){this.child=node}};
   context.window.ROVOR_WORKLOAD.mount(host);
   assert.match(host.child.innerHTML,/NO VERIFIED LIVE MODEL TELEMETRY/);
-  assert.match(host.child.innerHTML,/data-wl-cell="7-8"/);
+  assert.match(host.child.innerHTML,/LAST MAC REPORT \/ 31 JOB CLAIMS/);
   const click=host.child.handlers.click;
   const interact=(dataset)=>click({target:{closest(){return{
       dataset,hasAttribute(attr){
@@ -86,7 +88,7 @@ test('Popup interaction switches between heatmap, model list, routing and sample
       }
     }}}});
   interact({wlTab:'models'});
-  assert.match(host.child.innerHTML,/ALL NINE MODEL SLOTS/);
+  assert.match(host.child.innerHTML,/REPORTED MODEL IDENTITIES/);
   interact({wlDemo:''});
   assert.match(host.child.innerHTML,/DEMONSTRATION — SYNTHETIC NUMBERS/);
   interact({wlTab:'routing'});
@@ -95,7 +97,7 @@ test('Popup interaction switches between heatmap, model list, routing and sample
   assert.match(host.child.innerHTML,/NO VERIFIED LIVE MODEL TELEMETRY/);
 });
 
-test('Compact preview contains nine models, eight named employees, no invented values',()=>{
+test('Compact preview contains three reported models, eight named employees, no invented values',()=>{
   const nodes=[];
   const sandbox={window:{},document:{createElement(){const n={
     innerHTML:'',handlers:{},contains(){return true},
@@ -105,9 +107,9 @@ test('Compact preview contains nine models, eight named employees, no invented v
   let opened=0;
   const host={replaceChildren(){},append(node){this.child=node}};
   sandbox.window.ROVOR_WORKLOAD.mountPreview(host,()=>opened++);
-  assert.equal((host.child.innerHTML.match(/data-wl-compact-row="/g)||[]).length,9);
+  assert.equal((host.child.innerHTML.match(/data-wl-compact-row="/g)||[]).length,3);
   assert.match(host.child.innerHTML,/AI MODELS/);
-  assert.match(host.child.innerHTML,/TELEMETRY UNVERIFIED/);
+  assert.match(host.child.innerHTML,/LAST REPORT/);
   const click=dataset=>host.child.handlers.click({target:{closest(){return{
     dataset,hasAttribute(attr){
       if(attr==='data-wl-compact-tab')return dataset.wlCompactTab!==undefined;
@@ -122,7 +124,7 @@ test('Compact preview contains nine models, eight named employees, no invented v
   click({wlCompactRow:'2'});
   assert.equal(opened,1);
   sandbox.window.ROVOR_WORKLOAD.mount(host);
-  assert.match(host.child.innerHTML,/JANE × MODEL 01/);
+  assert.match(host.child.innerHTML,/JANE × North Mini Code/);
 });
 
 test('Workload selection survives unrelated refresh remount, resets after popup close',()=>{
@@ -145,10 +147,34 @@ test('Workload selection survives unrelated refresh remount, resets after popup 
   click({wlDemo:''});
   assert.match(host.child.innerHTML,/DEMONSTRATION — SYNTHETIC NUMBERS/);
   context.window.ROVOR_WORKLOAD.mount(host);
-  assert.match(host.child.innerHTML,/ALL NINE MODEL SLOTS/);
+  assert.match(host.child.innerHTML,/REPORTED MODEL IDENTITIES/);
   assert.match(host.child.innerHTML,/DEMONSTRATION — SYNTHETIC NUMBERS/);
   context.window.ROVOR_WORKLOAD.resetPopup();
   context.window.ROVOR_WORKLOAD.mount(host);
   assert.match(host.child.innerHTML,/NO VERIFIED LIVE MODEL TELEMETRY/);
-  assert.match(host.child.innerHTML,/EMPLOYEE × AI MODEL/);
+  assert.match(host.child.innerHTML,/LAST MAC REPORT/);
+});
+
+
+test('Observed outcomes are historical job attempts, never fabricated model usage',()=>{
+  const context={window:{},document:{createElement(){return {innerHTML:'',addEventListener(){}}}}};
+  vm.runInNewContext(popup,context);
+  const host={replaceChildren(){},append(node){this.child=node}};
+  context.window.ROVOR_WORKLOAD.mount(host);
+  const rendered=host.child.innerHTML;
+  assert.match(rendered,/historical owner-shared report, not current activity/);
+  assert.match(rendered,/10 \/ 31/);
+  assert.match(rendered,/12 \/ 31/);
+  assert.match(rendered,/8 \/ 31/);
+  assert.match(rendered,/1 \/ 31/);
+  assert.match(rendered,/--wl-share:32.3%/);
+  assert.match(rendered,/Live link missing/);
+  assert.match(rendered,/issuecomment-6382848776/);
+  assert.doesNotMatch(rendered,/data-active="yes"/);
+  context.window.ROVOR_WORKLOAD.mountPreview(host);
+  assert.match(host.child.innerHTML,/North Mini Code/);
+  assert.match(host.child.innerHTML,/Nemotron 3 Ultra/);
+  assert.match(host.child.innerHTML,/Nemotron 3.5 Super VL/);
+  assert.doesNotMatch(host.child.innerHTML,/>M0[1-9]</);
+  assert.doesNotMatch(host.child.innerHTML,/wl-compact-track/);
 });

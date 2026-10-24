@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 75540)
-Total output lines: 4169
-
 {
   "version": 1,
   "tasks": [
@@ -1782,7 +1779,892 @@ Total output lines: 4169
       "owner": "ChatGPT / Amar continuous host setup 2026-10-22",
       "branch": "feature/ghost-interpreter-research-queue",
       "scopes": [
-    …15540 tokens truncated…18.173Z",
+        "tools/ghost_worker.py",
+        "tools/interpreter_host_job.py",
+        "tests/test_ghost_research_queue.py",
+        "tools/ghost_worker_loop.py",
+        "integrations/open-interpreter/start-jane-worker.sh"
+      ],
+      "depends_on": [
+        "interpreter-research-mac-host-smoke",
+        "rovor-ghost-worker-readonly-v1"
+      ],
+      "updated_at": "2026-10-22T20:24:08.991Z",
+      "next_update": "After normal-Terminal queued model job and SQLite receipt review",
+      "next_action": "Real queued research job succeeded once in64.535s, SQLite status succeeded attempts1; answer SHA2563ee99bf4a74207de42219c8520419ac10949239634386e1fd7bf9ed020326736. Source research surfaced web cache gaps; actual installed DTD and pinned GitHub source were then verified directly. Native MCP and scheduling remain separate tasks.",
+      "acceptance": "Queue dedupe, default no-model behavior, explicit model optin, at-most-once dispatch after crash/lease, existing read-only adapters preserved, cancellation and actual Mac deterministic test evidence.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/39"
+      ],
+      "evidence": [
+        {
+          "commit": "f4ff1c281c0e25b7a5a7075e473351814f98bfe6",
+          "platform": "Actual Amar Intel Mac / Python 3.9 / Work Mode",
+          "check": "40 interpreter+host tests and 33 worker+loop+research tests; shell syntax; native SQLite restart smoke; full startup shell with fake Interpreter invoked twice; remote code readback identical",
+          "result": "73/73 PASS. Fake full-script job succeeded once with attempts1 and second startup dispatched zero. Shared STOP cancelled active fake Interpreter. Default worker left model job queued. Real foreground research previously completed40.902s; real queued model, app MCP, native editing, launchd and hosted CI remain unverified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/39"
+        },
+        {
+          "commit": "f4ff1c281c0e25b7a5a7075e473351814f98bfe6",
+          "platform": "Actual Amar Mac / normal Terminal",
+          "check": "start-jane-worker.sh ran through SQLite enqueue, explicit model dispatch, Interpreter research receipt and loop summary",
+          "result": "PASS one executed,one succeeded,zero failed,attempts1,64.535s model/64.646s loop,12896 bytes retained. App control and autonomous scheduling not established.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/39"
+        }
+      ]
+    },
+    {
+      "id": "jane-diagnostic-xml-integrity",
+      "title": "Prevent false valid XML diagnoses for changed native import evidence",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar diagnostic integrity 2026-10-23",
+      "branch": "fix/jane-diagnostic-integrity",
+      "scopes": [
+        "tools/fcp_jane_native_probe.py",
+        "tests/test_fcp_jane_native_probe.py"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T00:11:13.396Z",
+      "next_update": "PR41 review / actual Mac import investigation",
+      "next_action": "Repair merged into the existing PR41 integration candidate, feature/ghost-native-import-queue, at8f0502c141422a27407176e7297269141704d583. Use the consolidated checkpoint; no separate child checkout needed. Full workforce stack is not merged to main, installed or host-verified.",
+      "acceptance": "Regressions reject modified XML, incorrect geometry and sequence format, media references, and missing hashes; unchanged actual receipt structure passes; integrated offline suite passes. No Mac runtime claim.",
+      "evidence": [
+        {
+          "commit": "78d8c05f8a9f75b9b10918dab7474a6a78a0d209",
+          "platform": "Linux Python 3.12.14",
+          "check": "152 integrated offline tests, 13 probe tests, pre-fix run of four new regression methods, git diff --check; published two blob hashes equal tested files",
+          "result": "PASS 152/152 in 6.559s. Pre-fix module fails 11 assertions, zero errors. Queue checker retains pre-existing invalid Blender trailing-slash scope. No Mac/model/native app execution or unattended deployment.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/42"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/42"
+      ]
+    },
+    {
+      "id": "workforce-host-evidence-reconciliation",
+      "title": "Reconcile completed Mac MCP and diagnostic evidence with the shared next action",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar workforce evidence reconciliation",
+      "branch": "main",
+      "scopes": [
+        "subsystem:workforce-host-evidence-reconciliation"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T00:39:22.154Z",
+      "next_update": "Native app observation in verified Mac-backed chat",
+      "next_action": "Use fcp-mcp-real-host-smoke's reconciled evidence and blocker. Observe actual Final Cut UI through existing ChatGPT remote host; do not rerun completed research/MCP/diagnostic or native import.",
+      "acceptance": "Current queue passes project_loop validation; supplied MCP/diagnosis facts retain runtime limits; no owners released and no native success inferred.",
+      "evidence": [
+        {
+          "commit": "5ade85fadcb1451e1e5ef6cbbd261b3eef327aa6",
+          "platform": "Current GitHub main metadata, supplied Mac Terminal evidence, Linux validation",
+          "check": "Read latest supplied log; compare shared FCP record; validate complete updated queue with existing project_loop.validate",
+          "result": "Completed MCP and probe evidence retained; owner and blocked status preserved; obsolete setup next action replaced. Current live queue already has normalized Blender scope, so no duplicate repair needed. No new Mac execution or app-control success claimed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/blob/main/coordination/tasks.json"
+        }
+      ]
+    },
+    {
+      "id": "jane-queued-native-diagnosis",
+      "title": "Make native diagnosis inspect queued jobs as well as manual import attempts",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar continuous workforce repair",
+      "branch": "fix/jane-queued-diagnosis",
+      "scopes": [
+        "tools/jane_native_worker.py",
+        "tools/fcp_jane_native_probe.py",
+        "tests/test_ghost_native_import_queue.py",
+        "tests/test_fcp_jane_native_probe.py"
+      ],
+      "depends_on": [
+        "jane-diagnostic-xml-integrity"
+      ],
+      "updated_at": "2026-10-23T00:44:57.527Z",
+      "next_update": "PR41 review / actual Mac import investigation",
+      "next_action": "Repair merged into the existing PR41 integration candidate, feature/ghost-native-import-queue, at8f0502c141422a27407176e7297269141704d583. Use the consolidated checkpoint; no separate child checkout needed. Full workforce stack is not merged to main, installed or host-verified.",
+      "acceptance": "Queued native-import UUID folder can be diagnosed; malformed paths refused; manual/queue mixed attempts retained; missing receipts explicit; no model, native dispatch or DB initialization; integrated suite passes.",
+      "evidence": [
+        {
+          "commit": "f084710cd3e9b3068988f3c473dade2f4adb77f2",
+          "platform": "Linux Python 3.12.14",
+          "check": "161 integrated workforce tests; five regression methods fail before fix; Python 3.9 syntax; git diff --check; four published blob hashes match",
+          "result": "PASS 161/161 in6.727s. Native queued/manual attempts and malformed/missing/symlinked evidence covered; no queue initialization or dispatch by diagnosis. No Mac runtime/app control.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/43"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/43"
+      ]
+    },
+    {
+      "id": "ghost-worker-database-path-integrity",
+      "title": "Refuse redirected SQLite database paths before worker initialization",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar continuous workforce repair",
+      "branch": "fix/ghost-database-path-integrity",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tests/test_ghost_worker.py"
+      ],
+      "depends_on": [
+        "jane-queued-native-diagnosis"
+      ],
+      "updated_at": "2026-10-23T00:46:40.914Z",
+      "next_update": "PR41 review / actual Mac import investigation",
+      "next_action": "Repair merged into the existing PR41 integration candidate, feature/ghost-native-import-queue, at8f0502c141422a27407176e7297269141704d583. Use the consolidated checkpoint; no separate child checkout needed. Full workforce stack is not merged to main, installed or host-verified.",
+      "acceptance": "Deterministic regressions prove no SQLite connection or external target write on redirected paths; regular queues initialize/restart as before; integrated suite passes.",
+      "evidence": [
+        {
+          "commit": "57da42936b6fb90e45c80b4fb2ae2cced1e7581e",
+          "platform": "Linux Python 3.12.14",
+          "check": "164 integrated tests; seven pre-fix failing assertions; source blob equality; git diff --check",
+          "result": "PASS164/164 in6.705s. Reject pre-existing SQLite database/WAL/SHM symlinks and nonregular paths before connection; existing restart behavior passes. No Mac/model/native app execution.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/44"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/44"
+      ]
+    },
+    {
+      "id": "workforce-repair-candidate-integration",
+      "title": "Consolidate verified worker repairs into the existing integration candidate",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar continuous workforce repair",
+      "branch": "feature/ghost-native-import-queue",
+      "scopes": [
+        "subsystem:workforce-repair-candidate-integration",
+        "integrations/open-interpreter/WORKFORCE-CHECKPOINT.md"
+      ],
+      "depends_on": [
+        "jane-queued-native-diagnosis",
+        "ghost-worker-database-path-integrity"
+      ],
+      "updated_at": "2026-10-23T00:49:14.454Z",
+      "next_update": "PR41 candidate review and existing Mac import outcome investigation",
+      "next_action": "Use feature/ghost-native-import-queue at8f0502c141422a27407176e7297269141704d583 as the consolidated source candidate. PRs42/43/44 merged into this branch; full workforce stack remains unmerged to main and uninstalled. Latest Mac basic UI probe already completed; investigate actual existing import outcome without repeating setup/probes or dispatch.",
+      "acceptance": "One existing integration checkout contains all three tested repairs; published code equals tested blobs; hosted checks recorded; checkpoint names exact unresolved native import and latest Mac/UI evidence. No deployment/native success inferred.",
+      "evidence": [
+        {
+          "commit": "8f0502c141422a27407176e7297269141704d583",
+          "platform": "GitHub integration branch and Linux tests / hosted Linux Python3.9 and3.11",
+          "check": "Guarded merges PR42/43/44; six integrated code/test blob hashes equal164-test local files; hosted final-repair CI success both Python versions; 3.9 log count verified; refreshed checkpoint and PR41",
+          "result": "PASS164 local tests in6.705s and hosted Python3.9 in6.965s; Python3.11 job successful. All repair source consolidated; documentation checkpoint follows final code mergee32374977f974267818eca192f6e0e86693bd664. No Mac deployment, model, native import replay or unattended worker.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39880072286"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41"
+      ]
+    },
+    {
+      "id": "jane-bootstrap-error-details",
+      "title": "Preserve actionable stage and error evidence for failed native library bootstrap",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar bootstrap failure repair",
+      "branch": "fix/jane-bootstrap-error-details",
+      "scopes": [
+        "tools/fcp_jane_library_bootstrap.py",
+        "tests/test_fcp_jane_library_bootstrap.py"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T01:27:58.509Z",
+      "next_update": "After latest pilot reconciliation, full FCP checks and guarded PR45 integration",
+      "next_action": "Resume own PR45 claim; preserve current pilot UI logic while adding fixed stage/timeout evidence. Verify exact merged tree, hosted compilation and unit tests before guarded merge.",
+      "acceptance": "Generic exit1 produces useful observed stage/numeric error when present; empty/oversized/unknown stderr handled without leaking text; failed/time-out attempts remain non-replayable and never import XML; exact source tests pass.",
+      "evidence": [
+        {
+          "commit": "401383d09246b612bd516b53e91fcb586d8d63c4",
+          "platform": "Linux Python3.12.14 plus hosted macOS Python3.9/3.11",
+          "check": "91 FCP tests pass after preserving latest pilot2263e7e; exact resolved tree9f03aaac1c7bdb096d6d0ed867d858ac96644299 published; hosted unit tests and native AppleScript compilation passed",
+          "result": "PASS91/91 in0.138s, hosted unit/DTD/compile jobs successful. Current pilot advanced after resolution; PR remains unmerged due conflicts. No Mac GUI action, import or replay.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39883344582"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/45"
+      ]
+    },
+    {
+      "id": "ghost-legacy-native-dispatch-disabled",
+      "title": "Apply proven wrong-library import restriction to the durable worker route",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar native worker correction",
+      "branch": "fix/ghost-native-import-disabled",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tools/ghost_worker_loop.py",
+        "tests/test_ghost_native_import_queue.py",
+        "integrations/open-interpreter/WORKFORCE-CHECKPOINT.md",
+        "tools/fcp_native_auto_import.py",
+        "tests/test_fcp_native_auto_import.py",
+        "tools/jane_native_worker.py"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T01:22:57.559Z",
+      "next_update": "PR41 review and verified isolated native library workflow",
+      "next_action": "PR46 merged into PR41 candidate at967112cd5b2010fa5e5c26330ba44f6edda50a55. CLI native dispatch disabled before preparation; worker native requests record needs_review once without native effects. Preserve research/read-only jobs and wait for verified isolated library creation/app selection plus replacement adapter.",
+      "acceptance": "No worker route invokes native.prepare/dispatch even with --allow-native-import; native job recorded once as needs_review without replay; read-only jobs/research opt-ins unaffected; loop capability reflects disabled native import; tests pass.",
+      "evidence": [
+        {
+          "commit": "967112cd5b2010fa5e5c26330ba44f6edda50a55",
+          "platform": "Linux local Python3.12.14 and hosted Python3.9/3.11",
+          "check": "166 integrated offline tests; native queue and CLI regression checks; guarded PR46 merge; six merged code/test blobs equal tested files; hosted3.9 log count verified",
+          "result": "PASS166/166 local6.668s; hosted3.9/3.11 successful,3.9 log166 tests in7.054s. Production legacy importer call removed, capability receipts corrected. No native app/model/service action.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39883182817"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/46"
+      ]
+    },
+    {
+      "id": "jane-sqlite-isolated-library-creation",
+      "title": "Connect Jane's isolated native library creator to existing durable ghost worker",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar Jane queue-integration session 2026-10-22",
+      "branch": "feature/ghost-native-import-queue",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tools/ghost_worker_loop.py",
+        "tools/jane_library_worker.py",
+        "tools/fcp_jane_library_onepass.py",
+        "tests/test_ghost_jane_library_queue.py",
+        "tests/test_ghost_jane_library_launcher.py",
+        "integrations/open-interpreter/WORKFORCE-CHECKPOINT.md"
+      ],
+      "depends_on": [
+        "ghost-legacy-native-dispatch-disabled"
+      ],
+      "updated_at": "2026-10-23T02:00:33.748Z",
+      "next_update": "Review PR #41 integration and reconcile PR #45's overlapping bootstrap changes before merge; actual host native library and app-selected verification remain blocked",
+      "next_action": "Review CI 39887002258 and PR #41. Existing Mac-enabled agent must run one specifically approved exact-ID library creation job from tested branch; do not retry failed jobs or the disabled XML import. Record first real native library creation and independent FCP selection before enabling any editing/export.",
+      "acceptance": "One existing SQLite queue offers Jane library-create kind separately approved, exact-ID one-shot GUI attempt, STOP pre/postclaim, dedupe/crash nonreplay, immutable needs_review after execution and isolated test library path; existing research/read-only jobs preserved and legacy XML import disabled. Hosted regression tests pass; native Mac operation not claimed.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/37",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/45"
+      ],
+      "evidence": [
+        {
+          "commit": "144d6c5612035a1842b09c37d9f6e711cdbbba9d",
+          "platform": "Hosted Ubuntu Linux Python 3.9 and 3.11; no native Mac GUI execution",
+          "check": "Integrated workforce CI: 83 ghost tests, 40 Interpreter tests, 94 FCP tests; one exact SQLite Jane library create job with separate opt-in, STOP and replay rejection; old native import disabled",
+          "result": "PASS 217/217 on Python3.9 in 7.221s and 217/217 on Python3.11 in 7.037s. Source now connects Jane's onepass to durable worker; native app library creation/selection/export NOT verified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39887002258"
+        }
+      ]
+    },
+    {
+      "id": "jane-native-selection-evidence",
+      "title": "Add strict read-only proof of which native Final Cut library is selected",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Mac-runtime handoff GitHub-only session 2026-10-22",
+      "branch": "feature/ghost-native-import-queue",
+      "scopes": [
+        "tools/fcp_jane_selected_library_probe.py",
+        "tests/test_fcp_jane_selected_library_probe.py",
+        "integrations/open-interpreter/JANE-SELECTION-EVIDENCE.md",
+        ".github/workflows/jane-selection-ax-compile.yml"
+      ],
+      "depends_on": [
+        "jane-sqlite-isolated-library-creation"
+      ],
+      "updated_at": "2026-10-23T02:21:31.898Z",
+      "next_update": "After one verified native library creation on Amar's actual Mac, run the read-only verifier on that exact job ID; host execution remains unverified",
+      "next_action": "Actual Mac executor must inspect current PR41 checkout and existing Jane receipts, then from an explicitly approved single created library run python3 tools/fcp_jane_selected_library_probe.py --job-id <exact-existing-successful-ID>. Do not create a new job to get positive evidence; if unverified do not import XML/edit/export. Current ChatGPT session has GitHub connectors, not a working Mac process/UI executor.",
+      "acceptance": "Own-file-only read-only tool and offline tests; refuse missing or symlinked Jane receipts/libraries, avoid private project/title leaks, bound local UI and file-handle inspection, prove positive and negative mock cases; never alter Final Cut, existing Untitled, source media, queue status, or native import gates.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41#issuecomment-6355619140"
+      ],
+      "evidence": [
+        {
+          "commit": "355006c4e058c560ff2cfc5ed3434548987cdb67",
+          "platform": "GitHub Actions hosted Intel macOS and hosted Ubuntu Python3.9/3.11; NOT Amar's Mac",
+          "check": "Standalone read-only AX+PID native DB exact-target library selection verifier and non-mutating test cases; macos-15-intel osacompile without execute; integrated ghost/Interpreter/FCP tests",
+          "result": "PASS: 12/12 focused simulated tests on Intel macOS; osacompile AppleScript syntax PASS. Integrated 229/229 on Python3.9 (7.458s) and Python3.11 (6.774s). No user's native FCP process inspected; library created/selection unverified, no XML import.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39888978037"
+        },
+        {
+          "commit": "355006c4e058c560ff2cfc5ed3434548987cdb67",
+          "platform": "Connected GitHub ChatGPT + browser availability probe",
+          "check": "Mac-local execution capability assessment against 2026-10-22 parallel handoff",
+          "result": "GitHub read/write available. Browser tab connector refused because originating browser context unavailable. No local Mac shell/Open Interpreter/Final Cut GUI access; real host step remains blocked.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39888978044"
+        }
+      ]
+    },
+    {
+      "id": "jane-launcher-outcome-reporting",
+      "title": "Make Jane native library CLI report review-required outcomes without false shell success",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar iPhone GitHub review session 2026-10-22",
+      "branch": "fix/jane-outcome-contract-20261022",
+      "scopes": [
+        "tools/jane_library_worker.py",
+        "tests/test_ghost_jane_library_launcher.py"
+      ],
+      "depends_on": [
+        "jane-sqlite-isolated-library-creation"
+      ],
+      "updated_at": "2026-10-23T02:17:07.274Z",
+      "next_update": "After PR #47 integration into PR #41; host test remains with Mac lane",
+      "next_action": "PR #47 is ready for integration review into PR #41. Exit 3 now explicitly indicates a recorded, review-required GUI operation, never verified success; Mac test must inspect bundle existence and independent app selection. PR #45 owns bootstrap diagnostic conflicts; do not overwrite it.",
+      "acceptance": "CLI create attempt never exits 0 merely because enqueue/dispatch was recorded; clearly reports native created/app selection/review outcome; existing same-ID no-replay and status/dry-run unchanged; focused regression tests pass; original FCP libraries untouched.",
+      "evidence": [
+        {
+          "commit": "03aee976b1deef124a9ebcccf6b0403839e90946",
+          "platform": "GitHub-hosted Python 3.9 and 3.11 (Linux)",
+          "check": "Integrated workforce offline regression suite including Jane launcher create/review-required and read-only cases",
+          "result": "PASS on both Python versions; not a native Mac GUI run or app-selected proof",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39888632870"
+        }
+      ]
+    },
+    {
+      "id": "mac-execution-roundtrip",
+      "title": "Verify GitHub-to-owned-Mac sandbox write/read round trip",
+      "priority": 1,
+      "status": "blocked",
+      "owner": "ChatGPT / Amar iPhone Mac-link proof session 2026-10-22",
+      "branch": "main",
+      "scopes": [
+        ".github/workflows/rovor-mac-exec-proof.yml",
+        "rovor-production/mac-queue/exec-smoke-20261022-01.json",
+        "rovor-production/mac-queue/exec-smoke-20261022-02.json",
+        ".github/workflows/rovor-mac-proof-observer.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T02:36:53.366Z",
+      "next_update": "After a secure private Mac-control channel is established and one allowlisted host roundtrip succeeds, or verified runner/group policy changes.",
+      "next_action": "Safety gate discovered: repository is public, so do NOT restore a privileged unattended self-hosted runner against this repo; official GitHub security guidance discourages it. Keep pending harmless jobs unclaimed; first use an authenticated isolated private runner/control repository or constrained local agent, with separated approved workflows and STOP. The MacBook session should inspect existing local runner status only after establishing real host tool access and plan safe rehome. No local Mac access from GitHub connector.",
+      "acceptance": "An authenticated main-branch GitHub request runs once on the existing rovor-video Mac runner, creates exactly one new benign private sandbox file using O_EXCL, verifies SHA256 readback, and reports a trustworthy host result; if runner offline then record blocked with exact observed evidence.",
+      "evidence": [
+        {
+          "commit": "855a6bc0cd0642da9edb0bf75219ac969a07541e",
+          "platform": "GitHub main / remote job submitted, NOT host verified",
+          "check": "Restricted sandbox-write request and read-only receipt request committed to fixed self-hosted Mac workflow",
+          "result": "SUBMITTED; no authenticated Rovor-Mac execution receipt observed in Issue #48 yet",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/issues/48"
+        },
+        {
+          "commit": "5f2a135c22ecb8f765db918719c3677ad73e5155",
+          "platform": "GitHub-hosted Ubuntu observer; not user Mac",
+          "check": "GitHub REST GET exact Mac workflow runs and jobs; observer job 120206922616",
+          "result": "PASS observer; write workflow 39889060406 queued, self-hosted runner assignment empty; readback workflow 39889323818 pending; NO Mac execution observed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39889909663"
+        },
+        {
+          "commit": "98be939c8f2448b1f187a8b444fd3ce3e395bdf7",
+          "platform": "GitHub official security guidance / ROVOR current public repo",
+          "check": "Public-repo self-hosted runner risk and rehome acceptance gate",
+          "result": "BLOCKED by missing runner assignment and private isolation; no new host execution",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/issues/48#issuecomment-6356029670"
+        }
+      ],
+      "blocker": "Host write workflow run 39889060406 is queued with no runner assigned; readback pending. Additionally TeamRovor/rovor-video-engine is public, making a persistent privileged self-hosted Mac runner risky. A separately protected private control channel / runner group is required before enabling unattended control."
+    },
+    {
+      "id": "omniroute-parallel-worker-packets",
+      "title": "Give OmniRoute narrow, reusable parallel ROVOR automation tasks with private receipts",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / OmniRoute workpack engineering session 2026-10-22",
+      "branch": "feature/omniroute-parallel-workpacks",
+      "scopes": [
+        "tools/omniroute_workpack_runner.py",
+        "tests/test_omniroute_workpack_runner.py",
+        "coordination/omniroute-workpacks",
+        "integrations/open-interpreter/OMNIROUTE-PARALLEL-WORK.md",
+        ".github/workflows/omniroute-workpack-check.yml"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-23T02:48:54.944Z",
+      "next_update": "Review draft PR #51, then after a real Mac executor is connected, run one approved low-cost OmniRoute packet and inspect private receipt; do not claim external agents are active.",
+      "next_action": "The Mac-side operator can inspect PR #51 and run its default no-model dry-run; before any actual OmniRoute inference, verify the selected route's provider eligibility, zero-cost/quotas and upstream paid-fallback settings. Then approve a single packet via the local gateway on Mac and inspect receipt. Phone chat retains Mac runner task; do not duplicate it.",
+      "acceptance": "Three scoped agent packets with non-overlapping objectives; bounded opt-in localhost model requests; output as private receipts; no arbitrary provider/model fallback, no shared secrets or private media, no real filesystem/app automation, no claims of autonomous Mac execution unless host receipts supplied. Deterministic offline tests and CI plus coordination handoff.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/integrations/open-interpreter/OMNIROUTE.md",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+      ],
+      "evidence": [
+        {
+          "commit": "03237714b3124f3dd58588361a34f55b07d9c9f3",
+          "platform": "GitHub hosted Ubuntu Python3.9 and Python3.11, mocked localhost inference",
+          "check": "16 deterministic offline tests: three curated draft-only packets, explicit per-packet routes, no-model default, no secrets in receipts, no client paid fallback, no filesystem escapes, source hashes, bounded requests, exactly-once private receipts and no arbitrary OS actions",
+          "result": "PASS 16/16 Python3.9 and 16/16 Python3.11. No actual Mac/OmniRoute model calls executed; external inference quota and billable fallback unverified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39891497419"
+        }
+      ]
+    },
+    {
+      "id": "jane-status-sqlite-sidecar-guard",
+      "title": "Reject redirected SQLite database sidecars in Jane read-only status inspection",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar iPhone SQLite status guard session 2026-10-22",
+      "branch": "fix/jane-status-sqlite-sidecars-20261022",
+      "scopes": [
+        "tools/jane_library_worker.py",
+        "tests/test_ghost_jane_library_launcher.py"
+      ],
+      "depends_on": [
+        "jane-sqlite-isolated-library-creation"
+      ],
+      "updated_at": "2026-10-23T02:40:52.322Z",
+      "next_update": "After integrated PR #41 review and approved Mac host status reader run",
+      "next_action": "PR #50 merged into PR #41 at fe921d688dd6f6efd30ed719fd02adfb5571316d. Jane status is blocked before SQLite connect if DB/WAL/SHM is redirected/symlinked/nonregular. Linux Python 3.9 and 3.11 integrated suites passed 234/234 each; test-only, no host/native app verification. Do not confuse source completion with safe Mac deployment.",
+      "acceptance": "Read-only Jane status never connects to a redirected or nonregular SQLite DB/WAL/SHM path; outside sentinel unchanged; clean uninitialized status unchanged; Python3.9/3.11 integrated suite passes, with separate host FCP unverified.",
+      "evidence": [
+        {
+          "commit": "fe921d688dd6f6efd30ed719fd02adfb5571316d",
+          "platform": "GitHub-hosted Linux Python 3.9.25 and 3.11.17",
+          "check": "234 integrated tests including sidecar symlink, dangling link, nonregular object, outside sentinel and read-only state checks",
+          "result": "PASS both; PR #50 merged into PR #41; no macOS host GUI involved",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39890793103"
+        }
+      ]
+    },
+    {
+      "id": "private-mac-control-bridge-v1",
+      "title": "Build private GitHub-to-Mac bounded execution bridge with SQLite receipts",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar iPhone secure bridge engineering 2026-10-22",
+      "branch": "feature/private-mac-control-bridge-v1",
+      "scopes": [
+        "tools/ghost_private_control.py",
+        "tests/test_ghost_private_control.py",
+        "integrations/open-interpreter/PRIVATE-MAC-CONTROL.md"
+      ],
+      "depends_on": [
+        "rovor-ghost-worker-readonly-v1"
+      ],
+      "updated_at": "2026-10-23T02:53:54.995Z",
+      "next_update": "When a private TeamRovor control repository is connected and an authorized Mac executor completes first exact-ID private job",
+      "next_action": "Source bridge merged into PR #41 at 863d61be6ef1c979ead46ebc58d312d5d09ecef7 and tested 247/247 on Python3.9 and3.11 (Linux). NOT deployed to Mac. Next needs genuinely private TeamRovor control repo, scoped read/issues-write token kept only on Mac, and actual local foreground adapter execution to private issue receipt. Public self-hosted runner stays isolated/offline. Do not claim direct ChatGPT Mac access or auto-scheduling before host proof.",
+      "acceptance": "GitHub API refuses public repositories and current public repo; exact validated job payload fetched via scoped token; shared ghost_worker engine runs an approved one-shot read-only job under private nonoverlapping state; never runs other queued jobs; safe STOP/dedupe/fail-closed receipts; remote sanitized status; no secrets printed; tests actually pass.",
+      "evidence": [
+        {
+          "commit": "863d61be6ef1c979ead46ebc58d312d5d09ecef7",
+          "platform": "GitHub-hosted Linux / Python 3.9.25 and 3.11.17",
+          "check": "247 integrated ROVOR offline tests including 13 new private control channel tests; local isolated stub tests 13/13 before GitHub publish",
+          "result": "PASS both hosted suites; PR #52 merged to PR #41; Mac/private repo deployment remains UNVERIFIED",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39891954141"
+        }
+      ]
+    },
+    {
+      "id": "omniroute-loopback-egress-guard",
+      "title": "Prevent OmniRoute inference requests escaping localhost via proxy or redirect and tighten draft receipts",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / OmniRoute transport safety 2026-10-22",
+      "branch": "feature/omniroute-parallel-workpacks",
+      "scopes": [
+        "tools/omniroute_workpack_runner.py",
+        "tests/test_omniroute_workpack_runner.py",
+        "integrations/open-interpreter/OMNIROUTE-PARALLEL-WORK.md"
+      ],
+      "depends_on": [
+        "omniroute-parallel-worker-packets"
+      ],
+      "updated_at": "2026-10-23T02:55:27.539Z",
+      "next_update": "After a real Mac localhost OmniRoute test and provider cost/terms review, inspect private task receipts; hosted test success is not Mac/agent activation.",
+      "next_action": "Review draft PR #51. Host executor on user's Mac must confirm local OmniRoute service readiness, model route, provider billing/fallback settings and endpoint credentials before choosing an approved first draft task. Do not touch phone chat's private-mac-control-bridge-v1 scope or unblock public-repo self-hosted runner.",
+      "acceptance": "The runner uses a proxy-free, redirect-refusing opener by default; rejects 3xx/malformed/non-200 HTTP and unbounded response/usage metadata without saving private data publicly. No outbound provider calls during CI. All current 16 tests and new transport tests pass Python3.9/3.11, PR kept draft.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+      ],
+      "evidence": [
+        {
+          "commit": "63e2bda455c81ea172b08c01c8a7a57667c9befa",
+          "platform": "Hosted Ubuntu Python 3.9 and 3.11, no real localhost service or macOS GUI",
+          "check": "Loopback-only HTTP opener ignores proxy env, rejects all redirects and HTTP non-200 responses, rejects unsafe model name, sanitizes usage token metadata, refuses Git checkout receipts and redirected ancestors; default model use off",
+          "result": "21/21 tests PASS on Python 3.9 and 21/21 tests PASS on Python 3.11. Zero remote model calls or Mac operations; upstream provider billing/policy unverified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39892075079"
+        }
+      ]
+    },
+    {
+      "id": "private-mac-control-bounded-poller-v1",
+      "title": "Bounded foreground private Mac control queue poller",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar iPhone bounded private control polling 2026-10-22",
+      "branch": "feature/private-mac-control-poller-v1",
+      "scopes": [
+        "tools/ghost_private_control_loop.py",
+        "tests/test_ghost_private_control_loop.py",
+        "integrations/open-interpreter/PRIVATE-MAC-CONTROL-POLL.md"
+      ],
+      "depends_on": [
+        "private-mac-control-bridge-v1"
+      ],
+      "updated_at": "2026-10-23T03:00:54.976Z",
+      "next_update": "When private control repo, Mac-local connector and on-host receipt are verifiable; source phase complete",
+      "next_action": "PR #53 merged to PR #41 at fad997016ecb77b616a6467138f549db6c30c8de; hosted 258/258 tests pass Python3.9 and3.11. The bounded private queue poller remains source-only, not installed or running. Next: create/connect a separate genuinely private TeamRovor repo with control/queue.json, issue receipt and a scoped token; then an actual authorized Mac-local executor can invoke the poller. Do not restart public self-hosted runner or claim native GUI access.",
+      "acceptance": "One private queue schema, no arbitrary job type command inputs, no public repo, bounded time/work/fetches; persistent STOP and no replay; no unattended install or Mac actual runtime claimed until verified.",
+      "evidence": [
+        {
+          "commit": "fad997016ecb77b616a6467138f549db6c30c8de",
+          "platform": "GitHub-hosted Linux Python3.9.25 and3.11.17",
+          "check": "258 integrated unit tests including 11 bounded private queue polling tests, public repo refusal, STOP, no-starvation and exact private receipt",
+          "result": "PASS both suites; source merged, no Mac deployment/GUI/model calls",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39892498336"
+        }
+      ]
+    },
+    {
+      "id": "omniroute-private-draft-receipt-review",
+      "title": "Validate OmniRoute draft receipts against current workpack source before reuse",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / OmniRoute private draft review session 2026-10-22",
+      "branch": "feature/omniroute-parallel-workpacks",
+      "scopes": [
+        "tools/omniroute_draft_review.py",
+        "tests/test_omniroute_draft_review.py",
+        "integrations/open-interpreter/OMNIROUTE-OUTPUT-REVIEW.md",
+        ".github/workflows/omniroute-draft-review.yml"
+      ],
+      "depends_on": [
+        "omniroute-parallel-worker-packets"
+      ],
+      "updated_at": "2026-10-23T03:06:23.795Z",
+      "next_update": "When the Mac-side executor actually invokes OmniRoute once and returns a private receipt, run tools/omniroute_draft_review.py on that same Mac; do not claim inference/host execution from hosted tests.",
+      "next_action": "Review PR #51 and the new local-only receipt reviewer. Once privately connected Mac operator has actually generated one draft receipt, run python3 tools/omniroute_draft_review.py --packet runner-blocker (or --all); review underlying private text locally if fresh. Do not post raw model output to public GitHub or autoapprove code/tasks. Phone private Mac bridge owns all control-channel code.",
+      "acceptance": "A private Mac-side verifier reports only status/packet id without revealing model content; validates receipt identity, source digest, model and status, fails on tampering/staleness/unrecognized fields/secret-like output, never approves code or execution. Regression tests cover valid/stale/tampered/no receipt/secret and symlink cases; CI Python 3.9 and 3.11 pass.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/51"
+      ],
+      "evidence": [
+        {
+          "commit": "ea8320e87aaad5a2fc7a71eda17314c5e00af9cf",
+          "platform": "GitHub-hosted Ubuntu Python 3.9 and 3.11, zero model/API/Mac calls",
+          "check": "Private OmniRoute draft receipt reviewer: exact packet identity, strict receipt field schema, current packet and public source SHA256, suspicious execution-claim and token pattern flags, symlink/malformed files, no autoapprove or output of private model text.",
+          "result": "PASS 14/14 offline tests Python3.9 and PASS 14/14 Python3.11; existing OmniRoute workpack CI also passed. No actual Mac inference receipt reviewed yet.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39893071195"
+        }
+      ]
+    },
+    {
+      "id": "private-mac-supervisor-launchagent",
+      "title": "Package existing private Mac poller as a safe opt-in persistent LaunchAgent",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / ROVOR private supervisor packaging session 2026-10-22",
+      "branch": "feature/private-mac-supervisor-launchagent-v1",
+      "scopes": [
+        "tools/rovor_private_supervisor.py",
+        "tests/test_rovor_private_supervisor.py",
+        "integrations/open-interpreter/ROVOR-LAUNCHAGENT-SUPERVISOR.md",
+        ".github/workflows/rovor-private-supervisor.yml"
+      ],
+      "depends_on": [
+        "private-mac-control-bounded-poller-v1"
+      ],
+      "updated_at": "2026-10-23T03:55:00Z",
+      "next_update": "After protected private Mac host repo/token and first authorized system.ping proof; do not treat hosted CI as deployment.",
+      "next_action": "Reviewed opt-in supervisor is now included in PR #41 at merge commit 940fdd4; do not make a second supervisor or queue. Only after separate verified PRIVATE control repo + Mac-local scoped Keychain token + authorized local host executor exist, read-only inspect checkout, stage and explicitly activate in real user session, prove private system.ping receipt and later actual stop/loaded state.",
+      "acceptance": "No public runner or new queue; local-only LaunchAgent scheduled once per several minutes; private GitHub queue polling only; scoped token retrieved from Keychain; no secrets printed or in plist; guarded 0600 config; stage-and-activate separate; STOP/offline/missing key fail closed; tests Python3.9/3.11 and no actual Mac execution claim.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/54"
+      ],
+      "evidence": [
+        {
+          "commit": "d498537c26369485af73553cd18b869dde75c2f3",
+          "platform": "Hosted GitHub Linux Python 3.9 and 3.11; launchctl and Keychain mocked, no Mac execution",
+          "check": "20 stdlib regression tests for explicit launchd stage vs activate, validated private repo, exact fixed argv, one job/tick, frozen SHA-256 private source snapshot, tamper/symlink/permissions refusal, Keychain token isolation, STOP inherited from bridge, bounded status, no auto-install.",
+          "result": "PASS 20/20 on Python3.9 and 20/20 on Python3.11 at commit 1655867e85e0db99f37418c0497ed62dbe334567; later doc-only d498537. No agent staged, launched or observed on user Mac, private repo/token still unverified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39895341056"
+        },
+        {
+          "commit": "940fdd42953ac3460721f9d80a03489263a681ef",
+          "platform": "GitHub review/integration candidate only; no owner's Mac operation",
+          "check": "PR #54 including PR #57 emergency-stop repair merged into PR #41 candidate. Re-fetched integrated tools/rovor_private_supervisor.py and confirmed exact constant-target shutdown. GitHub hosted focused Python3.9/3.11 regression #39898910038 passed both jobs.",
+          "result": "SOURCE INTEGRATED INTO PR #41 CANDIDATE; hosted tests pass; real Mac service/private ping NOT verified.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/54"
+        }
+      ]
+    },
+    {
+      "id": "private-control-verified-receipt-fix-20261022",
+      "title": "Correct private bridge receipt acknowledgment and execution flags",
+      "status": "done",
+      "owner": "ChatGPT iPhone private bridge receipt verification session",
+      "branch": "fix/private-control-verified-receipt-v1",
+      "priority": 1,
+      "scopes": [
+        "tools/ghost_private_control.py",
+        "tests/test_ghost_private_control.py"
+      ],
+      "depends_on": [
+        "private-mac-control-bridge-v1"
+      ],
+      "next_action": "PR #55 merged into PR #41 candidate at b8c561fe98436fdc43f7decb151f3866bdabb181. Hosted Linux Python3.9/3.11 260/260 integrated tests PASS. Still requires a private TeamRovor control repository, operator-authenticated local Mac process and private issue roundtrip. Source merge is not Mac deployment.",
+      "acceptance": "Malformed GitHub receipt response never writes receipt marker; post retry does not replay the worker job; return flag executed only for current invocation; malformed encoded packet is refused; Python 3.9 and 3.11 hosted checks pass.",
+      "updated_at": "2026-10-23T03:31:08Z",
+      "evidence": [
+        {
+          "commit": "b8c561fe98436fdc43f7decb151f3866bdabb181",
+          "platform": "GitHub-hosted Ubuntu / Python3.9 and3.11",
+          "check": "260 integrated workforce offline tests each; receipt ACK, nonstring packet and execution reporting",
+          "result": "PASS both; no Mac execution performed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39895337525"
+        }
+      ]
+    },
+    {
+      "id": "private-supervisor-emergency-deactivate",
+      "title": "Make private Mac LaunchAgent emergency deactivation independent of damaged staged files",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar focused supervisor shutdown repair 2026-10-22",
+      "branch": "fix/private-supervisor-emergency-stop-20261022",
+      "scopes": [
+        "tools/rovor_private_supervisor.py",
+        "tests/test_rovor_private_supervisor.py"
+      ],
+      "depends_on": [
+        "private-mac-supervisor-launchagent"
+      ],
+      "updated_at": "2026-10-23T03:42:00Z",
+      "next_update": "When real private Mac control repo and authorized local execution are established, separately verify live launchctl bootout on the user Mac.",
+      "next_action": "PR #57 merged into PR #54 supervisor candidate. Review PR #54; first establish a separate genuinely private control channel and supervised Mac execution, then test a real user-session stop even after staged-file corruption. Do not claim host activation or publish credentials.",
+      "acceptance": "A corrupted/missing snapshot/plist cannot prevent explicit bootout of the exact known ROVOR user service; activation/tick still refuse corruption; no arbitrary label or shell invocation; CLI does not claim Mac host execution; offline Python3.9/3.11 tests pass.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/54",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/54#pullrequestreview-5623615879"
+      ],
+      "evidence": [
+        {
+          "commit": "9e31a2e35fb1cbc39f0ecf8c71fd78c97d941498",
+          "platform": "GitHub hosted Linux Python 3.9 and 3.11 (macOS launchctl mocked)",
+          "check": "PR #57 exact two-file shutdown patch, corrupt frozen runtime, missing plist, no-output-leak bootout failure, unknown verb and unchanged strict activation; hosted supervisor regression run #39897042327.",
+          "result": "PASS both Python 3.9 and 3.11 jobs; merged into PR #54 via squash. No Mac launchd activation/host execution performed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39897042327"
+        }
+      ]
+    },
+    {
+      "id": "painting-82sec-physical-contact-audition",
+      "title": "Render original-audio painting contact audition replacing 82-second graphic",
+      "status": "done",
+      "owner": "ChatGPT / Amar iPhone physical-contact repair audition 2026-10-22",
+      "priority": 1,
+      "branch": "review/painting-82sec-physical-contact-audition",
+      "scopes": [
+        "reviews/painting-82sec-contact-audition.md",
+        "tools/painting_contact_audition.py",
+        "tests/test_painting_contact_audition.py"
+      ],
+      "depends_on": [
+        "evan-acting-review"
+      ],
+      "updated_at": "2026-10-23T04:23:57.005Z",
+      "next_update": "At next owner-approved character rig and narration-aware story edit, not when more source unit tests pass",
+      "next_action": "The 30s original-voice dual 1080p60 audition replacing [81,87) was rendered, manually inspected, and rejected for artistic quality. Existing original V12 parents unchanged. GitHub PR #60 merged QA report at fd7a44344ead9826590ae60c77c9b58012e92678. Do not reuse the unapproved V18 insert or promote this WIP as final. Next independently owned artist/animation step: revise painter anatomy/prop grip, verify spoken words for 77\u201389, and produce one properly staged >=30s dual-view original-voice scene that fixes the actual website/gallery story; require actual normal-speed artistic approval.",
+      "acceptance": "One 30s each landscape/portrait source-faithful contact audition with original narration and no placeholder slate, exact 60fps validated and source frame range proof; full existing video unchanged; release quality remains not approved. Source stage is technically complete; artistic/release acceptance is EXPLICITLY REJECTED until redesigned.",
+      "evidence": [
+        {
+          "commit": "fd7a44344ead9826590ae60c77c9b58012e92678",
+          "platform": "Private artifact Linux/Python + FFmpeg source-media review; GitHub public-safe report only",
+          "check": "V12 source provenance and original MP3 SHA, 30.000s original narrated audition in both orientations at 1800x60fps frames, PTS step <0.7\u00b5s error, matched 16k PCM source vs AAC correlation 0.999964; visual frames checked",
+          "result": "TECHNICAL PASS; ARTISTIC FAIL; not a completed 4:23 film, not deployed to Mac; no media uploaded to public repo",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/blob/main/reviews/painting-82sec-contact-audition.md"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/60"
+      ]
+    },
+    {
+      "id": "private-supervisor-status-after-tamper",
+      "title": "Report actual user launchd supervisor state independently of corrupted staged files",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar Mac supervisor status integrity session 2026-10-22",
+      "branch": "fix/private-supervisor-status-after-tamper-20261022",
+      "scopes": [
+        "tools/rovor_private_supervisor.py",
+        "tests/test_rovor_private_supervisor.py"
+      ],
+      "depends_on": [
+        "private-supervisor-emergency-deactivate"
+      ],
+      "updated_at": "2026-10-23T04:15:52.604Z",
+      "next_update": "After an actual trusted Mac user-session executor can be run; status source checks alone are not host proof.",
+      "next_action": "Merged in PR #41 at 1eff106b2c8b5108608e44c132310b2a997cbbe6; future authorized host validation should compare fixed-label launchctl print evidence to stage_valid, including a damaged or missing stage, without touching existing media or reviving public runner.",
+      "acceptance": "When source/plist is corrupted or missing but fixed service still loaded, --status reports launchd_loaded true AND stage_valid false; launchctl failures never pretend definitive unloaded; only constant-label GUI user service inspected; mock tests and hosted CI pass. No Mac-host claims.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/54",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/57"
+      ],
+      "evidence": [
+        {
+          "commit": "1eff106b2c8b5108608e44c132310b2a997cbbe6",
+          "platform": "GitHub hosted Ubuntu Linux Python 3.9/3.11 (macOS launchctl mocked)",
+          "check": "PR #59 five synthetic regressions for damaged runtime/deleted plist with service loaded, ambiguous nonzero result, timeout, and non-Mac no-call; exact integrated source readback and existing protected activation/STOP controls",
+          "result": "PASS on PR #59 hosted Python3.9 and 3.11 at workflow 39899283702. Squash merged into PR #41; real Mac not executed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39899283702"
+        }
+      ]
+    },
+    {
+      "id": "private-mac-control-readiness-preflight",
+      "title": "Add one read-only preflight for private GitHub, Keychain, and local launchd readiness",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar read-only Mac control preflight session 2026-10-22",
+      "branch": "feature/private-mac-preflight-readonly-20261022",
+      "scopes": [
+        "tools/rovor_private_supervisor.py",
+        "tests/test_rovor_private_supervisor.py",
+        "integrations/open-interpreter/ROVOR-LAUNCHAGENT-SUPERVISOR.md"
+      ],
+      "depends_on": [
+        "private-mac-supervisor-launchagent",
+        "private-supervisor-status-after-tamper"
+      ],
+      "updated_at": "2026-10-23T04:41:28.569Z",
+      "next_update": "After authorized real Mac worker/private repo/Keychain credential are available; no further source setup loops.",
+      "next_action": "Read-only private control --preflight merged into PR #41 at 97d8818, hosted CI passed both Python versions. Operator still must create/connect distinct truly private TeamRovor repo and authorize Mac-only scoped Keychain token on real Mac before preflight can validate it; then prove actual private system.ping + issue POST receipt and unattended repeat. Do not assume --preflight GET metadata is a successful Mac job or private issue-write permission.",
+      "acceptance": "One no-write Mac check distinguishes stage/launchd/keychain/repo/issue readiness without publishing names/tokens; refuses public source repo; observed remote metadata does not claim live job execution; hosted Python3.9+3.11 regression green.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/41",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/54"
+      ],
+      "evidence": [
+        {
+          "commit": "97d881824e3a475c498f3aab4b27e8c5cfcc4674",
+          "platform": "Hosted Linux GitHub Actions Python 3.9 and 3.11 (Mac Keychain and launchctl mocked)",
+          "check": "Six preflight regressions GET-only private metadata and issue, no token display/POST/job dispatch, keychain absent, damaged snapshot, public-repo metadata refusal, issue write not presumed, non-Mac refusal; exact branch integration plus full workforce/Jane compile checks.",
+          "result": "PR #61 squash merged to PR #41; focused 39901594243, integrated workforce 39901594238 and Jane compile-only 39901594219 all PASS on respective matrix. No physical Mac deployment or private issue receipt.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/61"
+        }
+      ]
+    },
+    {
+      "id": "session-routing-coverage-and-idle-triage",
+      "title": "Make ROVOR session routing complete and useful when lanes are idle",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar system-routing audit 2026-10-22",
+      "branch": "feature/rovor-routing-coverage-and-idle-triage",
+      "scopes": [
+        "tools/work_brief.py",
+        "tests/test_work_brief.py",
+        "coordination/work-routing.json",
+        "coordination/ROUTING-IMPROVEMENTS.md",
+        ".github/workflows/work-brief-routing-check.yml",
+        "WORK.md"
+      ],
+      "depends_on": [
+        "work-session-routing"
+      ],
+      "updated_at": "2026-10-23T04:50:23.348Z",
+      "next_update": "When next new queue task is added, confirm explicit routing classification in CI",
+      "next_action": "PR #62 merged main at e05d5afd8b914e096863a85343af5dbdeef26813. All current shared task IDs have an explicit lane/capability policy. New tasks must add matching route entry or fail closed. Sessions can opt in to --fallback-any-lane only when their requested lane lacks eligible work; owners, blocked dependencies and missing machine permissions are never bypassed. Read WORK.md and coordination/ROUTING-IMPROVEMENTS.md. CLI does not claim work or run Mac apps.",
+      "acceptance": "Every open (ready/active/blocked) task has a valid routing rule, all unclassified remains fail-closed, idle-lane fallback is opt-in and never takes over reserved/blocked tasks, capability and dependency protections remain; deterministic tests pass on Python3.9 and3.11 and existing queue validates.",
+      "evidence": [
+        {
+          "commit": "e05d5afd8b914e096863a85343af5dbdeef26813",
+          "platform": "GitHub-hosted Ubuntu, Python 3.9 and 3.11 (not user Mac)",
+          "check": "Queue structural validation plus 19 work_brief tests per Python, including actual shared queue coverage, idle-lane fallback, owner protection, host capability refusal, snapshot integrity",
+          "result": "PASS both; 75/75 task routes classified; 2 historic date-only queue timestamps corrected from original completion commit times; no autonomous execution claimed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39902330162"
+        }
+      ]
+    },
+    {
+      "id": "interpreter-research-hosted-regression-gate",
+      "title": "Run full Open Interpreter research adapter regression on hosted Python 3.9 and 3.11",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar independent interpreter CI lane 2026-10-22",
+      "branch": "test/interpreter-research-hosted-regression-20261022",
+      "scopes": [
+        ".github/workflows/interpreter-research-hosted-regression.yml"
+      ],
+      "depends_on": [
+        "interpreter-research-preflight-command"
+      ],
+      "updated_at": "2026-10-23T04:54:17.271Z",
+      "next_update": "PR #38 owner should perform an actual Mac preflight/EPERM process cleanup host check before source lands in main.",
+      "next_action": "Hosted full test suite CI merged at 8cf419a on PR #38, run 39902738201 PASS Python3.9/3.11. Do not repeat hosted suite; owning Mac session must recheck process group/direct-child cleanup behavior and record real host evidence. This CI is not Mac, model, MCP, FCP, GUI or native process proof.",
+      "acceptance": "Matrix Python3.9 and3.11 runs all adapter offline unit tests, no local Mac/proprietary media/private credentials, and publishes passing hosted Actions proof. Does not falsely claim Open Interpreter Mac host control.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/38"
+      ],
+      "evidence": [
+        {
+          "commit": "8cf419ab593a8d368ea00f6d726ddeaeb019eddf",
+          "platform": "GitHub-hosted Ubuntu Linux on Python 3.9 and 3.11; no Mac tool or model",
+          "check": "Exact integrated PR #38 branch offline test_interpreter_research_job.py regression suite; one new workflow only. All 32 known cases including EPERM simulated process group cleanup and /var alias tests.",
+          "result": "GitHub Actions #39902738201 PASS both versions, private Mac process and Open Interpreter runtime not executed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39902738201"
+        }
+      ]
+    },
+    {
+      "id": "routing-future-ready-queue-regression",
+      "title": "Prevent routing CI from rejecting a legitimately ready future task",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar routing future-queue regression 2026-10-22",
+      "branch": "fix/rovor-routing-future-ready-tasks",
+      "scopes": [
+        "tests/test_work_brief.py",
+        "coordination/work-routing.json"
+      ],
+      "depends_on": [
+        "session-routing-coverage-and-idle-triage"
+      ],
+      "updated_at": "2026-10-23T04:54:34.253Z",
+      "next_update": "When new coordination tasks are added, run the existing route+queue CI",
+      "next_action": "PR #64 merged at d2ba3d5ebd1077d630802d63591e225668705a70. Current task-route mapping is complete and real-queue test now permits legitimately eligible future GitHub-only work. A concurrently added Interpreter-hosted task received an explicit integration/hosted-ci rule; new tasks must still add corresponding rules. Python3.9 and3.11 19/19 tests and queue check passed, no computer execution.",
+      "acceptance": "CI allows correctly classified new ready GitHub-only tasks, still rejects unclassified tasks and protects owners/capabilities. Queue and routing coverage full; Python3.9/3.11 checks pass.",
+      "evidence": [
+        {
+          "commit": "d2ba3d5ebd1077d630802d63591e225668705a70",
+          "platform": "GitHub-hosted Ubuntu Python3.9 and Python3.11",
+          "check": "Queue validated; 19 work_brief tests per interpreter incl new correct ready task and exact classification of contemporaneous queue",
+          "result": "PASS both; no local Mac/Windows operations",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39902753557"
+        }
+      ]
+    },
+    {
+      "id": "routing-explain-dependency-and-scope-blockers",
+      "title": "Explain exact dependency and scope blockers in ROVOR work briefs",
+      "priority": 1,
+      "status": "done",
+      "owner": "ChatGPT / Amar iPhone routing blocker diagnostics 2026-10-22",
+      "branch": "feature/rovor-routing-blocker-explanations",
+      "scopes": [
+        "tools/work_brief.py",
+        "tests/test_work_brief.py",
+        "coordination/work-routing.json"
+      ],
+      "depends_on": [
+        "session-routing-coverage-and-idle-triage"
+      ],
+      "updated_at": "2026-10-23T05:03:18.173Z",
       "next_update": "When new host or evaluation task status changes, refresh main and re-run router",
       "next_action": "PR #65 merged to main at 53e69d22d1d4c43321ba69da83536d778a37b843. The existing read-only work_brief now exposes ready_blockers with dependency ID/status/owner, reserved scope holder and required but missing confirmed capabilities. If no eligible task exists, text brief shows up to five precise blockers. No eligibility or ownership semantics changed; blocked jobs remain blocked. Tests on Python3.9 and3.11 passed 25 each. Next review actual host issues and only claim new independent work through canonical queue.",
       "acceptance": "For all ineligible ready tasks, router returns exact unmet dependency IDs/status/owners and conflicting reserved scopes/owners, keeps existing eligibility/priority/ownership behavior, and adds concise idle routing summary. Synthetic and real-queue tests pass on hosted Python 3.9/3.11. No Mac or app access claimed.",
@@ -3269,7 +4151,7 @@ Total output lines: 4169
       "id": "hud-real-model-evidence-20261024",
       "title": "Replace workload slot labels with observed model names and recorded Mac job outcomes",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar HUD evidence session 2026-10-24",
       "branch": "fix/hud-real-model-names",
       "scopes": [
@@ -3278,10 +4160,19 @@ Total output lines: 4169
         "dashboard/command-center/tests/workload-popup.browser.cjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T10:28:07.150070+00:00",
-      "next_update": "After focused tests and publication of recorded model identity/outcome display",
-      "next_action": "Use owner-published sanitized Mac report for historical inventory/outcomes; preserve unknown per-model usage and explicitly missing live bridge. No host control or routing changes.",
-      "acceptance": "No M01-M09 labels, actual three reported model IDs with provenance/time, 31 claim outcome bars separate from model usage, approved HUD geometry preserved; no fabricated live state."
+      "updated_at": "2026-10-24T10:31:20.891351+00:00",
+      "next_update": "After actual authenticated Mac transport and per-model receipt evidence become available",
+      "next_action": "Names/outcome correction implemented, 86 source checks pass. Live connection remains incomplete: this session exposes no Mac runtime/browser tool or configured authenticated collector. Need an actual Mac-initiated read-only telemetry transport and per-model attribution before live meters. No paid requests or worker changes performed.",
+      "acceptance": "No M01-M09 labels, actual three reported model IDs with provenance/time, 31 claim outcome bars separate from model usage, approved HUD geometry preserved; no fabricated live state.",
+      "evidence": [
+        {
+          "commit": "fix/hud-real-model-names",
+          "platform": "Linux / Node24",
+          "check": "node --test dashboard/command-center/tests/*.test.cjs dashboard/command-center/tests/*.test.js",
+          "result": "86 pass; new identities, historical counts, no unknown usage meters, preserved native UI. Browser responsive checks delegated to existing hosted CI; no new browser installed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382848776"
+        }
+      ]
     }
   ]
 }
