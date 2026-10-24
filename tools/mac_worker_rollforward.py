@@ -101,7 +101,8 @@ def state_snapshot(state):
     return True
 
 
-def inspect(home, checkout, expected, *, run=subprocess.run, platform=sys.platform, uid=os.getuid):
+def inspect(home, checkout, expected, *, run=subprocess.run, platform=sys.platform, uid=os.getuid,
+            approve_parallel=False):
     if platform != "darwin":
         raise Blocked("mac_gui_session_required")
     home = checked(home, directory=True)
@@ -148,6 +149,14 @@ def inspect(home, checkout, expected, *, run=subprocess.run, platform=sys.platfo
     revised = dict(current)
     revised["ProgramArguments"] = list(args)
     revised["ProgramArguments"][1] = str(script)
+    if approve_parallel:
+        if "--max-jobs" not in args or args.count("--max-jobs") != 1:
+            raise Blocked("parallel_job_limit_not_explicit")
+        index = args.index("--max-jobs") + 1
+        if index >= len(args) or args[index] != "1":
+            raise Blocked("parallel_old_job_limit_unexpected")
+        revised["ProgramArguments"][index] = "3"
+        revised["ProgramArguments"].extend(["--parallel-omniroute-workers", "3"])
     return {"plist": plist, "state": state, "domain": domain,
             "original": current, "replacement": revised, "oldscript": oldscript,
             "candidate_python": python, "candidate": checkout}
@@ -224,9 +233,12 @@ def main(argv=None):
     parser.add_argument("--candidate", required=True, type=Path)
     parser.add_argument("--expected-commit", required=True)
     parser.add_argument("--approve-rollforward", action="store_true")
+    parser.add_argument("--approve-parallel-free-research", action="store_true",
+                        help="Up to three concurrent preapproved research jobs; same free-only daily cap")
     args = parser.parse_args(argv)
     try:
-        info = inspect(Path.home(), args.candidate, args.expected_commit)
+        info = inspect(Path.home(), args.candidate, args.expected_commit,
+                       approve_parallel=args.approve_parallel_free_research)
         if not args.approve_rollforward:
             result = {"status": "read_only_candidate_ready",
                       "state_integrity_verified": True, "old_service_loaded": True,
