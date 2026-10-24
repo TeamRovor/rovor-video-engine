@@ -4606,7 +4606,7 @@
       "id": "walter-admission-nested-scope-guard-20261024",
       "title": "Fail closed on nested and malformed ownership scopes in public OmniRoute task admission",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 admission-scope shift",
       "branch": "feature/walter-admission-nested-scope-guard-20261024",
       "scopes": [
@@ -4614,11 +4614,26 @@
         "tests/test_walter_public_queue_admission.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T19:13:21.772Z",
-      "next_update": "After focused hosted Python 3.9/3.11 CI and paired task/routing checks on scoped PR.",
-      "next_action": "Reproduce and fix the existing public pre-enqueue gate's directory-without-trailing-slash ownership bypass; reject malformed scope inputs; add offline regression tests. No edits to Mac worker PR137, live state, providers or other owners.",
+      "updated_at": "2026-10-24T19:15:02.297Z",
+      "next_update": "Completed source-only; Mac PR137 owner may independently review the pre-enqueue guard before any opt-in integration.",
+      "next_action": "PR #180 merged at 27a6a5237a59d12602083c2adc94bd616b641a95. The public task admission gate now rejects bare-directory ancestor/descendant owner conflicts and malformed scopes without falsely blocking unrelated siblings; 29 offline tests PASS on hosted Python 3.9/3.11, plus project_loop.py check and task_routing_pair.py --check in run 40124376850. No Mac access, private SQLite read, model inference, paid route, job replay or runtime deployment. Existing PR137 owner must independently authenticate current pinned queue, full private task history, STOP/free billing/quota and atomic SQLite claim before considering this source-only pre-enqueue gate; no auto-deployment.",
       "acceptance": "Public-task admission rejects ancestor/descendant directory claims regardless of trailing slash, malformed or traversal scope values, while preserving unrelated siblings, done-task scopes and subsystem equality. Focused Python 3.9/3.11 CI and shared coordination checks pass. Source-only, no live Mac actions.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "27a6a5237a59d12602083c2adc94bd616b641a95",
+          "platform": "GitHub-hosted Ubuntu / Python 3.9 and 3.11",
+          "check": "29 offline pre-enqueue regressions, project_loop.py check, task_routing_pair.py --check",
+          "result": "PASS both Python versions; 129 tasks / 129 routes validated in run 40124376850. Source-only.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40124376850"
+        },
+        {
+          "commit": "27a6a5237a59d12602083c2adc94bd616b641a95",
+          "platform": "GitHub PR #180",
+          "check": "Independent public-task ownership collision and malformed scope guard",
+          "result": "MERGED source-only; not installed on Mac, no live provider call or private data accessed",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/180"
+        }
+      ]
     }
   ]
 }
