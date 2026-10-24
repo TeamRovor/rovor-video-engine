@@ -16,14 +16,14 @@ const count=x=>Number.isSafeInteger(x)&&x>=0?x:null;
 const WINDOWS={'1h':3600000,'24h':86400000,'7d':604800000};
 const same=(a,b)=>{if(typeof a!=='string'||typeof b!=='string')return false;const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&crypto.timingSafeEqual(x,y);};
 
-export function normalize(catalog,analytics,{period='24h',now=Date.now(),start,end}={}){
+export function normalize(catalog,analytics,{period='24h',now=Date.now(),start,end,allowEmpty=false}={}){
   if(!Array.isArray(catalog?.data)||catalog.data.length>10000)throw Error('inventory_shape_unsupported');
   const models=new Map();
   for(const row of catalog.data){
     const id=safeID(row?.id);if(!id||row.owned_by==='combo')continue;
     models.set(id,{id,name:id,provider:safeID(row.owned_by),requests:null,tokens:null,request_share_percent:null,quota_used_percent:null});
   }
-  if(!models.size)throw Error('inventory_empty');
+  if(!models.size&&!allowEmpty)throw Error('inventory_empty');
   const rows=analytics?.byModel;
   const total=count(analytics?.summary?.totalRequests);
   const unique=count(analytics?.summary?.uniqueModels);
@@ -60,6 +60,24 @@ export function normalize(catalog,analytics,{period='24h',now=Date.now(),start,e
     semantics:'Completed recorded request share, not quota or active-worker load. Catalog presence is not a successful model test.'};
 }
 
+export function normalizeOwned(providers,analytics,options={}){
+  if(!Array.isArray(providers?.connections)||providers.connections.length>2000)throw Error('connections_shape_unsupported');
+  const groups=new Map();
+  for(const row of providers.connections){
+    const provider=safeID(row?.provider);if(!provider)throw Error('connection_provider_invalid');
+    const group=groups.get(provider)||{provider,name:provider,connection_count:0,enabled_count:0};
+    group.connection_count++;if(row.isActive!==false)group.enabled_count++;groups.set(provider,group);
+  }
+  const all=normalize({data:[]},analytics,{...options,allowEmpty:true});
+  all.models=all.models.filter(m=>groups.has(m.provider));
+  all.connections=[...groups.values()];
+  all.connection_count=all.connections.reduce((n,g)=>n+g.connection_count,0);
+  all.inventory_count=all.models.length;
+  all.inventory_scope='configured_connections_and_recorded_models';
+  all.models_scope='recorded_models_matched_to_configured_provider_ids_only';
+  return all;
+}
+
 export function createCollector(read,{clock=Date.now}={}){
   const cache=new Map(),pending=new Map();let inventory=null,inventoryAt=0;
   return async period=>{
@@ -67,11 +85,11 @@ export function createCollector(read,{clock=Date.now}={}){
     if(cache.has(period)&&now-cache.get(period).fetched<5000)return cache.get(period).value;
     if(pending.has(period))return pending.get(period);
     const task=(async()=>{
-      if(!inventory||now-inventoryAt>60000){inventory=await read('/v1/models');inventoryAt=now;}
+      if(!inventory||now-inventoryAt>60000){inventory=await read('/api/providers');inventoryAt=now;}
       const end=new Date(Math.floor(now/5000)*5000).toISOString(),start=new Date(Date.parse(end)-WINDOWS[period]).toISOString();
       // Explicit moving boundaries avoid OmniRoute's 60-second analytics cache.
       const usage=await read('/api/usage/analytics?range=all&startDate='+encodeURIComponent(start)+'&endDate='+encodeURIComponent(end));
-      const value=normalize(inventory,usage,{period,now:clock(),start,end});cache.set(period,{fetched:clock(),value});return value;
+      const value=normalizeOwned(inventory,usage,{period,now:clock(),start,end});cache.set(period,{fetched:clock(),value});return value;
     })();pending.set(period,task);try{return await task;}finally{pending.delete(period);}
   };
 }
@@ -137,7 +155,7 @@ async function installedReader(){
     const p=spawnSync('/usr/bin/security',['find-generic-password','-s','rovordigital.omniroute.endpoint','-w'],{encoding:'utf8',timeout:5000});if(p.status===0)endpointKey=p.stdout.trim();
   }
   return async resource=>{
-    if(resource!=='/v1/models'&&!resource.startsWith('/api/usage/analytics?'))throw Error('read_path_denied');
+    if(resource!=='/api/providers'&&!resource.startsWith('/api/usage/analytics?'))throw Error('read_path_denied');
     const headers={'Accept':'application/json',[CLI_TOKEN_HEADER]:token};if(endpointKey)headers.Authorization='Bearer '+endpointKey;
     const r=await fetch('http://127.0.0.1:20128'+resource,{headers,redirect:'error',signal:AbortSignal.timeout(8000)});
     if(!r.ok)throw Error('gateway_read_failed');
@@ -152,7 +170,7 @@ async function main(){
   const first=await collect('24h');
   const bridge=createBridge({collect,port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8')});
   const port=await bridge.listen();
-  console.log(`OmniRoute connected: ${first.inventory_count} catalog model IDs; ${first.request_count} recorded requests in 24h. Quota remains unknown unless independently measured.`);
+  console.log(`OmniRoute connected: ${first.connection_count} configured connections; ${first.models.length} recorded models; ${first.request_count} recorded requests in 24h. Quota remains unknown unless independently measured.`);
   let tunnel;
   if(remote){
     tunnel=spawn('cloudflared',['tunnel','--url','http://127.0.0.1:'+port,'--no-autoupdate'],{stdio:['ignore','ignore','pipe']});

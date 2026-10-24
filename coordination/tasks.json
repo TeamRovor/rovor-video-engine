@@ -4245,7 +4245,7 @@
       "id": "hud-omniroute-live-sync-20261024",
       "title": "Connect existing HUD to read-only live full OmniRoute inventory and measured request usage",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar live HUD bridge session",
       "branch": "fix/hud-owned-connections",
       "scopes": [
@@ -4260,9 +4260,9 @@
         "dashboard/command-center/native-v8-9/connect-omniroute.js"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T11:26:09.028884+00:00",
-      "next_update": "After owned-inventory reducer and UI checks",
-      "next_action": "Owner rejects advertised 1012 catalog. Replace with actual configured provider connections and measured models under them, retaining eight employees. Label connections separately from models; never invent per-account usage for shared providers.",
+      "updated_at": "2026-10-24T11:28:01.263832+00:00",
+      "next_update": "After actual Mac bridge update returns configured connection inventory and existing HUD reflects it",
+      "next_action": "Removed advertised catalog from collector. Reads /api/providers configured connections and only measured models matching configured provider IDs; public adapter hides unmeasured catalog rows even from an old bridge. Main tabs OmniRoute and Employees. Connection count separate from model count; provider account labels/emails/keys excluded. Nine bridge tests and 86 native source checks pass. Actual Mac must update bridge for configured connection inventory; public UI alone immediately hides unknown catalog rows.",
       "acceptance": "Dynamic full model list, measured window counts and request-share bars, stale/error states, secrets never reach browser, no arbitrary proxy; tested mocked gateway end to end, actual Mac connection separately verified.",
       "blocker": "This session has no Mac runtime or connected browser tool. Code can be reviewed/published here; actual localhost gateway authentication, catalog/usage counts and remote phone pairing require one startup on the Mac. No real Mac sync claimed.",
       "evidence": [

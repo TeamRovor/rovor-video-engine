@@ -1,12 +1,12 @@
 import http from 'node:http';import test from 'node:test';import assert from 'node:assert/strict';
-import {normalize,createCollector,createBridge} from '../tools/hud_omniroute_bridge.mjs';
+import {normalize,normalizeOwned,createCollector,createBridge} from '../tools/hud_omniroute_bridge.mjs';
 const catalog={data:Array.from({length:12},(_,i)=>({id:'provider/model-'+i,owned_by:'provider'})).concat({id:'rovor-fast',owned_by:'combo'})};
 const usage={summary:{totalRequests:10,uniqueModels:2},byModel:[{rawModel:'model-0',provider:'provider',requests:7,totalTokens:70},{rawModel:'model-1',provider:'provider',requests:3,totalTokens:30}]};
 test('full catalog, exact measured shares, unknown quota and unobserved usage',()=>{const d=normalize(catalog,usage);assert.equal(d.inventory_count,12);assert.equal(d.models.length,12);assert.equal(d.models[0].request_share_percent,70);assert.equal(d.models[2].requests,null);assert.equal(d.models[0].quota_used_percent,null);assert.equal(d.usage_coverage,'complete_aggregate');});
 test('partial aggregates are labeled and ambiguous aliases never duplicate counts',()=>{const d=normalize({data:[{id:'a/m',owned_by:'x'},{id:'b/m',owned_by:'x'}]},{summary:{totalRequests:30,uniqueModels:55},byModel:[{rawModel:'m',provider:'x',requests:3,totalTokens:1}]});assert.equal(d.usage_coverage,'partial_top_50_or_unattributed');assert.equal(d.models.filter(m=>m.requests===3).length,1);assert.equal(d.models.filter(m=>m.requests===null).length,2);});
 test('explicit zero is distinct from unavailable and raw secrets never leave reducer',()=>{const x=structuredClone(usage);x.secret='private';const d=normalize(catalog,x);assert(!JSON.stringify(d).includes('private'));assert.equal(normalize(catalog,{summary:{totalRequests:0,uniqueModels:0},byModel:[]}).request_count,0);assert.throws(()=>normalize(catalog,{}));});
 test('duplicate, inconsistent and malformed rows fail closed',()=>{assert.throws(()=>normalize(catalog,{...usage,byModel:[usage.byModel[0],usage.byModel[0]]}));assert.throws(()=>normalize(catalog,{...usage,summary:{totalRequests:2,uniqueModels:2}}));assert.throws(()=>normalize({data:[]},usage));});
-test('collector deduplicates concurrent reads, refreshes usage after 5s and catalog after 60s',async()=>{let now=100000,calls=[];const collect=createCollector(async p=>{calls.push(p);return p==='/v1/models'?catalog:usage;},{clock:()=>now});await Promise.all([collect('24h'),collect('24h')]);assert.equal(calls.length,2);now+=6000;await collect('24h');assert.equal(calls.length,3);assert(calls[2].includes('endDate='));now+=60000;await collect('24h');assert.equal(calls.length,5);await assert.rejects(collect('bad'));});
+test('collector deduplicates concurrent reads, refreshes usage after 5s and catalog after 60s',async()=>{let now=100000,calls=[];const collect=createCollector(async p=>{calls.push(p);return p==='/api/providers'?{connections:[{provider:'provider'}]}:usage;},{clock:()=>now});await Promise.all([collect('24h'),collect('24h')]);assert.equal(calls.length,2);now+=6000;await collect('24h');assert.equal(calls.length,3);assert(calls[2].includes('endDate='));now+=60000;await collect('24h');assert.equal(calls.length,5);await assert.rejects(collect('bad'));});
 test('HTTP pairing, auth, whitelist, no proxy, no stale fallback, no mutations',async t=>{let broken=false;const b=createBridge({collect:async()=>{if(broken)throw Error('SECRET');return normalize(catalog,usage);},hud:'<body>ROVOR</body>',adapter:'/* adapter */',pairCode:'pair-secret'});const port=await b.listen();t.after(()=>new Promise(r=>b.server.close(r)));const base='http://127.0.0.1:'+port;
 assert.equal((await fetch(base+'/api/hud/omniroute')).status,401);
 assert.equal(await new Promise((resolve,reject)=>{const req=http.get(base+'/',{headers:{Host:'evil.example'}},res=>{res.resume();resolve(res.statusCode)});req.on('error',reject)}),403);
@@ -55,4 +55,15 @@ test('published HUD origin pairs for snapshot-only bearer access; other origins 
  assert.equal((await fetch(base+'/api/hud/omniroute',{headers:{Origin:'https://evil.example',Authorization:'Bearer '+data.token}})).status,403);
  assert.equal((await fetch(base+'/api/hud/omniroute',{method:'POST',headers})).status,405);
  assert.equal((await fetch(base+'/pair/external',{method:'POST',headers:{Origin:origin},body:JSON.stringify({code:'read-only-pair'})})).status,401);
+});
+
+
+test('owned inventory uses configured connections and measured models, never advertised catalog',()=>{
+ const configured={connections:[{provider:'provider',email:'private@example.com',apiKey:'SECRET'},{provider:'provider',isActive:false},{provider:'gemini'}]};
+ const d=normalizeOwned(configured,usage);
+ assert.equal(d.connection_count,3);assert.equal(d.connections.length,2);assert.equal(d.connections[0].enabled_count,1);assert.equal(d.models.length,2);
+ assert(!JSON.stringify(d).includes('SECRET'));assert(!JSON.stringify(d).includes('private@example.com'));
+ const zero=normalizeOwned(configured,{summary:{totalRequests:0,uniqueModels:0},byModel:[]});assert.equal(zero.models.length,0);assert.equal(zero.connection_count,3);
+ const other=normalizeOwned({connections:[{provider:'gemini'}]},usage);assert.equal(other.models.length,0);assert.equal(other.connection_count,1);
+ assert.throws(()=>normalizeOwned({},usage));
 });
