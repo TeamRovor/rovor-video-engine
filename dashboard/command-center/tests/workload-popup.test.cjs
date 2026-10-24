@@ -34,8 +34,8 @@ test('Bundled native script and CSS match reviewable workload sources',()=>{
     assert.ok(css.includes(rule),'Reviewable CSS missing '+rule);
     assert.ok(html.includes(rule),'Runtime HUD CSS missing '+rule);
   }
-  assert.match(css,/#workloadPanel \\.wl-compact/);
-  assert.match(css,/#rovor-workload-popup \\.wl-cell/);
+  assert.ok(css.includes('#workloadPanel .wl-compact'));
+  assert.ok(css.includes('#rovor-workload-popup .wl-cell'));
 });
 
 test('Popup JavaScript and existing inline HUD script compile',()=>{
