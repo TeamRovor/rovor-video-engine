@@ -4432,7 +4432,7 @@
       "id": "walter-public-queue-admission-20261024",
       "title": "Validate exact pinned public task seed before queuing specialist research",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 public admission shift",
       "branch": "feature/walter-public-queue-admission-v1",
       "scopes": [
@@ -4442,13 +4442,22 @@
         "subsystem:verified-public-task-seed-gate"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T14:44:27.786Z",
-      "next_update": "After Python 3.9/3.11 hosted focused tests and shared coordination validation",
-      "next_action": "Implement a pure fail-closed pre-enqueue validator for existing PR137 public_task jobs: require exact pinned queue/source identity, ready or separately approved active ownership, done dependencies, complete attempted task ledger, STOP/owner consent, valid form, and no fallback/blocked/generic assignments. New independent files only; no live worker edits or inference.",
+      "updated_at": "2026-10-24T14:47:25.383Z",
+      "next_update": "Source merged; PR #137 Mac owner may review separate opt-in integration",
+      "next_action": "PR #175 merged to main at 308bb0ad02e76f55232ab4e89a16199a3ec3315a. Pure tools/walter_public_queue_admission.py validates exact pinned public_task payload and role against immutable source hashes, task ownership/dependencies, independent complete task-history, STOP and explicit opt-in; refuses blocked/owned/host-only, stale/repeated, fallback/generic jobs before enqueue. 25 focused synthetic tests PASS on hosted Python3.9 and 3.11 plus project_loop.py check and task_routing_pair.py --check in run 40103997144. Source-only; no Mac deployment, provider calls, private receipts, new scheduler or real 24h soak. Existing PR137 owner must independently authenticate the pinned Git tree and complete private ledger, decide if/how to call this BEFORE enqueue of a NEW public_task, recheck STOP/verified $0 route/quota/atomic SQLite claim, and never replay failed jobs. No automatic worker edit or activation.",
       "acceptance": "Offline Python 3.9 stdlib gate produces an inert exact public_task payload only for a source-grounded eligible task; refuses blocked/done/host-only/unowned or overlapping work, stale title/acceptance/commit/source hashes, duplicate tasks and generic fallback packets, never mutates queue or SQLite, and includes adversarial focused tests and hosted Python 3.9/3.11 shared checks.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/137",
         "https://github.com/TeamRovor/rovor-video-engine/pull/173"
+      ],
+      "evidence": [
+        {
+          "commit": "308bb0ad02e76f55232ab4e89a16199a3ec3315a",
+          "platform": "GitHub Actions Ubuntu Python 3.9 and 3.11",
+          "check": "25 synthetic unittest cases per Python version; python tools/project_loop.py check; python tools/task_routing_pair.py --check",
+          "result": "PASS both matrix jobs in run 40103997144. Source merged only; no host or provider verification.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/175"
+        }
       ]
     }
   ]
