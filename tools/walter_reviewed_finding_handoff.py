@@ -50,6 +50,10 @@ def _digest(value):
 def _specific(value, minimum):
     if type(value) is not str or not minimum <= len(value) <= 700:
         return False
+    try:
+        value.encode("utf-8")
+    except UnicodeError:
+        return False
     normalized = " ".join(value.lower().split())
     if any(phrase in normalized for phrase in GENERIC):
         return False
@@ -95,6 +99,7 @@ def propose(finding, *, review_receipt, trusted_human_review=False,
     key = finding["finding_key"]
     if (type(role) is not str or role not in ROLES
             or type(key) is not str or KEY.fullmatch(key) is None
+            or type(finding["change_type"]) is not str
             or finding["change_type"] not in CHANGE_TYPES):
         _fail("finding_identity_invalid")
     for field in ("problem", "change", "acceptance"):
