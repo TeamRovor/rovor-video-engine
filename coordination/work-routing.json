@@ -660,6 +660,15 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "omniroute-continuous-runtime-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

@@ -3713,6 +3713,28 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/135"
         }
       ]
+    },
+    {
+      "id": "omniroute-continuous-runtime-20261024",
+      "title": "Integrate paced continuous research ticks, larger distinct backlog and same-service rollout",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar continuous-runtime session 2026-10-24",
+      "branch": "fix/omniroute-continuous-runtime",
+      "scopes": [
+        "tools/ghost_worker.py",
+        "tools/omniroute_continuous.py",
+        "tools/install_continuous_worker.py",
+        "tests/test_omniroute_continuous.py",
+        "tests/test_install_continuous_worker.py",
+        ".github/workflows/omniroute-continuous.yml",
+        "integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T06:42:18Z",
+      "next_update": "After integrated claim, backlog, STOP and rollback tests",
+      "next_action": "Extend unclaimed executor with explicitly opted-in paced claims; new scheduled tick reuses existing SQLite queue and approved free-route inference helpers. Add distinct public-source task catalogue, no-replay receipts and same-LaunchAgent installer; do not modify overlapping ghost_worker_loop/feed/workpack modules. Host activation outside writable roots remains final executable handoff.",
+      "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation."
     }
   ]
 }
