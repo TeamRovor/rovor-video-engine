@@ -3515,7 +3515,7 @@
       "id": "walter-approved-research-backlog-20261023",
       "title": "Stage Walter's bounded multi-specialist public research backlog with no replay and free/STOP gates",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / Amar independent Walter backlog release 2026-10-23",
       "branch": "feature/walter-approved-research-backlog",
       "scopes": [
@@ -3529,10 +3529,19 @@
         "ghost-self-research-bootstrap-20261023",
         "hybrid-cloud-provider-workforce-policy-20261023"
       ],
-      "updated_at": "2026-10-24T03:05:47.939Z",
-      "next_update": "After hosted Python 3.9 and 3.11 tests and draft PR review",
-      "next_action": "Create pre-reviewed review-only research backlog for the seven persistent specialists and offline handoff selector. Release only immutable approved work IDs, fail closed without $0 route/quota/STOP and existing-dedupe evidence; never auto-replay prior failed AI work or touch Mac-owned feeder files. Verify source and CI; host integration remains separate with Mac owner.",
-      "acceptance": "At least 14 distinct useful specialist work packets with existing public sources and proof-based deliverables. Strict validation of sources, approval and unique IDs. Selector dispatches at most one new immutable task when free model, local STOP, quota, and authoritative seen ledger allow; declines when exhausted, unavailable or unsafe. Python3.9/3.11 hosted tests, no model calls, no Mac activation, no second scheduler."
+      "updated_at": "2026-10-24T03:10:10.564Z",
+      "next_update": "Source release completed; actual Mac incorporation requires active Mac owner and new successful host receipt",
+      "next_action": "Merged PR #121 52a2d24955f67750a1f801786fcfbb7ef0f7eadd on main. 14 staged immutable research assignments, 19 Python 3.9/3.11 no-replay/STOP/free-model guard tests PASS, queue checks PASS. The Mac-owned PR41 OmniRoute feeder and PACKETS/ROUTES allowlists must be separately reviewed and integrated after HTTP502 blank-output fix and verified new inference. No actual Mac role dispatch or unbounded task generation occurred. No old failed jobs replayed.",
+      "acceptance": "At least 14 distinct useful specialist work packets with existing public sources and proof-based deliverables. Strict validation of sources, approval and unique IDs. Selector dispatches at most one new immutable task when free model, local STOP, quota, and authoritative seen ledger allow; declines when exhausted, unavailable or unsafe. Python3.9/3.11 hosted tests, no model calls, no Mac activation, no second scheduler.",
+      "evidence": [
+        {
+          "commit": "52a2d24955f67750a1f801786fcfbb7ef0f7eadd",
+          "platform": "GitHub-hosted Linux / Python 3.9 and Python 3.11",
+          "check": "19 Walter backlog offline tests and shared project loop checks",
+          "result": "PASS both matrix versions and shared queue; source merged. No Mac worker or AI inference activated.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40057131402"
+        }
+      ]
     }
   ]
 }
