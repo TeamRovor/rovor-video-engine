@@ -7,9 +7,9 @@ const vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'native','index.html'),'utf8');
 
-test('v8.7 is a standalone native interface with all images embedded',()=>{
+test('v8.8 is a standalone native interface with all images embedded',()=>{
  assert.match(html,/<!DOCTYPE html>/i);
- assert.match(html,/<title>ROVOR DIGITAL — Interactive HUD v8\.7/);
+ assert.match(html,/<title>ROVOR DIGITAL — Interactive HUD v8\.8/);
  assert.ok(html.length>1000000, 'Expected self-contained production artifact');
  assert.ok((html.match(/data:image\//g)||[]).length>=5,'Bundled artwork was lost');
  assert.doesNotMatch(html,/<(?:img|script|link)\b[^>]*(?:src|href)="(?:assets\/|\.\/)\b/i);
@@ -25,9 +25,15 @@ test('native controls are real elements and inline JavaScript is syntactically v
  assert.match(html,/window\.ROVOR_NATIVE/);
  assert.match(html,/coordination\/tasks\.json/);
  assert.match(html,/coordination\/work-routing\.json/);
+ assert.ok(html.includes('id="taskScopeButton"'), 'Open/All toggle missing');
+ assert.ok(html.includes('taskPreviewAll'), 'Tasks archive switch logic missing');
+ assert.ok(html.includes('SCROLL  ↓'), 'Visual scroll affordance missing');
+ assert.ok(html.includes('preview-has-more'), 'Overflow detection missing');
+ assert.ok(html.includes('flex:0 0 auto!important'), 'Preview rows may shrink instead of scrolling');
+ assert.ok(html.includes('sourcePreview'), 'Live source feed mini-window missing');
  const matches=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
  assert.equal(matches.length,1);
- assert.doesNotThrow(()=>new vm.Script(matches[0][1],{filename:'native-v8.6.js'}));
+ assert.doesNotThrow(()=>new vm.Script(matches[0][1],{filename:'native-v8.8.js'}));
 });
 test('root defaults to native without removing the older /exact/ rollback',()=>{
  const rootHtml=fs.readFileSync(path.join(root,'index.html'),'utf8');
