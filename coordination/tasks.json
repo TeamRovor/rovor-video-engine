@@ -4464,10 +4464,10 @@
       "id": "walter-24h-soak-evidence-20261024",
       "title": "Audit authenticated 24-hour OmniRoute heartbeat and claim evidence without claiming live success",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "Walter / unattended GitHub engineering 2026-10-24 24h evidence shift",
-      "updated_at": "2026-10-24T15:36:14.289Z",
-      "next_update": "After focused Python 3.9/3.11 hosted CI and source-only PR review",
+      "updated_at": "2026-10-24T15:39:01.395Z",
+      "next_update": "Source merged; after explicit Mac-owner review and independently authenticated 24h host snapshot (not obtained in this shift).",
       "branch": "feature/walter-24h-soak-evidence-gate",
       "scopes": [
         "tools/walter_soak_evidence_gate.py",
@@ -4476,9 +4476,24 @@
         "subsystem:walter-independent-24h-soak-evidence"
       ],
       "depends_on": [],
-      "next_action": "Implement a read-only fail-closed 24-hour evidence auditor that detects missing heartbeat coverage, duplicate claims, 601-second pacing violations, rolling-day quota breaches and role/review coverage; add synthetic adversarial tests and hosted CI; no host access or model calls.",
+      "next_action": "Existing PR #137 Mac owner may opt in to run the pure offline auditor against a consistent private heartbeat/claim copy with full preceding-day lookback and pinned host policy; separately verify real scheduler ticks, model receipts, human reviews and a complete 24h soak before claiming live continuity. Do not automatically deploy or replay failed jobs.",
       "acceptance": "Pure Python3.9 standard-library auditor for independently attested copied Mac evidence; separate heartbeat coverage, pacing, claim counts, role outcomes and human approval; reject malformed, duplicate, stale and incomplete evidence without printing private data; never claim runtime verification from synthetic input. At least 15 focused regression tests plus hosted Python3.9/3.11 coordination checks.",
-      "evidence": []
+      "evidence": [
+        {
+          "commit": "e61e6d1424cc2e08aed40fa24f76b3a1d6c554ad",
+          "platform": "GitHub Actions Ubuntu / Python 3.9 and 3.11",
+          "check": "23 synthetic unittest cases; python tools/project_loop.py check; python tools/task_routing_pair.py --check",
+          "result": "PASS both Python versions, all steps green; 24h heartbeat coverage, 601s pacing, rolling cap, dedupe, per-role review, invalid evidence; no real host evidence or model calls",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40107880145"
+        },
+        {
+          "commit": "83ab8cc10ccd714c2b8004fc9b9e732884eaac23",
+          "platform": "GitHub PR #176 merged into main",
+          "check": "Pure read-only source-only 24h evidence gate and focused regression workflow; new isolated paths only",
+          "result": "MERGED; not installed or executed on Mac; 24h soak and continuous specialist improvement remain unverified",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/176"
+        }
+      ]
     }
   ]
 }
