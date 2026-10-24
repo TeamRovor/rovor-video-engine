@@ -240,6 +240,133 @@ class WorkerAtomicFleetTests(unittest.TestCase):
         self.assertEqual(run.call_args.kwargs["omni_verified_fleet"]["task"]["id"],
                          supplied[0])
 
+    def independent(self, job_id, *, two_pools=False, **kw):
+        fast = model(pool_remaining_requests=5, remaining_requests=5,
+            pool_min_interval_seconds=120, pool_max_claims_24h=5,
+            model_min_interval_seconds=60, model_max_claims_24h=5)
+        models = [fast]
+        routes = dict(ROUTES)
+        catalog = list(CATALOG)
+        if two_pools:
+            backup_id = "groq/fallback/medium:free"
+            backup_combo = "rovor-independent-medium"
+            models.append(model(model_id=backup_id, quota_pool_id="groq_verified_pool",
+                tier=2, pool_remaining_requests=5, remaining_requests=5,
+                pool_min_interval_seconds=120, pool_max_claims_24h=5,
+                model_min_interval_seconds=60, model_max_claims_24h=5))
+            routes[backup_id] = {"combo": backup_combo, "provider_id": "groq"}
+            catalog.append({"name": backup_combo, "strategy": "priority",
+                "isHidden": False,
+                "models": [{"kind": "model", "providerId": "groq",
+                            "model": backup_id}]})
+        return fleet(job_id, models=models, routes=routes, catalog=catalog,
+                     independent_pool_limits=True, **kw)
+
+    def test_other_eligible_pool_claims_immediately_while_first_job_running(self):
+        first, second = self.queue(), self.queue()
+        initial = self.claim(first, self.independent(first,two_pools=True))
+        self.assertEqual(initial["omni_capacity"]["model_id"], MODEL)
+        # Same timestamp: global 601s wait and "any job running" would reject.
+        # With *verified* separate pools, the new job has an independent
+        # model+account reservation and still a globally counted claim.
+        followup = self.claim(second,self.independent(second,two_pools=True))
+        self.assertEqual(followup["omni_capacity"]["model_id"],
+                         "groq/fallback/medium:free")
+        self.assertEqual(self.conn.execute(
+            "SELECT COUNT(*) FROM jobs WHERE status='running'").fetchone()[0], 2)
+        self.assertEqual(self.conn.execute(
+            "SELECT COUNT(*) FROM events WHERE event='claimed'").fetchone()[0], 2)
+        self.assertEqual(self.conn.execute(
+            "SELECT COUNT(DISTINCT quota_pool_id) FROM omni_model_reservations"
+            ).fetchone()[0], 2)
+
+    def test_same_account_waits_even_with_unused_second_model(self):
+        one, two = self.queue(),self.queue()
+        self.assertIsNotNone(self.claim(one,self.independent(one)))
+        self.assertIsNone(self.claim(two,self.independent(two)))
+        self.assertEqual(self.conn.execute(
+            "SELECT status FROM jobs WHERE id=?", (two,)).fetchone()[0],"queued")
+        self.assertEqual(self.conn.execute(
+            "SELECT COUNT(*) FROM omni_model_reservations").fetchone()[0],1)
+
+    def test_finished_slot_still_has_independent_pool_cooldown(self):
+        one,two = self.queue(),self.queue()
+        self.assertIsNotNone(self.claim(one,self.independent(one)))
+        self.conn.execute("BEGIN IMMEDIATE")
+        self.conn.execute("UPDATE jobs SET status='needs_review' WHERE id=?",(one,))
+        import omniroute_model_reservation as reservation
+        reservation.release_finished_slot(self.conn,one,now=NOW+1)
+        self.conn.commit()
+        self.assertIsNone(self.claim(two,self.independent(two),when=NOW+2))
+        self.assertIsNotNone(self.claim(two,self.independent(two),when=NOW+121))
+
+    def test_pool_rate_limit_not_refunded_by_finished_jobs(self):
+        one,two=self.queue(),self.queue()
+        limited=self.independent(one)
+        limited["models"][0]["pool_max_claims_24h"]=1
+        self.assertIsNotNone(self.claim(one,limited))
+        self.conn.execute("BEGIN IMMEDIATE")
+        self.conn.execute("UPDATE jobs SET status='needs_review' WHERE id=?",(one,))
+        import omniroute_model_reservation as reservation
+        reservation.release_finished_slot(self.conn,one,now=NOW+1)
+        self.conn.commit()
+        again=self.independent(two)
+        again["models"][0]["pool_max_claims_24h"]=1
+        self.assertIsNone(self.claim(two,again,when=NOW+121))
+
+    def test_missing_independent_rate_attestation_fails_without_claim(self):
+        job=self.queue()
+        modified=self.independent(job)
+        del modified["models"][0]["pool_max_claims_24h"]
+        with self.assertRaisesRegex(ValueError,"independent_pool_limits_unverified"):
+            self.claim(job,modified)
+        self.assertEqual(self.conn.execute(
+            "SELECT status FROM jobs WHERE id=?",(job,)).fetchone()[0],"queued")
+        self.assertEqual(self.conn.execute(
+            "SELECT count(*) FROM sqlite_master WHERE name='omni_model_reservations'"
+            ).fetchone()[0],0)
+
+    def test_independent_pool_mode_requires_authenticated_host_evidence(self):
+        job=self.queue()
+        wrong=self.independent(job,host_evidence_authenticated=False)
+        with self.assertRaisesRegex(ValueError,"authenticated host evidence"):
+            self.claim(job,wrong)
+        self.assertEqual(self.conn.execute(
+            "SELECT status FROM jobs WHERE id=?",(job,)).fetchone()[0],"queued")
+
+    def test_global_failure_circuit_remains_closed_to_all_pools(self):
+        job=self.queue()
+        for n in range(3):
+            old=self.queue()
+            self.conn.execute("UPDATE jobs SET status='needs_review',result=? "
+                "WHERE id=?", (json.dumps({"draft_status":
+                                "needs_review_no_auto_retry"}),old))
+            self.conn.execute("INSERT INTO events(job_id,event,detail,timestamp) "
+                              "VALUES(?,?,?,?)",(old,"claimed","{}",NOW-3+n))
+        self.assertIsNone(self.claim(job,self.independent(job,two_pools=True)))
+        self.assertEqual(self.conn.execute(
+            "SELECT status FROM jobs WHERE id=?",(job,)).fetchone()[0],"queued")
+
+    def test_global_emergency_144_day_ceiling_still_applies(self):
+        job=self.queue()
+        old=self.queue()
+        self.conn.execute("UPDATE jobs SET status='needs_review',result='{}' "
+                          "WHERE id=?",(old,))
+        self.conn.executemany("INSERT INTO events(job_id,event,detail,timestamp) "
+            "VALUES(?,?,?,?)",[(old,"claimed","{}",NOW-60-j)
+                                for j in range(144)])
+        self.assertIsNone(self.claim(job,self.independent(job,two_pools=True)))
+        self.assertEqual(self.conn.execute(
+            "SELECT status FROM jobs WHERE id=?",(job,)).fetchone()[0],"queued")
+
+    def test_legacy_default_still_enforces_global_spacing_even_with_model_data(self):
+        first,second=self.queue(),self.queue()
+        self.assertIsNotNone(self.claim(first,fleet(first)))
+        # No independent flag: even a different verified model must wait.
+        alternate=self.independent(second,two_pools=True)
+        del alternate["independent_pool_limits"]
+        self.assertIsNone(self.claim(second,alternate))
+
     def test_fleet_mode_cannot_run_on_legacy_unbounded_claim(self):
         job=self.queue()
         with self.assertRaisesRegex(ValueError, "requires continuous"):
