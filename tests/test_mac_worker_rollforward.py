@@ -106,6 +106,18 @@ class UpgradeChecks(unittest.TestCase):
         self.assertEqual(self.orig["ProgramArguments"][
             self.orig["ProgramArguments"].index("--max-jobs") + 1], "1")
 
+    def test_fourteen_daily_free_research_calls_need_separate_approval(self):
+        with self.assertRaisesRegex(module.Blocked, "higher_daily_budget_requires_parallel_approval"):
+            module.inspect(self.home,self.runtime,SHA,platform="darwin",
+                           uid=lambda:501,run=self.fake_run,
+                           approve_free_budget=True)
+        info=module.inspect(self.home,self.runtime,SHA,platform="darwin",
+                            uid=lambda:501,run=self.fake_run,
+                            approve_parallel=True,approve_free_budget=True)
+        args=info["replacement"]["ProgramArguments"]
+        self.assertEqual(args[args.index("--max-omniroute-claims-per-day")+1],"14")
+        self.assertEqual(args[args.index("--max-jobs")+1],"3")
+
     def test_bad_checkout_and_existing_stop_are_refused(self):
         with self.assertRaisesRegex(module.Blocked, "candidate_name_not_isolated"):
             module.inspect(self.home, self.runtime, "2" * 40, platform="darwin",
