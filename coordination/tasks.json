@@ -4245,9 +4245,9 @@
       "id": "hud-omniroute-live-sync-20261024",
       "title": "Connect existing HUD to read-only live full OmniRoute inventory and measured request usage",
       "priority": 1,
-      "status": "blocked",
+      "status": "active",
       "owner": "Codex / Amar live HUD bridge session",
-      "branch": "fix/hud-owned-connections",
+      "branch": "feature/hud-employee-live-status",
       "scopes": [
         "tools/hud_omniroute_bridge.mjs",
         "dashboard/command-center/native-v8-9/live-omniroute.js",
@@ -4257,12 +4257,14 @@
         "tests/test_hud_omniroute_live.browser.cjs",
         ".github/workflows/hud-omniroute-live-sync.yml",
         "dashboard/command-center/native-v8-9/index.html",
-        "dashboard/command-center/native-v8-9/connect-omniroute.js"
+        "dashboard/command-center/native-v8-9/connect-omniroute.js",
+        "tools/hud_employee_snapshot.py",
+        "tests/test_hud_employee_snapshot.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T11:28:01.263832+00:00",
+      "updated_at": "2026-10-24T11:34:23.576471+00:00",
       "next_update": "After actual Mac bridge update returns configured connection inventory and existing HUD reflects it",
-      "next_action": "Removed advertised catalog from collector. Reads /api/providers configured connections and only measured models matching configured provider IDs; public adapter hides unmeasured catalog rows even from an old bridge. Main tabs OmniRoute and Employees. Connection count separate from model count; provider account labels/emails/keys excluded. Nine bridge tests and 86 native source checks pass. Actual Mac must update bridge for configured connection inventory; public UI alone immediately hides unknown catalog rows.",
+      "next_action": "Owner requests live employee tasks and model attribution. Add read-only role status from existing SQLite/WAL copy and heartbeat; public task titles only from canonical repo queue; route/configured model vs actual upstream model explicitly distinct. Do not touch active worker source/scheduler.",
       "acceptance": "Dynamic full model list, measured window counts and request-share bars, stale/error states, secrets never reach browser, no arbitrary proxy; tested mocked gateway end to end, actual Mac connection separately verified.",
       "blocker": "This session has no Mac runtime or connected browser tool. Code can be reviewed/published here; actual localhost gateway authentication, catalog/usage counts and remote phone pairing require one startup on the Mac. No real Mac sync claimed.",
       "evidence": [
