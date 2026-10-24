@@ -59,11 +59,11 @@ async function main(){
   assert(await evalJS('return !!document.querySelector(".wl-route-chart")'));
   await evalJS('document.querySelector("#screen .close").click();document.querySelector("[data-wl-compact-tab=employees]").click();return true');
   assert.equal(await evalJS('return document.querySelectorAll("#workloadPanel .wl-compact-row").length'),8);
-  await evalJS('document.querySelector("#workloadPanel [data-wl-compact-row=\"2\"]").click();return true');
+  await evalJS('document.querySelector("#workloadPanel [data-wl-compact-row=2]").click();return true');
   assert(await evalJS('return document.querySelector("#rovor-workload-popup").textContent.includes("JANE")'));
   results.push({name,width,height,home,expanded,pass:true});
  }
  fs.writeFileSync(path.join(output,'results.json'),JSON.stringify(results,null,2));
  console.log('PASS: ROVOR Workload popup opened and interacted in '+results.length+' responsive viewports');
 }
-main().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>{try{socket?.close()}catch{};try{chrome?.kill()}catch{};try{server?.close()}catch{};if(tmp)fs.rmSync(tmp,{recursive:true,force:true})});
+main().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>{try{socket?.close()}catch{};try{chrome?.kill()}catch{};try{server?.close()}catch{};if(tmp){try{fs.rmSync(tmp,{recursive:true,force:true,maxRetries:8,retryDelay:200})}catch(error){console.warn('Chrome cleanup deferred:',error.code)}}});
