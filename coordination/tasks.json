@@ -4601,6 +4601,24 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/179"
         }
       ]
+    },
+    {
+      "id": "walter-admission-nested-scope-guard-20261024",
+      "title": "Fail closed on nested and malformed ownership scopes in public OmniRoute task admission",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended GitHub engineering 2026-10-24 admission-scope shift",
+      "branch": "feature/walter-admission-nested-scope-guard-20261024",
+      "scopes": [
+        "tools/walter_public_queue_admission.py",
+        "tests/test_walter_public_queue_admission.py"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-24T19:13:21.772Z",
+      "next_update": "After focused hosted Python 3.9/3.11 CI and paired task/routing checks on scoped PR.",
+      "next_action": "Reproduce and fix the existing public pre-enqueue gate's directory-without-trailing-slash ownership bypass; reject malformed scope inputs; add offline regression tests. No edits to Mac worker PR137, live state, providers or other owners.",
+      "acceptance": "Public-task admission rejects ancestor/descendant directory claims regardless of trailing slash, malformed or traversal scope values, while preserving unrelated siblings, done-task scopes and subsystem equality. Focused Python 3.9/3.11 CI and shared coordination checks pass. Source-only, no live Mac actions.",
+      "evidence": []
     }
   ]
 }

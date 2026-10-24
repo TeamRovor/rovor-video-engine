@@ -823,6 +823,13 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "walter-admission-nested-scope-guard-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "prevent-owner-conflict"
     }
   }
 }
