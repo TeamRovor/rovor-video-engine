@@ -914,6 +914,15 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "walter-cloud-eligibility-config-20261025": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

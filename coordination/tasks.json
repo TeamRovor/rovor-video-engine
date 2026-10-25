@@ -5034,6 +5034,26 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40150493795"
         }
       ]
+    },
+    {
+      "id": "walter-cloud-eligibility-config-20261025",
+      "title": "Compile independently verified nine-provider zero-cost quota and canary attestations into deployable private fleet config",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended cloud migration eligibility configuration 2026-10-25",
+      "updated_at": "2026-10-25T02:37:00Z",
+      "next_update": "After focused hosted CI and owner review of immutable PR head",
+      "branch": "feature/walter-cloud-eligibility-config-20261025",
+      "scopes": [
+        "integrations/ghost-cloud/eligibility-config.mjs",
+        "tests/test_ghost_cloud_eligibility_config.mjs",
+        ".github/workflows/ghost-cloud-eligibility-config.yml"
+      ],
+      "depends_on": [
+        "nine-provider-cloud-dispatch-20261024"
+      ],
+      "next_action": "Implement an independent fail-closed host-side config compiler that consumes privately verified exact per-provider cost, quota/reset and live-canary facts and produces only disabled or bounded runtime-ready GHOST_FLEET_CONFIG. No new model calls, secrets, Mac access, HUD changes, or automatic deployment.",
+      "acceptance": "All nine fixed provider identities supported; unknown, expired, unverified, overquota, mismatched-model, inconsistent-pool attestations never enable dispatch. Current, independently verified, owner-authorized evidence yields runtime-eligible bounded configs without secrets; Node24 focused hosted tests and shared task/routing validation pass. Specialist PR remains unmerged pending exact-commit Amar PASS."
     }
   ]
 }
