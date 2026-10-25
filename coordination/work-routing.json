@@ -948,6 +948,14 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "gus-ops-input-directory-20261025": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
     }
   }
 }

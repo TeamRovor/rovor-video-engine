@@ -5189,6 +5189,23 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/blob/main/integrations/ghost-cloud/runtime.mjs"
         }
       ]
+    },
+    {
+      "id": "gus-ops-input-directory-20261025",
+      "title": "Reject redirected operations input directories before report generation",
+      "priority": 2,
+      "status": "active",
+      "owner": "Gus / cloud pool operations input integrity 2026-10-25",
+      "updated_at": "2026-10-25T03:21:25.407Z",
+      "next_update": "After focused operations regressions and actual hosted Ubuntu/Windows checks",
+      "branch": "fix/gus-ops-input-directory-20261025",
+      "scopes": [
+        "tools/ops_worker.py",
+        "tests/test_ops_worker.py"
+      ],
+      "depends_on": [],
+      "next_action": "Fix reproduced operations reporter accepting symlinked coordination directory from outside checkout; reject redirected input ancestors before snapshot/output and preserve valid reports/cache/STOP. Use synthetic data, open PR, no merge/deploy/client actions.",
+      "acceptance": "Symlinked coordination/business input directories fail before state creation; existing leaf checks remain; valid snapshot/cache and source immutability tests pass. Hosted business-ops Ubuntu/Windows checks observed. No private inputs, native GUI, model calls or human approval."
     }
   ]
 }
