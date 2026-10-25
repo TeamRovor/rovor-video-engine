@@ -5317,17 +5317,31 @@
       "id": "mike-pr201-stop-count-review-20261025",
       "title": "Review PR201 loss of partial feed counts when STOP occurs",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Mike / cloud pool scheduler evidence review 2026-10-25",
-      "updated_at": "2026-10-25T06:28:05.222Z",
-      "next_update": "After pinned-source reproduction and review handoff",
+      "updated_at": "2026-10-25T06:30:34.557Z",
+      "next_update": "After PR201 owner corrects partial-STOP counters and owner reviews report",
       "branch": "review/mike-pr201-stop-counts-20261025",
       "scopes": [
         "reviews/mike-pr201-stop-counts-20261025.md"
       ],
       "depends_on": [],
-      "next_action": "Publish independently reproduced PR201 partial-STOP receipt undercount, exact source revisions, existingCI evidence and bounded correction for current scheduler owner. Do not edit their source, post human reviews, merge or deploy.",
-      "acceptance": "Review identifies exact code branch and reproduces realSQLite persisted zeros versus feed queued2/duplicates1, verifies tick nevercalled, distinguishes existing11/11 tests from uncoveredcase. Public report contains no private data/runtime IDs; canonicalqueue/routing validated."
+      "next_action": "Read PR202 report at9d9ab63a3aa434da1acd1ffa863a2fdcc01cf647. PR201 head595ab826d8da971314629ff3f80b3ee49f1b2e47 loses queued2/duplicates1 when feeder returns stopped; persisted row becomes0/0 while two synthetic jobs remain, tick0. Scheduler owner should validate/preserve feed counters before stopped branch and add partial-progress STOP regression; no change by this review. Existing11tests passed locally; hostedbaseline40167203600 SUCCESS at535f18c; later595 changes onlycoordination/tasks.json and current-head runtime/ops checks SUCCESS. Do not merge/deploy or replay existing tasks.",
+      "acceptance": "Review identifies exact code branch and reproduces realSQLite persisted zeros versus feed queued2/duplicates1, verifies tick nevercalled, distinguishes existing11/11 tests from uncoveredcase. Public report contains no private data/runtime IDs; canonicalqueue/routing validated.",
+      "blocker": "Review finding awaits scheduler owner's correction/acceptance; scheduler source is outside this task's scope.",
+      "evidence": [
+        {
+          "commit": "9d9ab63a3aa434da1acd1ffa863a2fdcc01cf647",
+          "platform": "Cloud Linux Node24.22.1 real in-memory SQLite; native GitHub readback",
+          "check": "node --test tests/test_ghost_cloud_scheduled_shift.mjs (11 tests); node reproduce.mjs (synthetic partial STOP); public source/CI exact revisions; canonical paired intake",
+          "result": "Review report published as PR202 OPEN. All11existing tests PASS; realSQLite reproduction confirms saved queued0/duplicates0 despite feed2/1, syntheticqueue2, tick0. Claim hosted coordination Windows/macOS/Ubuntu and routing3.9/3.11 PASS in runs40169186541/40169186489. Scheduler code unchanged; no provider calls, private data, runtime IDs, external sends, human decision, merge or deploy.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/202"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/202",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/201"
+      ]
     }
   ]
 }
