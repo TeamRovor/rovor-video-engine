@@ -4679,7 +4679,7 @@
       "priority": 1,
       "status": "active",
       "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
-      "updated_at": "2026-10-24T22:39:29.549Z",
+      "updated_at": "2026-10-25T03:32:47.920Z",
       "next_update": "After real owner issue submission/deployed review readback, or private cloud hosting activation",
       "branch": "feature/hud-owner-reviews-20261024",
       "scopes": [
@@ -4697,7 +4697,7 @@
         "coordination/cloud-shifts/walter-pr186.json"
       ],
       "depends_on": [],
-      "next_action": "Inspect the next independently scheduled Mike/Gus run and available platform diagnostics; immediate attempts failed with no output/reason. Verify Amar's first actual owner review through deployed readback. Private Site source host DNS still blocks hosting activation; live OmniRoute cloud inference/in-progress telemetry remain unconfigured. Preserve existing Mac failure circuit; do not silently replay.",
+      "next_action": "Runtime milestone: existing owner-private Site is PUBLISHED version1 at https://rovor-private-hud.mm98z652cq.chatgpt.site . Deployment appgdep_6add77b7ed988191987bb9a6f36827cf SUCCEEDED from pushed Site source342b6fd4e846fb49ce476c98f530aaf5b629c760, environment revision1 (13 masked secret entries including nine providers). D1 DB is provisioned with hud_latest and hud_history; hud_latest readback EMPTY. Native MCP connection was provisioned; suggestion returned already_installed, but tool is not exposed in this turn, so authenticated invocation not verified. Native Site MCP plugin ID plugin_asdk_app_sites_8cefc4c5934c81919e84645a2575ef38. Source push worked from Amar Terminal via one-use memory-only credential pipe; this executor still lacks general outbound DNS. Initial artifact rejected d1 object; source and dist corrected to d1 string DB, validator strengthened; correct package accepted. Canonical build-sites helper and pending PR193 composer still need equivalent string-binding compatibility before future rebuilds. Current deployed Worker is HUD receiver only: ghost execution tables/adapters/feed/canaries/schedule are NOT mounted. Preserve disabled GHOST_FLEET_CONFIG and verify exact live cost/model/quota before any inference; don't claim nine live or current telemetry. Continue real runtime integration, no duplicate Sites or obsolete source-host blocker loops.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
@@ -4747,6 +4747,13 @@
           "check": "Peek matched immediate Mike/Gus attempts after request",
           "result": "Both immediate attempts recorded FAILED within seconds at22:38 UTC, no chat/result/diagnostic provided. Enabled hourly schedules are configuration only; do not claim these roles are successfully executing. No manual replay requested.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/187"
+        },
+        {
+          "commit": "342b6fd4e846fb49ce476c98f530aaf5b629c760",
+          "platform": "Amar Terminal supported Sites source workflow; native Sites Cloudflare publication and live D1 readback",
+          "check": "Corrected source pushed; official local package; save_version_and_deploy_private; terminal deployment status; get_site; read_database_overview; read_database_table_rows(hud_latest)",
+          "result": "PUBLISHED owner-private version1, status SUCCEEDED, applied env revision1. Live DB has hud_latest/hud_history and zero reports. Native MCP provisioned. Provider credentials stored but inference adapters/scheduler not deployed; no model or human acceptance claimed. Browser visual QA not performed.",
+          "reference": "https://rovor-private-hud.mm98z652cq.chatgpt.site"
         }
       ],
       "links": [
