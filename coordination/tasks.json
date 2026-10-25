@@ -4986,7 +4986,7 @@
       "id": "walter-cloud-canary-preflight-20261025",
       "title": "Add one-shot quota-reserved cloud provider canary preflight without Mac dependency",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar ASAP canary correction 2026-10-25",
       "branch": "feature/walter-cloud-canary-preflight-20261025",
       "scopes": [
@@ -4995,9 +4995,9 @@
         ".github/workflows/ghost-cloud.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T02:54:18.376Z",
-      "next_update": "After applied canary isolation and cross-dispatch regression hosted tests",
-      "next_action": "Amar explicitly requested fixing the reported blocker ASAP in this session. Continue existing PR192 branch with the one-line reserved canary kind correction and a regression proving denied probes cannot enter production after approval expiry. Preserve prior Walter evidence, failed attempt identities and human_review not_recorded. This is engineering rework, not Amar PASS on the previous faulty revision; no automatic provider calls or deployment.",
+      "updated_at": "2026-10-25T02:56:03.684Z",
+      "next_update": "Canary repair merged; cloud hosting/configuration remains separate.",
+      "next_action": "Amar-directed repair is merged in PR192 at 234099751547fa232c8d73f285bc8f918dae3bfb. Reserved canary kind prevents denied probes entering production dispatch after one-time approval expiry; original IDs stay consumed. 28 runtime/canary tests and canonical queue/routing checks passed locally and in GitHub runs40156244297/40156247045. Existing private Site source opening retried with fresh native credentials and failed exit128: Could not resolve host git.chatgpt-team.site. No source upload or deployment occurred. Existing persistent-HUD owner must resolve cloud source connectivity, provision nine private keys/current actual $0 account and quota evidence, run authorized real canaries, integrate optional feed/composition and bind real status. No saved human PASS, live inference, nine-provider operation or Mac service changes claimed.",
       "acceptance": "Standalone cloud preflight performs a single real HTTPS canary only after operator-verified zero-cost account/model evidence, persistent STOP and atomic shared-pool quota reservation, never replays a job or enables fleet, validates exact response and preserves sanitized provider/model/usage evidence. Offline Node24 real-SQL mocked-transport tests and shared coordination checks pass. No Mac, paid calls, HUD changes or deployment.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/192",
@@ -5010,6 +5010,20 @@
           "check": "node --test tests/test_ghost_cloud.mjs tests/test_ghost_cloud_canary_preflight.mjs; python3 tools/project_loop.py check; python3 tools/task_routing_pair.py --check",
           "result": "PASS 27/27 tests in both push run40146724409 and PR run40146735931; 138/138 task/routing coverage. Source-only PR OPEN awaiting saved owner PASS; no live provider canary, hosting deployment, Mac execution or human review.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40146735931"
+        },
+        {
+          "commit": "b720a97fc4724f7fd176b6bc835e223417cf6f4e",
+          "platform": "macOS Node24.22.0 and GitHub Actions Ubuntu Node24",
+          "check": "node --test tests/test_ghost_cloud.mjs tests/test_ghost_cloud_canary_preflight.mjs; project_loop.py check; task_routing_pair.py --check",
+          "result": "28 tests PASS locally and in both hosted runs. New regression denies pool-busy canary then advances beyond approval expiry: zero production requests/attempts. Mocked HTTPS only.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40156247045"
+        },
+        {
+          "commit": "234099751547fa232c8d73f285bc8f918dae3bfb",
+          "platform": "GitHub squash merge and managed macOS Site source opening",
+          "check": "Pinned head merge PR192; existing Site source workflow with fresh credential",
+          "result": "Canary correction MERGED SOURCE ONLY. Site source opener exited128 because registered host DNS cannot resolve. No source push, Site publication, secret transfer or provider request.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/192"
         }
       ],
       "previous_owner": "Walter / unattended cloud migration canary shift 2026-10-25"
