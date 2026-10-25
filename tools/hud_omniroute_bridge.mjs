@@ -194,7 +194,7 @@ async function main(){
   const reader=await installedReader(),readModels=createCollector(reader),readWorkers=createWorkerReader();
   const collect=async period=>({...await readModels(period),workforce:await readWorkers()});
   const first=await collect('24h');
-  const bridge=createBridge({collect,port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8')});
+  const bridge=createBridge({collect,port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8')+'\n'+fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8')});
   const port=await bridge.listen();
   console.log(`OmniRoute connected: ${first.connection_count} configured connections; ${first.models.length} recorded models; ${first.request_count} recorded requests in 24h. ${first.quota.records.length} fresh provider-reported quota rows (unknown limits remain unknown).`);
   let tunnel;
