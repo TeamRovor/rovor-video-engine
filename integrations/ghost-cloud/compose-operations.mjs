@@ -45,7 +45,7 @@ export function composeOperations(directory,{sourceDirectory=own,apply=false}={}
  // The hosted migration is schema-only. control() inserts the singleton on
  // explicit owner action; absence defaults to disabled in the existing runtime.
  const schema=read('schema.sql').replace(/^INSERT OR IGNORE INTO ghost_cloud_control[^\n]*\n/m,'')+
-  '\nCREATE TABLE IF NOT EXISTS ghost_cloud_reviews (id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL REFERENCES ghost_cloud_attempts(id),actor TEXT NOT NULL,verdict TEXT NOT NULL CHECK(verdict IN (\'passed\',\'failed\')),output_sha256 TEXT NOT NULL,reviewed_at INTEGER NOT NULL);\n';
+  '\nCREATE TABLE IF NOT EXISTS ghost_cloud_reviews (id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL UNIQUE REFERENCES ghost_cloud_attempts(id),actor TEXT NOT NULL,verdict TEXT NOT NULL CHECK(verdict IN (\'passed\',\'failed\')),output_sha256 TEXT NOT NULL,reviewed_at INTEGER NOT NULL);\n';
  if(/(^|\n)\s*(INSERT|UPDATE|DELETE|DROP|ALTER)\b/i.test(schema))throw Error('non_schema_migration');
  const migration=schema.replace(/;[ \t]*\n/g,';\n--> statement-breakpoint\n');
  journal.entries.push({idx:index,version:'6',when:Date.now(),tag,breakpoints:true});
