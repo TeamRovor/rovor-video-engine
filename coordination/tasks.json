@@ -5081,7 +5081,7 @@
       "id": "ghost-cloud-canary-release-review-20261025",
       "title": "Reproduce and isolate denied canary dispatch before cloud activation",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar cloud activation review 2026-10-25",
       "branch": "main",
       "scopes": [
@@ -5089,10 +5089,22 @@
         "coordination/reviews/ghost-cloud-canary-pr192.patch"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T02:39:40.283Z",
-      "next_update": "After reproduction and proposed isolation patch validation",
-      "next_action": "Publish exact P1 reproduction against PR192 and offline-validated minimal isolation patch without changing another owner's canary/runtime branch.",
-      "acceptance": "Reproduce denied canary later dispatched after approval expiry using real SQLite/mocked provider; show candidate isolation prevents the later request; record exact immutable reviewed revision and remaining host blocker. No live model calls, secrets, acceptance or deployment."
+      "updated_at": "2026-10-25T02:41:12.790Z",
+      "next_update": "Review complete; PR192 remains blocked on owner repair, fresh tests and actual acceptance.",
+      "next_action": "P1 found in PR192 at 9eb62a44b3ca7617a098d3ac613ee7f8b230eafe: a shared-pool-denied canary leaves a normal checklist job, allowing production tick to dispatch it after its 15-minute approval expires. Exact real-SQL/mocked-HTTPS repro and one-line isolation patch in coordination/reviews/ghost-cloud-canary-pr192.md and .patch. Candidate kind canary is excluded by production admission; offline later request count drops 1 to 0, and all 27 runtime/canary tests pass. Existing PR192 owner must apply candidate on new revision with cross-dispatch regression and fresh hosted checks; do not merge/deploy current canary source or invent owner PASS. Existing private Site still version0/no URL; source host DNS unavailable in this execution environment. No real provider calls, secrets, Site deployment or live HUD inference.",
+      "acceptance": "Reproduce denied canary later dispatched after approval expiry using real SQLite/mocked provider; show candidate isolation prevents the later request; record exact immutable reviewed revision and remaining host blocker. No live model calls, secrets, acceptance or deployment.",
+      "evidence": [
+        {
+          "commit": "9eb62a44b3ca7617a098d3ac613ee7f8b230eafe",
+          "platform": "macOS Node24.22.0; in-memory SQLite; mocked provider fetch",
+          "check": "Execute runCanary denied by existing running pool; clear busy claim; run production tick one hour later, beyond canary approval expiry",
+          "result": "REPRODUCED P1: denied canary was later dispatched once as needs_review with expired approval. Candidate reserved canary kind: zero later requests. 27 runtime/canary tests PASS against candidate; reverse git apply --check PASS.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/192"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/192"
+      ]
     }
   ]
 }
