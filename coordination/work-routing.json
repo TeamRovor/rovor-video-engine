@@ -965,6 +965,11 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "saul-cloud-inquiry-copy-20261025": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
     }
   }
 }

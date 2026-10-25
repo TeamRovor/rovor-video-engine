@@ -5243,10 +5243,43 @@
         "subsystem:private-hud-runtime-mount"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T03:41:13.152Z",
-      "next_update": "After composed Worker real-SQL tests and staged private source validation",
-      "next_action": "Compose existing tested runtime/canary and approved public task feeder into existing published Site without overwriting original HUD. Add authenticated cloud MCP operations, bounded read-only provider inspection, live same-origin status and explicit owner review; keep paid/unknown inference disabled.",
-      "acceptance": "Composed current Site imports and preserves native HUD; nine-provider status, immutable task admission, bounded cloud tick and canary, read-only fixed-endpoint provider inventory, durable user PASS/FAIL and STOP are authenticated; actual real-SQL tests pass. Prepare exact existing-Site source/archive; deployment and real model proof remain separate."
+      "updated_at": "2026-10-25T03:52:25.037Z",
+      "next_update": "After prepared source upload and native deployment readback",
+      "next_action": "PR197 merged at 6095d674ffced63b57ca0e34890a71c1c64fa9d3. 42 focused tests pass locally and hosted; actual published private Site source composes/imports, real SQLite validates migration, seven MCP tools and nine slots read successfully, original HUD retained. Complete bundle is staged in existing Site checkout: runtime/canary/private operations, live panels, browser-only digest-bound PASS/FAIL, schema-only appended 0001 migration, string DB binding. Needs supported source push from Amar's network-enabled Terminal, then native publication. Existing version1 remains receiver-only until version2 deployment verified. Keep unknown-cost providers disabled. Do not pretend staged source is live.",
+      "acceptance": "Composed current Site imports and preserves native HUD; nine-provider status, immutable task admission, bounded cloud tick and canary, read-only fixed-endpoint provider inventory, durable user PASS/FAIL and STOP are authenticated; actual real-SQL tests pass. Prepare exact existing-Site source/archive; deployment and real model proof remain separate.",
+      "evidence": [
+        {
+          "commit": "92b2cd5e2b92e991041030a2f2966bd46c5aebcf",
+          "platform": "macOS Node24.22.0 and GitHub Actions Ubuntu Node24",
+          "check": "42 runtime/canary/operations real-SQL and mocked-HTTPS tests; project_loop.py check; task_routing_pair.py --check; actual deployed Site source composed/imported with schema-only migration",
+          "result": "PASS: complete simulated approved-task->dispatch->measured receipt->explicit owner review->no replay; actual composed source has seven MCP tools/nine slots/owner auth; official artifact validator PASS. No live provider calls or new deployment.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40159570499"
+        }
+      ]
+    },
+    {
+      "id": "saul-cloud-inquiry-copy-20261025",
+      "title": "Draft three reviewable ROVOR service-inquiry thank-you messages",
+      "priority": 1,
+      "status": "active",
+      "owner": "Saul / approved public cloud pilot 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:saul-cloud-inquiry-copy"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T03:52:25.037Z",
+      "next_update": "After first eligible zero-cost cloud execution and factual receipt",
+      "next_action": "Public bounded draft approved for runtime intake; wait for deployed private runtime and actual eligible zero-cost model, then enqueue unchanged v1 packet once. Preserve failed job IDs; no automated publish/send or invented human PASS.",
+      "acceptance": "A real eligible zero-cost provider returns three variants of at most 60 words each with no invented claims, recorded actual model/usage when returned, immutable job receipt and human_review not_recorded; Amar can inspect and PASS/FAIL in private HUD.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Saul",
+        "kind": "research",
+        "prompt": "Use only this public ROVOR Digital service context: ROVOR Digital helps businesses with websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Draft exactly three concise thank-you messages for its service inquiry form. Each should acknowledge receipt and explain that the next step is a review of the business's needs. Include a single optional question that helps qualify the inquiry. Maximum 60 words per variant. Do not invent prices, delivery times, guaranteed results, clients, testimonials or contact details. Label the three variants and finish with a brief factual checklist of claims deliberately avoided. This is a draft for Amar to review, not permission to publish or send anything."
+      }
     }
   ]
 }
