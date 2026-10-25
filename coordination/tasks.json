@@ -5007,7 +5007,7 @@
       "priority": 1,
       "status": "blocked",
       "owner": "Walter / unattended cloud migration Site composition shift 2026-10-25",
-      "updated_at": "2026-10-25T01:23:08.587Z",
+      "updated_at": "2026-10-25T01:24:50.719Z",
       "next_update": "After Amar's saved exact-commit PASS/FAIL for PR193, or new private Site publication/secret access",
       "branch": "feature/walter-ghost-cloud-site-composition-20261025",
       "scopes": [
@@ -5018,20 +5018,20 @@
       "depends_on": [
         "nine-provider-cloud-dispatch-20261024"
       ],
-      "next_action": "PR193 at immutable tested head 3bfb9ae5cbae3963392facfc14d09e280bdbd9f3 OPEN awaiting Amar's saved PASS/FAIL. Both hosted Node24 runs 40150350531 (push) and 40150368215 (PR) SUCCESS: 8/8 tests including actual HUD+ghost source composition and ESM syntax, no skipped tests; shared queue/routing checks PASS. Existing private Site owner may independently review the opt-in dry-run composer and appended D1 migration, then resolve source publication, securely provision nine provider credentials/eligibility/real canaries, and explicitly enable schedule. No Mac, live Site, provider inference, model quota, secrets, owner approval, or HUD live status verified. Do not merge specialist PR without exact-commit owner PASS.",
+      "next_action": "PR193 final head 0bbebf8aeec424d61e8c1040d3e6f6dd0f0c8c8f OPEN awaiting Amar's saved exact-commit PASS/FAIL. GitHub Node24 push run40150493795 SUCCESS: 8/8 tests, 0 skipped; actual current HUD+ghost Site bundle was compiled, imported, authenticated nine-provider status was read with mocked D1, writer denied, cron inert, original HUD preserved; queue/routing checks PASS. No private Site push/publication, credentials, live canaries, provider calls, Mac access or owner approval. After PASS and fresh CI, persistent-HUD owner must review integration, resolve Site publication, append real D1 migration, securely provision provider keys and exact $0 quota/model/canary evidence, then explicitly enable cloud schedule and verify HUD. Do not self-merge.",
       "acceptance": "Source-only opt-in Site composition reads existing registered private HUD bundle and ghost-cloud runtime, preserves HUD identity and fetch behavior, routes authenticated provider status and existing writer endpoints, appends namespaced D1 migration safely and idempotently, never changes original HUD source, creates Sites, registers schedules, provisions secrets or dispatches. Focused hosted Node24 tests and shared queue/routing checks pass. Live hosting requires owner action.",
       "blocker": "Existing private Site remains unpublished and no host credential/secret or provider eligibility access is available in this GitHub-only shift. Source PR awaits owner PASS; no cloud provider outputs or per-model usage were observed.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/193",
-        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40150368215"
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40150493795"
       ],
       "evidence": [
         {
-          "commit": "3bfb9ae5cbae3963392facfc14d09e280bdbd9f3",
+          "commit": "0bbebf8aeec424d61e8c1040d3e6f6dd0f0c8c8f",
           "platform": "GitHub-hosted Ubuntu Node24.21.0; isolated Linux Node22.16.0",
           "check": "node --test tests/test_ghost_cloud_site_composition.mjs; python3 tools/project_loop.py check; python3 tools/task_routing_pair.py --check",
-          "result": "PASS 8/8 hosted with actual main HUD+ghost source compiled to executable ESM and D1 schema migration; 7/7 synthetic local (real-source test skipped locally due absent repo checkout). Existing ghost-cloud runtime checks also PASS in both push and PR. Source-only, PR open; no Site publication, model call, Mac access, provider secret, quota, owner PASS or deployment.",
-          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40150368215"
+          "result": "PASS 8/8 hosted, 0 skipped: current HUD+ghost source compiled to ESM, imported and authenticated /api/ghost/status returned nine configured-slot states from mocked D1; unauthenticated and writer routes denied, cron inert, namespaced migration append preserved existing HUD; shared queue/routing checks PASS. Isolated local synthetic tests 7/7. Source-only, no private Site, actual provider, Mac, human PASS or deployment.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40150493795"
         }
       ]
     }
