@@ -5280,6 +5280,24 @@
         "kind": "research",
         "prompt": "Use only this public ROVOR Digital service context: ROVOR Digital helps businesses with websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Draft exactly three concise thank-you messages for its service inquiry form. Each should acknowledge receipt and explain that the next step is a review of the business's needs. Include a single optional question that helps qualify the inquiry. Maximum 60 words per variant. Do not invent prices, delivery times, guaranteed results, clients, testimonials or contact details. Label the three variants and finish with a brief factual checklist of claims deliberately avoided. This is a draft for Amar to review, not permission to publish or send anything."
       }
+    },
+    {
+      "id": "jesse-moho-read-request-budget-20261025",
+      "title": "Bound Moho read-only queue request parsing before JSON allocation",
+      "priority": 2,
+      "status": "active",
+      "owner": "Jesse / cloud pool Moho queue validation 2026-10-25",
+      "updated_at": "2026-10-25T04:03:53.091Z",
+      "next_update": "After offline queue boundary tests and hosted Python checks",
+      "branch": "fix/jesse-moho-read-request-budget-20261025",
+      "scopes": [
+        ".github/scripts/rovor_moho_read_queue.py",
+        "tests/test_rovor_moho_read_queue.py",
+        ".github/workflows/moho-read-queue-check.yml"
+      ],
+      "depends_on": [],
+      "next_action": "Replace unbounded request file read with16KiB+1 bounded read; reject oversized data before JSON parsing. Preserve fixed read-command whitelist; add offline tests and hosted CI without triggering legacy Mac runner or native calls. Open PR, no merge/deploy.",
+      "acceptance": "Valid one/two read-command plans still accepted, exact-byte boundary supported, one-byte-over rejected before JSON parsing; invalid paths/commands remain rejected. Offline Python3.9/3.11 tests pass; no request queue jobs, subprocesses, network, Mac GUI or issue sends executed."
     }
   ]
 }

@@ -970,6 +970,14 @@
       "lane": "sales",
       "requires": [],
       "objective": "win-qualified-clients"
+    },
+    "jesse-moho-read-request-budget-20261025": {
+      "lane": "animation",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
     }
   }
 }
