@@ -62,7 +62,7 @@ export function createCloudOperations(base, cloud) {
   cohere:'https://api.cohere.ai/v1/models',
   huggingface:'https://router.huggingface.co/v1/models'
  };
- async function inventory(env,provider,fetcher=fetch) {
+ async function inventory(env,provider,fetcher=(...args)=>globalThis.fetch(...args)) {
   if(!Object.hasOwn(cloud.PROVIDERS,provider))throw Error('unknown_provider');
   const key=env[cloud.PROVIDERS[provider][1]];if(typeof key!=='string'||key.length<16)return {provider,status:'missing_secret'};
   const url=provider==='cloudflare-ai'&&/^[a-f0-9]{32}$/.test(env.CLOUDFLARE_ACCOUNT_ID||'')?
@@ -78,7 +78,7 @@ export function createCloudOperations(base, cloud) {
     catalog_zero_price:provider==='openrouter'?true:null
    }));
    return {provider,status:'catalog_received',observed_at:Date.now(),models,billing_verified:false,quota_verified:false,canary_verified:false};
-  }catch(error){const message=String(error?.message||'');const category=/timeout|timed out/i.test(message)?'timeout':/network|fetch|connect|dns|resolve/i.test(message)?'network':/abort/i.test(message)?'aborted':'runtime_or_catalog';return {provider,status:'catalog_unavailable',error_category:category,error_name:['TypeError','ReferenceError','TimeoutError','AbortError','SyntaxError','Error'].includes(error?.name)?error.name:'unknown'};}
+  }catch(error){const message=String(error?.message||'');const category=/illegal invocation|illegal receiver/i.test(message)?'unbound_runtime_call':/not a function/i.test(message)?'missing_runtime_api':/timeout|timed out/i.test(message)?'timeout':/network|fetch|connect|dns|resolve/i.test(message)?'network':/abort/i.test(message)?'aborted':'runtime_or_catalog';return {provider,status:'catalog_unavailable',error_category:category,error_name:['TypeError','ReferenceError','TimeoutError','AbortError','SyntaxError','Error'].includes(error?.name)?error.name:'unknown'};}
  }
  const tools=[
   {name:'rovor_cloud_workforce_status',description:'Read actual private cloud job/model/token receipts. Missing or disabled providers are explicit.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true}},
