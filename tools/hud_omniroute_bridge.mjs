@@ -102,7 +102,7 @@ export function createCollector(read,{clock=Date.now}={}){
   };
 }
 
-export function createBridge({collect,hud,adapter,pairCode=crypto.randomBytes(32).toString('hex'),port=0,clock=Date.now,viewerOrigin='https://teamrovor.github.io'}){
+export function createBridge({collect,hud,adapter,quotaAddon='',pairCode=crypto.randomBytes(32).toString('hex'),port=0,clock=Date.now,viewerOrigin='https://teamrovor.github.io'}){
   const sessions=new Map(),allowedHosts=new Set();let pairingOpen=true;
   const reply=(res,status,body,type='application/json',extra={})=>{res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"frame-ancestors 'none'; base-uri 'none'",...extra});res.end(body);};
   const externalTokens=new Map();
@@ -139,8 +139,9 @@ export function createBridge({collect,hud,adapter,pairCode=crypto.randomBytes(32
       return reply(res,200,login,'text/html');
     }
     if(!authenticated&&!(bearerOK&&url.pathname==='/api/hud/omniroute'))return denied(res);
-    if(url.pathname==='/')return reply(res,200,hud.replace('</body>','<script>window.ROVOR_START_OMNIROUTE?.();</script></body>'),'text/html');
+    if(url.pathname==='/')return reply(res,200,hud.replace('</body>',(quotaAddon?'<script src="/hud-quota.js"></script>':'')+'<script>window.ROVOR_START_OMNIROUTE?.();</script></body>'),'text/html');
     if(url.pathname==='/hud-live.js')return reply(res,200,adapter,'text/javascript');
+    if(url.pathname==='/hud-quota.js'&&quotaAddon)return reply(res,200,quotaAddon,'text/javascript');
     if(url.pathname==='/api/hud/omniroute'){
       const period=url.searchParams.get('period')||'24h';if(!WINDOWS[period])return reply(res,400,'{"error":"period_invalid"}');
       try{return reply(res,200,JSON.stringify(await collect(period)));}catch{return reply(res,503,'{"error":"omniroute_unavailable_or_unauthorized"}');}
@@ -194,7 +195,7 @@ async function main(){
   const reader=await installedReader(),readModels=createCollector(reader),readWorkers=createWorkerReader();
   const collect=async period=>({...await readModels(period),workforce:await readWorkers()});
   const first=await collect('24h');
-  const bridge=createBridge({collect,port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8')+'\n'+fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8')});
+  const bridge=createBridge({collect,port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8'),quotaAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8')});
   const port=await bridge.listen();
   console.log(`OmniRoute connected: ${first.connection_count} configured connections; ${first.models.length} recorded models; ${first.request_count} recorded requests in 24h. ${first.quota.records.length} fresh provider-reported quota rows (unknown limits remain unknown).`);
   let tunnel;
