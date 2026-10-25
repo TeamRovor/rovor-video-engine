@@ -2,7 +2,7 @@
 import copy,json,unittest,cv2
 from pathlib import Path
 import numpy as np
-from finished_cartoon_scene import finish_event,finished_controls,favicon_progress,favicon_weights,FinishedCartoonHead,FinishedCartoonSceneBody
+from finished_cartoon_scene import outro_event,finish_event,finished_controls,favicon_progress,favicon_weights,FinishedCartoonHead,FinishedCartoonSceneBody
 from detail_cartoon_scene import detail_controls,DetailCartoonHead
 class FinishedTests(unittest.TestCase):
     @classmethod
@@ -21,9 +21,23 @@ class FinishedTests(unittest.TestCase):
         self.assertEqual(favicon_weights(0),(1.,0.));self.assertEqual(favicon_weights(1),(0.,1.))
     def test_controls_are_isolated_continuous_plan_unchanged(self):
         before=copy.deepcopy(self.plan)
-        for t in [0.,10.,15.5,17.,20.,22.]:self.assertEqual(finished_controls(t,self.plan),detail_controls(t,self.plan))
+        for t in [0.,10.,15.5,17.,20.,23.]:self.assertEqual(finished_controls(t,self.plan),detail_controls(t,self.plan))
         rows=[]
         for t in np.arange(17.,19.8,1/480):
+            c=finished_controls(float(t),self.plan);rows.append(c['right']+c['left']+[c['head'],c['body_roll']])
+        self.assertLess(abs(np.diff(rows,axis=0)).max(),.25);self.assertEqual(before,self.plan)
+    def test_closing_gesture_matches_words_shifts_with_them_and_stays_continuous(self):
+        before=copy.deepcopy(self.plan);e=outro_event(self.plan)
+        self.assertEqual(e['scriptIndices'],list(range(62,66)))
+        self.assertNotEqual(finished_controls(e['arrive']+.1,self.plan),detail_controls(e['arrive']+.1,self.plan))
+        p=copy.deepcopy(self.plan)
+        for word in p['words']:word['start']+=3;word['end']+=3
+        for key in ['anticipate','prepare','arrive','hold','settle']:self.assertAlmostEqual(outro_event(p)[key],e[key]+3)
+        p=copy.deepcopy(self.plan);p['words'][-2]['word']='other'
+        self.assertIsNone(outro_event(p))
+        self.assertEqual(finished_controls(21.5,p),detail_controls(21.5,p))
+        rows=[]
+        for t in np.arange(20.,23.,1/480):
             c=finished_controls(float(t),self.plan);rows.append(c['right']+c['left']+[c['head'],c['body_roll']])
         self.assertLess(abs(np.diff(rows,axis=0)).max(),.25);self.assertEqual(before,self.plan)
     def test_brow_isolation(self):
@@ -39,10 +53,10 @@ class FinishedTests(unittest.TestCase):
         for name in before:
             if name not in ('head','neck'):np.testing.assert_array_equal(np.array(before[name]),np.array(after[name]))
         self.assertFalse(np.array_equal(np.array(before['head']),np.array(after['head'])))
-        self.assertEqual(len(body.head.rig.last_parts),10);self.assertTrue(body.head.last_audit['upper288Exact'])
+        self.assertEqual(len(body.head.rig.last_parts),11);self.assertTrue(body.head.last_audit['upper288Exact'])
     def test_arm_meshes_through_reference(self):
         body=FinishedCartoonSceneBody()
-        for i in range(1059):
+        for i in range(1105):
             c=finished_controls(i/48,self.plan)
             for name,arm in body.arms.items():
                 tri=arm.posed_vertices(c[name])[np.array(arm.triangles)];a=tri[:,1]-tri[:,0];b=tri[:,2]-tri[:,0]

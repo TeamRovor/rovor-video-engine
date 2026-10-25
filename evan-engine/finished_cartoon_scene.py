@@ -24,6 +24,19 @@ def finish_event(plan):
     return None
 
 
+def outro_event(plan):
+    words=plan.get('words',[])
+    for i in range(len(words)-3):
+        part=words[i:i+4]
+        if [w['word'].lower() for w in part]==['time','at','rovor','digital']:
+            time,_,brand,last=part
+            # shortcut: authored ending hold; a different script needs its own acting cue.
+            return dict(anticipate=time['start']-.3,prepare=time['start'],
+                        arrive=brand['start']+.08,hold=last['end']+.15,
+                        settle=last['end']+.95,scriptIndices=[w['scriptIndex'] for w in part])
+    return None
+
+
 def finished_controls(t,plan):
     c=detail_controls(t,plan);event=finish_event(plan)
     for side,back,accent,delays in [
@@ -32,6 +45,13 @@ def finished_controls(t,plan):
         c[side]=[v+detail_track(t,event,b,a,d) for v,b,a,d in zip(c[side],back,accent,delays)]
     c['head']+=detail_track(t,event,-.35,1.1,.025)
     c['body_roll']+=detail_track(t,event,-.08,.22,.06)
+    closing=outro_event(plan)
+    for side,back,accent,delays in [
+        ('right',[.5,2.,-2.],[-3.,-24.,16.],[0.,.045,.09]),
+        ('left',[-.2,-.5,0.],[.8,2.,0.],[.03,.07,.11])]:
+        c[side]=[v+detail_track(t,closing,b,a,d) for v,b,a,d in zip(c[side],back,accent,delays)]
+    c['head']+=detail_track(t,closing,.4,-1.8,.055)
+    c['body_roll']+=detail_track(t,closing,-.08,.2,.08)
     return c
 
 
