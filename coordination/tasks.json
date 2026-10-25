@@ -5039,10 +5039,10 @@
       "id": "walter-cloud-eligibility-config-20261025",
       "title": "Compile independently verified nine-provider zero-cost quota and canary attestations into deployable private fleet config",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Walter / unattended cloud migration eligibility configuration 2026-10-25",
-      "updated_at": "2026-10-25T02:28:00Z",
-      "next_update": "After focused hosted CI and owner review of immutable PR head",
+      "updated_at": "2026-10-25T02:31:45Z",
+      "next_update": "After saved Amar PASS/FAIL on PR194 exact tested head, or independently verified private hosting/provider evidence",
       "branch": "feature/walter-cloud-eligibility-config-20261025",
       "scopes": [
         "integrations/ghost-cloud/eligibility-config.mjs",
@@ -5052,8 +5052,30 @@
       "depends_on": [
         "nine-provider-cloud-dispatch-20261024"
       ],
-      "next_action": "Implement an independent fail-closed host-side config compiler that consumes privately verified exact per-provider cost, quota/reset and live-canary facts and produces only disabled or bounded runtime-ready GHOST_FLEET_CONFIG. No new model calls, secrets, Mac access, HUD changes, or automatic deployment.",
-      "acceptance": "All nine fixed provider identities supported; unknown, expired, unverified, overquota, mismatched-model, inconsistent-pool attestations never enable dispatch. Current, independently verified, owner-authorized evidence yields runtime-eligible bounded configs without secrets; Node24 focused hosted tests and shared task/routing validation pass. Specialist PR remains unmerged pending exact-commit Amar PASS."
+      "next_action": "PR194 head 3d63d8472964a2652c8b9a4aa4eca30cf7e85045 OPEN awaiting Amar exact-commit PASS/FAIL. Node24 hosted runs40154774210 and40154771324 passed 11 focused eligibility tests and project_loop/routing; nine-provider runtime PR run40154774215 also SUCCESS (19 existing runtime tests and shared checks). This isolated helper compiles only privately operator-attested current free-tier/model/canary/quota evidence into bounded GHOST_FLEET_CONFIG; no automatic eligibility renewal, provider queries, secrets, real canaries, inference, Site publication, HUD usage, Mac access, or owner approval. Existing private HUD owner must provision/publish Site, independently verify all nine accounts and invoke this helper in trusted host after explicit approval; PR191/192/193 remain separately awaiting PASS. Do not merge without saved PASS and fresh checks.",
+      "acceptance": "All nine fixed provider identities supported; unknown, expired, unverified, overquota, mismatched-model, inconsistent-pool attestations never enable dispatch. Current, independently verified, owner-authorized evidence yields runtime-eligible bounded configs without secrets; Node24 focused hosted tests and shared task/routing validation pass. Specialist PR remains unmerged pending exact-commit Amar PASS.",
+      "blocker": "Private Site appgprj_6add1e2cc8c08191839344b34d7dbf50 unpublished; host credentials and nine current real provider billing/quota/canary proofs unavailable to this GitHub-only shift. Source PR194 awaits owner PASS. No live provider outputs, measured tokens or quota state.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/194",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40154774210",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40154774215"
+      ],
+      "evidence": [
+        {
+          "commit": "3d63d8472964a2652c8b9a4aa4eca30cf7e85045",
+          "platform": "GitHub-hosted Ubuntu Node24.21.0",
+          "check": "node --test tests/test_ghost_cloud_eligibility_config.mjs; python3 tools/project_loop.py check; python3 tools/task_routing_pair.py --check",
+          "result": "PASS 11/11 focused tests and shared queue/routing checks; mocked operator evidence and real runtime eligibility() function; no live provider or secrets.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40154774210"
+        },
+        {
+          "commit": "3d63d8472964a2652c8b9a4aa4eca30cf7e85045",
+          "platform": "GitHub-hosted Ubuntu Node24.21.0",
+          "check": "node --test tests/test_ghost_cloud.mjs; python3 tools/project_loop.py check; python3 tools/task_routing_pair.py --check",
+          "result": "PASS existing 19/19 cloud runtime tests and shared checks; no inference or deployment.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40154774215"
+        }
+      ]
     }
   ]
 }
