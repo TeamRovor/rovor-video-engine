@@ -13,7 +13,7 @@ import {compileOperations,composeOperations} from '../integrations/ghost-cloud/c
 
 const root=new URL('../integrations/ghost-cloud/',import.meta.url);
 const read=name=>fs.readFileSync(new URL(name,root),'utf8');
-const reviewSchema="CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT REFERENCES ghost_cloud_attempts(id),actor TEXT,verdict TEXT,output_sha256 TEXT,reviewed_at INTEGER);";
+const reviewSchema="CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL UNIQUE REFERENCES ghost_cloud_attempts(id),actor TEXT,verdict TEXT,output_sha256 TEXT,reviewed_at INTEGER);";
 const baseSource=`function createSitesHandler(html){return async request=>{if(!request.headers.get('oai-authenticated-user-id'))return Response.json({error:'identity_required'},{status:401});if(new URL(request.url).pathname==='/mcp'){const rpc=await request.json();return Response.json({jsonrpc:'2.0',id:rpc.id,result:{tools:[{name:'rovor_workforce_status'}],content:[{type:'text',text:'never_received'}]}});}return new Response(html,{headers:{'Content-Type':'text/html'}});};}\nconst siteFetch = createSitesHandler('<html><body>Original HUD and logo</body></html>');\nexport default {fetch: siteFetch};\n`;
 const j={id:'approved-job',employee:'Saul',task_id:'canonical-task',kind:'research',title:'Public source research',prompt:'Inspect this public service offer.',source_commit:'c'.repeat(40),data_class:'public_repository'};
 function setup(){
@@ -73,9 +73,9 @@ test('PASS/FAIL requires explicit owner-browser request and creates a digest-bou
  assert.equal((await s.ops.fetch(request('/api/ghost/review',{body,browser:true}),s.env)).status,200);
  assert.equal(s.db.prepare('SELECT human_review FROM ghost_cloud_attempts').get().human_review,'passed');
  const row=s.db.prepare('SELECT * FROM ghost_cloud_reviews').get();assert.equal(row.actor,'owner');assert.match(row.output_sha256,/^[a-f0-9]{64}$/);
- assert.equal((await s.ops.fetch(request('/api/ghost/review',{body:{...body,verdict:'failed'},browser:true}),s.env)).status,200);
- assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_reviews').get().n,2);
- assert.equal(s.db.prepare('SELECT human_review FROM ghost_cloud_attempts').get().human_review,'failed');
+ assert.equal((await s.ops.fetch(request('/api/ghost/review',{body:{...body,verdict:'failed'},browser:true}),s.env)).status,409);
+ assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_reviews').get().n,1);
+ assert.equal(s.db.prepare('SELECT human_review FROM ghost_cloud_attempts').get().human_review,'passed');
 });
 test('model responses cannot mark an empty canary as human approved',async()=>{
  const s=setup();await completed(s);s.db.exec('UPDATE ghost_cloud_attempts SET output=NULL');
@@ -178,3 +178,5 @@ test('approved packet, real dispatcher, returned usage and explicit owner review
  assert.equal((await s.ops.status(s.env)).attempts[0].human_review,'passed');
  await rpc(s.ops,s.env,'rovor_cloud_replenish');await rpc(s.ops,s.env,'rovor_cloud_tick');assert.equal(requests,1);
 });
+
+test('owner-private service shift remains stopped and cannot submit human review',async()=>{const s=setup();const r=await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'shift'}}),s.env);assert.equal(r.status,200);const d=await r.json();assert.equal(d.intake.status,'stopped');assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_attempts').get().n,0);assert.equal((await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'review'}}),s.env)).status,400);});
