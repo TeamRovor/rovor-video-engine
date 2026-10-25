@@ -84,3 +84,13 @@ test('invalid scope, stale evidence and future canary never enable', async () =>
     assert.equal((await compileFleetConfig({ groq: a }, env, NOW)).config.groq.enabled, false);
   }
 });
+
+test('verified external allowance larger than local cap is safely bounded', async () => {
+  const a = sample();
+  a.quota.requests_remaining = 1000;
+  a.quota.tokens_remaining = 20000000;
+  const { config, states } = await compileFleetConfig({ groq: a }, env, NOW);
+  assert.equal(states.groq, 'operator_attested_eligible');
+  assert.equal(config.groq.requests_per_day, 8);
+  assert.equal(config.groq.tokens_per_day, 40000);
+});
