@@ -5232,7 +5232,7 @@
       "id": "private-hud-cloud-runtime-mount-20261025",
       "title": "Mount cloud inference, factual activity and owner review in existing private HUD",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar ASAP private cloud runtime mount 2026-10-25",
       "branch": "feature/private-hud-cloud-runtime-mount-20261025",
       "scopes": [
@@ -5243,9 +5243,9 @@
         "subsystem:private-hud-runtime-mount"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T07:15:06.465Z",
-      "next_update": "After private fixed OpenRouter account/quota verification and real canary, or exact live blocker",
-      "next_action": "Amar requested completion; resume existing deployment-owner claim for minimal private account verification and invoking existing canary/runtime controls. Preserve eligibility helper owner's scopes and unknown provider disablement; no invented account quota or human review.",
+      "updated_at": "2026-10-25T07:18:36.677Z",
+      "next_update": "After an authorized persistent host for actual OmniRoute is identified and connected",
+      "next_action": "LATEST OWNER DIRECTION: all nine actual OmniRoute-connected systems must work through real OmniRoute while Mac is off; Walter acceptable only as their supervisor. Stopped direct OpenRouter/provider activation path; no canary or production inference executed. Existing private HUD monitoring and nine catalog proofs preserved, not labeled OmniRoute execution. Version8 adds read-only OpenRouter account check (free tier50 remaining) and server-approved canary operation but no approval/config enabled. Unpublished local selected-model verification edit was cancelled at source helper before upload. Actual OmniRoute upstream supports remote Node/Docker/VPS operation, not an equivalent edge imitation; identify authorized persistent host, migrate actual verified encrypted provider/route config securely, run real gateway requests across nine systems and record model/usage/job receipts in HUD. Plugin discovery found Railway/Render available but neither connected; neither assumed free/authorized for spend. No paid deployment or new host created. Existing Walter hourly task corrected to gateway-only direction, no direct-provider activation. Do not repeat direct-provider canaries or claim scheduled ChatGPT engineering is OmniRoute work.",
       "acceptance": "Composed current Site imports and preserves native HUD; nine-provider status, immutable task admission, bounded cloud tick and canary, read-only fixed-endpoint provider inventory, durable user PASS/FAIL and STOP are authenticated; actual real-SQL tests pass. Prepare exact existing-Site source/archive; deployment and real model proof remain separate.",
       "evidence": [
         {
@@ -5262,7 +5262,8 @@
           "result": "DEPLOYED private cloud runtime and review-integrity fixes. Nine credentials present, zero inference attempts, disabled provider routes. All nine actual inventory checks failed catalog_unavailable; real model execution and continuous dispatch remain blocked.",
           "reference": "https://rovor-private-hud.mm98z652cq.chatgpt.site"
         }
-      ]
+      ],
+      "blocker": "Amar explicitly requires actual OmniRoute managing all nine configured systems, not direct-provider cloud substitutes. Only verified gateway endpoint in available evidence is Mac localhost:20128. No connected always-on Node/Docker server or remote OmniRoute endpoint is established. Cloud HUD Worker is not full OmniRoute. No inference performed."
     },
     {
       "id": "saul-cloud-inquiry-copy-20261025",
