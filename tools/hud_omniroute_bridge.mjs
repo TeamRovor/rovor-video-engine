@@ -139,7 +139,7 @@ export function createBridge({collect,hud,adapter,quotaAddon='',pairCode=crypto.
       return reply(res,200,login,'text/html');
     }
     if(!authenticated&&!(bearerOK&&url.pathname==='/api/hud/omniroute'))return denied(res);
-    if(url.pathname==='/')return reply(res,200,hud.replace('</body>',(quotaAddon?'<script src="/hud-quota.js"></script>':'')+'<script>window.ROVOR_START_OMNIROUTE?.();</script></body>'),'text/html');
+    if(url.pathname==='/')return reply(res,200,hud.replace('</body>',(quotaAddon?'<script src="/hud-quota.js"></script>':'')+'<script>window.ROVOR_QUOTA_BOARD?.start?.();window.ROVOR_START_OMNIROUTE?.();</script></body>'),'text/html');
     if(url.pathname==='/hud-live.js')return reply(res,200,adapter,'text/javascript');
     if(url.pathname==='/hud-quota.js'&&quotaAddon)return reply(res,200,quotaAddon,'text/javascript');
     if(url.pathname==='/api/hud/omniroute'){
