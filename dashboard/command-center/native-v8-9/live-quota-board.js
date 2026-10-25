@@ -46,7 +46,7 @@ function card(group,quota,models,live,index){
  return '<article class="rvq-provider"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">PROVIDER '+String(index+1).padStart(2,'0')+'</span><h4>'+esc(pretty(group.name||group.provider))+'</h4><p>'+fmt(group.connection_count)+' configured connection'+(group.connection_count===1?'':'s')+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+status+'</div></div>'+
  '<div class="rvq-provider-content">'+first+extra+'</div></article>';
 }
-const css=\`
+const css=`
 #rovor-workload-popup .rvq-board{margin:8px 0 20px!important;padding:20px!important;background:linear-gradient(160deg,rgba(4,24,47,.96),rgba(2,12,28,.96))!important;border:1px solid rgba(79,169,221,.36)!important;border-radius:15px!important;color:#e6f6ff}
 #rovor-workload-popup .rvq-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:17px}
 #rovor-workload-popup .rvq-eyebrow{color:#7bcaff;font:600 10px system-ui;letter-spacing:.18em}
@@ -91,7 +91,7 @@ const css=\`
 #rovor-workload-popup .rvq-footnote{font:11px/1.6 system-ui;color:#98bfd3;margin:16px 1px 0}
 @media(max-width:800px){#rovor-workload-popup .rvq-grid{grid-template-columns:1fr}#rovor-workload-popup .rvq-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#rovor-workload-popup .rvq-stat:last-child{grid-column:1/-1}}
 @media(max-width:500px){#rovor-workload-popup .rvq-board{padding:13px!important}#rovor-workload-popup .rvq-provider-head{padding:13px 11px;gap:8px}#rovor-workload-popup .rvq-provider-status{max-width:105px;white-space:normal}#rovor-workload-popup .rvq-provider-content{padding:0 12px 4px}#rovor-workload-popup .rvq-head{gap:10px}#rovor-workload-popup .rvq-stat{padding:10px}#rovor-workload-popup .rvq-stat-value{font-size:17px}#rovor-workload-popup .rvq-model-info{gap:7px}}
-\`;
+`;
 function mount(){
  if(document.getElementById('rvq-style'))return;
  const s=document.createElement('style');s.id='rvq-style';s.textContent=css;document.head.append(s);
