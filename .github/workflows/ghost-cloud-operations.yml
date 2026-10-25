@@ -1,0 +1,21 @@
+name: Private HUD cloud operations checks
+on:
+  push:
+    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud_operations.mjs', '.github/workflows/ghost-cloud-operations.yml']
+  pull_request:
+    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud_operations.mjs', '.github/workflows/ghost-cloud-operations.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/test_ghost_cloud_operations.mjs tests/test_ghost_cloud.mjs tests/test_ghost_cloud_canary_preflight.mjs
+      - run: python3 tools/project_loop.py check
+      - run: python3 tools/task_routing_pair.py --check
