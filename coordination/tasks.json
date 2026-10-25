@@ -4978,12 +4978,13 @@
       "branch": "feature/walter-cloud-canary-preflight-20261025",
       "scopes": [
         "integrations/ghost-cloud/canary-preflight.mjs",
-        "tests/test_ghost_cloud_canary_preflight.mjs"
+        "tests/test_ghost_cloud_canary_preflight.mjs",
+        ".github/workflows/ghost-cloud.yml"
       ],
       "depends_on": [],
       "updated_at": "2026-10-25T00:23:00Z",
       "next_update": "After focused hosted CI and owner review; no deployment or canary until private hosting and verified secrets",
-      "next_action": "Implement one-shot operator-authorized provider canary using existing D1 job/attempt accounting, STOP and strict cost/response checks; test with mocked providers and real SQL; leave PR for Amar PASS/FAIL. No live model calls or Site changes.",
+      "next_action": "Implement and run the dedicated Node24 canary test alongside the existing cloud runtime tests in the existing ghost-cloud CI workflow; keep PR awaiting owner PASS. No live model call or Site changes.",
       "acceptance": "Standalone cloud preflight performs a single real HTTPS canary only after operator-verified zero-cost account/model evidence, persistent STOP and atomic shared-pool quota reservation, never replays a job or enables fleet, validates exact response and preserves sanitized provider/model/usage evidence. Offline Node24 real-SQL mocked-transport tests and shared coordination checks pass. No Mac, paid calls, HUD changes or deployment."
     }
   ]
