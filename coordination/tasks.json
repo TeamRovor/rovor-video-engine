@@ -5350,6 +5350,198 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/202",
         "https://github.com/TeamRovor/rovor-video-engine/pull/201"
       ]
+    },
+    {
+      "id": "cloud-website-delivery-map-20261025",
+      "title": "Draft a website delivery milestone map",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-website-delivery-map-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.029Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Walter",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Create a practical milestone map for delivering a small-business website through ROVOR Digital. Use only the public service list below. Give six milestones, each with its deliverable, objective acceptance check, required client input, and handoff owner role. Separate website launch from ongoing maintenance. Include a short list of decisions that require the client's approval. No prices, dates, guarantees, invented clients, or claims that anything has been performed. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-domain-launch-checks-20261025",
+      "title": "Draft domain and business-email launch checks",
+      "priority": 1,
+      "status": "active",
+      "owner": "Mike / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-domain-launch-checks-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Mike",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Draft a concise launch checklist for connecting a small-business website domain and business email. Cover DNS records, HTTPS, redirects, SPF/DKIM/DMARC, form delivery, rollback and evidence capture. Distinguish browser checks from account-admin changes. Give safe read-only verification examples using example.com, never real customer domains or credentials. Flag provider-specific details as needing confirmation. No claims of tests being performed. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-phone-storyboard-20261025",
+      "title": "Draft a continuous phone-interaction storyboard",
+      "priority": 1,
+      "status": "active",
+      "owner": "Jesse / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-phone-storyboard-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Jesse",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Draft a 12-second 2D cartoon storyboard showing a customer opening a restaurant website on a phone, struggling with a cluttered menu, then using a clear mobile menu. Provide six timed beats with character pose, facial expression, hand/phone contact, screen state, and the causal transition. Use continuous action and readable phone screens. Do not redesign a logo, invent narration, or claim animation was rendered. End with three specific visual acceptance checks. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-phone-readability-spec-20261025",
+      "title": "Draft a phone-screen readability specification",
+      "priority": 1,
+      "status": "active",
+      "owner": "Gale / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-phone-readability-spec-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Gale",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Write a practical screen-readability specification for a premium phone shown within a 1920x1080 or 1080x1920 video at 60 fps. Provide recommended pixel-size targets, contrast checks, viewing-angle limits, screen-content density, antialiasing/texture considerations and a normal-speed review procedure. Label numerical targets as proposed design guidance, not measured results. Keep it usable for either a 2D or 3D phone asset. Do not claim any existing asset was inspected. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-portrait-landscape-handoff-20261025",
+      "title": "Draft portrait and landscape editorial handoff checks",
+      "priority": 1,
+      "status": "active",
+      "owner": "Jane / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-portrait-landscape-handoff-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Jane",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Draft an editorial handoff checklist for the same animated source delivered in 1920x1080 and 1080x1920 at 60 fps. Include narration preservation, lip-sync inspection, captions/safe areas, readable phone screens, intentional cuts, audio peaks, export metadata and decoded-video checks. Distinguish technical checks from Amar's creative approval. Give exact evidence each check should leave. No claim that a video was rendered, exported or approved. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-website-intake-fields-20261025",
+      "title": "Draft a focused website project intake form",
+      "priority": 1,
+      "status": "active",
+      "owner": "Gus / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-website-intake-fields-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Gus",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Propose a low-friction client intake form for ROVOR Digital's website services. Give no more than eight fields with purpose, required/optional state and a useful answer format. Cover business goal, existing website/domain, desired action, scope, supplied assets, decision maker and timing without promising delivery dates. Add a compact rule set for routing inquiries to website, branding, booking or store discovery. Do not invent client records or collect sensitive credentials. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-intake-field-microcopy-20261025",
+      "title": "Draft inquiry-form labels and helper text",
+      "priority": 1,
+      "status": "active",
+      "owner": "Saul / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-intake-field-microcopy-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Saul",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Draft concise inquiry-form microcopy for a ROVOR Digital website project. Provide labels and one-line helper text for business goal, current website, desired visitor action, services needed, available assets, contact preference and target launch window. Add a short submit-button label, privacy-neutral helper line, validation wording for an invalid email, and a recoverable submission failure message. No invented privacy promises, guarantees, prices or contact details. This is copy for review, not permission to publish. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-website-launch-review-20261025",
+      "title": "Draft a website launch review rubric",
+      "priority": 1,
+      "status": "active",
+      "owner": "Hank / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-website-launch-review-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Hank",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Create a practical pass/fail review rubric for a small-business website before launch. Cover mobile layout, keyboard access, contrast, readable text, navigation, forms/error recovery, accurate business claims, domain/HTTPS, image quality and basic performance. Each item must have an observable test, failure example and evidence to save. Separate a proposed rubric from actually executed tests. Never mark anything passed without evidence. Keep the response under 700 words. This is a draft for human review."
+      }
     }
   ]
 }

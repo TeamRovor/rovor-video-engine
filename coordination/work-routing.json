@@ -986,6 +986,46 @@
         "github-write",
         "hosted-ci"
       ]
+    },
+    "cloud-website-delivery-map-20261025": {
+      "lane": "delivery",
+      "requires": [],
+      "objective": "deliver-promised-work"
+    },
+    "cloud-domain-launch-checks-20261025": {
+      "lane": "delivery",
+      "requires": [],
+      "objective": "deliver-promised-work"
+    },
+    "cloud-phone-storyboard-20261025": {
+      "lane": "animation",
+      "requires": [],
+      "objective": "develop-content-engine"
+    },
+    "cloud-phone-readability-spec-20261025": {
+      "lane": "animation",
+      "requires": [],
+      "objective": "develop-content-engine"
+    },
+    "cloud-portrait-landscape-handoff-20261025": {
+      "lane": "delivery",
+      "requires": [],
+      "objective": "deliver-promised-work"
+    },
+    "cloud-website-intake-fields-20261025": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "cloud-intake-field-microcopy-20261025": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "cloud-website-launch-review-20261025": {
+      "lane": "delivery",
+      "requires": [],
+      "objective": "deliver-promised-work"
     }
   }
 }
