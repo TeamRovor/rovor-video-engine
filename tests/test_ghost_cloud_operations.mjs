@@ -13,7 +13,7 @@ import {compileOperations,composeOperations} from '../integrations/ghost-cloud/c
 
 const root=new URL('../integrations/ghost-cloud/',import.meta.url);
 const read=name=>fs.readFileSync(new URL(name,root),'utf8');
-const reviewSchema="CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL UNIQUE REFERENCES ghost_cloud_attempts(id),actor TEXT,verdict TEXT,output_sha256 TEXT,reviewed_at INTEGER);";
+const reviewSchema="CREATE TABLE IF NOT EXISTS ghost_cloud_provider_checks(provider TEXT PRIMARY KEY,observed_at INTEGER NOT NULL,status TEXT NOT NULL,error_category TEXT);CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL UNIQUE REFERENCES ghost_cloud_attempts(id),actor TEXT,verdict TEXT,output_sha256 TEXT,reviewed_at INTEGER);";
 const baseSource=`function createSitesHandler(html){return async request=>{if(!request.headers.get('oai-authenticated-user-id'))return Response.json({error:'identity_required'},{status:401});if(new URL(request.url).pathname==='/mcp'){const rpc=await request.json();return Response.json({jsonrpc:'2.0',id:rpc.id,result:{tools:[{name:'rovor_workforce_status'}],content:[{type:'text',text:'never_received'}]}});}return new Response(html,{headers:{'Content-Type':'text/html'}});};}\nconst siteFetch = createSitesHandler('<html><body>Original HUD and logo</body></html>');\nexport default {fetch: siteFetch};\n`;
 const j={id:'approved-job',employee:'Saul',task_id:'canonical-task',kind:'research',title:'Public source research',prompt:'Inspect this public service offer.',source_commit:'c'.repeat(40),data_class:'public_repository'};
 function setup(){
@@ -84,7 +84,7 @@ test('model responses cannot mark an empty canary as human approved',async()=>{
 });
 test('fixed-endpoint GET inventory returns bounded public model metadata only',async()=>{
  const {env,ops}=setup();let calls=0;
- const result=await ops.inventory(env,'openrouter',async(url,opts)=>{calls++;assert.equal(url,'https://openrouter.ai/api/v1/models');assert.equal(opts.method,'GET');assert.equal(opts.redirect,'error');return Response.json({data:[{id:'known/free:free',pricing:{prompt:'0',completion:'0'}},{id:'paid/model',pricing:{prompt:'1',completion:'1'}},{id:'unknown:free',pricing:{prompt:null,completion:null}}],secret:'must not return'});});
+ const result=await ops.inventory(env,'openrouter',async(url,opts)=>{calls++;assert.equal(url,'https://openrouter.ai/api/v1/models');assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');return Response.json({data:[{id:'known/free:free',pricing:{prompt:'0',completion:'0'}},{id:'paid/model',pricing:{prompt:'1',completion:'1'}},{id:'unknown:free',pricing:{prompt:null,completion:null}}],secret:'must not return'});});
  assert.equal(calls,1);assert.deepEqual(result.models.map(m=>m.id),['known/free:free']);assert.equal(result.billing_verified,false);assert.equal(result.quota_verified,false);assert.ok(!JSON.stringify(result).includes('must not return'));
  await assert.rejects(ops.inventory(env,'https://attacker.invalid',async()=>{throw Error();}));
 });
