@@ -56,7 +56,7 @@ async function sha256(text) {
  return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-export async function runCanary({provider,cfg,env,approval,fetcher=fetch,now=Date.now()}) {
+export async function runCanary({provider,cfg,env,approval,fetcher=fetch,now=Date.now(),clock=Date.now}) {
  const denied=preflight(provider,cfg,env,approval,now);
  if(denied)return {status:'denied',reason:denied,provider};
  if(!env.DB)return {status:'denied',reason:'missing_database',provider};
@@ -72,7 +72,7 @@ export async function runCanary({provider,cfg,env,approval,fetcher=fetch,now=Dat
  // A preexisting ID is permanently consumed, even if its earlier write was interrupted.
  const inserted=await dbq(db,`INSERT OR IGNORE INTO ghost_cloud_jobs
    (id,employee,task_id,kind,title,prompt,input_bytes,source_commit,created_at)
-   VALUES (?,'Walter',?,'checklist','PROVIDER CANARY (not task output)',?,?,?, ?,?)`,
+   VALUES (?,'Walter',?,'checklist','PROVIDER CANARY (not task output)',?,?,?,?)`,
    approval.canary_id,approval.task_id,prompt,bytes(prompt),approval.source_commit,now).run();
  if(inserted.meta.changes!==1)return {status:'denied',reason:'canary_id_used',provider};
  const attemptId=crypto.randomUUID();
@@ -98,12 +98,11 @@ export async function runCanary({provider,cfg,env,approval,fetcher=fetch,now=Dat
    cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,cfg.pool).first();
  if(!attempt)return {status:'denied',reason:'shared_pool_or_stop_admission',provider};
  let status='uncertain',error_code='transport_or_response_failure',actual_model=null;
- let tokens_input=null,tokens_output=null,canary_sha256=null;
+ let tokens_input=null,tokens_output=null,canary_sha256=null,retry_after=null;
  // STOP is checked again after the atomic reservation and before any HTTPS request.
  if((await dbq(db,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled!==1){
    status='failed';error_code='stopped_before_request';
- }else if(preflight(provider,cfg,env,approval,Date.now()) && now===Date.now()){
-   // No clock spoofing is permitted in a production invocation; tests inject now.
+ }else if(preflight(provider,cfg,env,approval,Math.max(now,clock()))){
    status='failed';error_code='evidence_expired_before_request';
  }else{
    try{
@@ -111,6 +110,8 @@ export async function runCanary({provider,cfg,env,approval,fetcher=fetch,now=Dat
      const response=await fetcher(...requestFor(provider,requestCfg,env,prompt));
      if(!response.ok){
        error_code=response.status===429?'rate_limited':response.status===401||response.status===403?'auth_rejected':'upstream_http';
+       // A rate-limited canary cannot authorize more requests; require operator review.
+       if(response.status===429)retry_after=Number.MAX_SAFE_INTEGER;
        status='failed';await response.body?.cancel();
      }else{
        const data=await boundedResponse(response),choice=data?.choices?.[0];
@@ -128,9 +129,9 @@ export async function runCanary({provider,cfg,env,approval,fetcher=fetch,now=Dat
    }catch{status='uncertain';error_code='transport_or_response_failure';}
  }
  await dbq(db,`UPDATE ghost_cloud_attempts SET status=?,error_code=?,actual_model=?,
-   tokens_input=?,tokens_output=?,output=NULL,finished_at=?
+   tokens_input=?,tokens_output=?,output=NULL,retry_after=?,finished_at=?
    WHERE id=? AND status='running'`,
-   status,error_code,actual_model,tokens_input,tokens_output,now,attemptId).run();
+   status,error_code,actual_model,tokens_input,tokens_output,retry_after,now,attemptId).run();
  return {execution_source:'cloud_provider_canary',provider,requested_model:cfg.model,actual_model,
    status,reason:error_code,observed_at:now,tokens_input,tokens_output,
    canary_sha256:status==='needs_review'?canary_sha256:null,
