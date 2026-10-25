@@ -5317,7 +5317,7 @@
       "id": "ghost-cloud-scheduled-shift-evidence-20261025",
       "title": "Replenish approved cloud jobs before one scheduled tick and persist factual per-shift receipts",
       "priority": 1,
-      "status": "blocked",
+      "status": "active",
       "owner": "ChatGPT / Amar regular chat isolated cloud-shift implementation 2026-10-25",
       "branch": "feature/ghost-cloud-scheduled-shift-receipts-20261025",
       "scopes": [
@@ -5325,12 +5325,14 @@
         "integrations/ghost-cloud/scheduled-shift.sql",
         "tests/test_ghost_cloud_scheduled_shift.mjs",
         ".github/workflows/ghost-cloud-scheduled-shift.yml",
-        "subsystem:cloud-scheduler-shift-evidence"
+        "subsystem:cloud-scheduler-shift-evidence",
+        "integrations/ghost-cloud/compose-scheduled-shift.mjs",
+        "tests/test_ghost_cloud_scheduled_shift_composer.mjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T05:55:06.438Z",
-      "next_update": "After Amar's review of PR #201 and existing private Site owner integration",
-      "next_action": "Draft PR #201 implements approved-job replenishment before a bounded cloud tick, with persisted per-shift D1-compatible receipts and strict STOP/opt-in. Hosted Node24 11/11 focused tests SUCCESS in run40167203600; routing Python3.9/3.11 SUCCESS run40167203618; coordination Linux/macOS/Windows SUCCESS run40167203483. Existing Site owner must review and merge only with explicit owner PASS, append a NEW D1 schema migration, connect the SAME Site's supported scheduled trigger, and verify two real Mac-off run receipts and provider eligibility. Do not claim live nine-model execution or modify active Site owners' code.",
+      "updated_at": "2026-10-25T06:29:00Z",
+      "next_update": "After hosted source-composer tests and a reviewable draft PR201 head",
+      "next_action": "Extend PR201 with additive verified composition into existing staged v2 Site Worker without editing actively-owned compiler or HUD, expose authenticated shift readback and register no trigger. Run hosted tests and hand off only; deployment still requires trusted Site owner.",
       "acceptance": "Eleven real SQLite offline tests verify opt-in gate, STOP, enqueue before tick, blank/idle accurate reporting, bounded counts, sanitized failures, immutable unique run IDs and readback. Hosted Node24 checks pass. Distinguish source-only from live recurring registration; no model/API requests.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/201",
