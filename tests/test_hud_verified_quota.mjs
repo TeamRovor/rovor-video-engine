@@ -50,3 +50,22 @@ test('existing drawer quota board remains nine-connection grouped and escaped',(
   assert(!html.includes('<untrusted>'));
   assert(html.includes('&lt;untrusted&gt;'));
 });
+
+test('expired reset hides cached percentage until a newer quota is observed',()=>{
+  const doc={caches:{'account-1':{
+    fetchedAt:'2026-10-25T07:58:00Z',
+    quotas:{
+      justExpired:{used:7,total:10,unit:'requests',resetAt:'2026-10-25T08:00:00Z'},
+      alreadyExpired:{used:7,total:10,unit:'requests',resetAt:'2026-10-25T07:59:00Z'},
+      stillOpen:{used:3,total:10,unit:'requests',resetAt:'2026-10-25T08:01:00Z'}
+    }
+  }}};
+  const rows=reduceProviderQuota(providers,doc,{now}).records;
+  assert.deepEqual(rows.map(row=>row.model_id),['stillOpen']);
+  assert.equal(rows[0].used_percent,30);
+  assert.equal(reduceProviderQuota(providers,doc,{now:now+61000}).records.length,0);
+  // A newer provider report with a future window restores trustworthy bars.
+  doc.caches['account-1'].fetchedAt='2026-10-25T08:02:00Z';
+  doc.caches['account-1'].quotas.stillOpen.resetAt='2026-10-26T00:00:00Z';
+  assert.equal(reduceProviderQuota(providers,doc,{now:now+180000}).records.length,1);
+});
