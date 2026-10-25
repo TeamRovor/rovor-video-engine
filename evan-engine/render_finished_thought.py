@@ -4,7 +4,7 @@ from pathlib import Path
 import cv2,numpy as np
 from finished_cartoon_scene import FinishedCartoonSceneBody,FinishedStage,finished_controls,finish_event,favicon_progress
 if __name__=='__main__':
- cv2.setNumThreads(1);p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('audit',type=Path);p.add_argument('--separated-face',action='store_true',help='Use the ten-plane review face with existing finished-thought acting');p.add_argument('--start',type=int,default=696);p.add_argument('--end',type=int,default=936);a=p.parse_args();plan=json.loads(a.plan.read_text());body=FinishedCartoonSceneBody();stage=FinishedStage();a.frames.mkdir(parents=True,exist_ok=True);rows=[]
+ cv2.setNumThreads(1);p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);p.add_argument('frames',type=Path);p.add_argument('audit',type=Path);p.add_argument('--separated-face',action='store_true',help='Use the eleven-plane review face with existing finished-thought acting');p.add_argument('--start',type=int,default=696);p.add_argument('--end',type=int,default=936);a=p.parse_args();plan=json.loads(a.plan.read_text());body=FinishedCartoonSceneBody();stage=FinishedStage();a.frames.mkdir(parents=True,exist_ok=True);rows=[]
  if a.separated_face:body.enable_separated_face()
  for i in range(a.start,a.end):
   t=i/48;c=finished_controls(t,plan);minimum={}

@@ -1,0 +1,137 @@
+{
+  "runtimeSourceCommit": "9e3a8fe1317680c8b35e2bb1024933e81087d7d0",
+  "sourceFrames": [
+    696,
+    936
+  ],
+  "sourceSamples": [
+    232000,
+    312000
+  ],
+  "audio": {
+    "sourcePcm16Samples": 80000,
+    "decodedPcm16Samples": 80000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "films": {
+    "Normal": {
+      "decodedFrames": 240,
+      "sha256": "94f0f1099425408ee8f1c991b20402174981b5c370da14e90c15be4168065a7e"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 960,
+      "sha256": "65e85582370724673afbe6aa6a2c7772665e31503a2c0808db5fc82a4115350c"
+    }
+  },
+  "upper288Exact": 240,
+  "noseMaximumChange": 0,
+  "minimumOral": 0.04448283836245537,
+  "minimumJaw": 45.5,
+  "minimumArms": {
+    "left": 494.6158370879494,
+    "right": 135.35149457940372
+  },
+  "fallbacks": [
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    }
+  ],
+  "workingFacePlanes": 11,
+  "bodyControlsAndBrowsAndFaviconExact": true,
+  "phonemeTimingChanged": false,
+  "artworkChanged": false,
+  "independentListeningOrRealTimePlaybackAccepted": false,
+  "polishedMilestoneReady": false,
+  "pixelComparison": {
+    "samples": 240,
+    "framesChanged": 240,
+    "outsideMouthRegionExact": true,
+    "unionChangedBBox": [
+      243,
+      160,
+      334,
+      208
+    ],
+    "runtimeCommit": "9e3a8fe1317680c8b35e2bb1024933e81087d7d0",
+    "codeSha256": {
+      "separated_oral_review.py": "b739bc9766d78b0ff6262c04aaa86500e5ede91966ee7f4948d2cb8c7f99a2cd",
+      "lower_lip_plane.py": "956ff58a07c25fd7017c29421a226fdcad9a82e2c9e28a98948b34136e1c6d08",
+      "finished_cartoon_scene.py": "d1ff8cb7248332b287ebb611e7b4f26b895228c28c35c8b76215937b20c979bb",
+      "render_finished_thought.py": "ed2a0fcdb6ae24f6043b213ae052bbd613e610231c1267880a793f76fcc8a06c",
+      "narrated_export.py": "638f88dacb0275106607a72281712b98094cea35c730e5e275c11f5334075061"
+    }
+  },
+  "layerExports": [
+    {
+      "file": "Body-Pixel-Layers-885.psd",
+      "layers": [
+        "neck",
+        "torso",
+        "hand-left",
+        "arm-left",
+        "arm-right",
+        "head"
+      ],
+      "meanPremultipliedError": 0.007137673827357667,
+      "nativeMohoBones": false
+    },
+    {
+      "file": "Native-Oral-Layers-885.psd",
+      "layers": [
+        "Neck backing",
+        "Drawn skin underlap",
+        "Painted cavity",
+        "Narration tongue",
+        "Rigid upper incisors",
+        "Front dental tongue tip",
+        "Upper face and cheeks",
+        "Drawn jaw skin",
+        "Independent lower lip",
+        "Independent upper-lip cap",
+        "Upper lip carrier guard"
+      ],
+      "meanPremultipliedError": 0.003268832786410461,
+      "nativeMohoBones": false
+    }
+  ],
+  "nativeStagedMouthFramesInspected": 240,
+  "fullFramesInspected": [
+    868,
+    885,
+    935
+  ],
+  "newMotionIntegrated": false,
+  "closedLipAnticipationIntegrated": false,
+  "sourceScriptSha256": {
+    "package.py": "374aee3108f3f3b7117b1e96653119e49c4b67ef5daf1f11585743f88999744f",
+    "export.py": "4ad4a7a22562be74ee6ae53886ead4b93fc1549838520126eefb20354d73762b",
+    "Runtime-separated_oral_review.py": "b739bc9766d78b0ff6262c04aaa86500e5ede91966ee7f4948d2cb8c7f99a2cd",
+    "Runtime-render_finished_thought.py": "ed2a0fcdb6ae24f6043b213ae052bbd613e610231c1267880a793f76fcc8a06c",
+    "Runtime-guided_jaw_exposure.py": "f5500b02b6cb49ae54afa94c1626ec43b4b083467f797e86ac03607afa4ab310",
+    "compare.py": "e2242fd80f10619e06ed34c42ed172099bb31618b98565929ec6b87b8256994f",
+    "Runtime-finished_cartoon_scene.py": "d1ff8cb7248332b287ebb611e7b4f26b895228c28c35c8b76215937b20c979bb"
+  }
+}
