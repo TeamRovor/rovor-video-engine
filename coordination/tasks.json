@@ -5285,10 +5285,10 @@
       "id": "jesse-moho-read-request-budget-20261025",
       "title": "Bound Moho read-only queue request parsing before JSON allocation",
       "priority": 2,
-      "status": "active",
+      "status": "blocked",
       "owner": "Jesse / cloud pool Moho queue validation 2026-10-25",
-      "updated_at": "2026-10-25T04:03:53.091Z",
-      "next_update": "After offline queue boundary tests and hosted Python checks",
+      "updated_at": "2026-10-25T04:05:55.193Z",
+      "next_update": "After owner review of PR198; preserve exact tested output",
       "branch": "fix/jesse-moho-read-request-budget-20261025",
       "scopes": [
         ".github/scripts/rovor_moho_read_queue.py",
@@ -5296,8 +5296,22 @@
         ".github/workflows/moho-read-queue-check.yml"
       ],
       "depends_on": [],
-      "next_action": "Replace unbounded request file read with16KiB+1 bounded read; reject oversized data before JSON parsing. Preserve fixed read-command whitelist; add offline tests and hosted CI without triggering legacy Mac runner or native calls. Open PR, no merge/deploy.",
-      "acceptance": "Valid one/two read-command plans still accepted, exact-byte boundary supported, one-byte-over rejected before JSON parsing; invalid paths/commands remain rejected. Offline Python3.9/3.11 tests pass; no request queue jobs, subprocesses, network, Mac GUI or issue sends executed."
+      "next_action": "Review PR198 at881b58cd14e4c8a5b42e0871e2c1afe7a1d53133. All6 offline tests PASS locally and on hostedPython3.9/3.11, PR run40160575762 and push run40160572954. Do not self-merge, deploy, enqueue a legacy Mac read request, send issue comments or fabricate PASS. Parser change bounds request bytes only; native bridge/GUI remains separately gated. Historical HUD receipt publication still depends on previous completed provenance and existing HUD owner fixture correction; do not mark current run completed.",
+      "acceptance": "Valid one/two read-command plans still accepted, exact-byte boundary supported, one-byte-over rejected before JSON parsing; invalid paths/commands remain rejected. Offline Python3.9/3.11 tests pass; no request queue jobs, subprocesses, network, Mac GUI or issue sends executed.",
+      "blocker": "Source change awaits owner acceptance; native Moho execution remains unverified.",
+      "evidence": [
+        {
+          "commit": "881b58cd14e4c8a5b42e0871e2c1afe7a1d53133",
+          "platform": "Cloud Linux Python3.12.14; GitHub-hosted Ubuntu Python3.9/3.11",
+          "check": "Reproduced one-megabyte valid read request accepted; python3 -m unittest discover -s tests -p test_rovor_moho_read_queue.py -v; project_loop.py check and task_routing_pair.py --check",
+          "result": "6/6 offline tests PASS locally and every hosted matrix job in both runs. Request capped16KiB before decoding/JSON; exact limit, one-byte-over, UTF8 bytes, whitelist and paths verified. Canonical147 tasks/routes valid. PR198 OPEN; no native runner, GUI, issue sends, provider calls, private inputs, owner approval, merge or deployment.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40160575762"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/198",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40160575762"
+      ]
     }
   ]
 }
