@@ -44,7 +44,7 @@ test('nine exact provider routes can each produce a bounded, private, quota-coun
   let called=0;
   const result=await runCanary({provider,cfg,env,approval:a,now:NOW,
    fetcher:async(url,opts)=>{
-    called++;assert.match(url,/^https:\/\//);assert.equal(opts.redirect,'error');
+    called++;assert.match(url,/^https:\/\//);assert.equal(opts.redirect,'manual');
     assert.equal(JSON.parse(opts.body).model,cfg.model);
     assert.equal(JSON.parse(opts.body).max_tokens,64);
     assert.equal(JSON.parse(opts.body).messages[0].content,'Return exactly '+marker(a)+' and nothing else.');
