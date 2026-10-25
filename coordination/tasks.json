@@ -5312,6 +5312,27 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/198",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40160575762"
       ]
+    },
+    {
+      "id": "ghost-cloud-scheduled-shift-evidence-20261025",
+      "title": "Replenish approved cloud jobs before one scheduled tick and persist factual per-shift receipts",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar regular chat isolated cloud-shift implementation 2026-10-25",
+      "branch": "feature/ghost-cloud-scheduled-shift-receipts-20261025",
+      "scopes": [
+        "integrations/ghost-cloud/scheduled-shift.mjs",
+        "integrations/ghost-cloud/scheduled-shift.sql",
+        "tests/test_ghost_cloud_scheduled_shift.mjs",
+        ".github/workflows/ghost-cloud-scheduled-shift.yml",
+        "subsystem:cloud-scheduler-shift-evidence"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T05:52:05.041Z",
+      "next_update": "After offline real-SQL tests and GitHub Actions results",
+      "next_action": "Implement an additive one-schedule shift orchestration module for existing private Site: strict opt-in, existing approved-feed replenishment before existing atomic cloud.tick(), persistent truth-labeled receipts and STOP, no new scheduler/Site/models or owner file overwrite. Site deployment owner must separately integrate and publish after review.",
+      "acceptance": "Eleven real SQLite offline tests verify opt-in gate, STOP, enqueue before tick, blank/idle accurate reporting, bounded counts, sanitized failures, immutable unique run IDs and readback. Hosted Node24 checks pass. Distinguish source-only from live recurring registration; no model/API requests.",
+      "links": []
     }
   ]
 }
