@@ -956,6 +956,15 @@
         "github-write",
         "hosted-ci"
       ]
+    },
+    "private-hud-cloud-runtime-mount-20261025": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

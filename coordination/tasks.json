@@ -5227,6 +5227,26 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/196",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40157938579"
       ]
+    },
+    {
+      "id": "private-hud-cloud-runtime-mount-20261025",
+      "title": "Mount cloud inference, factual activity and owner review in existing private HUD",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar ASAP private cloud runtime mount 2026-10-25",
+      "branch": "feature/private-hud-cloud-runtime-mount-20261025",
+      "scopes": [
+        "integrations/ghost-cloud/site-operations.mjs",
+        "integrations/ghost-cloud/compose-operations.mjs",
+        "tests/test_ghost_cloud_operations.mjs",
+        ".github/workflows/ghost-cloud-operations.yml",
+        "subsystem:private-hud-runtime-mount"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T03:41:13.152Z",
+      "next_update": "After composed Worker real-SQL tests and staged private source validation",
+      "next_action": "Compose existing tested runtime/canary and approved public task feeder into existing published Site without overwriting original HUD. Add authenticated cloud MCP operations, bounded read-only provider inspection, live same-origin status and explicit owner review; keep paid/unknown inference disabled.",
+      "acceptance": "Composed current Site imports and preserves native HUD; nine-provider status, immutable task admission, bounded cloud tick and canary, read-only fixed-endpoint provider inventory, durable user PASS/FAIL and STOP are authenticated; actual real-SQL tests pass. Prepare exact existing-Site source/archive; deployment and real model proof remain separate."
     }
   ]
 }
