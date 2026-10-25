@@ -931,6 +931,14 @@
         "github-write"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "gale-preflight-config-shapes-20261025": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
     }
   }
 }

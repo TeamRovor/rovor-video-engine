@@ -5118,6 +5118,24 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/192"
       ]
+    },
+    {
+      "id": "gale-preflight-config-shapes-20261025",
+      "title": "Return structured failure for malformed Blender MCP configuration shapes",
+      "priority": 2,
+      "status": "active",
+      "owner": "Gale / cloud pool Blender preflight reliability 2026-10-25",
+      "updated_at": "2026-10-25T02:52:42.922Z",
+      "next_update": "After offline malformed-config regressions and hosted Python checks",
+      "branch": "fix/gale-blender-preflight-shapes-20261025",
+      "scopes": [
+        "tools/blender_mcp_preflight.py",
+        "tests/test_blender_mcp_preflight.py",
+        ".github/workflows/blender-preflight.yml"
+      ],
+      "depends_on": [],
+      "next_action": "Fix reproduced AttributeError when JSON top level or JSON/TOML server sections are not objects; keep read-only validation and structured CLI failure. Add offline tests/workflow, open reviewable PR, no merge/deploy/native operations.",
+      "acceptance": "Malformed top-level JSON and JSON/TOML server-section shapes yield validated:false JSON and exit1 without traceback, socket calls, server start or writes; valid existing configs and existing safety validation preserved. Python3.11/3.12 hosted tests and canonical queue/routing checks pass."
     }
   ]
 }
