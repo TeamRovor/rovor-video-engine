@@ -25,7 +25,8 @@ function validateEvidence(provider, evidence, now) {
   if (provider === 'huggingface' && !/:[a-z0-9-]+$/.test(model)) return 'unpinned_upstream';
   if (!quota || !SHA.test(quota.sha256 || '') || !timestamp(quota.checked_at) ||
       quota.checked_at > now || now - quota.checked_at > DAY ||
-      !integer(quota.requests_remaining, 144) || !integer(quota.tokens_remaining, 10_000_000) ||
+      !integer(quota.requests_remaining, Number.MAX_SAFE_INTEGER) ||
+      !integer(quota.tokens_remaining, Number.MAX_SAFE_INTEGER) ||
       !timestamp(quota.reset_at) || quota.reset_at <= now) return 'quota_unverified';
   if (!canary || canary.live_verified !== true || !SHA.test(canary.sha256 || '') ||
       !timestamp(canary.at) || canary.at < Math.max(billing.checked_at, quota.checked_at) ||
