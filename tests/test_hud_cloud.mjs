@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import worker, {handle, latest, sanitize} from '../integrations/hud-cloud/worker.mjs';
-import {publishOnce, validateTarget} from '../tools/hud_telemetry_publisher.mjs';
+import {publishOnce, validateTarget, isAllowedLocalReadPath} from '../tools/hud_telemetry_publisher.mjs';
 
 const NOW = Date.parse('2026-10-24T20:00:00Z');
 const WRITER = 'w'.repeat(48), READER = 'r'.repeat(48);
@@ -153,4 +153,64 @@ test('original HUD is served behind authentication with automatic same-origin te
   const html = await (await handle(request('/'), env, NOW)).text();
   assert.match(html, /Original HUD/); assert.match(html, /ROVOR_START_OMNIROUTE/); assert.match(html, /credentials:'same-origin'/);
   assert.equal(html.includes(READER), false); assert.equal(html.includes(WRITER), false);
+});
+
+test('persistent reporter admits cached provider-limit reads, never inference paths', () => {
+  assert.equal(isAllowedLocalReadPath('/api/providers'), true);
+  assert.equal(isAllowedLocalReadPath('/api/usage/provider-limits'), true);
+  assert.equal(isAllowedLocalReadPath('/api/usage/analytics?range=all'), true);
+  for (const path of ['/v1/chat/completions', '/api/usage/provider-limits/refresh',
+    '/api/providers/write', '/api/usage/provider-limits?refresh=true']) {
+    assert.equal(isAllowedLocalReadPath(path), false, path);
+  }
+});
+
+test('private HUD retains authenticated cached quota limits and recomputes percent', async () => {
+  const env = environment(), d = sample();
+  d.quota = {source: 'omniroute_provider_limits_cache', freshness: 'recent_provider_cache',
+    apiKey: 'DO_NOT_LEAK',
+    records: [{provider: 'provider-a', account_slot: 1, model_id: 'model-a',
+      used: 9, total: 12, used_percent: 3, remaining: 999, unit: 'requests',
+      fetched_at: new Date(NOW - 20000).toISOString(), reset_at: new Date(NOW + 60000).toISOString(),
+      evidence: 'recent_authenticated_local_provider_cache', scope: 'model_on_provider_account',
+      raw_key: 'DO_NOT_LEAK'}]};
+  assert.equal((await ingest(env, d)).status, 200);
+  const read = await (await handle(request('/api/hud/omniroute'), env, NOW)).json();
+  assert.equal(read.quota.records.length, 1);
+  assert.equal(read.quota.records[0].used_percent, 75);
+  assert.equal(read.quota.records[0].remaining, 3);
+  assert.equal(read.quota.records[0].reset_at, new Date(NOW + 60000).toISOString());
+  assert.equal(JSON.stringify(read).includes('DO_NOT_LEAK'), false);
+  const pastReset = await (await handle(request('/api/hud/omniroute'), env, NOW + 61000)).json();
+  assert.equal(pastReset.quota.records.length, 0);
+  assert.equal(pastReset.quota.freshness, 'no_fresh_supported_limits');
+  assert.equal((await latest(env.DB, '24h', NOW)).snapshot.quota.records.length, 1);
+});
+
+test('missing, malformed, cross-provider and expired quotas never produce fictional bars', () => {
+  assert.equal(sanitize(sample(), NOW).quota.records.length, 0);
+  const base = () => {
+    const d = sample();
+    d.quota = {source: 'omniroute_provider_limits_cache', records: [{
+      provider: 'provider-a', account_slot: 1, model_id: 'model-a',
+      used: 1, total: 10, unit: 'tokens',
+      fetched_at: new Date(NOW - 5000).toISOString(), reset_at: null,
+      evidence: 'recent_authenticated_local_provider_cache', scope: 'model_on_provider_account'
+    }]};
+    return d;
+  };
+  for (const alter of [
+    d => d.quota.records[0].provider = 'unknown',
+    d => d.quota.records[0].account_slot = 2,
+    d => d.quota.records[0].total = 0,
+    d => d.quota.records[0].used = 11,
+    d => d.quota.records[0].unit = 'dollars',
+    d => d.quota.records[0].evidence = 'unverified',
+    d => d.quota.records.push({...d.quota.records[0]}),
+    d => d.quota.records[0].fetched_at = 'not a date'
+  ]) {
+    const d = base(); alter(d); assert.throws(() => sanitize(d, NOW));
+  }
+  const d = base(); d.quota.records[0].reset_at = new Date(NOW - 1).toISOString();
+  assert.equal(sanitize(d, NOW).quota.records.length, 0);
 });
