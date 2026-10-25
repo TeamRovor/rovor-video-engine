@@ -38,6 +38,25 @@ class SpeechAuditTests(unittest.TestCase):
         self.assertEqual(result['phonemes'],[phone])
         clean=copy.deepcopy(result);clean.pop('phoneAudioReview');clean['words'][0]['reviewFlags']=[]
         np.testing.assert_array_equal(planned_weights(.3,result,[]),planned_weights(.3,clean,[]))
+    def test_short_vowel_quiet_prefix_reaches_review_without_retiming(self):
+        from unittest.mock import patch
+        from acoustic_alignment import upgrade_plan
+        from speech_planner import planned_weights
+        phone=dict(start=.1,end=.29,word='all',phone='AO1',value='E',scriptIndex=0)
+        before=copy.deepcopy(phone);x=np.full(16000,.2);x[1600:2320]=0
+        rows=phone_audio_support([phone],x,16000)
+        self.assertEqual(rows[0]['flag'],'vowel-leading-low-energy-run');self.assertEqual(rows[0]['lowEnergyRun'],[.1,.145]);self.assertEqual(phone,before)
+        self.assertEqual(phone_audio_support([dict(phone,phone='M')],x,16000),[])
+        self.assertEqual(phone_audio_support([phone],np.zeros(16000),16000),[])
+        x[2160:2320]=.2;self.assertEqual(phone_audio_support([phone],x,16000),[])
+        x[2160:2320]=0
+        aligned=dict(words=[dict(word='all',scriptIndex=0,start=.1,end=.29,reviewFlags=[])],phonemes=[phone],silences=[],warnings=[],method='fixture',confidenceNote='not calibrated')
+        plan=dict(coverage=1,words=[],phonemes=[],warnings=[],audio=dict(step=.01,energy=[.2]*100))
+        with patch('acoustic_alignment.align_script',return_value=aligned),patch('speech_alignment_audit.read_audio',return_value=(x,16000)):
+            result=upgrade_plan(plan,'unused')
+        self.assertIn('vowel-leading-low-energy-run',result['words'][0]['reviewFlags']);self.assertEqual(result['alignment']['reviewWordCount'],1);self.assertEqual(result['phonemes'],[before])
+        clean=copy.deepcopy(result);clean.pop('phoneAudioReview');clean['words'][0]['reviewFlags']=[]
+        np.testing.assert_array_equal(planned_weights(.2,result,[]),planned_weights(.2,clean,[]))
     def test_phone_flag_without_independent_anchor_stays_explicitly_unresolved(self):
         p=dict(words=[dict(word='way',scriptIndex=0,start=.1,end=.5,reviewFlags=['long-phone-low-energy-run'])],estimatedWords=[])
         rows,groups=flagged_regions(p,1)

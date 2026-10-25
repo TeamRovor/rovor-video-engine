@@ -45,14 +45,24 @@ def energy_fraction(x,rate,interval,threshold_db=-40):
     return float(np.mean(20*np.log10(np.maximum(rms,1e-9))<threshold_db)) if len(rms) else None
 
 def phone_audio_support(phones,x,rate):
-    """Flag long assigned phones containing a sustained quiet run, never retime.
+    """Flag long quiet runs and quiet vowel prefixes, never retime.
 
     Fixed -40dBFS/60ms thresholds are review heuristics, not silence/phone labels.
     Each20ms bin is entirely inside its phone; partial trailing bins are omitted.
+    Vowel prefixes use5ms bins near -54dBFS/40ms before a louder bin.
+    Neither heuristic identifies the precise start of a vowel.
     """
     # shortcut: fixed amplitude thresholds are review-only; calibrate before any automatic timing/pose decision.
-    rows=[];size=max(1,round(rate*.02))
+    from speech_planner import VOWELS
+    rows=[];size=max(1,round(rate*.02));prefix_size=max(1,round(rate*.005))
     for index,phone in enumerate(phones):
+        if phone['phone'].rstrip('012') in VOWELS:
+            a=max(0,round(phone['start']*rate));b=min(len(x),round(phone['end']*rate))
+            rms=[float(np.sqrt(np.mean(x[i:i+prefix_size]**2))) for i in range(a,b-prefix_size+1,prefix_size)]
+            first_active=next((i for i,v in enumerate(rms) if v>=.002),len(rms))
+            # shortcut: near -54dBFS/40ms is a review heuristic, not a vowel onset detector.
+            if first_active*prefix_size/rate>=.04 and first_active<len(rms):
+                rows.append(dict(phoneIndex=index,scriptIndex=phone.get('scriptIndex'),word=phone['word'],phone=phone['phone'],assigned=[phone['start'],phone['end']],lowEnergyRun=[a/rate,(a+first_active*prefix_size)/rate],thresholdDbFS=float(20*np.log10(.002)),binSamples=prefix_size,flag='vowel-leading-low-energy-run',boundaryStatus='unresolved',timingChanged=False))
         if phone['end']-phone['start']<.25:continue
         a=max(0,round(phone['start']*rate));b=min(len(x),round(phone['end']*rate))
         bins=[(i,float(np.sqrt(np.mean(x[i:i+size]**2)))) for i in range(a,b-size+1,size)]
