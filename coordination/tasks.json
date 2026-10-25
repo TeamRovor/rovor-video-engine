@@ -4986,8 +4986,8 @@
       "id": "walter-cloud-canary-preflight-20261025",
       "title": "Add one-shot quota-reserved cloud provider canary preflight without Mac dependency",
       "priority": 1,
-      "status": "blocked",
-      "owner": "Walter / unattended cloud migration canary shift 2026-10-25",
+      "status": "active",
+      "owner": "Codex / Amar ASAP canary correction 2026-10-25",
       "branch": "feature/walter-cloud-canary-preflight-20261025",
       "scopes": [
         "integrations/ghost-cloud/canary-preflight.mjs",
@@ -4995,11 +4995,10 @@
         ".github/workflows/ghost-cloud.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T00:28:00Z",
-      "next_update": "After saved owner PASS/FAIL for PR192 exact head, or real private Site hosting/provisioning access",
-      "next_action": "PR192 head 9eb62a44b3ca7617a098d3ac613ee7f8b230eafe OPEN awaiting Amar's saved PASS/FAIL. Both hosted Node24 runs 40146724409 and 40146735931 SUCCESS: 27 tests (19 runtime + 8 new canary) plus project_loop.py check and paired routing. No model calls: tests use mocked provider HTTPS and real SQLite. If PASS, independently review fresh CI before merge; if FAIL, create NEW linked rework task, never replay. Existing private Site owner must resolve unpublished hosting, provision verified nine server-side keys, current account cost/quota evidence and authorized live canaries, and compose source without touching PR137 or HUD owner files. Separate Vercel external commit status is FAILURE (build-rate-limit/upgradeToPro); no paid upgrade requested or performed. The scoped GitHub cloud test workflow is SUCCESS; do not call all checks green.",
+      "updated_at": "2026-10-25T02:54:18.376Z",
+      "next_update": "After applied canary isolation and cross-dispatch regression hosted tests",
+      "next_action": "Amar explicitly requested fixing the reported blocker ASAP in this session. Continue existing PR192 branch with the one-line reserved canary kind correction and a regression proving denied probes cannot enter production after approval expiry. Preserve prior Walter evidence, failed attempt identities and human_review not_recorded. This is engineering rework, not Amar PASS on the previous faulty revision; no automatic provider calls or deployment.",
       "acceptance": "Standalone cloud preflight performs a single real HTTPS canary only after operator-verified zero-cost account/model evidence, persistent STOP and atomic shared-pool quota reservation, never replays a job or enables fleet, validates exact response and preserves sanitized provider/model/usage evidence. Offline Node24 real-SQL mocked-transport tests and shared coordination checks pass. No Mac, paid calls, HUD changes or deployment.",
-      "blocker": "No published private Site, host credentials, real account cost/quota verification or approved real provider canaries available in this GitHub-only shift. Source PR requires owner PASS before merge; no cloud provider output, HUD integration, human approval or Mac deployment.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/192",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40146735931"
@@ -5012,7 +5011,8 @@
           "result": "PASS 27/27 tests in both push run40146724409 and PR run40146735931; 138/138 task/routing coverage. Source-only PR OPEN awaiting saved owner PASS; no live provider canary, hosting deployment, Mac execution or human review.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40146735931"
         }
-      ]
+      ],
+      "previous_owner": "Walter / unattended cloud migration canary shift 2026-10-25"
     },
     {
       "id": "walter-ghost-cloud-site-composition-20261025",
