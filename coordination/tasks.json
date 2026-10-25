@@ -4916,17 +4916,30 @@
       "id": "mike-hud-pr189-receipt-20261024",
       "title": "Record Mike's verified completed PR189 cloud shift for existing HUD review controls",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Mike / cloud pool activity reporting 2026-10-24",
-      "updated_at": "2026-10-24T22:48:36.368Z",
-      "next_update": "After receipt schema/evidence validation and hosted PR checks",
+      "updated_at": "2026-10-25T02:51:41.767Z",
+      "next_update": "After persistent-HUD owner corrects newest-employee fixture assumption and PR190 is revalidated",
       "branch": "report/mike-hud-pr189-20261024",
       "scopes": [
         "coordination/cloud-shifts/mike-pr189.json"
       ],
       "depends_on": [],
-      "next_action": "Publish one immutable sanitized receipt for the previous completed Mike result, matching open PR189 exact tested head and successful CI. Do not report the current run completed, modify owner reviews or merge/deploy.",
-      "acceptance": "One exact-commit historical receipt passes existing schema and actual GitHub evidence readback. Prior recorded platform result completed before observed_at; no private IDs, model/token fabrication or owner approval. Existing hosted HUD checks pass; PR remains reviewable."
+      "next_action": "PR190 remains open at58c931b22085ccdb417647a657cca7dcf2446dab. HUD owner must replace fixed newest-employee assertion with full expected validated receipt ordering derived from actual inventory, while retaining source preservation/module/bounds checks. Run40140169453 failed48/49 solely on this assertion; GitHub evidence step skipped. Local existing receipt/evidence verifier passed against fresh PR189 exacthead/successCI. Do not alter historical timestamps, fabricate review, merge or deploy. After owner fix, validate PR190 against updated main through a new authorized integration/check; no force-push of reviewed output.",
+      "acceptance": "One exact-commit historical receipt passes existing schema and actual GitHub evidence readback. Prior recorded platform result completed before observed_at; no private IDs, model/token fabrication or owner approval. Existing hosted HUD checks pass; PR remains reviewable.",
+      "blocker": "Hosted HUD test expects newest receipt employee Walter at tests/test_hud_cloud_activity.mjs:67; valid newer Mike receipt fails Mike!==Walter. Test is reserved by hud-persistent-telemetry-20261024; no takeover.",
+      "evidence": [
+        {
+          "commit": "58c931b22085ccdb417647a657cca7dcf2446dab",
+          "platform": "Cloud Linux Node24 local receipt verification; GitHub Actions Ubuntu Node24",
+          "check": "validateCloudReceipt/verifyCloudEvidence with fresh native PR189 and CI40139798352; hosted49 HUD tests",
+          "result": "Receipt source prepared. Local exact-head evidence PASS. Hosted48/49 PASS, fixed newest-employee assertion fails Mike!==Walter; source test reserved by HUD owner. No receipt deployed or human acceptance; original task output immutable.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40140169453"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/190"
+      ]
     },
     {
       "id": "walter-ghost-cloud-approved-feed-20261024",
