@@ -5123,10 +5123,10 @@
       "id": "gale-preflight-config-shapes-20261025",
       "title": "Return structured failure for malformed Blender MCP configuration shapes",
       "priority": 2,
-      "status": "active",
+      "status": "blocked",
       "owner": "Gale / cloud pool Blender preflight reliability 2026-10-25",
-      "updated_at": "2026-10-25T02:52:42.922Z",
-      "next_update": "After offline malformed-config regressions and hosted Python checks",
+      "updated_at": "2026-10-25T02:54:18.969Z",
+      "next_update": "After owner review of PR195; keep its tested output immutable",
       "branch": "fix/gale-blender-preflight-shapes-20261025",
       "scopes": [
         "tools/blender_mcp_preflight.py",
@@ -5134,8 +5134,22 @@
         ".github/workflows/blender-preflight.yml"
       ],
       "depends_on": [],
-      "next_action": "Fix reproduced AttributeError when JSON top level or JSON/TOML server sections are not objects; keep read-only validation and structured CLI failure. Add offline tests/workflow, open reviewable PR, no merge/deploy/native operations.",
-      "acceptance": "Malformed top-level JSON and JSON/TOML server-section shapes yield validated:false JSON and exit1 without traceback, socket calls, server start or writes; valid existing configs and existing safety validation preserved. Python3.11/3.12 hosted tests and canonical queue/routing checks pass."
+      "next_action": "Review PR195 at4627c8802a58753394328d97447c444369af6a13. All14 offline tests PASS locally and on hostedPython3.11/3.12 in runs40156176970 and40156174087. Specialist must not merge/deploy or create owner review. Native host smoke stays unclaimed because this cloud shift lacks real Blender access. Preserve tested output; later receipt reporting needs completed platform provenance and the pending HUD owner fixture correction described in Mike PR190 handoff.",
+      "acceptance": "Malformed top-level JSON and JSON/TOML server-section shapes yield validated:false JSON and exit1 without traceback, socket calls, server start or writes; valid existing configs and existing safety validation preserved. Python3.11/3.12 hosted tests and canonical queue/routing checks pass.",
+      "blocker": "Source change awaits owner acceptance; no native Blender runtime verified.",
+      "evidence": [
+        {
+          "commit": "4627c8802a58753394328d97447c444369af6a13",
+          "platform": "Cloud Linux Python3.12.14; GitHub-hosted Ubuntu Python3.11/3.12",
+          "check": "Reproduced unhandled AttributeError for JSON[]; python3 -m unittest discover -s tests -p test_blender_mcp_preflight.py -v; shared queue/routing validation",
+          "result": "14/14 tests PASS locally and each hosted matrix job. Invalid JSON top levels and JSON/TOML section types now return validated:false JSON/exit1 before socket access; existing safety checks intact. PR195 OPEN; not merged/deployed/owner-accepted; no native Blender, provider calls, private assets or secrets.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40156176970"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/195",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40156176970"
+      ]
     }
   ]
 }
