@@ -23,7 +23,7 @@ function meter(q){
  const pct=Math.max(0,Math.min(100,Number(q.used_percent)||0));
  const left=Math.max(0,Number(q.total)-Number(q.used));
  const caution=pct>=90?' rvq-near-limit':'';
- return '<div class="rvq-model"><div class="rvq-model-head"><div class="rvq-model-name">'+esc(q.model_id)+'</div><div class="rvq-percent">'+pct.toFixed(1)+'<span>% USED</span></div></div>'+
+ return '<div class="rvq-model"><div class="rvq-model-head"><div class="rvq-model-name">'+esc(q.model_id)+'</div><div class="rvq-percent">'+pct.toFixed(1)+'%<span> USED</span></div></div>'+
  '<div class="rvq-track'+caution+'" role="progressbar" aria-label="Reported quota used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct.toFixed(1)+'"><i style="width:'+pct.toFixed(1)+'%"></i></div>'+
  '<div class="rvq-model-info"><div><span class="rvq-info-label">REMAINING ALLOWANCE</span><strong>'+fmt(left)+' / '+fmt(q.total)+' '+esc(q.unit)+'</strong></div><div><span class="rvq-info-label">RESET WINDOW</span><strong>'+esc(resetText(q.reset_at))+'</strong></div></div>'+
  '<div class="rvq-evidence">OMNIROUTE CACHED REPORT <span>·</span> '+esc(prettyTime(q.fetched_at))+' <span>·</span> Account '+fmt(q.account_slot)+'</div></div>';
