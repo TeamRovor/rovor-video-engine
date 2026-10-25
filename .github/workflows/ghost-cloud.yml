@@ -1,9 +1,9 @@
 name: Nine-provider cloud runtime checks
 on:
   push:
-    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud.mjs', '.github/workflows/ghost-cloud.yml']
+    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud*.mjs', '.github/workflows/ghost-cloud.yml']
   pull_request:
-    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud.mjs', '.github/workflows/ghost-cloud.yml']
+    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud*.mjs', '.github/workflows/ghost-cloud.yml']
 permissions:
   contents: read
 jobs:
@@ -16,6 +16,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node --test tests/test_ghost_cloud.mjs
+      - run: node --test tests/test_ghost_cloud.mjs tests/test_ghost_cloud_canary_preflight.mjs
       - run: python3 tools/project_loop.py check
       - run: python3 tools/task_routing_pair.py --check
