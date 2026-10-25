@@ -108,14 +108,16 @@ export function createCloudOperations(base, cloud) {
   if(request.headers.get('Sec-Fetch-Site')!=='same-origin'||request.headers.get('Origin')!==origin)return json({error:'owner_browser_required'},403);
   const value=await bounded(request);
   if(Object.keys(value).sort().join(',')!=='job_id,verdict'||!id(value.job_id)||!['passed','failed'].includes(value.verdict))throw Error('invalid_review');
-  const attempt=await sql(env,"SELECT id,output FROM ghost_cloud_attempts WHERE job_id=? AND status='needs_review'",value.job_id).first();
+  const attempt=await sql(env,"SELECT id,output FROM ghost_cloud_attempts WHERE job_id=? AND status='needs_review' AND human_review='not_recorded'",value.job_id).first();
   if(!attempt||typeof attempt.output!=='string'||!attempt.output.trim())return json({error:'reviewable_output_missing'},409);
   const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(attempt.output));
   const digest=[...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('');
-  await env.DB.batch([
-   sql(env,'INSERT INTO ghost_cloud_reviews(id,attempt_id,actor,verdict,output_sha256,reviewed_at) VALUES(?,?,?,?,?,?)',crypto.randomUUID(),attempt.id,actor,value.verdict,digest,Date.now()),
-   sql(env,'UPDATE ghost_cloud_attempts SET human_review=? WHERE id=?',value.verdict,attempt.id)
+  const reviewId=crypto.randomUUID();
+  const [insert,update]=await env.DB.batch([
+   sql(env,"INSERT INTO ghost_cloud_reviews(id,attempt_id,actor,verdict,output_sha256,reviewed_at) SELECT ?,id,?,?,?,? FROM ghost_cloud_attempts WHERE id=? AND status='needs_review' AND human_review='not_recorded' AND output=? ON CONFLICT(attempt_id) DO NOTHING",reviewId,actor,value.verdict,digest,Date.now(),attempt.id,attempt.output),
+   sql(env,"UPDATE ghost_cloud_attempts SET human_review=? WHERE id=? AND human_review='not_recorded' AND EXISTS(SELECT 1 FROM ghost_cloud_reviews WHERE attempt_id=? AND id=?)",value.verdict,attempt.id,attempt.id,reviewId)
   ]);
+  if(insert.meta.changes!==1||update.meta.changes!==1)return json({error:'review_already_decided'},409);
   return json({saved:true,job_id:value.job_id,verdict:value.verdict});
  }
  function browserUI(){
@@ -188,6 +190,22 @@ export function createCloudOperations(base, cloud) {
   inventory,status,control,replenish,
   async fetch(request,env){
    const url=new URL(request.url),actor=owner(request);
+   // Only the registered owner-private Site's dispatch may invoke this shared
+   // service route. Platform service access is separate from browser identity.
+   if(url.pathname==='/api/ghost/service'&&request.method==='POST'){
+    try {
+     const body=await bounded(request);
+     if(Object.keys(body).some(k=>!['operation','provider'].includes(k)))throw Error('invalid_service');
+     if(body.operation==='status')return json(await status(env));
+     if(body.operation==='inventory')return json(await inventory(env,body.provider));
+     if(body.operation==='shift'){
+      const intake=await replenish(env);
+      const result=await cloud.tick(env);
+      return json({intake,result,observed_at:Date.now()});
+     }
+     return json({error:'unsupported_service_operation'},400);
+    }catch{return json({error:'service_operation_failed'},503);}
+   }
    if(url.pathname.startsWith('/api/ghost/')){
     if(!actor)return json({error:'site_identity_required'},401);
     try{
