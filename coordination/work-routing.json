@@ -923,6 +923,14 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "ghost-cloud-canary-release-review-20261025": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

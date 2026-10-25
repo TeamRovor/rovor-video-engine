@@ -5076,6 +5076,23 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40154774215"
         }
       ]
+    },
+    {
+      "id": "ghost-cloud-canary-release-review-20261025",
+      "title": "Reproduce and isolate denied canary dispatch before cloud activation",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar cloud activation review 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "coordination/reviews/ghost-cloud-canary-pr192.md",
+        "coordination/reviews/ghost-cloud-canary-pr192.patch"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T02:39:40.283Z",
+      "next_update": "After reproduction and proposed isolation patch validation",
+      "next_action": "Publish exact P1 reproduction against PR192 and offline-validated minimal isolation patch without changing another owner's canary/runtime branch.",
+      "acceptance": "Reproduce denied canary later dispatched after approval expiry using real SQLite/mocked provider; show candidate isolation prevents the later request; record exact immutable reviewed revision and remaining host blocker. No live model calls, secrets, acceptance or deployment."
     }
   ]
 }
