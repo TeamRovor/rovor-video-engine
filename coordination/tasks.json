@@ -5243,9 +5243,9 @@
         "subsystem:private-hud-runtime-mount"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T03:52:25.037Z",
-      "next_update": "After prepared source upload and native deployment readback",
-      "next_action": "PR197 merged at 6095d674ffced63b57ca0e34890a71c1c64fa9d3. 42 focused tests pass locally and hosted; actual published private Site source composes/imports, real SQLite validates migration, seven MCP tools and nine slots read successfully, original HUD retained. Complete bundle is staged in existing Site checkout: runtime/canary/private operations, live panels, browser-only digest-bound PASS/FAIL, schema-only appended 0001 migration, string DB binding. Needs supported source push from Amar's network-enabled Terminal, then native publication. Existing version1 remains receiver-only until version2 deployment verified. Keep unknown-cost providers disabled. Do not pretend staged source is live.",
+      "updated_at": "2026-10-25T06:59:27.483Z",
+      "next_update": "After source publication and deployment verification in resumed Amar session",
+      "next_action": "Resuming same runtime-mount claim per Amar request. Existing Site source successfully opened at 342b6fd4e846fb49ce476c98f530aaf5b629c760 in current Linux session; deploying merged PR197 operations composition with providers initially disabled, then inspect live controls and eligibility. No live inference claimed.",
       "acceptance": "Composed current Site imports and preserves native HUD; nine-provider status, immutable task admission, bounded cloud tick and canary, read-only fixed-endpoint provider inventory, durable user PASS/FAIL and STOP are authenticated; actual real-SQL tests pass. Prepare exact existing-Site source/archive; deployment and real model proof remain separate.",
       "evidence": [
         {
