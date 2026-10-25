@@ -56,7 +56,7 @@ async function sha256(text) {
  return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-export async function runCanary({provider,cfg,env,approval,fetcher=fetch,now=Date.now(),clock=Date.now}) {
+export async function runCanary({provider,cfg,env,approval,fetcher=(...args)=>globalThis.fetch(...args),now=Date.now(),clock=Date.now}) {
  const denied=preflight(provider,cfg,env,approval,now);
  if(denied)return {status:'denied',reason:denied,provider};
  if(!env.DB)return {status:'denied',reason:'missing_database',provider};
