@@ -5232,7 +5232,7 @@
       "id": "private-hud-cloud-runtime-mount-20261025",
       "title": "Mount cloud inference, factual activity and owner review in existing private HUD",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar ASAP private cloud runtime mount 2026-10-25",
       "branch": "feature/private-hud-cloud-runtime-mount-20261025",
       "scopes": [
@@ -5243,9 +5243,9 @@
         "subsystem:private-hud-runtime-mount"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T06:59:27.483Z",
-      "next_update": "After source publication and deployment verification in resumed Amar session",
-      "next_action": "Resuming same runtime-mount claim per Amar request. Existing Site source successfully opened at 342b6fd4e846fb49ce476c98f530aaf5b629c760 in current Linux session; deploying merged PR197 operations composition with providers initially disabled, then inspect live controls and eligibility. No live inference claimed.",
+      "updated_at": "2026-10-25T07:06:38.185Z",
+      "next_update": "Runtime mount deployed; provider connectivity/eligibility and actual unattended dispatch remain separate follow-up",
+      "next_action": "Existing owner-private Site version4 deployed successfully from native source cdd6921790641b3dba337c59b264ba6933d8ec60, deployment appgdep_6addaa54581c8191bac1cc04e4cce6d4, env revision2. Live connected rovor_workforce_status now returns cloud ledger; native D1 lists cloud jobs, attempts, control and reviews tables. Nine credentials configured, dispatch false, zero attempts. Actual service-token status readback HTTP200 verified. All nine hosted fixed provider GET inventories returned catalog_unavailable, not live inference. Sanitized error-category diagnostics deployed. 44 focused Node24 tests PASS; latest focused operations16/16 PASS. PR199 fail-closed client behavior and issue200 first-decision-only review fix plus unique-index migration0002 deployed, no human review submitted. Canonical source/tests updated through 8bf03707c4c98dd6f17f27ae11890324a7cff527. Existing hourly Walter automation updated with exact deployed service route and immediate run requested, not completed. Provider-eligibility owner must resolve actual hosted outbound connectivity, independently verify free account/model/license/quota and real canary, then enable actual bounded dispatch and prove persistent Mac-off receipts. Current 24/7 nine-provider inference NOT established.",
       "acceptance": "Composed current Site imports and preserves native HUD; nine-provider status, immutable task admission, bounded cloud tick and canary, read-only fixed-endpoint provider inventory, durable user PASS/FAIL and STOP are authenticated; actual real-SQL tests pass. Prepare exact existing-Site source/archive; deployment and real model proof remain separate.",
       "evidence": [
         {
@@ -5254,6 +5254,13 @@
           "check": "42 runtime/canary/operations real-SQL and mocked-HTTPS tests; project_loop.py check; task_routing_pair.py --check; actual deployed Site source composed/imported with schema-only migration",
           "result": "PASS: complete simulated approved-task->dispatch->measured receipt->explicit owner review->no replay; actual composed source has seven MCP tools/nine slots/owner auth; official artifact validator PASS. No live provider calls or new deployment.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40159570499"
+        },
+        {
+          "commit": "cdd6921790641b3dba337c59b264ba6933d8ec60",
+          "platform": "Managed Linux Node24.22.1 and native Sites/Cloudflare D1 production",
+          "check": "44 focused real-SQL/mock-HTTPS tests, artifact ESM validation, native successful deployment, connected cloud ledger readback and HTTP200 service access, nine actual fixed provider inventory checks",
+          "result": "DEPLOYED private cloud runtime and review-integrity fixes. Nine credentials present, zero inference attempts, disabled provider routes. All nine actual inventory checks failed catalog_unavailable; real model execution and continuous dispatch remain blocked.",
+          "reference": "https://rovor-private-hud.mm98z652cq.chatgpt.site"
         }
       ]
     },
