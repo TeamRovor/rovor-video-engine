@@ -119,15 +119,36 @@ export function createCloudOperations(base, cloud) {
   return json({saved:true,job_id:value.job_id,verdict:value.verdict});
  }
  function browserUI(){
-  let busy=false,data=null,painted='';const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
+  let busy=false,data=null,painted='',connection='connecting',lastOk=null;
+  const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
+  function linkState(){
+   const panel=document.getElementById('workloadPanel');if(!panel)return;
+   let status=document.getElementById('rovor-cloud-link-state');
+   if(!status){status=el('p');status.id='rovor-cloud-link-state';status.className='wl-card';panel.prepend(status);}
+   if(connection==='connected'){
+    const recent=data?.attempts?.[0];
+    const date=recent&&Number.isSafeInteger(recent.finished_at||recent.started_at)?new Date(recent.finished_at||recent.started_at).toLocaleString():null;
+    status.textContent='CLOUD LEDGER REACHABLE · checked '+new Date(lastOk).toLocaleTimeString()+
+     (date?' · last recorded AI attempt '+date:' · no recorded AI attempts')+' · reachability does not prove agents online';
+   }else{
+    status.textContent='CLOUD TELEMETRY '+(connection==='connecting'?'CONNECTING':'OFFLINE')+
+     ' · last successful check '+(lastOk?new Date(lastOk).toLocaleTimeString():'never')+' · cached AI activity hidden';
+   }
+  }
+  function disconnect(){
+   connection='offline';data=null;painted='';
+   for(const name of ['rovor-cloud-live','rovor-cloud-results'])document.getElementById(name)?.remove();
+   linkState();
+  }
   function paint(){
+   linkState();
    const panel=document.getElementById('workloadPanel'),activity=document.getElementById('activityPanel');if(!panel||!activity||!data)return;
    const key=JSON.stringify([data.enabled,data.providers,data.attempts]);
    if(key===painted&&document.getElementById('rovor-cloud-live')&&document.getElementById('rovor-cloud-results'))return;
    painted=key;
    const section=el('section');section.id='rovor-cloud-live';section.className='wl-card';
    section.append(el('strong','CLOUD EMPLOYEES · '+(data.enabled?'DISPATCH ENABLED':'DISPATCH PAUSED')));
-   const pause=el('button',data.enabled?'PAUSE':'RESUME');pause.className='wl-button';pause.onclick=async()=>{await fetch('/api/ghost/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!data.enabled})});await poll();};section.append(pause);
+   const pause=el('button',data.enabled?'PAUSE':'RESUME');pause.className='wl-button';pause.onclick=async()=>{try{const r=await fetch('/api/ghost/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!data.enabled})});if(!r.ok)throw Error('control_unavailable');await poll();}catch{disconnect();}};section.append(pause);
    for(const p of data.providers){const last=data.attempts.find(a=>a.provider===p.provider);section.append(el('p',p.provider+' · '+p.admission+(last?' · '+last.status:' · no execution receipt')));}
    const old=document.getElementById(section.id);if(old)old.replaceWith(section);else panel.prepend(section);
    const results=el('section');results.id='rovor-cloud-results';results.append(el('strong','RECORDED CLOUD WORK'));
@@ -147,8 +168,19 @@ export function createCloudOperations(base, cloud) {
    }
    const prior=document.getElementById(results.id);if(prior)prior.replaceWith(results);else activity.prepend(results);
   }
-  async function poll(){if(busy||document.hidden)return;busy=true;try{const r=await fetch('/api/ghost/status',{cache:'no-store',signal:AbortSignal.timeout(8000)});if(r.ok)data=await r.json();paint();}catch{}finally{busy=false;}}
-  poll();setInterval(poll,15000);document.addEventListener('visibilitychange',poll);
+  async function poll(){
+   if(busy||document.hidden)return;busy=true;
+   try{
+    const r=await fetch('/api/ghost/status',{cache:'no-store',signal:AbortSignal.timeout(8000)});
+    if(!r.ok)throw Error('cloud_telemetry_unavailable');
+    const snapshot=await r.json();
+    if(!snapshot||snapshot.execution_source!=='cloud_provider'||!Number.isSafeInteger(snapshot.observed_at)||
+       typeof snapshot.enabled!=='boolean'||!Array.isArray(snapshot.providers)||snapshot.providers.length!==9||
+       !Array.isArray(snapshot.attempts))throw Error('cloud_telemetry_invalid');
+    data=snapshot;connection='connected';lastOk=Date.now();paint();
+   }catch{disconnect();}finally{busy=false;}
+  }
+  linkState();poll();setInterval(poll,15000);document.addEventListener('visibilitychange',poll);
   for(const name of ['workloadPanel','activityPanel']){const panel=document.getElementById(name);if(panel)new MutationObserver(()=>{if(!document.getElementById(name==='workloadPanel'?'rovor-cloud-live':'rovor-cloud-results'))paint();}).observe(panel,{childList:true});}
  }
  const script='<script>('+browserUI.toString()+')();</script>';

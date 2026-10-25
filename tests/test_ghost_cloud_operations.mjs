@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import fs from 'node:fs';
+import vm from 'node:vm';
 import os from 'node:os';
 import path from 'node:path';
 import * as runtime from '../integrations/ghost-cloud/runtime.mjs';
@@ -122,6 +123,46 @@ test('composer preserves applied migrations, emits schema-only SQL and string DB
   const migration=fs.readFileSync(path.join(dir,'drizzle/0001_cloud_operations.sql'),'utf8');assert.match(migration,/statement-breakpoint/);assert.doesNotMatch(migration,/(^|\n)\s*(INSERT|UPDATE|DELETE|DROP|ALTER)\b/);
   const db=new DatabaseSync(':memory:');db.exec(migration);assert.equal(db.prepare('SELECT count(*) n FROM ghost_cloud_control').get().n,0);db.close();
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+test('embedded HUD client hides stale agent cards after a failed or invalid live status request',async()=>{
+ const s=setup();await completed(s);
+ const page=await (await s.ops.fetch(request('/'),s.env)).text();
+ const start=page.indexOf('<script>'),end=page.indexOf('</script>',start);
+ const script=start>=0&&end>start?page.slice(start+8,end):null;
+ assert.ok(script,'private HUD injects its live module');
+ class Element {
+  constructor(tag){this.tag=tag;this.id='';this.children=[];this.parent=null;this.textContent='';this.className='';this.style={};this.hidden=false;}
+  append(...items){for(const item of items){item.remove();item.parent=this;this.children.push(item);}}
+  prepend(...items){for(const item of items.reverse()){item.remove();item.parent=this;this.children.unshift(item);}}
+  remove(){if(this.parent){const i=this.parent.children.indexOf(this);if(i>=0)this.parent.children.splice(i,1);this.parent=null;}}
+  replaceWith(item){if(!this.parent)return;const parent=this.parent,i=parent.children.indexOf(this);item.remove();parent.children[i]=item;item.parent=parent;this.parent=null;}
+ }
+ const root=new Element('root'),workload=new Element('div'),activity=new Element('div');
+ workload.id='workloadPanel';activity.id='activityPanel';root.append(workload,activity);
+ const find=(node,id)=>node.id===id?node:node.children.map(child=>find(child,id)).find(Boolean)||null;
+ const document={hidden:false,createElement:tag=>new Element(tag),getElementById:id=>find(root,id),addEventListener(){}};
+ let tick,mode='ok',reads=0;const snapshot=await s.ops.status(s.env);
+ const fetch=async()=>{reads++;if(mode==='offline')throw Error('network_down');
+  if(mode==='invalid')return {ok:true,json:async()=>({providers:[],attempts:[]})};
+  return {ok:true,json:async()=>snapshot};
+ };
+ vm.runInNewContext(script,{document,fetch,MutationObserver:class{observe(){}},setInterval:fn=>{tick=fn;},AbortSignal,console});
+ const settled=()=>new Promise(resolve=>setImmediate(resolve));
+ await settled();
+ assert.equal(reads,1);
+ assert.ok(document.getElementById('rovor-cloud-live'),'real status shows recorded receipts');
+ assert.ok(document.getElementById('rovor-cloud-results'));
+ assert.match(document.getElementById('rovor-cloud-link-state').textContent,/CLOUD LEDGER REACHABLE/);
+ assert.match(document.getElementById('rovor-cloud-link-state').textContent,/reachability does not prove agents online/);
+ mode='offline';await tick();await settled();
+ assert.equal(document.getElementById('rovor-cloud-live'),null,'old agent cards disappear on connection loss');
+ assert.equal(document.getElementById('rovor-cloud-results'),null,'old result cards disappear on connection loss');
+ assert.match(document.getElementById('rovor-cloud-link-state').textContent,/CLOUD TELEMETRY OFFLINE/);
+ mode='ok';await tick();await settled();assert.ok(document.getElementById('rovor-cloud-live'));
+ mode='invalid';await tick();await settled();
+ assert.equal(document.getElementById('rovor-cloud-results'),null,'malformed successful HTTP response fails closed');
+ assert.match(document.getElementById('rovor-cloud-link-state').textContent,/cached AI activity hidden/);
 });
 
 test('approved packet, real dispatcher, returned usage and explicit owner review form a complete loop',async()=>{
