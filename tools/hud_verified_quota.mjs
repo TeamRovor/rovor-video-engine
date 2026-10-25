@@ -40,7 +40,7 @@ export function reduceProviderQuota(providers,document,{now=Date.now(),maxAgeMs=
       const reset=safeTime(raw.resetAt??raw.resetsAt??raw.reset_at);
       // A period that has ended cannot certify today's remaining allowance.
       // Wait for a new cache observation rather than carrying forward stale %.
-      if(reset!==null&&reset>=at&&reset<=now)continue;
+      if(reset!==null&&reset<=now)continue;
       result.records.push({provider,account_slot:slot,model_id,used,total,
         remaining:Math.max(0,total-used),used_percent:Math.min(100,100*used/total),
         unit:safeUnit(raw.unit),fetched_at:new Date(at).toISOString(),
