@@ -939,6 +939,15 @@
         "github-write",
         "hosted-ci"
       ]
+    },
+    "ghost-cloud-private-secret-provision-20261025": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

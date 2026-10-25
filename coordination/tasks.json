@@ -5164,6 +5164,22 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/195",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40156176970"
       ]
+    },
+    {
+      "id": "ghost-cloud-private-secret-provision-20261025",
+      "title": "Provision existing nine provider credentials into owner-private cloud runtime with dispatch disabled",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar cloud credential migration 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:ghost-cloud-private-runtime-secrets"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T03:03:27.702Z",
+      "next_update": "After private cloud secret readback without value exposure",
+      "next_action": "Use read-only local OmniRoute decryption in memory and native Sites secret storage for the existing owner-private Site. Do not print/persist credential values, overwrite existing secrets, call models, enable dispatch, modify Mac service, or change Site sharing.",
+      "acceptance": "Nine provider key names and Cloudflare account if available are secret-marked in existing private Site; readback shows secret values masked; GHOST_FLEET_CONFIG disables every provider and cron opt-in is absent. Record precise storage revision and source-push blocker; no deployed inference claim."
     }
   ]
 }
