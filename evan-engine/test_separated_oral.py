@@ -141,5 +141,27 @@ class CornerPhaseTests(unittest.TestCase):
   from separated_oral_review import phonetic_corner_keys
   p=dict(self.plan,phonemes=[dict(start=0,end=.4,phone='OW',value='E'),dict(start=.4,end=.6,phone='W',value='F')])
   keys=phonetic_corner_keys(p,lambda t:(190,270));np.testing.assert_allclose([t for t,_ in keys[0]],[.1,.3,.5])
+ def test_bilabial_preparation_uses_only_the_contiguous_ao(self):
+  import copy
+  from separated_oral_review import phonetic_corner_keys
+  pose=lambda t:(190,270) if t<.2 else (210,250)
+  for phone in ['P','B','M']:
+   p=dict(phonemes=[dict(start=.1,end=.2,phone=phone),dict(start=.2,end=.4,phone='AO1')])
+   before=copy.deepcopy(p);keys=phonetic_corner_keys(p,pose)
+   self.assertEqual(keys[1][0][1]-keys[0][0][1],80)
+   self.assertLess(keys[1][1][1]-keys[0][1][1],45)
+   self.assertEqual(keys[1][-1][1]-keys[0][-1][1],40);self.assertEqual(p,before)
+   p['phonemes'][1]['start']=.21;keys=phonetic_corner_keys(p,pose)
+   self.assertEqual(keys[1][1][1]-keys[0][1][1],80)
+  p=dict(phonemes=[dict(start=.1,end=.2,phone='V'),dict(start=.2,end=.4,phone='AO')])
+  keys=phonetic_corner_keys(p,pose);self.assertEqual(keys[1][1][1]-keys[0][1][1],80)
+ def test_prepared_m_keeps_the_seal_and_independent_skin(self):
+  from audit_separated_geometry import capture
+  from english_articulation import phone_gestures
+  self.plan['phonemes']=self.plan['phonemes'][:2]+[dict(start=.3,end=.6,phone='AO',value='E',word='test')]
+  self.plan['gestures']=phone_gestures(self.plan['phonemes'])
+  oral,skin=self.prior(.28);row=capture(self.rig,.28,self.plan)
+  self.assertLess(row['width'],68);self.assertLessEqual(float(self.rig.head.current_oral[20,1]-self.rig.head.current_oral[28,1]),.151)
+  np.testing.assert_array_equal(oral[:,1],self.rig.head.current_oral[:,1]);np.testing.assert_array_equal(skin,self.rig.head.exposure_skin)
 
 if __name__=='__main__':unittest.main()

@@ -35,7 +35,7 @@ def corner_signature(plan):
 
 def phonetic_corner_keys(plan,pose):
  keys={}
- for p in plan['phonemes']:
+ for i,p in enumerate(plan['phonemes']):
   a,b=p['start'],p['end'];mid=(a+b)/2;base=p['phone'].rstrip('012')
   if not np.isfinite([a,b]).all() or b<=a:raise ValueError('Expected finite positive phone intervals')
   if base in {'P','B','M','F','V'}:times=[min(a+.015,mid),max(b-.010,mid)]
@@ -43,7 +43,16 @@ def phonetic_corner_keys(plan,pose):
    phases=len(PHONE_CATALOG[base]['targets']);times=[a+(b-a)*(i+.5)/phases for i in range(phases)]
   elif base=='W':times=[mid]
   else:continue
-  for t in times:keys[round(t,9)]=(t,*pose(t))
+  following=plan['phonemes'][i+1] if i+1<len(plan['phonemes']) else None
+  prepare=base in {'P','B','M'} and following is not None and following['phone'].rstrip('012')=='AO' and abs(b-following['start'])<1e-6
+  for t in times:
+   corners=np.asarray(pose(t))
+   if prepare:
+    # shortcut: 80ms AO preparation is authored; other vowels need separate review.
+    lead=min(.08,b-a);amount=float(ease((t-(b-lead))/lead))
+    desired=np.asarray(pose((following['start']+following['end'])/2))
+    corners=corners*(1-amount)+desired*amount
+   keys[round(t,9)]=(t,*corners)
  for s in plan.get('silences',[]):
   if not np.isfinite([s['start'],s['end']]).all() or s['end']<s['start']:raise ValueError('Expected finite ordered silence intervals')
   if s['end']-s['start']>=.08:
