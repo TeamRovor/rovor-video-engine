@@ -75,6 +75,23 @@ class SpeechAuditTests(unittest.TestCase):
                 report=audit(dict(p,phonemes=[]),wav,Path(folder)/'review')
             self.assertIsNone(report['words'][0]['anchorOutsideRecording'])
             self.assertIsNone(report['words'][0]['lowEnergyFractionBelowMinus40dBFS']['anchor'])
+    def test_review_clips_preserve_exact_pcm_and_source_channels(self):
+        from tempfile import TemporaryDirectory
+        from pathlib import Path
+        from unittest.mock import patch
+        import wave,hashlib
+        from speech_alignment_audit import audit
+        for channels in [1,2]:
+            with self.subTest(channels=channels),TemporaryDirectory() as folder:
+                p=Path(folder);samples=np.resize(np.array([-32768,-32767,-1,0,1,32767],dtype='<i2'),16000*channels).reshape(16000,channels);raw=samples.tobytes();wav=p/'voice.wav'
+                with wave.open(str(wav),'wb') as f:
+                    f.setnchannels(channels);f.setsampwidth(2);f.setframerate(16000);f.writeframes(raw)
+                plan=dict(words=[dict(word='test',scriptIndex=0,start=.2,end=.7,reviewFlags=['word-anchor-disagreement'])],estimatedWords=[],phonemes=[]);before=copy.deepcopy(plan)
+                with patch('speech_alignment_audit.plot_group'):report=audit(plan,wav,p/'review')
+                g=report['regions'][0];first,last=g['audioSamples'];expected=raw[first*channels*2:last*channels*2]
+                with wave.open(str(p/'review'/g['audio'])) as f:
+                    self.assertEqual(f.getnchannels(),channels);self.assertEqual(f.getnframes(),last-first);self.assertEqual(f.readframes(f.getnframes()),expected)
+                self.assertEqual(g['audioPcmSha256'],hashlib.sha256(expected).hexdigest());self.assertTrue(g['originalPcmPreserved']);self.assertEqual(plan,before)
     def test_energy_is_measured_in_the_requested_interval(self):
         x=np.r_[np.zeros(16000),np.full(16000,.5)]
         self.assertEqual(energy_fraction(x,16000,[0,1]),1)

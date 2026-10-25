@@ -109,8 +109,13 @@ def audit(plan,wav,output):
         row['lowEnergyFractionBelowMinus40dBFS']={name:energy_fraction(x,rate,row[name]) if row[name] is not None else None for name in ('acoustic','anchor')}
     for i,g in enumerate(groups,1):
         g['plot']=f'Region-{i:02}.png';g['audio']=f'Region-{i:02}.wav';plot_group(plan,x,rate,g,output/g['plot'])
+        first,last=round(g['start']*rate),round(g['end']*rate)
+        # Copy original PCM: float re-encoding attenuates samples and loses stereo.
+        with wave.open(str(wav)) as source:
+            channels=source.getnchannels();source.setpos(first);pcm=source.readframes(last-first)
         with wave.open(str(output/g['audio']),'wb') as f:
-            f.setnchannels(1);f.setsampwidth(2);f.setframerate(rate);f.writeframes((np.clip(x[round(g['start']*rate):round(g['end']*rate)],-1,1)*32767).astype('<i2').tobytes())
+            f.setnchannels(channels);f.setsampwidth(2);f.setframerate(rate);f.writeframes(pcm)
+        g.update(audioSamples=[first,last],audioChannels=channels,audioPcmSha256=hashlib.sha256(pcm).hexdigest(),originalPcmPreserved=True)
     report=dict(version=1,audioSha256=hashlib.sha256(wav.read_bytes()).hexdigest(),canonicalPlanSha256=hashlib.sha256(json.dumps(plan,sort_keys=True,separators=(',',':')).encode()).hexdigest(),sampleRate=rate,words=rows,regions=groups,timingsModified=False,note='Energy is supporting evidence only, never an automatic word-boundary correction.')
     (output/'Timing-Audit.json').write_text(json.dumps(report,indent=2));return report
 if __name__=='__main__':
