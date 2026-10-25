@@ -59,7 +59,7 @@ async function main(){
   await poll(()=>evalJS('return document.querySelectorAll(".rvq-provider").length===9'));
   assert.equal(await evalJS('return document.querySelector(".rvq-track[role=progressbar]")?.getAttribute("aria-valuenow")'),'25.0');
   assert(await evalJS('return !!document.querySelector(".rvq-unknown")'));
-  assert(await evalJS('return document.querySelector(".rvq-board").textContent.includes("Reset:")'));
+  assert(await evalJS('return document.querySelector(".rvq-board").textContent.includes("RESET WINDOW")'));
 
   assert(await evalJS('return document.querySelector("[role=meter]").getAttribute("aria-valuenow")==="70"'));
   const geometry=await evalJS('const r=document.querySelector(".drawer").getBoundingClientRect();return {width:r.width,height:r.height}');assert(geometry.width<=width+2&&geometry.height<=height+2);
