@@ -131,7 +131,7 @@ hook and removes the temporary-link button; existing source HTML is untouched.
 The receiver stores the latest report for each period in D1. It also retains
 one 24h-aggregate snapshot per minute for the preceding day, up to 32 KiB each.
 This is sampled history, not a complete per-request event log. History reads
-return at most 120 recent snapshots. Unknown quotas and upstream-model
+return at most 120 recent snapshots. Verified OmniRoute cached provider limits (including units and reset dates) now survive the outbound reporter and private receiver. Only recent, provider/account-matched cache records create bars; expired reset windows, forged percentages and missing limits never create filled meters. These remain provider-reported cache values, not proof of a free request or successful inference. Unknown quotas and upstream-model
 attribution remain unknown. No prompts, draft outputs, private paths, provider
 credentials or raw payloads are copied. Titles come from the existing public
 queue-based employee reader, and only explicit telemetry fields are retained.
