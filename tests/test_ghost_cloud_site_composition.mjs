@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import {bundleGhostSite,composeSite,planSite} from '../integrations/ghost-cloud/site-composition.mjs';
 
@@ -113,6 +113,24 @@ test('actual HUD+ghost source composes into valid executable ESM with appended r
   const compiled=path.join(f.dir,'worker/index.js');
   const parsed=spawnSync(process.execPath,['--check',compiled],{encoding:'utf8',timeout:10000});
   assert.equal(parsed.status,0,parsed.stderr);
+  const liveModule=await import(pathToFileURL(compiled).href);
+  const env={GHOST_READER_TOKEN:'r'.repeat(40),GHOST_WRITER_TOKEN:'w'.repeat(40),
+    GHOST_FLEET_CONFIG:'{}',DB:{prepare(){return {first:async()=>({enabled:0}),all:async()=>({results:[]})};}}};
+  const denied=await liveModule.default.fetch(new Request('https://private.example/api/ghost/status'),env);
+  assert.equal(denied.status,401);
+  const status=await liveModule.default.fetch(new Request('https://private.example/api/ghost/status',
+    {headers:{'oai-authenticated-user-id':'owner'}}),env);
+  assert.equal(status.status,200);
+  const doc=await status.json();
+  assert.equal(doc.execution_source,'cloud_provider');
+  assert.equal(doc.providers.length,9);
+  assert.equal(doc.enabled,false);
+  assert.equal(doc.attempts.length,0);
+  const writerDenied=await liveModule.default.fetch(new Request('https://private.example/api/ghost/control',
+    {method:'POST',headers:{'Content-Type':'application/json'},body:'{\"enabled\":true}'}),env);
+  assert.equal(writerDenied.status,401);
+  let scheduled=0;liveModule.default.scheduled({},env,{waitUntil(){scheduled++;}});
+  assert.equal(scheduled,0);
   const source=fs.readFileSync(compiled,'utf8');
   assert.ok(source.includes('ROVOR_GHOST_SITE_MOUNT_V1'));
   assert.ok(source.includes('window.ROVOR_START_OMNIROUTE'));
