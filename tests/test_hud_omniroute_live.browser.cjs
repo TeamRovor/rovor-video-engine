@@ -49,6 +49,8 @@ async function main(){
   assert(home.pageWidth<=home.viewport+2,name+': overflow');assert.equal(home.panels,6);assert.equal(home.nav,5);assert(home.text.includes('CONNECTED'));assert(home.text.includes('connected-8'));
   await evalJS('document.querySelector(".panel-expand[data-view=workload]").click();return true');
   await poll(()=>evalJS('return document.querySelectorAll("[data-live-model].wl-model-entry").length===12'));
+  const quotaDiag=await evalJS('return {helper:typeof window.ROVOR_QUOTA_BOARD,panels:document.querySelectorAll(".rvq-provider").length,board:!!document.querySelector(".rvq-board"),card:document.querySelector("#rovor-workload-popup .wl-card")?.textContent.slice(0,95)}');
+  console.log('QUOTA_WIDGET_DIAGNOSTIC',JSON.stringify(quotaDiag));
   await poll(()=>evalJS('return document.querySelectorAll(".rvq-provider").length===9'));
   assert.equal(await evalJS('return document.querySelector(".rvq-track[role=progressbar]")?.getAttribute("aria-valuenow")'),'25.0');
   assert(await evalJS('return !!document.querySelector(".rvq-unknown")'));
