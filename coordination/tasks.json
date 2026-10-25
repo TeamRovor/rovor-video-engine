@@ -5000,6 +5000,26 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40146735931"
         }
       ]
+    },
+    {
+      "id": "walter-ghost-cloud-site-composition-20261025",
+      "title": "Compose existing nine-provider cloud runtime into the already registered private HUD Site without changing owner files",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended cloud migration Site composition shift 2026-10-25",
+      "updated_at": "2026-10-25T01:17:45.111Z",
+      "next_update": "After exact GitHub CI evidence and owner PASS/FAIL on immutable PR head",
+      "branch": "feature/walter-ghost-cloud-site-composition-20261025",
+      "scopes": [
+        "integrations/ghost-cloud/site-composition.mjs",
+        "tests/test_ghost_cloud_site_composition.mjs",
+        ".github/workflows/ghost-cloud-site-composition.yml"
+      ],
+      "depends_on": [
+        "nine-provider-cloud-dispatch-20261024"
+      ],
+      "next_action": "Implement a fail-closed opt-in Site composer for the existing registered private Site, preserving original HUD and D1 schema, mounting only ghost-cloud routes, appending migration without overwrite, no scheduler registration, no secret transfer or deployment; verify with focused tests and submit PR for owner review.",
+      "acceptance": "Source-only opt-in Site composition reads existing registered private HUD bundle and ghost-cloud runtime, preserves HUD identity and fetch behavior, routes authenticated provider status and existing writer endpoints, appends namespaced D1 migration safely and idempotently, never changes original HUD source, creates Sites, registers schedules, provisions secrets or dispatches. Focused hosted Node24 tests and shared queue/routing checks pass. Live hosting requires owner action."
     }
   ]
 }
