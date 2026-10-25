@@ -5317,7 +5317,7 @@
       "id": "ghost-cloud-scheduled-shift-evidence-20261025",
       "title": "Replenish approved cloud jobs before one scheduled tick and persist factual per-shift receipts",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "ChatGPT / Amar regular chat isolated cloud-shift implementation 2026-10-25",
       "branch": "feature/ghost-cloud-scheduled-shift-receipts-20261025",
       "scopes": [
@@ -5330,15 +5330,15 @@
         "tests/test_ghost_cloud_scheduled_shift_composer.mjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T06:29:00Z",
-      "next_update": "After hosted source-composer tests and a reviewable draft PR201 head",
-      "next_action": "Extend PR201 with additive verified composition into existing staged v2 Site Worker without editing actively-owned compiler or HUD, expose authenticated shift readback and register no trigger. Run hosted tests and hand off only; deployment still requires trusted Site owner.",
+      "updated_at": "2026-10-25T06:37:02.672Z",
+      "next_update": "After new hosted CI is available and owner reviews PR201 exact head",
+      "next_action": "Existing PR201 now has additive compose-scheduled-shift.mjs and 10 new integration tests, creating one opt-in existing Site scheduled hook, private D1 shift-history endpoint and compact workload-status line. Previous 11 Node24 SQLite tests SUCCESS (40167260095); new composer tests and latest commit 40db79d6e192cbe3358c47f6729b3f1a4a864a72 have NO verified hosted CI result yet. Owner must verify new tests, apply P1 Issue200 review fix and current fail-closed Site source, review exact PR head, append migration and publish through existing Site, register schedule and prove Mac-off real model receipts.",
       "acceptance": "Eleven real SQLite offline tests verify opt-in gate, STOP, enqueue before tick, blank/idle accurate reporting, bounded counts, sanitized failures, immutable unique run IDs and readback. Hosted Node24 checks pass. Distinguish source-only from live recurring registration; no model/API requests.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/201",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40167203600"
       ],
-      "blocker": "Awaiting actual owner acceptance and integration in the published private Site. Existing version1 is receiver-only, existing nine provider eligibility remains disabled, and this GitHub-only shift performed no production deployment or provider inference.",
+      "blocker": "Latest composer tests not yet independently run in hosted CI, owner PASS absent, and existing private Site version2 deployment scheduling permission unavailable from current GitHub-only regular chat. GHOST_FLEET_CONFIG still disabled and live HUD snapshot absent; no real AI inference or installed cron.",
       "evidence": [
         {
           "commit": "535f18c16cb95eac4d0ac3749a208cab30a78180",
