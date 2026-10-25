@@ -41,5 +41,32 @@ const css=`
 `;
 function mount(){if(document.getElementById('rvq-style'))return;const s=document.createElement('style');s.id='rvq-style';s.textContent=css;document.head.append(s);}
 function render(data,live){mount();const connections=Array.isArray(data?.connections)?data.connections:[];const quota=Array.isArray(data?.quota?.records)?data.quota.records:[];const models=Array.isArray(data?.models)?data.models:[];return '<section class="wl-card rvq-board"><div class="rvq-intro"><div><h3>MODEL LIMITS & RESET WINDOWS</h3><p>Actual provider-reported allowance when available · unverified limits remain unknown</p></div><strong>'+ (live?quota.length+' VERIFIED REPORTS':'NO FRESH CONNECTION')+'</strong></div><div class="rvq-grid">'+connections.map(g=>card(g,quota,models,live)).join('')+'</div><p class="wl-empty">Limits can be shared across models or accounts. Recorded requests are not remaining quota. No AI calls are made by this monitoring panel.</p></section>';}
-return {render};
+
+function start(){
+ let busy=false,last=null,updated=0;
+ const slot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
+   n=>!n.hidden&&n.querySelector('h3')?.textContent?.trim()==='YOUR OMNIROUTE CONNECTIONS');
+ async function sync(){
+   if(busy||document.hidden)return;
+   const original=slot();if(!original)return;
+   if(last&&Date.now()-updated<5000){original.outerHTML=render(last,true);return;}
+   busy=true;
+   let fresh=null;
+   try{
+     const response=await fetch('/api/hud/omniroute?period=24h',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
+     if(response.ok){
+       const data=await response.json(),age=Date.now()-Date.parse(data.snapshot_at);
+       if(data.source==='local_omniroute_read_only_bridge'&&Array.isArray(data.connections)&&Number.isFinite(age)&&age>=-5000&&age<=15000)fresh=data;
+     }
+   }catch{}
+   finally{busy=false;}
+   last=fresh;updated=Date.now();
+   const target=slot();
+   if(target)target.outerHTML=render(fresh,!!fresh);
+ }
+ const observer=new MutationObserver(()=>{if(slot())void sync();});
+ observer.observe(document.body,{childList:true,subtree:true});
+ void sync();
+}
+return {render,start};
 })();
