@@ -1,0 +1,225 @@
+{
+  "runtimeParentCommit": "70484e9ef8cffe4686a6def3e727b3eea3143f4e",
+  "runtimeIncludesUncommittedOwnershipFix": true,
+  "sourceCodeSha256": {
+    "finished_cartoon_scene.py": "0c4fba9e9553f0fca66dae6c66f9b4a34697b0cad8779b1bbcb1034afbc80652",
+    "render_finished_thought.py": "d1d04709769649e411f7b8f999f48f4169a86259b4a64513e40b16b1ba00d72c"
+  },
+  "closingEvent": {
+    "anticipate": 20.39,
+    "prepare": 20.69,
+    "arrive": 21.15,
+    "hold": 21.91,
+    "settle": 22.71,
+    "scriptIndices": [
+      62,
+      63,
+      64,
+      65
+    ]
+  },
+  "stageBrandRegionExact": 144,
+  "sourceFrames": [
+    912,
+    1056
+  ],
+  "sourceSamples": [
+    304000,
+    352000
+  ],
+  "audio": {
+    "sourcePcm16Samples": 48000,
+    "decodedPcm16Samples": 48000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "beforeAudio": {
+    "sourcePcm16Samples": 48000,
+    "decodedPcm16Samples": 48000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "films": {
+    "Rovor-Finished-Thought-Normal": {
+      "decodedFrames": 144,
+      "sha256": "e3c64f04028f292d9a9d101117647e4a30812322fb5a8f778a530899f0057021"
+    },
+    "Rovor-Finished-Thought-Quarter-Speed": {
+      "decodedFrames": 576,
+      "sha256": "57a0ab450969156fadc8aa99ffa75edb74f5b975ae6672df5f72a81288206bfc"
+    },
+    "Before-Normal": {
+      "decodedFrames": 144,
+      "sha256": "51242319331af2da4a3a5fff6712b5d1b3fcc0dc525bcb6dd10a5e96c9bd8f5b"
+    },
+    "Before-Quarter-Speed": {
+      "decodedFrames": 576,
+      "sha256": "52adcfab38b993e351f167ef61e73009a46a01028507fd24a7a272a0d65ed830"
+    }
+  },
+  "upper288Exact": 144,
+  "noseMaximumChange": 0,
+  "minimumOral": 0.023623911663889885,
+  "minimumJaw": 45.5,
+  "minimumArms": {
+    "left": 494.6158370879494,
+    "right": 257.6299509624635
+  },
+  "fallbacks": [
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    }
+  ],
+  "workingFacePlanes": 11,
+  "bodyControlsExact": true,
+  "outsideFaceRegionExact": 144,
+  "phonemeTimingChanged": false,
+  "artworkChanged": false,
+  "independentListeningOrRealTimePlaybackAccepted": false,
+  "polishedMilestoneReady": false,
+  "nativeFaceAuditMetricsAndBrowsAndFaviconExact": 144,
+  "changedStageFrames": 100,
+  "stageDeltaBBox": [
+    268,
+    165,
+    307,
+    181
+  ],
+  "ownershipSourceSha256": "02ad47beba8bc49ac5a6320e6141bd8a02c96b7e54d5ba52398787f7617fefd8",
+  "nativeBaseComparison": {
+    "baseRows": [
+      {
+        "symbol": "X",
+        "changedPixels": 0,
+        "bbox": null,
+        "upper310Exact": true
+      },
+      {
+        "symbol": "A",
+        "changedPixels": 0,
+        "bbox": null,
+        "upper310Exact": true
+      },
+      {
+        "symbol": "B",
+        "changedPixels": 61,
+        "bbox": [
+          203,
+          327,
+          270,
+          333
+        ],
+        "upper310Exact": true
+      },
+      {
+        "symbol": "C",
+        "changedPixels": 85,
+        "bbox": [
+          205,
+          322,
+          271,
+          337
+        ],
+        "upper310Exact": true
+      },
+      {
+        "symbol": "D",
+        "changedPixels": 118,
+        "bbox": [
+          205,
+          322,
+          270,
+          344
+        ],
+        "upper310Exact": true
+      },
+      {
+        "symbol": "E",
+        "changedPixels": 30,
+        "bbox": [
+          217,
+          335,
+          230,
+          340
+        ],
+        "upper310Exact": true
+      },
+      {
+        "symbol": "F",
+        "changedPixels": 27,
+        "bbox": [
+          212,
+          325,
+          226,
+          329
+        ],
+        "upper310Exact": true
+      },
+      {
+        "symbol": "G",
+        "changedPixels": 11,
+        "bbox": [
+          208,
+          320,
+          264,
+          324
+        ],
+        "upper310Exact": true
+      },
+      {
+        "symbol": "H",
+        "changedPixels": 104,
+        "bbox": [
+          204,
+          321,
+          271,
+          337
+        ],
+        "upper310Exact": true
+      }
+    ],
+    "grinOwnershipFixedWithoutNewLipDrawing": true,
+    "grinCheeksStillUnapproved": true
+  },
+  "nativeBasePairsInspected": 9,
+  "nativeGrinBeforeAfterInspected": true,
+  "stagedNativePairsInspected": 144,
+  "fullStageFramesInspected": [
+    988,
+    1016,
+    1055
+  ],
+  "testsPassed": 23,
+  "sourcePixelsOrAlphaModified": false,
+  "newGrinOrCrownIntegratedIntoSpeakingScene": false,
+  "developmentOwnershipFixIntegrated": true,
+  "priorInterpretationCorrected": "The viewer-right skin wedge was caused by cheek carrier ownership over the lumen, not solely missing lip artwork.",
+  "sourceSnapshots": {
+    "package.py": "4e4c2f0c160723ff213cb2e99f0be211c9b0f186ac690ef8038b7e09c65fc508",
+    "separated_oral_review.py": "02ad47beba8bc49ac5a6320e6141bd8a02c96b7e54d5ba52398787f7617fefd8",
+    "test_face_lumen_ownership.py": "b73218d2063a7d863a7c3d522afc6e2a6d6b168fa3b24965d4fd83942840d2ee"
+  }
+}

@@ -146,13 +146,15 @@ def inner_oral_coverage(oral):
  inside=(x>=max(upper[0,0],lower[0,0]))&(x<=min(upper[-1,0],lower[-1,0]))
  return (coverage*inside)[:,:,None].astype('float32')
 
-def face_ownership(target,upper):
+def face_ownership(target,oral):
+ upper=inner_arch(oral,True)
  boundary=mapped_interface(target)
  for i,(x,_) in enumerate(INTERFACE):
   if 194<=x<=263:boundary[i,1]=np.interp(boundary[i,0],upper[:,0],upper[:,1])
  polygon=np.vstack([[[0,0],[511,0],[511,288]],boundary[::-1],[[0,288]]]).astype('float32');mask=np.zeros((1536,1536),np.uint8)
  cv2.fillPoly(mask,[np.rint(polygon*3*256).astype('int32')],255,lineType=cv2.LINE_AA,shift=8)
- return cv2.resize(mask,(512,512),interpolation=cv2.INTER_AREA).astype('float32')/255
+ # The authored cheek interface must never paint over the actual oral lumen.
+ return cv2.resize(mask,(512,512),interpolation=cv2.INTER_AREA).astype('float32')/255*(1-inner_oral_coverage(oral)[:,:,0])
 
 def upper_lip_carrier_guard(face,oral,carrier):
  # Use uncut face paint: the clipped cheek carrier leaves triangular cap gaps.
@@ -205,7 +207,7 @@ class SeparatedOralReview:
   underpaint=np.zeros_like(self.head.clean_face);underpaint[305:365,190:285]=self.head.clean_face[305:365,190:285]
   rounding=self.head.current_round_material;cap=arch_surface(self.cap,self.cap_edge,upper)*(1-rounding)+arch_surface(self.round_cap,self.round_edge,upper)*rounding
   # Restore the protected upper face once in front; the jaw owns the lower silhouette.
-  carrier=face*face_ownership(target,upper)[:,:,None];behind=carrier.copy();behind[:310]=0
+  carrier=face*face_ownership(target,oral)[:,:,None];behind=carrier.copy();behind[:310]=0
   parts={'Neck backing':self.neck.copy(),'Drawn skin underlap':underpaint,'Painted cavity':self.head.current_backing.copy(),'Narration tongue':self.head.review_tongue.copy(),'Rigid upper incisors':self.head.review_teeth.copy(),'Front dental tongue tip':self.head.review_dental_tip.copy(),'Upper face and cheeks':behind,'Drawn jaw skin':jaw,'Independent lower lip':self.lower.pose(lower,self.head.current_fv),'Independent upper-lip cap':cap,'Upper lip carrier guard':upper_lip_carrier_guard(face,oral,carrier)}
   result=np.zeros_like(jaw)
   for part in parts.values():result=over(result,part)
