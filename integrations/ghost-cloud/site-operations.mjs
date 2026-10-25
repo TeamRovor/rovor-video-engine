@@ -29,7 +29,8 @@ export function createCloudOperations(base, cloud) {
   const cfg=config(env,'GHOST_FLEET_CONFIG');
   const providers=data.providers.map(p=>({...p,credentials_configured:!!env[cloud.PROVIDERS[p.provider][1]],
    admission:cfg[p.provider]?.enabled!==true&&env[cloud.PROVIDERS[p.provider][1]]?'disabled_pending_verification':p.admission}));
-  return {...data,providers,attempts:results};
+  const checks=(await sql(env,'SELECT provider,observed_at,status,error_category FROM ghost_cloud_provider_checks').all()).results;
+  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null})),attempts:results};
  }
  async function control(env,enabled) {
   if(typeof enabled!=='boolean')throw Error('invalid_control');
@@ -78,7 +79,7 @@ export function createCloudOperations(base, cloud) {
     catalog_zero_price:provider==='openrouter'?true:null
    }));
    return {provider,status:'catalog_received',observed_at:Date.now(),models,billing_verified:false,quota_verified:false,canary_verified:false};
-  }catch(error){const message=String(error?.message||'');const category=/illegal invocation|illegal receiver/i.test(message)?'unbound_runtime_call':/not a function/i.test(message)?'missing_runtime_api':/timeout|timed out/i.test(message)?'timeout':/network|fetch|connect|dns|resolve/i.test(message)?'network':/abort/i.test(message)?'aborted':'runtime_or_catalog';return {provider,status:'catalog_unavailable',error_category:category,error_name:['TypeError','ReferenceError','TimeoutError','AbortError','SyntaxError','Error'].includes(error?.name)?error.name:'unknown'};}
+  }catch(error){const message=String(error?.message||'');const category=/illegal invocation|illegal receiver/i.test(message)?'unbound_runtime_call':/not a function/i.test(message)?'missing_runtime_api':/timeout|timed out/i.test(message)?'timeout':/network|fetch|connect|dns|resolve/i.test(message)?'network':/abort/i.test(message)?'aborted':'runtime_or_catalog';return {provider,status:'catalog_unavailable',error_message:message.replaceAll(key,'[redacted]').replace(/[A-Za-z0-9_=\/-]{24,}/g,'[redacted]').slice(0,180),error_category:category,error_name:['TypeError','ReferenceError','TimeoutError','AbortError','SyntaxError','Error'].includes(error?.name)?error.name:'unknown'};}
  }
  const tools=[
   {name:'rovor_cloud_workforce_status',description:'Read actual private cloud job/model/token receipts. Missing or disabled providers are explicit.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true}},
@@ -151,7 +152,7 @@ export function createCloudOperations(base, cloud) {
    const section=el('section');section.id='rovor-cloud-live';section.className='wl-card';
    section.append(el('strong','CLOUD EMPLOYEES · '+(data.enabled?'DISPATCH ENABLED':'DISPATCH PAUSED')));
    const pause=el('button',data.enabled?'PAUSE':'RESUME');pause.className='wl-button';pause.onclick=async()=>{try{const r=await fetch('/api/ghost/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!data.enabled})});if(!r.ok)throw Error('control_unavailable');await poll();}catch{disconnect();}};section.append(pause);
-   for(const p of data.providers){const last=data.attempts.find(a=>a.provider===p.provider);section.append(el('p',p.provider+' · '+p.admission+(last?' · '+last.status:' · no execution receipt')));}
+   for(const p of data.providers){const last=data.attempts.find(a=>a.provider===p.provider);section.append(el('p',p.provider+' · '+p.admission+(last?' · '+last.status:' · no execution receipt')+(p.last_check?' · provider check: '+p.last_check.status+(p.last_check.error_category?' ('+p.last_check.error_category+')':'')+' · '+new Date(p.last_check.observed_at).toLocaleString():' · provider not checked')));}
    const old=document.getElementById(section.id);if(old)old.replaceWith(section);else panel.prepend(section);
    const results=el('section');results.id='rovor-cloud-results';results.append(el('strong','RECORDED CLOUD WORK'));
    if(!data.attempts.length)results.append(el('p','No cloud request has completed yet.'));
@@ -197,7 +198,7 @@ export function createCloudOperations(base, cloud) {
      const body=await bounded(request);
      if(Object.keys(body).some(k=>!['operation','provider'].includes(k)))throw Error('invalid_service');
      if(body.operation==='status')return json(await status(env));
-     if(body.operation==='inventory')return json(await inventory(env,body.provider));
+     if(body.operation==='inventory'){const result=await inventory(env,body.provider);await sql(env,'INSERT INTO ghost_cloud_provider_checks(provider,observed_at,status,error_category) VALUES(?,?,?,?) ON CONFLICT(provider) DO UPDATE SET observed_at=excluded.observed_at,status=excluded.status,error_category=excluded.error_category',body.provider,Date.now(),result.status,result.error_category||null).run();return json(result);}
      if(body.operation==='shift'){
       const intake=await replenish(env);
       const result=await cloud.tick(env);
