@@ -52,7 +52,7 @@ export function requestFor(provider, cfg, env, prompt) {
  const endpoint = url || `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/v1/chat/completions`;
  const body = {model:cfg.model, messages:[{role:'user',content:prompt}], max_tokens:cfg.max_output_tokens, stream:false};
  if (provider === 'openrouter') body.provider = {allow_fallbacks:false, require_parameters:true, max_price:{prompt:0,completion:0}};
- return [endpoint,{method:'POST',redirect:'error',headers:{Authorization:`Bearer ${env[key]}`,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(45000)}];
+ return [endpoint,{method:'POST',redirect:'manual',headers:{Authorization:`Bearer ${env[key]}`,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(45000)}];
 }
 
 async function boundedJson(response) {
