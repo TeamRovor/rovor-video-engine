@@ -5005,10 +5005,10 @@
       "id": "walter-ghost-cloud-site-composition-20261025",
       "title": "Compose existing nine-provider cloud runtime into the already registered private HUD Site without changing owner files",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Walter / unattended cloud migration Site composition shift 2026-10-25",
-      "updated_at": "2026-10-25T01:17:45.111Z",
-      "next_update": "After exact GitHub CI evidence and owner PASS/FAIL on immutable PR head",
+      "updated_at": "2026-10-25T01:23:08.587Z",
+      "next_update": "After Amar's saved exact-commit PASS/FAIL for PR193, or new private Site publication/secret access",
       "branch": "feature/walter-ghost-cloud-site-composition-20261025",
       "scopes": [
         "integrations/ghost-cloud/site-composition.mjs",
@@ -5018,8 +5018,22 @@
       "depends_on": [
         "nine-provider-cloud-dispatch-20261024"
       ],
-      "next_action": "Implement a fail-closed opt-in Site composer for the existing registered private Site, preserving original HUD and D1 schema, mounting only ghost-cloud routes, appending migration without overwrite, no scheduler registration, no secret transfer or deployment; verify with focused tests and submit PR for owner review.",
-      "acceptance": "Source-only opt-in Site composition reads existing registered private HUD bundle and ghost-cloud runtime, preserves HUD identity and fetch behavior, routes authenticated provider status and existing writer endpoints, appends namespaced D1 migration safely and idempotently, never changes original HUD source, creates Sites, registers schedules, provisions secrets or dispatches. Focused hosted Node24 tests and shared queue/routing checks pass. Live hosting requires owner action."
+      "next_action": "PR193 at immutable tested head 3bfb9ae5cbae3963392facfc14d09e280bdbd9f3 OPEN awaiting Amar's saved PASS/FAIL. Both hosted Node24 runs 40150350531 (push) and 40150368215 (PR) SUCCESS: 8/8 tests including actual HUD+ghost source composition and ESM syntax, no skipped tests; shared queue/routing checks PASS. Existing private Site owner may independently review the opt-in dry-run composer and appended D1 migration, then resolve source publication, securely provision nine provider credentials/eligibility/real canaries, and explicitly enable schedule. No Mac, live Site, provider inference, model quota, secrets, owner approval, or HUD live status verified. Do not merge specialist PR without exact-commit owner PASS.",
+      "acceptance": "Source-only opt-in Site composition reads existing registered private HUD bundle and ghost-cloud runtime, preserves HUD identity and fetch behavior, routes authenticated provider status and existing writer endpoints, appends namespaced D1 migration safely and idempotently, never changes original HUD source, creates Sites, registers schedules, provisions secrets or dispatches. Focused hosted Node24 tests and shared queue/routing checks pass. Live hosting requires owner action.",
+      "blocker": "Existing private Site remains unpublished and no host credential/secret or provider eligibility access is available in this GitHub-only shift. Source PR awaits owner PASS; no cloud provider outputs or per-model usage were observed.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/193",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40150368215"
+      ],
+      "evidence": [
+        {
+          "commit": "3bfb9ae5cbae3963392facfc14d09e280bdbd9f3",
+          "platform": "GitHub-hosted Ubuntu Node24.21.0; isolated Linux Node22.16.0",
+          "check": "node --test tests/test_ghost_cloud_site_composition.mjs; python3 tools/project_loop.py check; python3 tools/task_routing_pair.py --check",
+          "result": "PASS 8/8 hosted with actual main HUD+ghost source compiled to executable ESM and D1 schema migration; 7/7 synthetic local (real-source test skipped locally due absent repo checkout). Existing ghost-cloud runtime checks also PASS in both push and PR. Source-only, PR open; no Site publication, model call, Mac access, provider secret, quota, owner PASS or deployment.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40150368215"
+        }
+      ]
     }
   ]
 }
