@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {PROVIDERS} from '../integrations/ghost-cloud/runtime.mjs';
+import {PROVIDERS,tick} from '../integrations/ghost-cloud/runtime.mjs';
 import {preflight,runCanary} from '../integrations/ghost-cloud/canary-preflight.mjs';
 
 const NOW=Date.now();
@@ -158,4 +158,20 @@ test('canary cannot turn a disabled fleet on or approve a model output',async()=
  assert.equal(out.status,'needs_review');
  assert.equal(sqlite.prepare('SELECT enabled FROM ghost_cloud_control WHERE id=1').get().enabled,1);
  assert.equal(sqlite.prepare('SELECT human_review FROM ghost_cloud_attempts').get().human_review,'not_recorded');
+});
+
+test('denied canary cannot become ordinary work after its one-time approval expires',async()=>{
+ const {env,sqlite}=setup(),cfg=config(),first=approval();
+ assert.equal((await runCanary({provider:'groq',cfg,env,approval:first,now:NOW,
+  fetcher:async()=>success(marker(first),cfg.model)})).status,'needs_review');
+ const deniedApproval=approval('groq',cfg,{canary_id:'canary-groq-denied-later'});
+ const denied=await runCanary({provider:'groq',cfg,env,approval:deniedApproval,now:NOW+1,
+  fetcher:async()=>{throw Error('pool spacing must deny probe');}});
+ assert.equal(denied.reason,'shared_pool_or_stop_admission');
+ assert.equal(sqlite.prepare('SELECT kind FROM ghost_cloud_jobs WHERE id=?').get(deniedApproval.canary_id).kind,'canary');
+ env.GHOST_FLEET_CONFIG=JSON.stringify({groq:{...cfg,canary_at:NOW,canary_sha256:'b'.repeat(64)}});
+ let calls=0;
+ const result=await tick(env,async()=>{calls++;return success(marker(deniedApproval),cfg.model);},NOW+120000);
+ assert.equal(result.dispatched,0);assert.equal(calls,0);
+ assert.equal(sqlite.prepare('SELECT count(*) n FROM ghost_cloud_attempts WHERE job_id=?').get(deniedApproval.canary_id).n,0);
 });

@@ -72,7 +72,7 @@ export async function runCanary({provider,cfg,env,approval,fetcher=fetch,now=Dat
  // A preexisting ID is permanently consumed, even if its earlier write was interrupted.
  const inserted=await dbq(db,`INSERT OR IGNORE INTO ghost_cloud_jobs
    (id,employee,task_id,kind,title,prompt,input_bytes,source_commit,created_at)
-   VALUES (?,'Walter',?,'checklist','PROVIDER CANARY (not task output)',?,?,?,?)`,
+   VALUES (?,'Walter',?,'canary','PROVIDER CANARY (not task output)',?,?,?,?)`,
    approval.canary_id,approval.task_id,prompt,bytes(prompt),approval.source_commit,now).run();
  if(inserted.meta.changes!==1)return {status:'denied',reason:'canary_id_used',provider};
  const attemptId=crypto.randomUUID();
