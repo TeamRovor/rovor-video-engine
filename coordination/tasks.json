@@ -4968,6 +4968,23 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40141808694"
         }
       ]
+    },
+    {
+      "id": "walter-cloud-canary-preflight-20261025",
+      "title": "Add one-shot quota-reserved cloud provider canary preflight without Mac dependency",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / unattended cloud migration canary shift 2026-10-25",
+      "branch": "feature/walter-cloud-canary-preflight-20261025",
+      "scopes": [
+        "integrations/ghost-cloud/canary-preflight.mjs",
+        "tests/test_ghost_cloud_canary_preflight.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T00:23:00Z",
+      "next_update": "After focused hosted CI and owner review; no deployment or canary until private hosting and verified secrets",
+      "next_action": "Implement one-shot operator-authorized provider canary using existing D1 job/attempt accounting, STOP and strict cost/response checks; test with mocked providers and real SQL; leave PR for Amar PASS/FAIL. No live model calls or Site changes.",
+      "acceptance": "Standalone cloud preflight performs a single real HTTPS canary only after operator-verified zero-cost account/model evidence, persistent STOP and atomic shared-pool quota reservation, never replays a job or enables fleet, validates exact response and preserves sanitized provider/model/usage evidence. Offline Node24 real-SQL mocked-transport tests and shared coordination checks pass. No Mac, paid calls, HUD changes or deployment."
     }
   ]
 }
