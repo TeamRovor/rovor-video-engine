@@ -17,6 +17,9 @@ const evalJS=async source=>{const r=await cmd('Runtime.evaluate',{expression:'((
 const poll=async fn=>{for(let i=0;i<600;i++){try{const v=await fn();if(v)return v}catch{}await delay(100)}throw Error('Browser operation timed out')};
 async function screenshot(name){const r=await cmd('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync(path.join(output,name+'.png'),Buffer.from(r.data,'base64'))}
 async function main(){
+ const quotaScript=path.join(root,'native-v8-9/live-quota-board.js');
+ const syntax=spawnSync(process.execPath,['--check',quotaScript],{encoding:'utf8'});
+ assert.equal(syntax.status,0,'Quota widget syntax: '+syntax.stderr);
  fs.mkdirSync(output,{recursive:true});
  const {createBridge}=await import('../tools/hud_omniroute_bridge.mjs');
  let offline=false,requests=7;
@@ -51,6 +54,8 @@ async function main(){
   await poll(()=>evalJS('return document.querySelectorAll("[data-live-model].wl-model-entry").length===12'));
   const quotaDiag=await evalJS('return {helper:typeof window.ROVOR_QUOTA_BOARD,panels:document.querySelectorAll(".rvq-provider").length,board:!!document.querySelector(".rvq-board"),card:document.querySelector("#rovor-workload-popup .wl-card")?.textContent.slice(0,95)}');
   console.log('QUOTA_WIDGET_DIAGNOSTIC',JSON.stringify(quotaDiag));
+  const addonSource=await (await fetch(origin+'/hud-live.js',{headers:{Cookie:'rovor_hud='+session}})).text();
+  console.log('QUOTA_ADAPTER_SOURCE',addonSource.includes('ROVOR_QUOTA_BOARD'),addonSource.length);
   await poll(()=>evalJS('return document.querySelectorAll(".rvq-provider").length===9'));
   assert.equal(await evalJS('return document.querySelector(".rvq-track[role=progressbar]")?.getAttribute("aria-valuenow")'),'25.0');
   assert(await evalJS('return !!document.querySelector(".rvq-unknown")'));
