@@ -45,7 +45,7 @@ test('existing drawer quota board remains nine-connection grouped and escaped',(
   const html=window.ROVOR_QUOTA_BOARD.render({connections:conns,quota:{records:[{provider:'p0',model_id:'modelX',used:25,total:100,used_percent:25,unit:'requests',reset_at:'2026-10-26T00:00:00Z',fetched_at:'2026-10-25T07:55:00Z',account_slot:1}]},models:[]},true);
   assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
   assert.match(html,/25\.0%/);
-  assert.match(html,/Reset:/);
+  assert.match(html,/RESET WINDOW/);
   assert.match(html,/LIMIT/);
   assert(!html.includes('<untrusted>'));
   assert(html.includes('&lt;untrusted&gt;'));
