@@ -9,6 +9,7 @@ import crypto from 'node:crypto';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {spawn,spawnSync,execFile} from 'node:child_process';
 import {promisify} from 'node:util';
+import {reduceProviderQuota} from './hud_verified_quota.mjs';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const ID=/^[a-zA-Z0-9][a-zA-Z0-9._:/+@-]{0,199}$/;
@@ -76,11 +77,14 @@ export function normalizeOwned(providers,analytics,options={}){
   all.inventory_count=all.models.length;
   all.inventory_scope='configured_connections_and_recorded_models';
   all.models_scope='recorded_models_matched_to_configured_provider_ids_only';
+  // Provider-authoritative cached limits are keyed by LIVE connection ID only.
+  // No limit or reset time is fabricated from historical requests or model names.
+  all.quota=reduceProviderQuota(providers,options.quotaDocument,{now:options.now??Date.now()});
   return all;
 }
 
 export function createCollector(read,{clock=Date.now}={}){
-  const cache=new Map(),pending=new Map();let inventory=null,inventoryAt=0;
+  const cache=new Map(),pending=new Map();let inventory=null,inventoryAt=0,quotaDocument=null,quotaAt=0;
   return async period=>{
     if(!WINDOWS[period])throw Error('period_invalid');const now=clock();
     if(cache.has(period)&&now-cache.get(period).fetched<5000)return cache.get(period).value;
@@ -90,12 +94,15 @@ export function createCollector(read,{clock=Date.now}={}){
       const end=new Date(Math.floor(now/5000)*5000).toISOString(),start=new Date(Date.parse(end)-WINDOWS[period]).toISOString();
       // Explicit moving boundaries avoid OmniRoute's 60-second analytics cache.
       const usage=await read('/api/usage/analytics?range=all&startDate='+encodeURIComponent(start)+'&endDate='+encodeURIComponent(end));
-      const value=normalizeOwned(inventory,usage,{period,now:clock(),start,end});cache.set(period,{fetched:clock(),value});return value;
+      // Cached quota read is optional: lack of provider evidence must not break
+      // historical usage or force outbound inference/refresh requests.
+      if(!quotaAt||now-quotaAt>=60000){quotaAt=now;try{quotaDocument=await read('/api/usage/provider-limits');}catch{quotaDocument=null;}}
+      const value=normalizeOwned(inventory,usage,{period,now:clock(),start,end,quotaDocument});cache.set(period,{fetched:clock(),value});return value;
     })();pending.set(period,task);try{return await task;}finally{pending.delete(period);}
   };
 }
 
-export function createBridge({collect,hud,adapter,pairCode=crypto.randomBytes(32).toString('hex'),port=0,clock=Date.now,viewerOrigin='https://teamrovor.github.io'}){
+export function createBridge({collect,hud,adapter,quotaAddon='',pairCode=crypto.randomBytes(32).toString('hex'),port=0,clock=Date.now,viewerOrigin='https://teamrovor.github.io'}){
   const sessions=new Map(),allowedHosts=new Set();let pairingOpen=true;
   const reply=(res,status,body,type='application/json',extra={})=>{res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"frame-ancestors 'none'; base-uri 'none'",...extra});res.end(body);};
   const externalTokens=new Map();
@@ -132,8 +139,9 @@ export function createBridge({collect,hud,adapter,pairCode=crypto.randomBytes(32
       return reply(res,200,login,'text/html');
     }
     if(!authenticated&&!(bearerOK&&url.pathname==='/api/hud/omniroute'))return denied(res);
-    if(url.pathname==='/')return reply(res,200,hud.replace('</body>','<script>window.ROVOR_START_OMNIROUTE?.();</script></body>'),'text/html');
+    if(url.pathname==='/')return reply(res,200,hud.replace('</body>',(quotaAddon?'<script src="/hud-quota.js"></script>':'')+'<script>window.ROVOR_QUOTA_BOARD?.start?.();window.ROVOR_START_OMNIROUTE?.();</script></body>'),'text/html');
     if(url.pathname==='/hud-live.js')return reply(res,200,adapter,'text/javascript');
+    if(url.pathname==='/hud-quota.js'&&quotaAddon)return reply(res,200,quotaAddon,'text/javascript');
     if(url.pathname==='/api/hud/omniroute'){
       const period=url.searchParams.get('period')||'24h';if(!WINDOWS[period])return reply(res,400,'{"error":"period_invalid"}');
       try{return reply(res,200,JSON.stringify(await collect(period)));}catch{return reply(res,503,'{"error":"omniroute_unavailable_or_unauthorized"}');}
@@ -156,7 +164,7 @@ async function installedReader(){
     const p=spawnSync('/usr/bin/security',['find-generic-password','-s','rovordigital.omniroute.endpoint','-w'],{encoding:'utf8',timeout:5000});if(p.status===0)endpointKey=p.stdout.trim();
   }
   return async resource=>{
-    if(resource!=='/api/providers'&&!resource.startsWith('/api/usage/analytics?'))throw Error('read_path_denied');
+    if(resource!=='/api/providers'&&resource!=='/api/usage/provider-limits'&&!resource.startsWith('/api/usage/analytics?'))throw Error('read_path_denied');
     const headers={'Accept':'application/json',[CLI_TOKEN_HEADER]:token};if(endpointKey)headers.Authorization='Bearer '+endpointKey;
     const r=await fetch('http://127.0.0.1:20128'+resource,{headers,redirect:'error',signal:AbortSignal.timeout(8000)});
     if(!r.ok)throw Error('gateway_read_failed');
@@ -187,9 +195,9 @@ async function main(){
   const reader=await installedReader(),readModels=createCollector(reader),readWorkers=createWorkerReader();
   const collect=async period=>({...await readModels(period),workforce:await readWorkers()});
   const first=await collect('24h');
-  const bridge=createBridge({collect,port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8')});
+  const bridge=createBridge({collect,port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8'),quotaAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8')});
   const port=await bridge.listen();
-  console.log(`OmniRoute connected: ${first.connection_count} configured connections; ${first.models.length} recorded models; ${first.request_count} recorded requests in 24h. Quota remains unknown unless independently measured.`);
+  console.log(`OmniRoute connected: ${first.connection_count} configured connections; ${first.models.length} recorded models; ${first.request_count} recorded requests in 24h. ${first.quota.records.length} fresh provider-reported quota rows (unknown limits remain unknown).`);
   let tunnel;
   if(remote){
     tunnel=spawn('cloudflared',['tunnel','--url','http://127.0.0.1:'+port,'--no-autoupdate'],{stdio:['ignore','ignore','pipe']});

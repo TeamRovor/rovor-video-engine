@@ -1,12 +1,13 @@
 import http from 'node:http';import test from 'node:test';import assert from 'node:assert/strict';
 import {normalize,normalizeOwned,createCollector,createBridge} from '../tools/hud_omniroute_bridge.mjs';
+import {reduceProviderQuota} from '../tools/hud_verified_quota.mjs';
 const catalog={data:Array.from({length:12},(_,i)=>({id:'provider/model-'+i,owned_by:'provider'})).concat({id:'rovor-fast',owned_by:'combo'})};
 const usage={summary:{totalRequests:10,uniqueModels:2},byModel:[{rawModel:'model-0',provider:'provider',requests:7,totalTokens:70},{rawModel:'model-1',provider:'provider',requests:3,totalTokens:30}]};
 test('full catalog, exact measured shares, unknown quota and unobserved usage',()=>{const d=normalize(catalog,usage);assert.equal(d.inventory_count,12);assert.equal(d.models.length,12);assert.equal(d.models[0].request_share_percent,70);assert.equal(d.models[2].requests,null);assert.equal(d.models[0].quota_used_percent,null);assert.equal(d.usage_coverage,'complete_aggregate');});
 test('partial aggregates are labeled and ambiguous aliases never duplicate counts',()=>{const d=normalize({data:[{id:'a/m',owned_by:'x'},{id:'b/m',owned_by:'x'}]},{summary:{totalRequests:30,uniqueModels:55},byModel:[{rawModel:'m',provider:'x',requests:3,totalTokens:1}]});assert.equal(d.usage_coverage,'partial_top_50_or_unattributed');assert.equal(d.models.filter(m=>m.requests===3).length,1);assert.equal(d.models.filter(m=>m.requests===null).length,2);});
 test('explicit zero is distinct from unavailable and raw secrets never leave reducer',()=>{const x=structuredClone(usage);x.secret='private';const d=normalize(catalog,x);assert(!JSON.stringify(d).includes('private'));assert.equal(normalize(catalog,{summary:{totalRequests:0,uniqueModels:0},byModel:[]}).request_count,0);assert.throws(()=>normalize(catalog,{}));});
 test('duplicate, inconsistent and malformed rows fail closed',()=>{assert.throws(()=>normalize(catalog,{...usage,byModel:[usage.byModel[0],usage.byModel[0]]}));assert.throws(()=>normalize(catalog,{...usage,summary:{totalRequests:2,uniqueModels:2}}));assert.throws(()=>normalize({data:[]},usage));});
-test('collector deduplicates concurrent reads, refreshes usage after 5s and catalog after 60s',async()=>{let now=100000,calls=[];const collect=createCollector(async p=>{calls.push(p);return p==='/api/providers'?{connections:[{provider:'provider'}]}:usage;},{clock:()=>now});await Promise.all([collect('24h'),collect('24h')]);assert.equal(calls.length,2);now+=6000;await collect('24h');assert.equal(calls.length,3);assert(calls[2].includes('endDate='));now+=60000;await collect('24h');assert.equal(calls.length,5);await assert.rejects(collect('bad'));});
+test('collector deduplicates concurrent reads, refreshes usage after 5s and catalog after 60s',async()=>{let now=100000,calls=[];const collect=createCollector(async p=>{calls.push(p);return p==='/api/providers'?{connections:[{provider:'provider'}]}:usage;},{clock:()=>now});await Promise.all([collect('24h'),collect('24h')]);assert.equal(calls.length,3);assert.equal(calls[2],'/api/usage/provider-limits');now+=6000;await collect('24h');assert.equal(calls.length,4);assert(calls[3].includes('endDate='));now+=60000;await collect('24h');assert.equal(calls.length,7);await assert.rejects(collect('bad'));});
 test('HTTP pairing, auth, whitelist, no proxy, no stale fallback, no mutations',async t=>{let broken=false;const b=createBridge({collect:async()=>{if(broken)throw Error('SECRET');return normalize(catalog,usage);},hud:'<body>ROVOR</body>',adapter:'/* adapter */',pairCode:'pair-secret'});const port=await b.listen();t.after(()=>new Promise(r=>b.server.close(r)));const base='http://127.0.0.1:'+port;
 assert.equal((await fetch(base+'/api/hud/omniroute')).status,401);
 assert.equal(await new Promise((resolve,reject)=>{const req=http.get(base+'/',{headers:{Host:'evil.example'}},res=>{res.resume();resolve(res.statusCode)});req.on('error',reject)}),403);
@@ -74,4 +75,19 @@ test('worker reader caches bounded private helper output and fails closed',async
  const read=createWorkerReader(async()=>{calls++;return {stdout:JSON.stringify({source:'existing_worker_sqlite_read_only',employees:Array.from({length:8},()=>({}))})};},()=>now);
  await read();await read();assert.equal(calls,1);now+=6000;await read();assert.equal(calls,2);
  const bad=createWorkerReader(async()=>{throw Error('PRIVATE_FAILURE')});const result=await bad();assert.equal(result.source,'worker_state_unavailable');assert(!JSON.stringify(result).includes('PRIVATE_FAILURE'));
+});
+
+test('quota report only counts recent active account limits and verified resets',()=>{
+ const now=Date.parse('2026-10-25T08:00:00Z');
+ const p={connections:[{provider:'groq',id:'id-1',isActive:true,secret:'hidden'},{provider:'gemini',id:'id-2',isActive:false}]};
+ const caches={'id-1':{fetchedAt:'2026-10-25T07:55:00Z',quotas:{
+   modelA:{used:3,total:10,unit:'requests',resetAt:'2026-10-26T12:00:00Z'},
+   invalid:{used:20,total:10}
+ }},'id-2':{fetchedAt:'2026-10-25T07:55:00Z',quotas:{ignored:{used:2,total:10}}}};
+ const r=reduceProviderQuota(p,{caches},{now});
+ assert.equal(r.records.length,1);
+ assert.equal(r.records[0].used_percent,30);
+ assert.equal(r.records[0].reset_at,'2026-10-26T12:00:00.000Z');
+ assert.equal(JSON.stringify(r).includes('hidden'),false);
+ assert.equal(reduceProviderQuota(p,{}, {now}).records.length,0);
 });
