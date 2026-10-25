@@ -5169,17 +5169,26 @@
       "id": "ghost-cloud-private-secret-provision-20261025",
       "title": "Provision existing nine provider credentials into owner-private cloud runtime with dispatch disabled",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar cloud credential migration 2026-10-25",
       "branch": "main",
       "scopes": [
         "subsystem:ghost-cloud-private-runtime-secrets"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T03:03:27.702Z",
-      "next_update": "After private cloud secret readback without value exposure",
-      "next_action": "Use read-only local OmniRoute decryption in memory and native Sites secret storage for the existing owner-private Site. Do not print/persist credential values, overwrite existing secrets, call models, enable dispatch, modify Mac service, or change Site sharing.",
-      "acceptance": "Nine provider key names and Cloudflare account if available are secret-marked in existing private Site; readback shows secret values masked; GHOST_FLEET_CONFIG disables every provider and cron opt-in is absent. Record precise storage revision and source-push blocker; no deployed inference claim."
+      "updated_at": "2026-10-25T03:05:28.713Z",
+      "next_update": "Secret storage verified; native source push/publication and live account/model verification remain separate.",
+      "next_action": "Existing owner-private Site appgprj_6add1e2cc8c08191839344b34d7dbf50 now has 13 secret-marked environment entries at revision1: all nine provider keys, Cloudflare account ID, separate ghost reader/writer capabilities, and GHOST_FLEET_CONFIG disabling all nine. Native independent readback confirms every value masked. No Mac credential/store/service changed, raw key printed or committed, provider request, source push, deployment or inference enabling occurred. General DNS unavailable from this Mac executor for Site host/GitHub/Cloudflare. Existing Walter cloud task updated and immediate execution requested to inspect its distinct cloud execution/network capabilities and advance existing private Site publication; request acceptance alone is not execution success. Next actual deployment owner must use supported source push, preserve audience/migrations, verify live model/cost/quota/canary evidence and integrate factual HUD status before enabling.",
+      "acceptance": "Nine provider key names and Cloudflare account if available are secret-marked in existing private Site; readback shows secret values masked; GHOST_FLEET_CONFIG disables every provider and cron opt-in is absent. Record precise storage revision and source-push blocker; no deployed inference claim.",
+      "evidence": [
+        {
+          "commit": "6107a6c9f5f3bc239f58cd0f6860755497ef81f2",
+          "platform": "Read-only local Node24.22.0 OmniRoute credential preflight and native owner-private Sites environment service",
+          "check": "Official installed OmniRoute decryptCredential; readOnly SQLite; native secret update then independent get_environment_variables readback",
+          "result": "SUCCESS: nine active provider credentials decryptable, valid Cloudflare account metadata, 13 secret-marked masked cloud entries, runtime environment revision1. All providers disabled; cron opt-in absent. No network model requests, Mac writes, Site publication or nine-way operation.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/blob/main/integrations/ghost-cloud/runtime.mjs"
+        }
+      ]
     }
   ]
 }
