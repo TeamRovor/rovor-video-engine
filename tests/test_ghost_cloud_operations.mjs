@@ -128,7 +128,8 @@ test('composer preserves applied migrations, emits schema-only SQL and string DB
 test('embedded HUD client hides stale agent cards after a failed or invalid live status request',async()=>{
  const s=setup();await completed(s);
  const page=await (await s.ops.fetch(request('/'),s.env)).text();
- const script=page.match(/<script>([\\s\\S]*?)<\\/script>/)?.[1];
+ const start=page.indexOf('<script>'),end=page.indexOf('</script>',start);
+ const script=start>=0&&end>start?page.slice(start+8,end):null;
  assert.ok(script,'private HUD injects its live module');
  class Element {
   constructor(tag){this.tag=tag;this.id='';this.children=[];this.parent=null;this.textContent='';this.className='';this.style={};this.hidden=false;}
