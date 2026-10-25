@@ -70,7 +70,7 @@ export function createCloudOperations(base, cloud) {
    `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/models/search`:endpoints[provider];
   if(!url)return {provider,status:'account_metadata_missing'};
   try{
-   const response=await fetcher(url,{method:'GET',redirect:'error',headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
+   const response=await fetcher(url,{method:'GET',redirect:'manual',headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
    if(!response.ok){await response.body?.cancel();return {provider,status:'http_'+response.status};}
    const data=await bounded(response,4194304),rows=data.data||data.models||data.result;
    if(!Array.isArray(rows))return {provider,status:'unrecognized_catalog'};
