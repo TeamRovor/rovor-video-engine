@@ -18,6 +18,7 @@ from painted_timing import ease,flowing_track
 from speech_planner import VOWELS
 from english_articulation import PHONE_CATALOG
 from duration_cartoon_head import duration_jaw_weights
+from rounded_duration_cartoon_head import rounded_duration_jaw_weights
 from rounded_cartoon_head import RoundedCartoonHead,rounding_identity
 from cartoon_head import TRIANGLES,area
 
@@ -72,6 +73,21 @@ def rounded_oral_arch(oral,aperture,strength):
  return result
 
 class MaterialCapture(FaceCapture):
+ def jaw_control(self,t,plan,identity=None):
+  current=super().jaw_control(t,plan,identity)
+  if plan.get('alignment',{}).get('status')!='acoustic':return current
+  active=[(float(ease((t-q['start'])/.025))*(1-float(ease((t-q['end'])/.06))),q['end']-q['start']) for p,q in zip(plan['phonemes'],plan['phonemes'][1:]) if p['phone'].rstrip('012') in {'P','B','M'} and q['phone'].rstrip('012')=='AO' and abs(p['end']-q['start'])<1e-6 and q['start']<=t<q['end']+.06]
+  strength,duration=max(active or [(0.,0.)])
+  if not strength:return current
+  # shortcut: capped10% causal lag is authored; other vowel contexts need review.
+  lag=min(1/48,.1*duration)
+  slow=sum(rounded_duration_jaw_weights(max(0,t-i*lag),plan)*v for i,v in enumerate([1,2,1]))/4
+  out=current*(1-strength)+slow*strength
+  fv=current[7];seal=min(max(current[1],out[1]),1-fv);budget=max(0.,1-seal-fv);out[[1,7]]=0
+  if out.sum()>1e-12:out*=budget/out.sum()
+  else:out[0]=budget
+  out[1]=seal;out[7]=fv
+  return out
  def baseline_corners(self,t,plan):
   # RoundedDuration preserves these original X controls while scaling height.
   points=RoundedCartoonHead.target_points(self,duration_jaw_weights(t,plan),rounding_identity(t,plan))

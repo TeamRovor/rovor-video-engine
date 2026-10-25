@@ -163,5 +163,22 @@ class CornerPhaseTests(unittest.TestCase):
   oral,skin=self.prior(.28);row=capture(self.rig,.28,self.plan)
   self.assertLess(row['width'],68);self.assertLessEqual(float(self.rig.head.current_oral[20,1]-self.rig.head.current_oral[28,1]),.151)
   np.testing.assert_array_equal(oral[:,1],self.rig.head.current_oral[:,1]);np.testing.assert_array_equal(skin,self.rig.head.exposure_skin)
+ def test_duration_release_keeps_current_contact_and_fv_budget(self):
+  from rounded_duration_cartoon_head import rounded_duration_jaw_weights
+  from english_articulation import phone_gestures
+  self.plan['phonemes']=self.plan['phonemes'][:2]+[dict(start=.3,end=.6,phone='AO',value='E',word='test'),dict(start=.6,end=.8,phone='F',value='G',word='test')]
+  self.plan['gestures']=phone_gestures(self.plan['phonemes'])
+  changed=False
+  for t in [.2,.28,.31,.35,.57,.61,.67]:
+   old=rounded_duration_jaw_weights(t,self.plan);new=self.rig.head.jaw_control(t,self.plan)
+   self.assertGreaterEqual(new[1]+1e-12,old[1]);self.assertEqual(new[7],old[7]);self.assertGreaterEqual(new.min(),0);self.assertAlmostEqual(new.sum(),1)
+   if t<.3 or t>=.66:np.testing.assert_array_equal(new,old)
+   changed|=bool(np.max(abs(old-new))>1e-5)
+  self.assertTrue(changed)
+ def test_duration_release_does_not_change_noncontiguous_or_unaligned_phones(self):
+  from rounded_duration_cartoon_head import rounded_duration_jaw_weights
+  for t in [.2,.35,.5]:np.testing.assert_array_equal(self.rig.head.jaw_control(t,self.plan),rounded_duration_jaw_weights(t,self.plan))
+  self.plan['alignment']['status']='estimated'
+  np.testing.assert_array_equal(self.rig.head.jaw_control(.5,self.plan),rounded_duration_jaw_weights(.5,self.plan))
 
 if __name__=='__main__':unittest.main()

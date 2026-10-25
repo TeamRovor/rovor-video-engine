@@ -1,0 +1,255 @@
+{
+  "baseCommit": "22ef528406f3895c574bf363b5477846ada4d9f0",
+  "componentIntegratedInDevelopmentReview": true,
+  "meanLag": "min(1/48 second,10% assigned AO duration); authored, not measured biomechanics",
+  "actualMeanLagSeconds": [
+    0.006,
+    0.006,
+    0.019
+  ],
+  "testsPassed": 29,
+  "geometry": {
+    "samples": 1307,
+    "failures": [],
+    "changedSamples": 29,
+    "actualClosedSamplesZeroInterior": 248,
+    "productionChanged": false,
+    "animationAccepted": false
+  },
+  "integratedVerification": {
+    "geometrySamplesExact": 1307,
+    "exactIntegratedNativeRasterFrames": [
+      741,
+      742,
+      888,
+      889,
+      980,
+      981
+    ],
+    "allRecordedTargetsAndAreasExact": true,
+    "phonemeTimingChanged": false,
+    "animationAccepted": false
+  },
+  "temporal": {
+    "samples": 1307,
+    "changedSamples": 29,
+    "closedSamples": 248,
+    "minimumOral": 0.023623911663889885,
+    "minimumJaw": 45.5,
+    "windows": [
+      {
+        "label": "Small",
+        "priorMaximumStep": 11.2889404296875,
+        "trialMaximumStep": 11.4114990234375,
+        "worseSteps": [
+          {
+            "fromFrame": 742,
+            "prior": 1.18963623046875,
+            "trial": 2.991302490234375
+          }
+        ],
+        "priorPeakY": 348.61053466796875,
+        "trialPeakY": 348.7393798828125
+      },
+      {
+        "label": "More",
+        "priorMaximumStep": 12.113677978515625,
+        "trialMaximumStep": 11.3555908203125,
+        "worseSteps": [
+          {
+            "fromFrame": 888,
+            "prior": 5.138092041015625,
+            "trial": 6.34912109375
+          }
+        ],
+        "priorPeakY": 347.54071044921875,
+        "trialPeakY": 346.8341979980469
+      },
+      {
+        "label": "Up-All",
+        "priorMaximumStep": 14.667755126953125,
+        "trialMaximumStep": 10.941650390625,
+        "worseSteps": [
+          {
+            "fromFrame": 981,
+            "prior": 3.195831298828125,
+            "trial": 7.429718017578125
+          },
+          {
+            "fromFrame": 982,
+            "prior": 1.283538818359375,
+            "trial": 3.15869140625
+          },
+          {
+            "fromFrame": 988,
+            "prior": 3.639556884765625,
+            "trial": 5.18609619140625
+          }
+        ],
+        "priorPeakY": 364.2467041015625,
+        "trialPeakY": 363.71795654296875
+      }
+    ]
+  },
+  "comparisons": [
+    {
+      "label": "Small",
+      "sourceFrames": [
+        720,
+        768
+      ],
+      "sourceSamples": [
+        240000,
+        256000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "cc204c0b2b25aff3b220fc64b831ee18f6905c067e700754ce2e268d51ecbff4"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "ab3f316f1daab2b4c4c2fdf6f2c65f6b7a9f9dd95157d6cb4ecbe108385ea57f"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": false,
+      "widthExact": true
+    },
+    {
+      "label": "More",
+      "sourceFrames": [
+        864,
+        912
+      ],
+      "sourceSamples": [
+        288000,
+        304000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "255145984dc8e436dc25fa20d8366511f03a4376c0c2c6070b77759321bdfaee"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "c5e34f1df45a478804b292529533ac29320be93ed098431a32530f0973d9393f"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": false,
+      "widthExact": true
+    },
+    {
+      "label": "Up-All",
+      "sourceFrames": [
+        960,
+        1008
+      ],
+      "sourceSamples": [
+        320000,
+        336000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "38e4fd75b45b396c47a0a3ff9b3d41a7b940fe6755a001f9a8fce95c57a6edad"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "be8fcea008ef6096ad753575a477187d5e1570ed3a244463914015ea2664c44e"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": false,
+      "widthExact": true
+    }
+  ],
+  "pilotNativeTriptychsRendered": 9,
+  "pilotFullFramesInspected": [
+    742,
+    888,
+    980
+  ],
+  "nativePairsInspected": 144,
+  "upper288AndEarExactSamples": 144,
+  "oralXAndFvChinControlsExact": true,
+  "layerExports": [
+    {
+      "file": "Body-Pixel-Layers-981.psd",
+      "layers": [
+        "neck",
+        "torso",
+        "hand-left",
+        "arm-left",
+        "arm-right",
+        "head"
+      ],
+      "meanPremultipliedError": 0.007053125781277896,
+      "nativeMohoBones": false
+    },
+    {
+      "file": "Native-Oral-Layers-981.psd",
+      "layers": [
+        "Neck backing",
+        "Drawn skin underlap",
+        "Painted cavity",
+        "Narration tongue",
+        "Rigid upper incisors",
+        "Front dental tongue tip",
+        "Upper face and cheeks",
+        "Drawn jaw skin",
+        "Independent lower lip",
+        "Independent upper-lip cap",
+        "Upper lip carrier guard"
+      ],
+      "meanPremultipliedError": 0.0036978889914119923,
+      "nativeMohoBones": false
+    }
+  ],
+  "phonemeTimingChanged": false,
+  "sourceArtworkOrAlphaChanged": false,
+  "independentListeningVerified": false,
+  "realtimePlaybackAccepted": false,
+  "animationAccepted": false,
+  "polishedMilestoneReady": false,
+  "sourceHashes": {
+    "package.py": "460fe39e71f3b517e8a3a09602a6cd58b83a1aa71151dbe3311a1aaf238bf5ae",
+    "pilot.py": "0c1c6424b2de223c342b32896013a308c2382e194f34624b9171135ca398e032",
+    "audit.py": "1491300c41cd2c7583992112fb55cd7fd259a40822a54dfeba2d373128165c67",
+    "render.py": "043479c9685be0869132c84be7bce49d1afc1ba10640a216e55d06e253ac2405",
+    "Integrated-separated_oral_review.py": "5f2c985f56567db05259bbf60db40c73a6f32300467fe2f25d6627841f10d47e",
+    "verify_integrated.py": "293e41e90748066ab1bd08e96a03405f9630e34bb80b3e7401fda0b50c6f4954",
+    "export.py": "5c4be4cf27235d5c1a65a418a49f2fb2b1bf5ea14b0322637a0cae87ccaaec72",
+    "Integrated-test_separated_oral.py": "7ed360ec74a96fdf71f803595b566559412a58bfa1acca141a6d9d5ac09af319",
+    "prototype.py": "8a42cacd18446c6247a3e8a46a12a84a7182d16cb7af60abda33fda31681f2d4",
+    "frozen_separated.py": "ea454b71ae213b5813a6ec611785b5c95be526f6c6c5ef1f2870f03316044381"
+  },
+  "layerExportsInspected": true,
+  "observedArtLimits": [
+    "Native source-alpha fringes/specks remain along body outline and between legs.",
+    "Hand size/pose asymmetry still needs artist judgment.",
+    "Concept expressive smiles/laugh/eye reveal are not registered working poses."
+  ]
+}
