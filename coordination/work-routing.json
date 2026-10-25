@@ -978,6 +978,14 @@
         "github-write",
         "hosted-ci"
       ]
+    },
+    "mike-pr201-stop-count-review-20261025": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
     }
   }
 }

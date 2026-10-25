@@ -5312,6 +5312,22 @@
         "https://github.com/TeamRovor/rovor-video-engine/pull/198",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40160575762"
       ]
+    },
+    {
+      "id": "mike-pr201-stop-count-review-20261025",
+      "title": "Review PR201 loss of partial feed counts when STOP occurs",
+      "priority": 1,
+      "status": "active",
+      "owner": "Mike / cloud pool scheduler evidence review 2026-10-25",
+      "updated_at": "2026-10-25T06:28:05.222Z",
+      "next_update": "After pinned-source reproduction and review handoff",
+      "branch": "review/mike-pr201-stop-counts-20261025",
+      "scopes": [
+        "reviews/mike-pr201-stop-counts-20261025.md"
+      ],
+      "depends_on": [],
+      "next_action": "Publish independently reproduced PR201 partial-STOP receipt undercount, exact source revisions, existingCI evidence and bounded correction for current scheduler owner. Do not edit their source, post human reviews, merge or deploy.",
+      "acceptance": "Review identifies exact code branch and reproduces realSQLite persisted zeros versus feed queued2/duplicates1, verifies tick nevercalled, distinguishes existing11/11 tests from uncoveredcase. Public report contains no private data/runtime IDs; canonicalqueue/routing validated."
     }
   ]
 }
