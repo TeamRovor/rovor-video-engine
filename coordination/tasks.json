@@ -5041,7 +5041,7 @@
       "priority": 1,
       "status": "active",
       "owner": "Walter / unattended cloud migration eligibility configuration 2026-10-25",
-      "updated_at": "2026-10-25T02:37:00Z",
+      "updated_at": "2026-10-25T02:28:00Z",
       "next_update": "After focused hosted CI and owner review of immutable PR head",
       "branch": "feature/walter-cloud-eligibility-config-20261025",
       "scopes": [
