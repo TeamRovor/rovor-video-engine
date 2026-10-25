@@ -1,5 +1,6 @@
 import http from 'node:http';import test from 'node:test';import assert from 'node:assert/strict';
 import {normalize,normalizeOwned,createCollector,createBridge} from '../tools/hud_omniroute_bridge.mjs';
+import {reduceProviderQuota} from '../tools/hud_verified_quota.mjs';
 const catalog={data:Array.from({length:12},(_,i)=>({id:'provider/model-'+i,owned_by:'provider'})).concat({id:'rovor-fast',owned_by:'combo'})};
 const usage={summary:{totalRequests:10,uniqueModels:2},byModel:[{rawModel:'model-0',provider:'provider',requests:7,totalTokens:70},{rawModel:'model-1',provider:'provider',requests:3,totalTokens:30}]};
 test('full catalog, exact measured shares, unknown quota and unobserved usage',()=>{const d=normalize(catalog,usage);assert.equal(d.inventory_count,12);assert.equal(d.models.length,12);assert.equal(d.models[0].request_share_percent,70);assert.equal(d.models[2].requests,null);assert.equal(d.models[0].quota_used_percent,null);assert.equal(d.usage_coverage,'complete_aggregate');});
@@ -74,4 +75,19 @@ test('worker reader caches bounded private helper output and fails closed',async
  const read=createWorkerReader(async()=>{calls++;return {stdout:JSON.stringify({source:'existing_worker_sqlite_read_only',employees:Array.from({length:8},()=>({}))})};},()=>now);
  await read();await read();assert.equal(calls,1);now+=6000;await read();assert.equal(calls,2);
  const bad=createWorkerReader(async()=>{throw Error('PRIVATE_FAILURE')});const result=await bad();assert.equal(result.source,'worker_state_unavailable');assert(!JSON.stringify(result).includes('PRIVATE_FAILURE'));
+});
+
+test('quota report only counts recent active account limits and verified resets',()=>{
+ const now=Date.parse('2026-10-25T08:00:00Z');
+ const p={connections:[{provider:'groq',id:'id-1',isActive:true,secret:'hidden'},{provider:'gemini',id:'id-2',isActive:false}]};
+ const caches={'id-1':{fetchedAt:'2026-10-25T07:55:00Z',quotas:{
+   modelA:{used:3,total:10,unit:'requests',resetAt:'2026-10-26T12:00:00Z'},
+   invalid:{used:20,total:10}
+ }},'id-2':{fetchedAt:'2026-10-25T07:55:00Z',quotas:{ignored:{used:2,total:10}}}};
+ const r=reduceProviderQuota(p,{caches},{now});
+ assert.equal(r.records.length,1);
+ assert.equal(r.records[0].used_percent,30);
+ assert.equal(r.records[0].reset_at,'2026-10-26T12:00:00.000Z');
+ assert.equal(JSON.stringify(r).includes('hidden'),false);
+ assert.equal(reduceProviderQuota(p,{}, {now}).records.length,0);
 });
