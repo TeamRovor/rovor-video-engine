@@ -44,9 +44,9 @@ async function main(){
  for(const [width,height,name,mobile] of sizes){
   await cmd('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile});
   await cmd('Page.navigate',{url:origin+'/'});
-  await poll(()=>evalJS('return document.querySelectorAll("#workloadPanel [data-live-model]").length===12'));
+  await poll(()=>evalJS('return document.querySelectorAll("#workloadPanel [data-live-details]").length===9'));
   const home=await evalJS('return {pageWidth:document.documentElement.scrollWidth,viewport:innerWidth,panels:document.querySelectorAll(".rail .panel").length,nav:document.querySelectorAll(".nav-item").length,text:document.querySelector("#workloadPanel").textContent}');
-  assert(home.pageWidth<=home.viewport+2,name+': overflow');assert.equal(home.panels,6);assert.equal(home.nav,5);assert(home.text.includes('CONNECTED'));assert(home.text.includes('provider/model-11'));
+  assert(home.pageWidth<=home.viewport+2,name+': overflow');assert.equal(home.panels,6);assert.equal(home.nav,5);assert(home.text.includes('CONNECTED'));assert(home.text.includes('connected-8'));
   await evalJS('document.querySelector(".panel-expand[data-view=workload]").click();return true');
   await poll(()=>evalJS('return document.querySelectorAll("[data-live-model].wl-model-entry").length===12'));
   await poll(()=>evalJS('return document.querySelectorAll(".rvq-provider").length===9'));
