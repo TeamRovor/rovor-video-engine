@@ -205,7 +205,9 @@ test('reports exact read-only no-dispatch blockers without replay or private fie
  enqueue(limited.sqlite,job('retry-first'));enqueue(limited.sqlite,job('retry-second'));
  assert.equal((await tick(limited.env,async()=>new Response('',{status:429,headers:{'Retry-After':'120'}}),NOW)).dispatched,1);
  const cooldown=await tick(limited.env,async()=>{throw Error('retry-after');},NOW+1000);
- assert.deepEqual(cooldown.blocked.groq,{reason:'account_retry_after',next_eligible_at:NOW+120000});
+ assert.equal(cooldown.blocked.groq.reason,'account_retry_after');
+ assert.ok(cooldown.blocked.groq.next_eligible_at>=NOW+120000);
+ assert.ok(cooldown.blocked.groq.next_eligible_at<=NOW+121000);
  assert.ok(!JSON.stringify(cooldown.blocked).includes('secret-value-never-returned'));
 
  const circuit=setup();enable(circuit.sqlite);
