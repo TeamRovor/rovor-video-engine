@@ -1,0 +1,30 @@
+name: OmniRoute private draft receipt review offline tests
+
+on:
+  pull_request:
+    paths:
+      - 'tools/omniroute_draft_review.py'
+      - 'tests/test_omniroute_draft_review.py'
+      - '.github/workflows/omniroute-draft-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  no-network:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify read-only receipt freshness and privacy rules
+        run: python -m unittest discover -s tests -p test_omniroute_draft_review.py -v
