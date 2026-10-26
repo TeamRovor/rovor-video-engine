@@ -134,6 +134,7 @@ test('forward-only review index repairs legacy schema and preserves first immuta
   const sql='INSERT INTO ghost_cloud_reviews(id,attempt_id,actor,verdict,output_sha256,reviewed_at) VALUES(?,?,?,?,?,?) ON CONFLICT(attempt_id) DO NOTHING';
   assert.throws(()=>db.prepare(sql),/ON CONFLICT clause/);
   db.exec(schema);
+  db.prepare('INSERT INTO ghost_cloud_attempts VALUES(?)').run('attempt-1');
   const insert=db.prepare(sql);
   assert.equal(insert.run('review-pass','attempt-1','owner','passed','a'.repeat(64),1).changes,1);
   assert.equal(insert.run('review-fail','attempt-1','owner','failed','b'.repeat(64),2).changes,0);
@@ -144,6 +145,7 @@ test('forward-only review index repairs legacy schema and preserves first immuta
  const corrupted=new DatabaseSync(':memory:');
  try{
   corrupted.exec('CREATE TABLE ghost_cloud_attempts(id TEXT PRIMARY KEY);CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL REFERENCES ghost_cloud_attempts(id),actor TEXT NOT NULL,verdict TEXT NOT NULL,output_sha256 TEXT NOT NULL,reviewed_at INTEGER NOT NULL)');
+  corrupted.prepare('INSERT INTO ghost_cloud_attempts VALUES(?)').run('same');
   corrupted.prepare('INSERT INTO ghost_cloud_reviews VALUES(?,?,?,?,?,?)').run('one','same','owner','passed','a'.repeat(64),1);
   corrupted.prepare('INSERT INTO ghost_cloud_reviews VALUES(?,?,?,?,?,?)').run('two','same','owner','failed','b'.repeat(64),2);
   assert.throws(()=>corrupted.exec(schema),/UNIQUE constraint failed/);
