@@ -58,7 +58,7 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
   if(/^\s*(?:import|export)\s/m.test(moduleSource))throw Error('unsupported_shift_import');
   // Embed the already-reviewed immutable-Git feed into the same self-contained
   // private Site bundle; no runtime import, new endpoint, or second scheduler.
-  let feedBundle='const __feed = null;\\n';
+  let feedBundle='const __feed = null;\n';
   if(feedSource!==null){
     const feedImport="import {validateJob} from './runtime.mjs';";
     const workerImport="const {default:worker}=await import('./worker.mjs');";
@@ -66,11 +66,11 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
       !feedSource.includes('export async function replenishApprovedJobs('))throw Error('unexpected_approved_feed_source');
     const body=feedSource.replace(feedImport,'const validateJob=__cloud.validateJob;')
       .replace(workerImport,'const worker=__cloud.worker;')
-      .replace(/^export (?=async function (?:fetchCanonicalQueue|planApprovedJobs|replenishApprovedJobs)\\b)/gm,'');
-    if(/(^|\\n)\\s*(?:import|export)\\s/.test(body)||/import\\s*\\(/.test(body))throw Error('unsupported_approved_feed_shape');
-    feedBundle='const __feed = (() => {\\n'+body+'\\nreturn {replenishApprovedJobs};\\n})();\\n';
+      .replace(/^export (?=async function (?:fetchCanonicalQueue|planApprovedJobs|replenishApprovedJobs)\b)/gm,'');
+    if(/(^|\n)\s*(?:import|export)\s/.test(body)||/import\s*\(/.test(body))throw Error('unsupported_approved_feed_shape');
+    feedBundle='const __feed = (() => {\n'+body+'\nreturn {replenishApprovedJobs};\n})();\n';
   }
-  const tag=createHash('sha256').update(shiftSource+'\\0'+(feedSource||'')).digest('hex');
+  const tag=createHash('sha256').update(shiftSource+'\0'+(feedSource||'')).digest('hex');
   const ui='<script>('+scheduleWidget.toString()+')();</script>';
   const ending='\n// ROVOR_CLOUD_SCHEDULED_SHIFT_V1 '+tag+'\n'+
     'const __shift = (() => {\n'+moduleSource+'\nreturn {runScheduledShift,readScheduledShifts};\n})();\n'+
