@@ -1,0 +1,33 @@
+# Evan cartoon: current checkpoint
+
+## Direction and safeguards
+
+Entertaining expressive 2D CARTOON Evan; photo supplies loose identity only. Follow CARTOON-EVAN-DIRECTION.md and evan-character/cartoon-v1/source/design-sheet-v1.png. Dark tousled hair, sunglasses, navy shirt/black tie, official Rovor. Realistic painted direction superseded. Concept plates are references, not registered expression frames. No flattened head swaps or studio-quality claims from tests.
+
+Repo work/engine; development/evan-painted-rig (legacy name), draftPR#4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Commit/push development only. NEVER merge/deploy without explicit approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62, V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/symlinks/updater/native projects. Do NOT launch/restart/probe Moho unattended after crash. Automation develop-evan-painted-animation ACTIVE; polished milestone NOT ready. Notify meaningful milestone/failure/completion/required action only.
+
+## Latest full-stage comparison
+
+CARTOON-EVAN-GRIN-STAGED.md / reviews/grin-staged-v1.json; outputs/evan-cartoon-grin-staged. Before/after19–23s branded closing context:192normal frames each,768muted quarter-speed each, all four films fully decode. Entire remaining original audio48758PCM16samples(sample304000:352758) preserved exactly in review WAV, then15242zero samples. Both AAC tracks decode64000samples; lossy AAC is not byte-exact PCM. No narration retiming.
+
+Smile begins22.127375,80ms after actual recording end22.047375;240ms rise into .35grin hold. Uses actual separated face/jaw, independent crown crossfade and crease. Existing current speaking cache912–1055 copied with hashes; fresh1055 calibration pixel-exact to cache. Other143cache frames not re-rendered. Three fresh tail frames cover remaining source audio unchanged;147speaking-context frames preserved. Tail48frames retain exact native upper310rows and outside-face/brand pixels; minOral.05927658/minJaw45.5. Source manifest, frozen reproductions and audit retained locally. All48native mouth/jaw pairs plus full peak1080/hold1103 inspected.
+
+Visible restrained smile, but thin tooth sliver and little cheek/upper-face acting remain below requested direction. No independent listening/realtime/fullstage acceptance, no current speaking-scene integration or source pixel changes. No pending jobs.
+
+Next: compare restrained held brow accent coordinated with this post-recording smile using existing independent brow drawings, before increasing mouth amplitude. Explicitly allow only brow/forehead pixels; preserve nose/ear, speech, body and official branding. Render normal/slow context and judge acting. Keep unsafe contact grin out of speech. Do not expand scope once polished milestone actually ready; disable automation then.
+
+## Working rig and retained constraints
+
+Current speaking reference remains outputs/evan-cartoon-lumen-staged (19–22s), based on current face-ownership fix6286d15. Eleven mouth/face planes: jaw skin, lower lip, upper cap, crown/tongue, protected upper carrier/guard. face_ownership excludes actual oral lumen; keep sourceX jaw mapping, UNCUT cap guard, original carrier above310 and original ear. Earlier prototypes had nose/cap/ear defects; use SeparatedOralReview. Native6body/11oral PSDs are editable pixel planes, NOT Moho bones.
+
+7cf9512 retains80ms horizontal P/B/M→AO preparation;54635b7 causal jaw mean min20.83ms/10%AO (short vowels6ms, all19ms), seal never weakened/FV exact. Do NOT stack frozen Candidate/AnticipationCapture over current MaterialCapture. 8a92357 closing time/at/rovor/digital cue has independent shoulder/elbow/wrist delays and small left/head/body accents; fixed hand drawings, no new fingers.
+
+Registered experimental crown grin-tooth-isolated-v1 has nine source-edge guides/hash;378alpha islands/1260pixels retained, no cleanup. Crease smile-crease-v1 retains original1254²PNG/alpha,18detached islands/22pixels. 10923c9 scales crease uniformly with lip width(12px at93px reference); previous fixed width crossed protected row309 in9/48frames and is rejected/frozen. Seven crease/crown tests pass;25-strength probe zero alpha above310. Corrected48-frame isolated transition has exact upper310/rest endpoints. See CARTOON-EVAN-GRIN-TRANSITION.md.
+
+Contact rejection: direct .35grin opens closed P/B/M analytic lumen0→397.3735(max oral displacement10.85px); F/V89.3994→541.7919/max8.2375px despite positive meshes. These are geometric sums, not acoustic measurements. No in-speech grin profile accepted. Jaw-skin cheek pull previously rejected: stronger pull deformed jaw/neck shadow; do not repeat larger width/shadow pulls to substitute for missing cheek drawings. Whole-head grin sources remain references only.
+
+## Acoustic evidence and unresolved limits
+
+CARTOON-EVAN-EXACT-CONTEXT-AUDIO.md / reviews/exact-context-audio-v1.json: f8ded65 copies exact source PCM bytes/channels for audit clips instead of float re-encoding/downmixing;16tests pass. Six exact contextclips/plots at outputs/evan-speech-exact-review-audio/Timing-Review.html cover original18word flags, already visually reviewed against waveform/spectrogram (reviews/evan-reference-timing-v1.json). No independent listening/exact-boundary acceptance or flag clearing. Four phone concerns remain: but/B184,whole/HH195,way/W207,all/AO228 leading lowenergy20.38–20.425. Thresholds are not verified boundaries; do not retime from them. CH/OY absent; catalog coverage is not performance evidence.
+
+PlanSHAaf01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e unchanged. Thin FV/dental, limited cheeks/eyes/fingers/legs, asymmetric fixed hands and source-alpha fringes/specks remain below polished bar. Full prior checkpoint PAINTED-EVAN-HISTORY-2026-10-26-D.md retains detailed history. Milestone not ready.
