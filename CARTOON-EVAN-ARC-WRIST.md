@@ -21,3 +21,5 @@ Six held attachment pilots use the corrected parent at wrist−15/0/+15 and tran
 The thumbs-up source retains its earlier unapproved matte/fringes. Its registration file, source PNG and the current speaking scene are unchanged. No new artwork was generated in this study. Original pilot scripts and JSON evidence are frozen locally.
 
 Next: fit two transverse source/target guides for the wrist stub and give the two components an explicit hidden ownership overlap. Start with the held raised wrist-zero pose, then test±15°; reject exposed cuts rather than hiding them with a broad dissolve. Keep the finger silhouette rigid during that attachment fit. Do not expose thumbs-up throughout the low-arm lift, where it reads thumbs-down. No speaking-scene integration until the seam and cuff silhouette pass visual review.
+
+Follow-up: CARTOON-EVAN-THUMB-STUB.md carries out the two-guide component trial, records its remaining rejected seam and supersedes the next-step paragraph above.

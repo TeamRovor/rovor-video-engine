@@ -69,6 +69,25 @@ class ElbowArcTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     call(bad)
 
+    def test_registered_component_guides(self):
+        axis = np.array([61., 137.]); axis /= np.linalg.norm(axis)
+        normal = np.array([-axis[1], axis[0]])
+        wrist = np.array(self.rig.geometry['wrist'])
+        guides = wrist + np.array([-36, -36, 0, 40, 40])[:, None]*axis + np.array([-24, 24, 0, -40, 40])[:, None]*normal
+        base = self.rig.posed_points(guides, [-5, -135, 0])
+        for angle in [-15, 0, 15]:
+            a = [-5, -135, angle]
+            actual = self.rig.posed_points(guides, a)
+            np.testing.assert_array_equal(actual[:2], base[:2])
+            np.testing.assert_allclose(actual[2], base[2], atol=1e-4)
+            expected = (np.c_[guides[3:], np.ones(2)] @ self.rig.hand_parent(a).T)[:, :2]
+            np.testing.assert_allclose(actual[3:], expected, atol=1e-4)
+
+    def test_invalid_component_guides(self):
+        for bad in [[1, 2], [[1, 2, 3]], [[1, np.nan]], [[np.inf, 0]]]:
+            with self.assertRaises(ValueError):
+                self.rig.posed_points(bad, [-5, -135, 0])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -49,14 +49,21 @@ class ElbowArcReview(CartoonArm):
         return rotation(self.geometry['shoulder'], a[0]) @ forearm @ rotation(wrist, a[2])
 
     def posed_vertices(self, angles):
+        return self.posed_points(self.vertices, angles)
+
+    def posed_points(self, points, angles):
+        """Pose registered component guides in the same material coordinates as the arm."""
         a = self._angles(angles)
-        p = self._bend(self.vertices, a[1])
+        points = np.asarray(points, float)
+        if points.ndim != 2 or points.shape[1] != 2 or not np.isfinite(points).all():
+            raise ValueError('Expected finite N-by-2 material points')
+        p = self._bend(points, a[1])
         if a[2] != 0:
             wrist = np.asarray(self.geometry['wrist'], float)
             axis = wrist - self.geometry['elbow']
             axis /= np.linalg.norm(axis)
-            w = smooth(((self.vertices - wrist) @ axis + 30) / 60)
-            delta = (np.c_[self.vertices, np.ones(len(p))] @ rotation(wrist, a[2]).T)[:, :2] - self.vertices
+            w = smooth(((points - wrist) @ axis + 30) / 60)
+            delta = (np.c_[points, np.ones(len(p))] @ rotation(wrist, a[2]).T)[:, :2] - points
             # Wrist influence begins beyond the elbow arc, so its displacement uses the rigid forearm parent.
             p = p + (delta * w[:, None]) @ rotation([0, 0], a[1])[:2, :2].T
         return (np.c_[p, np.ones(len(p))] @ rotation(self.geometry['shoulder'], a[0]).T)[:, :2]
