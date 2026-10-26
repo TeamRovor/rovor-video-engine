@@ -1070,6 +1070,13 @@
         "github-write"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "ghost-cloud-scheduled-shift-evidence-20261025": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

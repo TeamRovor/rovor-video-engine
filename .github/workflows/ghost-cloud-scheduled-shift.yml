@@ -1,0 +1,30 @@
+name: ROVOR ghost cloud scheduled shift safety
+on:
+  pull_request:
+    paths:
+      - 'integrations/ghost-cloud/scheduled-shift.mjs'
+      - 'integrations/ghost-cloud/scheduled-shift.sql'
+      - 'integrations/ghost-cloud/compose-scheduled-shift.mjs'
+      - 'tests/test_ghost_cloud_scheduled_shift.mjs'
+      - 'tests/test_ghost_cloud_scheduled_shift_composer.mjs'
+      - '.github/workflows/ghost-cloud-scheduled-shift.yml'
+  push:
+    paths:
+      - 'integrations/ghost-cloud/scheduled-shift.mjs'
+      - 'integrations/ghost-cloud/scheduled-shift.sql'
+      - 'integrations/ghost-cloud/compose-scheduled-shift.mjs'
+      - 'tests/test_ghost_cloud_scheduled_shift.mjs'
+      - 'tests/test_ghost_cloud_scheduled_shift_composer.mjs'
+      - '.github/workflows/ghost-cloud-scheduled-shift.yml'
+permissions:
+  contents: read
+jobs:
+  offline-sqlite-and-bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/test_ghost_cloud_scheduled_shift.mjs tests/test_ghost_cloud_scheduled_shift_composer.mjs
