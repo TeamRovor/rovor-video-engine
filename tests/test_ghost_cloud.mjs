@@ -28,7 +28,7 @@ test('all nine configured providers get their own fixed HTTPS endpoint and secre
  const {env}=setup();assert.equal(Object.keys(PROVIDERS).length,9);
  for(const p of Object.keys(PROVIDERS)){
   const c=configFor(p);assert.equal(eligibility(p,c,env,NOW),null);
-  const [url,init]=requestFor(p,c,env,'public task');assert.ok(url.startsWith('https://'));assert.equal(init.redirect,'error');assert.equal(init.method,'POST');
+  const [url,init]=requestFor(p,c,env,'public task');assert.ok(url.startsWith('https://'));assert.equal(init.redirect,'manual');assert.equal(init.method,'POST');
   const body=JSON.parse(init.body);assert.equal(body.model,c.model);assert.equal(body.max_tokens,512);assert.equal(body.stream,false);
   assert.equal(init.headers.Authorization,'Bearer '+env[PROVIDERS[p][1]]);
  }

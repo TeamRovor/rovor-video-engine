@@ -21,6 +21,13 @@ export function validateTarget(value) {
   return url.origin;
 }
 
+// Only the existing authenticated read-only OmniRoute telemetry endpoints.
+export function isAllowedLocalReadPath(resource) {
+  return resource === '/api/providers' ||
+    resource === '/api/usage/provider-limits' ||
+    (typeof resource === 'string' && resource.startsWith('/api/usage/analytics?'));
+}
+
 async function localReader() {
   const candidates = [process.env.OMNIROUTE_CLI, path.join(process.env.HOME || '', '.local/bin/omniroute'),
     ...String(process.env.PATH || '').split(path.delimiter).map(p => path.join(p, 'omniroute'))].filter(Boolean);
@@ -40,7 +47,7 @@ async function localReader() {
   if (!cliToken) throw Error('omniroute_cli_auth_missing');
   const endpointKey = process.env.OMNIROUTE_API_KEY || await keychain('rovordigital.omniroute.endpoint');
   return async resource => {
-    if (resource !== '/api/providers' && !resource.startsWith('/api/usage/analytics?')) throw Error('path_denied');
+    if (!isAllowedLocalReadPath(resource)) throw Error('path_denied');
     const headers = {[CLI_TOKEN_HEADER]: cliToken, Accept: 'application/json'};
     if (endpointKey) headers.Authorization = 'Bearer ' + endpointKey;
     const result = await fetch('http://127.0.0.1:20128' + resource, {headers, redirect: 'error', signal: AbortSignal.timeout(8000)});
@@ -97,4 +104,4 @@ async function main() {
   } while (!stop.signal.aborted);
 }
 
-if (isEntrypoint()) main().catch(() => { console.error('HUD reporting requires a configured HTTPS origin, writer credential, and authenticated local OmniRoute.'); process.exitCode = 1; });
+if (isEntrypoint(process.argv[1], import.meta.url)) main().catch(() => { console.error('HUD reporting requires a configured HTTPS origin, writer credential, and authenticated local OmniRoute.'); process.exitCode = 1; });

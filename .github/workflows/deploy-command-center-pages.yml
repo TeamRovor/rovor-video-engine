@@ -58,6 +58,9 @@ jobs:
           node --check dashboard/command-center/cinematic-layout.js
           node --check dashboard/command-center/app.js
           node --check dashboard/command-center/service-worker.js
+          node --check dashboard/command-center/native-v8-9/team-contributions.js
+          node --check dashboard/command-center/tools/inject-team-contributions.mjs
+          node --test dashboard/command-center/tests/team-contributions.test.cjs
           node --check dashboard/command-center/exact/app.js
           node --check dashboard/command-center/exact/live-panels.js
           node --check dashboard/command-center/exact/service-worker.js
@@ -88,6 +91,7 @@ jobs:
           mkdir -p "$ROVOR_PAGES_DIR"
           cp -R dashboard/command-center/. "$ROVOR_PAGES_DIR/"
           node integrations/hud-cloud/build-cloud-activity.mjs "$ROVOR_PAGES_DIR"
+          node dashboard/command-center/tools/inject-team-contributions.mjs "$ROVOR_PAGES_DIR"
 
       - name: Upload static Command Center
         uses: actions/upload-pages-artifact@v3

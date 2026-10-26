@@ -29,7 +29,18 @@ export function createCloudOperations(base, cloud) {
   const cfg=config(env,'GHOST_FLEET_CONFIG');
   const providers=data.providers.map(p=>({...p,credentials_configured:!!env[cloud.PROVIDERS[p.provider][1]],
    admission:cfg[p.provider]?.enabled!==true&&env[cloud.PROVIDERS[p.provider][1]]?'disabled_pending_verification':p.admission}));
-  return {...data,providers,attempts:results};
+  const checks=(await sql(env,'SELECT provider,observed_at,status,error_category FROM ghost_cloud_provider_checks').all()).results;
+  // Last-50 activity samples can hide older actionable review work. This
+  // oldest-first index is bounded and contains metadata only, never output.
+  const reviewCount=await sql(env,"SELECT COUNT(*) AS pending_count, MIN(finished_at) AS oldest_finished_at FROM ghost_cloud_attempts WHERE status='needs_review' AND human_review='not_recorded'").first();
+  const {results:reviewItems}=await sql(env,`SELECT a.id,a.job_id,a.provider,a.model requested_model,a.actual_model,
+   a.started_at,a.finished_at,a.status,a.tokens_input,a.tokens_output,a.human_review,
+   j.employee,j.task_id,j.title FROM ghost_cloud_attempts a JOIN ghost_cloud_jobs j ON a.job_id=j.id
+   WHERE a.status='needs_review' AND a.human_review='not_recorded'
+   ORDER BY COALESCE(a.finished_at,a.started_at) ASC,a.id ASC LIMIT 50`).all();
+  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null})),
+   attempts:results,review_queue:{pending_count:reviewCount?.pending_count??0,
+    oldest_finished_at:reviewCount?.oldest_finished_at??null,items:reviewItems}};
  }
  async function control(env,enabled) {
   if(typeof enabled!=='boolean')throw Error('invalid_control');
@@ -62,14 +73,14 @@ export function createCloudOperations(base, cloud) {
   cohere:'https://api.cohere.ai/v1/models',
   huggingface:'https://router.huggingface.co/v1/models'
  };
- async function inventory(env,provider,fetcher=fetch) {
+ async function inventory(env,provider,fetcher=(...args)=>globalThis.fetch(...args)) {
   if(!Object.hasOwn(cloud.PROVIDERS,provider))throw Error('unknown_provider');
   const key=env[cloud.PROVIDERS[provider][1]];if(typeof key!=='string'||key.length<16)return {provider,status:'missing_secret'};
   const url=provider==='cloudflare-ai'&&/^[a-f0-9]{32}$/.test(env.CLOUDFLARE_ACCOUNT_ID||'')?
    `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/models/search`:endpoints[provider];
   if(!url)return {provider,status:'account_metadata_missing'};
   try{
-   const response=await fetcher(url,{method:'GET',redirect:'error',headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
+   const response=await fetcher(url,{method:'GET',redirect:'manual',headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
    if(!response.ok){await response.body?.cancel();return {provider,status:'http_'+response.status};}
    const data=await bounded(response,4194304),rows=data.data||data.models||data.result;
    if(!Array.isArray(rows))return {provider,status:'unrecognized_catalog'};
@@ -78,7 +89,7 @@ export function createCloudOperations(base, cloud) {
     catalog_zero_price:provider==='openrouter'?true:null
    }));
    return {provider,status:'catalog_received',observed_at:Date.now(),models,billing_verified:false,quota_verified:false,canary_verified:false};
-  }catch{return {provider,status:'catalog_unavailable'};}
+  }catch(error){const message=String(error?.message||'');const category=/illegal invocation|illegal receiver/i.test(message)?'unbound_runtime_call':/not a function/i.test(message)?'missing_runtime_api':/timeout|timed out/i.test(message)?'timeout':/network|fetch|connect|dns|resolve/i.test(message)?'network':/abort/i.test(message)?'aborted':'runtime_or_catalog';return {provider,status:'catalog_unavailable',error_message:message.replaceAll(key,'[redacted]').replace(/[A-Za-z0-9_=\/-]{24,}/g,'[redacted]').slice(0,180),error_category:category,error_name:['TypeError','ReferenceError','TimeoutError','AbortError','SyntaxError','Error'].includes(error?.name)?error.name:'unknown'};}
  }
  const tools=[
   {name:'rovor_cloud_workforce_status',description:'Read actual private cloud job/model/token receipts. Missing or disabled providers are explicit.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true}},
@@ -108,14 +119,16 @@ export function createCloudOperations(base, cloud) {
   if(request.headers.get('Sec-Fetch-Site')!=='same-origin'||request.headers.get('Origin')!==origin)return json({error:'owner_browser_required'},403);
   const value=await bounded(request);
   if(Object.keys(value).sort().join(',')!=='job_id,verdict'||!id(value.job_id)||!['passed','failed'].includes(value.verdict))throw Error('invalid_review');
-  const attempt=await sql(env,"SELECT id,output FROM ghost_cloud_attempts WHERE job_id=? AND status='needs_review'",value.job_id).first();
+  const attempt=await sql(env,"SELECT id,output FROM ghost_cloud_attempts WHERE job_id=? AND status='needs_review' AND human_review='not_recorded'",value.job_id).first();
   if(!attempt||typeof attempt.output!=='string'||!attempt.output.trim())return json({error:'reviewable_output_missing'},409);
   const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(attempt.output));
   const digest=[...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('');
-  await env.DB.batch([
-   sql(env,'INSERT INTO ghost_cloud_reviews(id,attempt_id,actor,verdict,output_sha256,reviewed_at) VALUES(?,?,?,?,?,?)',crypto.randomUUID(),attempt.id,actor,value.verdict,digest,Date.now()),
-   sql(env,'UPDATE ghost_cloud_attempts SET human_review=? WHERE id=?',value.verdict,attempt.id)
+  const reviewId=crypto.randomUUID();
+  const [insert,update]=await env.DB.batch([
+   sql(env,"INSERT INTO ghost_cloud_reviews(id,attempt_id,actor,verdict,output_sha256,reviewed_at) SELECT ?,id,?,?,?,? FROM ghost_cloud_attempts WHERE id=? AND status='needs_review' AND human_review='not_recorded' AND output=? ON CONFLICT(attempt_id) DO NOTHING",reviewId,actor,value.verdict,digest,Date.now(),attempt.id,attempt.output),
+   sql(env,"UPDATE ghost_cloud_attempts SET human_review=? WHERE id=? AND human_review='not_recorded' AND EXISTS(SELECT 1 FROM ghost_cloud_reviews WHERE attempt_id=? AND id=?)",value.verdict,attempt.id,attempt.id,reviewId)
   ]);
+  if(insert.meta.changes!==1||update.meta.changes!==1)return json({error:'review_already_decided'},409);
   return json({saved:true,job_id:value.job_id,verdict:value.verdict});
  }
  function browserUI(){
@@ -143,21 +156,32 @@ export function createCloudOperations(base, cloud) {
   function paint(){
    linkState();
    const panel=document.getElementById('workloadPanel'),activity=document.getElementById('activityPanel');if(!panel||!activity||!data)return;
-   const key=JSON.stringify([data.enabled,data.providers,data.attempts]);
+   const key=JSON.stringify([data.enabled,data.providers,data.attempts,data.review_queue]);
    if(key===painted&&document.getElementById('rovor-cloud-live')&&document.getElementById('rovor-cloud-results'))return;
    painted=key;
    const section=el('section');section.id='rovor-cloud-live';section.className='wl-card';
    section.append(el('strong','CLOUD EMPLOYEES · '+(data.enabled?'DISPATCH ENABLED':'DISPATCH PAUSED')));
    const pause=el('button',data.enabled?'PAUSE':'RESUME');pause.className='wl-button';pause.onclick=async()=>{try{const r=await fetch('/api/ghost/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!data.enabled})});if(!r.ok)throw Error('control_unavailable');await poll();}catch{disconnect();}};section.append(pause);
-   for(const p of data.providers){const last=data.attempts.find(a=>a.provider===p.provider);section.append(el('p',p.provider+' · '+p.admission+(last?' · '+last.status:' · no execution receipt')));}
+   for(const p of data.providers){const last=data.attempts.find(a=>a.provider===p.provider);section.append(el('p',p.provider+' · '+p.admission+(last?' · '+last.status:' · no execution receipt')+(p.last_check?' · provider check: '+p.last_check.status+(p.last_check.error_category?' ('+p.last_check.error_category+')':'')+' · '+new Date(p.last_check.observed_at).toLocaleString():' · provider not checked')));}
    const old=document.getElementById(section.id);if(old)old.replaceWith(section);else panel.prepend(section);
-   const results=el('section');results.id='rovor-cloud-results';results.append(el('strong','RECORDED CLOUD WORK'));
-   if(!data.attempts.length)results.append(el('p','No cloud request has completed yet.'));
-   for(const a of data.attempts.slice(0,12)){
+   const results=el('section');results.id='rovor-cloud-results';
+   const pending=data.review_queue.items,count=data.review_queue.pending_count;
+   results.append(el('strong','OWNER REVIEW QUEUE · '+count+' PENDING'));
+   if(count){
+    const oldest=data.review_queue.oldest_finished_at;
+    results.append(el('p','Oldest pending completion: '+(Number.isSafeInteger(oldest)?new Date(oldest).toLocaleString():'Not recorded')+
+     (count>pending.length?' · '+pending.length+' of '+count+' indexed; additional reviews not displayed':'')+
+     ' · drafts require explicit PASS or FAIL; no automatic acceptance'));
+   }else results.append(el('p','No cloud drafts currently awaiting owner review.'));
+   results.append(el('strong','RECORDED CLOUD WORK'));
+   if(!data.attempts.length&&!pending.length)results.append(el('p','No cloud request has completed yet.'));
+   const pendingIds=new Set(pending.map(a=>a.id));
+   const shown=[...pending,...data.attempts.filter(a=>!pendingIds.has(a.id))].slice(0,20);
+   for(const a of shown){
     const row=el('details');row.className='wl-card';row.append(el('summary',a.employee+' · '+a.provider+' · '+a.status+' · '+a.human_review));
     row.append(el('p',a.title));row.append(el('p','Actual model: '+(a.actual_model||'unknown')+' · tokens: '+(a.tokens_input??'?')+' / '+(a.tokens_output??'?')));
     if(a.finished_at)row.append(el('p',new Date(a.finished_at).toLocaleString()));
-    if(a.status==='needs_review'){
+    if(a.status==='needs_review'&&a.human_review==='not_recorded'){
      const view=el('button','VIEW OUTPUT');view.className='wl-button';const output=el('pre');output.style.cssText='white-space:pre-wrap;max-height:240px;overflow:auto';
      const controls=el('div');controls.hidden=true;
      for(const [label,verdict] of [['PASS','passed'],['FAIL','failed']]){const b=el('button',label);b.className='wl-button';b.onclick=async()=>{const r=await fetch('/api/ghost/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:a.job_id,verdict})});if(r.ok)await poll();else output.textContent='Review could not be saved.';};controls.append(b);}
@@ -176,7 +200,9 @@ export function createCloudOperations(base, cloud) {
     const snapshot=await r.json();
     if(!snapshot||snapshot.execution_source!=='cloud_provider'||!Number.isSafeInteger(snapshot.observed_at)||
        typeof snapshot.enabled!=='boolean'||!Array.isArray(snapshot.providers)||snapshot.providers.length!==9||
-       !Array.isArray(snapshot.attempts))throw Error('cloud_telemetry_invalid');
+       !Array.isArray(snapshot.attempts)||!snapshot.review_queue||
+       !Number.isSafeInteger(snapshot.review_queue.pending_count)||snapshot.review_queue.pending_count<0||
+       !Array.isArray(snapshot.review_queue.items)||snapshot.review_queue.items.length>50)throw Error('cloud_telemetry_invalid');
     data=snapshot;connection='connected';lastOk=Date.now();paint();
    }catch{disconnect();}finally{busy=false;}
   }
@@ -188,6 +214,22 @@ export function createCloudOperations(base, cloud) {
   inventory,status,control,replenish,
   async fetch(request,env){
    const url=new URL(request.url),actor=owner(request);
+   // Only the registered owner-private Site's dispatch may invoke this shared
+   // service route. Platform service access is separate from browser identity.
+   if(url.pathname==='/api/ghost/service'&&request.method==='POST'){
+    try {
+     const body=await bounded(request);
+     if(Object.keys(body).some(k=>!['operation','provider'].includes(k)))throw Error('invalid_service');
+     if(body.operation==='status')return json(await status(env));
+     if(body.operation==='inventory'){const result=await inventory(env,body.provider);await sql(env,'INSERT INTO ghost_cloud_provider_checks(provider,observed_at,status,error_category) VALUES(?,?,?,?) ON CONFLICT(provider) DO UPDATE SET observed_at=excluded.observed_at,status=excluded.status,error_category=excluded.error_category',body.provider,Date.now(),result.status,result.error_category||null).run();return json(result);}
+     if(body.operation==='shift'){
+      const intake=await replenish(env);
+      const result=await cloud.tick(env);
+      return json({intake,result,observed_at:Date.now()});
+     }
+     return json({error:'unsupported_service_operation'},400);
+    }catch{return json({error:'service_operation_failed'},503);}
+   }
    if(url.pathname.startsWith('/api/ghost/')){
     if(!actor)return json({error:'site_identity_required'},401);
     try{

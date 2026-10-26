@@ -13,7 +13,7 @@ import {compileOperations,composeOperations} from '../integrations/ghost-cloud/c
 
 const root=new URL('../integrations/ghost-cloud/',import.meta.url);
 const read=name=>fs.readFileSync(new URL(name,root),'utf8');
-const reviewSchema="CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT REFERENCES ghost_cloud_attempts(id),actor TEXT,verdict TEXT,output_sha256 TEXT,reviewed_at INTEGER);";
+const reviewSchema="CREATE TABLE IF NOT EXISTS ghost_cloud_provider_checks(provider TEXT PRIMARY KEY,observed_at INTEGER NOT NULL,status TEXT NOT NULL,error_category TEXT);CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL UNIQUE REFERENCES ghost_cloud_attempts(id),actor TEXT,verdict TEXT,output_sha256 TEXT,reviewed_at INTEGER);";
 const baseSource=`function createSitesHandler(html){return async request=>{if(!request.headers.get('oai-authenticated-user-id'))return Response.json({error:'identity_required'},{status:401});if(new URL(request.url).pathname==='/mcp'){const rpc=await request.json();return Response.json({jsonrpc:'2.0',id:rpc.id,result:{tools:[{name:'rovor_workforce_status'}],content:[{type:'text',text:'never_received'}]}});}return new Response(html,{headers:{'Content-Type':'text/html'}});};}\nconst siteFetch = createSitesHandler('<html><body>Original HUD and logo</body></html>');\nexport default {fetch: siteFetch};\n`;
 const j={id:'approved-job',employee:'Saul',task_id:'canonical-task',kind:'research',title:'Public source research',prompt:'Inspect this public service offer.',source_commit:'c'.repeat(40),data_class:'public_repository'};
 function setup(){
@@ -65,6 +65,48 @@ test('status includes job IDs and measured tokens while omitting draft text',asy
  assert.ok(!JSON.stringify(result).includes('A concrete private draft'));
  const out=await (await s.ops.fetch(request('/api/ghost/jobs/'+j.id),s.env)).json();assert.equal(out.output,'A concrete private draft');
 });
+test('owner review backlog remains accessible after newer activity fills the 50-row sample',async()=>{
+ const s=setup();await completed(s);
+ const addJob=s.db.prepare('INSERT INTO ghost_cloud_jobs(id,employee,task_id,kind,title,prompt,input_bytes,source_commit,created_at) VALUES(?,?,?,?,?,?,?,?,?)');
+ const addAttempt=s.db.prepare("INSERT INTO ghost_cloud_attempts(id,job_id,provider,model,pool,started_at,finished_at,reserved_tokens,status,output,tokens_input,tokens_output) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
+ for(let i=0;i<55;i++){
+  const id='recent-'+i;
+  addJob.run(id,'Saul',id,'research','Public status check','public',6,'a'.repeat(40),100+i);
+  addAttempt.run('attempt-'+i,id,'groq','requested','pool',100+i,100+i,100,'failed',null,0,0);
+ }
+ const data=await s.ops.status(s.env);
+ assert.equal(data.attempts.length,50);
+ assert.equal(data.attempts.some(a=>a.job_id===j.id),false);
+ assert.equal(data.review_queue.pending_count,1);
+ assert.equal(data.review_queue.oldest_finished_at,2);
+ assert.equal(data.review_queue.items[0].job_id,j.id);
+ assert.equal(data.review_queue.items[0].human_review,'not_recorded');
+ assert.ok(!JSON.stringify(data).includes('A concrete private draft'));
+ const page=await (await s.ops.fetch(request('/'),s.env)).text();
+ assert.match(page,/OWNER REVIEW QUEUE/);
+ assert.match(page,/drafts require explicit PASS or FAIL/);
+ assert.equal((await s.ops.fetch(request('/api/ghost/review',{body:{job_id:j.id,verdict:'passed'},browser:true}),s.env)).status,200);
+ const after=await s.ops.status(s.env);
+ assert.equal(after.review_queue.pending_count,0);
+ assert.deepEqual(after.review_queue.items,[]);
+});
+test('review queue count is exact while payload stays bounded at 50 metadata-only entries',async()=>{
+ const s=setup();await completed(s);
+ const addJob=s.db.prepare('INSERT INTO ghost_cloud_jobs(id,employee,task_id,kind,title,prompt,input_bytes,source_commit,created_at) VALUES(?,?,?,?,?,?,?,?,?)');
+ const addAttempt=s.db.prepare("INSERT INTO ghost_cloud_attempts(id,job_id,provider,model,pool,started_at,finished_at,reserved_tokens,status,output,tokens_input,tokens_output) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
+ for(let i=0;i<55;i++){
+  const id='pending-'+i;
+  addJob.run(id,'Saul',id,'research','Public reviewable work','public',6,'a'.repeat(40),100+i);
+  addAttempt.run('attempt-'+i,id,'groq','requested','pool',100+i,100+i,100,'needs_review','private draft '+i,0,0);
+ }
+ const data=await s.ops.status(s.env);
+ assert.equal(data.review_queue.pending_count,56);
+ assert.equal(data.review_queue.items.length,50);
+ assert.equal(data.review_queue.items[0].job_id,j.id);
+ assert.equal(data.review_queue.items.at(-1).job_id,'pending-48');
+ assert.equal(data.review_queue.oldest_finished_at,2);
+ assert.ok(!JSON.stringify(data).includes('private draft'));
+});
 test('PASS/FAIL requires explicit owner-browser request and creates a digest-bound audit trail',async()=>{
  const s=setup();await completed(s);
  const body={job_id:j.id,verdict:'passed'};
@@ -73,9 +115,9 @@ test('PASS/FAIL requires explicit owner-browser request and creates a digest-bou
  assert.equal((await s.ops.fetch(request('/api/ghost/review',{body,browser:true}),s.env)).status,200);
  assert.equal(s.db.prepare('SELECT human_review FROM ghost_cloud_attempts').get().human_review,'passed');
  const row=s.db.prepare('SELECT * FROM ghost_cloud_reviews').get();assert.equal(row.actor,'owner');assert.match(row.output_sha256,/^[a-f0-9]{64}$/);
- assert.equal((await s.ops.fetch(request('/api/ghost/review',{body:{...body,verdict:'failed'},browser:true}),s.env)).status,200);
- assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_reviews').get().n,2);
- assert.equal(s.db.prepare('SELECT human_review FROM ghost_cloud_attempts').get().human_review,'failed');
+ assert.equal((await s.ops.fetch(request('/api/ghost/review',{body:{...body,verdict:'failed'},browser:true}),s.env)).status,409);
+ assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_reviews').get().n,1);
+ assert.equal(s.db.prepare('SELECT human_review FROM ghost_cloud_attempts').get().human_review,'passed');
 });
 test('model responses cannot mark an empty canary as human approved',async()=>{
  const s=setup();await completed(s);s.db.exec('UPDATE ghost_cloud_attempts SET output=NULL');
@@ -84,7 +126,7 @@ test('model responses cannot mark an empty canary as human approved',async()=>{
 });
 test('fixed-endpoint GET inventory returns bounded public model metadata only',async()=>{
  const {env,ops}=setup();let calls=0;
- const result=await ops.inventory(env,'openrouter',async(url,opts)=>{calls++;assert.equal(url,'https://openrouter.ai/api/v1/models');assert.equal(opts.method,'GET');assert.equal(opts.redirect,'error');return Response.json({data:[{id:'known/free:free',pricing:{prompt:'0',completion:'0'}},{id:'paid/model',pricing:{prompt:'1',completion:'1'}},{id:'unknown:free',pricing:{prompt:null,completion:null}}],secret:'must not return'});});
+ const result=await ops.inventory(env,'openrouter',async(url,opts)=>{calls++;assert.equal(url,'https://openrouter.ai/api/v1/models');assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');return Response.json({data:[{id:'known/free:free',pricing:{prompt:'0',completion:'0'}},{id:'paid/model',pricing:{prompt:'1',completion:'1'}},{id:'unknown:free',pricing:{prompt:null,completion:null}}],secret:'must not return'});});
  assert.equal(calls,1);assert.deepEqual(result.models.map(m=>m.id),['known/free:free']);assert.equal(result.billing_verified,false);assert.equal(result.quota_verified,false);assert.ok(!JSON.stringify(result).includes('must not return'));
  await assert.rejects(ops.inventory(env,'https://attacker.invalid',async()=>{throw Error();}));
 });
@@ -121,8 +163,36 @@ test('composer preserves applied migrations, emits schema-only SQL and string DB
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir,'dist/.openai/hosting.json'),'utf8')).d1,'DB');
   assert.equal(fs.readFileSync(path.join(dir,'drizzle/0000_hud.sql'),'utf8'),prior);
   const migration=fs.readFileSync(path.join(dir,'drizzle/0001_cloud_operations.sql'),'utf8');assert.match(migration,/statement-breakpoint/);assert.doesNotMatch(migration,/(^|\n)\s*(INSERT|UPDATE|DELETE|DROP|ALTER)\b/);
+   assert.match(migration,/ghost_cloud_reviews \(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL UNIQUE REFERENCES ghost_cloud_attempts\(id\)/);
   const db=new DatabaseSync(':memory:');db.exec(migration);assert.equal(db.prepare('SELECT count(*) n FROM ghost_cloud_control').get().n,0);db.close();
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+test('forward-only review index repairs legacy schema and preserves first immutable decision',()=>{
+ const schema=read('migrations/owner-review-one-decision.sql');
+ const db=new DatabaseSync(':memory:');
+ try{
+  db.exec('CREATE TABLE ghost_cloud_attempts(id TEXT PRIMARY KEY);CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL REFERENCES ghost_cloud_attempts(id),actor TEXT NOT NULL,verdict TEXT NOT NULL,output_sha256 TEXT NOT NULL,reviewed_at INTEGER NOT NULL)');
+  const sql='INSERT INTO ghost_cloud_reviews(id,attempt_id,actor,verdict,output_sha256,reviewed_at) VALUES(?,?,?,?,?,?) ON CONFLICT(attempt_id) DO NOTHING';
+  assert.throws(()=>db.prepare(sql),/ON CONFLICT clause/);
+  db.exec(schema);
+  db.prepare('INSERT INTO ghost_cloud_attempts VALUES(?)').run('attempt-1');
+  const insert=db.prepare(sql);
+  assert.equal(insert.run('review-pass','attempt-1','owner','passed','a'.repeat(64),1).changes,1);
+  assert.equal(insert.run('review-fail','attempt-1','owner','failed','b'.repeat(64),2).changes,0);
+  assert.equal(db.prepare('SELECT count(*) AS n FROM ghost_cloud_reviews').get().n,1);
+  assert.deepEqual({...db.prepare('SELECT verdict,output_sha256 FROM ghost_cloud_reviews').get()},{verdict:'passed',output_sha256:'a'.repeat(64)});
+  assert.doesNotThrow(()=>db.exec(schema));
+ }finally{db.close();}
+ const corrupted=new DatabaseSync(':memory:');
+ try{
+  corrupted.exec('CREATE TABLE ghost_cloud_attempts(id TEXT PRIMARY KEY);CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL REFERENCES ghost_cloud_attempts(id),actor TEXT NOT NULL,verdict TEXT NOT NULL,output_sha256 TEXT NOT NULL,reviewed_at INTEGER NOT NULL)');
+  corrupted.prepare('INSERT INTO ghost_cloud_attempts VALUES(?)').run('same');
+  corrupted.prepare('INSERT INTO ghost_cloud_reviews VALUES(?,?,?,?,?,?)').run('one','same','owner','passed','a'.repeat(64),1);
+  corrupted.prepare('INSERT INTO ghost_cloud_reviews VALUES(?,?,?,?,?,?)').run('two','same','owner','failed','b'.repeat(64),2);
+  assert.throws(()=>corrupted.exec(schema),/UNIQUE constraint failed/);
+  assert.equal(corrupted.prepare('SELECT count(*) AS n FROM ghost_cloud_reviews').get().n,2);
+ }finally{corrupted.close();}
 });
 
 test('embedded HUD client hides stale agent cards after a failed or invalid live status request',async()=>{
@@ -153,6 +223,8 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  assert.equal(reads,1);
  assert.ok(document.getElementById('rovor-cloud-live'),'real status shows recorded receipts');
  assert.ok(document.getElementById('rovor-cloud-results'));
+ const visible=(node)=>[node.textContent,...node.children.flatMap(visible)].join(' ');
+ assert.match(visible(document.getElementById('rovor-cloud-results')),/OWNER REVIEW QUEUE · 1 PENDING/);
  assert.match(document.getElementById('rovor-cloud-link-state').textContent,/CLOUD LEDGER REACHABLE/);
  assert.match(document.getElementById('rovor-cloud-link-state').textContent,/reachability does not prove agents online/);
  mode='offline';await tick();await settled();
@@ -178,3 +250,5 @@ test('approved packet, real dispatcher, returned usage and explicit owner review
  assert.equal((await s.ops.status(s.env)).attempts[0].human_review,'passed');
  await rpc(s.ops,s.env,'rovor_cloud_replenish');await rpc(s.ops,s.env,'rovor_cloud_tick');assert.equal(requests,1);
 });
+
+test('owner-private service shift remains stopped and cannot submit human review',async()=>{const s=setup();const r=await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'shift'}}),s.env);assert.equal(r.status,200);const d=await r.json();assert.equal(d.intake.status,'stopped');assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_attempts').get().n,0);assert.equal((await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'review'}}),s.env)).status,400);});

@@ -6,14 +6,14 @@ import {fileURLToPath} from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
-export function bundleSitesWorker(core, adapter, html) {
+export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const coreEnd = 'export default {fetch(request, env) { return handle(request, env); }};';
   const adapterImport = "import {handle} from './worker.mjs';";
   if (core.split(coreEnd).length !== 2 || adapter.split(adapterImport).length !== 2) throw Error('Unexpected source module shape');
   if (!html.includes('window.ROVOR_START_OMNIROUTE') || !html.includes('</body>')) throw Error('Original HUD live adapter missing');
   const plain = code => code.replace(/^export (?=(?:async )?function )/gm, '');
   return plain(core.replace(coreEnd, '')) + '\n' + plain(adapter.replace(adapterImport, '')) +
-    '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ');\nexport default {fetch: siteFetch};\n';
+    '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
 }
 
 export function buildSite(destination) {
@@ -23,8 +23,9 @@ export function buildSite(destination) {
   if (typeof manifest.project_id !== 'string' || !manifest.project_id.startsWith('appgprj_')) throw Error('Registered Site identity required');
   if (manifest.static) throw Error('Refusing static hosting configuration');
   const html = fs.readFileSync(path.join(root, 'dashboard/command-center/native-v8-9/index.html'), 'utf8');
+  const quotaJS = fs.readFileSync(path.join(root, 'dashboard/command-center/native-v8-9/live-quota-board.js'), 'utf8');
   const code = bundleSitesWorker(fs.readFileSync(path.join(here, 'worker.mjs'), 'utf8'),
-    fs.readFileSync(path.join(here, 'sites-adapter.mjs'), 'utf8'), html);
+    fs.readFileSync(path.join(here, 'sites-adapter.mjs'), 'utf8'), html, quotaJS);
   const nextManifest = {...manifest, d1: manifest.d1 || {binding: 'DB'}, r2: manifest.r2 || null,
     capabilities: [...new Set([...(manifest.capabilities || []), 'mcp'])]};
   // A first schema-only migration; never replace a previously applied migration.

@@ -52,7 +52,7 @@ export function requestFor(provider, cfg, env, prompt) {
  const endpoint = url || `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/v1/chat/completions`;
  const body = {model:cfg.model, messages:[{role:'user',content:prompt}], max_tokens:cfg.max_output_tokens, stream:false};
  if (provider === 'openrouter') body.provider = {allow_fallbacks:false, require_parameters:true, max_price:{prompt:0,completion:0}};
- return [endpoint,{method:'POST',redirect:'error',headers:{Authorization:`Bearer ${env[key]}`,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(45000)}];
+ return [endpoint,{method:'POST',redirect:'manual',headers:{Authorization:`Bearer ${env[key]}`,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(45000)}];
 }
 
 async function boundedJson(response) {
@@ -64,7 +64,7 @@ async function boundedJson(response) {
  return JSON.parse(new TextDecoder().decode(all));
 }
 
-export async function infer(provider,cfg,env,prompt,fetcher=fetch,now=Date.now()) {
+export async function infer(provider,cfg,env,prompt,fetcher=(...args)=>globalThis.fetch(...args),now=Date.now()) {
  const denied=eligibility(provider,cfg,env,now);if(denied)throw Error(denied);
  if(bytes(prompt)>cfg.max_input_bytes)throw Error('input_too_large');
  try {
@@ -103,7 +103,7 @@ export async function claim(db,provider,cfg,now) {
  cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,cfg.pool).first();
 }
 
-export async function tick(env,fetcher=fetch,now=Date.now()) {
+export async function tick(env,fetcher=(...args)=>globalThis.fetch(...args),now=Date.now()) {
  const startedClock=Date.now();
  const db=env.DB; if(!db)throw Error('missing_database');
  // An interrupted request is uncertain, never returned to the ready queue.

@@ -10,7 +10,8 @@ import {publishOnce} from '../tools/hud_telemetry_publisher.mjs';
 const root = path.resolve(import.meta.dirname, '..');
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const html = read('dashboard/command-center/native-v8-9/index.html');
-const handler = createSitesHandler(html);
+const quotaJS = read('dashboard/command-center/native-v8-9/live-quota-board.js');
+const handler = createSitesHandler(html, quotaJS);
 const emptyDB = {prepare() { return {bind() { return this; }, async first() { return null; }}; }};
 const env = {DB: emptyDB, HUD_WRITER_TOKEN: 'w'.repeat(48)};
 function req(route = '/', {identity, token, method = 'GET', body} = {}) {
@@ -34,6 +35,19 @@ test('platform viewer loads exact original HUD with same-origin live adapter and
   assert.equal(shown.replace(injection, ''), html);
   assert.equal(shown.includes(env.HUD_WRITER_TOKEN), false);
   assert.equal(response.headers.get('Set-Cookie'), null);
+});
+test('private Site serves original quota board only to authenticated viewers', async () => {
+  const denied = await handler(req('/hud-quota.js'), env);
+  assert.equal(denied.status, 401);
+  const served = await handler(req('/hud-quota.js', {identity: 'owner-id'}), env);
+  assert.equal(served.status, 200);
+  assert.equal(served.headers.get('Cache-Control'), 'no-store');
+  assert.match(served.headers.get('Content-Type'), /text\/javascript/);
+  assert.equal(await served.text(), quotaJS);
+  assert.equal((await handler(req('/hud-quota.js', {identity: 'owner-id', method: 'POST'}), env)).status, 405);
+  const hud = await (await handler(req('/', {identity: 'owner-id'}), env)).text();
+  assert.match(hud, /src="\/hud-quota.js"/);
+  assert.match(hud, /ROVOR_QUOTA_BOARD\?\.start/);
 });
 test('platform viewer reads status without a bearer key or writer configuration', async () => {
   const response = await handler(req('/api/hud/status', {identity: 'owner-id'}), {DB: emptyDB});
@@ -83,6 +97,8 @@ test('build retains Site identity, declares MCP, includes schema, and is repeata
   assert.match(sql, /CREATE TABLE IF NOT EXISTS hud_latest/); assert.match(sql, /statement-breakpoint/);
   assert.deepEqual(buildSite(dir), first);
   assert.equal(fs.readFileSync(path.join(dir, 'dist/server/index.js'), 'utf8'), code);
+  assert.match(code, /ROVOR_QUOTA_BOARD/);
+  assert.match(code, /All configured AI connections/);
 });
 test('build never rewrites a conflicting applied migration or existing build', t => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hud-site-migration-'));
