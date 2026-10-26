@@ -80,3 +80,45 @@ const stale=render(data,true,{...cloud,observed_at:now-60000});
 assert.ok(!stale.includes('Draft safe blog checklist'),
   'Stale cloud inference receipts must not be presented as fresh');
 console.log('HUD per-provider cloud receipt attribution: PASS');
+
+
+/* In the existing popup, employee bars must represent receipts only, never quota. */
+const providerNames=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
+const receiptNow=Date.now();
+const employeeCloud={
+  execution_source:'cloud_provider',observed_at:receiptNow,
+  providers:providerNames.map(provider=>({provider,credentials_configured:true,admission:'disabled_pending_verification'})),
+  attempts:[
+    {id:'w1',job_id:'work-1',employee:'Walter',provider:'groq',status:'needs_review',
+      started_at:receiptNow-2000,tokens_input:15,tokens_output:40,actual_model:'openai/gpt-oss-20b'},
+    {id:'w1',job_id:'work-1',employee:'Walter',provider:'groq',status:'needs_review',
+      started_at:receiptNow-2000,tokens_input:15,tokens_output:40},
+    {id:'w2',job_id:'work-2',employee:'Walter',provider:'groq',status:'needs_review',
+      started_at:receiptNow-4000,tokens_input:20,tokens_output:60,actual_model:'<svg onload=alert(1)>'},
+    {id:'j1',job_id:'work-3',employee:'Jane',provider:'openrouter',status:'failed',
+      started_at:receiptNow-1000,tokens_input:12,tokens_output:10},
+    {id:'canary',job_id:'canary-groq-owner',title:'PROVIDER CANARY (not task output)',
+      employee:'Jesse',provider:'groq',status:'needs_review',started_at:receiptNow-500},
+    {id:'old',job_id:'work-old',employee:'Gale',provider:'groq',status:'needs_review',
+      started_at:receiptNow-86400001,tokens_input:30,tokens_output:40},
+    {id:'unassigned',job_id:'unknown',employee:'Anonymous',provider:'groq',status:'needs_review',
+      started_at:receiptNow-3000,tokens_input:25,tokens_output:10}
+  ]
+};
+const employeeBoard=render(null,false,employeeCloud);
+assert.match(employeeBoard,/Employee model usage/);
+assert.match(employeeBoard,/3 ATTRIBUTED RECEIPTS/);
+assert.equal((employeeBoard.match(/class="rvq-emp-row"/g)||[]).length,8);
+assert.match(employeeBoard,/66\.7% of attributed receipt sample/);
+assert.match(employeeBoard,/33\.3% of attributed receipt sample/);
+assert.match(employeeBoard,/35 in \/ 100 out/);
+assert.match(employeeBoard,/12 in \/ 10 out/);
+assert.match(employeeBoard,/1 failed/);
+assert.match(employeeBoard,/1 other returned receipts have no matching employee/);
+assert.match(employeeBoard,/&lt;svg onload=alert\(1\)&gt;/);
+assert.ok(!employeeBoard.includes('<svg onload='));
+const staleEmployee=render(null,false,{...employeeCloud,observed_at:receiptNow-90000});
+assert.match(staleEmployee,/LEDGER DISCONNECTED/);
+assert.doesNotMatch(staleEmployee,/3 ATTRIBUTED RECEIPTS/);
+assert.doesNotMatch(staleEmployee,/35 in \/ 100 out/);
+console.log('HUD cloud employee usage meters: PASS');
