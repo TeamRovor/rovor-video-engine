@@ -284,3 +284,20 @@ test('service credential must be distinct from reader and writer tokens',async()
  s.env.GHOST_SERVICE_TOKEN=token;
  assert.equal((await s.ops.fetch(request('/api/ghost/service',{body:{operation:'status'},serviceToken:token}),s.env)).status,200);
 });
+
+
+test('cloud status exposes bounded read-only per-provider dispatch reasons',async()=>{
+ const s=setup();
+ const status=await s.ops.status(s.env);
+ assert.equal(status.providers.length,9);
+ assert.equal(status.providers.find(p=>p.provider==='groq').dispatch_gate.state,'ineligible');
+ assert.equal(status.providers.find(p=>p.provider==='groq').dispatch_gate.reason,'not_configured');
+ assert.equal(status.providers.find(p=>p.provider==='gemini').dispatch_gate.reason,'not_configured');
+ assert.equal(s.db.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,0);
+ const html=await (await s.ops.fetch(request('/'),s.env)).text();
+ assert.match(html,/current claim gate/);
+ const serialized=JSON.stringify(status);
+ assert.ok(!serialized.includes(s.env.GROQ_API_KEY));
+ assert.ok(!serialized.includes(s.env.GHOST_WRITER_TOKEN));
+ assert.ok(!serialized.includes('Inspect this public service offer.'));
+});
