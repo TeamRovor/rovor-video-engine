@@ -86,6 +86,29 @@ export function sanitize(doc, now = Date.now()) {
   const connections = doc.connections.map(c => ({provider: label(c.provider), name: label(c.name),
     connection_count: integer(c.connection_count), enabled_count: integer(c.enabled_count)}));
   if (new Set(connections.map(c => c.provider)).size !== connections.length || connections.some(c => c.enabled_count > c.connection_count)) fail();
+  // New reporters expose one sanitized status per configured account, never IDs,
+  // labels, API keys, or endpoint credentials. Older reporters omit this field.
+  const connection_slots = doc.connection_slots == null ? null : (() => {
+    if (!Array.isArray(doc.connection_slots) || doc.connection_slots.length > 100) fail();
+    const seen = new Set(), counts = new Map(), enabled = new Map();
+    const available = new Map(connections.map(c => [c.provider, c]));
+    const slots = doc.connection_slots.map(s => {
+      const provider = label(s?.provider), account_slot = integer(s?.account_slot), active = flag(s?.enabled);
+      const group = available.get(provider);
+      if (!group || account_slot < 1 || account_slot > group.connection_count) fail();
+      const key = provider + ':' + account_slot;
+      if (seen.has(key)) fail();
+      seen.add(key);
+      counts.set(provider, (counts.get(provider) || 0) + 1);
+      if (active) enabled.set(provider, (enabled.get(provider) || 0) + 1);
+      return {provider, account_slot, enabled: active};
+    });
+    if (slots.length !== connections.reduce((n,c)=>n+c.connection_count,0)) fail();
+    for (const g of connections) {
+      if ((counts.get(g.provider) || 0) !== g.connection_count || (enabled.get(g.provider) || 0) !== g.enabled_count) fail();
+    }
+    return slots;
+  })();
   const workforce = doc.workforce;
   if (!workforce || !Array.isArray(workforce.employees) || workforce.employees.length > 8) fail();
   if (!['existing_worker_sqlite_read_only', 'worker_state_unavailable'].includes(workforce.source)) fail();
@@ -106,7 +129,7 @@ export function sanitize(doc, now = Date.now()) {
   const snapshot = {schema_version: 1, source: doc.source, snapshot_at: new Date(observed).toISOString(), period: doc.period,
     request_count: integer(doc.request_count), connection_count: integer(doc.connection_count), inventory_count: models.length,
     usage_coverage: ['complete_aggregate', 'partial_top_50_or_unattributed'].includes(doc.usage_coverage) ? doc.usage_coverage : fail(),
-    quota_state: 'unknown_not_estimated', models, connections, quota: sanitizeQuota(doc.quota, connections, now),
+    quota_state: 'unknown_not_estimated', models, connections, connection_slots, quota: sanitizeQuota(doc.quota, connections, now),
     workforce: {source: workforce.source, employees, unassigned_jobs: optional(workforce.unassigned_jobs),
       heartbeat: {available: flag(h.available), recent: h.recent === true, age_seconds: optional(h.age_seconds),
         last_tick_dispatch: nullableLabel(h.last_tick_dispatch)}}};
