@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-business-delivery-checkpoints",
+  "id": "walter-public-v1-business-delivery-checkpoints",
+  "title": "ROVOR Gus research: business delivery checkpoints",
+  "role": "evidence-triage",
+  "inputs": [
+    "ROVOR-AI-PLAN.md",
+    "AGENTS.md"
+  ],
+  "task": "ROVOR ghost specialist: GUS. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Draft an operational work queue for small-client digital projects using only the public ROVOR roadmap.",
+  "deliverable": "A finite stage/owner/approval matrix; no access to any client record.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

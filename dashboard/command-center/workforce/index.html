@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#030815"><title>ROVOR DIGITAL • Workforce Control</title>
+<meta name="description" content="ROVOR ghost-employee command bridge: source-verified development queue, crew roster, local job drafts and safe runtime connection boundaries.">
+<style>
+:root{color-scheme:dark;--bg:#030815;--panel:rgba(4,15,33,.94);--edge:#3f86d6;--ice:#e6f5ff;--blue:#65baff;--dim:#8fb7d8;--space:clamp(10px,1.1vw,18px)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ice);font:13px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.48}a{color:#9bd5ff}
+body{background:radial-gradient(ellipse 42% 42% at 50% 31%,#113a774a,transparent),linear-gradient(120deg,#040914,#01030a 53%,#041023);overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;background:linear-gradient(transparent 95%,#66acfa09 100%);background-size:100% 5px;pointer-events:none;z-index:0}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #d3f1ff;outline-offset:3px}
+.shell{position:relative;max-width:1850px;margin:auto;padding:clamp(8px,1.1vw,18px);padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+.topbar,.dock,.panel,.dialog-body{background:linear-gradient(150deg,rgba(6,20,42,.96),rgba(2,7,17,.97));border:1px solid #579de9a8;box-shadow:0 0 13px #246dc52b,inset 0 0 16px #1968bb15;clip-path:polygon(15px 0,calc(100% - 14px) 0,100% 14px,100% calc(100% - 15px),calc(100% - 14px) 100%,15px 100%,0 calc(100% - 14px),0 15px)}
+.topbar{min-height:82px;padding:14px clamp(15px,2vw,31px);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mark{font-size:clamp(17px,1.6vw,25px);letter-spacing:.24em;font-weight:600;text-shadow:0 0 15px #66baff65}
+.mark b{background:linear-gradient(150deg,#f9fcff,#7bbdff);-webkit-background-clip:text;background-clip:text;color:transparent;margin-right:13px;font-size:1.25em}
+.eyebrow{font-size:10px;letter-spacing:.25em;color:#85bee9;text-transform:uppercase}
+.bar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.micro,.action{background:#07182f;border:1px solid #3f8ada88;color:#d2edff;padding:8px 12px;border-radius:2px}
+.micro:hover,.action:hover{background:#143d72;border-color:#a6dcff;box-shadow:0 0 14px #318aee44;transform:translateY(-1px)}
+.action.primary{background:linear-gradient(100deg,#1759a2,#2589d0);border-color:#a6daff;font-weight:700}
+.status{color:#a4c7e4;font-size:11px;letter-spacing:.06em}
+.status:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;background:#568dda;box-shadow:0 0 9px #438fff}
+.status.warn:before{border:1px dashed #ecf5ff;background:transparent}
+.hero{text-align:center;padding:19px 0 13px}.hero .eyebrow{margin-bottom:5px}.hero h1{margin:0;font-size:clamp(16px,2vw,27px);font-weight:500;letter-spacing:.34em;text-shadow:0 0 11px #75bffe7a}
+.hero p{color:#9bb8d2;margin:9px auto 0;max-width:850px}
+.dashboard{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,1.16fr) minmax(0,1fr);gap:var(--space);align-items:stretch}
+.rail{display:grid;grid-template-rows:repeat(3,minmax(215px,1fr));gap:var(--space);min-width:0}
+.panel{min-width:0;min-height:0;position:relative;overflow:hidden;padding:12px;display:flex;flex-direction:column}
+.panel:before{content:"";position:absolute;top:0;left:25%;right:25%;height:2px;background:linear-gradient(90deg,transparent,#bde7ff,transparent);box-shadow:0 0 13px #3795ec}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #3e8bd144;padding:4px 4px 10px;flex:none}
+.panel h2{font-size:12px;letter-spacing:.12em;margin:0;font-weight:600;white-space:nowrap}
+.panel small{color:var(--dim)}
+.panel-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:5px 4px;scrollbar-width:thin;scrollbar-color:#438acc #06162a}
+.panel-scroll::-webkit-scrollbar,.detail-scroll::-webkit-scrollbar{width:5px}.panel-scroll::-webkit-scrollbar-thumb,.detail-scroll::-webkit-scrollbar-thumb{background:#438acc;border-radius:4px}
+.scrollcue{font-size:9px;letter-spacing:.16em;text-align:right;color:#72b8e8;min-height:12px;line-height:12px}
+.rowline{display:flex;gap:9px;align-items:center;justify-content:space-between;padding:8px 2px;border-bottom:1px solid #6da3d52b;min-width:0}
+.rowline strong{font-size:11px;font-weight:550;display:block;line-height:1.3}.rowline small{font-size:10px;line-height:1.35;display:block}.rowline .left{min-width:0;flex:1}.rowline .pill{flex-shrink:0}
+.rowbutton{width:100%;text-align:left;background:transparent;border:0;color:inherit}.rowbutton:hover{background:#16447b4d}
+.pill{font-size:9px;letter-spacing:.06em;padding:4px 6px;border-radius:3px;border:1px solid #6eafff66;background:#14569d34;color:#b4dfff;text-transform:uppercase;white-space:nowrap}
+.pill.offline{color:#a7bad4;border-style:dashed}
+.pill.blocked{color:#d8ebff;border-style:dashed}
+.empty{color:#abc7df;padding:12px 3px;font-size:11px}
+.panel-meta{font-size:10px;color:#8fc6ed}
+.center{min-height:0;position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:center;gap:13px;padding:15px 7px}
+.reactor{width:min(100%,410px);aspect-ratio:1;position:relative;display:grid;place-items:center;margin:auto}
+.reactor:before{content:"";position:absolute;inset:5%;border-radius:50%;border:1px solid #6ab9ff55;box-shadow:0 0 27px #2d8bfc55,inset 0 0 36px #256bbc2b}
+.ring{position:absolute;inset:3%;border-radius:50%;border:7px solid transparent;border-top-color:#c5ecff;border-bottom-color:#3188ef;border-left-color:#54abff;filter:drop-shadow(0 0 7px #459dff);animation:spin 55s linear infinite}
+.ring.r2{inset:15%;border-width:3px;border-right-color:#75c7ff;border-top-color:#5a9dfa;border-bottom-color:#95d3ff;animation:spin 90s linear infinite reverse}
+.ring.r3{inset:24%;border:1px dashed #98c9ff;animation:spin 105s linear infinite}
+.center-core{position:relative;display:grid;place-items:center;width:45%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 55% 32%,#2c5b8c,#05162d 58%,#020712 76%);box-shadow:0 0 26px #4085e9a3,inset 0 0 15px #73bdfc44;border:1px solid #8abefc55}
+.center-core strong{font-size:clamp(23px,4vw,52px);color:#d3efff;letter-spacing:.05em;text-shadow:0 0 21px #82c7ff}
+.center-core small{position:absolute;bottom:24%;letter-spacing:.15em;color:#b3d8f5;font-size:10px}
+.center .hero-status{color:#b3d3ee;font-size:11px;text-align:center;max-width:340px;line-height:1.6}
+.center .hero-status b{display:block;font-size:13px;color:#edf8ff}
+.center-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
+.stat{padding:12px 0;border-bottom:1px solid #78aedd34}.stat strong{display:block;font-size:17px;letter-spacing:.06em}.stat small{font-size:10px}
+.section-buttons{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.mini-switch{border:1px solid #4a89c5;background:#081a36;color:#abdfff;padding:3px 6px;font-size:9px}
+.mini-switch[aria-pressed=true]{background:#1b5b9e;border-color:#a2d8ff}
+.dock{margin-top:15px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.dock p{margin:0;color:#8ab5d8;font-size:10px;letter-spacing:.14em}
+.dock .tabs{display:flex;gap:7px;flex-wrap:wrap}
+.dialog{position:fixed;inset:0;z-index:60;display:none;place-items:center;padding:clamp(8px,3vw,30px);background:#01040dbd;backdrop-filter:blur(7px)}
+.dialog[open]{display:grid}
+.dialog-body{width:min(850px,100%);height:min(78svh,730px);max-height:calc(100svh - 24px);display:flex;flex-direction:column;padding:clamp(12px,2vw,25px)}
+.dialog-top{display:flex;align-items:start;justify-content:space-between;gap:10px;border-bottom:1px solid #70b0eb5c;padding-bottom:13px}.dialog-top h2{margin:3px 0 0;letter-spacing:.14em;font-size:clamp(15px,2.2vw,23px)}
+.detail-scroll{flex:1;min-height:0;overflow:auto;padding:13px 3px 16px;scrollbar-width:thin;scrollbar-color:#438acc #06162a}
+.detail-scroll .rowline{padding:12px 4px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}.field.span2{grid-column:1/-1}.field label{color:#acd5f2;font-size:11px;letter-spacing:.05em}
+.field input,.field select,.field textarea{min-width:0;border:1px solid #4c8cca8a;background:#020d1f;color:#e6f4ff;padding:11px;outline:none}
+.field textarea{min-height:105px;resize:vertical}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}
+.note{border-left:2px solid #6fc1ff;background:#12325d35;padding:10px 12px;color:#c3e2fa;margin:10px 0;line-height:1.5;font-size:11px}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
+.footer-note{text-align:center;color:#779ebe;padding:13px 7px;font-size:10px}
+@keyframes spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.ring{animation:none!important}*{scroll-behavior:auto!important}}
+@media(max-width:1120px){.dashboard{grid-template-columns:minmax(0,1fr) minmax(260px,1.05fr) minmax(0,1fr)}.rail{grid-template-rows:repeat(3,minmax(200px,1fr))}.rowline{padding:6px 0}}
+@media(orientation:portrait) and (min-width:700px) and (max-width:1100px){.dashboard{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"center center" "left right"}.rail{grid-template-rows:repeat(3,240px)}.rail:first-child{grid-area:left}.rail:last-child{grid-area:right}.center{grid-area:center;min-height:480px}.reactor{width:370px}}
+@media(max-width:699px){.shell{padding:8px;padding-bottom:calc(75px + env(safe-area-inset-bottom))}.topbar{align-items:start;flex-direction:column;padding:14px}.mark{font-size:18px}.eyebrow{font-size:9px}.hero h1{font-size:16px;letter-spacing:.2em}.dashboard{display:flex;flex-direction:column}.center{order:-1;min-height:385px;padding:10px}.reactor{max-width:315px}.rail{display:flex;flex-direction:column}.rail .panel{height:240px;flex:none}.dock{position:fixed;left:7px;right:7px;bottom:calc(6px + env(safe-area-inset-bottom));z-index:12;justify-content:center;background:#020e24f8}.dock p{display:none}.dock .tabs{justify-content:center}.dock .tabs button{padding:7px}.dialog{padding:8px}.dialog-body{height:calc(100svh - 22px);padding:13px}.formgrid{grid-template-columns:1fr}.field.span2{grid-column:auto}}
+</style></head>
+<body>
+<div class="shell">
+<header class="topbar">
+  <div><div class="eyebrow">BUILD / CREATE / AUTOMATE / SCALE</div><div class="mark"><b>R</b>ROVOR DIGITAL</div></div>
+  <div class="bar-actions"><span class="status warn" id="sourceStatus">SOURCE UNVERIFIED</span><button class="micro" id="refresh" type="button">↻ Refresh GitHub</button><a class="micro" href="../">← Main HUD</a></div>
+</header>
+<div class="hero"><div class="eyebrow">WORKFORCE OPERATIONS // READ-ONLY BRIDGE</div><h1>AI FLEET CONTROL CENTER</h1><p>Walter supervises. Named specialists handle bounded jobs. Preview verified development records here; runtime dispatch remains disabled until a private authenticated connection is proven.</p></div>
+<main class="dashboard">
+<section class="rail">
+<article class="panel"><div class="panel-head"><h2>JOB QUEUE</h2><div class="section-buttons"><button class="mini-switch" id="queueOpen" aria-pressed="true">OPEN</button><button class="mini-switch" id="queueAll" aria-pressed="false">ALL</button><button class="micro" data-detail="queue" type="button">↗</button></div></div><div class="panel-meta" id="queueSummary">Verifying GitHub source…</div><div class="panel-scroll" id="queuePreview" tabindex="0" aria-label="Scrollable GitHub development task queue"></div><div class="scrollcue" id="queueCue"></div></article>
+<article class="panel"><div class="panel-head"><h2>MACHINE & COST</h2><button class="micro" data-detail="machine" type="button">↗</button></div><div class="panel-scroll" id="machinePreview" tabindex="0"></div><div class="scrollcue" id="machineCue"></div></article>
+<article class="panel"><div class="panel-head"><h2>MISSION TIMELINE</h2><button class="micro" data-detail="timeline" type="button">↗</button></div><div class="panel-scroll" id="timelinePreview" tabindex="0"></div><div class="scrollcue" id="timelineCue"></div></article>
+</section>
+<section class="center" aria-label="ROVOR operations core"><div class="eyebrow">WALTER / MISSION CONTROL</div><div class="reactor" aria-hidden="true"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="center-core"><strong>R</strong><small>ROVOR</small></div></div><div class="hero-status"><b>EXECUTION LINK: NOT VERIFIED</b>Development-task claims are not live worker sessions. Mac, OmniRoute and Cloudflare status require authenticated runtime receipts.</div><div class="center-nav"><button class="action primary" id="newJob" type="button">＋ NEW JOB DRAFT</button><button class="action" data-detail="fleet" type="button">VIEW EMPLOYEES</button></div></section>
+<section class="rail">
+<article class="panel"><div class="panel-head"><h2>AI FLEET</h2><button class="micro" data-detail="fleet" type="button">↗</button></div><div class="panel-scroll" id="fleetPreview" tabindex="0"></div><div class="scrollcue" id="fleetCue"></div></article>
+<article class="panel"><div class="panel-head"><h2>MODEL ROUTER</h2><button class="micro" data-detail="models" type="button">↗</button></div><div class="panel-scroll" id="modelsPreview" tabindex="0"></div><div class="scrollcue" id="modelsCue"></div></article>
+<article class="panel"><div class="panel-head"><h2>RESULTS VAULT</h2><button class="micro" data-detail="results" type="button">↗</button></div><div class="panel-scroll" id="resultsPreview" tabindex="0"></div><div class="scrollcue" id="resultsCue"></div></article>
+</section>
+</main>
+<div class="dock"><p>REAL SOURCE // VERIFIED STATE // NO PHANTOM WORKERS</p><div class="tabs"><button class="micro" data-detail="queue">JOBS</button><button class="micro" data-detail="fleet">EMPLOYEES</button><button class="micro" data-detail="models">MODELS</button><button class="micro" data-detail="timeline">ACTIVITY</button><button class="micro" id="dockDraft">NEW JOB</button></div></div>
+<div class="footer-note" id="verificationFooter">GitHub public source ≠ private Mac runtime. Queue creation is not enabled on the public website.</div>
+</div>
+<div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" aria-hidden="true">
+  <div class="dialog-body"><div class="dialog-top"><div><div class="eyebrow" id="dialogEyebrow">ROVOR SYSTEM</div><h2 id="dialogTitle">MODULE</h2></div><button class="action" type="button" id="closeDialog">✕ CLOSE</button></div><div id="detailScroll" class="detail-scroll" tabindex="0"></div></div>
+</div>
+<script>
+'use strict';
+(()=> {
+ const OWNER='TeamRovor', REPO='rovor-video-engine', API='https://api.github.com/repos/'+OWNER+'/'+REPO;
+ const DOCS='https://github.com/'+OWNER+'/'+REPO;
+ const ROLE_ORDER=['walter','mike','jane','jesse','gale','gus','saul','hank'];
+ const ROLE_LABEL={walter:'Supervisor / planning',mike:'Mac systems',jane:'Final Cut editing',jesse:'Moho 2D animation',gale:'Blender 3D',gus:'Business operations',saul:'Marketing',hank:'Quality assurance'};
+ const MODEL_PROVIDER=['Gemini','Groq','NVIDIA NIM','Mistral','OpenRouter','Cloudflare Workers AI'];
+ const state={mode:'unverified',sha:null,lastChecked:null,tasks:[],routing:{},roles:[],policy:null,queueMode:'open',drafts:[],view:null,returnFocus:null,loading:false};
+ const $=id=>document.getElementById(id);
+ const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);return n};
+ const clear=n=>n.replaceChildren();
+ const fmt=t=>{const d=Date.parse(t||'');return Number.isFinite(d)?new Date(d).toLocaleString():'Not recorded'};
+ const loadRoles=()=>{
+  const defaults=ROLE_ORDER.map(id=>({id,job:ROLE_LABEL[id],mission:id==='walter'?'Propose and coordinate bounded work for specialist review.':'Review-only specialist; no Mac connectivity verified.'}));
+  state.roles=defaults;
+ };
+ function line(into,a,b,kind){
+  const r=node('div','rowline');const l=node('div','left');l.append(node('strong','',a));if(kind)l.append(node('small','',kind));
+  r.append(l,node('span','pill'+(b==='NOT CONNECTED'?' offline':''),b));into.append(r);return r;
+ }
+ function cue(id){const sc=$(id+'Preview'),label=$(id+'Cue');if(!sc||!label)return;label.textContent=sc.scrollHeight-sc.clientHeight-sc.scrollTop>6?'SCROLL ↓':'';}
+ function watched(id){const el=$(id+'Preview');el.addEventListener('scroll',()=>cue(id),{passive:true});}
+ function checked(){return state.mode==='verified'}
+ function queueItems(){if(!checked())return[];return state.tasks.filter(t=>state.queueMode==='all'||t.status!=='done').sort((a,b)=>(Number(a.priority)||9)-(Number(b.priority)||9))}
+ function taskButton(t){
+  const btn=node('button','rowline rowbutton');btn.type='button';const left=node('div','left');left.append(node('strong','',t.title||t.id),node('small','',t.id+' · '+(t.owner||'unclaimed')));
+  btn.append(left,node('span','pill'+(t.status==='blocked'?' blocked':''),t.status||'unknown'));btn.addEventListener('click',()=>openDetail('task',t.id));return btn;
+ }
+ function renderQueue(){
+  const sc=$('queuePreview');clear(sc);$('queueSummary').textContent=checked()?queueItems().length+' displayed / '+state.tasks.length+' GitHub development tasks · NOT runtime jobs':'No verified GitHub development queue';$('queueOpen').setAttribute('aria-pressed',state.queueMode==='open');$('queueAll').setAttribute('aria-pressed',state.queueMode==='all');
+  if(!checked())sc.append(node('p','empty','GitHub source unverified. No runtime job state is available.'));else for(const t of queueItems())sc.append(taskButton(t));
+  requestAnimationFrame(()=>cue('queue'));
+ }
+ function renderFleet(){
+  const sc=$('fleetPreview');clear(sc);
+  for(const id of ROLE_ORDER){const role=state.roles.find(r=>r.id===id)||{};const b=node('button','rowline rowbutton');b.type='button';const l=node('div','left');l.append(node('strong','',id.toUpperCase()),node('small','',role.job||ROLE_LABEL[id]));b.append(l,node('span','pill offline','UNVERIFIED'));b.addEventListener('click',()=>openDetail('employee',id));sc.append(b)}
+  requestAnimationFrame(()=>cue('fleet'));
+ }
+ function renderMachine(){const sc=$('machinePreview');clear(sc);line(sc,'Mac executor','NOT CONNECTED','Authenticated host heartbeat absent');line(sc,'Emergency STOP','UNVERIFIED','Must be checked on Mac');line(sc,'OmniRoute','UNVERIFIED','Local gateway not remotely readable');line(sc,'Cloud scheduler','NOT DEPLOYED','Policy describes future Cloudflare design');line(sc,'Cost permission','REVIEW ONLY','Paid fallback not authorized');requestAnimationFrame(()=>cue('machine'))}
+ function renderModels(){const sc=$('modelsPreview');clear(sc);for(const x of MODEL_PROVIDER)line(sc,x,'UNVERIFIED','No authenticated provider/model inventory');requestAnimationFrame(()=>cue('models'))}
+ function renderTimeline(){const sc=$('timelinePreview');clear(sc);if(!checked()){sc.append(node('p','empty','Verified timeline unavailable. Worker execution receipts are not connected.'))}else{
+  const recent=[...state.tasks].filter(x=>x.updated_at).sort((a,b)=>Date.parse(b.updated_at)-Date.parse(a.updated_at));
+  for(const t of recent){const b=taskButton(t);b.querySelector('small').textContent=fmt(t.updated_at)+' · GitHub task record';sc.append(b)}
+ }requestAnimationFrame(()=>cue('timeline'))}
+ function renderResults(){const sc=$('resultsPreview');clear(sc);line(sc,'Verified production artifacts','NOT CONNECTED','Artifact receipt index requires a private source');line(sc,'Video / Final Cut output','UNVERIFIED','No authenticated completed render');line(sc,'QA approvals','NOT CONNECTED','Review system not attached');requestAnimationFrame(()=>cue('results'))}
+ function render(){renderQueue();renderFleet();renderMachine();renderModels();renderTimeline();renderResults();const ss=$('sourceStatus');ss.textContent=checked()?'GITHUB SOURCE VERIFIED · '+state.sha.slice(0,9):'SOURCE UNVERIFIED';ss.classList.toggle('warn',!checked());$('verificationFooter').textContent=(checked()?'GitHub source: '+state.sha.slice(0,12)+' · checked '+fmt(state.lastChecked)+'. ':'GitHub source not verified. ')+'Runtime worker queue remains private and disconnected from this public HUD.'}
+ function safeJSON(json,type){if(!json||typeof json!=='object')throw Error('Invalid '+type+' structure');return json}
+ async function get(url,signal){const r=await fetch(url,{signal,cache:'no-store',headers:{Accept:'application/vnd.github+json'}});if(!r.ok)throw Error('GitHub request '+r.status);return r.json()}
+ async function refresh(){
+  if(state.loading)return;state.loading=true;$('refresh').disabled=true;const ctrl=new AbortController();const timeout=setTimeout(()=>ctrl.abort(),12000);
+  // Clear stale "verified" state BEFORE fetching to avoid showing old claims as live.
+  state.mode='unverified';state.sha=null;state.tasks=[];state.routing={};loadRoles();render();
+  try{
+   const commit=safeJSON(await get(API+'/commits/main',ctrl.signal),'commit');
+   const sha=commit.sha;if(!/^[a-f0-9]{40}$/i.test(sha||''))throw Error('Commit SHA not verified');
+   const paths=['coordination/tasks.json','coordination/work-routing.json','coordination/ghost-role-bootstrap.json','coordination/ghost-provider-policy.json'];
+   const raw=await Promise.all(paths.map(p=>getRaw(p,sha,ctrl.signal)));
+   const tasks=safeJSON(raw[0],'tasks');const routing=safeJSON(raw[1],'routing');const bootstrap=safeJSON(raw[2],'roles');const policy=safeJSON(raw[3],'provider policy');
+   if(tasks.version!==1||!Array.isArray(tasks.tasks)||routing.version!==1||!routing.tasks||!Array.isArray(bootstrap.roles)||!policy.providers && !policy.provider_capabilities)throw Error('Source schema mismatch');
+   const ids=new Set();for(const t of tasks.tasks){if(!t||typeof t.id!=='string'||!['active','ready','blocked','done'].includes(t.status)||ids.has(t.id))throw Error('Task schema invalid');ids.add(t.id)}
+   const roles=ROLE_ORDER.map(id=>bootstrap.roles.find(r=>r.id===id)||{id,job:ROLE_LABEL[id]});
+   state.mode='verified';state.sha=sha;state.lastChecked=new Date().toISOString();state.tasks=tasks.tasks;state.routing=routing.tasks;state.roles=roles;state.policy=policy;
+  }catch(e){state.mode='unverified';state.sha=null;state.tasks=[];state.lastChecked=null;$('sourceStatus').title='Cannot verify live public source: '+String(e.message||e)}
+  finally{clearTimeout(timeout);state.loading=false;$('refresh').disabled=false;render()}
+ }
+ async function getRaw(path,sha,signal){const u='https://raw.githubusercontent.com/'+OWNER+'/'+REPO+'/'+sha+'/'+path;const r=await fetch(u,{signal,cache:'no-store'});if(!r.ok)throw Error('Pinned source '+r.status);return r.json()}
+ function openDialog(title,eyebrow,content){
+  state.returnFocus=document.activeElement;$('dialogTitle').textContent=title;$('dialogEyebrow').textContent=eyebrow;const region=$('detailScroll');clear(region);if(typeof content==='function')content(region);else region.append(node('p','empty','No authenticated data currently available'));
+  $('dialog').setAttribute('open','');$('dialog').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';$('closeDialog').focus();
+ }
+ function closeDialog(){$('dialog').removeAttribute('open');$('dialog').setAttribute('aria-hidden','true');document.body.style.overflow='';state.returnFocus?.focus?.()}
+ function info(n,text){n.append(node('p','note',text))}
+ function detailRow(n,label,value){line(n,label,String(value??'UNKNOWN'))}
+ function openDetail(view,arg){
+  state.view=view;
+  if(view==='new'){newJobDialog();return}
+  if(view==='employee'){const id=arg;const role=state.roles.find(r=>r.id===id)||{id,job:ROLE_LABEL[id]};openDialog(id.toUpperCase()+' / '+(role.job||ROLE_LABEL[id]),'AI FLEET / SPECIALIST',n=>{
+   detailRow(n,'Role',role.job||ROLE_LABEL[id]);detailRow(n,'Runtime connection','UNVERIFIED');detailRow(n,'Last heartbeat','NOT CONNECTED');detailRow(n,'Running job','NO VERIFIED RECEIPT');
+   info(n,role.mission||'This is a configured employee charter, not proof the employee is actively running.');
+   const btn=node('button','action','Prepare draft for '+id);btn.addEventListener('click',()=>newJobDialog(id));n.append(btn);
+  });return}
+  if(view==='task'){const t=checked()?state.tasks.find(t=>t.id===arg):null;openDialog(t?.title||'Task details','SOURCE-VERIFIED GITHUB DEVELOPMENT TASK',n=>{
+   if(!t){info(n,'Task source unverified.');return}
+   for(const [a,b] of [['ID',t.id],['Status',t.status],['Owner claim',t.owner],['Priority',t.priority],['Updated',fmt(t.updated_at)],['Next action',t.next_action],['Blocker',t.blocker||'Not recorded']])detailRow(n,a,b);
+   info(n,'This is a GitHub DEVELOPMENT task, not a live OmniRoute runtime job.');const link=node('a','action','View source on GitHub ↗');link.href=DOCS+'/blob/'+state.sha+'/coordination/tasks.json';link.target='_blank';link.rel='noopener noreferrer';n.append(link)
+  });return}
+  const titles={queue:'JOB QUEUE',fleet:'AI FLEET',models:'MODEL ROUTER',timeline:'MISSION TIMELINE',machine:'MACHINE & COST',results:'RESULTS VAULT'};
+  openDialog(titles[view]||'WORKFORCE SYSTEM','ROVOR / COMMAND MODULE',n=>{
+   if(view==='queue'){
+    info(n,'Verified GitHub development claims are listed below. Private Mac runtime jobs are NOT connected or dispatchable.');
+    if(checked()){const input=node('input');input.placeholder='Filter development tasks';input.setAttribute('aria-label','Search development tasks');input.style.width='100%';input.style.marginBottom='10px';n.append(input);const list=node('div');n.append(list);const update=()=>{clear(list);for(const t of state.tasks.filter(t=>(t.title+' '+t.id+' '+t.owner).toLowerCase().includes(input.value.toLowerCase())))list.append(taskButton(t))};input.addEventListener('input',update);update()}else info(n,'Source unverified.');
+   }else if(view==='fleet'){
+    info(n,'These are eight defined employee roles. Their last-seen timestamps, actual assignment and availability cannot be confirmed from a public repository.');
+    for(const id of ROLE_ORDER){const b=node('button','rowline rowbutton');b.type='button';b.textContent=id.toUpperCase()+' — '+ROLE_LABEL[id]+' · UNVERIFIED';b.addEventListener('click',()=>openDetail('employee',id));n.append(b)}
+   }else if(view==='models'){
+    info(n,'Nine configured connections do not mean nine independent employees. Provider routes, exact model IDs, quotas, and cost must come from authenticated OmniRoute/host evidence.');
+    for(const p of MODEL_PROVIDER)detailRow(n,p,'NO LIVE INVENTORY');
+   }else if(view==='timeline'){
+    info(n,'Only GitHub development-record timestamps are verified. Runtime attempts, receipts and session activity still need the private worker connector.');
+    if(checked())for(const t of [...state.tasks].filter(t=>t.updated_at).sort((a,b)=>Date.parse(b.updated_at)-Date.parse(a.updated_at)).slice(0,60))n.append(taskButton(t));
+   }else if(view==='machine'){
+    for(const [a,b] of [['Mac worker','UNVERIFIED'],['STOP switch','HOST-ONLY, NOT CONNECTED'],['OmniRoute','NO AUTHENTICATED STATUS'],['API spend','NOT VERIFIED'],['Cloudflare scheduler','NOT DEPLOYED']])detailRow(n,a,b);
+    info(n,'Existing LaunchAgent/SQLite/STOP must be validated on the actual Mac. No remote privileged action is exposed on GitHub Pages.');
+   }else if(view==='results'){info(n,'A future private receipt index will display completed jobs, exact outputs and review evidence. No unverified video or artifact is labeled finished.')}
+  })
+ }
+ function newJobDialog(employee){
+  openDialog('CREATE JOB DRAFT','WALTER / PROPOSE → REVIEW → APPROVE',n=>{
+   info(n,'Drafts here DO NOT enqueue or start workers. The private authenticated dispatcher is not yet connected. Do not enter passwords, API keys or client secrets.');
+   const form=node('form','formgrid');form.id='jobDraftForm';form.noValidate=true;
+   const field=(label,type,options)=>{const wrap=node('div','field'+(type==='textarea'?' span2':''));const lab=node('label','',label);const inp=type==='textarea'?node('textarea'):type==='select'?node('select'):node('input');
+    if(type==='select'){for(const [val,txt] of options){const o=node('option','',txt);o.value=val;inp.append(o)}}else if(type!=='textarea')inp.type='text';
+    const uid='f'+form.children.length;inp.id=uid;lab.htmlFor=uid;wrap.append(lab,inp);form.append(wrap);return inp};
+   const goal=field('What should the employee accomplish?','textarea');goal.maxLength=1200;goal.required=true;goal.placeholder='Example: Jesse, research accurate English lip-sync shapes for Moho and write a review checklist.';
+   const who=field('Specialist','select',[['','Walter chooses'],...ROLE_ORDER.map(id=>[id,id.toUpperCase()+' — '+ROLE_LABEL[id]])]);who.value=employee||'';
+   const deliver=field('Deliverable','text');deliver.placeholder='Reviewable checklist, FCPXML test plan, script draft…';deliver.maxLength=160;
+   const due=field('Due date / preference','text');due.placeholder='Optional';due.maxLength=70;
+   const feedback=node('div','note','This proposal stays on your device until you copy or export it. No connection to the runtime queue.');feedback.setAttribute('aria-live','polite');n.append(form,feedback);
+   const buttons=node('div','actions');
+   const prepare=node('button','action primary','PREPARE JOB DRAFT');prepare.type='button';
+   const copy=node('button','action','COPY DRAFT');copy.type='button';
+   const exportBtn=node('button','action','EXPORT JSON');exportBtn.type='button';
+   const queue=node('button','action','APPROVE & QUEUE — UNAVAILABLE');queue.disabled=true;queue.title='Needs authenticated controller, worker STOP and host capability checks';
+   buttons.append(prepare,copy,exportBtn,queue);n.append(buttons);
+   let current=null;
+   function build(){
+    const v=goal.value.trim();if(v.length<6){feedback.textContent='Enter a concrete goal (at least six characters).';return null}
+    if(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(v)){feedback.textContent='Remove control characters from the goal.';return null}
+    return {schema_version:1,kind:'rovor_job_draft',status:'local_draft_not_queued',created_at:new Date().toISOString(),goal:v,employee:who.value||null,deliverable:deliver.value.trim()||null,due_preference:due.value.trim()||null,requires_authenticated_review:true,external_effects_authorized:false,paid_fallback_authorized:false};
+   }
+   prepare.addEventListener('click',()=>{current=build();if(current){feedback.textContent='Prepared locally. Queue dispatch is unavailable until the private worker controller is connected.'}});
+   copy.addEventListener('click',async()=>{current=build();if(!current)return;try{await navigator.clipboard.writeText(JSON.stringify(current,null,2));feedback.textContent='Draft copied to clipboard, NOT queued.'}catch{feedback.textContent='Clipboard unavailable. Use Export JSON.'}});
+   exportBtn.addEventListener('click',()=>{current=build();if(!current)return;const blob=new Blob([JSON.stringify(current,null,2)+'\n'],{type:'application/json'});const url=URL.createObjectURL(blob);const a=node('a');a.href=url;a.download='rovor-job-draft-'+Date.now()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);feedback.textContent='Downloaded a local draft. No worker has received this job.'});
+  });
+ }
+ $('newJob').addEventListener('click',()=>newJobDialog());$('dockDraft').addEventListener('click',()=>newJobDialog());$('refresh').addEventListener('click',refresh);$('queueOpen').addEventListener('click',()=>{state.queueMode='open';renderQueue()});$('queueAll').addEventListener('click',()=>{state.queueMode='all';renderQueue()});
+ for(const b of document.querySelectorAll('[data-detail]'))b.addEventListener('click',()=>openDetail(b.dataset.detail));
+ $('closeDialog').addEventListener('click',closeDialog);
+ $('dialog').addEventListener('click',e=>{if(e.target===$('dialog'))closeDialog()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('dialog').hasAttribute('open'))closeDialog();if(e.key==='Tab'&&$('dialog').hasAttribute('open')){const focusables=[...$('dialog').querySelectorAll('button:not([disabled]),a[href],input,textarea,select')];if(focusables.length){const first=focusables[0],last=focusables.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});
+ for(const id of ['queue','fleet','machine','models','timeline','results'])watched(id);loadRoles();render();refresh();
+ const updateInterval=15*60*1000;setInterval(()=>{if(document.visibilityState==='visible')refresh()},updateInterval);
+ window.ROVOR_WORKFORCE={getMode:()=>state.mode,preview:()=>({verified:checked(),sha:state.sha,taskCount:state.tasks.length,roles:ROLE_ORDER.length,runtimeConnected:false})};
+})();
+</script>
+</body></html>

@@ -1,0 +1,32 @@
+name: Walter public source citation gate
+on:
+  push:
+    paths:
+      - 'tools/walter_source_citation_gate.py'
+      - 'tests/test_walter_source_citation_gate.py'
+      - '.github/workflows/walter-source-citation-gate.yml'
+  pull_request:
+    paths:
+      - 'tools/walter_source_citation_gate.py'
+      - 'tests/test_walter_source_citation_gate.py'
+      - '.github/workflows/walter-source-citation-gate.yml'
+permissions:
+  contents: read
+jobs:
+  offline-citation-review:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Verify public-source citation guard without models
+        run: python -m unittest discover -s tests -p test_walter_source_citation_gate.py -v
+      - name: Verify shared task ownership and routing
+        run: |
+          python tools/project_loop.py check
+          python tools/task_routing_pair.py --check

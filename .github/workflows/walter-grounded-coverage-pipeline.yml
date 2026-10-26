@@ -1,0 +1,36 @@
+name: Walter grounded specialist coverage integration
+on:
+  pull_request:
+    paths:
+      - tools/walter_grounded_coverage_pipeline.py
+      - tests/test_walter_grounded_coverage_pipeline.py
+      - tools/walter_public_task_grounding.py
+      - tools/walter_real_receipt_bridge.py
+      - tools/walter_specialist_coverage.py
+      - .github/workflows/walter-grounded-coverage-pipeline.yml
+      - coordination/tasks.json
+      - coordination/work-routing.json
+  push:
+    branches: [main]
+    paths:
+      - tools/walter_grounded_coverage_pipeline.py
+      - tests/test_walter_grounded_coverage_pipeline.py
+      - .github/workflows/walter-grounded-coverage-pipeline.yml
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Grounded public-to-private specialist integration
+        run: python -m unittest discover -s tests -p 'test_walter_grounded_coverage_pipeline.py' -v
+      - name: Shared task queue and paired routing
+        run: |
+          python tools/project_loop.py check
+          python tools/task_routing_pair.py --check

@@ -1,0 +1,38 @@
+name: Walter — approved research backlog safety
+on:
+  pull_request:
+    paths:
+      - "tools/walter_research_backlog.py"
+      - "tests/test_walter_research_backlog.py"
+      - "coordination/walter-approved-research-backlog.json"
+      - ".github/workflows/walter-research-backlog.yml"
+      - "integrations/open-interpreter/WALTER-RESEARCH-BACKLOG.md"
+  push:
+    branches: [main]
+    paths:
+      - "tools/walter_research_backlog.py"
+      - "tests/test_walter_research_backlog.py"
+      - "coordination/walter-approved-research-backlog.json"
+      - ".github/workflows/walter-research-backlog.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-release-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Validate bounded source-only backlog
+        run: python tools/walter_research_backlog.py
+      - name: Verify STOP, cost, no-replay, and source guards
+        run: python -m unittest discover -s tests -p test_walter_research_backlog.py -v

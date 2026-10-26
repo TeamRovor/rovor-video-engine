@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "release": "hybrid-workforce-provider-policy-v1",
+  "deployment_status": "design_only_not_running",
+  "control_plane": {
+    "planned_provider": "cloudflare_workers",
+    "schedule_utc": "*/5 * * * *",
+    "state": "cloudflare_d1",
+    "cloud_scheduler_enabled": false,
+    "private_mac_channel": "separate_private_teamrovor_repository",
+    "mac_executor": "existing_user_launchagent_and_sqlite",
+    "mac_native_requires_online_awake_session": true,
+    "development_claims_remain": "coordination/tasks.json",
+    "duplicate_scheduler_allowed": false
+  },
+  "supervisor": {
+    "employee": "Walter",
+    "recommended_planner": "gemini",
+    "duties": [
+      "daily_goal_breakdown",
+      "durable_task_selection",
+      "capability_delegation",
+      "checkpoints",
+      "review_escalation"
+    ]
+  },
+  "employees": [
+    {
+      "name": "Mike",
+      "responsibility": "mac_systems"
+    },
+    {
+      "name": "Jane",
+      "responsibility": "final_cut_editing"
+    },
+    {
+      "name": "Jesse",
+      "responsibility": "moho_2d"
+    },
+    {
+      "name": "Gale",
+      "responsibility": "blender_3d"
+    },
+    {
+      "name": "Gus",
+      "responsibility": "business_operations"
+    },
+    {
+      "name": "Saul",
+      "responsibility": "marketing"
+    },
+    {
+      "name": "Hank",
+      "responsibility": "quality_assurance"
+    }
+  ],
+  "provider_capabilities": {
+    "gemini": {
+      "preferred_for": [
+        "architect",
+        "long_context",
+        "planning"
+      ],
+      "configured": false,
+      "free_entitlement_verified": false
+    },
+    "groq": {
+      "preferred_for": [
+        "fast_parse",
+        "quick_script",
+        "syntax_checks"
+      ],
+      "configured": false,
+      "free_entitlement_verified": false
+    },
+    "nvidia_nim": {
+      "preferred_for": [
+        "fast_parse",
+        "quick_script"
+      ],
+      "configured": false,
+      "free_entitlement_verified": false,
+      "usage_license_must_be_verified": true
+    },
+    "mistral": {
+      "preferred_for": [
+        "complex_code",
+        "code_review",
+        "debugging"
+      ],
+      "configured": false,
+      "free_entitlement_verified": false
+    },
+    "openrouter": {
+      "preferred_for": [
+        "verified_free_fallback"
+      ],
+      "configured": false,
+      "free_entitlement_verified": false,
+      "strict_explicit_free_model_ids": true
+    },
+    "cloudflare_workers_ai": {
+      "preferred_for": [
+        "optional_cloud_inference"
+      ],
+      "configured": false,
+      "free_entitlement_verified": false,
+      "optional_not_scheduler": true
+    }
+  },
+  "work_type_preferences": {
+    "goal_decomposition": [
+      "gemini"
+    ],
+    "long_context_research": [
+      "gemini"
+    ],
+    "quick_diff_check": [
+      "groq",
+      "nvidia_nim"
+    ],
+    "syntax_and_small_script": [
+      "groq",
+      "nvidia_nim"
+    ],
+    "code_implementation": [
+      "mistral",
+      "gemini"
+    ],
+    "code_review": [
+      "mistral",
+      "gemini"
+    ],
+    "business_research_draft": [
+      "gemini",
+      "groq"
+    ]
+  },
+  "safety": {
+    "default_paid_use_allowed": false,
+    "required_spend_authorization": "explicit_owner_opt_in_only",
+    "model_selection": "current_model_capabilities_cost_and_quota_checked_before_dispatch",
+    "dynamic_fallback": "explicitly_verified_zero_cost_route_only",
+    "fallback_provider": "openrouter",
+    "fallback_not_guaranteed": true,
+    "unverified_model_is_ineligible": true,
+    "network_access_required": "specific_source_and_privacy_authorization",
+    "client_or_secret_data_to_free_tiers_allowed": false,
+    "transient_idempotent_retry_max_attempts": 3,
+    "side_effects_never_automatically_retried": true,
+    "legacy_failed_receipts_never_requeued": true,
+    "existing_omniroute_rolling_24h_claim_cap": 5,
+    "stop_honored_on_every_dispatch": true,
+    "exhausted_provider_behavior": "checkpoint_wait_without_model_call",
+    "review_escalation": "pause_after_three_safe_failures_or_immediately_for_uncertain_side_effects",
+    "notifications_require_verified_authorized_channel": true,
+    "automation_authority": "research_and_draft_only_until_each_capability_is_explicitly_host_verified"
+  },
+  "observability": {
+    "durable_fields": [
+      "job_id",
+      "role",
+      "stage",
+      "dedupe_key",
+      "owner",
+      "provider",
+      "exact_model_id",
+      "billing_eligibility_verified",
+      "attempts",
+      "status",
+      "started_at",
+      "updated_at",
+      "receipt_ref",
+      "next_action",
+      "error_class"
+    ],
+    "raw_keys_prompts_client_data_in_public_github": false
+  }
+}

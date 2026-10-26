@@ -1,0 +1,35 @@
+name: Walter real receipt coverage bridge offline regression
+on:
+  push:
+    paths:
+      - 'tools/walter_real_receipt_bridge.py'
+      - 'tests/test_walter_real_receipt_bridge.py'
+      - 'tools/walter_specialist_coverage.py'
+      - '.github/workflows/walter-real-receipt-bridge.yml'
+  pull_request:
+    paths:
+      - 'tools/walter_real_receipt_bridge.py'
+      - 'tests/test_walter_real_receipt_bridge.py'
+      - 'tools/walter_specialist_coverage.py'
+      - '.github/workflows/walter-real-receipt-bridge.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Private receipt bridge and existing coverage regression
+        run: python -m unittest discover -s tests -p 'test_walter_real_receipt_bridge.py' -v
+      - name: Shared task queue and paired routing
+        run: |
+          python tools/project_loop.py check
+          python tools/task_routing_pair.py --check

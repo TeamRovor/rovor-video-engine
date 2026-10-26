@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-animation-checkpoints",
+  "id": "walter-public-v1-animation-checkpoints",
+  "title": "ROVOR Jesse research: animation checkpoints",
+  "role": "software-architecture",
+  "inputs": [
+    "AGENTS.md",
+    "ROVOR-AI-PLAN.md"
+  ],
+  "task": "ROVOR ghost specialist: JESSE. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Plan an auditable MP3-to-2D animation release process with source preservation and no invented 1080p60 render claims.",
+  "deliverable": "A checkpoint and visual QA specification including timing, staging and rejection evidence.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

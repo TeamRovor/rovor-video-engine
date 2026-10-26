@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-render-confidence-rubric",
+  "id": "walter-public-v1-render-confidence-rubric",
+  "title": "ROVOR Gale research: render confidence rubric",
+  "role": "software-architecture",
+  "inputs": [
+    "AGENTS.md",
+    "ROVOR-AI-PLAN.md"
+  ],
+  "task": "ROVOR ghost specialist: GALE. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Design repeatable Blender render QA gates for a source-only review with no actual scene access.",
+  "deliverable": "A QA matrix distinguishing synthetic render, host capture and approved video evidence.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

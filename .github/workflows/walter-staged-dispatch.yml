@@ -1,0 +1,54 @@
+name: Walter staged specialist request proposal regression
+
+on:
+  push:
+    paths:
+      - 'tools/walter_staged_dispatch.py'
+      - 'tests/test_walter_staged_dispatch.py'
+      - 'tools/walter_workpack_compile.py'
+      - 'tools/walter_research_backlog.py'
+      - 'tools/omniroute_dispatch_permit.py'
+      - 'tools/omniroute_reasoning_admission.py'
+      - 'coordination/omniroute-workpacks/walter-v1-*.json'
+      - 'coordination/walter-approved-research-backlog.json'
+      - '.github/workflows/walter-staged-dispatch.yml'
+  pull_request:
+    paths:
+      - 'tools/walter_staged_dispatch.py'
+      - 'tests/test_walter_staged_dispatch.py'
+      - 'tools/walter_workpack_compile.py'
+      - 'tools/walter_research_backlog.py'
+      - 'tools/omniroute_dispatch_permit.py'
+      - 'tools/omniroute_reasoning_admission.py'
+      - 'coordination/omniroute-workpacks/walter-v1-*.json'
+      - 'coordination/walter-approved-research-backlog.json'
+      - '.github/workflows/walter-staged-dispatch.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Check specialist workpack release integrity
+        run: python tools/walter_workpack_compile.py
+      - name: Test staged specialist candidate composition
+        run: python -m unittest discover -s tests -p 'test_walter_staged_dispatch.py' -v
+      - name: Test upstream permit and reasoning guards
+        run: |
+          python -m unittest discover -s tests -p 'test_omniroute_dispatch_permit.py' -v
+          python -m unittest discover -s tests -p 'test_omniroute_reasoning_admission.py' -v
+      - name: Verify shared task ownership and routing
+        run: |
+          python tools/project_loop.py check
+          python tools/task_routing_pair.py --check

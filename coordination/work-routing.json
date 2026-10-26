@@ -1,0 +1,1040 @@
+{
+  "version": 1,
+  "tasks": {
+    "windows-runtime": {
+      "lane": "efficiency",
+      "requires": [
+        "local-exec",
+        "original-assets"
+      ]
+    },
+    "render-cache-file-identity": {
+      "lane": "efficiency",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "windows-benchmark-protocol": {
+      "lane": "efficiency",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "evan-acting-review": {
+      "lane": "animation",
+      "requires": [
+        "original-assets",
+        "visual-review"
+      ],
+      "objective": "develop-content-engine"
+    },
+    "scene-moho-contract": {
+      "lane": "integration",
+      "requires": []
+    },
+    "work-session-routing": {
+      "lane": "coordination",
+      "requires": [
+        "local-exec"
+      ]
+    },
+    "business-ops-worker": {
+      "lane": "operations",
+      "requires": [
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "business-service-delivery-playbook": {
+      "lane": "delivery",
+      "requires": [],
+      "objective": "deliver-promised-work"
+    },
+    "business-proof-catalog": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "business-offer-brief": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "rovor-ai-master-plan": {
+      "lane": "coordination",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "rovor-knowledge-pack": {
+      "lane": "operations",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "rovor-capability-evaluation-pack": {
+      "lane": "integration",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "rovor-work-packet-contract": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "rovor-hosted-runner-diagnosis": {
+      "lane": "operations",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "private-supervisor-emergency-deactivate": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "private-supervisor-status-after-tamper": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "private-mac-control-readiness-preflight": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "moho-disposable-pose": {
+      "lane": "integration",
+      "requires": [
+        "local-exec",
+        "moho-runtime"
+      ]
+    },
+    "shared-session-checks": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "windows-session-entrypoint": {
+      "lane": "coordination",
+      "requires": []
+    },
+    "windows-regression-ci": {
+      "lane": "efficiency",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "shared-audio-import": {
+      "lane": "animation",
+      "requires": [
+        "original-assets"
+      ]
+    },
+    "remote-github-handoff": {
+      "lane": "coordination",
+      "requires": []
+    },
+    "acoustic-production-gate": {
+      "lane": "animation",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "engine-efficiency-benchmarks": {
+      "lane": "efficiency",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "acting-acoustic-preflight": {
+      "lane": "animation",
+      "requires": [
+        "hosted-ci",
+        "original-assets"
+      ]
+    },
+    "continuous-english-diphthongs": {
+      "lane": "animation",
+      "requires": [
+        "hosted-ci",
+        "original-assets",
+        "visual-review"
+      ]
+    },
+    "remote-render-job-loop": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "moho-file-compiler": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "directed-contact-anchors": {
+      "lane": "animation",
+      "requires": [
+        "original-assets",
+        "visual-review"
+      ]
+    },
+    "longform-acoustic-chapter-plan": {
+      "lane": "animation",
+      "requires": [
+        "original-assets",
+        "hosted-ci"
+      ]
+    },
+    "longform-native-chapter-packaging": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci",
+        "original-assets"
+      ]
+    },
+    "native-chapter-switch-compiler": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "nonmoho-contact-lock-render": {
+      "lane": "animation",
+      "requires": [
+        "hosted-ci",
+        "original-assets",
+        "visual-review"
+      ]
+    },
+    "nonmoho-persistent-paint-trail": {
+      "lane": "animation",
+      "requires": [
+        "hosted-ci",
+        "original-assets",
+        "visual-review"
+      ]
+    },
+    "nonmoho-right-wrist-tool-ik": {
+      "lane": "animation",
+      "requires": [
+        "hosted-ci",
+        "original-assets",
+        "visual-review"
+      ]
+    },
+    "nonmoho-grip-raster-visibility": {
+      "lane": "animation",
+      "requires": [
+        "hosted-ci",
+        "original-assets",
+        "visual-review"
+      ]
+    },
+    "nonmoho-hand-over-prop-occlusion": {
+      "lane": "animation",
+      "requires": [
+        "hosted-ci",
+        "original-assets",
+        "visual-review"
+      ]
+    },
+    "blender-mcp-codex-local-bridge": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "blender-mcp-real-host-smoke": {
+      "lane": "integration",
+      "requires": [
+        "local-exec",
+        "blender-runtime"
+      ]
+    },
+    "rovor-ghost-worker-readonly-v1": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "rovor-ghost-loop-v1": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "rovor-ghost-launchd-v1": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "fcp-specialist-research-and-mcp-pilot": {
+      "lane": "integration",
+      "requires": []
+    },
+    "fcp-mcp-real-host-smoke": {
+      "lane": "integration",
+      "requires": [
+        "local-exec",
+        "final-cut-runtime"
+      ]
+    },
+    "fcp-interpreter-native-mcp-bridge": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "interpreter-research-job-runner": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "interpreter-research-mac-host-smoke": {
+      "lane": "integration",
+      "requires": [
+        "local-exec"
+      ]
+    },
+    "interpreter-research-process-bounds": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "interpreter-research-stop-control": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "interpreter-research-preflight-command": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "interpreter-research-macos-path-alias-fix": {
+      "lane": "integration",
+      "requires": [
+        "local-exec",
+        "hosted-ci"
+      ]
+    },
+    "ghost-interpreter-research-queue": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "jane-diagnostic-xml-integrity": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "workforce-host-evidence-reconciliation": {
+      "lane": "coordination",
+      "requires": []
+    },
+    "jane-queued-native-diagnosis": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "ghost-worker-database-path-integrity": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "workforce-repair-candidate-integration": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "jane-bootstrap-error-details": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "ghost-legacy-native-dispatch-disabled": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "jane-sqlite-isolated-library-creation": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "jane-native-selection-evidence": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "jane-launcher-outcome-reporting": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "mac-execution-roundtrip": {
+      "lane": "integration",
+      "requires": [
+        "local-exec"
+      ]
+    },
+    "omniroute-parallel-worker-packets": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "jane-status-sqlite-sidecar-guard": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "private-mac-control-bridge-v1": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "omniroute-loopback-egress-guard": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "private-mac-control-bounded-poller-v1": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "omniroute-private-draft-receipt-review": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "private-mac-supervisor-launchagent": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "private-control-verified-receipt-fix-20261022": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "painting-82sec-physical-contact-audition": {
+      "lane": "animation",
+      "requires": [
+        "original-assets",
+        "visual-review"
+      ]
+    },
+    "session-routing-coverage-and-idle-triage": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "routing-future-ready-queue-regression": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "interpreter-research-hosted-regression-gate": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "routing-explain-dependency-and-scope-blockers": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "omniroute-direct-api-receipt-containment": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "paired-task-routing-intake": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "routing-intake-work-entrypoint-adoption": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "github-atomic-paired-task-commit": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "business-home-service-prospect-shortlist": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "business-website-opportunity-audit-template": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "live-hud-github-autosync": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "hud-live-rate-limit-qa-20261023": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "business-ops-stale-run-cancellation-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "routing-ci-supersession-cancellation-20261023": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "capability-evaluator-malformed-output-guard-20261023": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "command-center-pages-predeploy-quality-gate-20261023": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "supervisor-ci-runtime-dependencies-20261023": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write"
+      ]
+    },
+    "omniroute-receipt-quality-verification-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "ghost-omniroute-queue-adapter-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "omniroute-workforce-composite-20261023": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "ghost-self-research-bootstrap-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "private-mac-control-repo-bootstrap-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "private-mac-terminal-probe-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "hybrid-cloud-provider-workforce-policy-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "hank-hosted-unattended-qa-watchdog-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-approved-research-backlog-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-backlog-runtime-workpack-compile-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "omniroute-reasoning-admission-gate-20261023": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "omniroute-free-dispatch-permit-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-staged-dispatch-proposal-20261024": {
+      "lane": "integration",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "omniroute-paced-runtime-health-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "omniroute-continuous-runtime-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-public-citation-evidence-gate-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-reviewed-finding-handoff-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "omniroute-nine-model-coverage-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "omniroute-proportional-capacity-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-draft-actionability-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "omniroute-model-atomic-claim-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-public-task-grounding-20261024": {
+      "lane": "coordination",
+      "requires": [
+        "hosted-ci"
+      ]
+    },
+    "a-overnight-01-hank-quality-triage": {
+      "lane": "operations",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "a-overnight-02-mike-same-worker-rollout": {
+      "lane": "operations",
+      "requires": [],
+      "objective": "reduce-repeat-work"
+    },
+    "a-overnight-03-saul-business-draft": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "a-overnight-04-jane-fcp-handoff": {
+      "lane": "animation",
+      "requires": [],
+      "objective": "deliver-promised-work"
+    },
+    "hud-real-model-evidence-20261024": {
+      "lane": "efficiency",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-specialist-coverage-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "hud-omniroute-live-sync-20261024": {
+      "lane": "efficiency",
+      "requires": [
+        "local-exec",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-real-receipt-coverage-bridge-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-cross-revision-task-dedupe-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-grounded-coverage-pipeline-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-public-queue-admission-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-24h-soak-evidence-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-pool-soak-pacing-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-snapshot-continuity-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-reviewed-handoff-scope-guard-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-admission-nested-scope-guard-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-citation-draft-quality-20261024": {
+      "lane": "operations",
+      "requires": [
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "hud-persistent-telemetry-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ]
+    },
+    "walter-citation-code-context-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "hank-cloud-audit-receipts-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "nine-provider-cloud-dispatch-20261024": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "mike-cloud-retry-after-20261024": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
+    },
+    "mike-hud-pr189-receipt-20261024": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
+    },
+    "walter-ghost-cloud-approved-feed-20261024": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-cloud-canary-preflight-20261025": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-ghost-cloud-site-composition-20261025": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "walter-cloud-eligibility-config-20261025": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "ghost-cloud-canary-release-review-20261025": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "gale-preflight-config-shapes-20261025": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
+    },
+    "ghost-cloud-private-secret-provision-20261025": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "gus-ops-input-directory-20261025": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
+    },
+    "private-hud-cloud-runtime-mount-20261025": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "saul-cloud-inquiry-copy-20261025": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "jesse-moho-read-request-budget-20261025": {
+      "lane": "animation",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
+    },
+    "mike-pr201-stop-count-review-20261025": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
+    },
+    "cloud-website-delivery-map-20261025": {
+      "lane": "delivery",
+      "requires": [],
+      "objective": "deliver-promised-work"
+    },
+    "cloud-domain-launch-checks-20261025": {
+      "lane": "delivery",
+      "requires": [],
+      "objective": "deliver-promised-work"
+    },
+    "cloud-phone-storyboard-20261025": {
+      "lane": "animation",
+      "requires": [],
+      "objective": "develop-content-engine"
+    },
+    "cloud-phone-readability-spec-20261025": {
+      "lane": "animation",
+      "requires": [],
+      "objective": "develop-content-engine"
+    },
+    "cloud-portrait-landscape-handoff-20261025": {
+      "lane": "delivery",
+      "requires": [],
+      "objective": "deliver-promised-work"
+    },
+    "cloud-website-intake-fields-20261025": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "cloud-intake-field-microcopy-20261025": {
+      "lane": "sales",
+      "requires": [],
+      "objective": "win-qualified-clients"
+    },
+    "cloud-website-launch-review-20261025": {
+      "lane": "delivery",
+      "requires": [],
+      "objective": "deliver-promised-work"
+    },
+    "windows-pr-mainline-sync-20261026": {
+      "lane": "efficiency",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    }
+  }
+}

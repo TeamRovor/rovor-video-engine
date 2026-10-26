@@ -1,0 +1,43 @@
+name: Shared project loop checks
+
+on:
+  pull_request:
+    paths:
+      - 'coordination/**'
+      - 'tools/project_loop.py'
+      - 'tests/test_project_loop.py'
+      - '.github/workflows/project-loop-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'coordination/**'
+      - 'tools/project_loop.py'
+      - 'tests/test_project_loop.py'
+      - '.github/workflows/project-loop-check.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-loop-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coordination:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check task claims and handoff structure
+        run: python tools/project_loop.py check
+      - name: Check overlap detection, stale ownership and fetched state
+        run: python -m unittest discover -s tests -p test_project_loop.py -v

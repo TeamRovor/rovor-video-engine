@@ -1,0 +1,38 @@
+name: Save ROVOR owner review
+on:
+  issues:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  record:
+    if: "${{ startsWith(github.event.issue.title, 'ROVOR review: ') }}"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      accepted: ${{ steps.review.outputs.accepted }}
+      source_sha: ${{ steps.review.outputs.source_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Record only the authenticated owner's original decision
+        id: review
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node integrations/hud-cloud/record-cloud-review.mjs
+  publish:
+    needs: record
+    if: needs.record.outputs.accepted == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-command-center-pages.yml
+    with:
+      source_ref: ${{ needs.record.outputs.source_sha }}

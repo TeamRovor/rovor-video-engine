@@ -24,3 +24,5 @@ outputs/
 work/
 ggml-*.bin
 
+# Local code knowledge graph (may contain project-derived information)
+graphify-out/

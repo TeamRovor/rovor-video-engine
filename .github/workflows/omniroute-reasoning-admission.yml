@@ -1,0 +1,43 @@
+name: OmniRoute reasoning admission offline regression
+
+on:
+  push:
+    paths:
+      - 'tools/omniroute_reasoning_admission.py'
+      - 'tests/test_omniroute_reasoning_admission.py'
+      - '.github/workflows/omniroute-reasoning-admission.yml'
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+  pull_request:
+    paths:
+      - 'tools/omniroute_reasoning_admission.py'
+      - 'tests/test_omniroute_reasoning_admission.py'
+      - '.github/workflows/omniroute-reasoning-admission.yml'
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: omniroute-reasoning-admission-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  admission:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Offline free-route and completion safety regression
+        run: python -m unittest discover -s tests -p test_omniroute_reasoning_admission.py -v
+      - name: Shared task queue and route coverage
+        run: |
+          python tools/project_loop.py check
+          python tools/task_routing_pair.py --check

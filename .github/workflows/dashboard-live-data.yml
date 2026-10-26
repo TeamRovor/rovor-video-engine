@@ -1,0 +1,74 @@
+name: ROVOR HUD live data checks
+on:
+  pull_request:
+    paths:
+      - 'dashboard/**'
+      - 'tools/hud_workload_export.py'
+      - 'tests/test_hud_workload_export.py'
+      - 'design/hud/WORKLOAD_USAGE_TELEMETRY_CONTRACT.md'
+      - '.github/workflows/dashboard-live-data.yml'
+permissions:
+  contents: read
+jobs:
+  browser-data-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate JavaScript syntax
+        run: |
+          node --check dashboard/command-center/live-data.js
+          node --check dashboard/command-center/app.js
+      - name: Test GitHub pinning and fallback handling
+        run: node --test dashboard/command-center/tests/live-data.test.js
+      - name: Verify Workload Distribution popup and compact meters
+        run: |
+          node --check dashboard/command-center/native-v8-9/workload-popup.js
+          node --test dashboard/command-center/tests/workload-popup.test.cjs
+
+  browser-responsive-workload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exercise existing HUD Workload popup in headless Chrome
+        run: node dashboard/command-center/tests/workload-popup.browser.cjs
+      - name: Package actual native HUD HTML for user review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rovor-existing-hud-workload-html
+          path: dashboard/command-center/native-v8-9/index.html
+          if-no-files-found: error
+          retention-days: 7
+      - name: Save responsive screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workload-popup-responsive-evidence
+          path: dashboard/command-center/qa-screenshots/workload-popup/
+          if-no-files-found: warn
+          retention-days: 7
+
+  workload-offline-metrics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check privacy-limited offline model snapshot reducer
+        run: python -m unittest tests/test_hud_workload_export.py -v

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "business": "Rovor Digital",
+  "positioning": "Digital Renovation: practical websites, branding, content and connected inquiry systems for businesses.",
+  "priority_order": ["deliver-promised-work", "win-qualified-clients", "reduce-repeat-work", "develop-content-engine"],
+  "objectives": [
+    {"id": "deliver-promised-work", "outcome": "Deliver accepted client work with fewer revisions and explicit completion evidence.", "metrics": ["delivery cycle time", "first-review acceptance rate", "revision hours per project"]},
+    {"id": "win-qualified-clients", "outcome": "Turn a verified business problem into a scoped offer and a qualified inquiry.", "metrics": ["qualified inquiries", "proposals accepted", "collected project revenue"]},
+    {"id": "reduce-repeat-work", "outcome": "Reduce repeated setup, duplicated research, failed handoffs and avoidable compute.", "metrics": ["manual minutes per accepted deliverable", "rework hours", "cache reuse and actual processing time"]},
+    {"id": "develop-content-engine", "outcome": "Produce original-narration, source-faithful content that earns approval and supports the business.", "metrics": ["approved publishable pieces", "production hours per approved piece", "inquiries attributable to content"]}
+  ],
+  "baseline_status": "Not measured here. Do not invent current revenue, conversion rates, hours saved or performance gains.",
+  "roles": [
+    {"id": "operations-clerk", "lane": "operations", "state": "implemented-read-only-report", "deliverable": "Queue health, blockers and capability-filtered next-work packets."},
+    {"id": "sales-research-assistant", "lane": "sales", "state": "supervised-work-only", "deliverable": "Source-backed opportunity briefs and offer drafts; no unsolicited sending."},
+    {"id": "delivery-coordinator", "lane": "delivery", "state": "supervised-work-only", "deliverable": "Client intake, acceptance checklist, missing-input list and review-ready delivery packet."},
+    {"id": "engine-maintainer", "lane": "efficiency", "state": "supervised-work-only", "deliverable": "Measured reliability and efficiency fixes on the existing engine."},
+    {"id": "content-producer", "lane": "animation", "state": "supervised-work-only", "deliverable": "Source-faithful content drafts and reviewed animation; native unattended production remains unverified."}
+  ],
+  "worker": {
+    "enabled": true,
+    "action": "operations-report",
+    "max_input_bytes": 2097152,
+    "max_report_bytes": 524288,
+    "max_tasks": 500,
+    "max_recommendations_per_lane": 3,
+    "max_runtime_seconds": 30,
+    "max_attempts_per_fingerprint": 1,
+    "llm_calls": 0,
+    "external_messages": 0,
+    "production_writes": 0
+  }
+}

@@ -1,0 +1,48 @@
+name: Hank — unattended GitHub QA
+on:
+  pull_request:
+    paths:
+      - "tools/hank_cloud_watchdog.py"
+      - "tests/test_hank_cloud_watchdog.py"
+      - ".github/workflows/hank-cloud-watchdog.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/hank_cloud_watchdog.py"
+      - "tests/test_hank_cloud_watchdog.py"
+      - ".github/workflows/hank-cloud-watchdog.yml"
+      - "coordination/tasks.json"
+      - "coordination/work-routing.json"
+      - "coordination/ghost-role-bootstrap.json"
+      - "coordination/ghost-provider-policy.json"
+  schedule:
+    - cron: "17,47 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hank-cloud-qa-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify QA logic
+        run: python -m unittest discover -s tests -p test_hank_cloud_watchdog.py -v
+      - name: Check live public task and safety rules
+        run: python tools/hank_cloud_watchdog.py --summary-file "$GITHUB_STEP_SUMMARY" --receipt-file "$RUNNER_TEMP/hank-cloud-audit.json"
+      - name: Retain bounded Hank execution receipt (including failed audits)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hank-cloud-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/hank-cloud-audit.json
+          retention-days: 90
+          if-no-files-found: error

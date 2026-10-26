@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "slug": "walter-v1-free-route-usage-audit",
+  "id": "walter-public-v1-free-route-usage-audit",
+  "title": "ROVOR Hank research: free route usage audit",
+  "role": "evidence-triage",
+  "inputs": [
+    "coordination/ghost-provider-policy.json",
+    "architecture/HYBRID-24-7-GHOST-WORKFORCE.md"
+  ],
+  "task": "ROVOR ghost specialist: HANK. Research only from the provided public source excerpts; cite exact supplied files and identify unverified claims. No model-generated follow-up may enqueue itself. Design a strict cost and evidence audit for approved read-only OmniRoute jobs without asserting that model quotas are actually verified.",
+  "deliverable": "A no-spend usage ledger schema and high-risk fallback rejection cases.",
+  "acceptance": [
+    "Cite only exact supplied public sources",
+    "Distinguish confirmed repo evidence from proposed Mac/app actions",
+    "Leave an actionable next read-only check"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}

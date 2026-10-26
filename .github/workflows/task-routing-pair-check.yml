@@ -1,0 +1,31 @@
+name: ROVOR paired routing intake checks
+on:
+  pull_request:
+    paths:
+      - 'tools/task_routing_pair.py'
+      - 'tests/test_task_routing_pair.py'
+      - 'coordination/TASK-INTAKE.md'
+      - '.github/workflows/task-routing-pair-check.yml'
+permissions:
+  contents: read
+jobs:
+  local-pair-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify task and route coverage
+        run: |
+          python tools/project_loop.py check
+          python tools/task_routing_pair.py --check
+      - name: Run paired route/queue unit tests
+        run: python -m unittest discover -s tests -p 'test_task_routing_pair.py' -v

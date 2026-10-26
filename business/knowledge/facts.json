@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "reviewed_at": "2026-10-21",
+  "source_revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+  "scope": "Repository-backed business knowledge; not a client record, asset inventory, live status store or public claim approval",
+  "facts": [
+    {
+      "id": "identity",
+      "classification": "business-description",
+      "statement": "Rovor Digital helps businesses improve websites, branding, content and connected inquiry/customer systems.",
+      "source": {
+        "path": "business/OPERATING-SYSTEM.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Business direction",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/business/OPERATING-SYSTEM.md"
+      },
+      "limitation": "Service categories do not establish pricing, delivery capacity or results."
+    },
+    {
+      "id": "positioning",
+      "classification": "repository-positioning",
+      "statement": "Digital Renovation: practical websites, branding, content and connected inquiry systems for businesses.",
+      "source": {
+        "path": "business/operating-plan.json",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "positioning",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/business/operating-plan.json"
+      },
+      "limitation": "Repository wording; not evidence of an approved public slogan or visual identity."
+    },
+    {
+      "id": "strategy",
+      "classification": "decision",
+      "statement": "Use ChatGPT-first human-directed sessions now; selected local-PC execution and bounded unattended workers come later.",
+      "source": {
+        "path": "ROVOR-AI-PLAN.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Mission and current decision",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/ROVOR-AI-PLAN.md"
+      },
+      "limitation": "Roadmap is not proof of installed capabilities or an active workforce."
+    },
+    {
+      "id": "capability-scope",
+      "classification": "goal",
+      "statement": "Video is one capability among operations, research, sales preparation, delivery, websites, design, writing, documents, analytics, engineering and knowledge support.",
+      "source": {
+        "path": "ROVOR-AI-PLAN.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Capability map",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/ROVOR-AI-PLAN.md"
+      },
+      "limitation": "Actual tool availability is checked per session."
+    },
+    {
+      "id": "preservation",
+      "classification": "policy",
+      "statement": "Preserve exact Rovor branding, approved Evan references, original narration and existing source work.",
+      "source": {
+        "path": "PROJECT-LOOP.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Goal",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/PROJECT-LOOP.md"
+      },
+      "limitation": "Actual approved binary files and hashes are not inventoried by this pack."
+    },
+    {
+      "id": "video-delivery",
+      "classification": "policy",
+      "statement": "User-facing final video previews target 1080p60 and at least 30 seconds; short diagnostic samples must be labeled.",
+      "source": {
+        "path": "AGENTS.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Repository collaboration instructions",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/AGENTS.md"
+      },
+      "limitation": "These are output requirements, not proof any particular film meets them."
+    },
+    {
+      "id": "approval-boundary",
+      "classification": "policy",
+      "statement": "Separate implementation, runtime verification, artistic/client approval, publication and delivery; Amar determines production animation acceptance.",
+      "source": {
+        "path": "AGENTS.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Repository collaboration instructions",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/AGENTS.md"
+      },
+      "limitation": "A test pass or completed render does not establish artistic approval."
+    },
+    {
+      "id": "access-boundary",
+      "classification": "policy",
+      "statement": "GitHub shares source and coordination; it does not automatically synchronize chats, local files, tools or computer state.",
+      "source": {
+        "path": "WORK.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Establish capabilities and choose work",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/WORK.md"
+      },
+      "limitation": "Check actual runtime access before assigning machine-dependent work."
+    },
+    {
+      "id": "ownership",
+      "classification": "policy",
+      "statement": "coordination/tasks.json is the single development ownership/dependency record; check current claims before editing.",
+      "source": {
+        "path": "WORK.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Read a small, fresh briefing",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/WORK.md"
+      },
+      "limitation": "This knowledge snapshot is never a live claim table."
+    },
+    {
+      "id": "business-order",
+      "classification": "policy",
+      "statement": "Prioritize promised delivery, credible qualified opportunities, reduced repeat work and useful content, subject to explicit user priorities and queue eligibility.",
+      "source": {
+        "path": "business/OPERATING-SYSTEM.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Business direction",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/business/OPERATING-SYSTEM.md"
+      },
+      "limitation": "No current client deadline or prospect is inferred."
+    },
+    {
+      "id": "privacy",
+      "classification": "policy",
+      "statement": "Reusable templates and permitted metadata belong here; private client records and credentials stay in authorized systems.",
+      "source": {
+        "path": "business/OPERATING-SYSTEM.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "One shared queue; distinct jobs",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/business/OPERATING-SYSTEM.md"
+      },
+      "limitation": "The existing scoped audio-import authorization is not blanket permission to import private data."
+    },
+    {
+      "id": "reuse",
+      "classification": "decision",
+      "statement": "Preserve the existing repository and engines; do not prematurely replace them with a local assistant or competing queue.",
+      "source": {
+        "path": "ROVOR-AI-PLAN.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Portability rules to build now",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/ROVOR-AI-PLAN.md"
+      },
+      "limitation": "Local migration is evaluated per capability after actual prerequisites."
+    },
+    {
+      "id": "spending",
+      "classification": "policy",
+      "statement": "The roadmap requires no hardware/model purchase or paid API subscription; no new subscriptions by default.",
+      "source": {
+        "path": "ROVOR-AI-PLAN.md",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "Mission and current decision",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/ROVOR-AI-PLAN.md"
+      },
+      "limitation": "This does not claim all connected services or compute are free."
+    },
+    {
+      "id": "metrics",
+      "classification": "unknown-baseline",
+      "statement": "Current revenue, conversion and time-saving baselines are not established in the repository operating plan.",
+      "source": {
+        "path": "business/operating-plan.json",
+        "revision": "2d1299fc4d033b23d3fea29f000a305030e9b5f5",
+        "section": "baseline_status",
+        "url": "https://github.com/TeamRovor/rovor-video-engine/blob/2d1299fc4d033b23d3fea29f000a305030e9b5f5/business/operating-plan.json"
+      },
+      "limitation": "Do not fabricate performance or business improvement claims."
+    }
+  ],
+  "unknowns": [
+    "brand-kit",
+    "commercial-terms",
+    "portfolio-approval",
+    "live-channels",
+    "machine-readiness",
+    "hardware",
+    "business-baselines",
+    "client-inputs"
+  ]
+}

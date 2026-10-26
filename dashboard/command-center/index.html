@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Native interactive HUD v8.9 is the default. Previous v8.5 remains
+       at ./native/ and screenshot reference at ./exact/ for rollback.
+       Redirect before legacy scripts load. -->
+  <script>
+    (() => {
+      const workforce = new URLSearchParams(location.search).get('workforce') === '1' || location.hash === '#workforce';
+      const next = new URL(workforce ? './workforce/' : './native-v8-9/', location.href);
+      if (!workforce) next.search = location.search;
+      if (!workforce) next.hash = location.hash;
+      location.replace(next.href);
+    })();
+  </script>
+  <noscript><meta http-equiv="refresh" content="0;url=./native-v8-9/" /></noscript>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#04111f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ROVOR HUD" />
+  <meta name="color-scheme" content="dark" />
+  <title>ROVOR DIGITAL • COMMAND BRIDGE</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./hud-icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="reference-hud.css" />
+  <link rel="stylesheet" href="hud-experience.css" />
+  <link rel="stylesheet" href="cinematic-layout.css" />
+  <link rel="stylesheet" href="electric-blue-theme.css" />
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="glow-orbit orbit-a"></div>
+  <div class="glow-orbit orbit-b"></div>
+  <div class="app-shell">
+    <header class="topbar hud-panel">
+      <div class="brand-lockup">
+        <div class="brand-emblem" aria-hidden="true"><img src="./rovor-mark.svg" alt="" /><span class="emblem-orbit"></span></div>
+      <div>
+        <div class="eyebrow">OPERATIONS CONTROL // 01</div>
+        <h1>ROVOR DIGITAL</h1>
+        <p class="header-subtitle"><span class="header-dot"></span> BUILD &nbsp;/&nbsp; CREATE &nbsp;/&nbsp; AUTOMATE &nbsp;/&nbsp; SCALE</p>
+      </div>
+      </div>
+      <div class="header-status"><span class="header-status-led"></span><span id="headerConnection">VERIFYING SOURCE</span><span class="header-clock"><strong id="hudClock">--:--</strong><small id="hudDate">—</small></span></div>
+      <button id="hudToolsBtn" class="hud-tools-toggle" aria-expanded="false" aria-controls="hudTools" type="button" title="Display tools and controls">TOOLS <span aria-hidden="true">⌄</span></button>
+    </header>
+      <div class="top-actions" id="hudTools">
+        <a class="hud-btn alt" href="./exact/" aria-label="Open 1:1 interactive screenshot HUD">1:1 Exact HUD ↗</a>
+        <button id="hudCommandBtn" class="hud-btn hud-command-button" type="button" aria-haspopup="dialog" aria-controls="hudCommandDialog">⌘ Command</button>
+        <button id="hudFullscreenBtn" class="hud-btn alt" type="button">Fullscreen</button>
+        <button id="motionBtn" class="hud-btn alt" type="button" aria-pressed="true">Motion: On</button>
+        <button id="focusBtn" class="hud-btn alt" type="button" aria-pressed="false">Focus View</button>
+        <button id="refreshBtn" class="hud-btn">Refresh GitHub</button>
+        <button id="exportBtn" class="hud-btn alt">Export JSON</button>
+      </div>
+
+
+
+    <div class="syncbar hud-panel" role="status" aria-live="polite">
+      <span class="sync-pill loading" id="syncState">CONNECTING</span>
+      <div class="sync-content"><strong id="syncLast">Not yet verified</strong><span id="syncDetails">Checking GitHub…</span></div>
+    </div>
+
+    <section class="reference-console" aria-label="ROVOR interactive operations dashboard">
+      <div class="console-rail console-left">
+        <section class="hud-panel reference-panel quick-tasks">
+          <div class="reference-panel-head"><h2 class="panel-title">ACTIVE TASKS</h2><span class="panel-counter" id="activeTaskCount">—</span></div>
+          <p class="source-caption">GitHub queue · claimed does not mean running</p>
+          <div class="quick-task-list" id="activeTaskPreview" aria-live="polite"><p class="muted">Loading public task queue…</p></div>
+          <button type="button" class="micro-link" data-open-view="tasks">VIEW COMPLETE QUEUE <span aria-hidden="true">↗</span></button>
+        </section>
+        <section class="hud-panel reference-panel workload-panel">
+          <h2 class="panel-title">TASK DISTRIBUTION</h2>
+          <div class="workload-bars" id="workloadBars"><p class="muted">Awaiting task counts…</p></div>
+          <p class="source-caption">Queue distribution · not CPU / GPU / Mac metrics</p>
+        </section>
+        <section class="hud-panel reference-panel activity-panel">
+          <h2 class="panel-title">RECENT ACTIVITY</h2>
+          <div class="evidence-list" id="recentEvidence"><p class="muted">Waiting for source evidence…</p></div>
+        </section>
+      </div>
+
+      <div class="console-center">
+        <div class="reactor-stage" id="reactorStage" aria-label="ROVOR orbital Earth command center">
+          <canvas id="earthCanvas" class="earth-canvas" aria-hidden="true"></canvas>
+          <div class="hud-scan-overlay" aria-hidden="true"></div>
+          <div class="core-banner">R O V O R &nbsp; D I G I T A L <span aria-hidden="true" class="core-banner-bars">▰▰▰</span></div>
+          <div class="reactor-grid"></div>
+          <div class="reactor-halo halo-outer"></div><div class="reactor-halo halo-mid"></div><div class="reactor-halo halo-inner"></div>
+          <div class="orbit-deck orbit-deck-outer" aria-hidden="true"></div><div class="orbit-deck orbit-deck-inner" aria-hidden="true"></div>
+          <button class="reactor-core" id="coreAction" type="button" aria-label="Open ROVOR command console" aria-haspopup="dialog" aria-controls="hudCommandDialog"><span class="core-crosshair" aria-hidden="true"></span><img src="./rovor-mark.svg" alt="" /><span class="core-action-tip">COMMAND CORE</span></button>
+          <div class="reactor-readout readout-left"><span>OPERATIONS LINK</span><strong id="coreSyncMode">VERIFYING GITHUB</strong><small id="coreCommit">Source SHA unavailable</small></div>
+          <div class="reactor-readout readout-right"><span class="telemetry-dot" aria-hidden="true"></span><strong id="coreTaskSummary">QUEUE / PENDING VERIFICATION</strong><small>Claimed ≠ executing</small></div>
+          <div class="reactor-tick tick-a"></div><div class="reactor-tick tick-b"></div><div class="reactor-tick tick-c"></div>
+          <div class="planet-horizon" aria-hidden="true"></div>
+          <div class="reactor-motto">REAL TOOLS. VERIFIED RESULTS.</div>
+          <div class="earth-controls" role="group" aria-label="Interactive Earth controls"><button type="button" id="earthSpeedBtn" class="hud-earth-btn">Earth · Slow</button><button type="button" id="earthPauseBtn" class="hud-earth-btn" aria-pressed="false">Pause Earth</button><button type="button" id="earthResetBtn" class="hud-earth-btn" title="Return Earth to starting orientation">↺ Reset</button></div>
+        </div>
+      </div>
+
+      <div class="console-rail console-right">
+        <section class="hud-panel reference-panel ring-panel">
+          <div class="reference-panel-head"><h2 class="panel-title">SYSTEM HEALTH</h2><button id="routingInspectBtn" class="hud-inspect-btn" type="button" title="Inspect routing coverage" aria-haspopup="dialog" aria-controls="hudDrawer">Details ↗</button></div>
+          <div class="health-topline">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 220 220" class="status-ring" role="img" aria-label="Percent of queued tasks with routing rules">
+                <defs><linearGradient id="ringGradient" x1="0%" x2="100%" y1="0%" y2="100%"><stop offset="0%" stop-color="#e8f6ff"></stop><stop offset="100%" stop-color="#3f9cff"></stop></linearGradient></defs>
+                <circle cx="110" cy="110" r="86" class="ring-bg"></circle>
+                <circle id="integrityRing" cx="110" cy="110" r="86" class="ring-fg"></circle>
+                <circle cx="110" cy="110" r="56" class="ring-inner"></circle>
+              </svg>
+              <div class="ring-center"><span id="integrityPct">—</span><small>tasks routed</small></div>
+            </div>
+            <div class="health-facts" id="healthFacts">
+              <div><span class="status-light pending"></span><span>GitHub</span><strong>VERIFYING</strong></div>
+              <div><span class="status-light pending"></span><span>Routing</span><strong>—</strong></div>
+              <div><span class="status-light pending"></span><span>Mac executor</span><strong>UNVERIFIED</strong></div>
+            </div>
+          </div>
+          <div class="tiny-grid" id="snapshotMeta"></div>
+        </section>
+        <section class="hud-panel reference-panel metrics-panel">
+          <h2 class="panel-title">GITHUB ANALYTICS</h2>
+          <div class="metrics" id="metrics"></div>
+          <div class="barline"><div class="bar-label">QUEUE STATUS DISTRIBUTION</div><div id="statusBars" class="status-bars"></div></div>
+          <p class="source-caption">Public repository metadata only · no API quota measurement</p>
+        </section>
+        <section class="hud-panel reference-panel warning-panel source-preview-panel">
+          <div class="reference-panel-head"><h2 class="panel-title">SOURCE FEED</h2><span class="source-live-pill" id="sourceFeedMode">VERIFYING</span></div>
+          <div class="source-feed-body">
+            <div class="feed-preview" aria-label="NASA Earth-at-night satellite imagery used as a decorative visual">
+              <img src="./earth-night.png" alt="NASA Earth-at-night imagery" loading="lazy" />
+              <div class="feed-wave" aria-hidden="true"></div>
+            </div>
+            <div class="feed-telemetry">
+              <strong>GITHUB SOURCE</strong>
+              <span id="sourceFeedState">Checking repository</span>
+              <small id="sourceFeedCommit">Commit not yet verified</small>
+              <button type="button" class="micro-link" data-open-view="repo">INSPECT SOURCE ↗</button>
+            </div>
+          </div>
+          <details class="boundary-details source-boundaries"><summary>Data and executor limitations</summary>
+            <p>GitHub status does not prove the Mac, video engine, or ghost employees are running.</p>
+            <ul id="notesList" class="notes-list"></ul>
+          </details>
+        </section>
+      </div>
+    </section>
+
+    <nav class="tabbar hud-panel" role="tablist" aria-label="Command bridge views">
+      <button class="tab active" id="tab-button-overview" role="tab" aria-selected="true" aria-controls="tab-overview" tabindex="0" data-tab="overview"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Dashboard</span></button>
+      <button class="tab" id="tab-button-tasks" role="tab" aria-selected="false" aria-controls="tab-tasks" tabindex="-1" data-tab="tasks"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m7 12 3 3 7-7"/></svg><span>Tasks</span></button>
+      <button class="tab" id="tab-button-systems" role="tab" aria-selected="false" aria-controls="tab-systems" tabindex="-1" data-tab="systems"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg><span>Systems</span></button>
+      <button class="tab" id="tab-button-repo" role="tab" aria-selected="false" aria-controls="tab-repo" tabindex="-1" data-tab="repo"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="3" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="20" r="2"/><path d="M6 5v11m0-4c0-4 12-1 12-6"/></svg><span>GitHub</span></button>
+      <button class="tab" id="tab-button-workers" role="tab" aria-selected="false" aria-controls="tab-workers" tabindex="-1" data-tab="workers"><svg class="nav-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="m18 9 2-2-3-3-2 2a8 8 0 0 0-3-1l-.5-2h-4L7 5a8 8 0 0 0-2.8 1l-2-1.7-2 3.3L2 9a8 8 0 0 0 0 6l-1.8 1.4 2 3.3 2.1-1.7A8 8 0 0 0 7 19l.5 2h4l.5-2a8 8 0 0 0 3-1l2 2 3-3-2-2a8 8 0 0 0 0-6z"/></svg><span>Workers</span></button>
+    </nav>
+
+    <footer class="hud-bottom-rail" aria-label="ROVOR Digital footer">
+      <div class="footer-brand"><img src="./rovor-mark.svg" alt="" /> ROVOR DIGITAL</div>
+      <span class="footer-ornament" aria-hidden="true"></span>
+      <span>INNOVATION &nbsp; // &nbsp; EFFICIENCY &nbsp; // &nbsp; FREEDOM</span>
+    </footer>
+    <button type="button" id="hudWorkspaceClose" class="hud-workspace-close" aria-label="Close active workspace" hidden>← Back to HUD</button>
+    <main>
+      <section class="tab-view active" id="tab-overview" role="tabpanel" aria-labelledby="tab-button-overview" tabindex="0">
+        <div class="section-grid two-thirds">
+          <div class="hud-panel">
+            <div class="panel-title">CONNECTED SYSTEMS</div>
+            <div class="system-network" id="systemNetwork"></div>
+          </div>
+          <div class="hud-panel compact-panel">
+            <div class="panel-title">TASK PRIORITIES</div>
+            <div class="overview-columns">
+              <div>
+                <h3>Ready</h3>
+                <div id="readyTasks" class="task-stack"></div>
+              </div>
+              <div>
+                <h3>Blocked</h3>
+                <div id="blockedTasks" class="task-stack"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-view" id="tab-tasks" role="tabpanel" aria-labelledby="tab-button-tasks" tabindex="0" hidden>
+        <div class="hud-panel">
+          <div class="panel-title">TASK QUEUE</div>
+          <div class="task-toolbar">
+            <input id="taskSearch" type="text" placeholder="Search task id, title, or owner" />
+            <select id="statusFilter">
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="blocked">Blocked</option>
+              <option value="ready">Ready</option>
+            </select>
+          </div>
+          <div id="taskTable" class="task-table"></div>
+        </div>
+      </section>
+
+      <section class="tab-view" id="tab-systems" role="tabpanel" aria-labelledby="tab-button-systems" tabindex="0" hidden>
+        <div class="section-grid triple">
+          <div class="hud-panel">
+            <div class="panel-title">SYSTEM STATUS</div>
+            <div id="systemsGrid" class="systems-grid"></div>
+          </div>
+          <div class="hud-panel">
+            <div class="panel-title">EXECUTION BOUNDARY</div>
+            <div class="boundary-diagram">
+              <div class="boundary-node ok">Public GitHub</div>
+              <div class="boundary-arrow"></div>
+              <div class="boundary-node warn">Hosted CI</div>
+              <div class="boundary-arrow dashed"></div>
+              <div class="boundary-node danger">Private Mac Executor</div>
+              <div class="boundary-arrow dashed"></div>
+              <div class="boundary-node danger">Native Apps</div>
+            </div>
+            <p class="muted">Verified source does not imply permission to execute on private hosts. That boundary stays visible here.</p>
+          </div>
+          <div class="hud-panel">
+            <div class="panel-title">CONTROL LOOP</div>
+            <ol class="control-loop">
+              <li>Human request enters queue</li>
+              <li>Capability route checked</li>
+              <li>Atomic task intake / PR change</li>
+              <li>Hosted checks validate source</li>
+              <li>Evidence recorded back to queue</li>
+              <li>Human / client approval remains separate</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-view" id="tab-repo" role="tabpanel" aria-labelledby="tab-button-repo" tabindex="0" hidden>
+        <div class="section-grid two-thirds">
+          <div class="hud-panel">
+            <div class="panel-title">REPOSITORY MODULE MAP</div>
+            <div id="repoBars" class="repo-bars"></div>
+          </div>
+          <div class="hud-panel">
+            <div class="panel-title">SOURCE OF TRUTH</div>
+            <div class="source-list">
+              <div><strong>Repo</strong><span id="repoName"></span></div>
+              <div><strong>Commit</strong><span id="commitSha"></span></div>
+              <div><strong>Routing Coverage</strong><span id="routeCoverage"></span></div>
+              <div><strong>Open PRs</strong><span id="prCount"></span></div>
+            </div>
+            <div class="muted block-top" id="repoDataHelp">Connecting to GitHub for current information…</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-view" id="tab-workers" role="tabpanel" aria-labelledby="tab-button-workers" tabindex="0" hidden>
+        <div class="hud-panel">
+          <div class="panel-title">WORKER ROUTING</div>
+          <div id="workersGrid" class="workers-grid"></div>
+        </div>
+      </section>
+    </main>
+    <div id="hudCommandDialog" class="hud-overlay" role="dialog" aria-modal="true" aria-labelledby="hudCommandTitle" hidden>
+      <div class="hud-overlay-backdrop" data-hud-close></div>
+      <div class="hud-command-window">
+        <header class="hud-dialog-head"><div><small>ROVOR DIGITAL // CONTROL DECK</small><h2 id="hudCommandTitle">Command console</h2></div><button type="button" class="hud-close" data-hud-close aria-label="Close command console">×</button></header>
+        <label class="hud-command-label" for="hudCommandSearch">Search views, tasks and actions</label>
+        <input id="hudCommandSearch" autocomplete="off" spellcheck="false" placeholder="Try: active tasks, GitHub, refresh…" />
+        <div id="hudCommandResults" class="hud-command-results" role="list"></div>
+        <footer>⌘ / Ctrl + K to open · ↑ ↓ to select · Enter to run · Esc to close</footer>
+      </div>
+    </div>
+    <div id="hudDrawer" class="hud-overlay hud-detail-overlay" role="dialog" aria-modal="true" aria-labelledby="hudDrawerTitle" hidden>
+      <div class="hud-overlay-backdrop" data-hud-close></div>
+      <aside class="hud-detail-window">
+        <header class="hud-dialog-head"><div><small>ROVOR DIGITAL // INSPECTOR</small><h2 id="hudDrawerTitle">Details</h2></div><button type="button" class="hud-close" data-hud-close aria-label="Close detail panel">×</button></header>
+        <div id="hudDrawerBody" class="hud-drawer-body"></div>
+      </aside>
+    </div>
+    <button id="hudHelpBtn" class="hud-help-fab" type="button" aria-haspopup="dialog" aria-controls="hudDrawer" title="Keyboard shortcuts">?</button>
+  </div>
+
+  <script src="live-data.js"></script>
+  <script src="reference-hud.js"></script>
+  <script src="orbital-earth.js"></script>
+  <script src="hud-experience.js"></script>
+  <script src="cinematic-layout.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

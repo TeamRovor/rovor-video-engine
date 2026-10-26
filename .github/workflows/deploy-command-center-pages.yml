@@ -1,0 +1,100 @@
+name: Deploy ROVOR Command Center to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "dashboard/command-center/**"
+      - ".github/workflows/deploy-command-center-pages.yml"
+      - "coordination/cloud-shifts/**"
+      - "integrations/hud-cloud/cloud-activity.mjs"
+      - "integrations/hud-cloud/build-cloud-activity.mjs"
+      - "integrations/hud-cloud/verify-cloud-activity.mjs"
+      - "tests/test_hud_cloud_activity.mjs"
+      - "tests/test_hud_cloud_reviews.mjs"
+      - "coordination/cloud-reviews/**"
+      - "integrations/hud-cloud/cloud-reviews.mjs"
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      source_ref:
+        type: string
+        required: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: command-center-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.source_ref || github.sha }}
+
+      - name: Set up Node.js for release checks
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Verify Command Center before publishing
+        run: |
+          node --check dashboard/command-center/live-data.js
+          node --check dashboard/command-center/reference-hud.js
+          node --check dashboard/command-center/orbital-earth.js
+          node --check dashboard/command-center/hud-experience.js
+          node --check dashboard/command-center/cinematic-layout.js
+          node --check dashboard/command-center/app.js
+          node --check dashboard/command-center/service-worker.js
+          node --check dashboard/command-center/exact/app.js
+          node --check dashboard/command-center/exact/live-panels.js
+          node --check dashboard/command-center/exact/service-worker.js
+          node --test dashboard/command-center/tests/live-data.test.js dashboard/command-center/tests/request-budget.test.js dashboard/command-center/tests/reference-hud.test.js dashboard/command-center/tests/hud-experience.test.js dashboard/command-center/tests/cinematic-layout.test.js dashboard/command-center/tests/electric-blue-theme.test.js dashboard/command-center/tests/exact-reference.test.js dashboard/command-center/tests/exact-hud.test.cjs dashboard/command-center/tests/default-exact.test.cjs dashboard/command-center/tests/exact-live-panels.test.cjs dashboard/command-center/tests/native-v8-5.test.cjs dashboard/command-center/tests/native-v8-9.test.cjs dashboard/command-center/tests/native-v8-6.test.cjs dashboard/command-center/tests/native-v8-7.test.cjs
+
+      - name: Verify workforce control center cannot dispatch and source is pinned
+        run: node --test dashboard/command-center/tests/workforce-control.test.cjs
+
+      - name: Verify cloud completion evidence and original HUD preservation
+        run: node --test tests/test_hud_cloud_activity.mjs tests/test_hud_cloud_reviews.mjs
+
+      - name: Read back actual cloud result commits and CI evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node integrations/hud-cloud/verify-cloud-activity.mjs
+
+      - name: Prepare and verify NASA Earth textures
+        run: bash dashboard/command-center/tools/prepare-earth-textures.sh
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Add recorded cloud work to the Pages artifact
+        run: |
+          ROVOR_PAGES_DIR="$RUNNER_TEMP/rovor-command-center-pages"
+          mkdir -p "$ROVOR_PAGES_DIR"
+          cp -R dashboard/command-center/. "$ROVOR_PAGES_DIR/"
+          node integrations/hud-cloud/build-cloud-activity.mjs "$ROVOR_PAGES_DIR"
+
+      - name: Upload static Command Center
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/rovor-command-center-pages
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+

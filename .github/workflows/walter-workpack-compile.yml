@@ -1,0 +1,38 @@
+name: Walter OmniRoute workpack compatibility
+on:
+  pull_request:
+    paths:
+      - "tools/walter_workpack_compile.py"
+      - "tests/test_walter_workpack_compile.py"
+      - "coordination/walter-approved-research-backlog.json"
+      - "coordination/omniroute-workpacks/walter-v1-*.json"
+      - ".github/workflows/walter-workpack-compile.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/walter_workpack_compile.py"
+      - "tests/test_walter_workpack_compile.py"
+      - "coordination/walter-approved-research-backlog.json"
+      - "coordination/omniroute-workpacks/walter-v1-*.json"
+      - ".github/workflows/walter-workpack-compile.yml"
+permissions:
+  contents: read
+jobs:
+  packet-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Verify exact checked-in packet compilation
+        run: python tools/walter_workpack_compile.py
+      - name: Unit and safety regressions
+        run: python -m unittest discover -s tests -p test_walter_workpack_compile.py -v

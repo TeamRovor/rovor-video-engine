@@ -1,0 +1,29 @@
+/* Optional authentic satellite surface drift for the approved ROVOR reference.
+   Off by default: original image stays byte-for-byte and pixel-for-pixel identical.
+   Motion is confined to planet surfaces, so central brand mark remains readable. */
+.earth-motion[hidden]{display:none!important}
+.earth-motion{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.earth-motion-globe {
+  position:absolute;left:39.1%;top:29%;width:21.8%;height:32.8%;border-radius:50%;
+  background-image:url("../earth-blue-marble.png");
+  background-repeat:repeat-x;background-size:250% 100%;background-position:0 center;
+  opacity:.38;mix-blend-mode:screen;
+  -webkit-mask-image:radial-gradient(ellipse at center,transparent 0 55%,#000 71%,#000 88%,transparent 98%);
+  mask-image:radial-gradient(ellipse at center,transparent 0 55%,#000 71%,#000 88%,transparent 98%);
+  animation:earth-surface-turn 240s linear infinite;
+}
+.earth-motion-night {
+  position:absolute;left:24.6%;top:62.5%;width:50.9%;height:17%;
+  border-radius:50% 50% 0 0;
+  background-image:url("../earth-night.png");background-size:210% 210%;
+  background-position:30% 48%;background-repeat:repeat-x;
+  opacity:.12;mix-blend-mode:screen;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 20%,transparent 85%);
+  mask-image:linear-gradient(180deg,transparent 0,#000 20%,transparent 85%);
+  animation:earth-city-turn 270s linear infinite;
+}
+@keyframes earth-surface-turn {to{background-position:250% center}}
+@keyframes earth-city-turn {to{background-position:230% 48%}}
+.motion-off .earth-motion *,[hidden] .earth-motion *,body:not(.earth-motion-on) .earth-motion *,
+.earth-motion-off .earth-motion *{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.earth-motion{display:none!important}.earth-motion *{animation:none!important}}

@@ -1,0 +1,40 @@
+name: HUD OmniRoute live bridge checks
+on:
+  pull_request:
+    paths:
+      - 'tools/hud_employee_snapshot.py'
+      - 'tests/test_hud_employee_snapshot.py'
+      - 'tools/hud_omniroute_bridge.mjs'
+      - 'tools/start_hud_live_sync.sh'
+      - 'dashboard/command-center/native-v8-9/live-omniroute.js'
+      - 'tests/test_hud_omniroute*'
+      - '.github/workflows/hud-omniroute-live-sync.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/hud_employee_snapshot.py'
+      - 'tests/test_hud_employee_snapshot.py'
+      - 'tools/hud_omniroute_bridge.mjs'
+      - 'dashboard/command-center/native-v8-9/live-omniroute.js'
+      - 'tests/test_hud_omniroute*'
+permissions:
+  contents: read
+jobs:
+  live-bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check dashboard/command-center/native-v8-9/live-omniroute.js
+      - run: sh -n tools/start_hud_live_sync.sh
+      - run: python3 -m unittest discover -s tests -p test_hud_employee_snapshot.py -v
+      - run: node --test tests/test_hud_omniroute_bridge.mjs
+      - run: node tests/test_hud_omniroute_live.browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hud-live-sync-responsive-evidence
+          path: dashboard/command-center/qa-screenshots/live-sync/
+          if-no-files-found: warn

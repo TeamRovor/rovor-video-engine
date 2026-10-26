@@ -1,0 +1,126 @@
+# When Amar or Evan says “work”
+
+Use GitHub as shared project memory. Start from **latest main**, even when your code branch is older.
+The goal is a multi-capability Rovor Digital AI, **ChatGPT-first now**, with selected local-PC execution and verified ghost employees later. Read [ROVOR-AI-PLAN.md](ROVOR-AI-PLAN.md) for the canonical architecture/build phases and `architecture/CHATGPT-WORKFLOWS.md` for present tool use. Video is one capability; business delivery, research, websites, design, documents and analysis also advance the mission.
+For video work, preserve approved source art and original narration. Final video previews target 1080p60 and at least 30 seconds;
+technical test success is separate from Amar's visual approval.
+
+**Hybrid workforce provider policy (owner direction, Oct 23, 2026):** Read [architecture/HYBRID-24-7-GHOST-WORKFORCE.md](architecture/HYBRID-24-7-GHOST-WORKFORCE.md) and [coordination/ghost-provider-policy.json](coordination/ghost-provider-policy.json) before choosing AI providers or claiming unattended work. Preserve Walter and the seven Breaking Bad employee names; Gemini plans, Groq/NVIDIA NIM handle fast tasks, Mistral specializes in code, OpenRouter is **verified-free-only fallback**, and Cloudflare Cron+D1 is the proposed cloud coordinator. This is **not deployed** and does not confer Mac access. Respect provider eligibility, $0 default spend, privacy limits, persistent STOP and existing task ownership; do not add a second Mac scheduler.
+
+## OmniRoute operator loop — one snapshot, then implement (Oct 24, 2026)
+
+When the requested work concerns **24/7 OmniRoute workers or ROVOR HUD workload distribution**, do not restart discovery, ask for repeated terminal logs, rerun the macOS installer, introduce another scheduler or spend a chat session only updating blockers.
+
+- **One read-only operator entrypoint:** `tools/omniroute_ops_snapshot.py` on main (PR #152, tests Python 3.9/3.11). It is a standalone source program: the existing Mac clone can `git fetch origin main` and execute `git show <reviewed-commit>:tools/omniroute_ops_snapshot.py | python3 -` once. Its sanitized JSON combines actual SQLite research claims/outcome quality, recent scheduler heartbeat, configured ROVOR model IDs/combos, provider connection count, local CLI version, model catalogue presence and quota status. **No new worker installation.**
+- **As of the verified real Mac audits:** OmniRoute CLI is **3.8.52**, nine configured provider connections but only **three distinct ROVOR-routed models**, with all eight specialist roles sharing the fast two-model combo; **27** recent claim events gave **10 review-ready drafts**, **12 not-ready model attempts** and **5 pending/failed review**. These are timestamped observations, not timeless facts or 27 approved outputs. Prefer a fresh single snapshot over quoting these values later.
+- **Selection priority:** Raise useful, review-ready outputs first, then use each *individually verified* model at proportional input/output sizes with quota/reset-aware alternative selection. PR #144 implemented conservative capability selection; PR #146 added shared-account SQLite atomic reservations; PR #147 integrated an opt-in hook into PR #137 development source, **not** the installed Mac runtime. No nine-way utilization proof or model-to-worker allocation yet. A `:free` suffix or model catalogue is never proof of $0 billing or a working response.
+- **No-loop rule:** If only GitHub is connected, make the next scoped, independently testable code improvement or review actual CI rather than asking for the same Mac diagnostics again. Distinguish merged source, installed host service, real model inference, review-ready draft and human-accepted deliverable. New host actions need direct Mac access/explicit deployment control; do not claim access or success from GitHub-only evidence.
+
+## One-time instruction for Evan's ChatGPT
+
+> Work on TeamRovor/rovor-video-engine. Whenever I say “work”, read the latest main WORK.md and AGENTS.md through GitHub, then follow that startup, claim, verification and handoff workflow. Use the efficiency lane unless I give another priority; when it has no eligible work, inspect other capability-matched tasks under the shared roadmap. Verify your actual access; do not assume you can control this computer. Continue useful non-overlapping work and publish a precise handoff before stopping.
+
+This establishes the instruction in that conversation. A new chat needs this prompt again (or an explicit
+persistent project instruction). Repository files do not automatically configure ChatGPT or wake a computer.
+
+## 1. Read a small, fresh briefing
+
+Read `AGENTS.md`, `coordination/tasks.json`, `coordination/work-routing.json`, and this file from the same
+main revision. Check open PRs and the selected task's linked evidence. Read the relevant branch checkpoint
+and scoped code only after selecting a candidate. Do not reload all history or rerun full renders every session.
+`PROJECT-LOOP.md` and `REMOTE-EVAN-GITHUB.md` give deeper collaboration and access guidance.
+
+The JSON task queue is the only ownership/dependency record. Routing JSON adds capability and lane hints;
+it is not a second task queue. Missing routing means inspect and classify, never guess. Queue `done` can
+mean a tested draft is complete; inspect its evidence before assuming merged, deployed, or visually approved.
+
+## 2. Establish capabilities and choose work
+
+Use a stable participant/session identifier; resume only an exact matching active claim. Being on Evan's
+computer does not make you the owner of the existing Keona session. Do not release a blocked or stale claim.
+
+Confirm GitHub read/write separately from hosted Actions access, local execution, original assets, visual
+inspection, and native Moho runtime. Do not print credentials or full local configuration files.
+GitHub-only sessions can work on repository code, reviews and documentation. Hosted Windows tests do not
+prove Evan's laptop works. A blocked local setup must not consume every session or prevent independent work.
+
+With a local checkout that contains this helper (PowerShell supports the same command):
+
+```sh
+git fetch origin
+python tools/work_brief.py --ref origin/main --participant "Evan / session-name" --lane efficiency --capability github-read --capability github-write --fallback-any-lane
+```
+
+Use `py -3` on Windows or `python3` on Mac if needed. Add `--capability hosted-ci` only when established;
+add `local-exec`, `original-assets`, `visual-review`, or `moho-runtime` only when actually available.
+The helper is read-only, uses Python's standard library, does not fetch, and does not claim or execute work.
+`--json` produces a machine-readable packet. It reads queue and routing from one resolved commit.
+A local working-copy brief explicitly does not establish freshness.
+
+The brief now reports `routing_coverage` and `selection_mode`. `--fallback-any-lane` is opt-in: it checks other lanes **only when no eligible requested-lane task exists**, and never circumvents the owner, dependency, scope or capability gates. A new task lacking an explicit entry in `coordination/work-routing.json` is not eligible; classify it before claiming. Route maintenance and examples: `coordination/ROUTING-IMPROVEMENTS.md`. This improves work discovery, **not** autonomous execution or model access.
+
+**GitHub connector only:** follow exactly the same rules by reading the two JSON files. Reject done,
+owned/blocked, dependency-blocked and overlapping tasks, then reject tasks missing capabilities or outside
+the selected lane. Prefer your own eligible active task, then ready tasks by lowest numeric priority and ID.
+No eligible task means inspect current evidence and propose one bounded independent task with scope,
+acceptance and capability requirements. Add it to the shared queue/routing and claim it before implementation.
+Never invent a task ID from an old document or take over someone else's active task.
+
+Evan's default lane is Windows portability, measured cache/resume efficiency, memory and reliability.
+Amar's animation lane owns speech accuracy, acting, visual quality and Moho integration. These are routing
+preferences, not permission to override claims. Minimize coordination overhead: one task, one useful result,
+one explicit next action. Reuse existing branches, tools and reports.
+
+## 3. Publish the claim before editing
+
+Use the actual relevant branch and bounded file/subsystem scopes. In main `coordination/tasks.json`, set
+`status: active`, `owner`, actual UTC `updated_at`, `next_update`, `next_action`, and concrete `acceptance`.
+Validate with `python tools/project_loop.py check`. Connector-only sessions must have equivalent validation
+run in an authorized execution environment or existing CI before implementation; do not report unrun checks.
+Use the current file blob SHA for contents updates, or a non-force commit update against the expected head.
+If GitHub rejects a stale write, reread and reapply only your task change. Never replace others' queue edits.
+Re-read main after publishing and check for concurrent/overlapping claims. Stop overlapping work if one appears.
+A branch-only claim is proposed, not shared ownership. GitHub updates are not a distributed task lock.
+
+For new tasks, use `tools/task_routing_pair.py` and `coordination/TASK-INTAKE.md` to validate the task and route together. Review both changes and commit both JSON files in one Git commit. For GitHub-connected sessions, prefer the verified Git-data transaction: read the same exact main commit and its tree, validate the new task and route against both pinned JSON files, create one two-file tree and one commit, then update main with **force=false** and a checked prior head. If another session moved main, refresh and reconsider; never overwrite or force an update. `tools/github_atomic_task_intake.py` and `coordination/ATOMIC-GITHUB-INTAKE.md` document the equivalent optional local CLI with dry-run as the default. Never paste credentials. If atomic Git-data operations are unavailable, coordinate the pair on a review branch rather than leave an unrouted task on main. No intake method creates a computer runtime or executes ghost employee tasks.
+
+## 4. Implement and verify the smallest useful result
+
+Inspect the current worktree before changing branches; preserve uncommitted work. Use an isolated branch
+from the appropriate existing development branch when needed. Do not merge experimental branches merely
+to obtain coordination files. With connector access, edit the relevant branch directly through supported tools.
+
+Fix demonstrated failures first. Run focused relevant checks, reuse valid evidence for unchanged work, and
+broaden tests only for a concrete risk. Measure speed/cache improvements against the same input, settings,
+commit and platform; do not invent speedup figures. Never disable correctness gates to produce a green result.
+If a blocker cannot be resolved with available capabilities, record it precisely and choose independent work.
+
+## 5. Leave a handoff another chat can act on
+
+Publish source changes and update your existing main queue entry. Include this information in its evidence,
+next action and linked PR description/checkpoint (do not create another owner table):
+
+- Task ID, owner, exact branch and commit; PR URL; whether proposed, merged, runtime-verified or visually approved.
+- What changed and which files; which Rovor capability/business outcome it advances.
+- Exact commands, platform, results, CI run links, and checks NOT run.
+- Current blocker, required input/capability, next executable action and next checkpoint.
+- Status: `active` to continue, `blocked` to retain a blocked claim, `done` with evidence, or `ready` with null
+  owner only after an explicit release/handoff. Preserve prior work/evidence when releasing.
+
+Refresh main before the handoff write. Never declare a PR integrated merely because it is pushed or green.
+Do not claim chats, private inputs, installations or computer state synchronize through GitHub. The next
+session reads the handoff and resumes from evidence instead of repeating setup or guessing what happened.
+
+## Business outcomes and unattended groundwork
+
+For business-efficiency work, read `business/OPERATING-SYSTEM.md` and `business/operating-plan.json`.
+Use sales, delivery or operations lanes as appropriate; Evan's existing efficiency default remains intact.
+Prefer a concrete accepted deliverable or removal of a real bottleneck over more speculative infrastructure.
+Use the existing queue for business tasks too. Templates under `business/templates/` make intake and handoffs
+consistent; they are not filled client records or permission to send/publish anything.
+
+The read-only operations worker and `Rovor business operations` GitHub workflow produce a report on relevant
+repository changes. They can run while people are away, but do not perform the recommended tasks or start
+ChatGPT on either computer. Reports identify input/code hashes and observation time; refresh live state
+before claiming. For actual unattended rendering, extend the existing reviewed PR #13 worker path only after
+its host/adapter/rig prerequisites are verified. See the operating system document for the staged rollout.

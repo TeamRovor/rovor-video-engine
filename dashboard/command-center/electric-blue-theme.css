@@ -1,0 +1,126 @@
+/* ROVOR Digital — monochrome electric-blue cockpit theme.
+   Status information is retained in text, shape, and labels; color alone does
+   not indicate an operational claim. Loaded last, after all legacy CSS. */
+:root {
+  --green:#90d7ff;
+  --yellow:#a7b9da;
+  --red:#d5e7ff;
+  --orange:#5daeff;
+  --orange2:#dbefff;
+  --cyan:#d9f2ff;
+  --cyan2:#4d9cff;
+  --blue-status-bright:#b0e6ff;
+  --blue-status-live:#59b8ff;
+  --blue-status-idle:#7896bd;
+  --blue-status-alert:#e1efff;
+}
+
+/* Online/claimed/verified lights are luminous BLUE — never green. */
+.header-status-led,
+body[data-source-mode="live"] .header-status-led,
+.source-live-pill::before,
+body[data-source-mode="live"] .source-live-pill::before,
+.status-light.active,
+.status-light.ok,
+.evidence-dot.verified,
+.status-light.verified,
+.header-dot {
+  background:#62baff!important;
+  border-color:#88d4ff!important;
+  box-shadow:0 0 8px rgba(83,166,255,.8),0 0 16px rgba(52,136,255,.35)!important;
+}
+.status-light.active,.status-light.ok,
+.evidence-dot.verified {outline:1px solid rgba(171,221,255,.22);outline-offset:2px}
+.source-live-pill,
+.sync-pill.live {
+  color:#c2eaff!important;
+  background:rgba(30,96,180,.2)!important;
+  border-color:rgba(121,191,255,.66)!important;
+}
+.sync-pill.live {text-shadow:0 0 8px rgba(78,158,255,.35)}
+/* Claimed is not necessarily running: label is the authoritative state. */
+.task-state.active,
+.pill.verified,.pill.healthy,.pill.ok,
+.boundary-node.ok {
+  color:#c4eaff!important;
+  background:rgba(28,101,193,.23)!important;
+  border-color:rgba(104,185,255,.55)!important;
+  box-shadow:inset 0 0 11px rgba(56,137,229,.12),0 0 8px rgba(48,119,219,.12)!important;
+}
+.task-state.active {font-weight:650;letter-spacing:.06em}
+/* Idle/unverified states are cool steel blue and are visually less luminous. */
+.status-light.ready {
+  background:#789cda!important;
+  box-shadow:0 0 8px rgba(102,159,237,.5)!important;
+}
+.status-light.done {background:#8fa8c7!important;box-shadow:none!important}
+.task-state.ready,.pill.development,.pill.conditional,.pill.mixed,
+.sync-pill.snapshot {
+  color:#bfd2ef!important;
+  background:rgba(71,95,141,.23)!important;
+  border-color:rgba(111,145,199,.46)!important;
+}
+body[data-source-mode="snapshot"] .header-status-led{
+  background:#92aacb!important;box-shadow:0 0 7px rgba(120,160,217,.3)!important;
+}
+body[data-source-mode="snapshot"] .source-live-pill::before{
+  background:#92aacb!important;box-shadow:0 0 7px rgba(120,160,217,.3)!important;
+}
+/* Critical/blocked state: bright outlined marker + explicit text, not green,
+   yellow, or red. Dashed outline distinguishes it from an online signal. */
+.status-light.blocked,
+body[data-source-mode="error"] .header-status-led,
+body[data-source-mode="error"] .source-live-pill::before {
+  background:#e6f2ff!important;
+  box-shadow:0 0 0 2px #081628,0 0 0 3px rgba(183,217,255,.85)!important;
+}
+.task-state.blocked,
+.pill.blocked,.pill.unverified,.pill.danger,
+.sync-pill.error {
+  color:#f4f8ff!important;
+  background:rgba(73,99,153,.22)!important;
+  border:1px dashed rgba(211,233,255,.9)!important;
+  box-shadow:inset 0 0 0 1px rgba(106,156,225,.12)!important;
+}
+body[data-source-mode="error"] .source-live-pill{
+  color:#f1f8ff!important;
+  border-style:dashed!important;
+}
+body[data-source-mode="error"] .header-status{
+  border-style:dashed!important;
+  border-color:rgba(206,226,255,.8)!important;
+}
+
+/* Make actual workload data coherent with the reference's blue bars. */
+.workload-fill.active {background:linear-gradient(90deg,#2876d7,#6dbdff)!important}
+.workload-fill.ready {background:linear-gradient(90deg,#35599e,#8db8ec)!important}
+.workload-fill.blocked {background:repeating-linear-gradient(135deg,#45699c 0 8px,#9cbce5 8px 13px)!important}
+.workload-fill.done {background:linear-gradient(90deg,#294b7b,#87a4cc)!important}
+
+/* A clean blue-only visual hierarchy throughout the workspaces and inspector. */
+.pill{border:1px solid rgba(116,172,237,.35)}
+.hud-btn.alt {
+  background:linear-gradient(135deg,rgba(35,94,174,.18),rgba(8,20,42,.75))!important;
+  border-color:rgba(116,183,255,.46)!important;
+  color:#c3e4ff!important;
+}
+.hud-btn.alt:hover{background:rgba(40,108,198,.35)!important}
+.warning-box,.hud-detail-warning {
+  border-color:rgba(161,194,236,.48)!important;
+  background:rgba(29,61,112,.18)!important;
+  color:#d7e9ff!important;
+}
+.warning-box{border-style:dashed!important}
+.warning-led{
+  background:#d1e9ff!important;
+  box-shadow:0 0 11px rgba(125,183,255,.45)!important;
+}
+.hud-detail-warning{border-left:3px dashed #c7e4ff!important}
+.repo-bar-fill {
+  background:linear-gradient(90deg,#356ed1,#9bd4ff)!important;
+  box-shadow:0 0 12px rgba(90,169,255,.3)!important;
+}
+.boundary-node.danger {border:1px dashed #cde5ff;color:#e0efff}
+.boundary-node.warn {border:1px dashed #8eaacf;color:#c2d4ef}
+.panel-title::before {background:#6cbbff!important;box-shadow:0 0 12px rgba(80,168,255,.6)!important}
+.source-live-pill {letter-spacing:.09em}

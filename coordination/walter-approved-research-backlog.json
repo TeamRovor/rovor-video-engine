@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "release": "walter-public-research-v1",
+  "visibility": "public-repository-metadata-only",
+  "status": "staged_not_integrated",
+  "policy": {
+    "max_jobs_per_tick": 1,
+    "existing_omniroute_max_claims_per_rolling_24h": 5,
+    "never_replay_seen_dedupe": true,
+    "auto_generate_followups": false,
+    "requires_live_free_model_verification": true,
+    "requires_separate_owner_model_use_opt_in": true,
+    "client_private_content_allowed": false,
+    "paid_fallback_allowed": false,
+    "external_effects_allowed": false,
+    "requires_STOP_absent": true
+  },
+  "jobs": [
+    {
+      "id": "walter-public-v1-mac-worker-stop-recovery",
+      "role": "mike",
+      "stage": 1,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-mac-worker-stop-recovery",
+      "sources": [
+        "architecture/HYBRID-24-7-GHOST-WORKFORCE.md",
+        "WORK.md"
+      ],
+      "task": "Use public worker architecture to explain safe recovery from restart, stopped jobs, stale lease, and unavailable OmniRoute, separating verified code paths from host-only checks.",
+      "deliverable": "One host-safe incident checklist with STOP checkpoints and no arbitrary shell.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-finalcut-source-first-process",
+      "role": "jane",
+      "stage": 1,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-finalcut-source-first-process",
+      "sources": [
+        "ROVOR-AI-PLAN.md",
+        "coordination/ghost-role-bootstrap.json"
+      ],
+      "task": "Propose a safe Final Cut Pro research-to-edit handoff that does not claim to open or modify a real library.",
+      "deliverable": "A five-stage read-only FCPXML research protocol with explicit GUI verification gates.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-moho-viseme-review",
+      "role": "jesse",
+      "stage": 1,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-moho-viseme-review",
+      "sources": [
+        "AGENTS.md",
+        "ROVOR-AI-PLAN.md"
+      ],
+      "task": "Design an evidence-first way to evaluate English lip-sync and 2D shot-planning accuracy without altering original artwork.",
+      "deliverable": "A reusable Moho viseme and scene QA rubric with rejection examples.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-blender-isolation-plan",
+      "role": "gale",
+      "stage": 1,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-blender-isolation-plan",
+      "sources": [
+        "AGENTS.md",
+        "ROVOR-AI-PLAN.md"
+      ],
+      "task": "Define a disposable Blender scene research protocol that distinguishes source review from actual Blender execution.",
+      "deliverable": "An isolated-scene verification checklist and render evidence specification.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-safe-client-intake",
+      "role": "gus",
+      "stage": 1,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-safe-client-intake",
+      "sources": [
+        "ROVOR-AI-PLAN.md",
+        "architecture/HYBRID-24-7-GHOST-WORKFORCE.md"
+      ],
+      "task": "Design a private client-intake review process from public company workflow goals without assuming account access.",
+      "deliverable": "A draft-only intake pipeline with permissions matrix and review handoffs.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-outreach-draft-review",
+      "role": "saul",
+      "stage": 1,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-outreach-draft-review",
+      "sources": [
+        "ROVOR-AI-PLAN.md",
+        "coordination/ghost-provider-policy.json"
+      ],
+      "task": "Build an ethical business outreach draft QA checklist from public ROVOR goals without sending messages.",
+      "deliverable": "A pre-send checklist covering truthfulness, consent, claims, deliverables, and approval.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-proof-before-done",
+      "role": "hank",
+      "stage": 1,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-proof-before-done",
+      "sources": [
+        "WORK.md",
+        "integrations/open-interpreter/HANK-CLOUD-WATCHDOG.md"
+      ],
+      "task": "Define evidence thresholds preventing source-only PRs or hosted CI from being mislabeled as Mac runtime achievements.",
+      "deliverable": "An evidence rubric for CI, Mac, model, deployment and customer-facing results.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-omniroute-failure-boundaries",
+      "role": "mike",
+      "stage": 2,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-omniroute-failure-boundaries",
+      "sources": [
+        "coordination/ghost-provider-policy.json",
+        "architecture/HYBRID-24-7-GHOST-WORKFORCE.md"
+      ],
+      "task": "Using the public provider policy, classify harmless read-only model failures versus uncertain side effects; never request or replay a failed ID.",
+      "deliverable": "A conservative fault decision tree with human-review escalation and free-only gates.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-fcpxml-handoff-acceptance",
+      "role": "jane",
+      "stage": 2,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-fcpxml-handoff-acceptance",
+      "sources": [
+        "AGENTS.md",
+        "architecture/HYBRID-24-7-GHOST-WORKFORCE.md"
+      ],
+      "task": "Specify what a research-only Final Cut handoff must prove before any native app automation is authorized.",
+      "deliverable": "A practical handoff contract with artifact identity, target-library gates, and rollback criteria.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-animation-checkpoints",
+      "role": "jesse",
+      "stage": 2,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-animation-checkpoints",
+      "sources": [
+        "AGENTS.md",
+        "ROVOR-AI-PLAN.md"
+      ],
+      "task": "Plan an auditable MP3-to-2D animation release process with source preservation and no invented 1080p60 render claims.",
+      "deliverable": "A checkpoint and visual QA specification including timing, staging and rejection evidence.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-render-confidence-rubric",
+      "role": "gale",
+      "stage": 2,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-render-confidence-rubric",
+      "sources": [
+        "AGENTS.md",
+        "ROVOR-AI-PLAN.md"
+      ],
+      "task": "Design repeatable Blender render QA gates for a source-only review with no actual scene access.",
+      "deliverable": "A QA matrix distinguishing synthetic render, host capture and approved video evidence.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-business-delivery-checkpoints",
+      "role": "gus",
+      "stage": 2,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-business-delivery-checkpoints",
+      "sources": [
+        "ROVOR-AI-PLAN.md",
+        "AGENTS.md"
+      ],
+      "task": "Draft an operational work queue for small-client digital projects using only the public ROVOR roadmap.",
+      "deliverable": "A finite stage/owner/approval matrix; no access to any client record.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-social-content-safety",
+      "role": "saul",
+      "stage": 2,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-social-content-safety",
+      "sources": [
+        "ROVOR-AI-PLAN.md",
+        "coordination/ghost-role-bootstrap.json"
+      ],
+      "task": "Propose evidence-based educational content ideas, without scheduling or posting to a real account.",
+      "deliverable": "A content approval worksheet with sourcing, no fabricated results and human approval.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    },
+    {
+      "id": "walter-public-v1-free-route-usage-audit",
+      "role": "hank",
+      "stage": 2,
+      "approved_for_proposal": true,
+      "dedupe_key": "walter-public-v1-free-route-usage-audit",
+      "sources": [
+        "coordination/ghost-provider-policy.json",
+        "architecture/HYBRID-24-7-GHOST-WORKFORCE.md"
+      ],
+      "task": "Design a strict cost and evidence audit for approved read-only OmniRoute jobs without asserting that model quotas are actually verified.",
+      "deliverable": "A no-spend usage ledger schema and high-risk fallback rejection cases.",
+      "acceptance": [
+        "Cite only exact supplied public sources",
+        "Distinguish confirmed repo evidence from proposed Mac/app actions",
+        "Leave an actionable next read-only check"
+      ],
+      "external_effects_allowed": false,
+      "model_inference_authorized_by_manifest": false
+    }
+  ]
+}
