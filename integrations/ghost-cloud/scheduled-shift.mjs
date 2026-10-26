@@ -47,7 +47,25 @@ export async function runScheduledShift(env, {replenish, tick, clock = Date.now,
             const denied=result.denied;
             const allDenied=denied&&typeof denied==='object'&&!Array.isArray(denied)&&
               Object.keys(denied).length===9&&Object.values(denied).every(x=>typeof x==='string'&&x.length>0);
-            reason=pending.n===0?'no_unattempted_jobs':allDenied?'no_eligible_providers':'unattempted_jobs_not_dispatched';
+            // The private tick can supply a read-only gate from its actual
+            // atomic claim checks. Persist only fixed, public-safe reason
+            // codes, never raw config, quotas, prompts or exception strings.
+            const safeProviders=new Set(['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface']);
+            const safeReasons=new Set(['no_matching_unattempted_job','global_daily_safety_cap',
+              'account_request_cap','account_reserved_token_cap','account_inflight_claim',
+              'account_minimum_interval','account_retry_after',
+              'failure_circuit_requires_review','claim_contention_or_unclassified_gate']);
+            const reports=result.blocked&&typeof result.blocked==='object'&&!Array.isArray(result.blocked)?
+              Object.entries(result.blocked):[];
+            let verifiedGate=null;
+            if(reports.length===1){
+              const [provider,record]=reports[0];
+              if(safeProviders.has(provider)&&record&&safeReasons.has(record.reason))
+                verifiedGate='claim_'+provider+'_'+record.reason;
+            }
+            reason=pending.n===0?'no_unattempted_jobs':
+              allDenied?'no_eligible_providers':
+              verifiedGate||'unattempted_jobs_not_dispatched';
           }
         }
       }
