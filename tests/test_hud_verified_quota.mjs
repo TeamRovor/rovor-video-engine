@@ -137,3 +137,25 @@ test('private cloud admission and verified cloud quota remain separate from gate
   assert(!noCloudLimit.includes('6 / 50 requests'));
   assert.match(noCloudLimit,/Cloud quota and reset: unknown/);
 });
+
+
+test('cloud PASS and FAIL receipts reflect actual backend verdict names',()=>{
+  const window={},document={getElementById:()=>({})};
+  const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
+  vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map});
+  const cloud={
+    execution_source:'cloud_provider',observed_at:Date.now(),
+    providers:[{provider:'groq',admission:'eligible',online_verified:false}],
+    attempts:[
+      {provider:'groq',employee:'Walter',title:'Owner accepted draft',status:'needs_review',human_review:'passed',started_at:Date.now()-3000},
+      {provider:'groq',employee:'Jane',title:'Owner rejected draft',status:'needs_review',human_review:'failed',started_at:Date.now()-2000},
+      {provider:'groq',employee:'Gus',title:'Pending draft',status:'needs_review',human_review:'not_recorded',started_at:Date.now()-1000}
+    ]
+  };
+  const html=window.ROVOR_QUOTA_BOARD.render(null,false,cloud);
+  assert.match(html,/Owner accepted draft/);
+  assert.match(html,/Owner rejected draft/);
+  assert.match(html,/PASS RECORDED/);
+  assert.match(html,/FAIL RECORDED/);
+  assert.equal((html.match(/AWAITING HUMAN REVIEW/g)||[]).length,1);
+});
