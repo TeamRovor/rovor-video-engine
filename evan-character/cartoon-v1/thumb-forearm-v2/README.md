@@ -7,3 +7,5 @@ V2 is a targeted background/matte edit of V1. Native composites show continuous 
 Core alpha percentiles min/p10/p50/p90/max: [251.0, 253.0, 254.0, 254.0, 254.0]; no fully255 core. Beyond8px from the half-alpha silhouette: 194 positive-alpha pixels, maxalpha1, totalmass0.760784 equivalent opaque pixels. Measurements only. Raw previews show colored RGB haze, but proper alpha composites do not show a broad rendered glow; do not key or delete transparent RGB.
 
 SOURCE PLATE ONLY. The current cuff-attachment construction is rejected: exposed proximal cut/underlap and cuff mismatch remain. No production component or final animation acceptance. See CARTOON-EVAN-THUMB-FOREARM-SOURCE.md and reviews/thumb-forearm-source-v1.json.
+
+Follow-up: Cuff-Registration.json plus evan-engine/cuff_registered_forearm.py now form an experimental registered working review component. The raw PNG remains a source plate. Reviewed held cuff samples hide the cap; production/animation acceptance remains false. See CARTOON-EVAN-CUFF-REGISTRATION.md.

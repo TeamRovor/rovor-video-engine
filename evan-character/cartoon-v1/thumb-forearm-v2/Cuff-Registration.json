@@ -1,0 +1,102 @@
+{
+  "sourceSha256": "f2063f694cd5a25e3dbbcb12edbdc2e9778c180e04a033dac46594873ee356b3",
+  "sourceSize": [
+    1024,
+    1536
+  ],
+  "sourceGuides": [
+    [
+      850,
+      599,
+      236
+    ],
+    [
+      1300,
+      675.5,
+      353
+    ],
+    [
+      1400,
+      694.5,
+      321
+    ]
+  ],
+  "targetGeometry": {
+    "shoulder": [
+      684,
+      405
+    ],
+    "elbow": [
+      749,
+      625
+    ],
+    "wrist": [
+      810,
+      762
+    ]
+  },
+  "cuffOpeningGuide": [
+    [
+      798,
+      638
+    ],
+    [
+      724,
+      677
+    ]
+  ],
+  "clothingExclusionPolygon": [
+    [
+      719,
+      680
+    ],
+    [
+      718,
+      665
+    ],
+    [
+      728,
+      653
+    ],
+    [
+      745,
+      642
+    ],
+    [
+      766,
+      634
+    ],
+    [
+      788,
+      634
+    ],
+    [
+      798,
+      638
+    ],
+    [
+      804,
+      658
+    ],
+    [
+      1024,
+      658
+    ],
+    [
+      1024,
+      1536
+    ],
+    [
+      0,
+      1536
+    ],
+    [
+      0,
+      680
+    ]
+  ],
+  "componentDomainYMax": 1350,
+  "underlapDepth": 20,
+  "productionAccepted": false,
+  "sourceAlphaModified": false
+}

@@ -19,3 +19,5 @@ The registration prototype and rejected variants remain frozen locally. No engin
 ## Next concrete work
 
 Derive the actual posed cuff-opening guide from the retained source boundary, then constrain the new forearm's proximal guides/underlap to it while preserving the distal wrist/hand construction. The current rigid plane extends past the curved cuff opening; more tail clipping cannot fix that mismatch. Require positive retained geometry and a hidden cap throughout wrist±15°, then review normal/slow native and branded shots. Do not expose thumbs-up on the low-arm lift or integrate with speech before the attachment passes. No further artwork generation is needed merely to replace this source plate.
+
+Follow-up: CARTOON-EVAN-CUFF-REGISTRATION.md now binds this source to a cuff-constrained working review component and supersedes the next-step section above.
