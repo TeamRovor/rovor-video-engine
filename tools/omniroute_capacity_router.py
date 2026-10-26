@@ -9,7 +9,7 @@ The caller must pass current, trusted host/provider attestations, not guesses.
 import math
 import re
 
-MODEL_ID = re.compile(r"^[a-z0-9][a-z0-9._:/-]{2,159}$")
+MODEL_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/@-]{2,159}$")
 TASK_ID = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{2,99}$")
 SKILL = re.compile(r"^[a-z][a-z0-9_]{1,31}$")
 MAX_EVIDENCE_AGE = 900
