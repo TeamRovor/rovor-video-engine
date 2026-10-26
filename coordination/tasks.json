@@ -736,7 +736,7 @@
       "id": "render-cache-file-identity",
       "title": "Prevent stale render resume after local dependency replacement",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Keona Windows desktop session",
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
@@ -744,14 +744,13 @@
         "subsystem:render-cache-file-identity"
       ],
       "depends_on": [],
-      "next_action": "Obtain and inspect a hosted regression run for commit 0d26634aa1408b720859fa000b62ccea55fac1ab; then close the task only after checks or runtime evidence are available.",
+      "next_action": "Hosted regression run 40251416651 passed on macOS, Ubuntu, and Windows at commit 0d26634aa1408b720859fa000b62ccea55fac1ab. Static review confirmed the file-identity and platform timestamp fields in fingerprint version 5; no local original-audio render was performed. Revisit after a material cache change or when local runtime inputs become available.",
       "acceptance": "A replaced tool/model file with matching path, size, and modification time produces a different resume fingerprint where filesystem identity metadata is supported; unrelated resume invalidation remains unchanged. Record static review and any hosted workflow results without claiming a render on Keona's laptop.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/7"
       ],
-      "updated_at": "2026-10-26T01:07:44Z",
-      "next_update": "When a hosted regression result is available for commit 0d26634aa1408b720859fa000b62ccea55fac1ab.",
-      "blocker": "The latest commit has a successful Vercel deployment status, but no automated regression workflow run is attached. No tests or local render were run in this session.",
+      "updated_at": "2026-10-26T01:11:58Z",
+      "next_update": "After a material cache change or when local Windows runtime inputs become available.",
       "evidence": [
         {
           "commit": "e8ef17c0c5c3f06224d6cc87b587385cf244d3ec",
@@ -766,6 +765,13 @@
           "check": "Reviewed the final cache fingerprint and explicit older-fingerprint resume error; confirmed PR #7 branch head and queried commit statuses/workflow runs.",
           "result": "Implementation published; PR head matches this commit. Vercel deployment status is success, but no automated regression workflow is attached. No tests or local render were run in this session.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/0d26634aa1408b720859fa000b62ccea55fac1ab"
+        },
+        {
+          "commit": "0d26634aa1408b720859fa000b62ccea55fac1ab",
+          "platform": "GitHub Actions: macos-latest, ubuntu-latest, windows-latest",
+          "check": "Portable engine regression checks; Python unittest discovery and actual reference-art/vector frame draw/decode smoke checks; static review of file_stamp and fingerprint version 5",
+          "result": "All three platform jobs PASS. The hosted suite ran against the exact PR #7 head. No local original-audio render or production media validation is claimed; the cache replacement identity branch was statically reviewed, not covered by a dedicated replacement-with-preserved-mtime test.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40251416651"
         }
       ]
     },
