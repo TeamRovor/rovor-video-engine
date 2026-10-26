@@ -75,7 +75,7 @@ function jobReceipts(provider,attempts){
      new Date(started).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'Unreported';
    const input=Number.isSafeInteger(a.tokens_input)&&a.tokens_input>=0?a.tokens_input:null;
    const output=Number.isSafeInteger(a.tokens_output)&&a.tokens_output>=0?a.tokens_output:null;
-   const approved=a.human_review==='approved',rejected=a.human_review==='rejected';
+   const approved=a.human_review==='passed',rejected=a.human_review==='failed';
    const review=approved?'PASS RECORDED':rejected?'FAIL RECORDED':'AWAITING HUMAN REVIEW';
    return '<li class="rvq-job"><div class="rvq-job-top"><span>'+short(a.employee||'Unassigned')+'</span><span>'+short(a.status.replaceAll('_',' '))+'</span></div>'+
      '<div class="rvq-job-title">'+short(a.title||a.task_id||'Untitled job')+'</div>'+
