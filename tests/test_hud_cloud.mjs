@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {spawnSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import worker, {handle, latest, sanitize} from '../integrations/hud-cloud/worker.mjs';
 import {publishOnce, validateTarget, isAllowedLocalReadPath} from '../tools/hud_telemetry_publisher.mjs';
@@ -238,4 +239,17 @@ test('private receiver checks nine sanitized connection slots and rejects identi
   // Legacy reporter remains usable, but does not claim per-account enabled status.
   delete d.connection_slots;
   assert.equal(sanitize(d,NOW).connection_slots,null);
+});
+
+test('HUD reporter CLI executes rather than silently returning success', () => {
+  const script = new URL('../tools/hud_telemetry_publisher.mjs', import.meta.url);
+  const attempt = spawnSync(process.execPath, [script.pathname, '--once'], {
+    encoding: 'utf8', timeout: 10000,
+    env: {...process.env, ROVOR_HUD_ORIGIN: 'http://not-a-secure-site.invalid'}
+  });
+  assert.equal(attempt.error, undefined);
+  assert.notEqual(attempt.status, 0,
+    'An invalid upload origin must not silently return success');
+  assert.match(attempt.stderr, /HUD reporting requires a configured HTTPS origin/);
+  assert.doesNotMatch(attempt.stdout, /HUD report delivered/);
 });
