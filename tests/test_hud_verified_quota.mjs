@@ -42,7 +42,7 @@ test('existing drawer quota board remains nine-connection grouped and escaped',(
   const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
   vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array});
   const conns=Array.from({length:9},(_,i)=>({provider:'p'+i,name:i===0?'<untrusted>':'p'+i,connection_count:1,enabled_count:1}));
-  const html=window.ROVOR_QUOTA_BOARD.render({connections:conns,quota:{records:[{provider:'p0',model_id:'modelX',used:25,total:100,used_percent:25,unit:'requests',reset_at:'2026-10-26T00:00:00Z',fetched_at:'2026-10-25T07:55:00Z',account_slot:1}]},models:[]},true);
+  const html=window.ROVOR_QUOTA_BOARD.render({connections:conns,quota:{records:[{provider:'p0',model_id:'modelX',used:25,total:100,used_percent:25,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:'2026-10-25T07:55:00Z',account_slot:1}]},models:[]},true);
   assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
   assert.match(html,/25\.0%/);
   assert.match(html,/RESET WINDOW/);
@@ -81,10 +81,10 @@ test('each of nine connection slots renders separately even when providers repea
     provider:g.provider,account_slot:i+1,enabled:i+1<=g.enabled_count
   })));
   const quota={records:[{provider:'groq',account_slot:3,model_id:'actual-model',
-    used:20,total:100,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:'2026-10-25T20:00:00Z'}]};
+    used:20,total:100,used_percent:20,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:'2026-10-25T20:00:00Z'}]};
   const html=window.ROVOR_QUOTA_BOARD.render({connections,connection_slots:slots,quota,snapshot_at:'2026-10-25T20:01:00Z'},true);
   assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
-  assert.equal((html.match(/20.0%/g)||[]).length,1);
+  assert.equal((html.match(/aria-label="Reported quota used"/g)||[]).length,1);
   assert.match(html,/Enabled according to gateway: 7 \/ 9/);
   assert.match(html,/DISABLED/);
   assert.match(html,/QUOTA UNKNOWN/);
@@ -96,4 +96,44 @@ test('each of nine connection slots renders separately even when providers repea
   const legacy=window.ROVOR_QUOTA_BOARD.render({connections,quota},true);
   assert.match(legacy,/ENABLEMENT UNKNOWN/);
   assert.match(legacy,/Unknown/);
+});
+
+test('private cloud admission and verified cloud quota remain separate from gateway quota',()=>{
+  const window={},document={getElementById:()=>({})};
+  const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
+  vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map});
+  const ts=Date.now();
+  const providers=Array.from({length:9},(_,i)=>({
+    provider:i===0?'openrouter':'provider'+i,
+    credentials_configured:true,admission:i===0?'eligible':'disabled_pending_verification',
+    online_verified:false,last_check:{status:'catalog_received'},
+    recorded_24h:i===0?{requests:11}:null,
+    quota:i===0?{status:'verified',observed_at:ts,used:6,limit:50,unit:'requests',resets_at:ts+3600000}:null
+  }));
+  const cloud={execution_source:'cloud_provider',observed_at:ts,providers};
+  // Cloud ledger can still report the nine configured provider identities when Mac is off.
+  const cloudOnly=window.ROVOR_QUOTA_BOARD.render(null,false,cloud);
+  assert.equal((cloudOnly.match(/class="rvq-provider"/g)||[]).length,9);
+  assert.match(cloudOnly,/CLOUD LEDGER ONLY/);
+  assert.match(cloudOnly,/CLOUD ROUTE NOT ELIGIBLE/);
+  assert.match(cloudOnly,/Verified cloud limit/);
+  assert.match(cloudOnly,/6 \/ 50 requests/);
+  assert.match(cloudOnly,/12.0/);
+  assert.match(cloudOnly,/NOT VERIFIED/);
+  const gateway={
+    connections:[{provider:'openrouter',name:'openrouter',connection_count:1,enabled_count:1}],
+    quota:{records:[{provider:'openrouter',account_slot:1,model_id:'providerCache',
+      used:0,total:50,used_percent:0,unit:'provider units',reset_at:new Date(ts+3600000).toISOString(),
+      fetched_at:new Date(ts).toISOString()}]}
+  };
+  const combined=window.ROVOR_QUOTA_BOARD.render(gateway,true,cloud);
+  assert.match(combined,/0.0%/);
+  assert.match(combined,/12.0/);
+  assert.match(combined,/OMNIROUTE CACHED REPORT/);
+  assert.match(combined,/CLOUD WORKFORCE \/ SEPARATE SOURCE/);
+  assert.equal((combined.match(/role="progressbar"/g)||[]).length,2);
+  const expired=structuredClone(cloud);expired.providers[0].quota.resets_at=ts-1;
+  const noCloudLimit=window.ROVOR_QUOTA_BOARD.render(null,false,expired);
+  assert(!noCloudLimit.includes('6 / 50 requests'));
+  assert.match(noCloudLimit,/Cloud quota and reset: unknown/);
 });
