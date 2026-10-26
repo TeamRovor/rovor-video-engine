@@ -45,7 +45,7 @@ function scheduleWidget() {
   poll();setInterval(poll,15000);document.addEventListener('visibilitychange',poll);
 }
 /** Fail-closed compiler: modifies no source except exact pre-approved default export. */
-export function compileScheduledShift(v2Source,shiftSource) {
+export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
   if(typeof v2Source!=='string'||typeof shiftSource!=='string'||
     !v2Source.includes('ROVOR_CLOUD_OPERATIONS_V1')||
     !v2Source.includes('const __cloud = (() =>')||
@@ -56,10 +56,25 @@ export function compileScheduledShift(v2Source,shiftSource) {
     !shiftSource.includes('export async function readScheduledShifts('))throw Error('unexpected_shift_module');
   const moduleSource=shiftSource.replace(/^export (?=async function (?:runScheduledShift|readScheduledShifts)\b)/gm,'');
   if(/^\s*(?:import|export)\s/m.test(moduleSource))throw Error('unsupported_shift_import');
-  const tag=createHash('sha256').update(shiftSource).digest('hex');
+  // Embed the already-reviewed immutable-Git feed into the same self-contained
+  // private Site bundle; no runtime import, new endpoint, or second scheduler.
+  let feedBundle='const __feed = null;\\n';
+  if(feedSource!==null){
+    const feedImport="import {validateJob} from './runtime.mjs';";
+    const workerImport="const {default:worker}=await import('./worker.mjs');";
+    if(typeof feedSource!=='string'||!feedSource.startsWith(feedImport)||!feedSource.includes(workerImport)||
+      !feedSource.includes('export async function replenishApprovedJobs('))throw Error('unexpected_approved_feed_source');
+    const body=feedSource.replace(feedImport,'const validateJob=__cloud.validateJob;')
+      .replace(workerImport,'const worker=__cloud.worker;')
+      .replace(/^export (?=async function (?:fetchCanonicalQueue|planApprovedJobs|replenishApprovedJobs)\\b)/gm,'');
+    if(/(^|\\n)\\s*(?:import|export)\\s/.test(body)||/import\\s*\\(/.test(body))throw Error('unsupported_approved_feed_shape');
+    feedBundle='const __feed = (() => {\\n'+body+'\\nreturn {replenishApprovedJobs};\\n})();\\n';
+  }
+  const tag=createHash('sha256').update(shiftSource+'\\0'+(feedSource||'')).digest('hex');
   const ui='<script>('+scheduleWidget.toString()+')();</script>';
   const ending='\n// ROVOR_CLOUD_SCHEDULED_SHIFT_V1 '+tag+'\n'+
     'const __shift = (() => {\n'+moduleSource+'\nreturn {runScheduledShift,readScheduledShifts};\n})();\n'+
+    feedBundle+
     'const __shiftUI = '+JSON.stringify(ui)+';\n'+
     'export default {\n'+
     "async fetch(request,env){\n"+
@@ -82,7 +97,7 @@ export function compileScheduledShift(v2Source,shiftSource) {
     " return response;\n"+
     "},\n"+
     "scheduled(_event,env,ctx){\n"+
-    ' if(env.GHOST_CRON_OPT_IN==='+JSON.stringify(OPT_IN)+')ctx.waitUntil(__shift.runScheduledShift(env,{replenish:__operations.replenish,tick:__cloud.tick}));\n'+
+    ' if(env.GHOST_CRON_OPT_IN==='+JSON.stringify(OPT_IN)+')ctx.waitUntil(__shift.runScheduledShift(env,{replenish:env.GHOST_FEED_COMMIT?(__feed?__feed.replenishApprovedJobs:async()=>{throw Error("approved_feed_not_bundled")}):__operations.replenish,tick:__cloud.tick}));\n'+
     "}\n};\n";
   return v2Source.slice(0,v2Source.lastIndexOf(TAIL))+ending;
 }
@@ -93,7 +108,9 @@ export function composeScheduledShift(directory,{apply=false,sourceDirectory=her
   const worker=safe(root,'worker/index.js'),built=safe(root,'dist/server/index.js');
   const initial=fs.readFileSync(worker,'utf8');
   if(initial!==fs.readFileSync(built,'utf8'))throw Error('site_bundle_mismatch');
-  const code=compileScheduledShift(initial,fs.readFileSync(path.join(sourceDirectory,'scheduled-shift.mjs'),'utf8'));
+  const code=compileScheduledShift(initial,
+    fs.readFileSync(path.join(sourceDirectory,'scheduled-shift.mjs'),'utf8'),
+    fs.readFileSync(path.join(sourceDirectory,'approved-feed.mjs'),'utf8'));
   const journalPath=safe(root,'drizzle/meta/_journal.json'),journal=JSON.parse(fs.readFileSync(journalPath,'utf8'));
   if(journal.version!=='7'||journal.dialect!=='sqlite'||!Array.isArray(journal.entries)||
     journal.entries.length<2||journal.entries.length>9999||
