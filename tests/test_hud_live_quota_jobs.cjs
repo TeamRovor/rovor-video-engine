@@ -25,7 +25,7 @@ const data={
     {provider:'openrouter',account_slot:1,enabled:true}
   ],
   quota:{records:[]},
-  workforce:{employees:[
+  workforce:{dispatch:{status:'recent_scheduler_report',reason:'paced_wait',claims_last_24h:46,max_claims_24h:50,queued:1,running:0,needs_review:92,last_tick_executed:0,next_eligible_at:Math.floor(now/1000)+900},employees:[
     {id:'mike',name:'Mike',status:'pending_or_failed_review',
      queued_jobs:0,running_jobs:0,online_verified:false,
      latest_job:{task:'Investigate scheduler pacing',
@@ -56,6 +56,12 @@ assert.match(html,/Draft safe blog checklist/);
 assert.match(html,/Mac workforce \/ local job history/);
 assert.match(html,/Investigate scheduler pacing/);
 assert.match(html,/Running not verified/);
+assert.match(html,/Reason: paced wait/);
+assert.ok(html.includes('46 / 50 claims in 24h'));
+assert.match(html,/Needs review 92/);
+const old=render({...data,workforce:{...data.workforce,dispatch:{status:'unavailable_or_stale'}}},true,cloud);
+assert.ok(!old.includes('46 / 50 claims in 24h'));
+assert.match(old,/No recent verified pacing counters available/);
 assert.ok(!html.includes('Mike is online'));
 
 assert.match(html,/Jane/);
