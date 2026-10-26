@@ -1,10 +1,10 @@
 name: HUD persistent telemetry
 on:
   pull_request:
-    paths: ['integrations/hud-cloud/**', 'coordination/cloud-shifts/**', 'tools/hud_telemetry_publisher.mjs', 'tests/test_hud_cloud.mjs', 'tests/test_hud_sites.mjs', 'tests/test_hud_cloud_activity.mjs', 'tests/test_hud_cloud_reviews.mjs', 'coordination/cloud-reviews/**', '.github/workflows/hud-cloud-reviews.yml', '.github/workflows/hud-cloud.yml']
+    paths: ['integrations/hud-cloud/**', 'coordination/cloud-shifts/**', 'tools/hud_telemetry_publisher.mjs', 'dashboard/command-center/native-v8-9/live-quota-board.js', 'tests/test_hud_cloud.mjs', 'tests/test_hud_sites.mjs', 'tests/test_hud_cloud_activity.mjs', 'tests/test_hud_cloud_reviews.mjs', 'coordination/cloud-reviews/**', '.github/workflows/hud-cloud-reviews.yml', '.github/workflows/hud-cloud.yml']
   push:
     branches: [main, feature/hud-persistent-telemetry-20261024, feature/hud-sites-adapter-20261024, feature/hud-cloud-activity-20261024, feature/hud-owner-reviews-20261024]
-    paths: ['integrations/hud-cloud/**', 'coordination/cloud-shifts/**', 'tools/hud_telemetry_publisher.mjs', 'tests/test_hud_cloud.mjs', 'tests/test_hud_sites.mjs', 'tests/test_hud_cloud_activity.mjs', 'tests/test_hud_cloud_reviews.mjs', 'coordination/cloud-reviews/**', '.github/workflows/hud-cloud-reviews.yml', '.github/workflows/hud-cloud.yml']
+    paths: ['integrations/hud-cloud/**', 'coordination/cloud-shifts/**', 'tools/hud_telemetry_publisher.mjs', 'dashboard/command-center/native-v8-9/live-quota-board.js', 'tests/test_hud_cloud.mjs', 'tests/test_hud_sites.mjs', 'tests/test_hud_cloud_activity.mjs', 'tests/test_hud_cloud_reviews.mjs', 'coordination/cloud-reviews/**', '.github/workflows/hud-cloud-reviews.yml', '.github/workflows/hud-cloud.yml']
 permissions:
   contents: read
 jobs:
