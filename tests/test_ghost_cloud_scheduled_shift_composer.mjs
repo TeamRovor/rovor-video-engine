@@ -140,12 +140,16 @@ test('one-bundle composer dry-run leaves original staged v2 untouched',t=>{
   assert.equal(r.prepared,false);assert.equal(r.deployment_performed,false);
   assert.equal(r.cron_trigger_registered,false);assert.equal(r.models_enabled,false);
   assert.equal(fs.readFileSync(path.join(dir,'worker/index.js'),'utf8'),v2);
-  assert.equal(fs.existsSync(path.join(dir,'drizzle/0002_cloud_scheduled_shift.sql')),false);
+  assert.equal(fs.existsSync(path.join(dir,'drizzle/0002_cloud_review_one_decision.sql')),false);
+  assert.equal(fs.existsSync(path.join(dir,'drizzle/0003_cloud_scheduled_shift.sql')),false);
+  assert.deepEqual(r.migrations,['0002_cloud_review_one_decision.sql','0003_cloud_scheduled_shift.sql']);
+  assert.equal(r.duplicate_review_preflight_required,true);
 });
-test('composer appends ONE schema-only migration and same Worker dist/source, no Site ID change',t=>{
+test('composer appends review UNIQUE index before scheduler in the existing Site journal',t=>{
   const dir=existing(t);
   const r=composeScheduledShift(dir,{apply:true});
-  assert.equal(r.prepared,true);assert.equal(r.migration,'0002_cloud_scheduled_shift.sql');
+  assert.equal(r.prepared,true);assert.equal(r.migration,'0003_cloud_scheduled_shift.sql');
+  assert.equal(r.review_migration,'0002_cloud_review_one_decision.sql');
   const out=fs.readFileSync(path.join(dir,'worker/index.js'),'utf8');
   assert.match(out,/ROVOR_CLOUD_SCHEDULED_SHIFT_V1/);
   assert.match(out,/const __feed = \(\(\) => \{/);
@@ -154,9 +158,45 @@ test('composer appends ONE schema-only migration and same Worker dist/source, no
   const manifest=JSON.parse(fs.readFileSync(path.join(dir,'.openai/hosting.json'),'utf8'));
   assert.equal(manifest.project_id,'appgprj_6add1e2cc8c08191839344b34d7dbf50');
   const journal=JSON.parse(fs.readFileSync(path.join(dir,'drizzle/meta/_journal.json'),'utf8'));
-  assert.equal(journal.entries.length,3);
-  assert.match(fs.readFileSync(path.join(dir,'drizzle/0002_cloud_scheduled_shift.sql'),'utf8'),/statement-breakpoint/);
+  assert.equal(journal.entries.length,4);
+  assert.equal(journal.entries[2].tag,'0002_cloud_review_one_decision');
+  assert.equal(journal.entries[3].tag,'0003_cloud_scheduled_shift');
+  const reviewSql=fs.readFileSync(path.join(dir,'drizzle/0002_cloud_review_one_decision.sql'),'utf8');
+  assert.match(reviewSql,/CREATE UNIQUE INDEX IF NOT EXISTS ghost_cloud_reviews_one_decision_per_attempt/);
+  assert.match(reviewSql,/ON ghost_cloud_reviews\(attempt_id\)/);
+  assert.match(fs.readFileSync(path.join(dir,'drizzle/0003_cloud_scheduled_shift.sql'),'utf8'),/statement-breakpoint/);
   assert.throws(()=>composeScheduledShift(dir,{apply:true}),/unexpected_existing_site_bundle/);
+});
+test('staged review migration enforces exactly one decision and stops on corrupt duplicates',t=>{
+  const dir=existing(t);composeScheduledShift(dir,{apply:true});
+  const sql=fs.readFileSync(path.join(dir,'drizzle/0002_cloud_review_one_decision.sql'),'utf8').replaceAll('--> statement-breakpoint','');
+  const seed=db=>db.exec('CREATE TABLE ghost_cloud_attempts(id TEXT PRIMARY KEY);CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL REFERENCES ghost_cloud_attempts(id),verdict TEXT NOT NULL)');
+  const healthy=new DatabaseSync(':memory:');
+  try{
+    seed(healthy);healthy.exec("INSERT INTO ghost_cloud_attempts VALUES('a');INSERT INTO ghost_cloud_reviews VALUES('review-a','a','passed')");
+    healthy.exec(sql);
+    assert.throws(()=>healthy.exec("INSERT INTO ghost_cloud_reviews VALUES('review-b','a','failed')"),/UNIQUE constraint failed/);
+    assert.equal(healthy.prepare('SELECT COUNT(*) n FROM ghost_cloud_reviews').get().n,1);
+  }finally{healthy.close();}
+  const corrupted=new DatabaseSync(':memory:');
+  try{
+    seed(corrupted);corrupted.exec("INSERT INTO ghost_cloud_attempts VALUES('a');INSERT INTO ghost_cloud_reviews VALUES('review-a','a','passed');INSERT INTO ghost_cloud_reviews VALUES('review-b','a','failed')");
+    assert.throws(()=>corrupted.exec(sql),/UNIQUE constraint failed/);
+    assert.equal(corrupted.prepare('SELECT COUNT(*) n FROM ghost_cloud_reviews').get().n,2);
+  }finally{corrupted.close();}
+});
+test('existing journaled owner review index is not restaged or reordered',t=>{
+  const dir=existing(t),jpath=path.join(dir,'drizzle/meta/_journal.json');
+  const journal=JSON.parse(fs.readFileSync(jpath,'utf8'));
+  const tag='0002_owner_review_one_decision';
+  fs.writeFileSync(path.join(dir,'drizzle',tag+'.sql'),'CREATE UNIQUE INDEX IF NOT EXISTS ghost_cloud_reviews_one_decision_per_attempt ON ghost_cloud_reviews(attempt_id);');
+  journal.entries.push({idx:2,version:'6',tag,breakpoints:true});
+  fs.writeFileSync(jpath,JSON.stringify(journal));
+  const r=composeScheduledShift(dir,{apply:true});
+  assert.equal(r.review_migration,'already_journaled');
+  assert.deepEqual(r.migrations,['0003_cloud_scheduled_shift.sql']);
+  assert.equal(fs.existsSync(path.join(dir,'drizzle/0002_cloud_review_one_decision.sql')),false);
+  assert.equal(JSON.parse(fs.readFileSync(jpath)).entries.length,4);
 });
 test('mismatched existing dist bundle fails without modifying staged v2',t=>{
   const dir=existing(t);

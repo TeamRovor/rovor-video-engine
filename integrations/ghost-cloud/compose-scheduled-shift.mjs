@@ -117,19 +117,42 @@ export function composeScheduledShift(directory,{apply=false,sourceDirectory=her
     journal.entries.some((e,i)=>e.idx!==i||!/^\d{4}_[a-z0-9_]+$/.test(e.tag)||!fs.existsSync(safe(root,'drizzle/'+e.tag+'.sql')))||
     !journal.entries.some(e=>e.tag.endsWith('_cloud_operations'))||
     journal.entries.some(e=>e.tag.endsWith('_cloud_scheduled_shift')))throw Error('unexpected_migration_journal');
-  const tag=String(journal.entries.length).padStart(4,'0')+'_cloud_scheduled_shift';
-  const sqlPath=safe(root,'drizzle/'+tag+'.sql');if(fs.existsSync(sqlPath))throw Error('migration_collision');
-  const schema=fs.readFileSync(path.join(sourceDirectory,'scheduled-shift.sql'),'utf8');
-  if(!schema.includes('CREATE TABLE IF NOT EXISTS ghost_cloud_shift_runs')||
-    /(^|\n)\s*(INSERT|UPDATE|DELETE|DROP|ALTER)\b/i.test(schema))throw Error('unexpected_shift_schema');
-  const migration=schema.replace(/;[ \t]*\n/g,';\n--> statement-breakpoint\n');
+  // An existing Site may have the legacy review table without UNIQUE(attempt_id).
+  // Stage the forward-only index BEFORE the scheduler migration so the
+  // authenticated owner PASS/FAIL path cannot fail at SQL conflict resolution.
+  // This only prepares local files; the real D1 migration needs a private
+  // owner review of historical duplicate attempts before deployment.
+  const hasReviewIndex=journal.entries.some(e=>
+    e.tag.endsWith('_cloud_review_one_decision')||e.tag.endsWith('_owner_review_one_decision'));
+  const reviewSource=fs.readFileSync(path.join(sourceDirectory,'migrations/owner-review-one-decision.sql'),'utf8');
+  if(!reviewSource.includes('CREATE UNIQUE INDEX IF NOT EXISTS ghost_cloud_reviews_one_decision_per_attempt')||
+     !reviewSource.includes('ON ghost_cloud_reviews(attempt_id)')||
+     /(^|\n)\s*(INSERT|UPDATE|DELETE|DROP|ALTER)\b/i.test(reviewSource))throw Error('unexpected_review_schema');
+  const shiftSource=fs.readFileSync(path.join(sourceDirectory,'scheduled-shift.sql'),'utf8');
+  if(!shiftSource.includes('CREATE TABLE IF NOT EXISTS ghost_cloud_shift_runs')||
+    /(^|\n)\s*(INSERT|UPDATE|DELETE|DROP|ALTER)\b/i.test(shiftSource))throw Error('unexpected_shift_schema');
+  const nextTag=(suffix)=>String(journal.entries.length).padStart(4,'0')+'_'+suffix;
+  const staged=[];
+  if(!hasReviewIndex){
+    const tag=nextTag('cloud_review_one_decision'),location=safe(root,'drizzle/'+tag+'.sql');
+    if(fs.existsSync(location))throw Error('migration_collision');
+    staged.push({tag,location,sql:reviewSource.replace(/;[ \t]*\n/g,';\n--> statement-breakpoint\n')});
+    journal.entries.push({idx:journal.entries.length,version:'6',when:Date.now(),tag,breakpoints:true});
+  }
+  const tag=nextTag('cloud_scheduled_shift'),sqlPath=safe(root,'drizzle/'+tag+'.sql');
+  if(fs.existsSync(sqlPath))throw Error('migration_collision');
+  staged.push({tag,location:sqlPath,sql:shiftSource.replace(/;[ \t]*\n/g,';\n--> statement-breakpoint\n')});
   journal.entries.push({idx:journal.entries.length,version:'6',when:Date.now(),tag,breakpoints:true});
   if(apply){
-    fs.writeFileSync(sqlPath,migration,{flag:'wx'});
+    for(const m of staged)fs.writeFileSync(m.location,m.sql,{flag:'wx'});
     fs.writeFileSync(journalPath,JSON.stringify(journal,null,2)+'\n');
     fs.writeFileSync(worker,code);fs.writeFileSync(built,code);
   }
-  return {project_id:SITE,prepared:apply,migration:tag+'.sql',worker_bytes:Buffer.byteLength(code),
+  return {project_id:SITE,prepared:apply,migration:tag+'.sql',
+    review_migration:hasReviewIndex?'already_journaled':staged[0].tag+'.sql',
+    migrations:staged.map(m=>m.tag+'.sql'),
+    duplicate_review_preflight_required:true,
+    worker_bytes:Buffer.byteLength(code),
     deployment_performed:false,cron_trigger_registered:false,models_enabled:false};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){

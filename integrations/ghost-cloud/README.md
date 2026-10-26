@@ -176,13 +176,27 @@ explicitly reviewed new revision requires new owner approval. The zero-cost
 provider gate, token permits, global STOP, human PASS/FAIL, and real model
 receipts remain separate.
 
-**Operational acceptance remains outstanding:** apply the forward-only unique
-review index to existing private D1, publish the composed source to the
-original Site, apply the scheduled-run migration, configure private allowlist,
-register one actual hosting cron trigger, verify two independent scheduler
-wakeups and one approved non-duplicate real attempt, and verify owner review
-persists. Merging source is not deployment, and a scheduler heartbeat is not
-proof of live model activity.
+The same `compose-scheduled-shift.mjs EXISTING_SITE --apply` command now
+stages **both** forward-only D1 migrations in the original Site's journal:
+first `cloud_review_one_decision` (only if not already journaled), then
+`cloud_scheduled_shift`. It preserves all existing migration entries and
+creates one combined staged Worker source/build. Run it without `--apply`
+first to inspect the dry-run report; it never publishes or registers a cron.
+It refuses unexpected Site IDs, changed bundles, symlinks, or repeat composition.
+**Before publishing**, query the actual owner-private D1 for duplicate
+`ghost_cloud_reviews.attempt_id` values as specified above and stop if any
+are found. Applying a unique index to duplicate records must fail rather than
+silently discard contradictory owner decisions. The original Site's publish
+review must also account for the fact that database migrations may persist
+even if publishing the updated code fails.
+
+**Operational acceptance remains outstanding:** inspect the existing private D1
+duplicate count, publish the updated original Site after reviewing the staged
+migrations and original worker code, configure the private canonical allowlist,
+register an actual hosting schedule, verify two independent scheduler wakeups
+and one new approved and non-duplicate real attempt, and verify that human
+review persists. Merging source is not deployment, and a scheduler heartbeat
+is not proof of live model activity.
 
 ## Verification
 
