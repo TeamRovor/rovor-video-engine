@@ -1,0 +1,26 @@
+name: ROVOR cloud refill batch admission
+on:
+  pull_request:
+    paths:
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+      - 'tests/test_ghost_cloud_refill_batch.mjs'
+      - '.github/workflows/ghost-cloud-refill-batch.yml'
+  push:
+    paths:
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+      - 'tests/test_ghost_cloud_refill_batch.mjs'
+      - '.github/workflows/ghost-cloud-refill-batch.yml'
+permissions:
+  contents: read
+jobs:
+  offline-next-batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/test_ghost_cloud_feed.mjs tests/test_ghost_cloud_refill_batch.mjs
