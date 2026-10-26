@@ -34,16 +34,18 @@ function unknownModel(m){
  '<div class="rvq-model-info"><div><span class="rvq-info-label">REMAINING ALLOWANCE</span><strong>Unknown</strong></div><div><span class="rvq-info-label">RESET WINDOW</span><strong>Not reported</strong></div></div>'+
  (typeof m?.requests==='number'?'<div class="rvq-evidence">'+fmt(m.requests)+' recorded requests · not quota usage</div>':'')+'</div>';
 }
-function card(group,quota,models,live,index){
- const entries=live?quota.filter(q=>q.provider===group.provider):[];
- const seen=new Set(entries.flatMap(q=>[q.model_id,q.provider+'/'+q.model_id]));
- const unmatched=(live?models:[]).filter(m=>m.provider===group.provider&&m.requests!==null&&!seen.has(m.id)&&!seen.has(m.name));
- const rows=[...entries.map(meter),...unmatched.map(unknownModel)];
+// One card per configured connection, not one card per provider family.
+// Public telemetry has only safe per-provider account ordinals; no keys or IDs.
+function card(group,quota,live,index,slot){
+ const entries=live&&slot.enabled!==false?quota.filter(q=>q.provider===group.provider&&q.account_slot===slot.account_slot&&
+   (!q.reset_at||Date.parse(q.reset_at)>Date.now())):[];
+ const rows=entries.map(meter);
  if(!rows.length)rows.push(unknownModel(null));
  const first=rows.slice(0,2).join('');
  const extra=rows.length>2?'<details class="rvq-more"><summary>Show '+(rows.length-2)+' more model'+(rows.length===3?'':'s')+'</summary>'+rows.slice(2).join('')+'</details>':'';
- const status=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
- return '<article class="rvq-provider"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">PROVIDER '+String(index+1).padStart(2,'0')+'</span><h4>'+esc(pretty(group.name||group.provider))+'</h4><p>'+fmt(group.connection_count)+' configured connection'+(group.connection_count===1?'':'s')+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+status+'</div></div>'+
+ const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
+ const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
+ return '<article class="rvq-provider"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
  '<div class="rvq-provider-content">'+first+extra+'</div></article>';
 }
 const css=`
@@ -99,19 +101,33 @@ function mount(){
 function render(data,live){
  mount();
  const connections=Array.isArray(data?.connections)?data.connections:[];
- const quota=live&&Array.isArray(data?.quota?.records)?data.quota.records:[];
- const models=live&&Array.isArray(data?.models)?data.models:[];
+ const quota=live&&Array.isArray(data?.quota?.records)?data.quota.records.filter(q=>!q.reset_at||Date.parse(q.reset_at)>Date.now()):[];
+ // Sanitized slot status is optional to preserve compatibility with older Mac reporters.
+ // Never infer which specific account is enabled from a provider-level enabled count.
+ const observedSlots=Array.isArray(data?.connection_slots)?data.connection_slots:null;
+ const bySlot=observedSlots?new Map(observedSlots.map(s=>[s.provider+':'+s.account_slot,s])):null;
+ const slots=[];
+ for(const group of connections){
+   const count=Math.max(0,Math.min(100,Number(group.connection_count)||0));
+   for(let n=1;n<=count;n++){
+     const evidence=bySlot?.get(group.provider+':'+n);
+     slots.push({group,account_slot:n,enabled:typeof evidence?.enabled==='boolean'?evidence.enabled:null});
+   }
+ }
  const resets=quota.map(q=>Date.parse(q.reset_at||'')).filter(t=>Number.isFinite(t)&&t>Date.now());
  const next=resets.length?new Date(Math.min(...resets)).toISOString():null;
- const summary='<div class="rvq-stats"><div class="rvq-stat"><span class="rvq-stat-label">CONFIGURED CONNECTIONS</span><strong class="rvq-stat-value">'+fmt(connections.reduce((a,g)=>a+(Number(g.connection_count)||0),0))+'</strong></div>'+
+ const enabled=live&&observedSlots?slots.filter(s=>s.enabled===true).length:null;
+ const summary='<div class="rvq-stats"><div class="rvq-stat"><span class="rvq-stat-label">CONFIGURED CONNECTIONS</span><strong class="rvq-stat-value">'+fmt(slots.length)+'</strong></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">LIMIT REPORTS</span><strong class="rvq-stat-value">'+(live?quota.length:'—')+'</strong></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
- return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">Capacity & reset windows</h3><p class="rvq-sub">Your configured AI providers, their reported model allowances, and the next quota reset — without estimated usage.</p></div><span class="rvq-status">'+(live?'TELEMETRY CONNECTED':'DATA UNAVAILABLE')+'</span></div>'+
- summary+'<div class="rvq-grid">'+connections.map((g,i)=>card(g,quota,models,live,i)).join('')+'</div>'+
- '<p class="rvq-footnote">A connected provider is not proof that inference works. Limits are cached OmniRoute reports and may be shared by several models. Missing limits and reset times remain unknown. The separate request-share chart is not quota usage.</p></section>';
+ const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · inventory observed '+esc(prettyTime(data.snapshot_at)):'';
+ return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Each configured connection gets its own status and quota/reset meter. Actual inference is unverified without a model execution receipt.</p></div><span class="rvq-status">'+(live?'FRESH INVENTORY':'REPORT DISCONNECTED')+'</span></div>'+
+ summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Provider cache limits are not independent model execution proof.</p>'+
+ '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+
+ '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Quota bars show provider-reported limits only. A configured or enabled connection does not prove a successful API request. Unknown or expired reset windows remain unknown.</p></section>';
 }
 function start(){
- let busy=false,last=null,updated=0;
+ let busy=false,last=null,lastInventory=null,updated=0;
  const slot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
    n=>!n.hidden&&n.querySelector('h3')?.textContent?.trim()==='YOUR OMNIROUTE CONNECTIONS');
  async function sync(){
@@ -126,8 +142,11 @@ function start(){
        if(data.source==='local_omniroute_read_only_bridge'&&Array.isArray(data.connections)&&Number.isFinite(age)&&age>=-5000&&age<=15000)fresh=data;
      }
    }catch{}finally{busy=false;}
+   // Preserve only the last known provider/slot inventory through outages.
+   // Never retain or display stale quota percentages as live.
+   if(fresh)lastInventory={connections:fresh.connections,connection_slots:fresh.connection_slots,snapshot_at:fresh.snapshot_at};
    last=fresh;updated=Date.now();
-   const target=slot();if(target)target.outerHTML=render(fresh,!!fresh);
+   const target=slot();if(target)target.outerHTML=render(fresh||lastInventory,!!fresh);
  }
  const observer=new MutationObserver(()=>{if(slot())void sync();});
  observer.observe(document.body,{childList:true,subtree:true});void sync();

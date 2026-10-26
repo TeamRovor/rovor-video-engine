@@ -98,7 +98,7 @@ test('build retains Site identity, declares MCP, includes schema, and is repeata
   assert.deepEqual(buildSite(dir), first);
   assert.equal(fs.readFileSync(path.join(dir, 'dist/server/index.js'), 'utf8'), code);
   assert.match(code, /ROVOR_QUOTA_BOARD/);
-  assert.match(code, /Capacity & reset windows/);
+  assert.match(code, /All configured AI connections/);
 });
 test('build never rewrites a conflicting applied migration or existing build', t => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hud-site-migration-'));

@@ -214,3 +214,28 @@ test('missing, malformed, cross-provider and expired quotas never produce fictio
   const d = base(); d.quota.records[0].reset_at = new Date(NOW - 1).toISOString();
   assert.equal(sanitize(d, NOW).quota.records.length, 0);
 });
+
+test('private receiver checks nine sanitized connection slots and rejects identity leakage',()=>{
+  const d=sample();
+  d.connection_count=9;
+  d.connections=[{provider:'groq',name:'groq',connection_count:6,enabled_count:5},
+    {provider:'mistral',name:'mistral',connection_count:3,enabled_count:2}];
+  d.models=[];
+  d.request_count=0;
+  d.connection_slots=[
+    ...Array.from({length:6},(_,i)=>({provider:'groq',account_slot:i+1,enabled:i<5})),
+    ...Array.from({length:3},(_,i)=>({provider:'mistral',account_slot:i+1,enabled:i<2}))];
+  const safe=sanitize(d,NOW);
+  assert.equal(safe.connection_slots.length,9);
+  assert.equal(safe.connection_slots.filter(s=>s.enabled).length,7);
+  assert.equal(JSON.stringify(safe).includes('apiKey'),false);
+  const tamper=change=>{const e=structuredClone(d);change(e);assert.throws(()=>sanitize(e,NOW));};
+  tamper(e=>e.connection_slots[0].provider='unknown-provider');
+  tamper(e=>e.connection_slots[0].account_slot=2);
+  tamper(e=>e.connection_slots[0].enabled='true');
+  tamper(e=>e.connection_slots[0].enabled=false);
+  tamper(e=>e.connection_slots.pop());
+  // Legacy reporter remains usable, but does not claim per-account enabled status.
+  delete d.connection_slots;
+  assert.equal(sanitize(d,NOW).connection_slots,null);
+});

@@ -69,3 +69,31 @@ test('expired reset hides cached percentage until a newer quota is observed',()=
   doc.caches['account-1'].quotas.stillOpen.resetAt='2026-10-26T00:00:00Z';
   assert.equal(reduceProviderQuota(providers,doc,{now:now+180000}).records.length,1);
 });
+
+test('each of nine connection slots renders separately even when providers repeat',()=>{
+  const window={},document={getElementById:()=>({})};
+  const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
+  vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map});
+  const connections=[{provider:'groq',name:'Groq',connection_count:4,enabled_count:3},
+    {provider:'mistral',name:'Mistral',connection_count:3,enabled_count:2},
+    {provider:'openrouter',name:'OpenRouter',connection_count:2,enabled_count:2}];
+  const slots=connections.flatMap(g=>Array.from({length:g.connection_count},(_,i)=>({
+    provider:g.provider,account_slot:i+1,enabled:i+1<=g.enabled_count
+  })));
+  const quota={records:[{provider:'groq',account_slot:3,model_id:'actual-model',
+    used:20,total:100,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:'2026-10-25T20:00:00Z'}]};
+  const html=window.ROVOR_QUOTA_BOARD.render({connections,connection_slots:slots,quota,snapshot_at:'2026-10-25T20:01:00Z'},true);
+  assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
+  assert.equal((html.match(/20.0%/g)||[]).length,1);
+  assert.match(html,/Enabled according to gateway: 7 \/ 9/);
+  assert.match(html,/DISABLED/);
+  assert.match(html,/QUOTA UNKNOWN/);
+  assert(!html.includes('apiKey'));
+  const offline=window.ROVOR_QUOTA_BOARD.render({connections,connection_slots:slots},false);
+  assert.equal((offline.match(/class="rvq-provider"/g)||[]).length,9);
+  assert.match(offline,/REPORT DISCONNECTED/);
+  assert(!offline.includes('20.0%'));
+  const legacy=window.ROVOR_QUOTA_BOARD.render({connections,quota},true);
+  assert.match(legacy,/ENABLEMENT UNKNOWN/);
+  assert.match(legacy,/Unknown/);
+});

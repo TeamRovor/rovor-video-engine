@@ -64,15 +64,21 @@ export function normalize(catalog,analytics,{period='24h',now=Date.now(),start,e
 
 export function normalizeOwned(providers,analytics,options={}){
   if(!Array.isArray(providers?.connections)||providers.connections.length>2000)throw Error('connections_shape_unsupported');
-  const groups=new Map();
+  const groups=new Map(),connectionSlots=[];
   for(const row of providers.connections){
     const provider=safeID(row?.provider);if(!provider)throw Error('connection_provider_invalid');
     const group=groups.get(provider)||{provider,name:provider,connection_count:0,enabled_count:0};
-    group.connection_count++;if(row.isActive!==false)group.enabled_count++;groups.set(provider,group);
+    group.connection_count++;
+    const enabled=row.isActive!==false;
+    if(enabled)group.enabled_count++;
+    // Stable within an inventory observation; never expose ID/key/account label.
+    connectionSlots.push({provider,account_slot:group.connection_count,enabled});
+    groups.set(provider,group);
   }
   const all=normalize({data:[]},analytics,{...options,allowEmpty:true});
   all.models=all.models.filter(m=>groups.has(m.provider));
   all.connections=[...groups.values()];
+  all.connection_slots=connectionSlots;
   all.connection_count=all.connections.reduce((n,g)=>n+g.connection_count,0);
   all.inventory_count=all.models.length;
   all.inventory_scope='configured_connections_and_recorded_models';
