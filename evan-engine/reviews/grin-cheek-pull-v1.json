@@ -1,0 +1,52 @@
+{
+  "baseCommit": "f8ded65dc98291ba60cb53d90dc731d9e3575d57",
+  "sourceArtworkChanged": false,
+  "runtimeChanged": false,
+  "initialRejectedUpperMutation": {
+    "changedUpper310Pixels": 23,
+    "bbox": [
+      366,
+      291,
+      382,
+      310
+    ],
+    "maximumDifference": 3
+  },
+  "geometry": {
+    "samples": 909,
+    "pinnedVertices": 148,
+    "pinnedExact": true,
+    "baselineExactSymbols": 9,
+    "invalidStrengthsRejected": 3,
+    "minimumArea2": 45.5,
+    "animationAccepted": false
+  },
+  "motion": {
+    "upper310Exact": 48,
+    "normalDecodedFrames": 48,
+    "slowDecodedFrames": 192,
+    "audio": false,
+    "performanceAccepted": false
+  },
+  "nativeStaticStrengthsInspected": [
+    0,
+    0.25,
+    0.5,
+    0.75,
+    1
+  ],
+  "nativeMotionFramesInspected": 48,
+  "selectedForIntegration": false,
+  "visualDecision": "Reject as an expression improvement: stronger pull mostly reshapes the jaw/neck shadow edge and adds little cheek attitude.",
+  "nextArtNeed": "Separate drawn smile-corner/cheek crease accents registered to lip corners; avoid further whole-jaw shadow pulls.",
+  "sourceHashes": {
+    "pilot.py": "c0c7d855b441937ca0acc62c437f9c54ba49e99c16cb0e5fbca25eb30e6a14e8",
+    "Rejected-unpinned-pilot.py.txt": "a772a3c2aa0bd2ee2079d16a4f6ec5a170812de3cbfc3e36d356b5512f11e956",
+    "audit.py": "ef056e25299c276cb381f9b7e7ee78f3004723e31c35e9b917959926e51100aa",
+    "Low-amplitude-pilot.py.txt": "b2be7f8311ec6ca6edc8764b7874b9d354d3a2554c74f669dabd25e5c16b6f56",
+    "motion.py": "8c924f9537d1fdafb50cb893fe9998b48b8aa82918d857a07db603e48580098a",
+    "prototype.py": "b8cf43980e631a9430d018dceb154932e3cbae1697e0b1f22db0208d8f36e84d"
+  },
+  "polishedMilestoneReady": false,
+  "independentListeningOrRealtimeAcceptance": false
+}

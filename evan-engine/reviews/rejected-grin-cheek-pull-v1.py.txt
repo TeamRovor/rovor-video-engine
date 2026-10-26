@@ -1,0 +1,32 @@
+"""Isolated sculpt of the existing jaw skin; no source redraw or speech route."""
+from pathlib import Path
+import cv2,numpy as np,json
+from PIL import Image
+from prototype import GrinCapture
+from separated_oral_review import SeparatedOralReview,inner_arch
+from grin_tooth_plane import GrinToothPlane
+from guided_jaw_exposure import SOURCE,checked_mesh
+cv2.setNumThreads(1);root=Path(__file__).resolve().parents[2];out=root/'outputs/evan-cartoon-grin-cheek';plane=GrinToothPlane()
+class ToothCapture(GrinCapture):
+ def composite_oral(self,*args):
+  result=super().composite_oral(*args);self.review_teeth=plane.pose(inner_arch(self.current_oral,True))*self.review_interior;return result
+
+def cheek_target(target,strength):
+ if not np.isfinite(strength) or not 0<=strength<=1:raise ValueError('Cheek strength must be within0..1')
+ out=target.copy();x,y=SOURCE.T;depth=np.clip((y-335)/15,0,1)*np.clip((394-y)/30,0,1)*((x>164)&(x<329))
+ left=np.maximum(0,1-abs(x-170)/50);right=np.maximum(0,1-abs(x-305)/50)
+ # shortcut: authored cheek/jaw skin pull, not measured muscle anatomy or new drawing.
+ out[:,0]+=strength*depth*(left*3.-right*4.)
+ out[:,1]-=strength*depth*(left*6.+right*9.)
+ return checked_mesh(out)
+class CheekReview(SeparatedOralReview):
+ strength=0.
+ def __init__(self):super().__init__();self.head=ToothCapture();self.head.strength=1
+ def jaw_target(self):return cheek_target(super().jaw_target()[0],self.strength)
+if __name__=='__main__':
+ rig=CheekReview();rows=[];baseline=None
+ for k,s in enumerate([0.,.25,.5,.75,1.]):
+  rig.strength=s;base=rig.head.weights(np.eye(9)[2]);im,audit=rig.assemble(base);im.save(out/f'Pose-{k}.png');arr=np.array(im)
+  if baseline is None:baseline=arr
+  assert np.array_equal(arr[:310],baseline[:310]);rows.append(dict(strength=s,**audit));print(k,flush=True)
+ (out/'Pilot.json').write_text(json.dumps(rows,indent=2)+'\n')
