@@ -5560,7 +5560,7 @@
       "id": "windows-pr-mainline-sync-20261026",
       "title": "Reconcile Windows reliability PR #7 with current main",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Keona Windows desktop session",
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
@@ -5569,10 +5569,19 @@
         "subsystem:windows-pr-mainline-sync"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-26T01:18:40Z",
-      "next_update": "After the two-file merge resolution and the three-platform hosted regression result.",
-      "next_action": "Use an isolated checkout at fetched PR head 0d26634aa1408b720859fa000b62ccea55fac1ab and merge exact current main 0599ea9d34611d1f58993c433835a61d2d9be000. Resolve only .gitignore and AGENTS.md while preserving current-main guidance and Windows branch context. Push only as a normal fast-forward; if either remote ref moved, stop and refetch. Confirm PR #7 status and hosted macOS, Ubuntu, and Windows regressions. This does not unblock local original-audio validation.",
-      "acceptance": "PR branch descends from the exact current-main revision without force push; only .gitignore and AGENTS.md required conflict resolution and both versions' required content is retained; PR #7 becomes mergeable and its hosted three-platform regression passes. Record local Windows media/tool validation as still blocked; do not claim a laptop render."
+      "updated_at": "2026-10-26T01:28:26Z",
+      "next_update": "If PR #7 moves again or further Windows reliability work is assigned.",
+      "next_action": "Completed: merged current main revision 454823fe207ada56759bdc12317f515ee32d592a into PR #7 at commit 43c2d2cd673a80995c3f37ec4c08304f53da7ae2. Only .gitignore and AGENTS.md conflicted; both were resolved preserving main guidance and the Windows PR context. Hosted three-platform regression passed. PR #7 remains draft. Local Windows audio/tool/render validation remains a separate blocked task.",
+      "acceptance": "PR branch descends from the exact current-main revision without force push; only .gitignore and AGENTS.md required conflict resolution and both versions' required content is retained; PR #7 becomes mergeable and its hosted three-platform regression passes. Record local Windows media/tool validation as still blocked; do not claim a laptop render.",
+      "evidence": [
+        {
+          "commit": "43c2d2cd673a80995c3f37ec4c08304f53da7ae2",
+          "platform": "GitHub Actions: macOS, Ubuntu, Windows; local clean Windows checkout",
+          "check": "Fast-forwarded PR branch onto main 454823fe; resolved .gitignore and AGENTS.md; verified PR mergeable and exact diff file set; Portable engine regression checks run 40254216574",
+          "result": "PASS: branch is 0 commits behind main, PR reports mergeable, all three hosted regression jobs passed, local checkout fast-forwarded cleanly to 43c2d2cd. No original-audio render or local toolchain validation performed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40254216574"
+        }
+      ]
     }
   ]
 }
