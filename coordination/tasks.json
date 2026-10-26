@@ -736,7 +736,7 @@
       "id": "render-cache-file-identity",
       "title": "Prevent stale render resume after local dependency replacement",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Keona Windows desktop session",
       "branch": "codex/windows-reliability-v3-1",
       "scopes": [
@@ -744,14 +744,13 @@
         "subsystem:render-cache-file-identity"
       ],
       "depends_on": [],
-      "next_action": "Obtain and inspect a hosted regression run for commit e8ef17c0c5c3f06224d6cc87b587385cf244d3ec; then close the task only after checks or runtime evidence are available.",
+      "next_action": "Hosted regression run 40251416651 passed on macOS, Ubuntu, and Windows at commit 0d26634aa1408b720859fa000b62ccea55fac1ab. Static review confirmed the file-identity and platform timestamp fields in fingerprint version 5; no local original-audio render was performed. Revisit after a material cache change or when local runtime inputs become available.",
       "acceptance": "A replaced tool/model file with matching path, size, and modification time produces a different resume fingerprint where filesystem identity metadata is supported; unrelated resume invalidation remains unchanged. Record static review and any hosted workflow results without claiming a render on Keona's laptop.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/7"
       ],
-      "updated_at": "2026-10-21T11:02:55Z",
-      "next_update": "When a hosted regression result is available for commit e8ef17c0c5c3f06224d6cc87b587385cf244d3ec.",
-      "blocker": "No GitHub commit status or workflow run is attached to the connector-authored commits yet. No automated tests or local render were run in this session.",
+      "updated_at": "2026-10-26T01:11:58Z",
+      "next_update": "After a material cache change or when local Windows runtime inputs become available.",
       "evidence": [
         {
           "commit": "e8ef17c0c5c3f06224d6cc87b587385cf244d3ec",
@@ -759,6 +758,20 @@
           "check": "Read back animate_evan.py at blob c2643cf5571676fe74e329d0c39c939e493847e0; reviewed file identity fields and fingerprint version 5; inspected PR status and associated workflow runs",
           "result": "Static review confirms device/file identity plus platform timestamps are fingerprinted without hashing tool/model contents. No commit statuses or workflow runs were attached; no tests or local render run.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/e8ef17c0c5c3f06224d6cc87b587385cf244d3ec"
+        },
+        {
+          "commit": "0d26634aa1408b720859fa000b62ccea55fac1ab",
+          "platform": "GitHub branch review",
+          "check": "Reviewed the final cache fingerprint and explicit older-fingerprint resume error; confirmed PR #7 branch head and queried commit statuses/workflow runs.",
+          "result": "Implementation published; PR head matches this commit. Vercel deployment status is success, but no automated regression workflow is attached. No tests or local render were run in this session.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/commit/0d26634aa1408b720859fa000b62ccea55fac1ab"
+        },
+        {
+          "commit": "0d26634aa1408b720859fa000b62ccea55fac1ab",
+          "platform": "GitHub Actions: macos-latest, ubuntu-latest, windows-latest",
+          "check": "Portable engine regression checks; Python unittest discovery and actual reference-art/vector frame draw/decode smoke checks; static review of file_stamp and fingerprint version 5",
+          "result": "All three platform jobs PASS. The hosted suite ran against the exact PR #7 head. No local original-audio render or production media validation is claimed; the cache replacement identity branch was statically reviewed, not covered by a dedicated replacement-with-preserved-mtime test.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40251416651"
         }
       ]
     },
@@ -5232,7 +5245,7 @@
       "id": "private-hud-cloud-runtime-mount-20261025",
       "title": "Mount cloud inference, factual activity and owner review in existing private HUD",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "Codex / Amar ASAP private cloud runtime mount 2026-10-25",
       "branch": "feature/private-hud-cloud-runtime-mount-20261025",
       "scopes": [
@@ -5243,9 +5256,9 @@
         "subsystem:private-hud-runtime-mount"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-25T03:52:25.037Z",
-      "next_update": "After prepared source upload and native deployment readback",
-      "next_action": "PR197 merged at 6095d674ffced63b57ca0e34890a71c1c64fa9d3. 42 focused tests pass locally and hosted; actual published private Site source composes/imports, real SQLite validates migration, seven MCP tools and nine slots read successfully, original HUD retained. Complete bundle is staged in existing Site checkout: runtime/canary/private operations, live panels, browser-only digest-bound PASS/FAIL, schema-only appended 0001 migration, string DB binding. Needs supported source push from Amar's network-enabled Terminal, then native publication. Existing version1 remains receiver-only until version2 deployment verified. Keep unknown-cost providers disabled. Do not pretend staged source is live.",
+      "updated_at": "2026-10-25T07:28:21.935Z",
+      "next_update": "After actual existing Mac supervisor/gateway and authenticated telemetry can be verified",
+      "next_action": "OWNER HOSTING CHANGE: use existing Mac-hosted OmniRoute and existing Mac supervisor for all nine configured systems. Stop VPS/cloud migration and direct-provider inference. Walter schedule renamed OmniRoute workforce oversight and updated to Mac direction; scheduled ChatGPT oversight is not proof of local execution. Verify no-sleep on AC, persistent existing gateway+worker restart/recovery and actual per-model jobs/usage, then authenticated Mac-to-private-HUD publishing that survives Terminal closure without per-device links. Preserve single scheduler/STOP/private creds/$0. No Mac service changes or live work verified in this phone/cloud session. Prior cloud HUD monitoring remains available but is not OmniRoute data.",
       "acceptance": "Composed current Site imports and preserves native HUD; nine-provider status, immutable task admission, bounded cloud tick and canary, read-only fixed-endpoint provider inventory, durable user PASS/FAIL and STOP are authenticated; actual real-SQL tests pass. Prepare exact existing-Site source/archive; deployment and real model proof remain separate.",
       "evidence": [
         {
@@ -5254,8 +5267,16 @@
           "check": "42 runtime/canary/operations real-SQL and mocked-HTTPS tests; project_loop.py check; task_routing_pair.py --check; actual deployed Site source composed/imported with schema-only migration",
           "result": "PASS: complete simulated approved-task->dispatch->measured receipt->explicit owner review->no replay; actual composed source has seven MCP tools/nine slots/owner auth; official artifact validator PASS. No live provider calls or new deployment.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40159570499"
+        },
+        {
+          "commit": "cdd6921790641b3dba337c59b264ba6933d8ec60",
+          "platform": "Managed Linux Node24.22.1 and native Sites/Cloudflare D1 production",
+          "check": "44 focused real-SQL/mock-HTTPS tests, artifact ESM validation, native successful deployment, connected cloud ledger readback and HTTP200 service access, nine actual fixed provider inventory checks",
+          "result": "DEPLOYED private cloud runtime and review-integrity fixes. Nine credentials present, zero inference attempts, disabled provider routes. All nine actual inventory checks failed catalog_unavailable; real model execution and continuous dispatch remain blocked.",
+          "reference": "https://rovor-private-hud.mm98z652cq.chatgpt.site"
         }
-      ]
+      ],
+      "blocker": "Amar now chooses existing MacBook plugged in24/7; no VPS required. This executor has no verified direct Mac control; connected HUD still never_received for Mac telemetry."
     },
     {
       "id": "saul-cloud-inquiry-copy-20261025",
@@ -5311,6 +5332,337 @@
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/198",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40160575762"
+      ]
+    },
+    {
+      "id": "mike-pr201-stop-count-review-20261025",
+      "title": "Review PR201 loss of partial feed counts when STOP occurs",
+      "priority": 1,
+      "status": "blocked",
+      "owner": "Mike / cloud pool scheduler evidence review 2026-10-25",
+      "updated_at": "2026-10-25T06:30:34.557Z",
+      "next_update": "After PR201 owner corrects partial-STOP counters and owner reviews report",
+      "branch": "review/mike-pr201-stop-counts-20261025",
+      "scopes": [
+        "reviews/mike-pr201-stop-counts-20261025.md"
+      ],
+      "depends_on": [],
+      "next_action": "Read PR202 report at9d9ab63a3aa434da1acd1ffa863a2fdcc01cf647. PR201 head595ab826d8da971314629ff3f80b3ee49f1b2e47 loses queued2/duplicates1 when feeder returns stopped; persisted row becomes0/0 while two synthetic jobs remain, tick0. Scheduler owner should validate/preserve feed counters before stopped branch and add partial-progress STOP regression; no change by this review. Existing11tests passed locally; hostedbaseline40167203600 SUCCESS at535f18c; later595 changes onlycoordination/tasks.json and current-head runtime/ops checks SUCCESS. Do not merge/deploy or replay existing tasks.",
+      "acceptance": "Review identifies exact code branch and reproduces realSQLite persisted zeros versus feed queued2/duplicates1, verifies tick nevercalled, distinguishes existing11/11 tests from uncoveredcase. Public report contains no private data/runtime IDs; canonicalqueue/routing validated.",
+      "blocker": "Review finding awaits scheduler owner's correction/acceptance; scheduler source is outside this task's scope.",
+      "evidence": [
+        {
+          "commit": "9d9ab63a3aa434da1acd1ffa863a2fdcc01cf647",
+          "platform": "Cloud Linux Node24.22.1 real in-memory SQLite; native GitHub readback",
+          "check": "node --test tests/test_ghost_cloud_scheduled_shift.mjs (11 tests); node reproduce.mjs (synthetic partial STOP); public source/CI exact revisions; canonical paired intake",
+          "result": "Review report published as PR202 OPEN. All11existing tests PASS; realSQLite reproduction confirms saved queued0/duplicates0 despite feed2/1, syntheticqueue2, tick0. Claim hosted coordination Windows/macOS/Ubuntu and routing3.9/3.11 PASS in runs40169186541/40169186489. Scheduler code unchanged; no provider calls, private data, runtime IDs, external sends, human decision, merge or deploy.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/202"
+        }
+      ],
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/202",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/201"
+      ]
+    },
+    {
+      "id": "cloud-website-delivery-map-20261025",
+      "title": "Draft a website delivery milestone map",
+      "priority": 1,
+      "status": "active",
+      "owner": "Walter / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-website-delivery-map-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.029Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Walter",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Create a practical milestone map for delivering a small-business website through ROVOR Digital. Use only the public service list below. Give six milestones, each with its deliverable, objective acceptance check, required client input, and handoff owner role. Separate website launch from ongoing maintenance. Include a short list of decisions that require the client's approval. No prices, dates, guarantees, invented clients, or claims that anything has been performed. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-domain-launch-checks-20261025",
+      "title": "Draft domain and business-email launch checks",
+      "priority": 1,
+      "status": "active",
+      "owner": "Mike / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-domain-launch-checks-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Mike",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Draft a concise launch checklist for connecting a small-business website domain and business email. Cover DNS records, HTTPS, redirects, SPF/DKIM/DMARC, form delivery, rollback and evidence capture. Distinguish browser checks from account-admin changes. Give safe read-only verification examples using example.com, never real customer domains or credentials. Flag provider-specific details as needing confirmation. No claims of tests being performed. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-phone-storyboard-20261025",
+      "title": "Draft a continuous phone-interaction storyboard",
+      "priority": 1,
+      "status": "active",
+      "owner": "Jesse / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-phone-storyboard-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Jesse",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Draft a 12-second 2D cartoon storyboard showing a customer opening a restaurant website on a phone, struggling with a cluttered menu, then using a clear mobile menu. Provide six timed beats with character pose, facial expression, hand/phone contact, screen state, and the causal transition. Use continuous action and readable phone screens. Do not redesign a logo, invent narration, or claim animation was rendered. End with three specific visual acceptance checks. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-phone-readability-spec-20261025",
+      "title": "Draft a phone-screen readability specification",
+      "priority": 1,
+      "status": "active",
+      "owner": "Gale / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-phone-readability-spec-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Gale",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Write a practical screen-readability specification for a premium phone shown within a 1920x1080 or 1080x1920 video at 60 fps. Provide recommended pixel-size targets, contrast checks, viewing-angle limits, screen-content density, antialiasing/texture considerations and a normal-speed review procedure. Label numerical targets as proposed design guidance, not measured results. Keep it usable for either a 2D or 3D phone asset. Do not claim any existing asset was inspected. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-portrait-landscape-handoff-20261025",
+      "title": "Draft portrait and landscape editorial handoff checks",
+      "priority": 1,
+      "status": "active",
+      "owner": "Jane / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-portrait-landscape-handoff-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Jane",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Draft an editorial handoff checklist for the same animated source delivered in 1920x1080 and 1080x1920 at 60 fps. Include narration preservation, lip-sync inspection, captions/safe areas, readable phone screens, intentional cuts, audio peaks, export metadata and decoded-video checks. Distinguish technical checks from Amar's creative approval. Give exact evidence each check should leave. No claim that a video was rendered, exported or approved. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-website-intake-fields-20261025",
+      "title": "Draft a focused website project intake form",
+      "priority": 1,
+      "status": "active",
+      "owner": "Gus / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-website-intake-fields-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Gus",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Propose a low-friction client intake form for ROVOR Digital's website services. Give no more than eight fields with purpose, required/optional state and a useful answer format. Cover business goal, existing website/domain, desired action, scope, supplied assets, decision maker and timing without promising delivery dates. Add a compact rule set for routing inquiries to website, branding, booking or store discovery. Do not invent client records or collect sensitive credentials. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-intake-field-microcopy-20261025",
+      "title": "Draft inquiry-form labels and helper text",
+      "priority": 1,
+      "status": "active",
+      "owner": "Saul / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-intake-field-microcopy-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Saul",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Draft concise inquiry-form microcopy for a ROVOR Digital website project. Provide labels and one-line helper text for business goal, current website, desired visitor action, services needed, available assets, contact preference and target launch window. Add a short submit-button label, privacy-neutral helper line, validation wording for an invalid email, and a recoverable submission failure message. No invented privacy promises, guarantees, prices or contact details. This is copy for review, not permission to publish. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "cloud-website-launch-review-20261025",
+      "title": "Draft a website launch review rubric",
+      "priority": 1,
+      "status": "active",
+      "owner": "Hank / Amar approved cloud backlog 2026-10-25",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-website-launch-review-20261025"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-25T17:42:00.032Z",
+      "next_update": "After a real zero-cost cloud receipt is saved for Amar review",
+      "next_action": "Run this bounded approved public-source drafting packet once through an eligible cloud provider. Preserve failed attempt IDs and require Amar PASS/FAIL before publication or execution.",
+      "acceptance": "One complete bounded draft satisfying the packet, with actual provider/model/token receipt and human_review not_recorded in the private HUD. No native-app execution, sending or publication is authorized.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Hank",
+        "kind": "plan",
+        "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Create a practical pass/fail review rubric for a small-business website before launch. Cover mobile layout, keyboard access, contrast, readable text, navigation, forms/error recovery, accurate business claims, domain/HTTPS, image quality and basic performance. Each item must have an observable test, failure example and evidence to save. Separate a proposed rubric from actually executed tests. Never mark anything passed without evidence. Keep the response under 700 words. This is a draft for human review."
+      }
+    },
+    {
+      "id": "windows-pr-mainline-sync-20261026",
+      "title": "Reconcile Windows reliability PR #7 with current main",
+      "priority": 1,
+      "status": "done",
+      "owner": "Codex / Keona + Bakir (shared Windows PR #7 synchronization stewardship)",
+      "branch": "codex/windows-reliability-v3-1",
+      "scopes": [
+        ".gitignore",
+        "AGENTS.md",
+        "subsystem:windows-pr-mainline-sync"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T01:28:26Z",
+      "next_update": "If PR #7 moves again or further Windows reliability work is assigned.",
+      "next_action": "Completed: merged current main revision 454823fe207ada56759bdc12317f515ee32d592a into PR #7 at commit 43c2d2cd673a80995c3f37ec4c08304f53da7ae2. Only .gitignore and AGENTS.md conflicted; both were resolved preserving main guidance and the Windows PR context. Hosted three-platform regression passed. PR #7 remains draft. Local Windows audio/tool/render validation remains a separate blocked task. Future PR #7 synchronization, hosted cross-platform regression review, and conflict triage are jointly assigned to Keona and Bakir. Prior completed sync and its CI proof remain attributed to Keona; this change does not assert that Bakir contributed a commit or ran Windows tests. Bakir handles branch/mainline diffs, CI evidence and review handoffs; Keona retains Windows-local runtime and tool validation. Both coordinate on PR #7 before modifying its branch.",
+      "acceptance": "PR branch descends from the exact current-main revision without force push; only .gitignore and AGENTS.md required conflict resolution and both versions' required content is retained; PR #7 becomes mergeable and its hosted three-platform regression passes. Record local Windows media/tool validation as still blocked; do not claim a laptop render.",
+      "evidence": [
+        {
+          "commit": "43c2d2cd673a80995c3f37ec4c08304f53da7ae2",
+          "platform": "GitHub Actions: macOS, Ubuntu, Windows; local clean Windows checkout",
+          "check": "Fast-forwarded PR branch onto main 454823fe; resolved .gitignore and AGENTS.md; verified PR mergeable and exact diff file set; Portable engine regression checks run 40254216574",
+          "result": "PASS: branch is 0 commits behind main, PR reports mergeable, all three hosted regression jobs passed, local checkout fast-forwarded cleanly to 43c2d2cd. No original-audio render or local toolchain validation performed.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40254216574"
+        }
+      ]
+    },
+    {
+      "id": "bakir-shortform-publish-handoff-20261025",
+      "title": "Bakir: publish first source-verified short-form production PR",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "bakir-work",
+      "scopes": [
+        "subsystem:bakir-shortform-publish-handoff"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T02:14:17.424Z",
+      "next_update": "After Bakir has posted his first real remote commit and pull request on issue #210",
+      "next_action": "Bakir: follow main BAKIR-PUBLISH.md in github.com (not read-only ChatGPT connector); perform one scoped short-form pipeline improvement on bakir-work, push a real commit, open a PR to main and record exact SHA/CI result on issue #210. Avoid private media; do not claim a native render from a GitHub-hosted test.",
+      "acceptance": "A genuine remote commit and PR from bakir-work, linked issue #210, exact file diff and tests; source-only or native work distinguished; no force-push, private media, or fake personal GitHub identity attribution.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/issues/210",
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/BAKIR-PUBLISH.md"
+      ]
+    },
+    {
+      "id": "bakir-keona-pr7-review-20261025",
+      "title": "Bakir + Keona: review draft Windows PR #7 safely and report outstanding validation",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "bakir-work",
+      "scopes": [
+        "subsystem:bakir-keona-pr7-readonly-review"
+      ],
+      "depends_on": [
+        "windows-pr-mainline-sync-20261026"
+      ],
+      "updated_at": "2026-10-26T02:14:17.424Z",
+      "next_update": "After first joint Bakir/Keona PR #7 diff and CI evidence handoff on issue #209",
+      "next_action": "Bakir reviews PR #7 against current main and hosted macOS/Linux/Windows regression evidence; Keona verifies actual Windows-local toolchain/original audio separately. Post exact SHA, tested/untested boundaries and conflicts on #209; do not rewrite Keona's active branch or merge draft PR #7 without owner review.",
+      "acceptance": "Issue #209 contains an exact HEAD revision, CI URLs, actionable unresolved Windows-local blockers and a signed-off review handoff; no claim of native Windows render solely from hosted runners.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/issues/209",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/7"
+      ]
+    },
+    {
+      "id": "evan-moho-quality-handoff-20261025",
+      "title": "Evan: source-level Moho character acting and video QA handoff",
+      "priority": 2,
+      "status": "ready",
+      "owner": null,
+      "branch": "evan-work",
+      "scopes": [
+        "subsystem:evan-moho-acting-qa-handoff"
+      ],
+      "depends_on": [
+        "evan-acting-review"
+      ],
+      "updated_at": "2026-10-26T02:14:17.424Z",
+      "next_update": "After Evan submits a focused evan-work PR and verifiable source-level test result for issue #211",
+      "next_action": "Evan inspects current character rig/scene source and existing animation-quality findings, proposes one bounded 2D character-acting/viseme/phone-UI QA improvement, tests it in hosted CI where feasible, and opens PR from evan-work linked to #211. Native Moho rendering and artist approval require separate real-host evidence.",
+      "acceptance": "Source-scoped PR from evan-work with exact SHA, regression evidence and visual-review plan. Never label synthetic source tests as a finished 1080p60 native Moho film.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/issues/211"
+      ]
+    },
+    {
+      "id": "amar-hud-human-telemetry-review-20261025",
+      "title": "Amar: review human GitHub activity proof and separate OmniRoute live telemetry",
+      "priority": 2,
+      "status": "ready",
+      "owner": null,
+      "branch": "amar-work",
+      "scopes": [
+        "subsystem:amar-hud-human-telemetry-review"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T02:14:17.424Z",
+      "next_update": "After Amar reviews the live native HUD team panel and authenticated OmniRoute source-freshness separately",
+      "next_action": "Amar reviews latest deployed HUD Recent Activity TEAM branch/PR evidence and verifies actual private OmniRoute provider quota/reset and worker receipts independently. Confirm source age and actual inference before marking models/employees online. Track remaining blockers on issue #208.",
+      "acceptance": "Document exact published HUD deployment SHA, human contribution URLs, independently verified or unknown provider reset/usage evidence and real worker receipt status; do not conflate GitHub checks, branch commits and 24/7 model execution.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/issues/208"
       ]
     },
     {
