@@ -8,6 +8,7 @@ import {compileScheduledShift,composeScheduledShift} from '../integrations/ghost
 
 const sourceDir=new URL('../integrations/ghost-cloud/',import.meta.url);
 const shiftSource=fs.readFileSync(new URL('scheduled-shift.mjs',sourceDir),'utf8');
+const feedSource=fs.readFileSync(new URL('approved-feed.mjs',sourceDir),'utf8');
 const schema=fs.readFileSync(new URL('scheduled-shift.sql',sourceDir),'utf8');
 const TAIL="export default {fetch:(request,env)=>__operations.fetch(request,env),scheduled(event,env,ctx){if(env.GHOST_CRON_OPT_IN==='owner-approved-ghost-cron-v1')return __cloud.worker.scheduled(event,env,ctx);}};";
 const v2='// ROVOR_CLOUD_OPERATIONS_V1 testfixture\n'+
@@ -64,6 +65,42 @@ test('compiler refuses wrong Site or unexpected module shape',()=>{
   assert.throws(()=>compileScheduledShift('export default {}',shiftSource),/unexpected_existing_site_bundle/);
   assert.throws(()=>compileScheduledShift(v2,'export const dangerous = true;'),/unexpected_shift_module/);
 });
+test('production bundle embeds pinned approved feed without dynamic module imports',()=>{
+  const compiled=compileScheduledShift(v2,shiftSource,feedSource);
+  assert.match(compiled,/const __feed = \(\(\) => \{/);
+  assert.match(compiled,/GHOST_FEED_COMMIT/);
+  assert.match(compiled,/replenishApprovedJobs/);
+  assert.doesNotMatch(compiled,/import\\s*\\(/);
+  assert.doesNotMatch(compiled,/^import\\s/m);
+  assert.throws(()=>compileScheduledShift(v2,shiftSource,'export const hostile=1;'),/unexpected_approved_feed_source/);
+});
+test('canonical feed branch uses approved task allowlist instead of exhausted static packets',async()=>{
+  const dangerous=v2.replace('replenish:async()=>({queued:0,duplicates:0})', "replenish:async()=>{throw Error('legacy_feed_called')}");
+  const compiled=compileScheduledShift(dangerous,shiftSource,feedSource);
+  const imported=await import('data:text/javascript;base64,'+Buffer.from(compiled).toString('base64'));
+  const s=mock(),promises=[];
+  s.env.GHOST_FEED_COMMIT='a'.repeat(40);
+  s.env.GHOST_APPROVED_TASKS='[]';
+  imported.default.scheduled({},s.env,{waitUntil:p=>promises.push(p)});
+  await Promise.all(promises);
+  const result=await (await imported.default.fetch(req('/api/ghost/shifts'),s.env)).json();
+  assert.equal(result.runs.length,1);
+  assert.equal(result.runs[0].status,'idle','empty approved feed is safe and does not call legacy fixed packets');
+  assert.equal(result.runs[0].dispatched,0);
+});
+test('canonical feed misconfiguration fails closed instead of falling back to old packet intake',async()=>{
+  const compiled=compileScheduledShift(v2,shiftSource,feedSource);
+  const imported=await import('data:text/javascript;base64,'+Buffer.from(compiled).toString('base64'));
+  const s=mock(),promises=[];
+  s.env.GHOST_FEED_COMMIT='a'.repeat(40);
+  delete s.env.GHOST_APPROVED_TASKS;
+  imported.default.scheduled({},s.env,{waitUntil:p=>promises.push(p)});
+  await Promise.all(promises);
+  const result=await (await imported.default.fetch(req('/api/ghost/shifts'),s.env)).json();
+  assert.equal(result.runs[0].status,'failed');
+  assert.equal(result.runs[0].reason,'shift_operation_failed');
+  assert.equal(result.runs[0].dispatched,0);
+});
 test('actual self-contained bundle exposes read-only identity-gated D1 schedule receipts',async()=>{
   const s=mock(),{handler}=await worker();
   assert.equal((await handler.fetch(req('/api/ghost/shifts',{identity:null}),s.env)).status,401);
@@ -111,6 +148,8 @@ test('composer appends ONE schema-only migration and same Worker dist/source, no
   assert.equal(r.prepared,true);assert.equal(r.migration,'0002_cloud_scheduled_shift.sql');
   const out=fs.readFileSync(path.join(dir,'worker/index.js'),'utf8');
   assert.match(out,/ROVOR_CLOUD_SCHEDULED_SHIFT_V1/);
+  assert.match(out,/const __feed = \(\(\) => \{/);
+  assert.match(out,/GHOST_FEED_COMMIT/);
   assert.equal(out,fs.readFileSync(path.join(dir,'dist/server/index.js'),'utf8'));
   const manifest=JSON.parse(fs.readFileSync(path.join(dir,'.openai/hosting.json'),'utf8'));
   assert.equal(manifest.project_id,'appgprj_6add1e2cc8c08191839344b34d7dbf50');
