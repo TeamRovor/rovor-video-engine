@@ -1,0 +1,21 @@
+name: ROVOR HUD live workload refresh
+on:
+  pull_request:
+    paths:
+      - 'dashboard/command-center/native-v8-9/live-quota-board.js'
+      - 'tests/test_hud_popup_refresh.cjs'
+      - '.github/workflows/hud-popup-refresh.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  refresh-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --check dashboard/command-center/native-v8-9/live-quota-board.js
+      - run: node tests/test_hud_popup_refresh.cjs
+      - run: node tests/test_hud_live_quota_jobs.cjs
