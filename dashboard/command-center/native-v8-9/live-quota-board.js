@@ -101,6 +101,27 @@ function card(group,quota,live,index,slot,cloud,attempts){
  return '<article class="rvq-provider"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
  '<div class="rvq-provider-content">'+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
 }
+
+function localEmployeeSection(workforce,live){
+ const employees=live&&Array.isArray(workforce?.employees)&&workforce.employees.length<=20?
+   workforce.employees:[];
+ if(!employees.length)return '<section class="rvq-staff"><h4>Mac employee snapshot</h4><p>Fresh employee job data unavailable; provider receipts above come from a separate cloud ledger.</p></section>';
+ const rows=employees.map(e=>{
+   const job=e?.latest_job;
+   const counts='Queued '+fmt(e?.queued_jobs)+' · Running '+fmt(e?.running_jobs);
+   const title=job?.task?esc(String(job.task).slice(0,120)):'No attributed job';
+   const route=job?.assigned_route?' · Route '+esc(String(job.assigned_route).slice(0,100)):'';
+   const verified=e?.online_verified===true?'Verified online':'Running not verified';
+   return '<li class="rvq-staff-row"><div class="rvq-job-top"><strong>'+
+     esc(String(e?.name||e?.id||'Unassigned').slice(0,80))+'</strong><span>'+
+     esc(String(e?.status||'Unknown').replaceAll('_',' ').slice(0,60))+'</span></div>'+
+     '<div class="rvq-job-title">'+title+'</div><div class="rvq-job-meta">'+counts+route+
+     '</div><div class="rvq-job-meta">'+verified+' · actual upstream model receipt not linked</div></li>';
+ }).join('');
+ return '<section class="rvq-staff"><h4>Mac workforce / local job history</h4>'+
+  '<p>Latest assigned employee jobs. Past draft records do not prove current execution.</p>'+
+  '<ul class="rvq-staff-list">'+rows+'</ul></section>';
+}
 const css=`
 #rovor-workload-popup .rvq-board{margin:8px 0 20px!important;padding:20px!important;background:linear-gradient(160deg,rgba(4,24,47,.96),rgba(2,12,28,.96))!important;border:1px solid rgba(79,169,221,.36)!important;border-radius:15px!important;color:#e6f6ff}
 #rovor-workload-popup .rvq-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:17px}
@@ -132,6 +153,12 @@ const css=`
 #rovor-workload-popup .rvq-jobs{display:grid;gap:6px;border-top:1px solid rgba(111,193,231,.23);padding:12px 0 14px;color:#99bdd3;font:11px/1.5 system-ui}
 #rovor-workload-popup .rvq-jobs>strong{font:700 10px system-ui;letter-spacing:.09em;color:#95daff}
 #rovor-workload-popup .rvq-jobs p{margin:2px 0;color:#9fc2d7}
+#rovor-workload-popup .rvq-staff{margin-top:16px;padding:14px;border:1px solid rgba(90,164,204,.38);border-radius:12px;background:rgba(6,29,51,.94);color:#a3c8dc}
+#rovor-workload-popup .rvq-staff>h4{margin:0 0 6px;color:#c7eeff;font:700 14px system-ui}
+#rovor-workload-popup .rvq-staff>p{margin:0 0 12px;font:11px/1.5 system-ui}
+#rovor-workload-popup .rvq-staff-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-height:280px;overflow-y:auto;overscroll-behavior:contain}
+#rovor-workload-popup .rvq-staff-row{padding:10px;border:1px solid rgba(90,164,204,.24);border-radius:9px;min-width:0;font:11px/1.5 system-ui}
+@media(max-width:650px){#rovor-workload-popup .rvq-staff-list{grid-template-columns:1fr}}
 #rovor-workload-popup .rvq-job-list{list-style:none;padding:0;margin:5px 0;max-height:235px;overflow:auto;overscroll-behavior:contain;scrollbar-color:#327baf #082b46;scrollbar-width:thin}
 #rovor-workload-popup .rvq-job{padding:9px 0;border-top:1px solid rgba(110,181,217,.16)}
 #rovor-workload-popup .rvq-job-top{display:flex;gap:9px;justify-content:space-between;flex-wrap:wrap;color:#8ad4ff;font-weight:600}
@@ -196,7 +223,7 @@ function render(data,live,cloud=null){
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Each configured connection gets its own status and quota/reset meter. Actual inference is unverified without a model execution receipt.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':'REPORT DISCONNECTED')+'</span></div>'+
  summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
- '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+
+ '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+localEmployeeSection(data?.workforce,live)+
  '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Local quota bars are cached gateway limits; separate cloud bars require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
 }
 function start(){
