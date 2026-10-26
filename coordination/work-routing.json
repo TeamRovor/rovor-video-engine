@@ -1026,6 +1026,15 @@
       "lane": "delivery",
       "requires": [],
       "objective": "deliver-promised-work"
+    },
+    "windows-pr-mainline-sync-20261026": {
+      "lane": "efficiency",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

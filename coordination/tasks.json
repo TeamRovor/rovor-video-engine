@@ -5555,6 +5555,24 @@
         "kind": "plan",
         "prompt": "Public ROVOR Digital services: websites, brand/logo design, social content, landing pages, domain connection, business email, inquiry/booking setup and online stores. Create a practical pass/fail review rubric for a small-business website before launch. Cover mobile layout, keyboard access, contrast, readable text, navigation, forms/error recovery, accurate business claims, domain/HTTPS, image quality and basic performance. Each item must have an observable test, failure example and evidence to save. Separate a proposed rubric from actually executed tests. Never mark anything passed without evidence. Keep the response under 700 words. This is a draft for human review."
       }
+    },
+    {
+      "id": "windows-pr-mainline-sync-20261026",
+      "title": "Reconcile Windows reliability PR #7 with current main",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Keona Windows desktop session",
+      "branch": "codex/windows-reliability-v3-1",
+      "scopes": [
+        ".gitignore",
+        "AGENTS.md",
+        "subsystem:windows-pr-mainline-sync"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T01:18:40Z",
+      "next_update": "After the two-file merge resolution and the three-platform hosted regression result.",
+      "next_action": "Use an isolated checkout at fetched PR head 0d26634aa1408b720859fa000b62ccea55fac1ab and merge exact current main 0599ea9d34611d1f58993c433835a61d2d9be000. Resolve only .gitignore and AGENTS.md while preserving current-main guidance and Windows branch context. Push only as a normal fast-forward; if either remote ref moved, stop and refetch. Confirm PR #7 status and hosted macOS, Ubuntu, and Windows regressions. This does not unblock local original-audio validation.",
+      "acceptance": "PR branch descends from the exact current-main revision without force push; only .gitignore and AGENTS.md required conflict resolution and both versions' required content is retained; PR #7 becomes mergeable and its hosted three-platform regression passes. Record local Windows media/tool validation as still blocked; do not claim a laptop render."
     }
   ]
 }
