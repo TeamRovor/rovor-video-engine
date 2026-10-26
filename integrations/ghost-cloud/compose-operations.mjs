@@ -15,7 +15,7 @@ export function compileOperations(site,runtime,worker,canary,operations) {
  const hash=createHash('sha256').update([runtime,worker,canary,operations].join('\0')).digest('hex');
  return site.slice(0,site.lastIndexOf(END))+`\n// ROVOR_CLOUD_OPERATIONS_V1 ${hash}\n`+
   `const __cloud = (() => {\n`+
-  `const rt = (() => {\n${rt}\nreturn {PROVIDERS,eligibility,tick,validateJob,requestFor};})();\n`+
+  `const rt = (() => {\n${rt}\nreturn {PROVIDERS,eligibility,tick,validateJob,requestFor,diagnosePending};})();\n`+
   `const worker = (() => {const {PROVIDERS,eligibility,tick,validateJob}=rt;\n${wk}\n})();\n`+
   `const canary = (() => {const {PROVIDERS,requestFor}=rt;\n${probe}\nreturn runCanary;})();\n`+
   `return {...rt,worker,canary};})();\n`+

@@ -122,3 +122,39 @@ test('invalid downstream tick receipt records failure without imaginary dispatch
     tick:async()=>({enabled:true,dispatched:15}),clock:s.clock,newId:s.newId});
   assert.equal(r.status,'failed');assert.equal(r.dispatched,0);assert.equal(r.reason,'invalid_tick_receipt');
 });
+
+
+test('persists only allowlisted provider gate causes for blocked unattended shifts',async()=>{
+ const s=setup();s.db.exec("INSERT INTO ghost_cloud_jobs(id) VALUES('ready')");
+ const r=await runScheduledShift(s.env,{
+   replenish:async()=>({queued:0,duplicates:0}),
+   tick:async()=>({enabled:true,dispatched:0,
+     denied:{gemini:'not_configured',openrouter:'not_configured'},
+     blocked:{groq:{reason:'account_minimum_interval',next_eligible_at:1792900042000}}}),
+   clock:s.clock,newId:s.newId
+ });
+ assert.equal(r.status,'idle');assert.equal(r.dispatched,0);
+ assert.equal(r.reason,'claim_groq_account_minimum_interval');
+ const record=(await readScheduledShifts(s.env)).runs[0];
+ assert.equal(record.reason,'claim_groq_account_minimum_interval');
+ assert.equal(JSON.stringify(record).includes('1792900042000'),false);
+
+ const x=setup();x.db.exec("INSERT INTO ghost_cloud_jobs(id) VALUES('ready')");
+ const malicious=await runScheduledShift(x.env,{
+   replenish:async()=>({queued:0,duplicates:0}),
+   tick:async()=>({enabled:true,dispatched:0,
+     blocked:{groq:{reason:'secret bearer-token injected'}}}),
+   clock:x.clock,newId:x.newId
+ });
+ assert.equal(malicious.reason,'unattempted_jobs_not_dispatched');
+ assert.ok(!JSON.stringify(x.db.prepare('SELECT * FROM ghost_cloud_shift_runs').all()).includes('bearer-token'));
+
+ const y=setup();y.db.exec("INSERT INTO ghost_cloud_jobs(id) VALUES('ready')");
+ const ambiguous=await runScheduledShift(y.env,{
+   replenish:async()=>({queued:0,duplicates:0}),
+   tick:async()=>({enabled:true,dispatched:0,
+     blocked:{groq:{reason:'account_minimum_interval'},mistral:{reason:'account_request_cap'}}}),
+   clock:y.clock,newId:y.newId
+ });
+ assert.equal(ambiguous.reason,'unattempted_jobs_not_dispatched');
+});

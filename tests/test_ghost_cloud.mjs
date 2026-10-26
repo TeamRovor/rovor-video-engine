@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {PROVIDERS,eligibility,requestFor,infer,claim,tick,validateJob} from '../integrations/ghost-cloud/runtime.mjs';
+import {PROVIDERS,eligibility,requestFor,infer,claim,tick,validateJob,diagnosePending} from '../integrations/ghost-cloud/runtime.mjs';
 import worker from '../integrations/ghost-cloud/worker.mjs';
 
 const NOW=Date.now();
@@ -168,4 +168,76 @@ test('global rolling-day emergency ceiling prevents a 145th claim',async()=>{
  const insert=sqlite.prepare("INSERT INTO ghost_cloud_attempts(id,job_id,provider,model,pool,started_at,reserved_tokens,status) VALUES(?,?,?,?,?,?,?,'needs_review')");
  for(let i=0;i<144;i++){enqueue(sqlite,job('old-'+i));insert.run('id-'+i,'old-'+i,'other','other','other',NOW-1000,1);}
  assert.equal(await claim(db,'groq',cfg(),NOW),null);
+});
+
+
+test('reports exact read-only no-dispatch blockers without replay or private fields',async()=>{
+ // A scheduled wakeup with no compatible job must not masquerade as work.
+ const none=setup();enable(none.sqlite);
+ const empty=await tick(none.env,async()=>{throw Error('unexpected inference');},NOW);
+ assert.equal(empty.dispatched,0);
+ assert.equal(empty.blocked.groq.reason,'no_matching_unattempted_job');
+
+ const roles=setup();enable(roles.sqlite);
+ enqueue(roles.sqlite,job('not-walter',{employee:'Saul'}));
+ const mismatch=await tick(roles.env,async()=>{throw Error('unexpected inference');},NOW);
+ assert.equal(mismatch.blocked.groq.reason,'no_matching_unattempted_job');
+ assert.equal(roles.sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,0);
+
+ const wait=setup({groq:cfg({min_interval_ms:60000})});enable(wait.sqlite);
+ enqueue(wait.sqlite,job('interval-first'));enqueue(wait.sqlite,job('interval-second'));
+ assert.equal((await tick(wait.env,async()=>success(),NOW)).dispatched,1);
+ const waiting=await tick(wait.env,async()=>{throw Error('cooldown must not infer');},NOW+1);
+ assert.deepEqual(waiting.blocked.groq,{reason:'account_minimum_interval',next_eligible_at:NOW+60000});
+ assert.equal(wait.sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,1);
+
+ const requests=setup({groq:cfg({requests_per_day:1})});enable(requests.sqlite);
+ enqueue(requests.sqlite,job('request-first'));enqueue(requests.sqlite,job('request-second'));
+ assert.equal((await tick(requests.env,async()=>success(),NOW)).dispatched,1);
+ assert.equal((await tick(requests.env,async()=>{throw Error('request cap');},NOW+2)).blocked.groq.reason,'account_request_cap');
+
+ const budget=setup({groq:cfg({tokens_per_day:1000})});enable(budget.sqlite);
+ enqueue(budget.sqlite,job('tokens-first'));enqueue(budget.sqlite,job('tokens-second'));
+ assert.equal((await tick(budget.env,async()=>success(),NOW)).dispatched,1);
+ assert.equal((await tick(budget.env,async()=>{throw Error('token cap');},NOW+2)).blocked.groq.reason,'account_reserved_token_cap');
+
+ const limited=setup();enable(limited.sqlite);
+ enqueue(limited.sqlite,job('retry-first'));enqueue(limited.sqlite,job('retry-second'));
+ assert.equal((await tick(limited.env,async()=>new Response('',{status:429,headers:{'Retry-After':'120'}}),NOW)).dispatched,1);
+ const cooldown=await tick(limited.env,async()=>{throw Error('retry-after');},NOW+1000);
+ assert.equal(cooldown.blocked.groq.reason,'account_retry_after');
+ assert.ok(cooldown.blocked.groq.next_eligible_at>=NOW+120000);
+ assert.ok(cooldown.blocked.groq.next_eligible_at<=NOW+121000);
+ assert.ok(!JSON.stringify(cooldown.blocked).includes('secret-value-never-returned'));
+
+ const circuit=setup();enable(circuit.sqlite);
+ for(let i=0;i<4;i++)enqueue(circuit.sqlite,job('failure-'+i));
+ for(let i=0;i<3;i++)assert.equal((await tick(circuit.env,async()=>new Response('fail',{status:503}),NOW+i*200)).dispatched,1);
+ const tripped=await tick(circuit.env,async()=>{throw Error('circuit');},NOW+1000);
+ assert.equal(tripped.blocked.groq.reason,'failure_circuit_requires_review');
+ assert.equal(circuit.sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,3);
+});
+
+
+test('read-only claim gate snapshot distinguishes STOP, eligible and accounted cap',async()=>{
+ const {env,sqlite}=setup({groq:cfg({requests_per_day:1})});
+ enqueue(sqlite,job('gate-job-one'));enqueue(sqlite,job('gate-job-two'));
+ const paused=await diagnosePending(env,NOW);
+ assert.equal(paused.source,'read_only_cloud_claim_gates');
+ assert.equal(paused.providers.length,9);
+ assert.deepEqual(paused.providers.find(x=>x.provider==='groq'),{provider:'groq',state:'paused',reason:'global_stop'});
+ assert.equal(paused.providers.find(x=>x.provider==='gemini').reason,'not_configured');
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,0);
+ enable(sqlite);
+ const open=await diagnosePending(env,NOW);
+ assert.deepEqual(open.providers.find(x=>x.provider==='groq'),
+   {provider:'groq',state:'claim_conditions_met_unverified',reason:'claim_conditions_met_unverified'});
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,0);
+ await tick(env,async()=>success(),NOW);
+ const capped=await diagnosePending(env,NOW+1);
+ assert.equal(capped.providers.find(x=>x.provider==='groq').reason,'account_request_cap');
+ const copy=JSON.stringify(capped);
+ assert.ok(!copy.includes('Compare these two public interfaces.'));
+ assert.ok(!copy.includes('secret-value-never-returned'));
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,1);
 });

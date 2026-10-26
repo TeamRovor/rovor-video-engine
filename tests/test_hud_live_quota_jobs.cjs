@@ -48,7 +48,7 @@ const cloud={
      title:'<img src=x onerror=alert(1)>',status:'needs_review',
      requested_model:'openai/gpt-oss-120b',
      tokens_input:12,tokens_output:20,
-     started_at:now - 2000,human_review:'approved'}
+     started_at:now - 2000,human_review:'passed'}
   ]
 };
 const html=render(data,true,cloud);

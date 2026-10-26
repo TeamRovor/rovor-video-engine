@@ -137,3 +137,50 @@ test('private cloud admission and verified cloud quota remain separate from gate
   assert(!noCloudLimit.includes('6 / 50 requests'));
   assert.match(noCloudLimit,/Cloud quota and reset: unknown/);
 });
+
+
+test('cloud claim gate is displayed without fabricating limits or online status',()=>{
+  const window={},document={getElementById:()=>({})};
+  const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
+  vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map});
+  const cloud={execution_source:'cloud_provider',observed_at:Date.now(),providers:[
+    {provider:'groq',admission:'eligible',credentials_configured:true,online_verified:false,
+      dispatch_gate:{provider:'groq',state:'blocked',reason:'account_request_cap'}},
+    {provider:'gemini',admission:'disabled_pending_verification',credentials_configured:true,online_verified:false,
+      dispatch_gate:{provider:'gemini',state:'ineligible',reason:'not_configured'}}
+  ]};
+  for(let i=2;i<9;i++)cloud.providers.push({provider:'provider'+i,admission:'disabled_pending_verification',credentials_configured:true,online_verified:false});
+  const html=window.ROVOR_QUOTA_BOARD.render(null,false,cloud);
+  assert.match(html,/Account request allowance reached/);
+  assert.match(html,/No verified cloud route configuration/);
+  assert.match(html,/NOT VERIFIED/);
+  assert.match(html,/Cloud quota and reset: unknown/);
+  assert.doesNotMatch(html,/Verified cloud limit/);
+  const poisoned=structuredClone(cloud);
+  poisoned.providers[0].dispatch_gate.reason='<img src=x onerror=alert(1)>';
+  const noLeak=window.ROVOR_QUOTA_BOARD.render(null,false,poisoned);
+  assert.doesNotMatch(noLeak,/<img src=x/);
+  assert.match(noLeak,/Next cloud claim · Not reported/);
+});
+
+
+test('reviewed cloud jobs display canonical passed and failed states',()=>{
+ const window={},document={getElementById:()=>({})};
+ const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
+ vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map});
+ const ps=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
+ const cloud={execution_source:'cloud_provider',observed_at:Date.now(),
+  providers:ps.map(provider=>({provider,credentials_configured:true,admission:'disabled_pending_verification',online_verified:false})),
+  attempts:[
+   {provider:'groq',employee:'Walter',title:'Owner accepted',human_review:'passed',status:'needs_review',started_at:Date.now()-3000},
+   {provider:'groq',employee:'Jane',title:'Owner rejected',human_review:'failed',status:'needs_review',started_at:Date.now()-2000},
+   {provider:'groq',employee:'Gale',title:'Not reviewed',human_review:'not_recorded',status:'needs_review',started_at:Date.now()-1000}
+  ]
+ };
+ const html=window.ROVOR_QUOTA_BOARD.render(null,false,cloud);
+ assert.match(html,/Owner accepted/);
+ assert.match(html,/Owner rejected/);
+ assert.match(html,/PASS RECORDED/);
+ assert.match(html,/FAIL RECORDED/);
+ assert.equal((html.match(/AWAITING HUMAN REVIEW/g)||[]).length,1);
+});
