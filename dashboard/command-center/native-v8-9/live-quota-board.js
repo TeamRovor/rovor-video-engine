@@ -219,10 +219,14 @@ function render(data,live,cloud=null){
  '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudFresh?cloud.attempts:[],data)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+unattributedWorkers(data,live)+
  '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Local quota bars are cached gateway limits; separate cloud bars require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
 }
+let started=false;
 function start(){
+ if(started)return;started=true;
  let busy=false,last=null,lastInventory=null,lastCloud=null,updated=0;
- const slot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
+ const originalSlot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
    n=>!n.hidden&&n.querySelector('h3')?.textContent?.trim()==='YOUR OMNIROUTE CONNECTIONS');
+ // Once render() replaces the original card, keep finding the mounted quota board.
+ const slot=()=>originalSlot()||[...document.querySelectorAll('#rovor-workload-popup .rvq-board')].find(n=>!n.hidden);
  async function sync(){
    if(busy||document.hidden)return;
    const original=slot();if(!original)return;
@@ -252,8 +256,14 @@ function start(){
    lastCloud=cloud;last=fresh;updated=Date.now();
    const target=slot();if(target)target.outerHTML=render(fresh||lastInventory,!!fresh,cloud);
  }
- const observer=new MutationObserver(()=>{if(slot())void sync();});
- observer.observe(document.body,{childList:true,subtree:true});void sync();
+ // Observe the *original* panel only; watching our replacement would cause
+ // MutationObserver -> render -> MutationObserver feedback loops.
+ const observer=new MutationObserver(()=>{if(originalSlot())void sync();});
+ observer.observe(document.body,{childList:true,subtree:true});
+ // Re-query the mounted board on each tick: a one-shot observer never refetches
+ // changing usage, even if the private telemetry endpoint stays fresh.
+ setInterval(()=>{if(slot())void sync();},5000);
+ void sync();
 }
 return {render,start};
 })();
