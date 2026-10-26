@@ -379,19 +379,33 @@ def tick(state, workspace, *, max_claims=144, interval=601, now=None,
         fleet = (verified_fleet_provider(queued['id'], json.loads(queued['payload']),
                                          time.time() if now is None else now)
                  if queued and verified_fleet_provider is not None else None)
+        route_blocked = False
+        if queued and fleet is None:
+            # shortcut: catalog can change after preflight; execute rechecks before POST.
+            import ghost_omniroute_job as gateway
+            try:
+                payload = json.loads(queued['payload'])
+                packet = (public_assignment(payload) if 'public_task' in payload
+                          else validate_assignment(payload))['packet']
+                gateway.verify_route(packet, gateway.read_combo_catalog())
+            except ValueError:
+                route_blocked = True
         result = (worker.run_once(conn, Path(workspace), owner='rovor-continuous-research',
                     now=now, allow_omniroute_model_use=True,
                     omniroute_queue_job_id=queued['id'], omni_max_24h=max_claims,
                     omni_continuous=True, omni_pace_seconds=interval,
-                    omni_verified_fleet=fleet) if queued else None)
+                    omni_verified_fleet=fleet) if queued and not route_blocked else None)
         # Never put raw model text or private errors in a status/heartbeat.
-        output = {'status': 'tick_complete', 'feed': feed,
+        output = {'status': 'route_preflight_requires_review' if route_blocked else 'tick_complete',
+                  'feed': feed,
                   'executed': int(result is not None), 'public_source': refresh,
                   'catalogue_assignments': len(assignments()),
                   'max_claims_24h': max_claims, 'min_interval_seconds': interval,
                   'observed_at': time.time() if now is None else now,
                   'review_ready': bool(result and (result.get('result') or {}).get(
                       'review_status') == 'draft_ready_for_human_review')}
+        if route_blocked:
+            output['route_policy'] = 'requires_review_before_claim'
         if (isinstance(fleet, dict)
                 and fleet.get('independent_pool_limits') is True):
             output['dispatch_mode'] = 'verified_independent_pool_opt_in'
@@ -405,6 +419,10 @@ def tick(state, workspace, *, max_claims=144, interval=601, now=None,
         else:
             output['dispatch'] = queue_health(conn, state, max_claims=max_claims,
                                               interval=interval, now=now)
+            if route_blocked and output['dispatch']['reason'] not in {
+                    'stop_requested', 'failure_circuit_requires_review'}:
+                output['dispatch'].update(allowed=False, reason='unknown',
+                                          next_eligible_at=None)
         import omniroute_workpack_runner as workpack
         workpack.write_receipt(state / 'continuous-status.json', output, replace=True)
         return output
