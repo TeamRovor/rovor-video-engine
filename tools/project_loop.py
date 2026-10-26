@@ -144,6 +144,37 @@ def suggestions(data):
                   key=lambda t: (t['priority'], t['id']))
 
 
+
+def health_summary(data):
+    """Return deterministic task counts and actionable queue guidance."""
+    tasks = data['tasks']
+    counts = {status: sum(1 for task in tasks if task.get('status') == status)
+              for status in sorted(STATUSES)}
+    ready = suggestions(data)
+    blocked = sorted((task for task in tasks if task.get('status') == 'blocked'),
+                     key=lambda task: (task.get('priority', 999999), task.get('id', '')))
+    return {'total': len(tasks), 'counts': counts, 'ready': ready, 'blocked': blocked}
+
+
+def print_health_summary(data):
+    summary = health_summary(data)
+    counts = summary['counts']
+    print('Project health: %d tasks | ready %d | active %d | blocked %d | done %d' % (
+        summary['total'], counts['ready'], counts['active'], counts['blocked'], counts['done']))
+    if summary['ready']:
+        print('Recommended eligible tasks (priority order; not automatically claimed):')
+        for task in summary['ready'][:5]:
+            print('  P%d %s — %s' % (task['priority'], task['id'], task['title']))
+    else:
+        print('Recommended eligible tasks: none')
+    if summary['blocked']:
+        print('Blocked tasks requiring attention:')
+        for task in summary['blocked'][:5]:
+            print('  P%d %s — %s' % (
+                task.get('priority', 0), task['id'], task.get('blocker', 'blocker not recorded')))
+    return summary
+
+
 def git(repo, *args):
     result = subprocess.run(['git', '-C', str(repo), *args], capture_output=True,
                             text=True, timeout=15, check=False)
@@ -200,6 +231,7 @@ def main(argv=None):
         print('Coordination structure valid; evidence remains subject to review.')
         if args.command == 'status':
             print('Source: ' + (args.ref or 'local working copy') + ' (fetch/push required to share)')
+            print_health_summary(data)
             for task in sorted(data['tasks'], key=lambda t: (t['priority'], t['id'])):
                 print('[%s] %s | %s | %s' % (task['status'], task['id'], task.get('owner') or 'unclaimed', task['branch']))
                 print('  Next: ' + task['next_action'])
