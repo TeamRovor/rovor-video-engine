@@ -57,7 +57,7 @@ assert.match(html,/Mac workforce \/ local job history/);
 assert.match(html,/Investigate scheduler pacing/);
 assert.match(html,/Running not verified/);
 assert.match(html,/Reason: paced wait/);
-assert.match(html,/46 \\/ 50 claims in 24h/);
+assert.ok(html.includes('46 / 50 claims in 24h'));
 assert.match(html,/Needs review 92/);
 const old=render({...data,workforce:{...data.workforce,dispatch:{status:'unavailable_or_stale'}}},true,cloud);
 assert.ok(!old.includes('46 / 50 claims in 24h'));
