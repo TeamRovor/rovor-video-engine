@@ -4,7 +4,7 @@ The existing right-arm linear blend reverses painted cuff triangles during a lar
 
 A finite-radius centerline spreads elbow curvature over 220 source pixels along the actual elbow-to-wrist axis. Cross-sections follow the curve normal; upper material outside the bend stays on the shoulder parent and distal material stays rigid with the forearm. This is a continuous mesh deformation of the arm component, not a flattened character or head swap. Existing mesh rasterization and premultiplied source pixels are reused unchanged.
 
-The review envelope is shoulder −5° through 0°, elbow −135° through 0°, wrist fixed at zero. Unsupported poses are rejected. The curved centerline moves the distal anchor relative to the old hinge FK; its old hand-parent matrix cannot be reused. No independent wrist, new hand attachment, pose switching or finger articulation is claimed.
+The initial study used shoulder −5° through 0°, elbow −135° through 0°, wrist fixed at zero. The initial study rejected unsupported poses. The curved centerline moves the distal anchor relative to the old hinge FK; its old hand-parent matrix cannot be reused. That initial study claimed no independent wrist, new hand attachment, pose switching or finger articulation. The current independent-wrist extension is documented in CARTOON-EVAN-ARC-WRIST.md.
 
 ## Comparison and checks
 
@@ -22,4 +22,4 @@ A 160-pixel finite bend removed many problems but still reverses one retained gr
 
 No generated artwork, source-alpha modification, audio retiming, release change or native Moho operation occurred. Source matte specks/fringes remain. `Motion-Review.json`, `Pilot.json`, `Arc-Pilot.json` and frozen local scripts retain the evidence.
 
-Next: derive the moved rigid forearm/wrist parent from the selected arc, validate its agreement with distal material, then fit a hand attachment at a held raised pose. Keep the old FK parent and rejected low-arm thumbs-down exposure out of that preview. Review independent wrist motion and cuff silhouette before any speaking-scene integration.
+Follow-up: CARTOON-EVAN-ARC-WRIST.md derives and checks the moved parent, adds independent wrist motion and records the remaining rejected attachment seam. Its next concrete work supersedes this initial study.
