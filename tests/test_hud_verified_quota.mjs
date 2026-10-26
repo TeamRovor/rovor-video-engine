@@ -144,12 +144,12 @@ test('cloud claim gate is displayed without fabricating limits or online status'
   const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
   vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map});
   const cloud={execution_source:'cloud_provider',observed_at:Date.now(),providers:[
-    {provider:'groq',admission:'eligible',online_verified:false,
+    {provider:'groq',admission:'eligible',credentials_configured:true,online_verified:false,
       dispatch_gate:{provider:'groq',state:'blocked',reason:'account_request_cap'}},
-    {provider:'gemini',admission:'disabled_pending_verification',online_verified:false,
+    {provider:'gemini',admission:'disabled_pending_verification',credentials_configured:true,online_verified:false,
       dispatch_gate:{provider:'gemini',state:'ineligible',reason:'not_configured'}}
   ]};
-  for(let i=2;i<9;i++)cloud.providers.push({provider:'provider'+i,admission:'disabled_pending_verification',online_verified:false});
+  for(let i=2;i<9;i++)cloud.providers.push({provider:'provider'+i,admission:'disabled_pending_verification',credentials_configured:true,online_verified:false});
   const html=window.ROVOR_QUOTA_BOARD.render(null,false,cloud);
   assert.match(html,/Account request allowance reached/);
   assert.match(html,/No verified cloud route configuration/);
