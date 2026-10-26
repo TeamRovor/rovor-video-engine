@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {PROVIDERS,eligibility,requestFor,infer,claim,tick,validateJob} from '../integrations/ghost-cloud/runtime.mjs';
+import {PROVIDERS,eligibility,requestFor,infer,claim,tick,validateJob,diagnosePending} from '../integrations/ghost-cloud/runtime.mjs';
 import worker from '../integrations/ghost-cloud/worker.mjs';
 
 const NOW=Date.now();
@@ -214,4 +214,28 @@ test('reports exact read-only no-dispatch blockers without replay or private fie
  const tripped=await tick(circuit.env,async()=>{throw Error('circuit');},NOW+1000);
  assert.equal(tripped.blocked.groq.reason,'failure_circuit_requires_review');
  assert.equal(circuit.sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,3);
+});
+
+
+test('read-only claim gate snapshot distinguishes STOP, eligible and accounted cap',async()=>{
+ const {env,sqlite}=setup({groq:cfg({requests_per_day:1})});
+ enqueue(sqlite,job('gate-job-one'));enqueue(sqlite,job('gate-job-two'));
+ const paused=await diagnosePending(env,NOW);
+ assert.equal(paused.source,'read_only_cloud_claim_gates');
+ assert.equal(paused.providers.length,9);
+ assert.deepEqual(paused.providers.find(x=>x.provider==='groq'),{provider:'groq',state:'paused',reason:'global_stop'});
+ assert.equal(paused.providers.find(x=>x.provider==='gemini').reason,'not_configured');
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,0);
+ enable(sqlite);
+ const open=await diagnosePending(env,NOW);
+ assert.deepEqual(open.providers.find(x=>x.provider==='groq'),
+   {provider:'groq',state:'claim_conditions_met_unverified',reason:'claim_conditions_met_unverified'});
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,0);
+ await tick(env,async()=>success(),NOW);
+ const capped=await diagnosePending(env,NOW+1);
+ assert.equal(capped.providers.find(x=>x.provider==='groq').reason,'account_request_cap');
+ const copy=JSON.stringify(capped);
+ assert.ok(!copy.includes('Compare these two public interfaces.'));
+ assert.ok(!copy.includes('secret-value-never-returned'));
+ assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,1);
 });
