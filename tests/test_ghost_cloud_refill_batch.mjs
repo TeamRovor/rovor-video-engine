@@ -6,6 +6,7 @@ import {planApprovedJobs} from '../integrations/ghost-cloud/approved-feed.mjs';
 // Source-only acceptance: no hosted secrets, provider calls, Mac, D1, or inference.
 const tasks=JSON.parse(readFileSync(new URL('../coordination/tasks.json',import.meta.url),'utf8'));
 const routing=JSON.parse(readFileSync(new URL('../coordination/work-routing.json',import.meta.url),'utf8'));
+const objectives=new Set(JSON.parse(readFileSync(new URL('../business/operating-plan.json',import.meta.url),'utf8')).priority_order);
 const batch=['cloud-fleet-unblock-checklist-20261026','cloud-route-drift-recovery-20261026',
  'cloud-short-pilot-production-20261026','cloud-speech-cue-verification-20261026',
  'cloud-phone-ui-acceptance-20261026','cloud-site-conversion-audit-20261026',
@@ -31,6 +32,7 @@ test('nine distinct new cloud packets are bounded, source-approved and correctly
   assert.ok(task.cloud_inference?.prompt?.length>90);
   assert.ok(task.cloud_inference.prompt.length<14500);
   assert.ok(routing.tasks[id]);assert.ok(Array.isArray(routing.tasks[id].requires));
+  assert.ok(objectives.has(routing.tasks[id].objective),id);
   assert.ok(task.acceptance.includes('PASS/FAIL'),id);
  }
 });
