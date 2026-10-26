@@ -1,5 +1,7 @@
 # One drawn smile-corner component
 
+Follow-up: CARTOON-EVAN-GRIN-TRANSITION.md corrects fixed-width mapping to follow parent scale, and rejects direct in-speech contact morphing. The original held broad-grin evidence below is retained.
+
 A separate generated tapered brown crease now registers to the viewer-right inner upper-lip endpoint of the experimental broad grin. It follows parent translation/rotation with uniform scale, retaining source pixels and alpha. This adds a restrained corner accent to the cartoon construction. It is opt-in, with no caller in the current speaking scene. Experimental broad crown is also still excluded from speech.
 
 Full1254×1254 source inspected; native512px baseline and strength0/.5/1 pilots reviewed. Initial3px offset looked detached and was rejected; zero offset connects the line to the corner. Twelve-pixel width reads as a small crease, not a cheek-volume solution. Visible head differences are19pixels at .5/1, zero when off. Original upper310rows remain exact. Source still has18 detached positive-alpha islands/22pixels; no threshold matte cleanup or artwork acceptance.

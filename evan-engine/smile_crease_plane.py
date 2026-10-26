@@ -13,7 +13,7 @@ class SmileCreasePlane:
   if not np.isfinite(strength) or not 0<=strength<=1:raise ValueError('Crease strength must be within0..1')
   if strength==0:return np.zeros((512,512,4),np.float32)
   r=self.registration;v=arch[-1]-arch[0];v=v/np.linalg.norm(v);rotation=np.array([[v[0],-v[1]],[v[1],v[0]]],np.float32)
-  scale=r['nativeWidth']/r['halfAlphaBBox'][2];linear=rotation*scale
+  scale=r['nativeWidth']/r['halfAlphaBBox'][2]*(arch[-1,0]-arch[0,0])/r['referenceLipWidth'];linear=rotation*scale
   destination=arch[-1]+rotation@np.asarray(r['anchorOffset'],np.float32)
   # source alpha is preserved; strength is an authored expression control.
   yy,xx=np.mgrid[:1536,:1536];offset=np.stack([xx/3-destination[0],yy/3-destination[1]],axis=-1)
