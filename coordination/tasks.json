@@ -5700,6 +5700,222 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40167203600"
         }
       ]
+    },
+    {
+      "id": "cloud-fleet-unblock-checklist-20261026",
+      "title": "Draft verified cloud workforce unblock checklist",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor / requested public workforce repair batch 2026-10-26",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-fleet-unblock-checklist-20261026"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T08:45:00Z",
+      "next_update": "After a new real zero-cost provider receipt and owner PASS/FAIL review",
+      "next_action": "Execute this newly reviewed public-source drafting task once on a verified free-only route after the private allowlist and pinned commit are updated. Preserve immutable attempts, enforce STOP, and keep output as an owner-review draft.",
+      "acceptance": "A single source-verified bounded draft, actual provider/model/token receipt when available, and recorded owner PASS/FAIL before any public delivery. No paid inference, account configuration, publication, native apps, external messages, or credentials.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Walter",
+        "kind": "checklist",
+        "prompt": "Using only the public ROVOR ghost-cloud README and worker safety design, create an operator checklist to restore useful cloud shifts after approved jobs are consumed. Separate queue refill, single-model zero-cost account evidence, Mac circuit recovery, independent provider receipt verification, HUD freshness and review backlog. Give one verifiable acceptance check and rollback point for each. Never claim live status, never invent provider entitlements, secrets or operator approvals. No API calls, code execution or state changes. Under 750 words. Draft for owner review."
+      }
+    },
+    {
+      "id": "cloud-route-drift-recovery-20261026",
+      "title": "Draft safe changed-Combo route recovery plan",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor / requested public workforce repair batch 2026-10-26",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-route-drift-recovery-20261026"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T08:45:00Z",
+      "next_update": "After a new real zero-cost provider receipt and owner PASS/FAIL review",
+      "next_action": "Execute this newly reviewed public-source drafting task once on a verified free-only route after the private allowlist and pinned commit are updated. Preserve immutable attempts, enforce STOP, and keep output as an owner-review draft.",
+      "acceptance": "A single source-verified bounded draft, actual provider/model/token receipt when available, and recorded owner PASS/FAIL before any public delivery. No paid inference, account configuration, publication, native apps, external messages, or credentials.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Mike",
+        "kind": "plan",
+        "prompt": "Prepare a source-first recovery procedure for the ROVOR OmniRoute Mac worker when a pinned two-model Combo becomes a changed four-model Combo and the three-failure circuit is open. Explain read-only inspection, preserving all failed job IDs, explicit zero-cost model/pool approval, matching Combo preflight, STOP, service rollback and one proof-of-model receipt. Do not assume the Mac or current Combo state is accessible, do not clear circuit or suggest bypassing safety checks. Under 750 words. Draft for human review."
+      }
+    },
+    {
+      "id": "cloud-short-pilot-production-20261026",
+      "title": "Draft 30-second animated pilot shot schedule",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor / requested public workforce repair batch 2026-10-26",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-short-pilot-production-20261026"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T08:45:00Z",
+      "next_update": "After a new real zero-cost provider receipt and owner PASS/FAIL review",
+      "next_action": "Execute this newly reviewed public-source drafting task once on a verified free-only route after the private allowlist and pinned commit are updated. Preserve immutable attempts, enforce STOP, and keep output as an owner-review draft.",
+      "acceptance": "A single source-verified bounded draft, actual provider/model/token receipt when available, and recorded owner PASS/FAIL before any public delivery. No paid inference, account configuration, publication, native apps, external messages, or credentials.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Jane",
+        "kind": "plan",
+        "prompt": "For ROVOR Digital's public concept of a restaurant owner improving a phone menu website, draft a 30-second continuous hand-animated 2D cartoon pilot shot schedule with acting beats, props, camera continuity, readable phone-screen content and lip-sync cue placeholders. Distinguish design proposals from actual Moho, audio or video output. No slideshows, fake render claims or real client assets. Include 1920x1080 and 1080x1920 framing checks at 60 fps. Under 800 words. Owner review before production."
+      }
+    },
+    {
+      "id": "cloud-speech-cue-verification-20261026",
+      "title": "Draft narration and viseme verification criteria",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor / requested public workforce repair batch 2026-10-26",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-speech-cue-verification-20261026"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T08:45:00Z",
+      "next_update": "After a new real zero-cost provider receipt and owner PASS/FAIL review",
+      "next_action": "Execute this newly reviewed public-source drafting task once on a verified free-only route after the private allowlist and pinned commit are updated. Preserve immutable attempts, enforce STOP, and keep output as an owner-review draft.",
+      "acceptance": "A single source-verified bounded draft, actual provider/model/token receipt when available, and recorded owner PASS/FAIL before any public delivery. No paid inference, account configuration, publication, native apps, external messages, or credentials.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Jesse",
+        "kind": "checklist",
+        "prompt": "Produce a concise verification checklist for a source-first 2D short with original voiceover, English phoneme lip-sync, natural gestures and 60 fps export. Separate checks that can be automated (duration, audio identity, decoded frame count, subtitle timing) from subjective animation checks (acting, hand contacts, expressions). Include one failure example and minimum proof for each. Never claim to have heard narration or opened proprietary project files. Under 750 words. Draft for review."
+      }
+    },
+    {
+      "id": "cloud-phone-ui-acceptance-20261026",
+      "title": "Draft a mobile website-on-phone readability test",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor / requested public workforce repair batch 2026-10-26",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-phone-ui-acceptance-20261026"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T08:45:00Z",
+      "next_update": "After a new real zero-cost provider receipt and owner PASS/FAIL review",
+      "next_action": "Execute this newly reviewed public-source drafting task once on a verified free-only route after the private allowlist and pinned commit are updated. Preserve immutable attempts, enforce STOP, and keep output as an owner-review draft.",
+      "acceptance": "A single source-verified bounded draft, actual provider/model/token receipt when available, and recorded owner PASS/FAIL before any public delivery. No paid inference, account configuration, publication, native apps, external messages, or credentials.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Gale",
+        "kind": "checklist",
+        "prompt": "Design a measurable visual acceptance checklist for a premium cartoon video showing a smartphone with a restaurant menu site. Specify minimum readable text targets for render review, contrast, stable geometry, screen perspective, tap feedback, correct UI narrative order and portrait/landscape safe areas. Present tests as proposals not real pass results; no invented screenshots or private client details. Under 700 words. Draft for human review."
+      }
+    },
+    {
+      "id": "cloud-site-conversion-audit-20261026",
+      "title": "Draft ROVOR service inquiry conversion audit",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor / requested public workforce repair batch 2026-10-26",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-site-conversion-audit-20261026"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T08:45:00Z",
+      "next_update": "After a new real zero-cost provider receipt and owner PASS/FAIL review",
+      "next_action": "Execute this newly reviewed public-source drafting task once on a verified free-only route after the private allowlist and pinned commit are updated. Preserve immutable attempts, enforce STOP, and keep output as an owner-review draft.",
+      "acceptance": "A single source-verified bounded draft, actual provider/model/token receipt when available, and recorded owner PASS/FAIL before any public delivery. No paid inference, account configuration, publication, native apps, external messages, or credentials.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Gus",
+        "kind": "plan",
+        "prompt": "Use only publicly described ROVOR Digital services (websites, logo/branding, social content, ads, booking, domain/email, stores) to propose a one-page audit checklist that improves first-visit clarity and qualified inquiries. Provide measurable tests for offer clarity, above-fold action, trust evidence without invented testimonials, mobile speed, form friction and next-step expectations. Prioritize five changes by effort and conversion hypothesis without pretending you inspected the live site. No data collection or deployment. Under 750 words. Human review required."
+      }
+    },
+    {
+      "id": "cloud-outreach-qualification-20261026",
+      "title": "Draft consent-respecting lead qualification sequence",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor / requested public workforce repair batch 2026-10-26",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-outreach-qualification-20261026"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T08:45:00Z",
+      "next_update": "After a new real zero-cost provider receipt and owner PASS/FAIL review",
+      "next_action": "Execute this newly reviewed public-source drafting task once on a verified free-only route after the private allowlist and pinned commit are updated. Preserve immutable attempts, enforce STOP, and keep output as an owner-review draft.",
+      "acceptance": "A single source-verified bounded draft, actual provider/model/token receipt when available, and recorded owner PASS/FAIL before any public delivery. No paid inference, account configuration, publication, native apps, external messages, or credentials.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Saul",
+        "kind": "plan",
+        "prompt": "Draft a short, non-spammy, opt-in-first outreach and qualification sequence for ROVOR Digital's local small-business website work. Include one concise first message, follow-up only after appropriate contact, discovery questions, and a handoff format. Avoid mass messaging, scraping contacts, invented prices/clients/results or promise of automated sends. Keep entire response under 650 words. This is private draft copy only, no sending or publication without owner PASS."
+      }
+    },
+    {
+      "id": "cloud-usage-proof-audit-20261026",
+      "title": "Draft nine-provider usage proof and HUD audit",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor / requested public workforce repair batch 2026-10-26",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-usage-proof-audit-20261026"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T08:45:00Z",
+      "next_update": "After a new real zero-cost provider receipt and owner PASS/FAIL review",
+      "next_action": "Execute this newly reviewed public-source drafting task once on a verified free-only route after the private allowlist and pinned commit are updated. Preserve immutable attempts, enforce STOP, and keep output as an owner-review draft.",
+      "acceptance": "A single source-verified bounded draft, actual provider/model/token receipt when available, and recorded owner PASS/FAIL before any public delivery. No paid inference, account configuration, publication, native apps, external messages, or credentials.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Hank",
+        "kind": "checklist",
+        "prompt": "Create an audit rubric for nine configured OmniRoute provider connections that clearly separates connected credentials, live catalog response, verified free/commercial-use entitlement, remaining quota/reset, actual model request receipts, worker-attributed tasks and continuous online status. Include how unknown usage is displayed without fabricated 0% bars, and how to recognize stale telemetry. Do not invent current utilization or billing evidence. No API calls or credentials. Under 750 words. Human review only."
+      }
+    },
+    {
+      "id": "cloud-review-to-deliverable-20261026",
+      "title": "Draft review-to-shippable output workflow",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor / requested public workforce repair batch 2026-10-26",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-review-to-deliverable-20261026"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T08:45:00Z",
+      "next_update": "After a new real zero-cost provider receipt and owner PASS/FAIL review",
+      "next_action": "Execute this newly reviewed public-source drafting task once on a verified free-only route after the private allowlist and pinned commit are updated. Preserve immutable attempts, enforce STOP, and keep output as an owner-review draft.",
+      "acceptance": "A single source-verified bounded draft, actual provider/model/token receipt when available, and recorded owner PASS/FAIL before any public delivery. No paid inference, account configuration, publication, native apps, external messages, or credentials.",
+      "cloud_inference": {
+        "revision": "v1",
+        "approved_for_cloud": true,
+        "data_class": "public_repository",
+        "employee": "Walter",
+        "kind": "plan",
+        "prompt": "Propose a practical process that takes ROVOR AI worker draft receipts and turns accepted work into useful business deliverables. Specify owner PASS/FAIL evidence, duplication checks, attribution, native-app boundary, deliverable acceptance, rejection/rework as a new immutable job (never replay old attempts), and a weekly metric measuring shipped approved work rather than raw token usage. Do not auto-approve, publish, contact clients, or claim files were made. Under 750 words. Owner review before changes."
+      }
     }
   ]
 }
