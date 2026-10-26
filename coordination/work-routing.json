@@ -1081,27 +1081,27 @@
     "cloud-fleet-unblock-checklist-20261026": {
       "lane": "operations",
       "requires": [],
-      "objective": "keep-operations-safe"
+      "objective": "reduce-repeat-work"
     },
     "cloud-route-drift-recovery-20261026": {
       "lane": "integration",
       "requires": [],
-      "objective": "deliver-promised-work"
+      "objective": "reduce-repeat-work"
     },
     "cloud-short-pilot-production-20261026": {
       "lane": "animation",
       "requires": [],
-      "objective": "deliver-promised-work"
+      "objective": "develop-content-engine"
     },
     "cloud-speech-cue-verification-20261026": {
       "lane": "animation",
       "requires": [],
-      "objective": "deliver-promised-work"
+      "objective": "develop-content-engine"
     },
     "cloud-phone-ui-acceptance-20261026": {
       "lane": "delivery",
       "requires": [],
-      "objective": "deliver-promised-work"
+      "objective": "develop-content-engine"
     },
     "cloud-site-conversion-audit-20261026": {
       "lane": "sales",
@@ -1116,7 +1116,7 @@
     "cloud-usage-proof-audit-20261026": {
       "lane": "operations",
       "requires": [],
-      "objective": "keep-operations-safe"
+      "objective": "reduce-repeat-work"
     },
     "cloud-review-to-deliverable-20261026": {
       "lane": "delivery",
