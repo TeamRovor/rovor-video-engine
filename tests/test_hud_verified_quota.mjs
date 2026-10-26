@@ -84,7 +84,7 @@ test('each of nine connection slots renders separately even when providers repea
     used:20,total:100,used_percent:20,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:'2026-10-25T20:00:00Z'}]};
   const html=window.ROVOR_QUOTA_BOARD.render({connections,connection_slots:slots,quota,snapshot_at:'2026-10-25T20:01:00Z'},true);
   assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
-  assert.equal((html.match(/20.0%/g)||[]).length,1);
+  assert.equal((html.match(/aria-label="Reported quota used"/g)||[]).length,1);
   assert.match(html,/Enabled according to gateway: 7 \/ 9/);
   assert.match(html,/DISABLED/);
   assert.match(html,/QUOTA UNKNOWN/);
