@@ -102,6 +102,26 @@ function card(group,quota,live,index,slot,cloud,attempts){
  '<div class="rvq-provider-content">'+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
 }
 
+function dispatchInfo(workforce,live){
+ const d=live?workforce?.dispatch:null;
+ if(d?.status!=='recent_scheduler_report')
+  return '<div class="rvq-dispatch">SCHEDULER STATUS · No recent verified pacing counters available</div>';
+ const counts=Number.isSafeInteger(d.claims_last_24h)&&Number.isSafeInteger(d.max_claims_24h)?
+   fmt(d.claims_last_24h)+' / '+fmt(d.max_claims_24h)+' claims in 24h':'Allowance not reported';
+ const queued=Number.isSafeInteger(d.queued)?fmt(d.queued):'Unknown';
+ const review=Number.isSafeInteger(d.needs_review)?fmt(d.needs_review):'Unknown';
+ const completed=Number.isSafeInteger(d.last_tick_executed)?fmt(d.last_tick_executed):'Unknown';
+ const when=Number(d.next_eligible_at);
+ const next=Number.isFinite(when)&&when>0?
+   (when*1000>Date.now()?'Next eligible '+new Date(when*1000).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):
+    'Last eligibility time passed · waiting for a new worker report'):'Next eligible time not reported';
+ const reason=String(d.reason||'unknown').replaceAll('_',' ').slice(0,80);
+ return '<div class="rvq-dispatch"><strong>MAC WORKER / VERIFIED SCHEDULER REPORT</strong>'+
+  '<div class="rvq-dispatch-stats"><span>Reason: '+esc(reason)+'</span><span>'+counts+
+  '</span><span>Queued '+queued+'</span><span>Needs review '+review+
+  '</span><span>Executed last tick '+completed+'</span></div>'+
+  '<p>'+esc(next)+' · scheduler heartbeat, not proof of model activity</p></div>';
+}
 function localEmployeeSection(workforce,live){
  const employees=live&&Array.isArray(workforce?.employees)&&workforce.employees.length<=20?
    workforce.employees:[];
@@ -120,6 +140,7 @@ function localEmployeeSection(workforce,live){
  }).join('');
  return '<section class="rvq-staff"><h4>Mac workforce / local job history</h4>'+
   '<p>Latest assigned employee jobs. Past draft records do not prove current execution.</p>'+
+  dispatchInfo(workforce,live)+
   '<ul class="rvq-staff-list">'+rows+'</ul></section>';
 }
 const css=`
@@ -156,6 +177,11 @@ const css=`
 #rovor-workload-popup .rvq-staff{margin-top:16px;padding:14px;border:1px solid rgba(90,164,204,.38);border-radius:12px;background:rgba(6,29,51,.94);color:#a3c8dc}
 #rovor-workload-popup .rvq-staff>h4{margin:0 0 6px;color:#c7eeff;font:700 14px system-ui}
 #rovor-workload-popup .rvq-staff>p{margin:0 0 12px;font:11px/1.5 system-ui}
+#rovor-workload-popup .rvq-dispatch{margin:4px 0 12px;padding:11px 12px;border:1px solid rgba(87,175,224,.4);border-radius:9px;background:rgba(9,46,77,.65);color:#acd5ee;font:11px/1.6 system-ui}
+#rovor-workload-popup .rvq-dispatch>strong{font:700 10px system-ui;letter-spacing:.09em;color:#a5e2ff}
+#rovor-workload-popup .rvq-dispatch-stats{display:flex;gap:8px 16px;flex-wrap:wrap;margin:9px 0}
+#rovor-workload-popup .rvq-dispatch-stats>span{color:#d6f2ff}
+#rovor-workload-popup .rvq-dispatch>p{margin:7px 0 0;color:#9cbed4}
 #rovor-workload-popup .rvq-staff-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-height:280px;overflow-y:auto;overscroll-behavior:contain}
 #rovor-workload-popup .rvq-staff-row{padding:10px;border:1px solid rgba(90,164,204,.24);border-radius:9px;min-width:0;font:11px/1.5 system-ui}
 @media(max-width:650px){#rovor-workload-popup .rvq-staff-list{grid-template-columns:1fr}}
