@@ -152,5 +152,7 @@
   "raisedArmProfileAccepted": false,
   "currentSpeakingProfileChanged": false,
   "defaultChanged": false,
-  "polishedMilestoneReady": false
+  "polishedMilestoneReady": false,
+  "actingSweepAccepted": false,
+  "actingFinding": "Low-arm start exposes a thumbs-down silhouette; do not use the rigid-hand sweep as closing acting. Plan pose change/occlusion or a drawn transition after arm construction is valid."
 }
