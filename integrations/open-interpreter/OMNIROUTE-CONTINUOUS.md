@@ -44,6 +44,15 @@ pre-inference failures are recorded for this circuit. The worker does not retry
 an uncertain or failed ID. A pause or provider outage means it is not completing
 work continuously; the schedule remains installed and status gives the reason.
 
+The candidate checks the installed combo before claiming a legacy assignment.
+If the exact route has changed, it records `route_preflight_requires_review`
+in the private continuous status and leaves the queued job unclaimed. The
+execution path checks again before a model request because the combo can change
+after preflight. This does not clear an existing failure circuit or make a
+multi-provider fallback eligible. Direct-provider dispatch requires a trusted
+current per-account zero-cost entitlement adapter and an exact approved
+single-model combo.
+
 ## Activation
 
 Use an immutable clean checkout of the tested candidate. The installer is a
@@ -61,6 +70,15 @@ same service label with its existing interpreter, state and workspace. Failed
 activation restores the prior plist and service with STOP held. On success it
 clears only its own rollout STOP and requests one scheduled tick. It does not
 claim a model completed merely because launchd loaded the service.
+
+If combo preflight fails or the three-failure circuit is open, stop the rollout
+and review the failed private receipts and route policy. Do not raise the claim
+cap or use a recovery canary to mask route drift. For rollback after successful
+activation, hold STOP, pause only this service, restore the installer's
+`.before-continuous-*` plist backup, and bootstrap the original service. Keep
+STOP until the restored configuration and queue have been checked; never replay
+failed job IDs. A failed installer apply already restores the original plist
+and service and deliberately leaves STOP held.
 
 Host activation must run on the actual Mac with permission to write its existing
 LaunchAgents and private worker state. In the preparing ChatGPT session those
