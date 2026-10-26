@@ -122,3 +122,19 @@ test('mounted quota board keeps polling fresh evidence after replacing original 
  window.ROVOR_QUOTA_BOARD.start();
  assert.equal(intervals.length,1,'repeated start must not add extra polling loops');
 });
+
+test('old provider cache cannot masquerade as a current usage-limit bar',()=>{
+ const report={...data,quota:{records:[{
+  provider:'openrouter',account_slot:1,model_id:'free_daily',used:12,total:50,
+  used_percent:24,unit:'requests',fetched_at:new Date(Date.now()-2*3600000).toISOString(),
+  reset_at:new Date(Date.now()+3600000).toISOString()
+ }]}};
+ const stale=board().render(report,true,null);
+ assert.match(stale,/QUOTA UNKNOWN/);
+ assert.doesNotMatch(stale,/24\.0%/);
+ assert.doesNotMatch(stale,/LIMITS REPORTED/);
+ report.quota.records[0].fetched_at=new Date().toISOString();
+ const fresh=board().render(report,true,null);
+ assert.match(fresh,/LIMITS REPORTED/);
+ assert.match(fresh,/24\.0%/);
+});
