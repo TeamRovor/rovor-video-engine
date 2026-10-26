@@ -22,7 +22,7 @@ function mock() {
   return {db,env:{GHOST_CRON_OPT_IN:'owner-approved-ghost-cron-v1',DB:{
     prepare(query){
       const statement=db.prepare(query);
-      return {bind(...args){return{
+      return {first:async()=>statement.get(),bind(...args){return{
         run:async()=>({meta:{changes:statement.run(...args).changes}}),
         first:async()=>statement.get(...args),
         all:async()=>({results:statement.all(...args)})
