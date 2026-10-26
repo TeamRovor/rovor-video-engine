@@ -1,0 +1,22 @@
+name: Moho read queue parser checks
+on:
+  push:
+    paths: ['.github/scripts/rovor_moho_read_queue.py', 'tests/test_rovor_moho_read_queue.py', '.github/workflows/moho-read-queue-check.yml']
+  pull_request:
+    paths: ['.github/scripts/rovor_moho_read_queue.py', 'tests/test_rovor_moho_read_queue.py', '.github/workflows/moho-read-queue-check.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s tests -p test_rovor_moho_read_queue.py -v
