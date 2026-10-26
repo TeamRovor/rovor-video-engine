@@ -1,0 +1,30 @@
+{
+  "status": "render-in-progress",
+  "runtimeCommit": "02c5003c7972096f2aa989efacd33aedc374494a",
+  "progress": {
+    "lastFrame": 168,
+    "totalFrames": 552,
+    "elapsedSeconds": 510.74980690097436,
+    "commit": "02c5003c7972096f2aa989efacd33aedc374494a"
+  },
+  "execSessionId": 27135,
+  "calibration24fpsFramesPassed": [
+    456,
+    504
+  ],
+  "plannedFreshFrames": 456,
+  "plannedCopiedEndingFrames": 96,
+  "plannedNormalFrames": 552,
+  "plannedSlowFrames": 2208,
+  "normalAndSlowExportVerified": false,
+  "sourceRecordingAndPlanModified": false,
+  "flagsCleared": 0,
+  "visualTimingRegionsRechecked": 6,
+  "flaggedWordsCovered": 18,
+  "polishedMilestoneReady": false,
+  "localOutput": "outputs/evan-cartoon-continuous",
+  "next": "Read Progress/Render.log/Failure/Verification and existing session; do not start duplicate render. After export, run contact-sheet/page builders, inspect actual films/frame evidence, then update this pending review.",
+  "workerRunningAtCheckpoint": true,
+  "reviewBuildersSyntaxChecked": 3,
+  "completeContactSheetsExecuted": false
+}
