@@ -194,7 +194,14 @@ function render(data,live,cloud=null){
  const connections=Array.isArray(data?.connections)?data.connections:
    cloudFresh?cloud.providers.filter(p=>p?.credentials_configured===true&&typeof p.provider==='string')
      .map(p=>({provider:p.provider,name:p.provider,connection_count:1,enabled_count:0})) : [];
- const quota=live&&Array.isArray(data?.quota?.records)?data.quota.records.filter(q=>!q.reset_at||Date.parse(q.reset_at)>Date.now()):[];
+ // Mac inventory freshness is not the same as provider-quota freshness.
+ // A bridge can keep reporting an old cache indefinitely; expire those meters.
+ const quota=live&&Array.isArray(data?.quota?.records)?data.quota.records.filter(q=>{
+   const checked=Date.parse(q?.fetched_at||'');
+   const age=Date.now()-checked;
+   return Number.isFinite(age)&&age>=-5000&&age<=15*60*1000&&
+     (!q.reset_at||Date.parse(q.reset_at)>Date.now());
+ }):[];
  // Sanitized slot status is optional to preserve compatibility with older Mac reporters.
  // Never infer which specific account is enabled from a provider-level enabled count.
  const observedSlots=Array.isArray(data?.connection_slots)?data.connection_slots:null;
