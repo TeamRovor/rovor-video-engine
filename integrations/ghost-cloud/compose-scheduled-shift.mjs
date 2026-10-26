@@ -40,7 +40,23 @@ function scheduleWidget() {
         no_eligible_providers:'all nine provider routes ineligible',
         unattempted_jobs_not_dispatched:'unattempted jobs blocked by current admission or assignment'
       };
-      const idleReason=run.status==='idle'&&Object.hasOwn(reasons,run.reason)?' · '+reasons[run.reason]:'';
+      const gates={
+        no_matching_unattempted_job:'no compatible approved job',
+        global_daily_safety_cap:'global daily safety limit reached',
+        account_request_cap:'account request allowance exhausted',
+        account_reserved_token_cap:'account reserved token allowance exhausted',
+        account_inflight_claim:'another job is still claimed',
+        account_minimum_interval:'waiting for account pacing window',
+        account_retry_after:'provider Retry-After is active',
+        failure_circuit_requires_review:'failure circuit requires review',
+        claim_contention_or_unclassified_gate:'claim blocked; inspect private receipts'
+      };
+      const names=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
+      const found=names.find(p=>String(run.reason||'').startsWith('claim_'+p+'_'));
+      const code=found?String(run.reason).slice(('claim_'+found+'_').length):'';
+      const detail=found&&Object.hasOwn(gates,code)?found.toUpperCase()+' · '+gates[code]:null;
+      const idleReason=run.status==='idle'?(detail?' · '+detail:
+        Object.hasOwn(reasons,run.reason)?' · '+reasons[run.reason]:''):'';
       status.textContent='CLOUD SCHEDULE · '+(recent?'recent run':'last recorded run')+' '+new Date(run.started_at).toLocaleString()+
         ' · '+run.status+' · dispatched '+run.dispatched+idleReason+
         ' · execution records do not prove models online right now';
