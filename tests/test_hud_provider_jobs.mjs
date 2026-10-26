@@ -74,3 +74,51 @@ test('stale or disconnected cloud evidence cannot be presented as fresh jobs',()
  assert.doesNotMatch(html,/Website launch rubric/);
  assert.match(html,/CLOUD JOB HISTORY · unavailable/);
 });
+
+
+test('mounted quota board keeps polling fresh evidence after replacing original panel', async ()=>{
+ let now=Date.now(), kind='original', requests=0, rendered=0;
+ const intervals=[];
+ class Clock extends Date { static now(){return now;} }
+ const original={
+  hidden:false,
+  querySelector:s=>s==='h3'?{textContent:'YOUR OMNIROUTE CONNECTIONS'}:null,
+  set outerHTML(value){ assert.match(value,/All configured AI connections/);kind='rendered';rendered++; }
+ };
+ const mounted={
+  hidden:false,
+  set outerHTML(value){ assert.match(value,/All configured AI connections/);rendered++; }
+ };
+ const document={
+  hidden:false,body:{},getElementById:()=>({}),
+  querySelectorAll(s){
+   if(s==='#rovor-workload-popup .wl-card')return kind==='original'?[original]:[];
+   if(s==='#rovor-workload-popup .rvq-board')return kind==='rendered'?[mounted]:[];
+   return [];
+  }
+ };
+ const fetch=async path=>{
+  requests++;
+  return {ok:true,json:async()=>path.includes('/api/hud/omniroute')?
+   {...data,snapshot_at:new Date(now).toISOString()}:
+   {execution_source:'cloud_provider',observed_at:now,providers:[],attempts:[]}};
+ };
+ class Observer { observe(){} }
+ const window={};
+ runInNewContext(code,{window,document,fetch,MutationObserver:Observer,
+  AbortSignal:{timeout:()=>null},setInterval:(fn,ms)=>{assert.equal(ms,5000);intervals.push(fn);},
+  Date:Clock,Number,String,Array,Math});
+ window.ROVOR_QUOTA_BOARD.start();
+ const drain=async()=>{await new Promise(setImmediate);await new Promise(setImmediate);};
+ await drain();
+ assert.equal(kind,'rendered','first request must mount replacement board');
+ assert.equal(requests,2,'gateway and cloud endpoints both fetched');
+ assert.equal(intervals.length,1,'one bounded periodic update loop');
+ now+=5101;
+ intervals[0]();
+ await drain();
+ assert.equal(requests,4,'subsequent poll must refetch both endpoints after card replacement');
+ assert.ok(rendered>=2,'existing mounted board must receive refreshed markup');
+ window.ROVOR_QUOTA_BOARD.start();
+ assert.equal(intervals.length,1,'repeated start must not add extra polling loops');
+});
