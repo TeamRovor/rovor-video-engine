@@ -42,7 +42,7 @@ test('existing drawer quota board remains nine-connection grouped and escaped',(
   const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
   vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array});
   const conns=Array.from({length:9},(_,i)=>({provider:'p'+i,name:i===0?'<untrusted>':'p'+i,connection_count:1,enabled_count:1}));
-  const html=window.ROVOR_QUOTA_BOARD.render({connections:conns,quota:{records:[{provider:'p0',model_id:'modelX',used:25,total:100,used_percent:25,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:'2026-10-25T07:55:00Z',account_slot:1}]},models:[]},true);
+  const html=window.ROVOR_QUOTA_BOARD.render({connections:conns,quota:{records:[{provider:'p0',model_id:'modelX',used:25,total:100,used_percent:25,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:new Date().toISOString(),account_slot:1}]},models:[]},true);
   assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
   assert.match(html,/25\.0%/);
   assert.match(html,/RESET WINDOW/);
@@ -81,7 +81,7 @@ test('each of nine connection slots renders separately even when providers repea
     provider:g.provider,account_slot:i+1,enabled:i+1<=g.enabled_count
   })));
   const quota={records:[{provider:'groq',account_slot:3,model_id:'actual-model',
-    used:20,total:100,used_percent:20,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:'2026-10-25T20:00:00Z'}]};
+    used:20,total:100,used_percent:20,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:new Date().toISOString()}]};
   const html=window.ROVOR_QUOTA_BOARD.render({connections,connection_slots:slots,quota,snapshot_at:'2026-10-25T20:01:00Z'},true);
   assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
   assert.equal((html.match(/aria-label="Reported quota used"/g)||[]).length,1);
