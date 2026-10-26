@@ -30,7 +30,17 @@ export function createCloudOperations(base, cloud) {
   const providers=data.providers.map(p=>({...p,credentials_configured:!!env[cloud.PROVIDERS[p.provider][1]],
    admission:cfg[p.provider]?.enabled!==true&&env[cloud.PROVIDERS[p.provider][1]]?'disabled_pending_verification':p.admission}));
   const checks=(await sql(env,'SELECT provider,observed_at,status,error_category FROM ghost_cloud_provider_checks').all()).results;
-  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null})),attempts:results};
+  // Last-50 activity samples can hide older actionable review work. This
+  // oldest-first index is bounded and contains metadata only, never output.
+  const reviewCount=await sql(env,"SELECT COUNT(*) AS pending_count, MIN(finished_at) AS oldest_finished_at FROM ghost_cloud_attempts WHERE status='needs_review' AND human_review='not_recorded'").first();
+  const {results:reviewItems}=await sql(env,`SELECT a.id,a.job_id,a.provider,a.model requested_model,a.actual_model,
+   a.started_at,a.finished_at,a.status,a.tokens_input,a.tokens_output,a.human_review,
+   j.employee,j.task_id,j.title FROM ghost_cloud_attempts a JOIN ghost_cloud_jobs j ON a.job_id=j.id
+   WHERE a.status='needs_review' AND a.human_review='not_recorded'
+   ORDER BY COALESCE(a.finished_at,a.started_at) ASC,a.id ASC LIMIT 50`).all();
+  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null})),
+   attempts:results,review_queue:{pending_count:reviewCount?.pending_count??0,
+    oldest_finished_at:reviewCount?.oldest_finished_at??null,items:reviewItems}};
  }
  async function control(env,enabled) {
   if(typeof enabled!=='boolean')throw Error('invalid_control');
@@ -146,7 +156,7 @@ export function createCloudOperations(base, cloud) {
   function paint(){
    linkState();
    const panel=document.getElementById('workloadPanel'),activity=document.getElementById('activityPanel');if(!panel||!activity||!data)return;
-   const key=JSON.stringify([data.enabled,data.providers,data.attempts]);
+   const key=JSON.stringify([data.enabled,data.providers,data.attempts,data.review_queue]);
    if(key===painted&&document.getElementById('rovor-cloud-live')&&document.getElementById('rovor-cloud-results'))return;
    painted=key;
    const section=el('section');section.id='rovor-cloud-live';section.className='wl-card';
@@ -154,13 +164,24 @@ export function createCloudOperations(base, cloud) {
    const pause=el('button',data.enabled?'PAUSE':'RESUME');pause.className='wl-button';pause.onclick=async()=>{try{const r=await fetch('/api/ghost/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!data.enabled})});if(!r.ok)throw Error('control_unavailable');await poll();}catch{disconnect();}};section.append(pause);
    for(const p of data.providers){const last=data.attempts.find(a=>a.provider===p.provider);section.append(el('p',p.provider+' · '+p.admission+(last?' · '+last.status:' · no execution receipt')+(p.last_check?' · provider check: '+p.last_check.status+(p.last_check.error_category?' ('+p.last_check.error_category+')':'')+' · '+new Date(p.last_check.observed_at).toLocaleString():' · provider not checked')));}
    const old=document.getElementById(section.id);if(old)old.replaceWith(section);else panel.prepend(section);
-   const results=el('section');results.id='rovor-cloud-results';results.append(el('strong','RECORDED CLOUD WORK'));
-   if(!data.attempts.length)results.append(el('p','No cloud request has completed yet.'));
-   for(const a of data.attempts.slice(0,12)){
+   const results=el('section');results.id='rovor-cloud-results';
+   const pending=data.review_queue.items,count=data.review_queue.pending_count;
+   results.append(el('strong','OWNER REVIEW QUEUE · '+count+' PENDING'));
+   if(count){
+    const oldest=data.review_queue.oldest_finished_at;
+    results.append(el('p','Oldest pending completion: '+(Number.isSafeInteger(oldest)?new Date(oldest).toLocaleString():'Not recorded')+
+     (count>pending.length?' · '+pending.length+' of '+count+' indexed; additional reviews not displayed':'')+
+     ' · drafts require explicit PASS or FAIL; no automatic acceptance'));
+   }else results.append(el('p','No cloud drafts currently awaiting owner review.'));
+   results.append(el('strong','RECORDED CLOUD WORK'));
+   if(!data.attempts.length&&!pending.length)results.append(el('p','No cloud request has completed yet.'));
+   const pendingIds=new Set(pending.map(a=>a.id));
+   const shown=[...pending,...data.attempts.filter(a=>!pendingIds.has(a.id))].slice(0,20);
+   for(const a of shown){
     const row=el('details');row.className='wl-card';row.append(el('summary',a.employee+' · '+a.provider+' · '+a.status+' · '+a.human_review));
     row.append(el('p',a.title));row.append(el('p','Actual model: '+(a.actual_model||'unknown')+' · tokens: '+(a.tokens_input??'?')+' / '+(a.tokens_output??'?')));
     if(a.finished_at)row.append(el('p',new Date(a.finished_at).toLocaleString()));
-    if(a.status==='needs_review'){
+    if(a.status==='needs_review'&&a.human_review==='not_recorded'){
      const view=el('button','VIEW OUTPUT');view.className='wl-button';const output=el('pre');output.style.cssText='white-space:pre-wrap;max-height:240px;overflow:auto';
      const controls=el('div');controls.hidden=true;
      for(const [label,verdict] of [['PASS','passed'],['FAIL','failed']]){const b=el('button',label);b.className='wl-button';b.onclick=async()=>{const r=await fetch('/api/ghost/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:a.job_id,verdict})});if(r.ok)await poll();else output.textContent='Review could not be saved.';};controls.append(b);}
@@ -179,7 +200,9 @@ export function createCloudOperations(base, cloud) {
     const snapshot=await r.json();
     if(!snapshot||snapshot.execution_source!=='cloud_provider'||!Number.isSafeInteger(snapshot.observed_at)||
        typeof snapshot.enabled!=='boolean'||!Array.isArray(snapshot.providers)||snapshot.providers.length!==9||
-       !Array.isArray(snapshot.attempts))throw Error('cloud_telemetry_invalid');
+       !Array.isArray(snapshot.attempts)||!snapshot.review_queue||
+       !Number.isSafeInteger(snapshot.review_queue.pending_count)||snapshot.review_queue.pending_count<0||
+       !Array.isArray(snapshot.review_queue.items)||snapshot.review_queue.items.length>50)throw Error('cloud_telemetry_invalid');
     data=snapshot;connection='connected';lastOk=Date.now();paint();
    }catch{disconnect();}finally{busy=false;}
   }
