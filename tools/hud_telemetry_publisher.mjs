@@ -104,4 +104,4 @@ async function main() {
   } while (!stop.signal.aborted);
 }
 
-if (isEntrypoint()) main().catch(() => { console.error('HUD reporting requires a configured HTTPS origin, writer credential, and authenticated local OmniRoute.'); process.exitCode = 1; });
+if (isEntrypoint(process.argv[1], import.meta.url)) main().catch(() => { console.error('HUD reporting requires a configured HTTPS origin, writer credential, and authenticated local OmniRoute.'); process.exitCode = 1; });
