@@ -1,0 +1,119 @@
+"""Offline tests: GitHub runner must never silently bypass the private Site."""
+import contextlib
+import io
+import json
+import os
+import sys
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from tools import ghost_cloud_hosted_shift as runner
+
+TOKEN = "owner-private-test-token-" + "x" * 40
+
+
+class Reply:
+    def __init__(self, obj=None, content=None, status=200):
+        self.body = json.dumps(obj).encode() if content is None else content
+        self.status = status
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+    def read(self, max_bytes):
+        return self.body[:max_bytes]
+
+
+class Client:
+    def __init__(self, reply):
+        self.reply = reply
+        self.request = None
+
+    def open(self, request, timeout):
+        self.request = request
+        self.timeout = timeout
+        return self.reply
+
+
+def receipt(enabled=True, dispatched=1, queued=0, denied=None):
+    return {
+        "intake": {"queued": queued, "duplicates": 0},
+        "result": {"enabled": enabled, "dispatched": dispatched,
+                   "denied": denied if denied is not None else {"gemini": "not_configured"}},
+        "observed_at": 1234567890000,
+    }
+
+
+class HostedShiftTests(unittest.TestCase):
+    def test_one_post_to_pinned_private_service_only(self):
+        client = Client(Reply(receipt(dispatched=1, queued=2)))
+        result = runner.send_shift(token=TOKEN, opener=client)
+        self.assertEqual(result["dispatched"], 1)
+        self.assertEqual(result["newly_admitted_approved_jobs"], 2)
+        self.assertEqual(result["admission_denied_provider_count"], 1)
+        self.assertEqual(client.request.full_url, runner.TARGET)
+        self.assertEqual(client.request.get_method(), "POST")
+        self.assertEqual(client.request.data, b'{"operation":"shift"}')
+        self.assertEqual(client.request.get_header("Authorization"), "Bearer " + TOKEN)
+        self.assertNotIn(TOKEN, json.dumps(result))
+        self.assertEqual(client.timeout, 90)
+
+    def test_no_arbitrary_target_or_short_service_secret(self):
+        with self.assertRaisesRegex(ValueError, "unapproved_target"):
+            runner.send_shift(token=TOKEN, url="https://evil.example/api/ghost/service")
+        with self.assertRaisesRegex(ValueError, "service_secret_missing_or_short"):
+            runner.send_shift(token="123", opener=Client(Reply(receipt())))
+
+    def test_owner_stop_is_reported_as_paused(self):
+        result = runner.send_shift(
+            token=TOKEN, opener=Client(Reply(receipt(enabled=False, dispatched=0))))
+        self.assertEqual(result["state"], "owner_paused")
+        self.assertEqual(result["dispatched"], 0)
+
+    def test_invalid_receipts_rejected_without_inventing_execution(self):
+        for body in [[], {}, {"intake": {"queued": 0}, "result": {"enabled": True}},
+                     receipt(dispatched=True), receipt(dispatched=10),
+                     receipt(dispatched=-1), receipt(queued=10),
+                     receipt(enabled=False, dispatched=1)]:
+            with self.subTest(body=body), self.assertRaises(ValueError):
+                runner.send_shift(token=TOKEN, opener=Client(Reply(body)))
+        with self.assertRaisesRegex(ValueError, "response_too_large"):
+            runner.send_shift(token=TOKEN, opener=Client(
+                Reply(content=b"x" * (runner.MAX_BYTES + 1))))
+        with self.assertRaisesRegex(ValueError, "non_json_receipt"):
+            runner.send_shift(token=TOKEN, opener=Client(Reply(content=b"not-json")))
+
+    def test_invalid_http_status_not_treated_as_shift(self):
+        with self.assertRaisesRegex(ValueError, "unexpected_http_status"):
+            runner.send_shift(token=TOKEN, opener=Client(Reply(receipt(), status=401)))
+
+    def test_missing_action_secret_exits_visibly_without_inference(self):
+        output = io.StringIO()
+        with patch.dict(os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": ""}):
+            with contextlib.redirect_stdout(output):
+                code = runner.main()
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(output.getvalue())["state"], "not_armed")
+
+    def test_no_redirects_to_untrusted_origin(self):
+        handler = runner.NoRedirect()
+        self.assertIsNone(handler.redirect_request(None, None, 302, "move", {},
+                                                   "https://evil.example/"))
+
+    def test_workflow_does_not_run_models_on_untrusted_pull_requests(self):
+        workflow = (ROOT / ".github/workflows/ghost-cloud-github-scheduler.yml").read_text()
+        self.assertIn("cron: '*/5 * * * *'", workflow)
+        self.assertIn("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'", workflow)
+        self.assertIn("persist-credentials: false", workflow)
+        self.assertIn("ROVOR_GHOST_SERVICE_TOKEN: " + chr(36) + "{{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}", workflow)
+        self.assertNotIn("pull_request_target", workflow)
+
+
+if __name__ == "__main__":
+    unittest.main()

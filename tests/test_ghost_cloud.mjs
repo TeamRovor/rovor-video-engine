@@ -188,7 +188,8 @@ test('reports exact read-only no-dispatch blockers without replay or private fie
  enqueue(wait.sqlite,job('interval-first'));enqueue(wait.sqlite,job('interval-second'));
  assert.equal((await tick(wait.env,async()=>success(),NOW)).dispatched,1);
  const waiting=await tick(wait.env,async()=>{throw Error('cooldown must not infer');},NOW+1);
- assert.deepEqual(waiting.blocked.groq,{reason:'account_minimum_interval',next_eligible_at:NOW+60000});
+ const actualStarted=wait.sqlite.prepare("SELECT started_at FROM ghost_cloud_attempts WHERE job_id='interval-first'").get().started_at;
+ assert.deepEqual(waiting.blocked.groq,{reason:'account_minimum_interval',next_eligible_at:actualStarted+60000});
  assert.equal(wait.sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,1);
 
  const requests=setup({groq:cfg({requests_per_day:1})});enable(requests.sqlite);
