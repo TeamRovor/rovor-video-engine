@@ -1,0 +1,51 @@
+name: ROVOR cloud workforce (hosted shift)
+
+on:
+  schedule:
+    # GitHub-hosted dispatcher; schedule can be delayed by GitHub load.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/ghost-cloud-github-scheduler.yml'
+      - 'tools/ghost_cloud_hosted_shift.py'
+      - 'tests/test_ghost_cloud_hosted_shift.py'
+  push:
+    paths:
+      - '.github/workflows/ghost-cloud-github-scheduler.yml'
+      - 'tools/ghost_cloud_hosted_shift.py'
+      - 'tests/test_ghost_cloud_hosted_shift.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  # A scheduled invocation must not overlap another hosted invocation.
+  # The private D1 runtime also owns durable job-claim and quota guards.
+  group: rovor-cloud-hosted-shift
+  cancel-in-progress: false
+
+jobs:
+  test:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Offline scheduler safety tests
+        run: python3 -m unittest discover -s tests -p test_ghost_cloud_hosted_shift.py -v
+
+  shift:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: One bounded existing provider-cloud shift
+        env:
+          ROVOR_GHOST_SERVICE_TOKEN: \${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
+        run: python3 tools/ghost_cloud_hosted_shift.py
