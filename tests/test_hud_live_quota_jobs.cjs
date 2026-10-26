@@ -24,7 +24,13 @@ const data={
     {provider:'groq',account_slot:1,enabled:true},
     {provider:'openrouter',account_slot:1,enabled:true}
   ],
-  quota:{records:[]}
+  quota:{records:[]},
+  workforce:{employees:[
+    {id:'mike',name:'Mike',status:'pending_or_failed_review',
+     queued_jobs:0,running_jobs:0,online_verified:false,
+     latest_job:{task:'Investigate scheduler pacing',
+                 assigned_route:'rovor-fast-free-v1'}}
+  ]}
 };
 const cloud={
   execution_source:'cloud_provider',observed_at:now,
@@ -47,6 +53,11 @@ const cloud={
 };
 const html=render(data,true,cloud);
 assert.match(html,/Draft safe blog checklist/);
+assert.match(html,/Mac workforce \/ local job history/);
+assert.match(html,/Investigate scheduler pacing/);
+assert.match(html,/Running not verified/);
+assert.ok(!html.includes('Mike is online'));
+
 assert.match(html,/Jane/);
 assert.match(html,/14 in \/ 12 out/);
 assert.match(html,/AWAITING HUMAN REVIEW/);
