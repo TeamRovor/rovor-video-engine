@@ -62,7 +62,7 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
   if(feedSource!==null){
     const feedImport="import {validateJob} from './runtime.mjs';";
     const workerImport="const {default:worker}=await import('./worker.mjs');";
-    if(typeof feedSource!=='string'||!feedSource.startsWith(feedImport)||!feedSource.includes(workerImport)||
+    if(typeof feedSource!=='string'||!feedSource.includes('\n'+feedImport+'\n')||!feedSource.includes(workerImport)||
       !feedSource.includes('export async function replenishApprovedJobs('))throw Error('unexpected_approved_feed_source');
     const body=feedSource.replace(feedImport,'const validateJob=__cloud.validateJob;')
       .replace(workerImport,'const worker=__cloud.worker;')
