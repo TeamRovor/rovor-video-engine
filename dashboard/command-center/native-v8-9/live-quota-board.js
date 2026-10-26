@@ -117,6 +117,57 @@ function jobReceipts(provider,attempts){
     (history.length>6?'<p>Showing six most recent of '+fmt(history.length)+'</p>':'')+
     '<p>Account-slot attribution requires a separate receipt; human review controls are not connected here.</p></div>';
 }
+
+const CLOUD_ROSTER=['Walter','Mike','Jane','Jesse','Gale','Gus','Saul','Hank'];
+// Employee meters are shares of returned, receipt-attributed cloud attempts,
+// never percentages of provider quota or proof an employee is running now.
+function cloudEmployeeUsage(attempts,fresh){
+ const now=Date.now(), start=now-86400000;
+ const employees=new Map(CLOUD_ROSTER.map(name=>[name.toLowerCase(),{name,receipts:0,failed:0,passed:0,tokensIn:0,tokensOut:0,incompleteTokens:0,last:null}]));
+ let measured=0, unattributed=0;
+ const seen=new Set();
+ if(fresh)for(const a of attempts){
+   if(!a||typeof a!=='object'||typeof a.status!=='string')continue;
+   const when=Number(a.started_at);
+   if(!Number.isSafeInteger(when)||when<start||when>now+300000)continue;
+   // Canaries test a route; they are not employee deliverables.
+   if(String(a.job_id||'').startsWith('canary-')||
+      String(a.title||'').startsWith('PROVIDER CANARY'))continue;
+   if(typeof a.id!=='string'||!a.id||seen.has(a.id))continue;
+   seen.add(a.id);
+   const entry=employees.get(String(a.employee||'').trim().toLowerCase());
+   if(!entry){unattributed++;continue;}
+   entry.receipts++;measured++;
+   if(a.status==='failed')entry.failed++;
+   if(a.human_review==='passed')entry.passed++;
+   if(Number.isSafeInteger(a.tokens_input)&&a.tokens_input>=0&&
+      Number.isSafeInteger(a.tokens_output)&&a.tokens_output>=0){
+     entry.tokensIn+=a.tokens_input;
+     entry.tokensOut+=a.tokens_output;
+   }else entry.incompleteTokens++;
+   if(!entry.last||when>entry.last.when)
+     entry.last={when,provider:String(a.provider||'Unknown'),model:typeof a.actual_model==='string'?a.actual_model:'Model unreported'};
+ }
+ const rows=[...employees.values()].map(e=>{
+   const pct=measured?100*e.receipts/measured:0;
+   const visual=fresh&&measured&&e.receipts?
+     '<div class="rvq-track" role="progressbar" aria-label="Share of returned cloud receipts for '+esc(e.name)+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct.toFixed(1)+'"><i style="width:'+pct.toFixed(1)+'%"></i></div>':
+     '<div class="rvq-track rvq-unknown" role="img" aria-label="No measured receipt share"></div>';
+   const label=!fresh?'DATA DISCONNECTED':!measured?'NO RECEIPT SAMPLE':e.receipts?fmt(e.receipts)+' RECEIPT'+(e.receipts===1?'':'S'):'NO ATTRIBUTED RECEIPT';
+   const tokens=e.receipts?
+     fmt(e.tokensIn)+' in / '+fmt(e.tokensOut)+' out'+(e.incompleteTokens?' · partial token reporting':''):
+     'Tokens unreported';
+   const latest=e.last?esc(e.last.provider.slice(0,70))+' · '+esc(e.last.model.slice(0,100)):'No recorded provider/model assignment';
+   return '<li class="rvq-emp-row"><div class="rvq-emp-top"><strong>'+esc(e.name)+'</strong><span>'+label+'</span></div>'+
+     visual+'<div class="rvq-emp-facts"><span>'+(measured&&e.receipts?pct.toFixed(1)+'% of attributed receipt sample':'Share unknown')+
+     '</span><span>'+tokens+'</span></div><div class="rvq-emp-last">'+latest+
+     (e.receipts?' · '+fmt(e.failed)+' failed · '+fmt(e.passed)+' passed review':'')+'</div></li>';
+ }).join('');
+ return '<section class="rvq-cloud-staff"><div class="rvq-emp-head"><div><span class="rvq-eyebrow">VERIFIED CLOUD LEDGER / LAST 24H</span><h4>Employee model usage</h4></div><span class="rvq-status">'+(fresh?fmt(measured)+' ATTRIBUTED RECEIPTS':'LEDGER DISCONNECTED')+'</span></div>'+
+   '<p>Eight employee slots. Bars show each employee’s share of the returned cloud receipt sample, not quota utilization, total 24h requests, or proof of active execution. Canary probes excluded. '+(unattributed?fmt(unattributed)+' other returned receipts have no matching employee.':'')+'</p>'+
+   '<ul class="rvq-emp-grid">'+rows+'</ul></section>';
+}
+
 function card(group,quota,live,index,slot,cloud,attempts){
  const entries=live&&slot.enabled!==false?quota.filter(q=>q.provider===group.provider&&q.account_slot===slot.account_slot&&
    (!q.reset_at||Date.parse(q.reset_at)>Date.now())):[];
@@ -202,6 +253,20 @@ const css=`
 #rovor-workload-popup .rvq-jobs{display:grid;gap:6px;border-top:1px solid rgba(111,193,231,.23);padding:12px 0 14px;color:#99bdd3;font:11px/1.5 system-ui}
 #rovor-workload-popup .rvq-jobs>strong{font:700 10px system-ui;letter-spacing:.09em;color:#95daff}
 #rovor-workload-popup .rvq-jobs p{margin:2px 0;color:#9fc2d7}
+
+#rovor-workload-popup .rvq-cloud-staff{margin:16px 0;padding:14px;border:1px solid rgba(99,183,227,.38);border-radius:12px;background:linear-gradient(160deg,rgba(9,41,70,.95),rgba(4,23,43,.98));color:#afcddd}
+#rovor-workload-popup .rvq-emp-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:9px}
+#rovor-workload-popup .rvq-emp-head h4{font:700 15px system-ui;margin:4px 0 0;color:#d4f2ff}
+#rovor-workload-popup .rvq-cloud-staff>p{font:11px/1.6 system-ui;color:#9cbfd4;margin:10px 0 14px}
+#rovor-workload-popup .rvq-emp-grid{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0;padding:0}
+#rovor-workload-popup .rvq-emp-row{padding:12px;min-width:0;border:1px solid rgba(101,170,211,.27);border-radius:9px;background:rgba(3,24,45,.76)}
+#rovor-workload-popup .rvq-emp-top,.rvq-emp-facts{display:flex;justify-content:space-between;align-items:start;gap:9px;flex-wrap:wrap}
+#rovor-workload-popup .rvq-emp-top{color:#d4f3ff;font:700 11px system-ui;margin-bottom:9px}
+#rovor-workload-popup .rvq-emp-top span{font:700 9px system-ui;letter-spacing:.05em;color:#8bbbd7}
+#rovor-workload-popup .rvq-emp-facts{color:#a8d1e9;font:10px/1.5 system-ui;margin-top:8px}
+#rovor-workload-popup .rvq-emp-last{color:#88b1ca;font:10px/1.5 system-ui;margin-top:6px;overflow-wrap:anywhere}
+@media(max-width:650px){#rovor-workload-popup .rvq-emp-grid{grid-template-columns:1fr}}
+
 #rovor-workload-popup .rvq-staff{margin-top:16px;padding:14px;border:1px solid rgba(90,164,204,.38);border-radius:12px;background:rgba(6,29,51,.94);color:#a3c8dc}
 #rovor-workload-popup .rvq-staff>h4{margin:0 0 6px;color:#c7eeff;font:700 14px system-ui}
 #rovor-workload-popup .rvq-staff>p{margin:0 0 12px;font:11px/1.5 system-ui}
@@ -277,7 +342,7 @@ function render(data,live,cloud=null){
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Each configured connection gets its own status and quota/reset meter. Actual inference is unverified without a model execution receipt.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':'REPORT DISCONNECTED')+'</span></div>'+
  summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
- '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+localEmployeeSection(data?.workforce,live)+
+ '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+
  '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Local quota bars are cached gateway limits; separate cloud bars require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
 }
 let started=false;
