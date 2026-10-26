@@ -149,6 +149,7 @@ test('cloud claim gate is displayed without fabricating limits or online status'
     {provider:'gemini',admission:'disabled_pending_verification',online_verified:false,
       dispatch_gate:{provider:'gemini',state:'ineligible',reason:'not_configured'}}
   ]};
+  for(let i=2;i<9;i++)cloud.providers.push({provider:'provider'+i,admission:'disabled_pending_verification',online_verified:false});
   const html=window.ROVOR_QUOTA_BOARD.render(null,false,cloud);
   assert.match(html,/Account request allowance reached/);
   assert.match(html,/No verified cloud route configuration/);
