@@ -65,6 +65,48 @@ test('status includes job IDs and measured tokens while omitting draft text',asy
  assert.ok(!JSON.stringify(result).includes('A concrete private draft'));
  const out=await (await s.ops.fetch(request('/api/ghost/jobs/'+j.id),s.env)).json();assert.equal(out.output,'A concrete private draft');
 });
+test('owner review backlog remains accessible after newer activity fills the 50-row sample',async()=>{
+ const s=setup();await completed(s);
+ const addJob=s.db.prepare('INSERT INTO ghost_cloud_jobs(id,employee,task_id,kind,title,prompt,input_bytes,source_commit,created_at) VALUES(?,?,?,?,?,?,?,?,?)');
+ const addAttempt=s.db.prepare("INSERT INTO ghost_cloud_attempts(id,job_id,provider,model,pool,started_at,finished_at,reserved_tokens,status,output,tokens_input,tokens_output) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
+ for(let i=0;i<55;i++){
+  const id='recent-'+i;
+  addJob.run(id,'Saul',id,'research','Public status check','public',6,'a'.repeat(40),100+i);
+  addAttempt.run('attempt-'+i,id,'groq','requested','pool',100+i,100+i,100,'failed',null,0,0);
+ }
+ const data=await s.ops.status(s.env);
+ assert.equal(data.attempts.length,50);
+ assert.equal(data.attempts.some(a=>a.job_id===j.id),false);
+ assert.equal(data.review_queue.pending_count,1);
+ assert.equal(data.review_queue.oldest_finished_at,2);
+ assert.equal(data.review_queue.items[0].job_id,j.id);
+ assert.equal(data.review_queue.items[0].human_review,'not_recorded');
+ assert.ok(!JSON.stringify(data).includes('A concrete private draft'));
+ const page=await (await s.ops.fetch(request('/'),s.env)).text();
+ assert.match(page,/OWNER REVIEW QUEUE/);
+ assert.match(page,/drafts require explicit PASS or FAIL/);
+ assert.equal((await s.ops.fetch(request('/api/ghost/review',{body:{job_id:j.id,verdict:'passed'},browser:true}),s.env)).status,200);
+ const after=await s.ops.status(s.env);
+ assert.equal(after.review_queue.pending_count,0);
+ assert.deepEqual(after.review_queue.items,[]);
+});
+test('review queue count is exact while payload stays bounded at 50 metadata-only entries',async()=>{
+ const s=setup();await completed(s);
+ const addJob=s.db.prepare('INSERT INTO ghost_cloud_jobs(id,employee,task_id,kind,title,prompt,input_bytes,source_commit,created_at) VALUES(?,?,?,?,?,?,?,?,?)');
+ const addAttempt=s.db.prepare("INSERT INTO ghost_cloud_attempts(id,job_id,provider,model,pool,started_at,finished_at,reserved_tokens,status,output,tokens_input,tokens_output) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
+ for(let i=0;i<55;i++){
+  const id='pending-'+i;
+  addJob.run(id,'Saul',id,'research','Public reviewable work','public',6,'a'.repeat(40),100+i);
+  addAttempt.run('attempt-'+i,id,'groq','requested','pool',100+i,100+i,100,'needs_review','private draft '+i,0,0);
+ }
+ const data=await s.ops.status(s.env);
+ assert.equal(data.review_queue.pending_count,56);
+ assert.equal(data.review_queue.items.length,50);
+ assert.equal(data.review_queue.items[0].job_id,j.id);
+ assert.equal(data.review_queue.items.at(-1).job_id,'pending-48');
+ assert.equal(data.review_queue.oldest_finished_at,2);
+ assert.ok(!JSON.stringify(data).includes('private draft'));
+});
 test('PASS/FAIL requires explicit owner-browser request and creates a digest-bound audit trail',async()=>{
  const s=setup();await completed(s);
  const body={job_id:j.id,verdict:'passed'};
@@ -181,6 +223,8 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  assert.equal(reads,1);
  assert.ok(document.getElementById('rovor-cloud-live'),'real status shows recorded receipts');
  assert.ok(document.getElementById('rovor-cloud-results'));
+ const visible=(node)=>[node.textContent,...node.children.flatMap(visible)].join(' ');
+ assert.match(visible(document.getElementById('rovor-cloud-results')),/OWNER REVIEW QUEUE · 1 PENDING/);
  assert.match(document.getElementById('rovor-cloud-link-state').textContent,/CLOUD LEDGER REACHABLE/);
  assert.match(document.getElementById('rovor-cloud-link-state').textContent,/reachability does not prove agents online/);
  mode='offline';await tick();await settled();
