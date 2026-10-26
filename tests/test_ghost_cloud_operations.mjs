@@ -121,8 +121,36 @@ test('composer preserves applied migrations, emits schema-only SQL and string DB
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir,'dist/.openai/hosting.json'),'utf8')).d1,'DB');
   assert.equal(fs.readFileSync(path.join(dir,'drizzle/0000_hud.sql'),'utf8'),prior);
   const migration=fs.readFileSync(path.join(dir,'drizzle/0001_cloud_operations.sql'),'utf8');assert.match(migration,/statement-breakpoint/);assert.doesNotMatch(migration,/(^|\n)\s*(INSERT|UPDATE|DELETE|DROP|ALTER)\b/);
+   assert.match(migration,/ghost_cloud_reviews \(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL UNIQUE REFERENCES ghost_cloud_attempts\(id\)/);
   const db=new DatabaseSync(':memory:');db.exec(migration);assert.equal(db.prepare('SELECT count(*) n FROM ghost_cloud_control').get().n,0);db.close();
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+test('forward-only review index repairs legacy schema and preserves first immutable decision',()=>{
+ const schema=read('migrations/owner-review-one-decision.sql');
+ const db=new DatabaseSync(':memory:');
+ try{
+  db.exec('CREATE TABLE ghost_cloud_attempts(id TEXT PRIMARY KEY);CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL REFERENCES ghost_cloud_attempts(id),actor TEXT NOT NULL,verdict TEXT NOT NULL,output_sha256 TEXT NOT NULL,reviewed_at INTEGER NOT NULL)');
+  const sql='INSERT INTO ghost_cloud_reviews(id,attempt_id,actor,verdict,output_sha256,reviewed_at) VALUES(?,?,?,?,?,?) ON CONFLICT(attempt_id) DO NOTHING';
+  assert.throws(()=>db.prepare(sql),/ON CONFLICT clause/);
+  db.exec(schema);
+  db.prepare('INSERT INTO ghost_cloud_attempts VALUES(?)').run('attempt-1');
+  const insert=db.prepare(sql);
+  assert.equal(insert.run('review-pass','attempt-1','owner','passed','a'.repeat(64),1).changes,1);
+  assert.equal(insert.run('review-fail','attempt-1','owner','failed','b'.repeat(64),2).changes,0);
+  assert.equal(db.prepare('SELECT count(*) AS n FROM ghost_cloud_reviews').get().n,1);
+  assert.deepEqual({...db.prepare('SELECT verdict,output_sha256 FROM ghost_cloud_reviews').get()},{verdict:'passed',output_sha256:'a'.repeat(64)});
+  assert.doesNotThrow(()=>db.exec(schema));
+ }finally{db.close();}
+ const corrupted=new DatabaseSync(':memory:');
+ try{
+  corrupted.exec('CREATE TABLE ghost_cloud_attempts(id TEXT PRIMARY KEY);CREATE TABLE ghost_cloud_reviews(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL REFERENCES ghost_cloud_attempts(id),actor TEXT NOT NULL,verdict TEXT NOT NULL,output_sha256 TEXT NOT NULL,reviewed_at INTEGER NOT NULL)');
+  corrupted.prepare('INSERT INTO ghost_cloud_attempts VALUES(?)').run('same');
+  corrupted.prepare('INSERT INTO ghost_cloud_reviews VALUES(?,?,?,?,?,?)').run('one','same','owner','passed','a'.repeat(64),1);
+  corrupted.prepare('INSERT INTO ghost_cloud_reviews VALUES(?,?,?,?,?,?)').run('two','same','owner','failed','b'.repeat(64),2);
+  assert.throws(()=>corrupted.exec(schema),/UNIQUE constraint failed/);
+  assert.equal(corrupted.prepare('SELECT count(*) AS n FROM ghost_cloud_reviews').get().n,2);
+ }finally{corrupted.close();}
 });
 
 test('embedded HUD client hides stale agent cards after a failed or invalid live status request',async()=>{

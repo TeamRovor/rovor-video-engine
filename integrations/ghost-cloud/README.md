@@ -122,6 +122,34 @@ Bearer secrets remain server-side. A public browser cannot safely embed them;
 the private Site's identity adapter must mediate HUD reads. This module does
 not implement a second review ledger or change the existing PASS/FAIL owner.
 
+## Immutable review migration gate (P1)
+
+The owner-private `/api/ghost/review` endpoint relies on `ON CONFLICT(attempt_id)`.
+A legacy composer-generated `ghost_cloud_reviews` table omitted the unique index;
+that schema can reject every review with a SQL conflict-target error. Fresh
+compositions now declare `attempt_id UNIQUE`. **Do not edit migrations already
+applied to a deployed D1 database** or claim an existing Site is fixed merely
+by merging this source change.
+
+For an existing database, before enabling PASS/FAIL, query privately:
+
+```sql
+SELECT attempt_id, COUNT(*) AS decisions
+FROM ghost_cloud_reviews
+GROUP BY attempt_id HAVING COUNT(*) > 1;
+```
+
+If any rows exist, stop: the owner must reconcile those conflicting historical
+decisions with their original outputs before proceeding. Never auto-delete or
+silently select one verdict. When there are no duplicates, **append** the SQL
+from `migrations/owner-review-one-decision.sql` as a new, journaled migration
+for the *existing* private Site, apply it to that D1 database, and verify
+`PRAGMA index_list('ghost_cloud_reviews')` and an authenticated owner browser
+PASS followed by an opposing FAIL returns 409 with only one unchanged record.
+Do not apply SQL through a public GitHub Action, store review outputs in the
+public repo, or overwrite an old migration file. Source/SQLite tests are not
+proof the private Site is migrated or deployed.
+
 ## Verification
 
 `node --test tests/test_ghost_cloud.mjs` requires Node 24 and no dependencies.
