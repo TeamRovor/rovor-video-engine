@@ -47,6 +47,7 @@
   const status = rec => rec.state === 'loaded'
     ? (rec.ahead === 0 ? 'No unmerged commits' : rec.ahead + ' unmerged branch commit(s)') + (rec.behind > 0 ? ' · ' + rec.behind + ' behind main' : '')
     : 'GitHub status unavailable';
+  const prStatus = pr => pr.mergedAt ? 'MERGED INTO MAIN' : pr.state === 'open' ? (pr.draft ? 'DRAFT / NOT PUBLISHED TO MAIN' : 'OPEN / REVIEW PENDING') : 'CLOSED WITHOUT MERGE';
   function ensurePreview() {
     if (!activity.isConnected) return;
     let node = document.getElementById('rovorTeamMini');
@@ -111,9 +112,18 @@
         card.append(txt('div', 'meta', 'Commit timestamp: ' + when(rec.latest.date)));
         card.append(txt('div', 'meta', 'Files changed (compare range): ' + (rec.files.length ? rec.files.join(', ') : 'No filenames reported')));
       }
-      const prLine = txt('div', 'meta', rec.pr ? 'Latest attributed branch PR: ' : rec.prsAvailable ? 'Branch PR: no match in recent 100 PRs' : 'Branch PR: unavailable');
-      if (rec.pr) prLine.append(link('#' + rec.pr.number + ' · ' + rec.pr.title, rec.pr.url));
-      card.append(prLine);
+      const prLine = txt('div', 'meta', rec.pr ? 'Latest recorded branch PR: ' : rec.prsAvailable ? 'Branch PR: no match in recent 100 PRs' : 'Branch PR: unavailable');
+      if (rec.pr) {
+        prLine.append(link('#' + rec.pr.number + ' · ' + rec.pr.title, rec.pr.url));
+        card.append(prLine);
+        card.append(txt('div', 'meta', 'PR publication: ' + prStatus(rec.pr)));
+        card.append(txt('div', 'meta', rec.pr.mergedAt ? 'Merged: ' + when(rec.pr.mergedAt) : 'Last PR update: ' + when(rec.pr.updatedAt)));
+        if (rec.ahead === 0 && rec.pr.mergedAt) {
+          card.append(txt('div', 'meta', 'No unmerged commits is expected after merge; the recorded PR remains visible here.'));
+        }
+      } else {
+        card.append(prLine);
+      }
       grid.append(card);
     }
     section.append(grid);
@@ -175,7 +185,10 @@
         ? result.value.files.slice(0, 4).map(f => String(f.filename || '')).filter(Boolean) : [];
       const pr = prs.find(p => p.head?.ref === m.branch && p.head?.repo?.full_name === repo);
       rec.pr = pr && Number.isInteger(pr.number) && typeof pr.html_url === 'string'
-        ? { number: pr.number, title: String(pr.title || '').slice(0, 90), url: pr.html_url } : null;
+        ? { number: pr.number, title: String(pr.title || '').slice(0, 90), url: pr.html_url,
+            state: pr.state === 'open' ? 'open' : 'closed', draft: pr.draft === true,
+            mergedAt: Number.isFinite(Date.parse(pr.merged_at)) ? pr.merged_at : null,
+            updatedAt: Number.isFinite(Date.parse(pr.updated_at)) ? pr.updated_at : null } : null;
     }
     lastChecked = new Date().toISOString();
     refreshError = results.every(x => x.status === 'rejected') ? 'GitHub temporarily unavailable' : (results[3].status === 'rejected' ? 'PR data unavailable' : '');
