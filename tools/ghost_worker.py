@@ -298,13 +298,22 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
             if selection['chosen_model_id'] is None:
                 conn.execute('COMMIT')
                 return None
+            selected_slot = next((slot for slot in fleet['models']
+                                  if slot.get('model_id') == selection['chosen_model_id']), None)
+            provider_id = fleet['routes'][selection['chosen_model_id']]['provider_id']
+            # The trusted host callback supplies a fresh zero-cost entitlement
+            # witness for direct models whose IDs lack an OpenRouter :free suffix.
+            witness = binding.zero_cost_witness(
+                selected_slot, selection['chosen_model_id'], provider_id,
+                selection['quota_pool_id'], now=now) if not selection['chosen_model_id'].endswith(':free') else None
             combo = binding.verify_binding(
-                selection['chosen_model_id'], fleet['routes'], fleet['catalog'])
+                selection['chosen_model_id'], fleet['routes'], fleet['catalog'],
+                verified_slot=selected_slot, pool_id=selection['quota_pool_id'], now=now)
             fleet_selected = {
                 'model_id': selection['chosen_model_id'],
                 'pool_id': selection['quota_pool_id'],
                 'provider_id': fleet['routes'][selection['chosen_model_id']]['provider_id'],
-                'combo': combo}
+                'combo': combo, **({'zero_cost_witness': witness} if witness else {})}
         if job:
             if (not omni_continuous and job['kind'] == OMNI_KIND
                     and set(json.loads(job['payload'])) in ({'assignment'}, {'public_task'})):
