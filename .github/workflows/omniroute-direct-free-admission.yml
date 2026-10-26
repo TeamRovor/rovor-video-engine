@@ -1,0 +1,35 @@
+name: OmniRoute direct-provider free admission (offline)
+
+on:
+  pull_request:
+    paths:
+      - 'tools/omniroute_fleet_binding.py'
+      - 'tools/omniroute_capacity_router.py'
+      - 'tools/omniroute_model_reservation.py'
+      - 'tools/ghost_worker.py'
+      - 'tests/test_omniroute_direct_free_models.py'
+      - '.github/workflows/omniroute-direct-free-admission.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  direct-free-evidence:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Explicitly test direct-provider eligibility and exact route safety
+        run: python -m unittest discover -s tests -p test_omniroute_direct_free_models.py -v
+      - name: Recheck atomic independent pool safety
+        run: |
+          python -m unittest discover -s tests -p test_omniroute_model_reservation.py -v
+          python -m unittest discover -s tests -p test_omniroute_atomic_worker_hook.py -v
