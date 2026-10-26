@@ -36,7 +36,33 @@ function unknownModel(m){
 }
 // One card per configured connection, not one card per provider family.
 // Public telemetry has only safe per-provider account ordinals; no keys or IDs.
-function card(group,quota,live,index,slot){
+// Separate authenticated cloud-ledger evidence; do NOT mix with local OmniRoute cache.
+// Cloud provider admission/verification may be disabled even when the local gateway has a key.
+function cloudEvidence(p){
+ if(!p)return '<div class="rvq-cloud">CLOUD EXECUTION · not connected to private ledger</div>';
+ const eligible=p.admission==='eligible';
+ const recorded=Number.isSafeInteger(p.recorded_24h?.requests)?p.recorded_24h.requests:null;
+ const state=eligible?'ELIGIBLE · execution still requires receipts':'CLOUD ROUTE NOT ELIGIBLE';
+ const check=p.last_check?.status?esc(String(p.last_check.status).replaceAll('_',' ')):'Not checked';
+ const result=['<div class="rvq-cloud"><strong>CLOUD WORKFORCE / SEPARATE SOURCE</strong><span>'+state+'</span>',
+   '<span>Provider catalog check: '+check+'</span>',
+   '<span>Recorded cloud requests (24h): '+(recorded===null?'Not reported':fmt(recorded))+'</span>',
+   '<span>Verified running now: '+(p.online_verified===true?'YES':'NOT VERIFIED')+'</span>'];
+ const q=p.quota;
+ const time=Number(q?.observed_at);
+ const active=q?.status==='verified'&&Number.isFinite(time)&&time<=Date.now()+300000&&time>Date.now()-90*60000;
+ const used=Number(q?.used),limit=Number(q?.limit);
+ const reset=q?.resets_at==null?null:new Date(q.resets_at);
+ if(active&&Number.isSafeInteger(used)&&Number.isSafeInteger(limit)&&limit>0&&used>=0&&used<=limit&&
+    (reset===null||(Number.isFinite(reset.getTime())&&reset.getTime()>Date.now()))){
+   const pct=Math.max(0,Math.min(100,100*used/limit)).toFixed(1);
+   result.push('<span>Verified cloud limit · '+fmt(used)+' / '+fmt(limit)+' '+esc(q.unit||'units')+'</span>');
+   result.push('<div class="rvq-track" role="progressbar" aria-label="Verified cloud ledger quota used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><i style="width:'+pct+'%"></i></div>');
+   result.push('<span>Cloud reset: '+esc(reset?resetText(reset.toISOString()):'Not reported')+'</span>');
+ }else result.push('<span>Cloud quota and reset: unknown / not currently verified</span>');
+ result.push('</div>');return result.join('');
+}
+function card(group,quota,live,index,slot,cloud){
  const entries=live&&slot.enabled!==false?quota.filter(q=>q.provider===group.provider&&q.account_slot===slot.account_slot&&
    (!q.reset_at||Date.parse(q.reset_at)>Date.now())):[];
  const rows=entries.map(meter);
@@ -46,7 +72,7 @@ function card(group,quota,live,index,slot){
  const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
  return '<article class="rvq-provider"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
- '<div class="rvq-provider-content">'+first+extra+'</div></article>';
+ '<div class="rvq-provider-content">'+first+extra+cloudEvidence(cloud)+'</div></article>';
 }
 const css=`
 #rovor-workload-popup .rvq-board{margin:8px 0 20px!important;padding:20px!important;background:linear-gradient(160deg,rgba(4,24,47,.96),rgba(2,12,28,.96))!important;border:1px solid rgba(79,169,221,.36)!important;border-radius:15px!important;color:#e6f6ff}
@@ -73,6 +99,10 @@ const css=`
 #rovor-workload-popup .rvq-provider-content{padding:0 15px 5px}
 #rovor-workload-popup .rvq-model{padding:15px 0 13px;border-bottom:1px solid rgba(110,181,217,.16)}
 #rovor-workload-popup .rvq-model:last-child{border-bottom:0}
+#rovor-workload-popup .rvq-cloud{display:grid;gap:7px;padding:12px 0 13px;border-top:1px solid rgba(111,193,231,.23);font:11px/1.5 system-ui;color:#a8cce3}
+#rovor-workload-popup .rvq-cloud strong{color:#94d5ff;font-size:10px;letter-spacing:.09em}
+#rovor-workload-popup .rvq-cloud .rvq-track{height:8px}
+
 #rovor-workload-popup .rvq-model-head{display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:12px}
 #rovor-workload-popup .rvq-model-name{font:600 12px/1.42 system-ui;color:#d7efff;overflow-wrap:anywhere;min-width:0}
 #rovor-workload-popup .rvq-percent{color:#c5efff;font:700 19px/1 system-ui;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -98,9 +128,16 @@ function mount(){
  if(document.getElementById('rvq-style'))return;
  const s=document.createElement('style');s.id='rvq-style';s.textContent=css;document.head.append(s);
 }
-function render(data,live){
+function render(data,live,cloud=null){
  mount();
- const connections=Array.isArray(data?.connections)?data.connections:[];
+ const cloudFresh=cloud?.execution_source==='cloud_provider'&&Number.isFinite(cloud.observed_at)&&
+   Math.abs(Date.now()-cloud.observed_at)<=15000&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
+ const cloudProviders=cloudFresh?new Map(cloud.providers.filter(p=>p&&typeof p.provider==='string').map(p=>[p.provider,p])):new Map();
+ // When the Mac is off, cloud provider credentials and past gateway inventory
+ // remain distinguishable: this is NOT a live Mac connection.
+ const connections=Array.isArray(data?.connections)?data.connections:
+   cloudFresh?cloud.providers.filter(p=>p?.credentials_configured===true&&typeof p.provider==='string')
+     .map(p=>({provider:p.provider,name:p.provider,connection_count:1,enabled_count:0})) : [];
  const quota=live&&Array.isArray(data?.quota?.records)?data.quota.records.filter(q=>!q.reset_at||Date.parse(q.reset_at)>Date.now()):[];
  // Sanitized slot status is optional to preserve compatibility with older Mac reporters.
  // Never infer which specific account is enabled from a provider-level enabled count.
@@ -117,23 +154,23 @@ function render(data,live){
  const resets=quota.map(q=>Date.parse(q.reset_at||'')).filter(t=>Number.isFinite(t)&&t>Date.now());
  const next=resets.length?new Date(Math.min(...resets)).toISOString():null;
  const enabled=live&&observedSlots?slots.filter(s=>s.enabled===true).length:null;
- const summary='<div class="rvq-stats"><div class="rvq-stat"><span class="rvq-stat-label">CONFIGURED CONNECTIONS</span><strong class="rvq-stat-value">'+fmt(slots.length)+'</strong></div>'+
+ const summary='<div class="rvq-stats"><div class="rvq-stat"><span class="rvq-stat-label">REPORTED CONNECTION SLOTS</span><strong class="rvq-stat-value">'+fmt(slots.length)+'</strong></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">LIMIT REPORTS</span><strong class="rvq-stat-value">'+(live?quota.length:'—')+'</strong></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
- const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · inventory observed '+esc(prettyTime(data.snapshot_at)):'';
- return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Each configured connection gets its own status and quota/reset meter. Actual inference is unverified without a model execution receipt.</p></div><span class="rvq-status">'+(live?'FRESH INVENTORY':'REPORT DISCONNECTED')+'</span></div>'+
- summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Provider cache limits are not independent model execution proof.</p>'+
- '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+
- '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Quota bars show provider-reported limits only. A configured or enabled connection does not prove a successful API request. Unknown or expired reset windows remain unknown.</p></section>';
+ const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
+ return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Each configured connection gets its own status and quota/reset meter. Actual inference is unverified without a model execution receipt.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':'REPORT DISCONNECTED')+'</span></div>'+
+ summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
+ '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider))).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+
+ '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Local quota bars are cached gateway limits; separate cloud bars require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
 }
 function start(){
- let busy=false,last=null,lastInventory=null,updated=0;
+ let busy=false,last=null,lastInventory=null,lastCloud=null,updated=0;
  const slot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
    n=>!n.hidden&&n.querySelector('h3')?.textContent?.trim()==='YOUR OMNIROUTE CONNECTIONS');
  async function sync(){
    if(busy||document.hidden)return;
    const original=slot();if(!original)return;
-   if(last&&Date.now()-updated<5000){original.outerHTML=render(last,true);return;}
+   if(last&&Date.now()-updated<5000){original.outerHTML=render(last,true,lastCloud);return;}
    busy=true;let fresh=null;
    try{
      const response=await fetch('/api/hud/omniroute?period=24h',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
@@ -145,8 +182,19 @@ function start(){
    // Preserve only the last known provider/slot inventory through outages.
    // Never retain or display stale quota percentages as live.
    if(fresh)lastInventory={connections:fresh.connections,connection_slots:fresh.connection_slots,snapshot_at:fresh.snapshot_at};
-   last=fresh;updated=Date.now();
-   const target=slot();if(target)target.outerHTML=render(fresh||lastInventory,!!fresh);
+   // Private same-origin cloud ledger is a separate read-only source.
+   // Do not cache it through disconnects as a fresh state.
+   let cloud=null;
+   try{
+     const response=await fetch('/api/ghost/status',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
+     if(response.ok){
+       const d=await response.json();
+       if(d?.execution_source==='cloud_provider'&&Number.isFinite(d.observed_at)&&
+          Math.abs(Date.now()-d.observed_at)<=15000&&Array.isArray(d.providers)&&d.providers.length<=20)cloud=d;
+     }
+   }catch{}
+   lastCloud=cloud;last=fresh;updated=Date.now();
+   const target=slot();if(target)target.outerHTML=render(fresh||lastInventory,!!fresh,cloud);
  }
  const observer=new MutationObserver(()=>{if(slot())void sync();});
  observer.observe(document.body,{childList:true,subtree:true});void sync();
