@@ -5,6 +5,22 @@ export function createCloudOperations(base, cloud) {
  const sql=(env,text,...args)=>env.DB.prepare(text).bind(...args);
  const config=(env,key,fallback={})=>JSON.parse(env[key]||JSON.stringify(fallback));
  const owner=req=>{const x=req.headers.get('oai-authenticated-user-id');return x&&x.length<=200?x:null;};
+ // Service-to-service calls must prove possession of a separate, owner-private
+ // 32+ byte credential. An anonymous POST to this route may otherwise spend
+ // model quota or reveal internal status. Browser owner identity alone is not
+ // a substitute for the service credential; MCP actions have their own gate.
+ async function serviceAuthorized(request,env) {
+  const service=env.GHOST_SERVICE_TOKEN;
+  const reader=env.GHOST_READER_TOKEN,writer=env.GHOST_WRITER_TOKEN;
+  if(typeof service!=='string'||service.length<32||service===reader||service===writer)return false;
+  const supplied=request.headers.get('Authorization');
+  if(!supplied||supplied.length>1024||!supplied.startsWith('Bearer '))return false;
+  // Constant-time comparison of equal-size SHA-256 digests (no secret echoes).
+  const hash=async value=>new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)));
+  const [a,b]=await Promise.all([hash(supplied),hash('Bearer '+service)]);
+  let diff=0;for(let i=0;i<a.length;i++)diff|=a[i]^b[i];
+  return diff===0;
+ }
  async function bounded(response,max=32768) {
   const reader=response.body?.getReader();if(!reader)throw Error('missing_body');
   const chunks=[];let n=0;try{for(;;){const r=await reader.read();if(r.done)break;n+=r.value.length;if(n>max)throw Error('body_too_large');chunks.push(r.value);}}
@@ -217,6 +233,9 @@ export function createCloudOperations(base, cloud) {
    // Only the registered owner-private Site's dispatch may invoke this shared
    // service route. Platform service access is separate from browser identity.
    if(url.pathname==='/api/ghost/service'&&request.method==='POST'){
+    // Block unauthorized callers *before* parsing the request or touching D1.
+    // Do not fall back to oai-authenticated-user-id or reader/writer tokens.
+    if(!await serviceAuthorized(request,env))return json({error:'service_auth_required'},401);
     try {
      const body=await bounded(request);
      if(Object.keys(body).some(k=>!['operation','provider'].includes(k)))throw Error('invalid_service');
