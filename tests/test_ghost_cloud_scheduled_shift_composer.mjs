@@ -70,8 +70,8 @@ test('production bundle embeds pinned approved feed without dynamic module impor
   assert.match(compiled,/const __feed = \(\(\) => \{/);
   assert.match(compiled,/GHOST_FEED_COMMIT/);
   assert.match(compiled,/replenishApprovedJobs/);
-  assert.doesNotMatch(compiled,/import\\s*\\(/);
-  assert.doesNotMatch(compiled,/^import\\s/m);
+  assert.doesNotMatch(compiled,/import\s*\(/);
+  assert.doesNotMatch(compiled,/^import\s/m);
   assert.throws(()=>compileScheduledShift(v2,shiftSource,'export const hostile=1;'),/unexpected_approved_feed_source/);
 });
 test('canonical feed branch uses approved task allowlist instead of exhausted static packets',async()=>{
