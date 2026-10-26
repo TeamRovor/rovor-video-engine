@@ -10,6 +10,7 @@ on:
       - 'dashboard/command-center/native-v8-9/live-quota-board.js'
       - 'tests/test_hud_verified_quota.mjs'
       - 'tests/test_hud_omniroute*'
+      - 'tests/test_hud_provider_jobs.mjs'
       - '.github/workflows/hud-omniroute-live-sync.yml'
   push:
     branches: [main]
@@ -19,6 +20,7 @@ on:
       - 'tools/hud_omniroute_bridge.mjs'
       - 'dashboard/command-center/native-v8-9/live-omniroute.js'
       - 'tests/test_hud_omniroute*'
+      - 'tests/test_hud_provider_jobs.mjs'
 permissions:
   contents: read
 jobs:
@@ -30,6 +32,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --check dashboard/command-center/native-v8-9/live-omniroute.js
+      - run: node --check dashboard/command-center/native-v8-9/live-quota-board.js
+      - run: node --test tests/test_hud_provider_jobs.mjs
       - run: sh -n tools/start_hud_live_sync.sh
       - run: python3 -m unittest discover -s tests -p test_hud_employee_snapshot.py -v
       - run: node --test tests/test_hud_omniroute_bridge.mjs
