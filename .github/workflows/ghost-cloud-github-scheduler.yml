@@ -47,5 +47,5 @@ jobs:
           persist-credentials: false
       - name: One bounded existing provider-cloud shift
         env:
-          ROVOR_GHOST_SERVICE_TOKEN: \${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
+          ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
         run: python3 tools/ghost_cloud_hosted_shift.py
