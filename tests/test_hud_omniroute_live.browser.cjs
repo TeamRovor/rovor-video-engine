@@ -73,7 +73,7 @@ async function main(){
  await poll(()=>evalJS('return document.querySelector("[role=meter]")?.getAttribute("aria-valuenow")==="80"'));
  offline=true;
  await poll(()=>evalJS('return document.querySelector("#rovor-workload-popup").textContent.includes("DISCONNECTED")'));
- assert.equal(await evalJS('return document.querySelectorAll("[role=meter]").length'),0);
+ await poll(()=>evalJS('return document.querySelectorAll("[role=meter]").length===0'));
  const {normalize}=await import('../tools/hud_omniroute_bridge.mjs');
  const externalBridge=createBridge({viewerOrigin:publicOrigin,pairCode:'a'.repeat(64),hud:'<body></body>',adapter:'',collect:async period=>({...normalize({data:Array.from({length:12},(_,i)=>({id:'p/m'+i,owned_by:'p'}))},{summary:{totalRequests:1,uniqueModels:1},byModel:[{rawModel:'m0',provider:'p',requests:1,totalTokens:1}]}),period})});
  const extPort=await externalBridge.listen();externalServer=externalBridge.server;publicOriginHolder.bridge='http://127.0.0.1:'+extPort;
