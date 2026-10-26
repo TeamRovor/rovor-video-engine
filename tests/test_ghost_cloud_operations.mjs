@@ -19,13 +19,13 @@ const j={id:'approved-job',employee:'Saul',task_id:'canonical-task',kind:'resear
 function setup(){
  const db=new DatabaseSync(':memory:');db.exec(read('schema.sql'));db.exec(reviewSchema);
  const DB={prepare(text){const p=db.prepare(text);let args=[];const x={bind(...a){args=a;return x;},async first(){return p.get(...args)||null;},async all(){return {results:p.all(...args)};},async run(){return {meta:{changes:Number(p.run(...args).changes)}};}};return x;},async batch(items){db.exec('BEGIN');try{const result=[];for(const i of items)result.push(await i.run());db.exec('COMMIT');return result;}catch(e){db.exec('ROLLBACK');throw e;}}};
- const env={DB,GHOST_FLEET_CONFIG:'{}',GHOST_READER_TOKEN:'r'.repeat(40),GHOST_WRITER_TOKEN:'w'.repeat(40),CLOUDFLARE_ACCOUNT_ID:'b'.repeat(32)};
+ const env={DB,GHOST_FLEET_CONFIG:'{}',GHOST_READER_TOKEN:'r'.repeat(40),GHOST_WRITER_TOKEN:'w'.repeat(40),GHOST_SERVICE_TOKEN:'s'.repeat(40),CLOUDFLARE_ACCOUNT_ID:'b'.repeat(32)};
  for(const [,key]of Object.values(runtime.PROVIDERS))env[key]='synthetic-provider-secret';
  const base=async request=>{if(new URL(request.url).pathname==='/mcp')return Response.json({jsonrpc:'2.0',id:1,result:{tools:[{name:'rovor_workforce_status'}],content:[{type:'text',text:'never_received'}]}});return new Response('<html><body>Original HUD and logo</body></html>',{headers:{'Content-Type':'text/html'}});};
  const cloud={...runtime,worker,canary:runCanary};const ops=createCloudOperations(base,cloud);
  return {env,db,ops,cloud};
 }
-const request=(route,{body,identity='owner',browser=false}={})=>new Request('https://private.example'+route,{method:body===undefined?'GET':'POST',headers:{...(identity?{'oai-authenticated-user-id':identity}:{}),'Content-Type':'application/json',...(browser?{Origin:'https://private.example','Sec-Fetch-Site':'same-origin'}:{})},body:body===undefined?undefined:JSON.stringify(body)});
+const request=(route,{body,identity='owner',browser=false,serviceToken=null}={})=>new Request('https://private.example'+route,{method:body===undefined?'GET':'POST',headers:{...(identity?{'oai-authenticated-user-id':identity}:{}),'Content-Type':'application/json',...(serviceToken?{Authorization:'Bearer '+serviceToken}:{}),...(browser?{Origin:'https://private.example','Sec-Fetch-Site':'same-origin'}:{})},body:body===undefined?undefined:JSON.stringify(body)});
 async function rpc(ops,env,name,args={}){const r=await ops.fetch(request('/mcp',{body:{jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}}}),env);const d=await r.json();return d.result?.isError?{isError:true}:JSON.parse(d.result.content[0].text);}
 async function completed(s){s.env.GHOST_APPROVED_JOBS=JSON.stringify([j]);await s.ops.control(s.env,true);await s.ops.replenish(s.env);s.db.prepare("INSERT INTO ghost_cloud_attempts(id,job_id,provider,model,pool,started_at,finished_at,reserved_tokens,status,output,tokens_input,tokens_output) VALUES('attempt',?,'groq','requested','pool',1,2,100,'needs_review','A concrete private draft',7,9)").run(j.id);}
 
@@ -251,4 +251,36 @@ test('approved packet, real dispatcher, returned usage and explicit owner review
  await rpc(s.ops,s.env,'rovor_cloud_replenish');await rpc(s.ops,s.env,'rovor_cloud_tick');assert.equal(requests,1);
 });
 
-test('owner-private service shift remains stopped and cannot submit human review',async()=>{const s=setup();const r=await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'shift'}}),s.env);assert.equal(r.status,200);const d=await r.json();assert.equal(d.intake.status,'stopped');assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_attempts').get().n,0);assert.equal((await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'review'}}),s.env)).status,400);});
+test('service route never performs inference or reads private status without independent service authorization',async()=>{
+ const s=setup();s.env.GHOST_APPROVED_JOBS=JSON.stringify([j]);await s.ops.control(s.env,true);
+ for(const operation of ['status','inventory','shift']){
+  for(const options of [{},{identity:null},{serviceToken:s.env.GHOST_WRITER_TOKEN},{serviceToken:s.env.GHOST_READER_TOKEN},{serviceToken:'wrong'}]){
+   const result=await s.ops.fetch(request('/api/ghost/service',{body:{operation},...options}),s.env);
+   assert.equal(result.status,401,'unauthorized '+operation);
+  }
+ }
+ assert.equal(s.db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_jobs').get().n,0);
+ assert.equal(s.db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_attempts').get().n,0);
+ const token=s.env.GHOST_SERVICE_TOKEN;
+ assert.equal((await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'status'},serviceToken:token}),s.env)).status,200);
+ assert.equal((await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'review'},serviceToken:token}),s.env)).status,400);
+ delete s.env.GHOST_SERVICE_TOKEN;
+ assert.equal((await s.ops.fetch(request('/api/ghost/service',{body:{operation:'shift'},serviceToken:token}),s.env)).status,401);
+});
+test('authenticated private service shift is still constrained by STOP and refuses review',async()=>{
+ const s=setup();
+ const r=await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'shift'},serviceToken:s.env.GHOST_SERVICE_TOKEN}),s.env);
+ assert.equal(r.status,200);
+ const d=await r.json();assert.equal(d.intake.status,'stopped');
+ assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_attempts').get().n,0);
+ assert.equal((await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'review'},serviceToken:s.env.GHOST_SERVICE_TOKEN}),s.env)).status,400);
+});
+test('service credential must be distinct from reader and writer tokens',async()=>{
+ const s=setup(),token=s.env.GHOST_SERVICE_TOKEN;
+ for(const reused of [s.env.GHOST_READER_TOKEN,s.env.GHOST_WRITER_TOKEN]){
+  s.env.GHOST_SERVICE_TOKEN=reused;
+  assert.equal((await s.ops.fetch(request('/api/ghost/service',{body:{operation:'status'},serviceToken:reused}),s.env)).status,401);
+ }
+ s.env.GHOST_SERVICE_TOKEN=token;
+ assert.equal((await s.ops.fetch(request('/api/ghost/service',{body:{operation:'status'},serviceToken:token}),s.env)).status,200);
+});

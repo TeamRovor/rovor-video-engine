@@ -122,6 +122,36 @@ Bearer secrets remain server-side. A public browser cannot safely embed them;
 the private Site's identity adapter must mediate HUD reads. This module does
 not implement a second review ledger or change the existing PASS/FAIL owner.
 
+## Private Site service endpoint authentication (P0)
+
+The original owner's Site has a platform-service `POST /api/ghost/service`
+operation supporting `status`, `inventory`, and `shift`. It must **never**
+be an anonymous public shift trigger. The Site's shared operation adapter now
+rejects the request with HTTP 401 **before** body parsing, database reads, task
+replenishment, or provider calls unless the caller supplies
+
+`Authorization: Bearer <private service credential>`
+
+and the private Site host provides `GHOST_SERVICE_TOKEN`. Provision a new
+cryptographically random secret of at least 32 characters on the host, **not**
+in GitHub, browser HTML/JavaScript, job bodies, URLs, screenshots, command-line
+history, or the public Pages HUD. The service secret must differ from the
+`GHOST_READER_TOKEN` and `GHOST_WRITER_TOKEN`; reusing either fails closed.
+Pass the service bearer credential only from the trusted private service
+caller. Other owner-authenticated MCP actions retain their existing owner
+identity checks. The service route never accepts owner-identity headers as
+a substitute for this separate machine credential and never accepts a
+`review` service operation.
+
+**Compatibility requirement:** Existing platform callers of this route must
+be updated to supply the dedicated secret before publishing the new source.
+Do not disable authentication to restore an old caller. A cron `scheduled()`
+hook runs locally without this HTTP service endpoint. After private Site
+deployment, verify anonymous and reader-token POSTs return 401, a valid
+service-token `status` succeeds, owner-only review stays restricted, and the
+registered cron can execute without an exposed public trigger. These are
+deployment acceptance tests, not evidence they have already passed live.
+
 ## Immutable review migration gate (P1)
 
 The owner-private `/api/ghost/review` endpoint relies on `ON CONFLICT(attempt_id)`.
