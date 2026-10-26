@@ -1,9 +1,9 @@
 name: Private HUD cloud operations checks
 on:
   push:
-    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud_operations.mjs', '.github/workflows/ghost-cloud-operations.yml']
+    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud_operations.mjs', 'tests/test_ghost_cloud.mjs', 'tests/test_ghost_cloud_canary_preflight.mjs', '.github/workflows/ghost-cloud-operations.yml']
   pull_request:
-    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud_operations.mjs', '.github/workflows/ghost-cloud-operations.yml']
+    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud_operations.mjs', 'tests/test_ghost_cloud.mjs', 'tests/test_ghost_cloud_canary_preflight.mjs', '.github/workflows/ghost-cloud-operations.yml']
 permissions:
   contents: read
 jobs:
