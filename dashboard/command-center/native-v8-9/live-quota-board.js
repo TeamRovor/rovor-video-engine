@@ -48,6 +48,34 @@ function cloudEvidence(p){
    '<span>Provider catalog check: '+check+'</span>',
    '<span>Recorded cloud requests (24h): '+(recorded===null?'Not reported':fmt(recorded))+'</span>',
    '<span>Verified running now: '+(p.online_verified===true?'YES':'NOT VERIFIED')+'</span>'];
+ const gates={
+  not_configured:'No verified cloud route configuration',
+  missing_secret:'Cloud credential unavailable',
+  unpinned_model:'Exact model is not pinned',
+  eligibility_unverified:'Free-use eligibility not verified',
+  eligibility_expired:'Provider eligibility evidence expired',
+  canary_unverified:'Model canary not verified',
+  invalid_limits:'Account limits are not verified',
+  missing_account:'Provider account metadata is missing',
+  paid_route_denied:'Paid model blocked',
+  unpinned_upstream:'Upstream provider not pinned',
+  global_stop:'Dispatch paused by owner',
+  no_matching_unattempted_job:'No eligible approved task for this model',
+  global_daily_safety_cap:'Global daily safety cap reached',
+  account_request_cap:'Account request allowance reached',
+  account_reserved_token_cap:'Reserved token allowance reached',
+  account_inflight_claim:'Another job is still claimed',
+  account_minimum_interval:'Waiting for rate-limit pacing interval',
+  account_retry_after:'Provider Retry-After still active',
+  failure_circuit_requires_review:'Failure circuit requires human review',
+  claim_contention_or_unclassified_gate:'Claim contention or unknown gate',
+  claim_conditions_met_unverified:'Claim gates appear open; inference not verified'
+ };
+ const gate=p.dispatch_gate;
+ const gateMessage=gate&&Object.hasOwn(gates,gate.reason)?gates[gate.reason]:'Not reported';
+ const eta=Number(gate?.next_eligible_at);
+ const future=Number.isSafeInteger(eta)&&eta>Date.now()&&eta<Date.now()+30*86400000;
+ result.push('<span>Next cloud claim · '+esc(gateMessage)+(future?' · eligible after '+esc(new Date(eta).toLocaleString()):'')+' · read-only assessment</span>');
  const q=p.quota;
  const time=Number(q?.observed_at);
  const active=q?.status==='verified'&&Number.isFinite(time)&&time<=Date.now()+300000&&time>Date.now()-90*60000;
