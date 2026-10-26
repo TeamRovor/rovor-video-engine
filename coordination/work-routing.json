@@ -1035,6 +1035,41 @@
         "hosted-ci"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "bakir-shortform-publish-handoff-20261025": {
+      "lane": "animation",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "develop-content-engine"
+    },
+    "bakir-keona-pr7-review-20261025": {
+      "lane": "efficiency",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "evan-moho-quality-handoff-20261025": {
+      "lane": "animation",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "develop-content-engine"
+    },
+    "amar-hud-human-telemetry-review-20261025": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

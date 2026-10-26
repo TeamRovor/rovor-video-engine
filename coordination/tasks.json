@@ -5582,6 +5582,88 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40254216574"
         }
       ]
+    },
+    {
+      "id": "bakir-shortform-publish-handoff-20261025",
+      "title": "Bakir: publish first source-verified short-form production PR",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "bakir-work",
+      "scopes": [
+        "subsystem:bakir-shortform-publish-handoff"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T02:14:17.424Z",
+      "next_update": "After Bakir has posted his first real remote commit and pull request on issue #210",
+      "next_action": "Bakir: follow main BAKIR-PUBLISH.md in github.com (not read-only ChatGPT connector); perform one scoped short-form pipeline improvement on bakir-work, push a real commit, open a PR to main and record exact SHA/CI result on issue #210. Avoid private media; do not claim a native render from a GitHub-hosted test.",
+      "acceptance": "A genuine remote commit and PR from bakir-work, linked issue #210, exact file diff and tests; source-only or native work distinguished; no force-push, private media, or fake personal GitHub identity attribution.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/issues/210",
+        "https://github.com/TeamRovor/rovor-video-engine/blob/main/BAKIR-PUBLISH.md"
+      ]
+    },
+    {
+      "id": "bakir-keona-pr7-review-20261025",
+      "title": "Bakir + Keona: review draft Windows PR #7 safely and report outstanding validation",
+      "priority": 1,
+      "status": "ready",
+      "owner": null,
+      "branch": "bakir-work",
+      "scopes": [
+        "subsystem:bakir-keona-pr7-readonly-review"
+      ],
+      "depends_on": [
+        "windows-pr-mainline-sync-20261026"
+      ],
+      "updated_at": "2026-10-26T02:14:17.424Z",
+      "next_update": "After first joint Bakir/Keona PR #7 diff and CI evidence handoff on issue #209",
+      "next_action": "Bakir reviews PR #7 against current main and hosted macOS/Linux/Windows regression evidence; Keona verifies actual Windows-local toolchain/original audio separately. Post exact SHA, tested/untested boundaries and conflicts on #209; do not rewrite Keona's active branch or merge draft PR #7 without owner review.",
+      "acceptance": "Issue #209 contains an exact HEAD revision, CI URLs, actionable unresolved Windows-local blockers and a signed-off review handoff; no claim of native Windows render solely from hosted runners.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/issues/209",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/7"
+      ]
+    },
+    {
+      "id": "evan-moho-quality-handoff-20261025",
+      "title": "Evan: source-level Moho character acting and video QA handoff",
+      "priority": 2,
+      "status": "ready",
+      "owner": null,
+      "branch": "evan-work",
+      "scopes": [
+        "subsystem:evan-moho-acting-qa-handoff"
+      ],
+      "depends_on": [
+        "evan-acting-review"
+      ],
+      "updated_at": "2026-10-26T02:14:17.424Z",
+      "next_update": "After Evan submits a focused evan-work PR and verifiable source-level test result for issue #211",
+      "next_action": "Evan inspects current character rig/scene source and existing animation-quality findings, proposes one bounded 2D character-acting/viseme/phone-UI QA improvement, tests it in hosted CI where feasible, and opens PR from evan-work linked to #211. Native Moho rendering and artist approval require separate real-host evidence.",
+      "acceptance": "Source-scoped PR from evan-work with exact SHA, regression evidence and visual-review plan. Never label synthetic source tests as a finished 1080p60 native Moho film.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/issues/211"
+      ]
+    },
+    {
+      "id": "amar-hud-human-telemetry-review-20261025",
+      "title": "Amar: review human GitHub activity proof and separate OmniRoute live telemetry",
+      "priority": 2,
+      "status": "ready",
+      "owner": null,
+      "branch": "amar-work",
+      "scopes": [
+        "subsystem:amar-hud-human-telemetry-review"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-26T02:14:17.424Z",
+      "next_update": "After Amar reviews the live native HUD team panel and authenticated OmniRoute source-freshness separately",
+      "next_action": "Amar reviews latest deployed HUD Recent Activity TEAM branch/PR evidence and verifies actual private OmniRoute provider quota/reset and worker receipts independently. Confirm source age and actual inference before marking models/employees online. Track remaining blockers on issue #208.",
+      "acceptance": "Document exact published HUD deployment SHA, human contribution URLs, independently verified or unknown provider reset/usage evidence and real worker receipt status; do not conflate GitHub checks, branch commits and 24/7 model execution.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/issues/208"
+      ]
     }
   ]
 }
