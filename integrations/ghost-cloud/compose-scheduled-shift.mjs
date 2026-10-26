@@ -35,8 +35,14 @@ function scheduleWidget() {
       if(!run){status.textContent='CLOUD SCHEDULE · no recorded executions · model usage unknown';return;}
       if(!Number.isSafeInteger(run.started_at)||!Number.isSafeInteger(run.dispatched))throw Error('invalid');
       const recent=run.started_at<=Date.now()+60000&&Date.now()-run.started_at<=600000;
+      const reasons={
+        no_unattempted_jobs:'no new unattempted jobs in cloud queue',
+        no_eligible_providers:'all nine provider routes ineligible',
+        unattempted_jobs_not_dispatched:'unattempted jobs blocked by current admission or assignment'
+      };
+      const idleReason=run.status==='idle'&&Object.hasOwn(reasons,run.reason)?' · '+reasons[run.reason]:'';
       status.textContent='CLOUD SCHEDULE · '+(recent?'recent run':'last recorded run')+' '+new Date(run.started_at).toLocaleString()+
-        ' · '+run.status+' · dispatched '+run.dispatched+
+        ' · '+run.status+' · dispatched '+run.dispatched+idleReason+
         ' · execution records do not prove models online right now';
     }catch{
       status.textContent='CLOUD SCHEDULE OFFLINE · last confirmed check '+(lastOk?new Date(lastOk).toLocaleTimeString():'never')+' · no live model claim';

@@ -8,6 +8,7 @@ function setup({optIn = true, enabled = true} = {}) {
   const db = new DatabaseSync(':memory:');
   db.exec(fs.readFileSync(new URL('../integrations/ghost-cloud/scheduled-shift.sql', import.meta.url), 'utf8'));
   db.exec('CREATE TABLE ghost_cloud_control(id INTEGER PRIMARY KEY,enabled INTEGER NOT NULL)');
+  db.exec('CREATE TABLE ghost_cloud_jobs(id TEXT PRIMARY KEY);CREATE TABLE ghost_cloud_attempts(job_id TEXT NOT NULL UNIQUE)');
   db.prepare('INSERT INTO ghost_cloud_control(id,enabled) VALUES(1,?)').run(enabled ? 1 : 0);
   const api = {
     prepare(query) {
@@ -54,6 +55,23 @@ test('no fresh jobs yields an idle receipt, not a fabricated online worker',asyn
   const s=setup();const r=await runScheduledShift(s.env,{replenish:async()=>({queued:0,duplicates:9}),
     tick:async()=>({enabled:true,dispatched:0}),clock:s.clock,newId:s.newId});
   assert.equal(r.status,'idle');assert.equal(r.dispatched,0);
+  assert.equal(r.reason,'no_unattempted_jobs');
+});
+test('idle shift distinguishes all ineligible routes from blocked unattempted work',async()=>{
+  const s=setup();s.db.exec("INSERT INTO ghost_cloud_jobs(id) VALUES('ready')");
+  const denied=Object.fromEntries(['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'].map(id=>[id,'not_configured']));
+  const first=await runScheduledShift(s.env,{replenish:async()=>({queued:0,duplicates:0}),
+    tick:async()=>({enabled:true,dispatched:0,denied}),clock:s.clock,newId:s.newId});
+  assert.equal(first.status,'idle');assert.equal(first.reason,'no_eligible_providers');
+  const second=await runScheduledShift(s.env,{replenish:async()=>({queued:0,duplicates:0}),
+    tick:async()=>({enabled:true,dispatched:0,denied:{groq:'not_configured'}}),clock:s.clock,newId:s.newId});
+  assert.equal(second.reason,'unattempted_jobs_not_dispatched');
+  s.db.exec("INSERT INTO ghost_cloud_attempts(job_id) VALUES('ready')");
+  const third=await runScheduledShift(s.env,{replenish:async()=>({queued:0,duplicates:1}),
+    tick:async()=>({enabled:true,dispatched:0,denied}),clock:s.clock,newId:s.newId});
+  assert.equal(third.reason,'no_unattempted_jobs');
+  assert.deepEqual(s.db.prepare('SELECT reason FROM ghost_cloud_shift_runs ORDER BY started_at').all().map(x=>x.reason),
+    ['no_eligible_providers','unattempted_jobs_not_dispatched','no_unattempted_jobs']);
 });
 
 test('STOP after feeding prevents any tick',async()=>{

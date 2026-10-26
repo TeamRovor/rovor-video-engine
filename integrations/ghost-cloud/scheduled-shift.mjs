@@ -38,6 +38,17 @@ export async function runScheduledShift(env, {replenish, tick, clock = Date.now,
           if (!validCount(result?.dispatched, 9) || typeof result?.enabled !== 'boolean') throw Error('invalid_tick_receipt');
           dispatched = result.dispatched;
           status = result.enabled ? (dispatched ? 'dispatched' : 'idle') : 'stopped';
+          if(status==='idle'){
+            // A scheduled wakeup with zero dispatch is not productive work.
+            // Diagnose against the durable ledger, not guessed model status.
+            const pending=await statement(db,`SELECT COUNT(*) AS n FROM ghost_cloud_jobs j
+              WHERE NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts a WHERE a.job_id=j.id)`).first();
+            if(!Number.isSafeInteger(pending?.n)||pending.n<0)throw Error('invalid_workload_state');
+            const denied=result.denied;
+            const allDenied=denied&&typeof denied==='object'&&!Array.isArray(denied)&&
+              Object.keys(denied).length===9&&Object.values(denied).every(x=>typeof x==='string'&&x.length>0);
+            reason=pending.n===0?'no_unattempted_jobs':allDenied?'no_eligible_providers':'unattempted_jobs_not_dispatched';
+          }
         }
       }
     }
