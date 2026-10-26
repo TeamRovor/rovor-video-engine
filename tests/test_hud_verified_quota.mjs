@@ -137,3 +137,27 @@ test('private cloud admission and verified cloud quota remain separate from gate
   assert(!noCloudLimit.includes('6 / 50 requests'));
   assert.match(noCloudLimit,/Cloud quota and reset: unknown/);
 });
+
+
+test('cloud claim gate is displayed without fabricating limits or online status',()=>{
+  const window={},document={getElementById:()=>({})};
+  const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
+  vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map});
+  const cloud={execution_source:'cloud_provider',observed_at:Date.now(),providers:[
+    {provider:'groq',admission:'eligible',online_verified:false,
+      dispatch_gate:{provider:'groq',state:'blocked',reason:'account_request_cap'}},
+    {provider:'gemini',admission:'disabled_pending_verification',online_verified:false,
+      dispatch_gate:{provider:'gemini',state:'ineligible',reason:'not_configured'}}
+  ]};
+  const html=window.ROVOR_QUOTA_BOARD.render(null,false,cloud);
+  assert.match(html,/Account request allowance reached/);
+  assert.match(html,/No verified cloud route configuration/);
+  assert.match(html,/NOT VERIFIED/);
+  assert.match(html,/Cloud quota and reset: unknown/);
+  assert.doesNotMatch(html,/Verified cloud limit/);
+  const poisoned=structuredClone(cloud);
+  poisoned.providers[0].dispatch_gate.reason='<img src=x onerror=alert(1)>';
+  const noLeak=window.ROVOR_QUOTA_BOARD.render(null,false,poisoned);
+  assert.doesNotMatch(noLeak,/<img src=x/);
+  assert.match(noLeak,/Next cloud claim · Not reported/);
+});
