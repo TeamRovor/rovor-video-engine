@@ -411,7 +411,7 @@ def main():
     if args.resume:
         previous = read_json(state)
         if not same_request(previous, fingerprint):
-            raise ValueError('Continue only when the audio, scene plan, character mode, tool config, and engine version match.')
+            raise ValueError('Continue only when the audio, scene plan, character mode, tool config, engine version, and render fingerprint match. Start a new output folder when the saved request uses an older fingerprint version.')
     else:
         write_json_atomic(state, fingerprint)
     metrics_path = out / 'render_metrics.json'
