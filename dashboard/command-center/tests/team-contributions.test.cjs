@@ -16,6 +16,11 @@ test('team tracking maps three unique branches and attributes shared Windows PR 
   assert.match(source, /compare\/main/);
   assert.match(source, /ahead_by/);
   assert.match(source, /GitHub status unavailable/);
+  assert.match(source, /behind_by/);
+  assert.match(source, /behind main/);
+  assert.match(source, /prsAvailable/);
+  assert.match(source, /https:\/\/github\.dev\//);
+  assert.match(source, /BAKIR-PUBLISH\.md/);
 });
 
 test('injector stages module in existing HUD, is idempotent, and refuses unexpected source', () => {

@@ -4,13 +4,13 @@
   const repo = 'TeamRovor/rovor-video-engine';
   const api = 'https://api.github.com/repos/' + repo;
   const members = [
-    { id: 'amar', name: 'Amar', branch: 'amar-work', scope: 'HUD / OmniRoute oversight' },
-    { id: 'bakir', name: 'Bakir', branch: 'bakir-work', scope: 'Video pipeline + shared Windows PR #7 sync' },
-    { id: 'evan', name: 'Evan', branch: 'evan-work', scope: 'Moho / animation engine quality' }
+    { id: 'amar', name: 'Amar', branch: 'amar-work', scope: 'HUD / OmniRoute oversight', issue: 208 },
+    { id: 'bakir', name: 'Bakir', branch: 'bakir-work', scope: 'Video pipeline + shared Windows PR #7 sync', issue: 210 },
+    { id: 'evan', name: 'Evan', branch: 'evan-work', scope: 'Moho / animation engine quality', issue: 211 }
   ];
   const activity = document.getElementById('activityPanel');
   if (!activity || !window.ROVOR_NATIVE) return;
-  const records = Object.fromEntries(members.map(m => [m.id, { state: 'loading', ahead: null, latest: null, files: [], pr: null }]));
+  const records = Object.fromEntries(members.map(m => [m.id, { state: 'loading', ahead: null, behind: null, latest: null, files: [], pr: null, prsAvailable: false }]));
   let lastChecked = null, refreshError = '';
   const css = document.createElement('style');
   css.textContent = `
@@ -45,7 +45,7 @@
   };
   const when = str => str && Number.isFinite(Date.parse(str)) ? new Date(str).toLocaleString() : 'Unknown';
   const status = rec => rec.state === 'loaded'
-    ? (rec.ahead === 0 ? 'No unmerged branch commits' : rec.ahead + ' unmerged branch commit(s)')
+    ? (rec.ahead === 0 ? 'No unmerged commits' : rec.ahead + ' unmerged branch commit(s)') + (rec.behind > 0 ? ' · ' + rec.behind + ' behind main' : '')
     : 'GitHub status unavailable';
   function ensurePreview() {
     if (!activity.isConnected) return;
@@ -90,9 +90,20 @@
       card.append(txt('h4', '', m.name));
       card.append(txt('span', 'state', status(rec)));
       card.append(txt('div', 'meta', 'Responsibility: ' + m.scope));
+      const assignment = txt('div', 'meta', 'Assigned work: ');
+      assignment.append(link('ISSUE #' + m.issue, 'https://github.com/' + repo + '/issues/' + m.issue));
+      card.append(assignment);
       const branchLine = txt('div', 'meta', 'Branch: ');
       branchLine.append(link(m.branch, 'https://github.com/' + repo + '/tree/' + encodeURIComponent(m.branch)));
       card.append(branchLine);
+      const editorLine = txt('div', 'meta', 'Publish changes: ');
+      editorLine.append(link('OPEN BRANCH EDITOR', 'https://github.dev/' + repo + '/tree/' + encodeURIComponent(m.branch)));
+      card.append(editorLine);
+      if (m.id === 'bakir') {
+        const helpLine = txt('div', 'meta', 'No ChatGPT publish button? ');
+        helpLine.append(link('FOLLOW BAKIR PUBLISH GUIDE', 'https://github.com/' + repo + '/blob/main/BAKIR-PUBLISH.md'));
+        card.append(helpLine);
+      }
       if (rec.state === 'loaded' && rec.latest) {
         const line = txt('div', 'meta', 'Latest unmerged commit: ');
         line.append(link(rec.latest.sha.slice(0, 7) + ' · ' + rec.latest.message, 'https://github.com/' + repo + '/commit/' + rec.latest.sha));
@@ -100,7 +111,7 @@
         card.append(txt('div', 'meta', 'Commit timestamp: ' + when(rec.latest.date)));
         card.append(txt('div', 'meta', 'Files changed (compare range): ' + (rec.files.length ? rec.files.join(', ') : 'No filenames reported')));
       }
-      const prLine = txt('div', 'meta', rec.pr ? 'Latest attributed branch PR: ' : 'Branch PR: no match in recent 100 PRs');
+      const prLine = txt('div', 'meta', rec.pr ? 'Latest attributed branch PR: ' : rec.prsAvailable ? 'Branch PR: no match in recent 100 PRs' : 'Branch PR: unavailable');
       if (rec.pr) prLine.append(link('#' + rec.pr.number + ' · ' + rec.pr.title, rec.pr.url));
       card.append(prLine);
       grid.append(card);
@@ -152,6 +163,8 @@
       const result = results[i], rec = records[m.id];
       rec.state = result.status === 'fulfilled' && Number.isInteger(result.value?.ahead_by) ? 'loaded' : 'unavailable';
       rec.ahead = rec.state === 'loaded' ? result.value.ahead_by : null;
+      rec.behind = rec.state === 'loaded' ? result.value.behind_by : null;
+      rec.prsAvailable = results[3].status === 'fulfilled';
       const commits = rec.state === 'loaded' && Array.isArray(result.value.commits) ? result.value.commits : [];
       const newest = rec.ahead > 0 ? commits.at(-1) : null;
       rec.latest = newest && /^[a-f0-9]{40}$/i.test(newest.sha || '') ? {
