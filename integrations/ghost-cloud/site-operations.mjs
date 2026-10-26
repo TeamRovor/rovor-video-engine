@@ -43,8 +43,10 @@ export function createCloudOperations(base, cloud) {
    j.employee,j.task_id,j.title FROM ghost_cloud_attempts a JOIN ghost_cloud_jobs j ON a.job_id=j.id
    ORDER BY a.started_at DESC,a.id DESC LIMIT 50`).all();
   const cfg=config(env,'GHOST_FLEET_CONFIG');
+  const diagnosis=typeof cloud.diagnosePending==='function'?await cloud.diagnosePending(env).catch(()=>null):null;
   const providers=data.providers.map(p=>({...p,credentials_configured:!!env[cloud.PROVIDERS[p.provider][1]],
-   admission:cfg[p.provider]?.enabled!==true&&env[cloud.PROVIDERS[p.provider][1]]?'disabled_pending_verification':p.admission}));
+   admission:cfg[p.provider]?.enabled!==true&&env[cloud.PROVIDERS[p.provider][1]]?'disabled_pending_verification':p.admission,
+   dispatch_gate:diagnosis?.providers?.find(g=>g.provider===p.provider)||null}));
   const checks=(await sql(env,'SELECT provider,observed_at,status,error_category FROM ghost_cloud_provider_checks').all()).results;
   // Last-50 activity samples can hide older actionable review work. This
   // oldest-first index is bounded and contains metadata only, never output.
@@ -178,7 +180,7 @@ export function createCloudOperations(base, cloud) {
    const section=el('section');section.id='rovor-cloud-live';section.className='wl-card';
    section.append(el('strong','CLOUD EMPLOYEES · '+(data.enabled?'DISPATCH ENABLED':'DISPATCH PAUSED')));
    const pause=el('button',data.enabled?'PAUSE':'RESUME');pause.className='wl-button';pause.onclick=async()=>{try{const r=await fetch('/api/ghost/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!data.enabled})});if(!r.ok)throw Error('control_unavailable');await poll();}catch{disconnect();}};section.append(pause);
-   for(const p of data.providers){const last=data.attempts.find(a=>a.provider===p.provider);section.append(el('p',p.provider+' · '+p.admission+(last?' · '+last.status:' · no execution receipt')+(p.last_check?' · provider check: '+p.last_check.status+(p.last_check.error_category?' ('+p.last_check.error_category+')':'')+' · '+new Date(p.last_check.observed_at).toLocaleString():' · provider not checked')));}
+   for(const p of data.providers){const last=data.attempts.find(a=>a.provider===p.provider);section.append(el('p',p.provider+' · '+p.admission+(last?' · '+last.status:' · no execution receipt')+(p.dispatch_gate?' · current claim gate: '+p.dispatch_gate.reason.replaceAll('_',' ')+(Number.isSafeInteger(p.dispatch_gate.next_eligible_at)?' · next eligible '+new Date(p.dispatch_gate.next_eligible_at).toLocaleString():''):' · claim gate unknown')+(p.last_check?' · provider check: '+p.last_check.status+(p.last_check.error_category?' ('+p.last_check.error_category+')':'')+' · '+new Date(p.last_check.observed_at).toLocaleString():' · provider not checked')));}
    const old=document.getElementById(section.id);if(old)old.replaceWith(section);else panel.prepend(section);
    const results=el('section');results.id='rovor-cloud-results';
    const pending=data.review_queue.items,count=data.review_queue.pending_count;
