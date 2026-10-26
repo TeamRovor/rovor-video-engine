@@ -99,6 +99,35 @@ test('rejects malformed counts, ratios, duplicates and employee role substitutio
     d => d.connection_count = 9, d => d.models[0].requests = 8];
   for (const change of changes) { const d = sample(); change(d); assert.throws(() => sanitize(d, NOW)); }
 });
+test('Mac dispatch counters reach private HUD, unknown or stale values remain unknown', async () => {
+  const env = environment(), doc = sample();
+  doc.workforce.dispatch = {
+    status:'recent_scheduler_report',reason:'paced_wait',
+    claims_last_24h:46,max_claims_24h:50,
+    queued:1,running:0,needs_review:92,last_tick_executed:0,
+    next_eligible_at: NOW / 1000 + 900,
+    secret:'DO_NOT_EXPOSE'
+  };
+  assert.equal((await ingest(env,doc)).status,200);
+  const received=await (await handle(request('/api/hud/omniroute'),env,NOW)).json();
+  assert.equal(received.workforce.dispatch.reason,'paced_wait');
+  assert.equal(received.workforce.dispatch.claims_last_24h,46);
+  assert.equal(received.workforce.dispatch.needs_review,92);
+  assert.equal(received.workforce.dispatch.last_tick_executed,0);
+  assert.equal(JSON.stringify(received).includes('DO_NOT_EXPOSE'),false);
+  const old=sample();old.workforce.dispatch={status:'unavailable_or_stale'};
+  assert.equal(sanitize(old,NOW).workforce.dispatch.status,'unavailable_or_stale');
+  old.workforce.dispatch=doc.workforce.dispatch;
+  old.workforce.heartbeat.recent=false;
+  assert.equal(sanitize(old,NOW).workforce.dispatch.status,'unavailable_or_stale');
+  old.workforce.heartbeat.recent=true;
+  old.workforce.dispatch.next_eligible_at = NOW / 1000 + 9999999;
+  assert.throws(()=>sanitize(old,NOW));
+  old.workforce.dispatch.next_eligible_at = null;
+  old.workforce.dispatch.claims_last_24h='46';
+  assert.throws(()=>sanitize(old,NOW));
+});
+
 test('missing worker evidence remains unavailable rather than inventing employees', async () => {
   const d = sample(); d.workforce = {source: 'worker_state_unavailable', employees: [], heartbeat: {available: false}};
   assert.deepEqual(sanitize(d, NOW).workforce.employees, []);

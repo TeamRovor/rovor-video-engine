@@ -75,6 +75,41 @@ function expireQuota(snapshot, now) {
   return snapshot;
 }
 
+// Bound and allowlist scheduler counters received from the Mac. This is
+// diagnostic evidence only and does not authorize dispatch or infer success.
+function sanitizeDispatch(input, now, recentHeartbeat) {
+  if (!recentHeartbeat || input == null) return {status:'unavailable_or_stale'};
+  if (typeof input !== 'object' || Array.isArray(input)) fail();
+  if (input.status === 'unavailable_or_stale') return {status:'unavailable_or_stale'};
+  if (input.status !== 'recent_scheduler_report') fail();
+  const reasons = new Set(['paced_wait','rolling_quota','eligible',
+    'no_queued_work','existing_work_running','stop_requested',
+    'failure_circuit_requires_review',
+    'independent_pool_capacity_checked_per_claim','unknown']);
+  if (!reasons.has(input.reason)) fail();
+  const numberOrNull = (value, max) => {
+    if (value == null) return null;
+    const n = integer(value);
+    if (n > max) fail();
+    return n;
+  };
+  const next = input.next_eligible_at;
+  let next_eligible_at = null;
+  if (next != null) {
+    if (typeof next !== 'number' || !Number.isFinite(next) ||
+        next < now / 1000 - 86400 || next > now / 1000 + 172800) fail();
+    next_eligible_at = next;
+  }
+  return {status: 'recent_scheduler_report', reason: input.reason,
+    claims_last_24h: numberOrNull(input.claims_last_24h,100000),
+    max_claims_24h: numberOrNull(input.max_claims_24h,100000),
+    queued: numberOrNull(input.queued,100000),
+    running: numberOrNull(input.running,100000),
+    needs_review: numberOrNull(input.needs_review,100000),
+    last_tick_executed: numberOrNull(input.last_tick_executed,9),
+    next_eligible_at};
+}
+
 export function sanitize(doc, now = Date.now()) {
   if (doc?.source !== 'local_omniroute_read_only_bridge' || !PERIODS.has(doc.period)) fail();
   const observed = Date.parse(doc.snapshot_at);
@@ -131,6 +166,7 @@ export function sanitize(doc, now = Date.now()) {
     usage_coverage: ['complete_aggregate', 'partial_top_50_or_unattributed'].includes(doc.usage_coverage) ? doc.usage_coverage : fail(),
     quota_state: 'unknown_not_estimated', models, connections, connection_slots, quota: sanitizeQuota(doc.quota, connections, now),
     workforce: {source: workforce.source, employees, unassigned_jobs: optional(workforce.unassigned_jobs),
+      dispatch: sanitizeDispatch(workforce.dispatch, now, h.recent === true),
       heartbeat: {available: flag(h.available), recent: h.recent === true, age_seconds: optional(h.age_seconds),
         last_tick_dispatch: nullableLabel(h.last_tick_dispatch)}}};
   if (connections.reduce((n, c) => n + c.connection_count, 0) !== snapshot.connection_count) fail();
