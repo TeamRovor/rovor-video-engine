@@ -96,7 +96,11 @@ Timeouts, malformed/oversized responses and unknown transport effects are
 uncertain; empty, truncated and tool-call responses fail. No attempt is
 automatically replayed. A failed job is kept for review; a replacement provider
 gets a new job, preserving the original failed attempt. HTTP 429 cooldowns
-honor `Retry-After` across all connections in that pool. STOP is persistent
+honor `Retry-After` across all connections in that pool, including reset times
+beyond 24 hours. Unrepresentably large numeric delays block until the safe
+integer timestamp ceiling rather than wrapping or permitting an early request.
+Malformed delays retain the conservative one-minute minimum. Renewed eligibility
+evidence does not clear an existing provider cooldown. STOP is persistent
 and checked again before external requests; it cannot undo an in-flight call.
 
 Successful text is stored as `needs_review`; `human_review` stays
