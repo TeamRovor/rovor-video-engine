@@ -1,0 +1,9 @@
+{
+  "ffmpeg": "ffmpeg",
+  "whisper": "C:/tools/whisper.cpp/whisper-cli.exe",
+  "model": "C:/tools/whisper.cpp/models/ggml-base.en.bin",
+  "rhubarb": "C:/tools/rhubarb/rhubarb.exe",
+  "node": "node",
+  "sharp": "sharp"
+}
+
