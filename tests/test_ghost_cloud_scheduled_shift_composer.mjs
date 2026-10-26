@@ -18,6 +18,7 @@ const v2='// ROVOR_CLOUD_OPERATIONS_V1 testfixture\n'+
 function mock() {
   const db=new DatabaseSync(':memory:');db.exec(schema);
   db.exec('CREATE TABLE ghost_cloud_control(id INTEGER PRIMARY KEY,enabled INTEGER NOT NULL)');
+  db.exec('CREATE TABLE ghost_cloud_jobs(id TEXT PRIMARY KEY);CREATE TABLE ghost_cloud_attempts(job_id TEXT NOT NULL UNIQUE)');
   db.exec('INSERT INTO ghost_cloud_control(id,enabled) VALUES(1,1)');
   return {db,env:{GHOST_CRON_OPT_IN:'owner-approved-ghost-cron-v1',DB:{
     prepare(query){
