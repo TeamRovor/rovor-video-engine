@@ -252,14 +252,23 @@ function render(data,live,cloud=null){
  '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+localEmployeeSection(data?.workforce,live)+
  '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Local quota bars are cached gateway limits; separate cloud bars require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
 }
+let started=false;
 function start(){
+ if(started)return;
+ started=true;
  let busy=false,last=null,lastInventory=null,lastCloud=null,updated=0;
+ const isOriginal=n=>n.querySelector('h3')?.textContent?.trim()==='YOUR OMNIROUTE CONNECTIONS';
+ // After first render the heading changes, so the old placeholder selector
+ // cannot find the board again. Keep the replacement selectable for live sync.
  const slot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
-   n=>!n.hidden&&n.querySelector('h3')?.textContent?.trim()==='YOUR OMNIROUTE CONNECTIONS');
+   n=>!n.hidden&&(n.classList.contains('rvq-board')||isOriginal(n)));
  async function sync(){
    if(busy||document.hidden)return;
    const original=slot();if(!original)return;
-   if(last&&Date.now()-updated<5000){original.outerHTML=render(last,true,lastCloud);return;}
+   if(last&&Date.now()-updated<5000){
+     if(!original.classList.contains('rvq-board'))original.outerHTML=render(last,true,lastCloud);
+     return;
+   }
    busy=true;let fresh=null;
    try{
      const response=await fetch('/api/hud/omniroute?period=24h',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
@@ -285,8 +294,17 @@ function start(){
    lastCloud=cloud;last=fresh;updated=Date.now();
    const target=slot();if(target)target.outerHTML=render(fresh||lastInventory,!!fresh,cloud);
  }
- const observer=new MutationObserver(()=>{if(slot())void sync();});
- observer.observe(document.body,{childList:true,subtree:true});void sync();
+ // Only the original placeholder triggers a new observer sync. Otherwise
+ // rendering into the observed subtree could create an infinite event loop.
+ const observer=new MutationObserver(()=>{
+   if([...document.querySelectorAll('#rovor-workload-popup .wl-card')].some(
+       n=>!n.hidden&&isOriginal(n)))void sync();
+ });
+ observer.observe(document.body,{childList:true,subtree:true});
+ // Refresh the EXISTING popup even after its original heading was replaced.
+ // Do not poll or render when the document is hidden or popup is absent.
+ setInterval(()=>{if(slot())void sync();},10000);
+ void sync();
 }
 return {render,start};
 })();
