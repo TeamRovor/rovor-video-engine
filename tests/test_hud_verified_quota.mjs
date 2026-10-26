@@ -162,3 +162,25 @@ test('cloud claim gate is displayed without fabricating limits or online status'
   assert.doesNotMatch(noLeak,/<img src=x/);
   assert.match(noLeak,/Next cloud claim · Not reported/);
 });
+
+
+test('reviewed cloud jobs display canonical passed and failed states',()=>{
+ const window={},document={getElementById:()=>({})};
+ const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
+ vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map});
+ const ps=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
+ const cloud={execution_source:'cloud_provider',observed_at:Date.now(),
+  providers:ps.map(provider=>({provider,credentials_configured:true,admission:'disabled_pending_verification',online_verified:false})),
+  attempts:[
+   {provider:'groq',employee:'Walter',title:'Owner accepted',human_review:'passed',status:'needs_review',started_at:Date.now()-3000},
+   {provider:'groq',employee:'Jane',title:'Owner rejected',human_review:'failed',status:'needs_review',started_at:Date.now()-2000},
+   {provider:'groq',employee:'Gale',title:'Not reviewed',human_review:'not_recorded',status:'needs_review',started_at:Date.now()-1000}
+  ]
+ };
+ const html=window.ROVOR_QUOTA_BOARD.render(null,false,cloud);
+ assert.match(html,/Owner accepted/);
+ assert.match(html,/Owner rejected/);
+ assert.match(html,/PASS RECORDED/);
+ assert.match(html,/FAIL RECORDED/);
+ assert.equal((html.match(/AWAITING HUMAN REVIEW/g)||[]).length,1);
+});
