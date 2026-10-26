@@ -21,6 +21,14 @@ test('team tracking maps three unique branches and attributes shared Windows PR 
   assert.match(source, /prsAvailable/);
   assert.match(source, /https:\/\/github\.dev\//);
   assert.match(source, /BAKIR-PUBLISH\.md/);
+  assert.match(source, /merged_at/);
+  assert.match(source, /MERGED INTO MAIN/);
+  assert.match(source, /DRAFT \/ NOT PUBLISHED TO MAIN/);
+  assert.match(source, /OPEN \/ REVIEW PENDING/);
+  assert.match(source, /CLOSED WITHOUT MERGE/);
+  assert.match(source, /No unmerged commits is expected after merge/);
+  assert.match(source, /Last PR update:/);
+  assert.match(source, /Latest recorded branch PR:/);
 });
 
 test('injector stages module in existing HUD, is idempotent, and refuses unexpected source', () => {
