@@ -130,16 +130,41 @@ class ContinuousTests(unittest.TestCase):
         self.assertIsNone(self.claim(now=2000))
 
     def test_dry_tick_mock_executes_only_one_job_and_writes_no_private_text_to_heartbeat(self):
+        import ghost_omniroute_job as gateway
         def complete(conn, workspace, **kw):
             self.assertTrue(kw['omni_continuous'])
             self.assertEqual(kw['omni_max_24h'], 144)
             return {'result': {'review_status': 'draft_ready_for_human_review',
                                'private': 'DO_NOT_EXPOSE'}}
-        with mock.patch.object(worker, 'run_once', side_effect=complete) as run:
+        with mock.patch.object(worker, 'run_once', side_effect=complete) as run, \
+             mock.patch.object(gateway, 'read_combo_catalog', return_value=[]), \
+             mock.patch.object(gateway, 'verify_route', return_value='rovor-fast-free-v1'):
             result = continuous.tick(self.state, self.workspace, now=1000)
         self.assertEqual(run.call_count, 1)
         self.assertTrue(result['review_ready'])
         self.assertNotIn('DO_NOT_EXPOSE', (self.state / 'continuous-status.json').read_text())
+
+    def test_changed_combo_blocks_before_claim_and_preserves_queue(self):
+        import ghost_omniroute_job as gateway
+        key = next(iter(continuous.assignments()))
+        job = self.enqueue(key)
+        name, models = gateway.ROUTES[continuous.assignments()[key]['packet']]
+        catalog = [{'name': name, 'strategy': 'priority', 'isHidden': False,
+                    'models': [{'kind': 'model', 'providerId': 'openrouter', 'model': model}
+                               for model in models] +
+                              [{'kind': 'model', 'providerId': 'groq',
+                                'model': 'groq/openai/gpt-oss-20b'}]}]
+        with mock.patch.object(gateway, 'read_combo_catalog', return_value=catalog), \
+             mock.patch.object(worker, 'run_once', side_effect=AssertionError('claimed')):
+            result = continuous.tick(self.state, self.workspace, now=1000)
+        self.assertEqual(result['status'], 'route_preflight_requires_review')
+        self.assertEqual(result['route_policy'], 'requires_review_before_claim')
+        self.assertEqual(result['executed'], 0)
+        self.assertEqual(result['dispatch']['reason'], 'unknown')
+        self.assertFalse(result['dispatch']['allowed'])
+        self.assertEqual(self.conn.execute('SELECT status FROM jobs WHERE id=?',
+                                           (job,)).fetchone()[0], 'queued')
+        self.assertEqual(self.conn.execute("SELECT count(*) FROM events WHERE event='claimed'").fetchone()[0], 0)
 
     def test_unknown_assignment_is_rejected_before_queue_write(self):
         with self.assertRaises(ValueError):
