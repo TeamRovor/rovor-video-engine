@@ -138,7 +138,7 @@ test('forward-only review index repairs legacy schema and preserves first immuta
   assert.equal(insert.run('review-pass','attempt-1','owner','passed','a'.repeat(64),1).changes,1);
   assert.equal(insert.run('review-fail','attempt-1','owner','failed','b'.repeat(64),2).changes,0);
   assert.equal(db.prepare('SELECT count(*) AS n FROM ghost_cloud_reviews').get().n,1);
-  assert.deepEqual(db.prepare('SELECT verdict,output_sha256 FROM ghost_cloud_reviews').get(),{verdict:'passed',output_sha256:'a'.repeat(64)});
+  assert.deepEqual({...db.prepare('SELECT verdict,output_sha256 FROM ghost_cloud_reviews').get()},{verdict:'passed',output_sha256:'a'.repeat(64)});
   assert.doesNotThrow(()=>db.exec(schema));
  }finally{db.close();}
  const corrupted=new DatabaseSync(':memory:');
