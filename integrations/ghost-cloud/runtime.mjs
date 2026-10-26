@@ -138,6 +138,32 @@ async function diagnoseNoClaim(db,cfg,now) {
  return {reason:'claim_contention_or_unclassified_gate'};
 }
 
+// Read-only snapshot of provider admission and atomic claim gates.
+// Evaluating a gate does not claim a job or prove live model availability.
+export async function diagnosePending(env,now=Date.now()) {
+ if(!env?.DB||!Number.isSafeInteger(now)||now<0)throw Error('diagnostics_unavailable');
+ let config;
+ try{config=JSON.parse(env.GHOST_FLEET_CONFIG||'{}');}
+ catch{throw Error('invalid_fleet_config');}
+ const control=await run(env.DB,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first();
+ const providers=[];
+ for(const provider of Object.keys(PROVIDERS)){
+  const cfg=config[provider],rejected=eligibility(provider,cfg,env,now);
+  if(rejected){providers.push({provider,state:'ineligible',reason:rejected});continue;}
+  if(control?.enabled!==1){providers.push({provider,state:'paused',reason:'global_stop'});continue;}
+  const result=await diagnoseNoClaim(env.DB,cfg,now);
+  const {reason,next_eligible_at}=result;
+  // A read-only "open" SQL gate does not prove a claim will succeed under
+  // contention or that inference would produce a complete response.
+  providers.push({provider,
+   state:reason==='claim_contention_or_unclassified_gate'?'claim_conditions_met_unverified':'blocked',
+   reason:reason==='claim_contention_or_unclassified_gate'?'claim_conditions_met_unverified':reason,
+   ...(Number.isSafeInteger(next_eligible_at)?{next_eligible_at}:{})
+  });
+ }
+ return {source:'read_only_cloud_claim_gates',observed_at:now,providers};
+}
+
 export async function tick(env,fetcher=(...args)=>globalThis.fetch(...args),now=Date.now()) {
  const startedClock=Date.now();
  const db=env.DB; if(!db)throw Error('missing_database');
