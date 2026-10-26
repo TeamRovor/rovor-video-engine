@@ -147,7 +147,7 @@ def reserve(conn, job_id, task, models, *, now,
         # Basic shape and account scope validated by decide(), but query only
         # with parameterized SQL after validating the model identifier.
         if (not isinstance(ident, str)
-                or not re.fullmatch(r"[a-z0-9][a-z0-9._:/-]{2,159}", ident)):
+                or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/@-]{2,159}", ident)):
             _reject("model_identity_invalid")
         pool_remaining, pool_active, pool_max, pool_at = pool_evidence[pool_id][:4]
         model_at = item.get("verified_at")
