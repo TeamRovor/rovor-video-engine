@@ -103,6 +103,41 @@ export async function claim(db,provider,cfg,now) {
  cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,cfg.pool).first();
 }
 
+// Read only when an otherwise eligible route has no successful atomic claim.
+// Reasons derive from the SAME durable constraints as claim(); they never
+// license retries, reset a circuit, expose prompts, or relax provider limits.
+async function diagnoseNoClaim(db,cfg,now) {
+ const candidate=await run(db,`SELECT COUNT(*) n,MIN(j.input_bytes) min_bytes FROM ghost_cloud_jobs j
+   WHERE j.employee IN (SELECT value FROM json_each(?))
+     AND j.kind IN (SELECT value FROM json_each(?))
+     AND j.input_bytes<=?
+     AND NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts a WHERE a.job_id=j.id)`,
+   JSON.stringify(cfg.roles),JSON.stringify(cfg.kinds),cfg.max_input_bytes).first();
+ if(!candidate?.n)return {reason:'no_matching_unattempted_job'};
+ const globalCount=await run(db,'SELECT COUNT(*) n FROM ghost_cloud_attempts WHERE started_at>?',now-DAY).first();
+ if(globalCount.n>=144)return {reason:'global_daily_safety_cap'};
+ const pool=await run(db,`SELECT COUNT(*) n,COALESCE(SUM(reserved_tokens),0) reserved
+   FROM ghost_cloud_attempts WHERE pool=? AND started_at>?`,cfg.pool,now-DAY).first();
+ if(pool.n>=cfg.requests_per_day)return {reason:'account_request_cap'};
+ if(pool.reserved+candidate.min_bytes+cfg.max_output_tokens+256>cfg.tokens_per_day)
+   return {reason:'account_reserved_token_cap'};
+ const lock=await run(db,`SELECT
+   COALESCE(SUM(CASE WHEN status='running' THEN 1 ELSE 0 END),0) running,
+   MAX(CASE WHEN started_at>? THEN started_at ELSE NULL END) recent,
+   MAX(CASE WHEN retry_after>? THEN retry_after ELSE NULL END) retry_until
+   FROM ghost_cloud_attempts WHERE pool=?`,
+   now-cfg.min_interval_ms,now,cfg.pool).first();
+ if(lock.running>0)return {reason:'account_inflight_claim'};
+ if(lock.recent!==null)return {reason:'account_minimum_interval',next_eligible_at:lock.recent+cfg.min_interval_ms};
+ if(lock.retry_until!==null)return {reason:'account_retry_after',next_eligible_at:lock.retry_until};
+ const circuit=await run(db,`SELECT COUNT(*) n FROM ghost_cloud_attempts
+   WHERE pool=? AND status IN ('failed','uncertain')
+   AND started_at>COALESCE((SELECT MAX(started_at) FROM ghost_cloud_attempts
+     WHERE pool=? AND status='needs_review'),0)`,cfg.pool,cfg.pool).first();
+ if(circuit.n>=3)return {reason:'failure_circuit_requires_review'};
+ return {reason:'claim_contention_or_unclassified_gate'};
+}
+
 export async function tick(env,fetcher=(...args)=>globalThis.fetch(...args),now=Date.now()) {
  const startedClock=Date.now();
  const db=env.DB; if(!db)throw Error('missing_database');
@@ -118,12 +153,14 @@ export async function tick(env,fetcher=(...args)=>globalThis.fetch(...args),now=
   if(pools.has(cfg.pool)&&pools.get(cfg.pool)!==limits)throw Error('conflicting_pool_limits');pools.set(cfg.pool,limits);
  }
  let dispatched=0;
+ const blocked={};
  for(const provider of Object.keys(PROVIDERS)){
   if(denied[provider])continue;const cfg=config[provider];
   // Recheck STOP and evidence clocks immediately before each external call.
   const clock=now+(Date.now()-startedClock);
   if(eligibility(provider,cfg,env,clock))continue;
-  const attempt=await claim(db,provider,cfg,clock);if(!attempt)continue;
+  const attempt=await claim(db,provider,cfg,clock);
+  if(!attempt){blocked[provider]=await diagnoseNoClaim(db,cfg,clock);continue;}
   if(!(await run(db,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled){
    await run(db,"UPDATE ghost_cloud_attempts SET status='failed',error_code='stopped_before_request',finished_at=? WHERE id=? AND status='running'",clock,attempt.id).run();break;
   }
@@ -131,5 +168,5 @@ export async function tick(env,fetcher=(...args)=>globalThis.fetch(...args),now=
   const outcome=await infer(provider,cfg,env,job.prompt,fetcher,clock);dispatched++;
   await run(db,`UPDATE ghost_cloud_attempts SET status=?,error_code=?,actual_model=?,tokens_input=?,tokens_output=?,output=?,retry_after=?,finished_at=? WHERE id=? AND status='running'`,outcome.status,outcome.error_code,outcome.actual_model??null,outcome.tokens_input??null,outcome.tokens_output??null,outcome.output??null,outcome.retry_after??null,now+(Date.now()-startedClock),attempt.id).run();
  }
- return {enabled:true,dispatched,denied};
+ return {enabled:true,dispatched,denied,blocked};
 }
