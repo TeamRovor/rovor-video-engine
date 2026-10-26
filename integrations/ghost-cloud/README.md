@@ -150,6 +150,40 @@ Do not apply SQL through a public GitHub Action, store review outputs in the
 public repo, or overwrite an old migration file. Source/SQLite tests are not
 proof the private Site is migrated or deployed.
 
+## Scheduled shift to immutable approved-task feed
+
+The source-only `compose-scheduled-shift.mjs` now bundles the already-reviewed
+`approved-feed.mjs` with the **existing** owner-private Site deployment. A
+scheduled shift uses the pinned canonical GitHub queue rather than the original
+fixed `GHOST_APPROVED_JOBS` cache only when both the private Site opt-in and
+feed configuration are present:
+
+- `GHOST_CRON_OPT_IN=owner-approved-ghost-cron-v1` gates scheduled executions;
+  it does **not** register a trigger.
+- `GHOST_FEED_COMMIT` must be the exact immutable 40-character commit SHA for
+  `coordination/tasks.json` and `coordination/work-routing.json`.
+- `GHOST_APPROVED_TASKS` is a **private** JSON allowlist of at most nine
+  `{\"task_id\":\"...\",\"revision\":\"v1\"}` entries. The canonical task
+  must independently have `cloud_inference.approved_for_cloud=true`, status
+  `active`, public data class, assigned owner, passing dependencies, and matching
+  revision. There is no inferred authorization from a GitHub task alone.
+
+When `GHOST_FEED_COMMIT` is present but allowlist data are missing or invalid,
+the shift fails closed with a sanitized receipt; it must **not** fall back to
+stale packets. If the feed is not selected, legacy fixed packets remain the
+existing guarded behavior. Identical tasks deduplicate by stable job IDs; an
+explicitly reviewed new revision requires new owner approval. The zero-cost
+provider gate, token permits, global STOP, human PASS/FAIL, and real model
+receipts remain separate.
+
+**Operational acceptance remains outstanding:** apply the forward-only unique
+review index to existing private D1, publish the composed source to the
+original Site, apply the scheduled-run migration, configure private allowlist,
+register one actual hosting cron trigger, verify two independent scheduler
+wakeups and one approved non-duplicate real attempt, and verify owner review
+persists. Merging source is not deployment, and a scheduler heartbeat is not
+proof of live model activity.
+
 ## Verification
 
 `node --test tests/test_ghost_cloud.mjs` requires Node 24 and no dependencies.
