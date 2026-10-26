@@ -4,9 +4,9 @@
   const repo = 'TeamRovor/rovor-video-engine';
   const api = 'https://api.github.com/repos/' + repo;
   const members = [
-    { id: 'amar', name: 'Amar', branch: 'amar-work', scope: 'HUD / OmniRoute oversight' },
-    { id: 'bakir', name: 'Bakir', branch: 'bakir-work', scope: 'Video pipeline + shared Windows PR #7 sync' },
-    { id: 'evan', name: 'Evan', branch: 'evan-work', scope: 'Moho / animation engine quality' }
+    { id: 'amar', name: 'Amar', branch: 'amar-work', scope: 'HUD / OmniRoute oversight', issue: 208 },
+    { id: 'bakir', name: 'Bakir', branch: 'bakir-work', scope: 'Video pipeline + shared Windows PR #7 sync', issue: 210 },
+    { id: 'evan', name: 'Evan', branch: 'evan-work', scope: 'Moho / animation engine quality', issue: 211 }
   ];
   const activity = document.getElementById('activityPanel');
   if (!activity || !window.ROVOR_NATIVE) return;
@@ -90,6 +90,9 @@
       card.append(txt('h4', '', m.name));
       card.append(txt('span', 'state', status(rec)));
       card.append(txt('div', 'meta', 'Responsibility: ' + m.scope));
+      const assignment = txt('div', 'meta', 'Assigned work: ');
+      assignment.append(link('ISSUE #' + m.issue, 'https://github.com/' + repo + '/issues/' + m.issue));
+      card.append(assignment);
       const branchLine = txt('div', 'meta', 'Branch: ');
       branchLine.append(link(m.branch, 'https://github.com/' + repo + '/tree/' + encodeURIComponent(m.branch)));
       card.append(branchLine);
