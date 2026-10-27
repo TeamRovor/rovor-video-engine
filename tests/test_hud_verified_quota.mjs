@@ -131,7 +131,7 @@ test('private cloud admission and verified cloud quota remain separate from gate
   assert.match(combined,/12.0/);
   assert.match(combined,/OMNIROUTE CACHED REPORT/);
   assert.match(combined,/CLOUD WORKFORCE \/ SEPARATE SOURCE/);
-  assert.equal((combined.match(/role="progressbar"/g)||[]).length,2);
+  assert.equal((combined.match(/role="progressbar"/g)||[]).length,3);
   const expired=structuredClone(cloud);expired.providers[0].quota.resets_at=ts-1;
   const noCloudLimit=window.ROVOR_QUOTA_BOARD.render(null,false,expired);
   assert(!noCloudLimit.includes('6 / 50 requests'));
