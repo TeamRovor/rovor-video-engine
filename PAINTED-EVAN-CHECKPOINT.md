@@ -5,12 +5,21 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current bounded acting work: small-detail head/torso pilot
+CARTOON-EVAN-PAYOFF-LEAN.md / evan-engine/reviews/payoff-lean-v1.json. Existing detail_event43–45already has hands/brows/head/body; baseline holdhead−1.7/body+.35. New opt-in payoff_controls strengthens same cue: head+.5/−3.2delay25ms,body−.15/+.85delay70ms; totalhold−4.9/+1.2. Same14.34prepare-start/14.64back/15.34arrive/15.95hold/16.78settle. Arms/index/nativeoraljaw unchanged. Head+registeredneck move; body rotates all layers, so delivery mouth pixels intentionally move. No new cue, source artwork, hand pose or timing/default changes.
+
+13tests passed(3new): offcue/shift/fallback/isolation/immutability/480Hzcontinuity/finite-time plus actual currentjaw neck meshpositive480Hz and prior detail/neckguards. Pilots353/374/396 baseline complete stages exact; nativeoraljaw/audits, torso/armlayers beforeglobalrotation and brand/browser exact. Inspected nativejoin520x540for3poses, full1280x720holdbeforeafter and2xneckdetail. Stronger attitude is visible; existing tinycollar contour nib remains. No new broad open gap observed, but pilot samples are not motion acceptance.
+
+PENDING worker68712: work/payoff-lean-review/render.py renders14–17.25s into outputs/evan-cartoon-payoff-lean. Expected78frames/60changed345..404+18offcuecopies,normal3.25s/slow13s. ExactPCM224000:27600052000samples. Frozen Launch-Source-Manifest.json/Source/. DO NOT restart.
+
+NEXT: poll68712; require Verification.json and78/312decode. Run work/payoff-lean-review/review.py, inspect all60nativecollar/jawpairs,18overview,4normal+2slow1280x720samples, verify exactPCM/source/framehashes. Pay attention to existing collar nib and mouth rotation before integration. No extra variant absent concrete defect. Fullfilm remains definition-continuous; polished milestone NOT ready.
+
 ## Latest complete candidate: explanatory brows integrated
 CARTOON-EVAN-DEFINITION-CONTINUOUS.md / evan-engine/reviews/definition-continuous-v1.json; outputs/evan-cartoon-definition-continuous/Review.html. Worker5341COMPLETED/no pending jobs. Reused114reviewed frame235..348 PNGs from component, other438byte-exact to filtered-continuous including20closing. No rerender, new source art, retiming or default change.
 
 Full23s normal/92s muted slow fully decode552/2208. All552hashes, source snapshots, film digests checked; changed frames preserve outside-head and stage mouth pixels. Original full WAV byte-exact; AAC368000samples16k lossy. All18markers equal CURRENT acoustic plan; no flags cleared. Inspected19overview including235/348/349and551, normal234/248/268/348/540 andslow992/1392at1280x720. Brow lift reads modestly with held palm, no newly observed seam/oral defect. Reference design sheet was compared at full resolution: stronger torso attitude, hand variety and facial range remain missing; real-time/listening acceptance remains unverified. Polished milestone NOT ready.
 
-NEXT: inspect existing head/body control ownership around payoff super small detail14.72–16.03s. Measure current motion and evaluate ONE bounded opt-in anticipation/lean/settle via native and delivery pilots if existing transforms preserve oral contacts, joins and brand. No new whole-character plate, extra brow/camera/dwell variant or retiming. No automatic acceptance from decode checks.
+The planned head/body ownership inspection led to the bounded pilot above. No automatic acceptance from decode checks.
 
 ## Latest acting improvement: definition brow component reviewed
 CARTOON-EVAN-DEFINITION-BROWS.md / evan-engine/reviews/definition-brows-v1.json. Existing word-anchored palm cue now has opt-in registered brow lift5/7pixels, tilts+1/-2; same9.79prepare/10.31arrive/14.01hold/14.54settle. No new artwork, timing, oral/grin, hand cue or default changes. Ten relevant tests passed previously.

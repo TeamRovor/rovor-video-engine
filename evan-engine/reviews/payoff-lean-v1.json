@@ -1,0 +1,103 @@
+{
+  "status": "opt-in-payoff-lean-pilots-reviewed-component-render-in-progress",
+  "event": {
+    "anticipate": 14.34,
+    "prepare": 14.64,
+    "arrive": 15.34,
+    "hold": 15.95,
+    "settle": 16.78,
+    "scriptIndices": [
+      43,
+      44,
+      45
+    ]
+  },
+  "additionalHeadDegrees": {
+    "anticipation": 0.5,
+    "hold": -3.2,
+    "delay": 0.025
+  },
+  "additionalBodyDegrees": {
+    "anticipation": -0.15,
+    "hold": 0.85,
+    "delay": 0.07
+  },
+  "heldTotalHeadDegrees": -4.9,
+  "heldTotalBodyDegrees": 1.2,
+  "pilots": [
+    {
+      "frame": 353,
+      "time": 14.708333333333334,
+      "baselineHead": 0.5746490875715368,
+      "candidateHead": 1.0338671849692265,
+      "baselineBody": -0.11998893004115227,
+      "candidateBody": -0.2699750925925926,
+      "baselineStagePixelExact": true,
+      "nativeOralJawAndAuditExact": true,
+      "armTorsoLayersExactBeforeGlobalRotation": true,
+      "officialBrandAndBrowserExact": true,
+      "minimumOralArea2": 0.08450055122375488
+    },
+    {
+      "frame": 374,
+      "time": 15.583333333333334,
+      "baselineHead": -1.7,
+      "candidateHead": -4.9,
+      "baselineBody": 0.35,
+      "candidateBody": 1.1999999999999997,
+      "baselineStagePixelExact": true,
+      "nativeOralJawAndAuditExact": true,
+      "armTorsoLayersExactBeforeGlobalRotation": true,
+      "officialBrandAndBrowserExact": true,
+      "minimumOralArea2": 2.6879451274871826
+    },
+    {
+      "frame": 396,
+      "time": 16.5,
+      "baselineHead": -0.5199626784099664,
+      "candidateHead": -1.4987159554169618,
+      "baselineBody": 0.13422174690925204,
+      "candidateBody": 0.460188846546007,
+      "baselineStagePixelExact": true,
+      "nativeOralJawAndAuditExact": true,
+      "armTorsoLayersExactBeforeGlobalRotation": true,
+      "officialBrandAndBrowserExact": true,
+      "minimumOralArea2": 2.8705894947052
+    }
+  ],
+  "nativeJoinPilotsVisuallyInspected": [
+    353,
+    374,
+    396
+  ],
+  "decodedFramesReviewed": 0,
+  "pilotDeliveryBeforeAfterInspected": 374,
+  "testsPassed": 13,
+  "newTests": 3,
+  "neckMeshCurrentJawTrajectoryPositiveAt480Hz": true,
+  "sourceFrameRange": [
+    336,
+    414
+  ],
+  "expectedFrames": 78,
+  "expectedUpdatedFrames": 60,
+  "expectedOffCueCopies": 18,
+  "expectedNormalSeconds": 3.25,
+  "expectedSlowSeconds": 13,
+  "sourcePcmSamples": [
+    224000,
+    276000
+  ],
+  "pendingJobs": true,
+  "worker": 68712,
+  "newArtwork": false,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "phonemeTimingChanged": false,
+  "flagsCleared": 0,
+  "mohoProbed": false,
+  "polishedMilestoneReady": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "nextConcreteWork": "Poll68712; do not restart. Require Verification.json and78/312decodedframes. Run work/payoff-lean-review/review.py; inspect all60native collar/jaw before-after pairs,18overview and4normal/2slow encoded samples. Verify exact52000sample PCM/source/frame hashes. Evaluate existing collar contour nib and transformed mouth before any full integration; no additional variant without concrete defect."
+}
