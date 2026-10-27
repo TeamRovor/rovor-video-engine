@@ -11,7 +11,7 @@
   const activity = document.getElementById('activityPanel');
   if (!activity || !window.ROVOR_NATIVE) return;
   const records = Object.fromEntries(members.map(m => [m.id, { state: 'loading', ahead: null, behind: null, latest: null, files: [], pr: null, prsAvailable: false }]));
-  let lastChecked = null, refreshError = '';
+  let lastAttempted = null, lastSuccessful = null, refreshError = '';
   const css = document.createElement('style');
   css.textContent = `
     .rovor-team-mini {border:1px solid #366391;background:#041329bb;padding:7px 8px;margin:6px 0 9px;color:#bcdeff;font-size:10px;flex-shrink:0}
@@ -83,7 +83,9 @@
     }
     section.replaceChildren();
     section.append(txt('h3', '', 'TEAM CONTRIBUTION TRACKING'));
-    section.append(txt('p', 'rovor-team-caveat', 'GitHub activity grouped by agreed work branches. The shared TeamRovor login cannot prove which person authored a commit or connected their ChatGPT. Last checked: ' + (lastChecked ? when(lastChecked) : 'Not yet verified') + (refreshError ? ' · ' + refreshError : '') + '.'));
+    const successAge = lastSuccessful ? Date.now() - Date.parse(lastSuccessful) : Infinity;
+    const freshness = !lastSuccessful ? 'No successful refresh yet' : successAge > 30 * 60 * 1000 ? 'STALE · last complete refresh ' + when(lastSuccessful) : 'Last complete refresh ' + when(lastSuccessful);
+    section.append(txt('p', 'rovor-team-caveat', 'GitHub activity grouped by agreed work branches. The shared TeamRovor login cannot prove which person authored a commit or connected their ChatGPT. ' + freshness + '. Last poll attempt: ' + (lastAttempted ? when(lastAttempted) : 'Not yet attempted') + (refreshError ? ' · ' + refreshError : '') + '.'));
     const grid = txt('div', 'rovor-team-grid', '');
     for (const m of members) {
       const rec = records[m.id];
@@ -190,8 +192,20 @@
             mergedAt: Number.isFinite(Date.parse(pr.merged_at)) ? pr.merged_at : null,
             updatedAt: Number.isFinite(Date.parse(pr.updated_at)) ? pr.updated_at : null } : null;
     }
-    lastChecked = new Date().toISOString();
-    refreshError = results.every(x => x.status === 'rejected') ? 'GitHub temporarily unavailable' : (results[3].status === 'rejected' ? 'PR data unavailable' : '');
+    lastAttempted = new Date().toISOString();
+    const complete = results.every((x, i) => x.status === 'fulfilled' && (i === 3
+      ? Array.isArray(x.value)
+      : Number.isInteger(x.value?.ahead_by) && Number.isInteger(x.value?.behind_by)));
+    if (complete) {
+      lastSuccessful = lastAttempted;
+      refreshError = '';
+    } else {
+      const failedBranches = members.filter((m, i) => results[i].status !== 'fulfilled' || !Number.isInteger(results[i].value?.ahead_by) || !Number.isInteger(results[i].value?.behind_by)).map(m => m.name);
+      const parts = [];
+      if (failedBranches.length) parts.push('Branch data unavailable: ' + failedBranches.join(', '));
+      if (results[3].status !== 'fulfilled' || !Array.isArray(results[3].value)) parts.push('PR data unavailable');
+      refreshError = parts.length ? parts.join(' · ') : 'GitHub response incomplete';
+    }
     ensurePreview(); renderDrawer();
   }
   ensurePreview();
