@@ -301,3 +301,26 @@ test('cloud status exposes bounded read-only per-provider dispatch reasons',asyn
  assert.ok(!serialized.includes(s.env.GHOST_WRITER_TOKEN));
  assert.ok(!serialized.includes('Inspect this public service offer.'));
 });
+
+test('hosted service shift uses the same canonical approved feeder as scheduled cron',async()=>{
+ const s=setup();await s.ops.control(s.env,true);
+ s.env.GHOST_APPROVED_JOBS=JSON.stringify([j]);
+ s.env.GHOST_FEED_COMMIT='f'.repeat(40);
+ await assert.rejects(s.ops.replenish(s.env),/canonical_feed_bundle_missing/);
+ assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_jobs').get().n,0);
+ let called=0;
+ s.ops.installApprovedFeeder({replenishApprovedJobs:async env=>{
+  assert.equal(env,s.env);called++;return {status:'complete',queued:0,duplicates:0};
+ }});
+ assert.throws(()=>s.ops.installApprovedFeeder({replenishApprovedJobs:async()=>({queued:0})}),/canonical_feed_already_registered/);
+ const response=await s.ops.fetch(request('/api/ghost/service',{
+  body:{operation:'shift'},identity:null,serviceToken:s.env.GHOST_SERVICE_TOKEN
+ }),s.env);
+ assert.equal(response.status,200);
+ const receipt=await response.json();
+ assert.equal(receipt.intake.queued,0);
+ assert.equal(receipt.result.dispatched,0);
+ assert.equal(called,1);
+ assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_jobs').get().n,0,
+  'spent fixed packets must not silently return on canonical feed path');
+});
