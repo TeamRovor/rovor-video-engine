@@ -68,7 +68,12 @@ async function main(){
     assert(await evalJS('return !!document.querySelector(".rvq-more summary")'));
     const baseline=await evalJS('return performance.getEntriesByType("resource").filter(e=>e.name.includes("/api/hud/omniroute?period=24h")).length');
     await evalJS('const s=document.querySelector(".rvq-more summary");s.click();s.focus();return true');
-    await delay(11500);
+    const diagnostic=()=>evalJS('return {rings:document.querySelectorAll(".rvq-provider").length,more:document.querySelectorAll(".rvq-more").length,open:document.querySelectorAll(".rvq-more[open]").length,focus:document.activeElement?.tagName,record:window.ROVOR_QUOTA_BOARD?.captureState?.(document),shared:!!window.ROVOR_WORKLOAD?.getQuotaSnapshot?.()}');
+    console.log('INSPECTION_T0',JSON.stringify(await diagnostic()));
+    await delay(6000);
+    console.log('INSPECTION_T6',JSON.stringify(await diagnostic()));
+    await delay(5500);
+    console.log('INSPECTION_T11',JSON.stringify(await diagnostic()));
     assert(await evalJS('return !!document.querySelector(".rvq-more[open]")'),'expanded quota must survive all refreshes');
     assert(await evalJS('return document.activeElement?.closest(".rvq-more")!==null'),'focused summary must survive refresh');
     const requestsNow=await evalJS('return performance.getEntriesByType("resource").filter(e=>e.name.includes("/api/hud/omniroute?period=24h")).length');
