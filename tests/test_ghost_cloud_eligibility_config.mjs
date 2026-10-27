@@ -13,7 +13,7 @@ const sample = (provider = 'groq') => {
     operator_approved: true, model, pool: provider + '-account',
     billing: { zero_cost: true, commercial_use: true, sha256: HEX, checked_at: NOW - 1000 },
     quota: { sha256: HEX, checked_at: NOW - 900, requests_remaining: 10, tokens_remaining: 50000, reset_at: NOW + 3600000 },
-    canary: { live_verified: true, sha256: HEX, at: NOW - 500, requested_model: model, actual_model: model, capability_verified: true },
+    canary: { live_verified: true, sha256: HEX, at: NOW - 500, requested_model: model, actual_model: model, capability_verified: true, verified_kinds: ['plan', 'code_review'] },
     limits: { requests_per_day: 8, tokens_per_day: 40000, min_interval_ms: 601000, max_input_bytes: 4000, max_output_tokens: 500, roles: ['Walter', 'Hank'], kinds: ['plan', 'code_review'] },
   };
 };
@@ -93,4 +93,47 @@ test('verified external allowance larger than local cap is safely bounded', asyn
   assert.equal(states.groq, 'operator_attested_eligible');
   assert.equal(config.groq.requests_per_day, 8);
   assert.equal(config.groq.tokens_per_day, 40000);
+});
+
+
+test('plan-only canary never authorizes code review work', async () => {
+  const a = sample();
+  a.canary.verified_kinds = ['plan'];
+  const { config, states } = await compileFleetConfig({ groq: a }, env, NOW);
+  assert.equal(config.groq.enabled, false);
+  assert.equal(states.groq, 'canary_scope_unverified');
+  a.limits.kinds = ['plan'];
+  const limited = await compileFleetConfig({ groq: a }, env, NOW);
+  assert.equal(limited.config.groq.enabled, true);
+  assert.deepEqual(limited.config.groq.kinds, ['plan']);
+});
+
+test('missing, malformed or duplicate canary capability scope fails closed', async () => {
+  for (const mutate of [
+    a => { delete a.canary.verified_kinds; },
+    a => { a.canary.verified_kinds = []; },
+    a => { a.canary.verified_kinds = 'plan'; },
+    a => { a.canary.verified_kinds = ['plan', 'plan']; },
+    a => { a.canary.verified_kinds = ['plan', 'shell']; },
+    a => { a.canary.verified_kinds = ['code_review']; },
+  ]) {
+    const a = sample(); mutate(a);
+    const { config, states } = await compileFleetConfig({ groq: a }, env, NOW);
+    assert.equal(config.groq.enabled, false);
+    assert.equal(states.groq, 'canary_scope_unverified');
+  }
+});
+
+test('evidence digest binds the enabled and attested capability scopes', async () => {
+  const a = sample();
+  const first = (await compileFleetConfig({ groq: a }, env, NOW)).config.groq.evidence_sha256;
+  a.canary.verified_kinds = ['code_review', 'plan'];
+  const sameScope = (await compileFleetConfig({ groq: a }, env, NOW)).config.groq.evidence_sha256;
+  assert.equal(first, sameScope, 'set ordering should not change evidence digest');
+  a.limits.kinds = ['plan'];
+  const narrowed = (await compileFleetConfig({ groq: a }, env, NOW)).config.groq.evidence_sha256;
+  assert.notEqual(first, narrowed, 'changing admitted kinds changes evidence digest');
+  a.canary.verified_kinds = ['plan'];
+  const narrowerAttestation = (await compileFleetConfig({ groq: a }, env, NOW)).config.groq.evidence_sha256;
+  assert.notEqual(narrowed, narrowerAttestation, 'changing attested kinds changes evidence digest');
 });
