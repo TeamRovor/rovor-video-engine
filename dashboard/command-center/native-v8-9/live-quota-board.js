@@ -284,7 +284,9 @@ function overviewSlot(slot,quota,live,cloud,index,activity){
  const traffic=activity?usageRing(activity.share,'Mac 24-hour recorded request share for '+name,'activity'):'';
  return '<div class="rvq-overview-tile" aria-label="'+esc(name)+' connection '+fmt(slot.account_slot)+' · '+evidence+'">'+
    '<span class="rvq-overview-name">'+esc(name)+'</span>'+
-   '<div class="rvq-overview-rings">'+usageRing(pct,evidence+' for '+name)+traffic+'</div>'+
+   // Prioritize the real 24h usage ring in each of the nine connection tiles.
+   // Unknown account quota remains a separate visible ring; never present traffic as quota.
+   '<div class="rvq-overview-rings">'+(activity?traffic+usageRing(pct,evidence+' for '+name):usageRing(pct,evidence+' for '+name))+'</div>'+
    '<span class="rvq-overview-source">'+evidence+'</span>'+
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac requests / 24h':'Mac requests unverified')+'</span></div>';
 }
