@@ -243,10 +243,10 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         state_path = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
         released = consecutive_failed >= 3 and circuit_recovery.release_is_valid(
             conn, failed_ids, state=state_path, now=now)
-        omni_circuit_open = consecutive_failed >= 3 and not released
+        omni_circuit_open = consecutive_failed >= 3
         omni_enabled = (allow_omniroute_model_use and
                         omni_used < omni_max_24h and
-                        (not omni_circuit_open or (allow_recovery_canary and circuit_released)))
+                        (not omni_circuit_open or (allow_recovery_canary and released)))
         if omni_continuous and not verified_pool_mode:
             claims = [r[0] for r in conn.execute(
                 "SELECT e.timestamp FROM events e JOIN jobs j ON j.id=e.job_id "
