@@ -137,7 +137,7 @@ def read_health(plist_path, *, now=None):
         raise ValueError("invalid STOP marker")
     with snapshot(state) as conn:
         rows = conn.execute(
-            "SELECT e.timestamp,j.status,j.result FROM events e "
+            "SELECT e.timestamp,j.id,j.status,j.result FROM events e "
             "JOIN jobs j ON j.id=e.job_id WHERE e.event='claimed' "
             "AND j.kind='research.omniroute' AND e.timestamp>=? "
             "ORDER BY e.timestamp DESC,e.id DESC", (now - DAY,)).fetchall()
@@ -154,13 +154,18 @@ def read_health(plist_path, *, now=None):
         counts = dict(conn.execute(
             "SELECT status,count(*) FROM jobs WHERE kind='research.omniroute' "
             "GROUP BY status").fetchall())
+        import omniroute_circuit_recovery as recovery
+        failed_ids = [r["id"] for r in rows[:failures]]
+        released = failures >= 3 and recovery.release_is_valid(
+            conn, failed_ids, state=state, now=now)
         decision = dispatch_decision(
             now=now, claims=[r["timestamp"] for r in rows], max_claims=limit,
             queued=counts.get("queued", 0), running=counts.get("running", 0),
-            stopped=marker.exists(), circuit_open=failures >= 3)
+            stopped=marker.exists(), circuit_open=failures >= 3 and not released)
     next_at = decision["next_eligible_at"]
     decision.update(
         observation_only=True, model_requests=0, state_modified=False,
+        failure_circuit_released=released,
         launchagent_loaded_verified=False,
         pacing_installed=False, consecutive_recorded_failures=failures,
         earliest_eligible_utc=(datetime.fromtimestamp(next_at, timezone.utc)

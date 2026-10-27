@@ -221,7 +221,7 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         # draft breaks the streak. An unknown review state does not falsely
         # count as a gateway failure.
         recent_omni = conn.execute(
-            "SELECT j.status,j.result FROM events e JOIN jobs j ON e.job_id=j.id "
+            "SELECT j.id,j.status,j.result,e.timestamp FROM events e JOIN jobs j ON e.job_id=j.id "
             "WHERE j.kind=? AND e.event='claimed' AND e.timestamp>=? "
             "ORDER BY e.timestamp DESC, e.id DESC LIMIT 3",
             (OMNI_KIND, now - 86400)).fetchall()
@@ -238,7 +238,12 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
             if not failed_attempt:
                 break
             consecutive_failed += 1
-        omni_circuit_open = consecutive_failed >= 3
+        import omniroute_circuit_recovery as circuit_recovery
+        failed_ids = [r["id"] for r in recent_omni[:consecutive_failed]]
+        state_path = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
+        released = consecutive_failed >= 3 and circuit_recovery.release_is_valid(
+            conn, failed_ids, state=state_path, now=now)
+        omni_circuit_open = consecutive_failed >= 3 and not released
         omni_enabled = (allow_omniroute_model_use and
                         omni_used < omni_max_24h and
                         (not omni_circuit_open or allow_recovery_canary))

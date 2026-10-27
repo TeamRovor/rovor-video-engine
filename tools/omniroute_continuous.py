@@ -262,7 +262,7 @@ def execute(state, job_id, payload, *, root=None, completion=None, catalog=None,
 def queue_health(conn, state, *, max_claims=144, interval=601, now=None):
     now = time.time() if now is None else now
     rows = conn.execute(
-        "SELECT e.timestamp,j.status,j.result FROM events e JOIN jobs j ON j.id=e.job_id "
+        "SELECT e.timestamp,j.id,j.status,j.result FROM events e JOIN jobs j ON j.id=e.job_id "
         "WHERE j.kind=? AND e.event='claimed' AND e.timestamp>=? "
         "ORDER BY e.timestamp DESC,e.id DESC", (worker.OMNI_KIND, now - 86400)).fetchall()
     failed = 0
@@ -275,12 +275,17 @@ def queue_health(conn, state, *, max_claims=144, interval=601, now=None):
             break
     counts = dict(conn.execute("SELECT status,count(*) FROM jobs WHERE kind=? GROUP BY status",
                                (worker.OMNI_KIND,)).fetchall())
+    import omniroute_circuit_recovery as recovery
+    failed_ids = [r["id"] for r in rows[:failed]]
+    released = failed >= 3 and recovery.release_is_valid(
+        conn, failed_ids, state=state, now=now)
     result = pacing.dispatch_decision(
         now=now, claims=[r['timestamp'] for r in rows], max_claims=max_claims,
         queued=counts.get('queued', 0), running=counts.get('running', 0),
-        stopped=os.path.lexists(Path(state) / 'STOP'), circuit_open=failed >= 3,
+        stopped=os.path.lexists(Path(state) / 'STOP'), circuit_open=failed >= 3 and not released,
         pace_seconds=interval)
     result['consecutive_recorded_failures'] = failed
+    result['failure_circuit_released'] = released
     result['job_counts'] = counts
     return result
 
