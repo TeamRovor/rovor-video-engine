@@ -13,7 +13,7 @@ const schema=fs.readFileSync(new URL('scheduled-shift.sql',sourceDir),'utf8');
 const TAIL="export default {fetch:(request,env)=>__operations.fetch(request,env),scheduled(event,env,ctx){if(env.GHOST_CRON_OPT_IN==='owner-approved-ghost-cron-v1')return __cloud.worker.scheduled(event,env,ctx);}};";
 const v2='// ROVOR_CLOUD_OPERATIONS_V1 testfixture\n'+
   "const __cloud = (() => { return {tick:async()=>({enabled:true,dispatched:0}),worker:{scheduled:()=>{throw Error('old_tick_called')}}};})();\n"+
-  "const __operations = (() => {return {replenish:async()=>({queued:0,duplicates:0}),installApprovedFeeder:()=>{},fetch:async()=>new Response('<html><body>Original ROVOR HUD</body></html>',{headers:{'Content-Type':'text/html'}})};})();\n"+
+  "const __operations = (() => {return {replenish:async()=>({queued:0,duplicates:0}),installApprovedFeeder:()=>{},installHostedShiftRunner:()=>{},fetch:async()=>new Response('<html><body>Original ROVOR HUD</body></html>',{headers:{'Content-Type':'text/html'}})};})();\n"+
   TAIL+'\n';
 function mock() {
   const db=new DatabaseSync(':memory:');db.exec(schema);
@@ -72,6 +72,8 @@ test('production bundle embeds pinned approved feed without dynamic module impor
   assert.match(compiled,/GHOST_FEED_COMMIT/);
   assert.match(compiled,/replenishApprovedJobs/);
   assert.match(compiled,/__operations\.installApprovedFeeder\(__feed\)/);
+  assert.match(compiled,/__operations\.installHostedShiftRunner/);
+  assert.match(compiled,/__shift\.runScheduledShift\(env/);
   assert.doesNotMatch(compiled,/import\s*\(/);
   assert.doesNotMatch(compiled,/^import\s/m);
   assert.throws(()=>compileScheduledShift(v2,shiftSource,'export const hostile=1;'),/unexpected_approved_feed_source/);
@@ -218,4 +220,10 @@ test('symlink redirection of migration folder is rejected without modifying orig
 test('composer refuses a canonical feeder when original Site service lacks the registration hook',()=>{
  const old=v2.replace('installApprovedFeeder:()=>{},','');
  assert.throws(()=>compileScheduledShift(old,shiftSource,feedSource),/canonical_service_feeder_unavailable/);
+});
+
+test('composer fails closed without a hosted D1 shift registration hook',()=>{
+ const unmounted=v2.replace('installHostedShiftRunner:()=>{},','');
+ assert.throws(()=>compileScheduledShift(unmounted,shiftSource,feedSource),
+  /hosted_shift_ledger_registration_unavailable/);
 });
