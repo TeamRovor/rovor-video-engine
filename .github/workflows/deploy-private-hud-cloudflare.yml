@@ -1,0 +1,91 @@
+name: GitHub-owned PRIVATE ROVOR HUD (Cloudflare Worker)
+on:
+  pull_request:
+    paths:
+      - 'integrations/hud-cloud/**'
+      - 'dashboard/command-center/native-v8-9/**'
+      - 'tests/test_hud_cloud.mjs'
+      - 'tests/test_hud_github_deployment.mjs'
+      - 'tests/test_hud_ios_quota_rings.mjs'
+      - '.github/workflows/deploy-private-hud-cloudflare.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'integrations/hud-cloud/**'
+      - 'dashboard/command-center/native-v8-9/**'
+      - 'tests/test_hud_cloud.mjs'
+      - 'tests/test_hud_github_deployment.mjs'
+      - 'tests/test_hud_ios_quota_rings.mjs'
+      - '.github/workflows/deploy-private-hud-cloudflare.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  safety-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test private auth, nine-provider meters and GitHub release preflight
+        run: |
+          node --check integrations/hud-cloud/worker.mjs
+          node --check integrations/hud-cloud/prepare-github-deploy.mjs
+          node --check integrations/hud-cloud/verify-github-deploy.mjs
+          node --test tests/test_hud_cloud.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs
+
+  deploy:
+    needs: safety-tests
+    # Never expose secrets to pull_request, untrusted branches, or AI PR code.
+    # Default off after merge; owner opts into automatic main deploy after
+    # first private readback, setting ROVOR_HUD_GITHUB_AUTO_DEPLOY=enabled.
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'push' && vars.ROVOR_HUD_GITHUB_AUTO_DEPLOY == 'enabled'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: rovor-hud-production
+    concurrency:
+      group: rovor-hud-private-deployment
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ROVOR_HUD_D1_ID: ${{ secrets.ROVOR_HUD_D1_ID }}
+      ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+      ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
+    defaults:
+      run:
+        working-directory: integrations/hud-cloud
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify trusted main, independently held credentials, and private Worker-first config
+        run: node prepare-github-deploy.mjs
+      - name: Install Wrangler (Cloudflare-owned hosting, no ChatGPT Site publisher)
+        run: npm install --global wrangler@4
+      - name: Ensure only the existing private telemetry tables exist in the assigned D1
+        run: |
+          wrangler d1 execute DB --remote --file=schema.sql --config wrangler.github.jsonc
+      - name: Publish original HUD and private telemetry Worker from GitHub
+        run: wrangler deploy --config wrangler.github.jsonc
+      - name: Set both independently stored Worker secrets without printing their values
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e 'process.stdout.write(JSON.stringify({HUD_WRITER_TOKEN:process.env.ROVOR_HUD_WRITER_TOKEN,HUD_READER_TOKEN:process.env.ROVOR_HUD_READER_TOKEN}))' |
+            wrangler secret bulk --config wrangler.github.jsonc
+      - name: Verify anonymous denial, authenticated original HUD, quota script, and D1 status
+        run: node verify-github-deploy.mjs
