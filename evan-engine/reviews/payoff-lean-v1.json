@@ -1,5 +1,5 @@
 {
-  "status": "opt-in-payoff-lean-pilots-reviewed-component-render-in-progress",
+  "status": "opt-in-payoff-component-rendered-and-visually-reviewed",
   "event": {
     "anticipate": 14.34,
     "prepare": 14.64,
@@ -88,8 +88,7 @@
     224000,
     276000
   ],
-  "pendingJobs": true,
-  "worker": 68712,
+  "pendingJobs": false,
   "newArtwork": false,
   "fullFilmUpdated": false,
   "defaultChanged": false,
@@ -99,5 +98,50 @@
   "polishedMilestoneReady": false,
   "independentListeningAccepted": false,
   "realTimeActingAccepted": false,
-  "nextConcreteWork": "Poll68712; do not restart. Require Verification.json and78/312decodedframes. Run work/payoff-lean-review/review.py; inspect all60native collar/jaw before-after pairs,18overview and4normal/2slow encoded samples. Verify exact52000sample PCM/source/frame hashes. Evaluate existing collar contour nib and transformed mouth before any full integration; no additional variant without concrete defect."
+  "nextConcreteWork": "Full integration is now complete in payoff-continuous-v1.json. Next inspect the existing left-collar contour nib source ownership before any artwork or rig change.",
+  "sourceSeconds": [
+    14,
+    17.25
+  ],
+  "frames": 78,
+  "updatedFrames": 60,
+  "offCueByteExactFrames": 18,
+  "baselineStageCalibrationsExact": 60,
+  "nativeOralJawAndAuditExact": true,
+  "armTorsoLayersExactBeforeGlobalRotation": true,
+  "officialBrandAndBrowserExact": true,
+  "sourcePcmExact": true,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 78,
+      "sha256": "efb32f6e1c132f96b91d2d9d44860a150b937a24e1101f8438b2582974cf1181"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 312,
+      "sha256": "f3ce3ab2a8c545e8ee047d6cf75ad31339f91ecabbf06694bf33f8c193b0ab41"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 52000,
+    "decodedPcm16Samples": 52000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "workerCompleted": 68712,
+  "nativeJoinPairsVisuallyInspected": 60,
+  "overviewPosesVisuallyInspected": 18,
+  "decodedNormalClipSamplesVisuallyInspected": [
+    9,
+    17,
+    38,
+    68
+  ],
+  "decodedSlowClipSamplesVisuallyInspected": [
+    152,
+    272
+  ],
+  "launchAndFinalSourceHashesVerified": true,
+  "allFrameHashesVerified": true,
+  "visualAssessment": "More deliberate tilted head/torso attitude supports the existing palm. No broad neck gap or detached collar observed across all60native pairs. Small pre-existing left-collar contour nib persists and is slightly exposed by tilt. Rigid torso and fixed fingers remain limits."
 }

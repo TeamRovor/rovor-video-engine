@@ -1,0 +1,58 @@
+{
+  "frames": 552,
+  "reviewedPayoffFramesIntegrated": 60,
+  "previousFramesByteExact": 492,
+  "closingFramesByteExact": 20,
+  "officialBrandAndBrowserExact": true,
+  "nativeOralJawAndAuditExact": true,
+  "sourceWavByteExact": true,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 552,
+      "sha256": "7fb30d108cb3f5139c1b4f31b050f569fcf32453b3be9c2abf683b8777c93de1"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 2208,
+      "sha256": "555861c441ef16ae3cb9fde1060cf1a14e97e4e18cd542c2f8ea7d793d8e053b"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 368000,
+    "decodedPcm16Samples": 368000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "fullFilmUpdated": true,
+  "defaultChanged": false,
+  "newArtwork": false,
+  "phonemeTimingChanged": false,
+  "flagsCleared": 0,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "status": "full-opt-in-payoff-integration-verified-and-sampled",
+  "pendingJobs": false,
+  "workerCompleted": 55490,
+  "allFrameHashesVerified": true,
+  "sourceManifestVerified": true,
+  "overviewPosesVisuallyInspected": 22,
+  "decodedNormalSamplesVisuallyInspected": [
+    345,
+    353,
+    374,
+    404,
+    540
+  ],
+  "decodedSlowSamplesVisuallyInspected": [
+    1496,
+    1616
+  ],
+  "all18MarkersMatchCurrentPlan": true,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "visualAssessment": "More deliberate head/torso attitude accompanies the existing small-detail palm. No broad neck opening or missing collar observed in the60component pairs or integration samples. Existing left-collar contour nib persists; rigid torso and fixed fingers remain. Performance and listening are unaccepted.",
+  "nextConcreteWork": "Trace the small existing left-collar contour nib in frame374 through head/neck/torso source ownership. Compare individual planes and composited alpha at baseline/held tilt; determine whether it is duplicated ink or an intended collar edge before editing. Preserve phoneme and native oral targets, approved source plates, defaults and Moho projects; no further acting variant without a defect."
+}
