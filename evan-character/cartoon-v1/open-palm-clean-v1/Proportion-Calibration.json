@@ -1,0 +1,31 @@
+{
+  "sourceScale": 0.192,
+  "sourceWrist": [
+    551,
+    510
+  ],
+  "targetWrist": [
+    810,
+    762
+  ],
+  "sourceAngleDegrees": 15,
+  "anatomyAccepted": false,
+  "measurements": {
+    "left": {
+      "distalAxialReach": 152.38720091924316,
+      "transverseSpan": 126.81485087656614,
+      "halfAlphaPixels": 11481
+    },
+    "right": {
+      "distalAxialReach": 152.11380682491466,
+      "transverseSpan": 125.47455299949235,
+      "halfAlphaPixels": 10561
+    }
+  },
+  "rejectedScale016": {
+    "rightReach": 126.42143010667883,
+    "rightSpan": 106.69037827453249,
+    "reason": "Axial reach about17% shorter than the opposite hand"
+  },
+  "rawSourceModified": false
+}

@@ -9,9 +9,12 @@ from PIL import Image
 from cartoon_body import ROOT
 from cartoon_index import smooth
 
-def build(root=ROOT):
- folder=root/'relaxed-hand-v1';source=folder/'source/right-relaxed-v2.png';arm_path=root/'body-rig/arm-right.png';old=np.asarray(Image.open(arm_path).convert('RGBA'));raw=np.asarray(Image.open(source).convert('RGBA')).astype('float32');raw[:,:,:3]*=raw[:,:,3:4]/255
- pivot=np.array([531.,500.]);origin=np.array([810.,762.]);angle=math.radians(15);scale=.16;linear=scale*np.array([[math.cos(angle),-math.sin(angle)],[math.sin(angle),math.cos(angle)]]);matrix=np.c_[linear,origin-linear@pivot].astype('float32');palm=cv2.warpAffine(raw,matrix,(1024,1536),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT);palm=np.clip(palm,0,255)
+def build(root=ROOT,*,folder_name='relaxed-hand-v1',source_name='source/right-relaxed-v2.png',source_wrist=(531.,500.),source_scale=.16):
+ folder=root/folder_name;source=folder/source_name;arm_path=root/'body-rig/arm-right.png';old=np.asarray(Image.open(arm_path).convert('RGBA'));raw=np.asarray(Image.open(source).convert('RGBA')).astype('float32');raw[:,:,:3]*=raw[:,:,3:4]/255
+ pivot=np.asarray(source_wrist,float)
+ if pivot.shape!=(2,) or not np.isfinite(pivot).all():raise ValueError('Expected finite source wrist coordinates')
+ if not np.isfinite(source_scale) or source_scale<=0:raise ValueError('Expected positive finite source scale')
+ origin=np.array([810.,762.]);angle=math.radians(15);linear=source_scale*np.array([[math.cos(angle),-math.sin(angle)],[math.sin(angle),math.cos(angle)]]);matrix=np.c_[linear,origin-linear@pivot].astype('float32');palm=cv2.warpAffine(raw,matrix,(1024,1536),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_CONSTANT);palm=np.clip(palm,0,255)
  axis=np.array([61.,137.]);axis/=np.linalg.norm(axis);normal=np.array([-axis[1],axis[0]]);sections=np.arange(-65,41,dtype=float);q=np.arange(-110,110.01,.25);xy=origin+sections[:,None,None]*axis+q[None,:,None]*normal;widths=[];centers=[]
  for image in [old,palm]:
   alpha=cv2.remap(image[:,:,3].astype('float32'),xy[:,:,0].astype('float32'),xy[:,:,1].astype('float32'),cv2.INTER_LINEAR);limits=[]
