@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Roll the existing research LaunchAgent to an immutable paced runtime.
 
-Dry-run by default. --apply authorizes up to 144 free-route research claims per
-rolling day, spaced at least 601 seconds apart; existing failed IDs never replay.
+Dry-run by default. Recovery preserves an installed continuous worker's claim
+budget and spacing; legacy-loop migration uses 144/day and 601-second spacing.
+Existing failed IDs never replay; preflight blockers prevent service changes.
 Only the existing service is changed. STOP and rollback protect failed activation.
 """
 from __future__ import annotations
@@ -16,9 +17,42 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 
-from omniroute_dispatch_pacing import LABEL, snapshot
+from omniroute_dispatch_pacing import LABEL, snapshot, recommended_interval
+
+
+def configured_budget(args):
+    values = []
+    for flag in ('--max-claims-per-day', '--min-interval-seconds'):
+        if args.count(flag) != 1 or args.index(flag) + 1 >= len(args):
+            raise ValueError('Missing or repeated installed budget')
+        values.append(int(args[args.index(flag) + 1]))
+    cap, interval = values
+    if not 1 <= cap <= 144 or interval < recommended_interval(cap):
+        raise ValueError('Unsafe installed budget')
+    return cap, interval
+
+
+def rollout_preflight(state, config):
+    import ghost_omniroute_job
+    from omniroute_continuous import queue_health
+    blockers = []
+    cap, interval = configured_budget(config['ProgramArguments'])
+    with snapshot(state) as conn:
+        health = queue_health(conn, state, max_claims=cap, interval=interval, now=time.time())
+    if os.path.lexists(Path(state) / 'STOP'):
+        blockers.append('stop_requested')
+    if health['consecutive_recorded_failures'] >= 3:
+        blockers.append('failure_circuit_requires_review')
+    if health['running']:
+        blockers.append('existing_work_running')
+    try:
+        ghost_omniroute_job.background_preflight()
+    except ValueError:
+        blockers.append('background_route_or_gateway_auth_unverified')
+    return blockers
 
 
 def atomic_write(path, blob):
@@ -50,11 +84,16 @@ def build_config(original, runtime):
         return args[args.index(flag) + 1]
     state, workspace = argument('--state'), argument('--workspace')
     python = args[0]
+    cap, interval = (configured_budget(args) if Path(args[1]).name ==
+                     'omniroute_continuous.py' else (144, 601))
+    cadence = original.get('StartInterval', 301)
+    if type(cadence) is not int or not 1 <= cadence <= 3600:
+        raise ValueError('Unsafe installed schedule')
     result = dict(original)
     result.update(ProgramArguments=[python, str(Path(runtime) / 'tools/omniroute_continuous.py'),
-        '--state', state, '--workspace', workspace, '--max-claims-per-day', '144',
-        '--min-interval-seconds', '601', '--approve-continuous-research'],
-        StartInterval=301, RunAtLoad=True, KeepAlive=False)
+        '--state', state, '--workspace', workspace, '--max-claims-per-day', str(cap),
+        '--min-interval-seconds', str(interval), '--approve-continuous-research'],
+        StartInterval=cadence, RunAtLoad=True, KeepAlive=False)
     return result, Path(state)
 
 
@@ -106,8 +145,9 @@ def activate(plist, proposed, state, *, run=subprocess.run, uid=None):
         # Do not boot it out merely because kickstart reports it is active.
         tick_requested = run(['launchctl', 'kickstart', target],
                              capture_output=True, timeout=10).returncode == 0
+        cap, interval = configured_budget(proposed['ProgramArguments'])
         return {'status': 'same_service_activated_receipt_pending',
-                'max_claims_24h': 144, 'min_interval_seconds': 601,
+                'max_claims_24h': cap, 'min_interval_seconds': interval,
                 'first_tick_requested': tick_requested,
                 'model_completion_verified': False, 'second_service_created': False}
     except Exception:
@@ -148,13 +188,17 @@ def main():
     config, state = build_config(plistlib.loads(plist.read_bytes()), runtime)
     if state.is_symlink() or stat.S_IMODE(state.stat().st_mode) & 0o077:
         raise ValueError('Existing private worker state required')
+    blockers = rollout_preflight(state, config)
     if not args.apply:
-        print(json.dumps({'status': 'dry_run', 'max_claims_24h': 144,
-                          'min_interval_seconds': 601, 'model_requests': 0,
+        cap, interval = configured_budget(config['ProgramArguments'])
+        print(json.dumps({'status': 'dry_run_blocked' if blockers else 'dry_run',
+                          'activation_ready': not blockers, 'blockers': blockers,
+                          'max_claims_24h': cap,
+                          'min_interval_seconds': interval, 'model_requests': 0,
                           'catalogue_assignments': 168, 'state_modified': False}))
         return 0
-    import ghost_omniroute_job
-    ghost_omniroute_job.background_preflight()
+    if blockers:
+        raise ValueError('Rollout prerequisites require review')
     # Compile the tick before stopping a working service; this does not run code.
     compile((runtime / 'tools/omniroute_continuous.py').read_text(),
             'omniroute_continuous.py', 'exec')
