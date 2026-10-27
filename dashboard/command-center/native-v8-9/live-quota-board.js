@@ -205,7 +205,7 @@ function card(group,quota,live,index,slot,cloud,attempts){
  const extra=rows.length>2?'<details class="rvq-more"><summary>Show '+(rows.length-2)+' more model'+(rows.length===3?'':'s')+'</summary>'+rows.slice(2).join('')+'</details>':'';
  const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
- return '<article class="rvq-provider"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
+ return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
  '<div class="rvq-provider-content">'+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
 }
 
@@ -438,6 +438,53 @@ function render(data,live,cloud=null){
  '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+
  '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Local quota bars are cached gateway limits; separate cloud bars require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
 }
+// Preserve owner inspection context even when live evidence must be refreshed.
+function captureState(root){
+ const board=root?.classList?.contains('rvq-board')?root:root?.querySelector?.('.rvq-board');
+ if(!board)return null;
+ const cards=[...board.querySelectorAll('[data-rvq-slot]')];
+ const state={details:[],scrolls:[],focused:null};
+ for(const card of cards){
+  const key=card.getAttribute('data-rvq-slot');
+  const details=[...card.querySelectorAll('details')];
+  details.forEach((d,i)=>{
+   if(d.open)state.details.push({key,index:i});
+  });
+  const scrolls=[...card.querySelectorAll('.rvq-job-list')];
+  scrolls.forEach((list,i)=>{if(list.scrollTop)state.scrolls.push({key,index:i,top:list.scrollTop})});
+ }
+ const other=[...board.querySelectorAll('.rvq-staff-list,.rvq-emp-grid')];
+ other.forEach((node,i)=>{if(node.scrollTop)state.scrolls.push({key:'$other',index:i,top:node.scrollTop})});
+ const active=document.activeElement;
+ if(active&&board.contains(active)){
+  const card=active.closest('[data-rvq-slot]');
+  if(card&&active.tagName==='SUMMARY'){
+   const details=[...card.querySelectorAll('details')];
+   state.focused={key:card.getAttribute('data-rvq-slot'),index:details.indexOf(active.parentElement)};
+  }
+ }
+ return state;
+}
+function restoreState(root,state){
+ if(!state)return;
+ const board=root?.classList?.contains('rvq-board')?root:root?.querySelector?.('.rvq-board');
+ if(!board)return;
+ const cards=[...board.querySelectorAll('[data-rvq-slot]')];
+ const getCard=key=>cards.find(card=>card.getAttribute('data-rvq-slot')===key);
+ for(const item of state.details){
+  const d=getCard(item.key)?.querySelectorAll('details')[item.index];
+  if(d)d.open=true;
+ }
+ for(const item of state.scrolls){
+  const els=item.key==='$other'?[...board.querySelectorAll('.rvq-staff-list,.rvq-emp-grid')]:
+    [...(getCard(item.key)?.querySelectorAll('.rvq-job-list')||[])];
+  if(els[item.index])els[item.index].scrollTop=item.top;
+ }
+ if(state.focused){
+  const d=getCard(state.focused.key)?.querySelectorAll('details')[state.focused.index];
+  d?.querySelector('summary')?.focus({preventScroll:true});
+ }
+}
 let started=false;
 function start(){
  if(started)return;
@@ -451,18 +498,31 @@ function start(){
  async function sync(){
    if(busy||document.hidden)return;
    const original=slot();if(!original)return;
-   if(last&&Date.now()-updated<5000){
-     if(!original.classList.contains('rvq-board'))original.outerHTML=render(last,true,lastCloud);
+   if(Date.now()-updated<5000){
+     if(!original.classList.contains('rvq-board')){
+       const state=captureState(original);
+       original.outerHTML=render(last||lastInventory,!!last,lastCloud);
+       restoreState(slot(),state);
+     }
      return;
    }
    busy=true;let fresh=null;
-   try{
+   // The main 24h HUD view has already fetched and validated this report.
+   // Reuse it rather than make a second network request every ten seconds.
+   const shared=window.ROVOR_WORKLOAD?.getQuotaSnapshot?.();
+   if(shared?.source==='local_omniroute_read_only_bridge'&&shared.period==='24h'&&
+      Array.isArray(shared.connections)){
+     const age=Date.now()-Date.parse(shared.snapshot_at);
+     if(Number.isFinite(age)&&age>=-5000&&age<=15000)fresh=shared;
+   }
+   if(!fresh)try{
      const response=await fetch('/api/hud/omniroute?period=24h',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
      if(response.ok){
        const data=await response.json(),age=Date.now()-Date.parse(data.snapshot_at);
        if(data.source==='local_omniroute_read_only_bridge'&&Array.isArray(data.connections)&&Number.isFinite(age)&&age>=-5000&&age<=15000)fresh=data;
      }
    }catch{}finally{busy=false;}
+   if(fresh)busy=false;
    // Preserve only the last known provider/slot inventory through outages.
    // Never retain or display stale quota percentages as live.
    if(fresh)lastInventory={connections:fresh.connections,connection_slots:fresh.connection_slots,snapshot_at:fresh.snapshot_at};
@@ -478,7 +538,11 @@ function start(){
      }
    }catch{}
    lastCloud=cloud;last=fresh;updated=Date.now();
-   const target=slot();if(target)target.outerHTML=render(fresh||lastInventory,!!fresh,cloud);
+   const target=slot();if(target){
+     const state=captureState(target);
+     target.outerHTML=render(fresh||lastInventory,!!fresh,cloud);
+     restoreState(slot(),state);
+   }
  }
  // Only the original placeholder triggers a new observer sync. Otherwise
  // rendering into the observed subtree could create an infinite event loop.
@@ -492,5 +556,5 @@ function start(){
  setInterval(()=>{if(slot())void sync();},10000);
  void sync();
 }
-return {render,start};
+return {render,start,captureState,restoreState};
 })();
