@@ -403,6 +403,9 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
     state = Path(conn.execute("PRAGMA database_list").fetchone()[2]).parent
     if os.path.lexists(state / "STOP"):
         return None
+    if allow_recovery_canary:
+        import ghost_omniroute_job
+        ghost_omniroute_job.background_preflight()
     job = claim(conn, owner, now, allow_model_use=allow_model_use, allow_native_import=allow_native_import,
                 allow_jane_library_create=allow_jane_library_create,
                 jane_library_only=jane_library_only,
@@ -443,9 +446,6 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
         elif kind == OMNI_KIND:
             if not allow_omniroute_model_use:
                 raise ValueError('OmniRoute requires separate explicit approval')
-            if allow_recovery_canary:
-                import ghost_omniroute_job
-                ghost_omniroute_job.background_preflight()
             import ghost_omniroute_job
             if set(payload) in ({'assignment'}, {'public_task'}):
                 if not omni_continuous:
