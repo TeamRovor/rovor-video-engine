@@ -64,22 +64,56 @@ async function boundedJson(response) {
  return JSON.parse(new TextDecoder().decode(all));
 }
 
+// A provider-authenticated inference response may include the same account
+// RPD headers as a catalog response. Never infer a quota from token usage,
+// requested max_tokens, config limits, or an absent/malformed header.
+function inferenceGroqRpd(headers, observedAt) {
+ if(!headers || typeof headers.get!=='function' ||
+    !Number.isSafeInteger(observedAt)||observedAt<=0)return null;
+ const integer=name=>{
+  const value=headers.get(name);
+  return typeof value==='string' && /^(0|[1-9][0-9]{0,8})$/.test(value)?Number(value):null;
+ };
+ const limit=integer('x-ratelimit-limit-requests'),
+       remaining=integer('x-ratelimit-remaining-requests'),
+       reset=headers.get('x-ratelimit-reset-requests');
+ if(limit===null||limit<1||remaining===null||remaining>limit||
+    typeof reset!=='string'||reset.length>48)return null;
+ const multiplier={d:86400000,h:3600000,m:60000,s:1000};
+ const rank={d:4,h:3,m:2,s:1},matches=/(\d+(?:\.\d+)?)([dhms])/g;
+ let match,end=0,lastRank=5,ms=0;
+ while((match=matches.exec(reset))!==null){
+  if(match.index!==end||rank[match[2]]>=lastRank)return null;
+  ms+=Number(match[1])*multiplier[match[2]];
+  end=matches.lastIndex;lastRank=rank[match[2]];
+ }
+ if(!end||end!==reset.length||ms<=0||ms>2*86400000||
+    !Number.isFinite(ms)||!Number.isSafeInteger(observedAt+Math.ceil(ms)))return null;
+ return {unit:'requests_per_day',used:limit-remaining,limit,remaining,
+  resets_at:observedAt+Math.ceil(ms),observed_at:observedAt,
+  source:'authenticated_groq_rpd_response_headers',scope:'provider_account'};
+}
+
 export async function infer(provider,cfg,env,prompt,fetcher=(...args)=>globalThis.fetch(...args),now=Date.now()) {
  const denied=eligibility(provider,cfg,env,now);if(denied)throw Error(denied);
  if(bytes(prompt)>cfg.max_input_bytes)throw Error('input_too_large');
  try {
   const response=await fetcher(...requestFor(provider,cfg,env,prompt));
+  const quota_observation=provider==='groq'&&(response.ok||response.status===429)?
+   inferenceGroqRpd(response.headers,now):null;
   if(!response.ok){
    const raw=response.headers.get('Retry-After'); const n=Number(raw);
    const delay=raw && Number.isFinite(n) && n>=0 ? n*1000 : Date.parse(raw || '')-now;
    await response.body?.cancel();
-   return {status:'failed',error_code:response.status===429?'rate_limited':response.status===401||response.status===403?'auth_rejected':'upstream_http',retry_after:response.status===429?now+Math.max(60000,Number.isFinite(delay)?Math.min(delay,DAY):60000):null};
+   return {status:'failed',error_code:response.status===429?'rate_limited':response.status===401||response.status===403?'auth_rejected':'upstream_http',retry_after:response.status===429?now+Math.max(60000,Number.isFinite(delay)?Math.min(delay,DAY):60000):null,...(quota_observation?{quota_observation}:{})};
   }
   const data=await boundedJson(response), choice=data.choices?.[0], text=choice?.message?.content;
   const usage=data.usage || {}, count=n=>Number.isSafeInteger(n)&&n>=0?n:null;
   const info={actual_model:typeof data.model==='string'&&data.model.length<=200?data.model:null,tokens_input:count(usage.prompt_tokens),tokens_output:count(usage.completion_tokens)};
-  if(typeof text!=='string'||!text.trim()||bytes(text)>32768||choice.finish_reason!=='stop')return {...info,status:'failed',error_code:'incomplete_output',retry_after:null};
-  return {...info,status:'needs_review',error_code:null,output:text,retry_after:null};
+  if(typeof text!=='string'||!text.trim()||bytes(text)>32768||choice.finish_reason!=='stop')return {...info,status:'failed',error_code:'incomplete_output',retry_after:null,
+   ...(quota_observation?{quota_observation}:{})};
+  return {...info,status:'needs_review',error_code:null,output:text,retry_after:null,
+   ...(quota_observation?{quota_observation}:{})};
  } catch { return {status:'uncertain',error_code:'transport_or_response_failure',retry_after:null}; }
 }
 
@@ -193,6 +227,25 @@ export async function tick(env,fetcher=(...args)=>globalThis.fetch(...args),now=
   const job=await run(db,'SELECT prompt FROM ghost_cloud_jobs WHERE id=?',attempt.job_id).first();
   const outcome=await infer(provider,cfg,env,job.prompt,fetcher,clock);dispatched++;
   await run(db,`UPDATE ghost_cloud_attempts SET status=?,error_code=?,actual_model=?,tokens_input=?,tokens_output=?,output=?,retry_after=?,finished_at=? WHERE id=? AND status='running'`,outcome.status,outcome.error_code,outcome.actual_model??null,outcome.tokens_input??null,outcome.tokens_output??null,outcome.output??null,outcome.retry_after??null,now+(Date.now()-startedClock),attempt.id).run();
+  // Do not make an extra provider call: retain safely parsed account request
+  // allowance from the inference response already used by this bounded job.
+  // The optional existing Site quota migration may be absent; never let
+  // telemetry failure erase the immutable private inference receipt.
+  const q=provider==='groq'?outcome.quota_observation:null;
+  if(q&&q.unit==='requests_per_day'&&q.source==='authenticated_groq_rpd_response_headers'){
+   try {
+    await run(db,`INSERT INTO ghost_cloud_provider_quota
+     (provider,observed_at,unit,used,quota_limit,remaining,resets_at,source)
+     VALUES(?,?,?,?,?,?,?,?)
+     ON CONFLICT(provider) DO UPDATE SET
+       observed_at=excluded.observed_at,unit=excluded.unit,
+       used=excluded.used,quota_limit=excluded.quota_limit,
+       remaining=excluded.remaining,resets_at=excluded.resets_at,
+       source=excluded.source
+     WHERE excluded.observed_at>=ghost_cloud_provider_quota.observed_at`,
+     provider,q.observed_at,'requests',q.used,q.limit,q.remaining,q.resets_at,q.source).run();
+   }catch{/* Missing optional private migration: leave quota unknown. */}
+  }
  }
  return {enabled:true,dispatched,denied,blocked};
 }
