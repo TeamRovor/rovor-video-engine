@@ -1,0 +1,42 @@
+{
+  "status": "registered-source-and-eight-frame-pilot; full render in progress",
+  "source": "evan-character/cartoon-v1/open-palm-ink-v1/source-v1.png",
+  "sourceSha256": "c717b774eb0f1ad82a68287c0b6c756365b358a7ff5823aea08708f1ac6c6d0f",
+  "registeredSkinSha256": "6d987eb718d86172dce48d1ed7fe86de4e9ff0e00b0291c8593ee59661710219",
+  "builtInImagegen": true,
+  "sourceAlphaModified": false,
+  "sourceGeometryExact": false,
+  "sourceHalfAlphaSilhouetteIoU": 0.9000984892126438,
+  "pilotFrames": [
+    0,
+    42,
+    69,
+    248,
+    276,
+    374,
+    510,
+    531
+  ],
+  "pilotMinimumArmArea2": 135.35224293485436,
+  "pilotOutsideRightHandRegionExact": true,
+  "pilotFaceLeftArmAndBrandExact": true,
+  "reusedComponentGuardTests": 3,
+  "fullFilmUpdated": false,
+  "fullRenderWorker": 60000,
+  "fullRenderFolder": "outputs/evan-cartoon-ink-palm",
+  "previousVerifiedFullReview": "outputs/evan-cartoon-clean-palm-continuous/Review.html",
+  "visualInspection": "Raw source at full resolution; all eight native pilot crops at original resolution; full stage frame276. Five digits retained, no finger joint bands, contour is heavier; native edge stippling remains. No new open wrist seam observed in these samples.",
+  "inkTrace": {
+    "threshold": 80,
+    "leftAreaPerBoundary": 2.2940038684719535,
+    "rightAreaPerBoundary": 2.9076517150395778,
+    "leftDepth95": 3.59689998626709,
+    "rightDepth95": 4.196899890899658,
+    "interpretation": "Heavier than opposite hand; proxy across differing silhouettes, not a precise stroke match or artist approval."
+  },
+  "flagsCleared": 0,
+  "timingChanged": false,
+  "polishedMilestoneReady": false,
+  "defaultChanged": false,
+  "mohoProbed": false
+}
