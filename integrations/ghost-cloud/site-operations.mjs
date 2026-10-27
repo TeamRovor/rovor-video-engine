@@ -1,5 +1,13 @@
 // Bound to the existing owner-private Site; model eligibility remains in runtime.mjs.
 export function createCloudOperations(base, cloud) {
+ // Register the immutable, bundled canonical feeder once. No browser or service caller
+ // can supply feeder code or job prompts; all task admission remains in approved-feed.mjs.
+ let canonicalFeeder = null;
+ function installApprovedFeeder(feed) {
+  if(canonicalFeeder)throw Error('canonical_feed_already_registered');
+  if(!feed || typeof feed.replenishApprovedJobs !== 'function')throw Error('invalid_canonical_feeder');
+  canonicalFeeder = feed.replenishApprovedJobs;
+ }
  const json=(x,status=200)=>Response.json(x,{status,headers:{'Cache-Control':'no-store'}});
  const id=x=>typeof x==='string'&&/^[a-z0-9][a-z0-9-]{0,149}$/.test(x);
  const sql=(env,text,...args)=>env.DB.prepare(text).bind(...args);
@@ -67,6 +75,13 @@ export function createCloudOperations(base, cloud) {
  }
  async function replenish(env) {
   if((await sql(env,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled!==1)return {status:'stopped',queued:0};
+  // The Mac-independent hosted /service shift and private MCP replenisher must
+  // use the SAME commit-pinned, owner-approved queue as the native Site cron.
+  // Never quietly fall back to spent fixed packets if a canonical feed is selected.
+  if(env.GHOST_FEED_COMMIT){
+   if(!canonicalFeeder)throw Error('canonical_feed_bundle_missing');
+   return canonicalFeeder(env);
+  }
   // These are approved cached public packets from the canonical GitHub queue,
   // not an independent ownership record or prompts supplied by a model.
   const jobs=config(env,'GHOST_APPROVED_JOBS',[]);
@@ -229,7 +244,7 @@ export function createCloudOperations(base, cloud) {
  }
  const script='<script>('+browserUI.toString()+')();</script>';
  return {
-  inventory,status,control,replenish,
+  inventory,status,control,replenish,installApprovedFeeder,
   async fetch(request,env){
    const url=new URL(request.url),actor=owner(request);
    // Only the registered owner-private Site's dispatch may invoke this shared

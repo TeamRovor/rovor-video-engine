@@ -74,6 +74,7 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
     !v2Source.includes('const __operations = (() =>')||
     v2Source.includes('ROVOR_CLOUD_SCHEDULED_SHIFT_V1')||
     v2Source.split(TAIL).length!==2||!v2Source.trimEnd().endsWith(TAIL))throw Error('unexpected_existing_site_bundle');
+  if(feedSource!==null&&!v2Source.includes('installApprovedFeeder'))throw Error('canonical_service_feeder_unavailable');
   if(!shiftSource.includes('export async function runScheduledShift(')||
     !shiftSource.includes('export async function readScheduledShifts('))throw Error('unexpected_shift_module');
   const moduleSource=shiftSource.replace(/^export (?=async function (?:runScheduledShift|readScheduledShifts)\b)/gm,'');
@@ -97,6 +98,7 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
   const ending='\n// ROVOR_CLOUD_SCHEDULED_SHIFT_V1 '+tag+'\n'+
     'const __shift = (() => {\n'+moduleSource+'\nreturn {runScheduledShift,readScheduledShifts};\n})();\n'+
     feedBundle+
+    'if(__feed)__operations.installApprovedFeeder(__feed);\n'+
     'const __shiftUI = '+JSON.stringify(ui)+';\n'+
     'export default {\n'+
     "async fetch(request,env){\n"+
