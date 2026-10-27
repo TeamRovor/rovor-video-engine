@@ -260,6 +260,12 @@ export async function handle(request, env, now = Date.now()) {
       return response(200, {accepted: results[0].meta.changes > 0, observed_at: doc.snapshot_at});
     }
     if (ingest) return response(405, {error: 'method_not_allowed'});
+    // Standalone Cloudflare host: map the original Site quota URL to the
+    // *tracked* GitHub asset. The owner-private ChatGPT Site adapter still
+    // owns this same URL separately, so neither hosting path breaks.
+    if (request.method === 'GET' && url.pathname === '/hud-quota.js' && env.ASSETS) {
+      return env.ASSETS.fetch(new Request(new URL('/live-quota-board.js', url.origin), request));
+    }
     if (request.method === 'GET' && ['/api/hud/status', '/api/hud/omniroute'].includes(url.pathname)) {
       const period = url.searchParams.get('period') || '24h';
       if (!PERIODS.has(period)) return response(400, {error: 'period_invalid'});
