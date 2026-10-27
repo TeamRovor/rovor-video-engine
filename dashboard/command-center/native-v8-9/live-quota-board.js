@@ -19,7 +19,15 @@ function listenForQuotaInteraction(){
  },true);
  document.addEventListener('focusin',event=>{
    const summary=event.target?.closest?.('.rvq-more summary');
-   focusedQuotaSlot=summary?.closest?.('[data-rvq-slot]')?.getAttribute('data-rvq-slot')||null;
+   if(summary)focusedQuotaSlot=summary.closest('[data-rvq-slot]')?.getAttribute('data-rvq-slot')||null;
+ },true);
+ // A programmatic focus change during repaint is not an owner's choice to
+ // leave the detail. Clear the selection only for real navigation away.
+ document.addEventListener('pointerdown',event=>{
+   if(!event.target?.closest?.('.rvq-more summary'))focusedQuotaSlot=null;
+ },true);
+ document.addEventListener('keydown',event=>{
+   if(event.key==='Tab'||event.key==='Escape')focusedQuotaSlot=null;
  },true);
 }
 function restoreFocusedQuota(root){
