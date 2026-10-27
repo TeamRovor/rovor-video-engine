@@ -74,6 +74,12 @@ test('all nine configured providers show measured Mac requests separately from q
  const html=board().render(data,true,cloud());
  assert.equal((html.match(/class="rvq-overview-tile"/g)||[]).length,9);
  assert.equal((html.match(/percent of recorded Mac requests/g)||[]).length,9);
+ // The visible first meter is actual traffic, not an alarming UNKNOWN quota ring.
+ const ringHead=html.slice(html.indexOf('class="rvq-overview-tile"'),
+   html.indexOf('class="rvq-overview-tile"')+1500);
+ assert(ringHead.indexOf('percent of recorded Mac requests')>=0);
+ assert(ringHead.indexOf('Provider quota unknown')>=0);
+ assert(ringHead.indexOf('percent of recorded Mac requests')<ringHead.indexOf('Provider quota unknown'));
  assert.match(html,/--rvq-angle:75\.0%/);
  assert.match(html,/--rvq-angle:25\.0%/);
  assert.match(html,/--rvq-angle:0\.0%/);
