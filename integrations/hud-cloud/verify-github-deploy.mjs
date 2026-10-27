@@ -26,7 +26,7 @@ export async function verifyGithubHud({origin, readerToken, send = fetch}) {
   });
   const anonymous = await read('/api/hud/status', false);
   if (anonymous.status !== 401) throw Error('anonymous_telemetry_was_not_denied');
-  const anonymousScript = await read('/live-quota-board.js', false);
+  const anonymousScript = await read('/hud-quota.js', false);
   if (anonymousScript.status !== 401) throw Error('anonymous_quota_asset_was_not_denied');
   const anonymousRoot = await read('/', false);
   if (anonymousRoot.status !== 303 ||
@@ -36,9 +36,9 @@ export async function verifyGithubHud({origin, readerToken, send = fetch}) {
   if (root.status !== 200) throw Error('authenticated_original_hud_unavailable');
   const html = await root.text();
   if (!html.includes('ROVOR_START_OMNIROUTE') ||
-      !html.includes('<script src="/live-quota-board.js"></script>'))
+      !html.includes('<script src="/hud-quota.js"></script>'))
     throw Error('original_hud_or_quota_bootstrap_missing');
-  const script = await read('/live-quota-board.js', true);
+  const script = await read('/hud-quota.js', true);
   if (script.status !== 200) throw Error('authenticated_quota_asset_unavailable');
   const js = await script.text();
   if (!js.includes('window.ROVOR_QUOTA_BOARD=') ||
