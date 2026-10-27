@@ -95,11 +95,16 @@ class HostedShiftTests(unittest.TestCase):
 
     def test_missing_action_secret_exits_visibly_without_inference(self):
         output = io.StringIO()
-        with patch.dict(os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": ""}):
-            with contextlib.redirect_stdout(output):
-                code = runner.main()
-        self.assertEqual(code, 0)
-        self.assertEqual(json.loads(output.getvalue())["state"], "not_armed")
+        with patch.dict(os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": "", "GITHUB_ACTIONS": "true"}):
+            with patch.object(runner, "send_shift", side_effect=AssertionError("unexpected inference")):
+                with contextlib.redirect_stdout(output):
+                    code = runner.main()
+        self.assertEqual(code, 2)
+        lines = output.getvalue().splitlines()
+        self.assertEqual(json.loads(lines[0])["state"], "not_armed")
+        self.assertEqual(json.loads(lines[0])["dispatched"], 0)
+        self.assertIn("::error title=ROVOR cloud scheduler not armed::", lines[1])
+        self.assertNotIn(TOKEN, output.getvalue())
 
     def test_no_redirects_to_untrusted_origin(self):
         handler = runner.NoRedirect()
