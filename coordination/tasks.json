@@ -5652,16 +5652,18 @@
       "id": "amar-hud-human-telemetry-review-20261025",
       "title": "Amar: review human GitHub activity proof and separate OmniRoute live telemetry",
       "priority": 2,
-      "status": "ready",
-      "owner": null,
-      "branch": "amar-work",
+      "status": "active",
+      "owner": "ChatGPT / Amar HUD team activity review 2026-10-27",
+      "branch": "fix/amar-hud-team-activity-20261027",
       "scopes": [
-        "subsystem:amar-hud-human-telemetry-review"
+        "subsystem:amar-hud-human-telemetry-review",
+        "dashboard/command-center/native-v8-9/team-contributions.js",
+        "dashboard/command-center/tests/team-contributions.test.cjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-26T02:14:17.424Z",
-      "next_update": "After Amar reviews the live native HUD team panel and authenticated OmniRoute source-freshness separately",
-      "next_action": "Amar reviews latest deployed HUD Recent Activity TEAM branch/PR evidence and verifies actual private OmniRoute provider quota/reset and worker receipts independently. Confirm source age and actual inference before marking models/employees online. Track remaining blockers on issue #208.",
+      "updated_at": "2026-10-27T20:20:00Z",
+      "next_update": "After the bounded stale-source/PR-attribution fix and hosted HUD checks are read back.",
+      "next_action": "Improve the existing Pages-staged TEAM panel so failed GitHub polls cannot look newly verified and PR history is not silently truncated to 100 updated PRs; run team-contributions and Pages HUD checks. Keep GitHub evidence separate from private OmniRoute quota/reset and worker receipts. Do not claim private Site or Mac runtime verification.",
       "acceptance": "Document exact published HUD deployment SHA, human contribution URLs, independently verified or unknown provider reset/usage evidence and real worker receipt status; do not conflate GitHub checks, branch commits and 24/7 model execution.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/208"
