@@ -1,0 +1,225 @@
+{
+  "sourceAudioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "actualDecodedFrameIndices": [
+    384,
+    385,
+    388,
+    391,
+    401,
+    402,
+    405,
+    408,
+    430,
+    431,
+    435,
+    438,
+    489,
+    490,
+    491,
+    494
+  ],
+  "sourcePcmExact": true,
+  "timingChanged": false,
+  "flagsCleared": 0,
+  "listeningAccepted": false,
+  "exactPhoneBoundariesAccepted": false,
+  "geometryIsAuthoredNotMeasuredMotion": true,
+  "rows": [
+    {
+      "phoneIndex": 184,
+      "scriptIndex": 46,
+      "word": "but",
+      "phone": "B",
+      "assigned": [
+        16.03,
+        16.29
+      ],
+      "lowEnergyRun": [
+        16.07,
+        16.27
+      ],
+      "thresholdDbFS": -40,
+      "binSamples": 320,
+      "flag": "long-phone-low-energy-run",
+      "boundaryStatus": "unresolved",
+      "timingChanged": false,
+      "contextSourceSamples": [
+        255200,
+        263840
+      ],
+      "contextPcmSha256": "a7ec802adc0beefe6e10e813308c220834e1df5221d334faa3d0be93bec579f3",
+      "geometrySamples": 125,
+      "nativeInnerGapRange": [
+        0.149993896484375,
+        0.979583740234375
+      ],
+      "apertureInputRange": [
+        1.0,
+        1.9795813380118057
+      ],
+      "contextFile": "But-B.wav",
+      "tracePlot": "But-B-Acoustic-Target-Trace.png",
+      "phoneticBoundaryAccepted": false,
+      "lowEnergyRunActualInnerGapRange": [
+        0.149993896484375,
+        0.149993896484375
+      ],
+      "lowEnergyRunBilabialIdentityRange": [
+        1.0,
+        1.0
+      ],
+      "visualEvidenceReviewed": true,
+      "disposition": "retain-current-timing-pending-phonetic-review",
+      "reviewObservation": "The low-energy middle200ms has an actual0.15px inner gap and full bilabial identity. The waveform/spectrum attenuates before a strong return near the vowel. This is compatible with a stop closure; low RMS does not establish that B is mistimed."
+    },
+    {
+      "phoneIndex": 195,
+      "scriptIndex": 50,
+      "word": "whole",
+      "phone": "HH",
+      "assigned": [
+        16.73,
+        17.01
+      ],
+      "lowEnergyRun": [
+        16.83,
+        17.01
+      ],
+      "thresholdDbFS": -40,
+      "binSamples": 320,
+      "flag": "long-phone-low-energy-run",
+      "boundaryStatus": "unresolved",
+      "timingChanged": false,
+      "contextSourceSamples": [
+        265600,
+        275200
+      ],
+      "contextPcmSha256": "4ae55a7e88a2f9179b99a6e19251b0c5a5ba150f128afa8c0c468ce7d52069ea",
+      "geometrySamples": 134,
+      "nativeInnerGapRange": [
+        2.00115966796875,
+        12.8895263671875
+      ],
+      "apertureInputRange": [
+        3.001194152625289,
+        13.889530364944598
+      ],
+      "contextFile": "Whole-HH.wav",
+      "tracePlot": "Whole-HH-Acoustic-Target-Trace.png",
+      "phoneticBoundaryAccepted": false,
+      "lowEnergyRunActualInnerGapRange": [
+        2.00115966796875,
+        12.0909423828125
+      ],
+      "lowEnergyRunBilabialIdentityRange": [
+        0.0,
+        0.0
+      ],
+      "visualEvidenceReviewed": true,
+      "disposition": "retain-current-timing-pending-phonetic-review",
+      "reviewObservation": "Broadband high-frequency energy continues within much of the low-RMS HH interval, with a stronger low-frequency return near OW. A low-energy breath/fricative remains plausible; energy alone does not establish a new boundary."
+    },
+    {
+      "phoneIndex": 207,
+      "scriptIndex": 53,
+      "word": "way",
+      "phone": "W",
+      "assigned": [
+        17.94,
+        18.27
+      ],
+      "lowEnergyRun": [
+        18.12,
+        18.18
+      ],
+      "thresholdDbFS": -40,
+      "binSamples": 320,
+      "flag": "long-phone-low-energy-run",
+      "boundaryStatus": "unresolved",
+      "timingChanged": false,
+      "contextSourceSamples": [
+        284800,
+        295200
+      ],
+      "contextPcmSha256": "f5337393741e11741e5411e408932c2d92220e7c0c9af67aee718f765af1ccda",
+      "geometrySamples": 158,
+      "nativeInnerGapRange": [
+        4.609344482421875,
+        13.5499267578125
+      ],
+      "apertureInputRange": [
+        5.6093397728126835,
+        14.549913795595172
+      ],
+      "contextFile": "Way-W.wav",
+      "tracePlot": "Way-W-Acoustic-Target-Trace.png",
+      "phoneticBoundaryAccepted": false,
+      "lowEnergyRunActualInnerGapRange": [
+        4.609344482421875,
+        5.204254150390625
+      ],
+      "lowEnergyRunBilabialIdentityRange": [
+        0.0,
+        0.0
+      ],
+      "visualEvidenceReviewed": true,
+      "disposition": "retain-current-timing-pending-phonetic-review",
+      "reviewObservation": "Low-frequency periodic energy persists through much of the assigned W, weakening before a stronger transition toward EY. The quiet60ms has a4.61\u20135.20px authored inner gap. Exact W/EY separation remains uncertain."
+    },
+    {
+      "phoneIndex": 228,
+      "scriptIndex": 60,
+      "word": "all",
+      "phone": "AO",
+      "assigned": [
+        20.38,
+        20.57
+      ],
+      "lowEnergyRun": [
+        20.38,
+        20.425
+      ],
+      "thresholdDbFS": -53.979400086720375,
+      "binSamples": 80,
+      "flag": "vowel-leading-low-energy-run",
+      "boundaryStatus": "unresolved",
+      "timingChanged": false,
+      "contextSourceSamples": [
+        323520,
+        332160
+      ],
+      "contextPcmSha256": "3f1a0f08aa04b1a13c0797af45bdb84f4a6d211ffda3c7f9c0c9803af2f062c2",
+      "geometrySamples": 91,
+      "nativeInnerGapRange": [
+        1.470001220703125,
+        30.798736572265625
+      ],
+      "apertureInputRange": [
+        2.4699911221877477,
+        31.798713119858835
+      ],
+      "contextFile": "All-AO.wav",
+      "tracePlot": "All-AO-Acoustic-Target-Trace.png",
+      "phoneticBoundaryAccepted": false,
+      "lowEnergyRunActualInnerGapRange": [
+        1.470001220703125,
+        13.69378662109375
+      ],
+      "lowEnergyRunBilabialIdentityRange": [
+        0.06372325898949184,
+        0.9222360749912516
+      ],
+      "visualEvidenceReviewed": true,
+      "disposition": "retain-current-timing-pending-phonetic-review",
+      "reviewObservation": "AO starts at20.38s but the leading low-energy run extends to20.425s. The authored inner gap grows from1.47 to13.69px during that prefix. Decoded frames490/491 show the release/opening; this is a concrete early-opening review target, not proof that threshold crossing is vowel onset."
+    }
+  ],
+  "reviewedPhoneConcerns": 4,
+  "geometrySamplesTotal": 1120,
+  "plotsVisuallyReviewed": 4,
+  "decodedLandmarksVisuallyReviewed": 16,
+  "polishedMilestoneReady": false,
+  "pendingJobs": false,
+  "sourceManifestSha256": "806d7c75c1b9fe91a901b41db8c23787c4bdce19b9669c2eff51c9c5252a4477"
+}

@@ -1,0 +1,18 @@
+# Four low-energy phone concerns against actual mouth targets
+
+The four remaining phone concerns now have focused original-PCM contexts, waveform/spectrogram/actual-target traces, and16decoded landmarks from the current full filtered cartoon film. Local outputs/evan-cartoon-low-energy-phone-review/Review.html seeks both the full normal and muted quarter-speed films and presents the evidence together. This review changes no phone interval, animation, source artwork or default. All four boundaries and all18word-boundary flags remain unresolved.
+
+| Phone | Assigned interval | Prior low-energy run | Actual inner gap during that run | Review finding |
+|---|---|---|---|---|
+| but/B184 |16.03–16.29s|16.07–16.27s|0.15px|Closed oral target/full bilabial identity through the quiet middle is compatible with a stop closure. Low RMS is not evidence that B should be shortened.|
+| whole/HH195 |16.73–17.01s|16.83–17.01s|2.00–12.09px|Broadband high-frequency energy continues within much of the low-RMS interval, then stronger low-frequency activity returns near OW. A breath/fricative remains plausible; no exact boundary accepted.|
+| way/W207 |17.94–18.27s|18.12–18.18s|4.61–5.20px|Low-frequency periodic energy persists through much of assigned W and weakens before the stronger EY transition. The division remains uncertain.|
+| all/AO228 |20.38–20.57s|20.38–20.425s|1.47–13.69px|The authored mouth opens during the low-energy prefix. Decoded490/491 show the release/opening. This is a focused early-opening review target, not proof that the threshold crossing is the vowel onset.|
+
+All four waveform/spectrogram/control plots and16decoded output landmarks were visually inspected. Mouth crops are enlarged2× using nearest-neighbor beside stage thumbnails; they do not add resolution or prove short boundaries at24fps. The1120geometry samples at480Hz are actual current oral-construction targets, checked by the existing geometry capture pipeline. They are authored geometry, not measured human facial motion, independent listening or raster-plane approval. These regions follow the skeptical brow cue and precede the closing grin, so those unrelated acting variants are not introduced into this trace.
+
+The existing phone-audio-support helper reproduces exactly phone indices184/195/207/228. Its amplitude thresholds remain review heuristics. Four mono16kPCM16 WAV contexts are byte-exact slices of original samples255200:263840,265600:275200,284800:295200 and323520:332160; their payload hashes are recorded. Audio SHA28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96 and planSHAaf01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e remain unchanged. No float re-encoding or threshold-based retiming.
+
+Executed work/low-energy-phone-review/{trace,evidence,page}.py reuse the existing target trace, geometry capture and acoustic support tools. Source snapshots/digests are frozen beside the review. Workers31289/79247 completed; no pending jobs. The page retains access to the full18-marker/six-region evidence review. No phonetic boundary or real-time acting/listening acceptance is claimed; the polished milestone remains unaccepted. No merge, deployment or Moho interaction.
+
+Next: focus the performance review on the P→AO release around20.38–20.425s using the exact context and existing full normal/slow footage. Evaluate whether the observed opening is reasonable anticipation or visibly premature before proposing any motion change. Preserve the bilabial contact guard and existing unverified intervals; never make the energy threshold an automatic phone boundary. Do not add further artwork/sampler/acting/camera/dwell variants without a demonstrated defect.
