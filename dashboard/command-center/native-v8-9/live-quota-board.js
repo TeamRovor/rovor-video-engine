@@ -3,6 +3,34 @@
  */
 window.ROVOR_QUOTA_BOARD=(()=>{
 'use strict';
+const expandedSlots=new Set();
+let focusedQuotaSlot=null;
+// Keep UI inspection state independent of whichever legacy module redraws the popup.
+function listenForQuotaInteraction(){
+ if(typeof document.addEventListener!=='function')return;
+ document.addEventListener('click',event=>{
+   const summary=event.target?.closest?.('.rvq-more summary');
+   if(!summary)return;
+   const detail=summary.parentElement;
+   const key=detail?.closest?.('[data-rvq-slot]')?.getAttribute('data-rvq-slot');
+   if(!key)return;
+   if(detail.open)expandedSlots.delete(key);
+   else expandedSlots.add(key);
+ },true);
+ document.addEventListener('focusin',event=>{
+   const summary=event.target?.closest?.('.rvq-more summary');
+   focusedQuotaSlot=summary?.closest?.('[data-rvq-slot]')?.getAttribute('data-rvq-slot')||null;
+ },true);
+}
+function restoreFocusedQuota(root){
+ if(!focusedQuotaSlot||document.activeElement!==document.body)return;
+ const board=root?.classList?.contains('rvq-board')?root:root?.querySelector?.('.rvq-board');
+ if(!board)return;
+ const card=[...board.querySelectorAll('[data-rvq-slot]')].find(
+   n=>n.getAttribute('data-rvq-slot')===focusedQuotaSlot);
+ card?.querySelector('.rvq-more summary')?.focus({preventScroll:true});
+}
+
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>typeof n==='number'&&Number.isFinite(n)?n.toLocaleString():'—';
 const pretty=s=>{
@@ -202,7 +230,7 @@ function card(group,quota,live,index,slot,cloud,attempts){
  const rows=entries.map(meter);
  if(!rows.length)rows.push(unknownModel(null));
  const first=rows.slice(0,2).join('');
- const extra=rows.length>2?'<details class="rvq-more"><summary>Show '+(rows.length-2)+' more model'+(rows.length===3?'':'s')+'</summary>'+rows.slice(2).join('')+'</details>':'';
+ const extra=rows.length>2?'<details class="rvq-more"'+(expandedSlots.has(group.provider+':'+slot.account_slot)?' open':'')+'><summary>Show '+(rows.length-2)+' more model'+(rows.length===3?'':'s')+'</summary>'+rows.slice(2).join('')+'</details>':'';
  const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
  return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
@@ -400,6 +428,7 @@ const css=`
 `;
 function mount(){
  if(document.getElementById('rvq-style'))return;
+ listenForQuotaInteraction();
  const s=document.createElement('style');s.id='rvq-style';s.textContent=css;document.head.append(s);
 }
 function render(data,live,cloud=null){
@@ -509,7 +538,7 @@ function start(){
    busy=true;let fresh=null;
    // The main 24h HUD view has already fetched and validated this report.
    // Reuse it rather than make a second network request every ten seconds.
-   const shared=window.ROVOR_WORKLOAD?.getQuotaSnapshot?.();
+   const shared=window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT?.();
    if(shared?.source==='local_omniroute_read_only_bridge'&&shared.period==='24h'&&
       Array.isArray(shared.connections)){
      const age=Date.now()-Date.parse(shared.snapshot_at);
@@ -549,6 +578,9 @@ function start(){
  const observer=new MutationObserver(()=>{
    if([...document.querySelectorAll('#rovor-workload-popup .wl-card')].some(
        n=>!n.hidden&&isOriginal(n)))void sync();
+   // A legacy popup replacement can discard focus without calling our API.
+   // Reassert it only when focus fell back to body after such a replacement.
+   restoreFocusedQuota(slot());
  });
  observer.observe(document.body,{childList:true,subtree:true});
  // Refresh the EXISTING popup even after its original heading was replaced.
