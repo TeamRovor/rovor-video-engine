@@ -100,3 +100,27 @@ jobs:
             wrangler secret bulk --config wrangler.github.jsonc
       - name: Verify anonymous denial, authenticated original HUD, quota script, and D1 status
         run: node verify-github-deploy.mjs
+
+  verify-existing:
+    # A code-only main push can verify the already-deployed Worker without
+    # pushing code, rewriting D1 or secrets, or requiring owner to run deploy.
+    needs: safety-tests
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      vars.ROVOR_HUD_GITHUB_AUTO_DEPLOY != 'enabled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    environment: rovor-hud-production
+    env:
+      ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify existing private Worker without uploading or running inference
+        run: node integrations/hud-cloud/verify-github-deploy.mjs
