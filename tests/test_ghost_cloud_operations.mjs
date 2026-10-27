@@ -324,3 +324,27 @@ test('hosted service shift uses the same canonical approved feeder as scheduled 
  assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_jobs').get().n,0,
   'spent fixed packets must not silently return on canonical feed path');
 });
+
+test('hosted authenticated service shifts use registered durable runner only',async()=>{
+ const s=setup();await s.ops.control(s.env,true);
+ let invoked=0;
+ s.ops.installHostedShiftRunner(async env=>{
+  assert.equal(env,s.env);invoked++;
+  return {intake:{queued:0,duplicates:0},result:{enabled:true,dispatched:0,denied:{}},
+    shift:{id:'hosted-shift-1',status:'idle',reason:'no_unattempted_jobs'},observed_at:Date.now()};
+ });
+ assert.throws(()=>s.ops.installHostedShiftRunner(async()=>({})),/hosted_shift_already_registered/);
+ const operation={operation:'shift'};
+ const denied=await s.ops.fetch(request('/api/ghost/service',{body:operation,identity:null}),s.env);
+ assert.equal(denied.status,401);
+ assert.equal(invoked,0);
+ const ok=await s.ops.fetch(request('/api/ghost/service',{
+  body:operation,identity:null,serviceToken:s.env.GHOST_SERVICE_TOKEN
+ }),s.env);
+ assert.equal(ok.status,200);
+ const body=await ok.json();
+ assert.equal(body.shift.status,'idle');
+ assert.equal(body.shift.reason,'no_unattempted_jobs');
+ assert.equal(body.result.dispatched,0);
+ assert.equal(invoked,1);
+});

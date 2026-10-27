@@ -13,7 +13,7 @@ const schema=fs.readFileSync(new URL('scheduled-shift.sql',sourceDir),'utf8');
 const TAIL="export default {fetch:(request,env)=>__operations.fetch(request,env),scheduled(event,env,ctx){if(env.GHOST_CRON_OPT_IN==='owner-approved-ghost-cron-v1')return __cloud.worker.scheduled(event,env,ctx);}};";
 const v2='// ROVOR_CLOUD_OPERATIONS_V1 testfixture\n'+
   "const __cloud = (() => { return {tick:async()=>({enabled:true,dispatched:0}),worker:{scheduled:()=>{throw Error('old_tick_called')}}};})();\n"+
-  "const __operations = (() => {return {replenish:async()=>({queued:0,duplicates:0}),installApprovedFeeder:()=>{},fetch:async()=>new Response('<html><body>Original ROVOR HUD</body></html>',{headers:{'Content-Type':'text/html'}})};})();\n"+
+  "const __operations = (() => {return {replenish:async()=>({queued:0,duplicates:0}),installApprovedFeeder:()=>{},installHostedShiftRunner:()=>{},fetch:async()=>new Response('<html><body>Original ROVOR HUD</body></html>',{headers:{'Content-Type':'text/html'}})};})();\n"+
   TAIL+'\n';
 function mock() {
   const db=new DatabaseSync(':memory:');db.exec(schema);
@@ -72,6 +72,8 @@ test('production bundle embeds pinned approved feed without dynamic module impor
   assert.match(compiled,/GHOST_FEED_COMMIT/);
   assert.match(compiled,/replenishApprovedJobs/);
   assert.match(compiled,/__operations\.installApprovedFeeder\(__feed\)/);
+  assert.match(compiled,/__operations\.installHostedShiftRunner/);
+  assert.match(compiled,/__shift\.runScheduledShift\(env/);
   assert.doesNotMatch(compiled,/import\s*\(/);
   assert.doesNotMatch(compiled,/^import\s/m);
   assert.throws(()=>compileScheduledShift(v2,shiftSource,'export const hostile=1;'),/unexpected_approved_feed_source/);
@@ -218,4 +220,35 @@ test('symlink redirection of migration folder is rejected without modifying orig
 test('composer refuses a canonical feeder when original Site service lacks the registration hook',()=>{
  const old=v2.replace('installApprovedFeeder:()=>{},','');
  assert.throws(()=>compileScheduledShift(old,shiftSource,feedSource),/canonical_service_feeder_unavailable/);
+});
+
+test('composer fails closed without a hosted D1 shift registration hook',()=>{
+ const unmounted=v2.replace('installHostedShiftRunner:()=>{},','');
+ assert.throws(()=>compileScheduledShift(unmounted,shiftSource,feedSource),
+  /hosted_shift_ledger_registration_unavailable/);
+});
+
+test('hosted service requests persist real scheduled-shift receipts in existing D1',async()=>{
+ const replaceTarget="installHostedShiftRunner:()=>{},fetch:async()=>new Response('<html><body>Original ROVOR HUD</body></html>',{headers:{'Content-Type':'text/html'}})";
+ assert.ok(v2.includes(replaceTarget));
+ const fakeService="installHostedShiftRunner(run){this.hostedRunner=run;},async fetch(req,env){"+
+  "if(new URL(req.url).pathname==='/api/ghost/service')return Response.json(await this.hostedRunner(env));"+
+  "return new Response('<html><body>Original ROVOR HUD</body></html>',{headers:{'Content-Type':'text/html'}});}";
+ const compiled=compileScheduledShift(v2.replace(replaceTarget,fakeService),shiftSource,feedSource);
+ const imported=await import('data:text/javascript;base64,'+Buffer.from(compiled).toString('base64'));
+ const s=mock();
+ const reply=await imported.default.fetch(req('/api/ghost/service',{method:'POST'}),s.env);
+ assert.equal(reply.status,200);
+ const data=await reply.json();
+ assert.equal(data.result.enabled,true);
+ assert.equal(data.result.dispatched,0);
+ assert.equal(data.intake.queued,0);
+ assert.equal(data.shift.status,'idle');
+ assert.equal(data.shift.reason,'no_unattempted_jobs');
+ const report=await (await imported.default.fetch(req('/api/ghost/shifts'),s.env)).json();
+ assert.equal(report.runs.length,1);
+ assert.equal(report.runs[0].id,data.shift.id);
+ assert.equal(report.runs[0].status,'idle');
+ assert.equal(report.runs[0].reason,'no_unattempted_jobs');
+ assert.equal(s.db.prepare('SELECT count(*) n FROM ghost_cloud_shift_runs').get().n,1);
 });

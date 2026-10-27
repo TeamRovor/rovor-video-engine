@@ -75,6 +75,7 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
     v2Source.includes('ROVOR_CLOUD_SCHEDULED_SHIFT_V1')||
     v2Source.split(TAIL).length!==2||!v2Source.trimEnd().endsWith(TAIL))throw Error('unexpected_existing_site_bundle');
   if(feedSource!==null&&!v2Source.includes('installApprovedFeeder'))throw Error('canonical_service_feeder_unavailable');
+  if(!v2Source.includes('installHostedShiftRunner'))throw Error('hosted_shift_ledger_registration_unavailable');
   if(!shiftSource.includes('export async function runScheduledShift(')||
     !shiftSource.includes('export async function readScheduledShifts('))throw Error('unexpected_shift_module');
   const moduleSource=shiftSource.replace(/^export (?=async function (?:runScheduledShift|readScheduledShifts)\b)/gm,'');
@@ -99,6 +100,15 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
     'const __shift = (() => {\n'+moduleSource+'\nreturn {runScheduledShift,readScheduledShifts};\n})();\n'+
     feedBundle+
     'if(__feed)__operations.installApprovedFeeder(__feed);\n'+
+    'if(__operations.installHostedShiftRunner){\n'+
+    ' __operations.installHostedShiftRunner(async env=>{\n'+
+    '  let tickReceipt=null;\n'+
+    '  const run=await __shift.runScheduledShift(env,{replenish:__operations.replenish,tick:async e=>{tickReceipt=await __cloud.tick(e);return tickReceipt;}});\n'+
+    "  if(run.status==='failed'||run.status==='not_opted_in')throw Error('hosted_shift_unavailable');\n"+
+    "  const result=tickReceipt||{enabled:false,dispatched:0,denied:{}};\n"+
+    '  return {intake:{queued:run.queued,duplicates:run.duplicates},result,shift:{id:run.id,status:run.status,reason:run.reason},observed_at:Date.now()};\n'+
+    ' });\n'+
+    '}\n'+
     'const __shiftUI = '+JSON.stringify(ui)+';\n'+
     'export default {\n'+
     "async fetch(request,env){\n"+
