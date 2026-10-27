@@ -46,6 +46,10 @@ def receipt(enabled=True, dispatched=1, queued=0, denied=None):
         "intake": {"queued": queued, "duplicates": 0},
         "result": {"enabled": enabled, "dispatched": dispatched,
                    "denied": denied if denied is not None else {"gemini": "not_configured"}},
+        "shift": {"id": "hosted-shift-receipt-0001",
+                  "status": "dispatched" if enabled and dispatched else
+                            "idle" if enabled else "stopped",
+                  "reason": "no_unattempted_jobs" if enabled and not dispatched else None},
         "observed_at": 1234567890000,
     }
 
@@ -55,6 +59,7 @@ class HostedShiftTests(unittest.TestCase):
         client = Client(Reply(receipt(dispatched=1, queued=2)))
         result = runner.send_shift(token=TOKEN, opener=client)
         self.assertEqual(result["dispatched"], 1)
+        self.assertEqual(result["state"], "work_dispatched")
         self.assertEqual(result["newly_admitted_approved_jobs"], 2)
         self.assertEqual(result["admission_denied_provider_count"], 1)
         self.assertEqual(client.request.full_url, runner.TARGET)
@@ -75,6 +80,37 @@ class HostedShiftTests(unittest.TestCase):
             token=TOKEN, opener=Client(Reply(receipt(enabled=False, dispatched=0))))
         self.assertEqual(result["state"], "owner_paused")
         self.assertEqual(result["dispatched"], 0)
+
+    def test_idle_is_not_reported_as_completed_work(self):
+        result = runner.send_shift(token=TOKEN, opener=Client(Reply(receipt(dispatched=0))))
+        self.assertEqual(result["state"], "idle_no_work")
+        self.assertEqual(result["idle_reason"], "no_unattempted_jobs")
+        self.assertEqual(result["dispatched"], 0)
+
+    def test_legacy_bare_tick_fails_closed(self):
+        body = receipt()
+        del body["shift"]
+        with self.assertRaisesRegex(ValueError, "durable_shift_receipt_missing"):
+            runner.send_shift(token=TOKEN, opener=Client(Reply(body)))
+
+    def test_invalid_durable_receipts_fail_closed(self):
+        for status, enabled, count in [
+            ("failed", True, 0), ("idle", True, 1),
+            ("dispatched", True, 0), ("stopped", True, 0),
+            ("dispatched", False, 0)
+        ]:
+            body = receipt(enabled=enabled, dispatched=count)
+            body["shift"]["status"] = status
+            with self.subTest(status=status, enabled=enabled, count=count):
+                with self.assertRaises(ValueError):
+                    runner.send_shift(token=TOKEN, opener=Client(Reply(body)))
+
+    def test_private_idle_reason_not_in_public_output(self):
+        body = receipt(dispatched=0)
+        body["shift"]["reason"] = "private-secret-no-echo"
+        result = runner.send_shift(token=TOKEN, opener=Client(Reply(body)))
+        self.assertEqual(result["idle_reason"], "unknown")
+        self.assertNotIn("private-secret", json.dumps(result))
 
     def test_invalid_receipts_rejected_without_inventing_execution(self):
         for body in [[], {}, {"intake": {"queued": 0}, "result": {"enabled": True}},

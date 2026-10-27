@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -54,6 +55,9 @@ def send_shift(*, token: str, url: str = TARGET, opener=None) -> dict:
         raise ValueError("invalid_shift_receipt")
     tick = result.get("result")
     intake = result.get("intake")
+    shift = result.get("shift")
+    if not isinstance(shift, dict):
+        raise ValueError("durable_shift_receipt_missing")
     if not isinstance(tick, dict) or not isinstance(intake, dict):
         raise ValueError("invalid_shift_receipt")
 
@@ -68,15 +72,37 @@ def send_shift(*, token: str, url: str = TARGET, opener=None) -> dict:
             or (enabled is False and dispatched != 0)):
         raise ValueError("invalid_shift_receipt")
 
-    # Keep all model IDs, prompts, job IDs, provider keys and private drafts out
-    # of public Actions logs. "dispatched" is not proof of round-the-clock cron.
-    return {
-        "state": "executed" if enabled else "owner_paused",
+    # Require a durable shift receipt; a successful legacy tick is insufficient.
+    shift_id = shift.get("id")
+    shift_status = shift.get("status")
+    if (not isinstance(shift_id, str)
+            or not re.fullmatch(r"[a-z0-9-]{16,64}", shift_id)
+            or shift_status not in {"dispatched", "idle", "stopped"}):
+        raise ValueError("invalid_durable_shift_receipt")
+    if (shift_status == "dispatched" and not (enabled and dispatched > 0)
+            or shift_status == "idle" and not (enabled and dispatched == 0)
+            or shift_status == "stopped" and not (enabled is False and dispatched == 0)):
+        raise ValueError("inconsistent_durable_shift_receipt")
+    # Public Actions logs must contain only allowlisted reason codes.
+    reason = shift.get("reason")
+    safe = {"no_unattempted_jobs", "no_eligible_providers",
+            "unattempted_jobs_not_dispatched"}
+    idle_reason = (reason if isinstance(reason, str) and reason in safe
+                   else "claim_blocked" if isinstance(reason, str) and reason.startswith("claim_")
+                   else "unknown")
+    # Dispatch is a claimed attempt; it does not prove completion or 24/7 uptime.
+    report = {
+        "state": {"dispatched": "work_dispatched",
+                  "idle": "idle_no_work",
+                  "stopped": "owner_paused"}[shift_status],
         "dispatched": dispatched,
         "admission_denied_provider_count": len(denied),
         "newly_admitted_approved_jobs": queued,
-        "source": "private_cloud_service_receipt",
+        "source": "durable_private_cloud_shift_receipt",
     }
+    if shift_status == "idle":
+        report["idle_reason"] = idle_reason
+    return report
 
 
 def main() -> int:

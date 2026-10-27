@@ -21,7 +21,10 @@ Mac, and does not select or pay for models.
    A missing repository secret now yields a FAILED Actions job, with a
    `not_armed` receipt and zero dispatched; fix the secret before treating the
    five-minute hosted trigger as operational. State `executed` with
-   `dispatched: 0` means admission/claims blocked dispatch.
+   `dispatched: 0` means admission/claims blocked dispatch in older clients.
+   Updated hosted clients require the private Site's durable D1 shift receipt;
+   `work_dispatched` means a claim was attempted, `idle_no_work` means zero dispatch,
+   and `owner_paused` means STOP is active. A legacy bare tick fails closed.
 5. Match real job attempts and actual models in the existing private HUD.
    Do not infer quota/online status from API-key presence or model catalog.
 
