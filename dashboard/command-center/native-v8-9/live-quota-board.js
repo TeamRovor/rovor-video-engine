@@ -441,7 +441,7 @@ function render(data,live,cloud=null){
 // Preserve owner inspection context even when live evidence must be refreshed.
 function captureState(root){
  const board=root?.classList?.contains('rvq-board')?root:root?.querySelector?.('.rvq-board');
- if(!board)return null;
+ if(!board||typeof board.querySelectorAll!=='function')return null;
  const cards=[...board.querySelectorAll('[data-rvq-slot]')];
  const state={details:[],scrolls:[],focused:null};
  for(const card of cards){
@@ -468,7 +468,7 @@ function captureState(root){
 function restoreState(root,state){
  if(!state)return;
  const board=root?.classList?.contains('rvq-board')?root:root?.querySelector?.('.rvq-board');
- if(!board)return;
+ if(!board||typeof board.querySelectorAll!=='function')return;
  const cards=[...board.querySelectorAll('[data-rvq-slot]')];
  const getCard=key=>cards.find(card=>card.getAttribute('data-rvq-slot')===key);
  for(const item of state.details){
