@@ -18,8 +18,10 @@ Mac, and does not select or pay for models.
    only execute from the default branch. GitHub's nominal five-minute cron is
    best effort, not a 24/7 SLA.
 4. Use Actions > ROVOR cloud workforce (hosted shift) > Run workflow once.
-   A green run with state not_armed means no repository secret and NO WORK.
-   State executed with dispatched 0 means admission/claims blocked dispatch.
+   A missing repository secret now yields a FAILED Actions job, with a
+   `not_armed` receipt and zero dispatched; fix the secret before treating the
+   five-minute hosted trigger as operational. State `executed` with
+   `dispatched: 0` means admission/claims blocked dispatch.
 5. Match real job attempts and actual models in the existing private HUD.
    Do not infer quota/online status from API-key presence or model catalog.
 
