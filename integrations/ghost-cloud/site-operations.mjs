@@ -137,7 +137,7 @@ export function createCloudOperations(base, cloud) {
    j.employee,j.task_id,j.title FROM ghost_cloud_attempts a JOIN ghost_cloud_jobs j ON a.job_id=j.id
    WHERE a.status='needs_review' AND a.human_review='not_recorded'
    ORDER BY COALESCE(a.finished_at,a.started_at) ASC,a.id ASC LIMIT 50`).all();
-  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,quota:observedQuota(p.provider)})),
+  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null)})),
    attempts:results,review_queue:{pending_count:reviewCount?.pending_count??0,
     oldest_finished_at:reviewCount?.oldest_finished_at??null,items:reviewItems}};
  }
