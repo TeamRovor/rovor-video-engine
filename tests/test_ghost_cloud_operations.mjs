@@ -124,6 +124,34 @@ test('model responses cannot mark an empty canary as human approved',async()=>{
  assert.equal((await s.ops.fetch(request('/api/ghost/review',{body:{job_id:j.id,verdict:'passed'},browser:true}),s.env)).status,409);
  assert.equal(s.db.prepare('SELECT human_review FROM ghost_cloud_attempts').get().human_review,'not_recorded');
 });
+test('owner inventory checks refresh the exact provider HUD health row without claiming inference or quota',async t=>{
+ const {env,db,ops}=setup();
+ let deny=false,seen=0;
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  seen++;assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models');
+  assert.equal(options.method,'GET');assert.equal(options.redirect,'manual');
+  return deny?new Response('private upstream error body',{status:403}):
+   Response.json({models:[{name:'models/gemini-2.5-flash'}],secret:'never displayed'});
+ });
+ const initial=await ops.status(env);
+ assert.equal(initial.providers.find(p=>p.provider==='gemini').last_check,null);
+ const fresh=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
+ assert.equal(fresh.status,'catalog_received');assert.equal(fresh.models.length,1);
+ assert.equal(fresh.quota_verified,false);assert.equal(fresh.billing_verified,false);
+ const after=await ops.status(env),provider=after.providers.find(p=>p.provider==='gemini');
+ assert.equal(provider.last_check.status,'catalog_received');
+ assert.equal(provider.last_check.observed_at,fresh.observed_at);
+ assert.equal(provider.admission,'disabled_pending_verification');
+ deny=true;
+ const unavailable=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
+ assert.equal(unavailable.status,'http_403');
+ const stored=await ops.status(env);
+ assert.equal(stored.providers.find(p=>p.provider==='gemini').last_check.status,'http_403');
+ assert.equal(db.prepare('SELECT count(*) AS n FROM ghost_cloud_provider_checks').get().n,1);
+ assert.equal(seen,2);
+ assert.equal(JSON.stringify(stored).includes('private upstream error body'),false);
+});
+
 test('fixed-endpoint GET inventory returns bounded public model metadata only',async()=>{
  const {env,ops}=setup();let calls=0;
  const result=await ops.inventory(env,'openrouter',async(url,opts)=>{calls++;assert.equal(url,'https://openrouter.ai/api/v1/models');assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');return Response.json({data:[{id:'known/free:free',pricing:{prompt:'0',completion:'0'}},{id:'paid/model',pricing:{prompt:'1',completion:'1'}},{id:'unknown:free',pricing:{prompt:null,completion:null}}],secret:'must not return'});});
