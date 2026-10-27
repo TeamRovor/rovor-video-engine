@@ -11,6 +11,8 @@ on:
       - 'tests/test_hud_verified_quota.mjs'
       - 'tests/test_hud_ios_quota_rings.mjs'
       - 'tests/test_hud_serial_refresh.mjs'
+      - 'integrations/hud-cloud/patch-private-site-quota.mjs'
+      - 'tests/test_hud_private_site_quota_release.mjs'
       - 'tests/test_hud_omniroute*'
       - '.github/workflows/hud-omniroute-live-sync.yml'
   push:
@@ -39,6 +41,7 @@ jobs:
       - run: node --check dashboard/command-center/native-v8-9/live-quota-board.js
       - run: node --test tests/test_hud_ios_quota_rings.mjs
       - run: node --test tests/test_hud_serial_refresh.mjs
+      - run: node --test tests/test_hud_private_site_quota_release.mjs
       - run: node tests/test_hud_omniroute_live.browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
