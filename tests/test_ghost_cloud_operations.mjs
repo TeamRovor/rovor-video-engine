@@ -124,6 +124,34 @@ test('model responses cannot mark an empty canary as human approved',async()=>{
  assert.equal((await s.ops.fetch(request('/api/ghost/review',{body:{job_id:j.id,verdict:'passed'},browser:true}),s.env)).status,409);
  assert.equal(s.db.prepare('SELECT human_review FROM ghost_cloud_attempts').get().human_review,'not_recorded');
 });
+test('owner inventory checks refresh the exact provider HUD health row without claiming inference or quota',async t=>{
+ const {env,db,ops}=setup();
+ let deny=false,seen=0;
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  seen++;assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/openai/models');
+  assert.equal(options.method,'GET');assert.equal(options.redirect,'manual');
+  return deny?new Response('private upstream error body',{status:403}):
+   Response.json({models:[{name:'models/gemini-2.5-flash'}],secret:'never displayed'});
+ });
+ const initial=await ops.status(env);
+ assert.equal(initial.providers.find(p=>p.provider==='gemini').last_check,null);
+ const fresh=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
+ assert.equal(fresh.status,'catalog_received');assert.equal(fresh.models.length,1);
+ assert.equal(fresh.quota_verified,false);assert.equal(fresh.billing_verified,false);
+ const after=await ops.status(env),provider=after.providers.find(p=>p.provider==='gemini');
+ assert.equal(provider.last_check.status,'catalog_received');
+ assert.equal(provider.last_check.observed_at,fresh.observed_at);
+ assert.equal(provider.admission,'disabled_pending_verification');
+ deny=true;
+ const unavailable=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
+ assert.equal(unavailable.status,'http_403');
+ const stored=await ops.status(env);
+ assert.equal(stored.providers.find(p=>p.provider==='gemini').last_check.status,'http_403');
+ assert.equal(db.prepare('SELECT count(*) AS n FROM ghost_cloud_provider_checks').get().n,1);
+ assert.equal(seen,2);
+ assert.equal(JSON.stringify(stored).includes('private upstream error body'),false);
+});
+
 test('fixed-endpoint GET inventory returns bounded public model metadata only',async()=>{
  const {env,ops}=setup();let calls=0;
  const result=await ops.inventory(env,'openrouter',async(url,opts)=>{calls++;assert.equal(url,'https://openrouter.ai/api/v1/models');assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');return Response.json({data:[{id:'known/free:free',pricing:{prompt:'0',completion:'0'}},{id:'paid/model',pricing:{prompt:'1',completion:'1'}},{id:'unknown:free',pricing:{prompt:null,completion:null}}],secret:'must not return'});});
@@ -203,6 +231,7 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  assert.ok(script,'private HUD injects its live module');
  class Element {
   constructor(tag){this.tag=tag;this.id='';this.children=[];this.parent=null;this.textContent='';this.className='';this.style={};this.hidden=false;}
+  setAttribute(name,value){this[name]=value;}
   append(...items){for(const item of items){item.remove();item.parent=this;this.children.push(item);}}
   prepend(...items){for(const item of items.reverse()){item.remove();item.parent=this;this.children.unshift(item);}}
   remove(){if(this.parent){const i=this.parent.children.indexOf(this);if(i>=0)this.parent.children.splice(i,1);this.parent=null;}}
@@ -213,6 +242,8 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  const find=(node,id)=>node.id===id?node:node.children.map(child=>find(child,id)).find(Boolean)||null;
  const document={hidden:false,createElement:tag=>new Element(tag),getElementById:id=>find(root,id),addEventListener(){}};
  let tick,mode='ok',reads=0;const snapshot=await s.ops.status(s.env);
+ snapshot.providers[0].quota={status:'verified',unit:'requests',used:2,limit:10,observed_at:Date.now(),resets_at:Date.now()+60000};
+ snapshot.providers[0].recorded_24h={requests:3};
  const fetch=async()=>{reads++;if(mode==='offline')throw Error('network_down');
   if(mode==='invalid')return {ok:true,json:async()=>({providers:[],attempts:[]})};
   return {ok:true,json:async()=>snapshot};
@@ -225,6 +256,14 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  assert.ok(document.getElementById('rovor-cloud-results'));
  const visible=(node)=>[node.textContent,...node.children.flatMap(visible)].join(' ');
  assert.match(visible(document.getElementById('rovor-cloud-results')),/OWNER REVIEW QUEUE · 1 PENDING/);
+ const providerView=visible(document.getElementById('rovor-cloud-live'));
+ assert.match(providerView,/RECORDED CLOUD REQUESTS \(24H\) · 3/);
+ assert.match(providerView,/VERIFIED PROVIDER REQUEST ALLOWANCE · 2 \/ 10 used/);
+ assert.equal((providerView.match(/USAGE LIMIT UNKNOWN/g)||[]).length,8);
+ const progress=(node)=>[...(node.tag==='progress'?[node]:[]),...node.children.flatMap(progress)];
+ const bars=progress(document.getElementById('rovor-cloud-live'));
+ assert.equal(bars.length,1);assert.equal(bars[0].value,2);assert.equal(bars[0].max,10);
+
  assert.match(document.getElementById('rovor-cloud-link-state').textContent,/CLOUD LEDGER REACHABLE/);
  assert.match(document.getElementById('rovor-cloud-link-state').textContent,/reachability does not prove agents online/);
  mode='offline';await tick();await settled();
