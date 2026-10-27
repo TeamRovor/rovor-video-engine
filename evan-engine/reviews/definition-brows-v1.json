@@ -1,0 +1,49 @@
+{
+  "status": "opt-in-brow-pilot-verified-component-render-in-progress",
+  "sourceFrameRange": [
+    228,
+    354
+  ],
+  "sourceSeconds": [
+    9.5,
+    14.75
+  ],
+  "expectedFrames": 126,
+  "expectedUpdatedBrowFrames": 114,
+  "expectedOffCueByteExactFrames": 12,
+  "expectedNormalSeconds": 5.25,
+  "expectedQuarterSpeedSeconds": 21,
+  "browAccent": {
+    "leftRaise": 5,
+    "rightRaise": 7,
+    "leftTilt": 1,
+    "rightTilt": -2
+  },
+  "sharedCue": "definition_event",
+  "pilot": {
+    "frame": 268,
+    "time": 11.166666666666666,
+    "changedNativePixels": 2558,
+    "changedStagePixels": 915,
+    "oralJawAndAuditExact": true,
+    "outsideNativeBrowMaskExact": true,
+    "minimumOralArea2": 6.04426908493042
+  },
+  "pilotNativeAndStageVisuallyInspected": true,
+  "testsPassed": 10,
+  "newTests": 2,
+  "firstTinyAndOtherCuesUnchanged": true,
+  "phonemeTimingChanged": false,
+  "defaultChanged": false,
+  "fullFilmUpdated": false,
+  "newArtwork": false,
+  "flagsCleared": 0,
+  "pendingJobs": true,
+  "worker": 31087,
+  "launchManifestSha256": "fa4663a6a63aae304cfca19f57e1d97dc5e4587657466b49bba9220a3e84878b",
+  "polishedMilestoneReady": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "mohoProbed": false,
+  "nextConcreteWork": "Poll31087 without restarting. Require Verification.json and full126/504decode, then run work/definition-brow-review/review.py. Inspect all114native before/after pairs,18overview and encoded normal/slow samples; validate source/frame hashes and exact84000sample context. Keep full film/default unchanged until shot reviewed."
+}

@@ -24,3 +24,12 @@ def definition_controls(t,plan):
   # shortcut: one fixed open-palm drawing; new finger acting needs registered artwork.
   c['right']=[v*(1-weight)+p*weight for v,p in zip(c['right'],[-3.,-38.,-5.])]
  return c
+
+def definition_brows(t,plan,baseline):
+ if not np.isfinite(t):raise ValueError('Expected finite review time')
+ c=baseline.copy();event=definition_event(plan)
+ if event is None:return c
+ weight=flowing_track(t,[(event['anticipate'],0.),(event['arrive'],1.),(event['hold'],1.),(event['settle'],0.)])
+ for key,accent in [('leftRaise',5.),('rightRaise',7.),('leftTilt',1.),('rightTilt',-2.)]:
+  c[key]+=weight*accent
+ return c

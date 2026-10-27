@@ -1,7 +1,7 @@
 import copy,json,unittest
 from pathlib import Path
 import cv2,numpy as np
-from definition_cartoon_review import definition_event,definition_controls
+from definition_cartoon_review import definition_event,definition_controls,definition_brows
 from finished_cartoon_scene import finished_controls,FinishedCartoonSceneBody
 class DefinitionTests(unittest.TestCase):
  @classmethod
@@ -31,4 +31,20 @@ class DefinitionTests(unittest.TestCase):
    with self.assertRaises(ValueError):definition_controls(t,self.plan)
   p=copy.deepcopy(self.plan);p['words'][42]['end']=0
   with self.assertRaises(ValueError):definition_event(p)
+ def test_brows_share_existing_cue_without_mutating_plan_or_baseline(self):
+  before=copy.deepcopy(self.plan);baseline=dict(leftRaise=0.,rightRaise=0.,leftTilt=0.,rightTilt=0.)
+  e=definition_event(self.plan)
+  for t in [0,2.4,e['anticipate'],e['settle'],20,23]:self.assertEqual(definition_brows(t,self.plan,baseline),baseline)
+  self.assertEqual(definition_brows(11.17,self.plan,baseline),dict(leftRaise=5.,rightRaise=7.,leftTilt=1.,rightTilt=-2.))
+  p=copy.deepcopy(self.plan)
+  for w in p['words']:w['start']+=3;w['end']+=3
+  self.assertEqual(definition_brows(14.17,p,baseline),definition_brows(11.17,self.plan,baseline))
+  p['words'][34]['word']='other';self.assertEqual(definition_brows(14.17,p,baseline),baseline)
+  self.assertEqual(before,self.plan);self.assertEqual(baseline,dict(leftRaise=0.,rightRaise=0.,leftTilt=0.,rightTilt=0.))
+ def test_brow_continuity_and_invalid_time(self):
+  base=dict(leftRaise=0.,rightRaise=0.,leftTilt=0.,rightTilt=0.)
+  rows=[list(definition_brows(float(t),self.plan,base).values())for t in np.arange(9.5,14.8,1/480)]
+  self.assertLess(float(abs(np.diff(rows,axis=0)).max()),.06)
+  for t in [float('nan'),float('inf')]:
+   with self.assertRaises(ValueError):definition_brows(t,self.plan,base)
 if __name__=='__main__':unittest.main()
