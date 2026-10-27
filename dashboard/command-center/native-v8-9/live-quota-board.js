@@ -31,7 +31,7 @@ function listenForQuotaInteraction(){
  },true);
 }
 function restoreFocusedQuota(root){
- if(!focusedQuotaSlot||document.activeElement!==document.body)return;
+ if(!focusedQuotaSlot)return;
  const board=root?.classList?.contains('rvq-board')?root:root?.querySelector?.('.rvq-board');
  if(!board)return;
  const card=[...board.querySelectorAll('[data-rvq-slot]')].find(
