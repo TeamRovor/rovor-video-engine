@@ -192,7 +192,7 @@ test('composer preserves applied migrations, emits schema-only SQL and string DB
   assert.equal(fs.readFileSync(path.join(dir,'drizzle/0000_hud.sql'),'utf8'),prior);
   const migration=fs.readFileSync(path.join(dir,'drizzle/0001_cloud_operations.sql'),'utf8');assert.match(migration,/statement-breakpoint/);assert.doesNotMatch(migration,/(^|\n)\s*(INSERT|UPDATE|DELETE|DROP|ALTER)\b/);
    assert.match(migration,/ghost_cloud_reviews \(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL UNIQUE REFERENCES ghost_cloud_attempts\(id\)/);
-  const db=new DatabaseSync(':memory:');db.exec(migration);assert.equal(db.prepare('SELECT count(*) n FROM ghost_cloud_control').get().n,0);db.close();
+  const db=new DatabaseSync(':memory:');db.exec(migration);assert.equal(db.prepare('SELECT count(*) n FROM ghost_cloud_control').get().n,0);assert.equal(db.prepare('SELECT count(*) n FROM ghost_cloud_provider_quota').get().n,0);db.close();
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
 
