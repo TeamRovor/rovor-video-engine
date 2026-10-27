@@ -67,6 +67,19 @@ class CircuitRecoveryTests(unittest.TestCase):
         self.assertEqual(receipt['reviewed_job_ids'], self.ids)
         self.assertTrue(recovery.release_is_valid(self.conn, self.ids, now=201))
         self.assertFalse(recovery.release_is_valid(self.conn, self.ids[1:], now=201))
+        canary_id = str(uuid.uuid4())
+        self.conn.execute(
+            "INSERT INTO jobs(id,kind,payload,dedupe_key,status,created_at,updated_at) "
+            "VALUES(?,?,?,?,?,?,?)",
+            (canary_id, worker.OMNI_KIND, '{\"packet\":\"walter-v2-recovery-proof\"}',
+             'walter-public-v2-recovery-proof', 'queued', 200, 200))
+        self.assertIsNone(worker.claim(self.conn, 'automatic', now=5000,
+                                       allow_omniroute_model_use=True))
+        selected = worker.claim(
+            self.conn, 'owner-canary', now=5000,
+            allow_omniroute_model_use=True, allow_recovery_canary=True,
+            omniroute_queue_job_id=canary_id)
+        self.assertEqual(selected['id'], canary_id)
         (self.state / 'STOP').touch()
         self.assertFalse(recovery.release_is_valid(self.conn, self.ids, now=201))
 

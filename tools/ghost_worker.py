@@ -246,7 +246,7 @@ def claim(conn: sqlite3.Connection, owner: str, now: float | None = None, *, all
         omni_circuit_open = consecutive_failed >= 3 and not released
         omni_enabled = (allow_omniroute_model_use and
                         omni_used < omni_max_24h and
-                        (not omni_circuit_open or allow_recovery_canary))
+                        (not omni_circuit_open or (allow_recovery_canary and circuit_released)))
         if omni_continuous and not verified_pool_mode:
             claims = [r[0] for r in conn.execute(
                 "SELECT e.timestamp FROM events e JOIN jobs j ON j.id=e.job_id "
@@ -443,6 +443,9 @@ def run_once(conn: sqlite3.Connection, workspace: Path, owner: str = "local-work
         elif kind == OMNI_KIND:
             if not allow_omniroute_model_use:
                 raise ValueError('OmniRoute requires separate explicit approval')
+            if allow_recovery_canary:
+                import ghost_omniroute_job
+                ghost_omniroute_job.background_preflight()
             import ghost_omniroute_job
             if set(payload) in ({'assignment'}, {'public_task'}):
                 if not omni_continuous:
@@ -543,6 +546,9 @@ def main():
     run.add_argument("--approve-model-use", action="store_true")
     run.add_argument("--approve-omniroute-model-use", action="store_true",
                      help="Separate approval; max five private OmniRoute jobs per rolling 24h")
+    run.add_argument("--approve-recovery-canary", action="store_true",
+                     help="One exact, owner-reviewed recovery canary after circuit approval")
+    run.add_argument("--omniroute-job-id", help="Exact queued OmniRoute job ID for recovery canary")
     run.add_argument("--allow-native-import", action="store_true")
     run.add_argument("--approve-jane-library-create", action="store_true",
                      help="One explicit Mac GUI library creation; does not import XML")
@@ -557,7 +563,9 @@ def main():
             output = run_once(conn, args.workspace, args.worker_id, allow_model_use=args.approve_model_use,
                               allow_native_import=args.allow_native_import,
                               allow_jane_library_create=args.approve_jane_library_create,
-                              allow_omniroute_model_use=args.approve_omniroute_model_use)
+                              allow_omniroute_model_use=args.approve_omniroute_model_use,
+                              allow_recovery_canary=args.approve_recovery_canary,
+                              omniroute_queue_job_id=args.omniroute_job_id)
         else:
             rows = conn.execute("SELECT id,kind,status,attempts,error FROM jobs ORDER BY created_at,id").fetchall()
             output = {"jobs": [dict(r) for r in rows]}

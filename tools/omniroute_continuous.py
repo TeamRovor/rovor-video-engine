@@ -282,10 +282,10 @@ def queue_health(conn, state, *, max_claims=144, interval=601, now=None):
     result = pacing.dispatch_decision(
         now=now, claims=[r['timestamp'] for r in rows], max_claims=max_claims,
         queued=counts.get('queued', 0), running=counts.get('running', 0),
-        stopped=os.path.lexists(Path(state) / 'STOP'), circuit_open=failed >= 3 and not released,
+        stopped=os.path.lexists(Path(state) / 'STOP'), circuit_open=failed >= 3,
         pace_seconds=interval)
     result['consecutive_recorded_failures'] = failed
-    result['failure_circuit_released'] = released
+    result['recovery_canary_approved'] = released
     result['job_counts'] = counts
     return result
 

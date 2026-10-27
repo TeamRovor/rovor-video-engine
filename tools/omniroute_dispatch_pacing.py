@@ -161,11 +161,11 @@ def read_health(plist_path, *, now=None):
         decision = dispatch_decision(
             now=now, claims=[r["timestamp"] for r in rows], max_claims=limit,
             queued=counts.get("queued", 0), running=counts.get("running", 0),
-            stopped=marker.exists(), circuit_open=failures >= 3 and not released)
+            stopped=marker.exists(), circuit_open=failures >= 3)
     next_at = decision["next_eligible_at"]
     decision.update(
         observation_only=True, model_requests=0, state_modified=False,
-        failure_circuit_released=released,
+        recovery_canary_approved=released,
         launchagent_loaded_verified=False,
         pacing_installed=False, consecutive_recorded_failures=failures,
         earliest_eligible_utc=(datetime.fromtimestamp(next_at, timezone.utc)
