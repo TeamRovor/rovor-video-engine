@@ -524,7 +524,11 @@ function start(){
      }
      return;
    }
-   busy=true;let fresh=null;
+   busy=true;
+   // Serialize the complete two-source refresh, not just the local gateway fetch.
+   // A slow cloud ledger read must not overlap another scheduled refresh.
+   try {
+   let fresh=null;
    // The main 24h HUD view has already fetched and validated this report.
    // Reuse it rather than make a second network request every ten seconds.
    const shared=window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT?.();
@@ -539,8 +543,7 @@ function start(){
        const data=await response.json(),age=Date.now()-Date.parse(data.snapshot_at);
        if(data.source==='local_omniroute_read_only_bridge'&&Array.isArray(data.connections)&&Number.isFinite(age)&&age>=-5000&&age<=15000)fresh=data;
      }
-   }catch{}finally{busy=false;}
-   if(fresh)busy=false;
+   }catch{}
    // Preserve only the last known provider/slot inventory through outages.
    // Never retain or display stale quota percentages as live.
    if(fresh)lastInventory={connections:fresh.connections,connection_slots:fresh.connection_slots,snapshot_at:fresh.snapshot_at};
@@ -560,6 +563,9 @@ function start(){
      const state=captureState(target);
      target.outerHTML=render(fresh||lastInventory,!!fresh,cloud);
      restoreState(slot(),state);
+   }
+   } finally {
+     busy=false;
    }
  }
  // Only the original placeholder triggers a new observer sync. Otherwise
