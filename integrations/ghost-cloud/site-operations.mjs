@@ -1,3 +1,47 @@
+/** Parse Groq's authenticated response headers as RPD evidence only.
+ * This is not proof of free billing, commercial rights, or current inference.
+ */
+export function readGroqRpd(headers, observedAt = Date.now()) {
+  if (!headers || typeof headers.get !== 'function' ||
+      !Number.isSafeInteger(observedAt) || observedAt <= 0) return null;
+  const integer = key => {
+    const text = headers.get(key);
+    return typeof text === 'string' && /^(0|[1-9][0-9]{0,8})$/.test(text)
+      ? Number(text) : null;
+  };
+  const limit = integer('x-ratelimit-limit-requests');
+  const remaining = integer('x-ratelimit-remaining-requests');
+  if (limit === null || limit < 1 || remaining === null || remaining > limit) return null;
+  const reset = headers.get('x-ratelimit-reset-requests');
+  if (typeof reset !== 'string' || reset.length > 48) return null;
+  const multipliers = {d: 86400000, h: 3600000, m: 60000, s: 1000};
+  const rank = {d: 4, h: 3, m: 2, s: 1};
+  const chunks = /(\d+(?:\.\d+)?)([dhms])/g;
+  let found, end = 0, lastRank = 5, milliseconds = 0;
+  while ((found = chunks.exec(reset)) !== null) {
+    if (found.index !== end || rank[found[2]] >= lastRank) return null;
+    const part = Number(found[1]);
+    if (!Number.isFinite(part)) return null;
+    milliseconds += part * multipliers[found[2]];
+    end = chunks.lastIndex;
+    lastRank = rank[found[2]];
+  }
+  if (!end || end !== reset.length || milliseconds <= 0 ||
+      milliseconds > 2 * 86400000 || !Number.isFinite(milliseconds)) return null;
+  const resetsAt = observedAt + Math.ceil(milliseconds);
+  if (!Number.isSafeInteger(resetsAt)) return null;
+  return {
+    unit: 'requests_per_day',
+    used: limit - remaining,
+    limit,
+    remaining,
+    resets_at: resetsAt,
+    observed_at: observedAt,
+    source: 'authenticated_groq_rpd_response_headers',
+    scope: 'provider_account'
+  };
+}
+
 // Bound to the existing owner-private Site; model eligibility remains in runtime.mjs.
 export function createCloudOperations(base, cloud) {
  // Register the immutable, bundled canonical feeder once. No browser or service caller
@@ -62,6 +106,29 @@ export function createCloudOperations(base, cloud) {
    admission:cfg[p.provider]?.enabled!==true&&env[cloud.PROVIDERS[p.provider][1]]?'disabled_pending_verification':p.admission,
    dispatch_gate:diagnosis?.providers?.find(g=>g.provider===p.provider)||null}));
   const checks=(await sql(env,'SELECT provider,observed_at,status,error_category FROM ghost_cloud_provider_checks').all()).results;
+  // This table is an additive migration, installed only by the owner in the
+  // existing private Site. An older deployment must show UNKNOWN, never 0%.
+  let quotaRows=[];
+  try{
+   quotaRows=(await sql(env,'SELECT provider,observed_at,unit,used,quota_limit,remaining,resets_at,source FROM ghost_cloud_provider_quota').all()).results;
+  }catch{
+   quotaRows=[];
+  }
+  const now=Date.now();
+  const observedQuota=provider=>{
+   if(provider!=='groq')return null;
+   const q=quotaRows.find(row=>row.provider===provider);
+   if(!q||q.unit!=='requests'||q.source!=='authenticated_groq_rpd_response_headers'||
+      !Number.isSafeInteger(q.observed_at)||q.observed_at>now+60000||
+      now-q.observed_at>90*60000||
+      !Number.isSafeInteger(q.quota_limit)||q.quota_limit<1||
+      !Number.isSafeInteger(q.used)||q.used<0||q.used>q.quota_limit||
+      !Number.isSafeInteger(q.remaining)||q.remaining!==q.quota_limit-q.used||
+      !Number.isSafeInteger(q.resets_at)||q.resets_at<=now)return null;
+   return {unit:'requests',status:'verified',used:q.used,limit:q.quota_limit,
+    remaining:q.remaining,resets_at:q.resets_at,observed_at:q.observed_at,
+    source:q.source,scope:'provider_account'};
+  };
   // Last-50 activity samples can hide older actionable review work. This
   // oldest-first index is bounded and contains metadata only, never output.
   const reviewCount=await sql(env,"SELECT COUNT(*) AS pending_count, MIN(finished_at) AS oldest_finished_at FROM ghost_cloud_attempts WHERE status='needs_review' AND human_review='not_recorded'").first();
@@ -70,7 +137,7 @@ export function createCloudOperations(base, cloud) {
    j.employee,j.task_id,j.title FROM ghost_cloud_attempts a JOIN ghost_cloud_jobs j ON a.job_id=j.id
    WHERE a.status='needs_review' AND a.human_review='not_recorded'
    ORDER BY COALESCE(a.finished_at,a.started_at) ASC,a.id ASC LIMIT 50`).all();
-  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null})),
+  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null)})),
    attempts:results,review_queue:{pending_count:reviewCount?.pending_count??0,
     oldest_finished_at:reviewCount?.oldest_finished_at??null,items:reviewItems}};
  }
@@ -121,14 +188,45 @@ export function createCloudOperations(base, cloud) {
   try{
    const response=await fetcher(url,{method:'GET',redirect:'manual',headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
    if(!response.ok){await response.body?.cancel();return {provider,status:'http_'+response.status};}
+   // Read authenticated provider quota headers without inferring limits from catalog entries.
+   const quotaObservation=provider==='groq'?readGroqRpd(response.headers,Date.now()):null;
    const data=await bounded(response,4194304),rows=data.data||data.models||data.result;
    if(!Array.isArray(rows))return {provider,status:'unrecognized_catalog'};
    const models=rows.filter(m=>m&&typeof(m.id||m.name)==='string').filter(m=>provider!=='openrouter'||(m.id.endsWith(':free')&&m.pricing?.prompt!=null&&m.pricing?.completion!=null&&Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0)).slice(0,20).map(m=>({
     id:String(m.id||m.name).slice(0,200),context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
     catalog_zero_price:provider==='openrouter'?true:null
    }));
-   return {provider,status:'catalog_received',observed_at:Date.now(),models,billing_verified:false,quota_verified:false,canary_verified:false};
+   return {provider,status:'catalog_received',observed_at:Date.now(),models,
+    ...(quotaObservation?{quota_observation:quotaObservation}:{}),
+    billing_verified:false,quota_verified:quotaObservation!==null,canary_verified:false};
   }catch(error){const message=String(error?.message||'');const category=/illegal invocation|illegal receiver/i.test(message)?'unbound_runtime_call':/not a function/i.test(message)?'missing_runtime_api':/timeout|timed out/i.test(message)?'timeout':/network|fetch|connect|dns|resolve/i.test(message)?'network':/abort/i.test(message)?'aborted':'runtime_or_catalog';return {provider,status:'catalog_unavailable',error_message:message.replaceAll(key,'[redacted]').replace(/[A-Za-z0-9_=\/-]{24,}/g,'[redacted]').slice(0,180),error_category:category,error_name:['TypeError','ReferenceError','TimeoutError','AbortError','SyntaxError','Error'].includes(error?.name)?error.name:'unknown'};}
+ }
+ async function recordInventory(env,provider,report) {
+  const observed=Number.isSafeInteger(report.observed_at)?report.observed_at:Date.now();
+  await sql(env,'INSERT INTO ghost_cloud_provider_checks(provider,observed_at,status,error_category) VALUES(?,?,?,?) ON CONFLICT(provider) DO UPDATE SET observed_at=excluded.observed_at,status=excluded.status,error_category=excluded.error_category',
+   provider,observed,report.status,report.error_category||null).run();
+  const q=report.quota_observation;
+  if(provider!=='groq'||report.status!=='catalog_received'||!q||
+     q.source!=='authenticated_groq_rpd_response_headers'||
+     q.unit!=='requests_per_day'||q.scope!=='provider_account'||
+     !Number.isSafeInteger(q.observed_at)||q.observed_at<=0||
+     !Number.isSafeInteger(q.limit)||q.limit<=0||
+     !Number.isSafeInteger(q.used)||q.used<0||q.used>q.limit||
+     !Number.isSafeInteger(q.remaining)||q.remaining!==q.limit-q.used||
+     !Number.isSafeInteger(q.resets_at)||q.resets_at<=q.observed_at)return;
+  try{
+   await sql(env,`INSERT INTO ghost_cloud_provider_quota(provider,observed_at,unit,used,quota_limit,remaining,resets_at,source)
+    VALUES(?,?,?,?,?,?,?,?)
+    ON CONFLICT(provider) DO UPDATE SET
+     observed_at=excluded.observed_at,unit=excluded.unit,used=excluded.used,
+     quota_limit=excluded.quota_limit,remaining=excluded.remaining,
+     resets_at=excluded.resets_at,source=excluded.source
+    WHERE excluded.observed_at>=ghost_cloud_provider_quota.observed_at`,
+    provider,q.observed_at,'requests',q.used,q.limit,q.remaining,q.resets_at,q.source).run();
+  }catch{
+   // An owner who has not applied the optional Site migration gets no meter.
+   // Never pretend a quota was durably recorded.
+  }
  }
  const tools=[
   {name:'rovor_cloud_workforce_status',description:'Read actual private cloud job/model/token receipts. Missing or disabled providers are explicit.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true}},
@@ -148,8 +246,7 @@ export function createCloudOperations(base, cloud) {
    // Persist its bounded public status so the existing HUD can report when
    // this exact provider was last checked rather than a stale historical row.
    const report=await inventory(env,args.provider);
-   await sql(env,'INSERT INTO ghost_cloud_provider_checks(provider,observed_at,status,error_category) VALUES(?,?,?,?) ON CONFLICT(provider) DO UPDATE SET observed_at=excluded.observed_at,status=excluded.status,error_category=excluded.error_category',
-    args.provider,Number.isSafeInteger(report.observed_at)?report.observed_at:Date.now(),report.status,report.error_category||null).run();
+   await recordInventory(env,args.provider,report);
    return report;
   }
   if(name==='rovor_cloud_control')return control(env,args.enabled);
@@ -297,7 +394,7 @@ export function createCloudOperations(base, cloud) {
      const body=await bounded(request);
      if(Object.keys(body).some(k=>!['operation','provider'].includes(k)))throw Error('invalid_service');
      if(body.operation==='status')return json(await status(env));
-     if(body.operation==='inventory'){const result=await inventory(env,body.provider);await sql(env,'INSERT INTO ghost_cloud_provider_checks(provider,observed_at,status,error_category) VALUES(?,?,?,?) ON CONFLICT(provider) DO UPDATE SET observed_at=excluded.observed_at,status=excluded.status,error_category=excluded.error_category',body.provider,Date.now(),result.status,result.error_category||null).run();return json(result);}
+     if(body.operation==='inventory'){const result=await inventory(env,body.provider);await recordInventory(env,body.provider,result);return json(result);}
      if(body.operation==='shift'){
       // A compiled scheduled Site registers the durable D1 shift ledger.
       // Reuse this authenticated route; never report a hosted wakeup as native.

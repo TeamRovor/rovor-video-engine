@@ -192,7 +192,7 @@ test('composer preserves applied migrations, emits schema-only SQL and string DB
   assert.equal(fs.readFileSync(path.join(dir,'drizzle/0000_hud.sql'),'utf8'),prior);
   const migration=fs.readFileSync(path.join(dir,'drizzle/0001_cloud_operations.sql'),'utf8');assert.match(migration,/statement-breakpoint/);assert.doesNotMatch(migration,/(^|\n)\s*(INSERT|UPDATE|DELETE|DROP|ALTER)\b/);
    assert.match(migration,/ghost_cloud_reviews \(id TEXT PRIMARY KEY,attempt_id TEXT NOT NULL UNIQUE REFERENCES ghost_cloud_attempts\(id\)/);
-  const db=new DatabaseSync(':memory:');db.exec(migration);assert.equal(db.prepare('SELECT count(*) n FROM ghost_cloud_control').get().n,0);db.close();
+  const db=new DatabaseSync(':memory:');db.exec(migration);assert.equal(db.prepare('SELECT count(*) n FROM ghost_cloud_control').get().n,0);assert.equal(db.prepare('SELECT count(*) n FROM ghost_cloud_provider_quota').get().n,0);db.close();
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
 
@@ -386,4 +386,57 @@ test('hosted authenticated service shifts use registered durable runner only',as
  assert.equal(body.shift.reason,'no_unattempted_jobs');
  assert.equal(body.result.dispatched,0);
  assert.equal(invoked,1);
+});
+
+test('fresh Groq RPD observation flows into the existing HUD status without enabling dispatch',async t=>{
+ const {env,db,ops}=setup();db.exec(read('quota-observations.sql'));
+ const hdr=new Headers({
+  'x-ratelimit-limit-requests':'1000',
+  'x-ratelimit-remaining-requests':'997',
+  'x-ratelimit-reset-requests':'2h'
+ });
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  assert.equal(url,'https://api.groq.com/openai/v1/models');
+  assert.equal(options.method,'GET');
+  assert.equal(options.redirect,'manual');
+  return Response.json({data:[{id:'openai/gpt-oss-20b'}]}, {headers:hdr});
+ });
+ const result=await rpc(ops,env,'rovor_provider_inventory',{provider:'groq'});
+ assert.equal(result.status,'catalog_received');
+ assert.equal(result.quota_verified,true);
+ assert.equal(result.billing_verified,false);
+ assert.equal(result.canary_verified,false);
+ const persisted=db.prepare('SELECT * FROM ghost_cloud_provider_quota').get();
+ assert.equal(persisted.provider,'groq');
+ assert.equal(persisted.used,3);
+ assert.equal(persisted.remaining,997);
+ const snapshot=await ops.status(env);
+ const groq=snapshot.providers.find(p=>p.provider==='groq');
+ assert.equal(groq.quota.status,'verified');
+ assert.equal(groq.quota.used,3);
+ assert.equal(groq.quota.limit,1000);
+ assert.equal(groq.quota.unit,'requests');
+ assert.equal(groq.quota.source,'authenticated_groq_rpd_response_headers');
+ assert.equal(groq.admission,'disabled_pending_verification');
+ assert.equal(snapshot.providers.filter(p=>p.quota!==null).length,1);
+ assert.equal(JSON.stringify(snapshot).includes('test-authenticated-slot-token'),false);
+ db.prepare('UPDATE ghost_cloud_provider_quota SET observed_at=? WHERE provider=?').run(Date.now()-91*60000,'groq');
+ assert.equal((await ops.status(env)).providers.find(p=>p.provider==='groq').quota,null);
+ db.prepare('UPDATE ghost_cloud_provider_quota SET observed_at=? , resets_at=? WHERE provider=?').run(Date.now()-600000,Date.now()-1,'groq');
+ assert.equal((await ops.status(env)).providers.find(p=>p.provider==='groq').quota,null);
+});
+test('existing private Site without quota migration continues to render unknown, not zero',async t=>{
+ const {env,db,ops}=setup();
+ const hdr=new Headers({
+  'x-ratelimit-limit-requests':'1000',
+  'x-ratelimit-remaining-requests':'999',
+  'x-ratelimit-reset-requests':'3m'
+ });
+ t.mock.method(globalThis,'fetch',async()=>Response.json({data:[{id:'openai/gpt-oss-20b'}]},{headers:hdr}));
+ const report=await rpc(ops,env,'rovor_provider_inventory',{provider:'groq'});
+ assert.equal(report.status,'catalog_received');
+ assert.equal(report.quota_verified,true);
+ assert.equal(db.prepare('SELECT count(*) n FROM ghost_cloud_provider_checks').get().n,1);
+ const snapshot=await ops.status(env);
+ assert.equal(snapshot.providers.find(p=>p.provider==='groq').quota,null);
 });
