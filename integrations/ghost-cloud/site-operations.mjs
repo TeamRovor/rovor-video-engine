@@ -210,7 +210,32 @@ export function createCloudOperations(base, cloud) {
    const section=el('section');section.id='rovor-cloud-live';section.className='wl-card';
    section.append(el('strong','CLOUD EMPLOYEES · '+(data.enabled?'DISPATCH ENABLED':'DISPATCH PAUSED')));
    const pause=el('button',data.enabled?'PAUSE':'RESUME');pause.className='wl-button';pause.onclick=async()=>{try{const r=await fetch('/api/ghost/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!data.enabled})});if(!r.ok)throw Error('control_unavailable');await poll();}catch{disconnect();}};section.append(pause);
-   for(const p of data.providers){const last=data.attempts.find(a=>a.provider===p.provider);section.append(el('p',p.provider+' · '+p.admission+(last?' · '+last.status:' · no execution receipt')+(p.dispatch_gate?' · current claim gate: '+p.dispatch_gate.reason.replaceAll('_',' ')+(Number.isSafeInteger(p.dispatch_gate.next_eligible_at)?' · next eligible '+new Date(p.dispatch_gate.next_eligible_at).toLocaleString():''):' · claim gate unknown')+(p.last_check?' · provider check: '+p.last_check.status+(p.last_check.error_category?' ('+p.last_check.error_category+')':'')+' · '+new Date(p.last_check.observed_at).toLocaleString():' · provider not checked')));}
+   for(const p of data.providers){
+    const last=data.attempts.find(a=>a.provider===p.provider);
+    const card=el('div');card.className='wl-card';
+    card.append(el('strong',p.provider.toUpperCase()+' · '+p.admission));
+    const observed=Number.isSafeInteger(p.recorded_24h?.requests)&&p.recorded_24h.requests>=0?p.recorded_24h.requests:null;
+    card.append(el('p','RECORDED CLOUD REQUESTS (24H) · '+(observed===null?'not reported':observed)+
+     (last?' · latest attempt '+last.status:' · no recorded inference attempt')));
+    const limit=p.quota;
+    const verified=limit?.status==='verified'&&limit.unit==='requests'&&
+     Number.isSafeInteger(limit.used)&&limit.used>=0&&Number.isSafeInteger(limit.limit)&&limit.limit>0&&
+     limit.used<=limit.limit&&Number.isSafeInteger(limit.observed_at)&&
+     limit.observed_at<=Date.now()+60000&&Date.now()-limit.observed_at<=90*60000;
+    if(verified){
+     card.append(el('p','VERIFIED PROVIDER REQUEST ALLOWANCE · '+limit.used+' / '+limit.limit+' used'+
+      (Number.isSafeInteger(limit.resets_at)&&limit.resets_at>Date.now()?
+        ' · resets '+new Date(limit.resets_at).toLocaleString():' · reset time unknown')));
+     const meter=el('progress');meter.max=limit.limit;meter.value=limit.used;
+     meter.style.accentColor='#4cc9ff';meter.style.width='100%';
+     meter.setAttribute('aria-label',p.provider+' verified request allowance used');
+     card.append(meter);
+    }else card.append(el('p','USAGE LIMIT UNKNOWN · quota and reset not verified'));
+    card.append(el('p',(p.dispatch_gate?'Claim gate: '+p.dispatch_gate.reason.replaceAll('_',' ')+
+      (Number.isSafeInteger(p.dispatch_gate.next_eligible_at)?' · next eligible '+new Date(p.dispatch_gate.next_eligible_at).toLocaleString():''):'Claim gate unknown')+
+     (p.last_check?' · last catalog check '+p.last_check.status+' at '+new Date(p.last_check.observed_at).toLocaleString():' · catalog not checked')));
+    section.append(card);
+   }
    const old=document.getElementById(section.id);if(old)old.replaceWith(section);else panel.prepend(section);
    const results=el('section');results.id='rovor-cloud-results';
    const pending=data.review_queue.items,count=data.review_queue.pending_count;
