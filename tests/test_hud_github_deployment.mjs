@@ -58,20 +58,20 @@ test('private Worker serves tracked nine-meter script, but only to authenticated
       const path = new URL(req.url).pathname;
       return path === '/' ? new Response('<html><body>ROVOR_START_OMNIROUTE</body></html>',
         {headers:{'Content-Type':'text/html'}}) :
-        path === '/live-quota-board.js' ?
+        path === '/hud-quota.js' ?
           new Response('window.ROVOR_QUOTA_BOARD={}', {headers:{'Content-Type':'text/javascript'}}) :
           new Response('Not found', {status:404});
     }}};
   const send = (path, token) => handle(new Request('https://hud.example' + path, {
     headers: token ? {Authorization: 'Bearer ' + token} : {}
   }),env);
-  assert.equal((await send('/live-quota-board.js')).status,401);
+  assert.equal((await send('/hud-quota.js')).status,401);
   assert.equal((await send('/')).status,303);
-  assert.equal((await send('/live-quota-board.js',env.HUD_WRITER_TOKEN)).status,401);
+  assert.equal((await send('/hud-quota.js',env.HUD_WRITER_TOKEN)).status,401);
   assert.equal((await send('/',env.HUD_READER_TOKEN)).status,200);
   const html = await (await send('/',env.HUD_READER_TOKEN)).text();
   assert.match(html, /<script src="\/live-quota-board\.js"><\/script>/);
-  assert.equal((await send('/live-quota-board.js',env.HUD_READER_TOKEN)).status,200);
+  assert.equal((await send('/hud-quota.js',env.HUD_READER_TOKEN)).status,200);
 });
 
 test('readback requires actual auth and live assets, not mere deploy success', async () => {
@@ -82,8 +82,8 @@ test('readback requires actual auth and live assets, not mere deploy success', a
     if (!auth && path === '/') return new Response(null, {
       status:303,headers:{Location:'https://hud.example/login'}});
     if (!auth) return new Response('{}', {status:401});
-    if (path === '/') return new Response('<html><body>ROVOR_START_OMNIROUTE<script src="/live-quota-board.js"></script></body></html>');
-    if (path === '/live-quota-board.js')
+    if (path === '/') return new Response('<html><body>ROVOR_START_OMNIROUTE<script src="/hud-quota.js"></script></body></html>');
+    if (path === '/hud-quota.js')
       return new Response('window.ROVOR_QUOTA_BOARD={}; rvq-overview rvq-ring Mac requests / 24h');
     if (path === '/api/hud/status') return Response.json({
       source:'cloud_hud_telemetry',connection:'never_received',snapshot:null});
@@ -95,7 +95,7 @@ test('readback requires actual auth and live assets, not mere deploy success', a
   assert.equal(verified.all_nine_live_verified,false);
   await assert.rejects(() => verifyGithubHud({origin:'https://hud.example',
     readerToken:token, send:async (url,opts) => {
-      if (!opts.headers.Authorization && new URL(url).pathname==='/live-quota-board.js')
+      if (!opts.headers.Authorization && new URL(url).pathname==='/hud-quota.js')
         return new Response('PUBLIC', {status:200});
       return fetchOK(url,opts);
     }}), /anonymous_quota_asset/);
