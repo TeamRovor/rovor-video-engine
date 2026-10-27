@@ -109,6 +109,39 @@ class HostedShiftTests(unittest.TestCase):
         self.assertIn("::error title=ROVOR cloud scheduler not armed::", lines[1])
         self.assertNotIn(TOKEN, output.getvalue())
 
+    def test_short_present_service_secret_fails_closed_before_any_network_call(self):
+        output = io.StringIO()
+        # GitHub masks populated secrets even when they fail the contract.
+        short_secret = "present-but-short"
+        with patch.dict(os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": short_secret,
+                                     "GITHUB_ACTIONS": "true"}):
+            with patch.object(runner, "send_shift",
+                              side_effect=AssertionError("must not dispatch")) as send:
+                with contextlib.redirect_stdout(output):
+                    code = runner.main()
+        self.assertEqual(code, 2)
+        send.assert_not_called()
+        lines = output.getvalue().splitlines()
+        self.assertEqual(json.loads(lines[0]),
+                         {"state": "not_armed",
+                          "reason": "repository_service_secret_too_short",
+                          "dispatched": 0})
+        self.assertIn("at least 32 characters", lines[1])
+        self.assertNotIn(short_secret, output.getvalue())
+        self.assertNotIn("must not dispatch", output.getvalue())
+
+    def test_32_character_service_secret_reaches_guarded_sender(self):
+        token = "x" * 32
+        with patch.dict(os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": token}):
+            with patch.object(runner, "send_shift",
+                              return_value={"state": "executed", "dispatched": 0}) as send:
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    code = runner.main()
+        self.assertEqual(code, 0)
+        send.assert_called_once_with(token=token)
+        self.assertNotIn(token, output.getvalue())
+
     def test_safe_dispatch_failure_categories_are_visible_without_secrets(self):
         cases = [
             (urllib.error.URLError(socket.timeout("sensitive-token")), "private_service_timeout"),
