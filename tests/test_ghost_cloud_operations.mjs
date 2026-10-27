@@ -422,7 +422,7 @@ test('fresh Groq RPD observation flows into the existing HUD status without enab
  assert.equal(JSON.stringify(snapshot).includes('test-authenticated-slot-token'),false);
  db.prepare('UPDATE ghost_cloud_provider_quota SET observed_at=? WHERE provider=?').run(Date.now()-91*60000,'groq');
  assert.equal((await ops.status(env)).providers.find(p=>p.provider==='groq').quota,null);
- db.prepare('UPDATE ghost_cloud_provider_quota SET observed_at=? , resets_at=? WHERE provider=?').run(Date.now(),Date.now()-1,'groq');
+ db.prepare('UPDATE ghost_cloud_provider_quota SET observed_at=? , resets_at=? WHERE provider=?').run(Date.now()-600000,Date.now()-1,'groq');
  assert.equal((await ops.status(env)).providers.find(p=>p.provider==='groq').quota,null);
 });
 test('existing private Site without quota migration continues to render unknown, not zero',async t=>{
