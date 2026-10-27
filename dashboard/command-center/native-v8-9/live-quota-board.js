@@ -19,20 +19,46 @@ const resetText=s=>{
  const min=Math.ceil((t-Date.now())/60000);
  return prettyTime(s)+' · '+(min>=1440?Math.floor(min/1440)+'d '+Math.ceil((min%1440)/60)+'h':min>=60?Math.floor(min/60)+'h '+min%60+'m':min+'m')+' left';
 };
+// Pure presentation of an authenticated, already-vetted percentage.
+// A provider with missing or contradictory evidence receives NO filled ring.
+function usageRing(percent,label){
+ if(percent===null){
+  return '<div class="rvq-ring rvq-ring-unknown" role="img" aria-label="Provider quota unknown">'+
+   '<div class="rvq-ring-core"><strong>—</strong><small>UNKNOWN</small></div></div>';
+ }
+ const pct=percent.toFixed(1);
+ return '<div class="rvq-ring" role="progressbar" aria-label="'+esc(label)+
+  '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+
+  '" aria-valuetext="'+pct+' percent of verified allowance used" style="--rvq-angle:'+pct+'%">'+
+  '<div class="rvq-ring-core"><strong>'+pct+'%</strong><small>USED</small></div></div>';
+}
 function meter(q){
- const pct=Math.max(0,Math.min(100,Number(q.used_percent)||0));
- const left=Math.max(0,Number(q.total)-Number(q.used));
- const caution=pct>=90?' rvq-near-limit':'';
- return '<div class="rvq-model"><div class="rvq-model-head"><div class="rvq-model-name">'+esc(q.model_id)+'</div><div class="rvq-percent">'+pct.toFixed(1)+'%<span> USED</span></div></div>'+
- '<div class="rvq-track'+caution+'" role="progressbar" aria-label="Reported quota used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct.toFixed(1)+'"><i style="width:'+pct.toFixed(1)+'%"></i></div>'+
- '<div class="rvq-model-info"><div><span class="rvq-info-label">REMAINING ALLOWANCE</span><strong>'+fmt(left)+' / '+fmt(q.total)+' '+esc(q.unit)+'</strong></div><div><span class="rvq-info-label">RESET WINDOW</span><strong>'+esc(resetText(q.reset_at))+'</strong></div></div>'+
- '<div class="rvq-evidence">OMNIROUTE CACHED REPORT <span>·</span> '+esc(prettyTime(q.fetched_at))+' <span>·</span> Account '+fmt(q.account_slot)+'</div></div>';
+ const used=q?.used,total=q?.total;
+ if(!Number.isSafeInteger(used)||!Number.isSafeInteger(total)||
+    total<=0||used<0||used>total||
+    (q.used_percent!==undefined&&
+      (!Number.isFinite(q.used_percent)||Math.abs(q.used_percent-100*used/total)>0.11)))
+   return unknownModel(q);
+ const pct=100*used/total;
+ const remaining=total-used;
+ return '<div class="rvq-model"><div class="rvq-model-head"><div class="rvq-model-name">'+esc(q.model_id)+'</div></div>'+
+  '<div class="rvq-ring-layout">'+usageRing(pct,'Reported quota used')+
+  '<div class="rvq-ring-copy">'+
+  '<div><span class="rvq-info-label">REMAINING ALLOWANCE</span><strong>'+fmt(remaining)+' / '+fmt(total)+' '+esc(q.unit)+'</strong></div>'+
+  '<div><span class="rvq-info-label">RESET WINDOW</span><strong>'+esc(resetText(q.reset_at))+'</strong></div>'+
+  '<div class="rvq-evidence">OMNIROUTE CACHED REPORT · '+esc(prettyTime(q.fetched_at))+' · Account '+fmt(q.account_slot)+'</div>'+
+  '</div></div></div>';
 }
 function unknownModel(m){
- return '<div class="rvq-model"><div class="rvq-model-head"><div class="rvq-model-name">'+esc(m?.name||'Model allowance unavailable')+'</div><div class="rvq-unknown-tag">UNVERIFIED</div></div>'+
- '<div class="rvq-track rvq-unknown" role="img" aria-label="Provider quota unknown"></div>'+
- '<div class="rvq-model-info"><div><span class="rvq-info-label">REMAINING ALLOWANCE</span><strong>Unknown</strong></div><div><span class="rvq-info-label">RESET WINDOW</span><strong>Not reported</strong></div></div>'+
- (typeof m?.requests==='number'?'<div class="rvq-evidence">'+fmt(m.requests)+' recorded requests · not quota usage</div>':'')+'</div>';
+ return '<div class="rvq-model"><div class="rvq-model-head"><div class="rvq-model-name">'+
+  esc(m?.model_id||m?.name||'Model allowance unavailable')+
+  '</div><div class="rvq-unknown-tag">UNVERIFIED</div></div>'+
+  '<div class="rvq-ring-layout">'+usageRing(null)+
+  '<div class="rvq-ring-copy">'+
+  '<div><span class="rvq-info-label">REMAINING ALLOWANCE</span><strong>Unknown</strong></div>'+
+  '<div><span class="rvq-info-label">RESET WINDOW</span><strong>Not reported</strong></div>'+
+  (typeof m?.requests==='number'?'<div class="rvq-evidence">'+fmt(m.requests)+' recorded requests · not quota usage</div>':'')+
+  '</div></div></div>';
 }
 // One card per configured connection, not one card per provider family.
 // Public telemetry has only safe per-provider account ordinals; no keys or IDs.
@@ -84,9 +110,11 @@ function cloudEvidence(p){
  if(active&&Number.isSafeInteger(used)&&Number.isSafeInteger(limit)&&limit>0&&used>=0&&used<=limit&&
     (reset===null||(Number.isFinite(reset.getTime())&&reset.getTime()>Date.now()))){
    const pct=Math.max(0,Math.min(100,100*used/limit)).toFixed(1);
-   result.push('<span>Verified cloud limit · '+fmt(used)+' / '+fmt(limit)+' '+esc(q.unit||'units')+'</span>');
-   result.push('<div class="rvq-track" role="progressbar" aria-label="Verified cloud ledger quota used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><i style="width:'+pct+'%"></i></div>');
-   result.push('<span>Cloud reset: '+esc(reset?resetText(reset.toISOString()):'Not reported')+'</span>');
+   result.push('<div class="rvq-cloud-ring-layout">'+
+     usageRing(100*used/limit,'Verified cloud ledger quota used')+
+     '<div class="rvq-cloud-ring-copy"><span>Verified cloud limit · '+fmt(used)+' / '+fmt(limit)+' '+esc(q.unit||'units')+'</span>'+
+     '<span>Cloud reset: '+esc(reset?resetText(reset.toISOString()):'Not reported')+'</span>'+
+     '<span>Independent cloud account limit · not OmniRoute cached usage</span></div></div>');
  }else result.push('<span>Cloud quota and reset: unknown / not currently verified</span>');
  result.push('</div>');return result.join('');
 }
@@ -284,6 +312,24 @@ const css=`
 #rovor-workload-popup .rvq-job-title{margin:5px 0;color:#e3f6ff;font-weight:600;overflow-wrap:anywhere}
 #rovor-workload-popup .rvq-job-meta{color:#9abed3;font-size:10px;overflow-wrap:anywhere}
 
+/* Compact iOS-style activity rings: model quota only, never request share. */
+#rovor-workload-popup .rvq-ring-layout,#rovor-workload-popup .rvq-cloud-ring-layout{display:grid;grid-template-columns:96px minmax(0,1fr);gap:13px;align-items:center}
+#rovor-workload-popup .rvq-ring{--rvq-angle:0%;position:relative;display:grid;place-items:center;width:96px;height:96px;border-radius:50%;flex:none;background:conic-gradient(from -90deg,#69d8ff 0 var(--rvq-angle),#183c59 var(--rvq-angle) 100%);box-shadow:0 0 0 1px rgba(116,207,250,.3),0 0 15px rgba(46,143,211,.15)}
+#rovor-workload-popup .rvq-ring:before{content:"";position:absolute;inset:11px;border-radius:50%;background:#071e35;box-shadow:inset 0 0 0 1px rgba(111,182,223,.2)}
+#rovor-workload-popup .rvq-ring-core{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1}
+#rovor-workload-popup .rvq-ring-core strong{color:#f0fbff;font:700 18px/1 system-ui;font-variant-numeric:tabular-nums;white-space:nowrap}
+#rovor-workload-popup .rvq-ring-core small{color:#9ccbe7;font:700 8px/1 system-ui;letter-spacing:.11em}
+#rovor-workload-popup .rvq-ring-unknown{background:repeating-conic-gradient(from -90deg,#315b78 0deg 10deg,#142e46 10deg 20deg);box-shadow:0 0 0 1px rgba(116,207,250,.15)}
+#rovor-workload-popup .rvq-ring-unknown .rvq-ring-core strong{color:#afc8d7;font-size:22px}
+#rovor-workload-popup .rvq-ring-copy,#rovor-workload-popup .rvq-cloud-ring-copy{min-width:0;display:grid;gap:9px;color:#d9f3ff;font:11px/1.45 system-ui;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-ring-copy strong{display:block;color:#d9f3ff;font:600 11px/1.5 system-ui}
+#rovor-workload-popup .rvq-ring-copy .rvq-evidence{margin:0}
+#rovor-workload-popup .rvq-cloud-ring-layout{margin-top:10px;padding:9px 0;grid-template-columns:76px minmax(0,1fr)}
+#rovor-workload-popup .rvq-cloud-ring-layout .rvq-ring{width:76px;height:76px;box-shadow:0 0 0 1px rgba(116,207,250,.25)}
+#rovor-workload-popup .rvq-cloud-ring-layout .rvq-ring:before{inset:9px}
+#rovor-workload-popup .rvq-cloud-ring-layout .rvq-ring-core strong{font-size:15px}
+#rovor-workload-popup .rvq-cloud-ring-layout .rvq-ring-core small{font-size:7px}
+@media(max-width:380px){#rovor-workload-popup .rvq-ring-layout{grid-template-columns:80px minmax(0,1fr);gap:9px}#rovor-workload-popup .rvq-ring-layout .rvq-ring{width:80px;height:80px}#rovor-workload-popup .rvq-ring-layout .rvq-ring:before{inset:9px}#rovor-workload-popup .rvq-ring-layout .rvq-ring-core strong{font-size:15px}#rovor-workload-popup .rvq-ring-layout .rvq-ring-core small{font-size:7px}}
 #rovor-workload-popup .rvq-model-head{display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:12px}
 #rovor-workload-popup .rvq-model-name{font:600 12px/1.42 system-ui;color:#d7efff;overflow-wrap:anywhere;min-width:0}
 #rovor-workload-popup .rvq-percent{color:#c5efff;font:700 19px/1 system-ui;white-space:nowrap;font-variant-numeric:tabular-nums}
