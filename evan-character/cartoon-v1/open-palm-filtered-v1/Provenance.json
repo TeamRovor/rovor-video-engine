@@ -1,0 +1,17 @@
+{
+  "mode": "Existing built-in imagegen source reused; deterministic associated-RGBA minification filter",
+  "sourceArtwork": "../open-palm-ink-v1/source-v1.png",
+  "sourcePrompt": "../open-palm-ink-v1/Prompt-Set.md",
+  "sourceSha256": "c717b774eb0f1ad82a68287c0b6c756365b358a7ff5823aea08708f1ac6c6d0f",
+  "newArtworkGenerated": false,
+  "rawSourceByteExact": true,
+  "rawSourceAlphaModified": false,
+  "derivativeAlphaResampled": true,
+  "registrationPrefilter": {
+    "method": "Gaussian on associated RGBA before cubic affine minification",
+    "sigmaSourcePixels": 2.5557159520920507,
+    "rawSourceUnmodified": true,
+    "sourceAlphaCleaned": false,
+    "derivativeAlphaResampled": true
+  }
+}
