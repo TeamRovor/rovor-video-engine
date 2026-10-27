@@ -231,6 +231,7 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  assert.ok(script,'private HUD injects its live module');
  class Element {
   constructor(tag){this.tag=tag;this.id='';this.children=[];this.parent=null;this.textContent='';this.className='';this.style={};this.hidden=false;}
+  setAttribute(name,value){this[name]=value;}
   append(...items){for(const item of items){item.remove();item.parent=this;this.children.push(item);}}
   prepend(...items){for(const item of items.reverse()){item.remove();item.parent=this;this.children.unshift(item);}}
   remove(){if(this.parent){const i=this.parent.children.indexOf(this);if(i>=0)this.parent.children.splice(i,1);this.parent=null;}}
@@ -241,6 +242,8 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  const find=(node,id)=>node.id===id?node:node.children.map(child=>find(child,id)).find(Boolean)||null;
  const document={hidden:false,createElement:tag=>new Element(tag),getElementById:id=>find(root,id),addEventListener(){}};
  let tick,mode='ok',reads=0;const snapshot=await s.ops.status(s.env);
+ snapshot.providers[0].quota={status:'verified',unit:'requests',used:2,limit:10,observed_at:Date.now(),resets_at:Date.now()+60000};
+ snapshot.providers[0].recorded_24h={requests:3};
  const fetch=async()=>{reads++;if(mode==='offline')throw Error('network_down');
   if(mode==='invalid')return {ok:true,json:async()=>({providers:[],attempts:[]})};
   return {ok:true,json:async()=>snapshot};
@@ -253,6 +256,14 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  assert.ok(document.getElementById('rovor-cloud-results'));
  const visible=(node)=>[node.textContent,...node.children.flatMap(visible)].join(' ');
  assert.match(visible(document.getElementById('rovor-cloud-results')),/OWNER REVIEW QUEUE · 1 PENDING/);
+ const providerView=visible(document.getElementById('rovor-cloud-live'));
+ assert.match(providerView,/RECORDED CLOUD REQUESTS \(24H\) · 3/);
+ assert.match(providerView,/VERIFIED PROVIDER REQUEST ALLOWANCE · 2 \/ 10 used/);
+ assert.equal((providerView.match(/USAGE LIMIT UNKNOWN/g)||[]).length,8);
+ const progress=(node)=>[...(node.tag==='progress'?[node]:[]),...node.children.flatMap(progress)];
+ const bars=progress(document.getElementById('rovor-cloud-live'));
+ assert.equal(bars.length,1);assert.equal(bars[0].value,2);assert.equal(bars[0].max,10);
+
  assert.match(document.getElementById('rovor-cloud-link-state').textContent,/CLOUD LEDGER REACHABLE/);
  assert.match(document.getElementById('rovor-cloud-link-state').textContent,/reachability does not prove agents online/);
  mode='offline';await tick();await settled();
