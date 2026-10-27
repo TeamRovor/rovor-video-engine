@@ -262,7 +262,7 @@ def execute(state, job_id, payload, *, root=None, completion=None, catalog=None,
 def queue_health(conn, state, *, max_claims=144, interval=601, now=None):
     now = time.time() if now is None else now
     rows = conn.execute(
-        "SELECT e.timestamp,j.status,j.result FROM events e JOIN jobs j ON j.id=e.job_id "
+        "SELECT e.timestamp,j.id,j.status,j.result FROM events e JOIN jobs j ON j.id=e.job_id "
         "WHERE j.kind=? AND e.event='claimed' AND e.timestamp>=? "
         "ORDER BY e.timestamp DESC,e.id DESC", (worker.OMNI_KIND, now - 86400)).fetchall()
     failed = 0
@@ -275,12 +275,17 @@ def queue_health(conn, state, *, max_claims=144, interval=601, now=None):
             break
     counts = dict(conn.execute("SELECT status,count(*) FROM jobs WHERE kind=? GROUP BY status",
                                (worker.OMNI_KIND,)).fetchall())
+    import omniroute_circuit_recovery as recovery
+    failed_ids = [r["id"] for r in rows[:failed]]
+    released = failed >= 3 and recovery.release_is_valid(
+        conn, failed_ids, state=state, now=now)
     result = pacing.dispatch_decision(
         now=now, claims=[r['timestamp'] for r in rows], max_claims=max_claims,
         queued=counts.get('queued', 0), running=counts.get('running', 0),
         stopped=os.path.lexists(Path(state) / 'STOP'), circuit_open=failed >= 3,
         pace_seconds=interval)
     result['consecutive_recorded_failures'] = failed
+    result['recovery_canary_approved'] = released
     result['job_counts'] = counts
     return result
 
@@ -379,7 +384,15 @@ def tick(state, workspace, *, max_claims=144, interval=601, now=None,
         fleet = (verified_fleet_provider(queued['id'], json.loads(queued['payload']),
                                          time.time() if now is None else now)
                  if queued and verified_fleet_provider is not None else None)
-        route_blocked = False
+        # An incomplete callback is not legacy admission or authenticated capacity.
+        route_blocked = fleet is not None and not (
+            isinstance(fleet, dict)
+            and fleet.get('host_evidence_authenticated') is True
+            and type(fleet.get('independent_pool_limits', False)) is bool
+            and isinstance(fleet.get('task'), dict)
+            and isinstance(fleet.get('models'), list)
+            and isinstance(fleet.get('routes'), dict)
+            and isinstance(fleet.get('catalog'), list))
         if queued and fleet is None:
             # shortcut: catalog can change after preflight; execute rechecks before POST.
             import ghost_omniroute_job as gateway
@@ -406,8 +419,9 @@ def tick(state, workspace, *, max_claims=144, interval=601, now=None,
                       'review_status') == 'draft_ready_for_human_review')}
         if route_blocked:
             output['route_policy'] = 'requires_review_before_claim'
-        if (isinstance(fleet, dict)
-                and fleet.get('independent_pool_limits') is True):
+        if (not route_blocked and isinstance(fleet, dict)
+                and fleet.get('independent_pool_limits') is True
+                and fleet.get('host_evidence_authenticated') is True):
             output['dispatch_mode'] = 'verified_independent_pool_opt_in'
             output['dispatch'] = {
                 'reason': 'independent_pool_capacity_checked_per_claim',

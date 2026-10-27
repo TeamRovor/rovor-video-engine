@@ -4,6 +4,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 import ghost_worker as worker
@@ -38,6 +39,20 @@ class InstallerTests(unittest.TestCase):
         self.assertIn(str(self.state), self.proposed['ProgramArguments'])
         self.assertEqual(self.proposed['StartInterval'], 301)
         self.assertFalse(self.proposed['KeepAlive'])
+
+    def test_recovery_preserves_installed_continuous_budget_and_cadence(self):
+        config = dict(self.proposed)
+        args = list(config['ProgramArguments'])
+        args[args.index('--max-claims-per-day') + 1] = '50'
+        args[args.index('--min-interval-seconds') + 1] = '1730'
+        config.update(ProgramArguments=args, StartInterval=60)
+        proposed, _ = installer.build_config(config, self.root / 'recovery')
+        self.assertEqual(installer.configured_budget(proposed['ProgramArguments']), (50, 1730))
+        self.assertEqual(proposed['StartInterval'], 60)
+        for bad in (args + ['--max-claims-per-day', '144'],
+                    [x if x != '1730' else '1' for x in args]):
+            with self.assertRaises(ValueError):
+                installer.build_config({**config, 'ProgramArguments': bad}, self.root)
 
     def test_301_tick_aligns_with_601_pace_without_extra_daily_claims(self):
         import omniroute_dispatch_pacing as pacing
@@ -91,6 +106,25 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(self.plist.read_bytes(), self.blob)
         self.assertTrue((self.state / 'STOP').exists())
         self.assertEqual(count, 2)
+
+    def test_preflight_reports_circuit_and_route_blocks_without_mutation(self):
+        import ghost_omniroute_job as gateway
+        import omniroute_continuous as continuous
+        for index, key in enumerate(list(continuous.assignments())[:3]):
+            import json, time
+            job = worker.enqueue(self.conn, worker.OMNI_KIND, {'assignment': key}, key)
+            self.conn.execute("UPDATE jobs SET status='needs_review',result=? WHERE id=?",
+                (json.dumps({'draft_status': 'needs_review_no_auto_retry'}), job))
+            self.conn.execute("INSERT INTO events(job_id,event,detail,timestamp) VALUES(?,?,?,?)",
+                (job, 'claimed', '{}', time.time() - index))
+        before = (self.state / 'jobs.sqlite3').read_bytes()
+        with mock.patch.object(gateway, 'background_preflight', side_effect=ValueError('private error')):
+            blockers = installer.rollout_preflight(self.state, self.proposed)
+        self.assertEqual(blockers, ['failure_circuit_requires_review',
+                                  'background_route_or_gateway_auth_unverified'])
+        self.assertEqual(before, (self.state / 'jobs.sqlite3').read_bytes())
+        self.assertEqual(self.calls, [])
+        self.assertFalse((self.state / 'STOP').exists())
 
     def test_existing_stop_is_never_cleared(self):
         (self.state / 'STOP').write_text('owner pause')

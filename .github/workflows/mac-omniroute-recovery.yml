@@ -1,0 +1,38 @@
+name: Mac OmniRoute recovery safety
+on:
+  pull_request:
+    paths:
+      - tools/omniroute_continuous.py
+      - tools/ghost_worker.py
+      - tools/omniroute_dispatch_pacing.py
+      - tools/omniroute_circuit_recovery.py
+      - tests/test_omniroute_circuit_recovery.py
+      - tools/install_continuous_worker.py
+      - tools/mac_omniroute_recovery.py
+      - tests/test_omniroute_continuous.py
+      - tests/test_install_continuous_worker.py
+      - tests/test_mac_omniroute_recovery.py
+      - .github/workflows/mac-omniroute-recovery.yml
+permissions:
+  contents: read
+jobs:
+  safety:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Offline regression only, no model calls or live service changes
+        run: |
+          python -m unittest discover -s tests -p test_omniroute_circuit_recovery.py -q
+          python -m unittest discover -s tests -p test_omniroute_continuous.py -q
+          python -m unittest discover -s tests -p test_install_continuous_worker.py -q
+          python -m unittest discover -s tests -p test_mac_omniroute_recovery.py -q
+          python -m unittest discover -s tests -p test_omniroute_atomic_worker_hook.py -q
+          python -m unittest discover -s tests -p test_omniroute_direct_free_models.py -q
+          python -m unittest discover -s tests -p test_omniroute_model_reservation.py -q
+          python -m unittest discover -s tests -p test_omniroute_dispatch_pacing.py -q
