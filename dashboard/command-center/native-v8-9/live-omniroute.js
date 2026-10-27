@@ -75,6 +75,13 @@ window.ROVOR_START_OMNIROUTE=()=>{
     },
     resetPopup(){popupHost=null;filter='';selected='';quotaInspectionState=null;}
   };
+  // Stable bridge-only read API, not the legacy ROVOR_WORKLOAD global.
+  // No credentials or requests exposed. Never provide stale or non-24h quotas.
+  window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT=()=>{
+    if(period!=='24h'||!fresh()||!Array.isArray(snapshot?.connections))return null;
+    const age=Date.now()-Date.parse(snapshot.snapshot_at);
+    return age>=-5000&&age<=15000?snapshot:null;
+  };
   mountPreview(document.getElementById('workloadPanel'),()=>window.ROVOR_NATIVE.open('workload'));
   poll();
 };
