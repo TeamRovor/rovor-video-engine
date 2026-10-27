@@ -1,3 +1,47 @@
+/** Parse Groq's authenticated response headers as RPD evidence only.
+ * This is not proof of free billing, commercial rights, or current inference.
+ */
+export function readGroqRpd(headers, observedAt = Date.now()) {
+  if (!headers || typeof headers.get !== 'function' ||
+      !Number.isSafeInteger(observedAt) || observedAt <= 0) return null;
+  const integer = key => {
+    const text = headers.get(key);
+    return typeof text === 'string' && /^(0|[1-9][0-9]{0,8})$/.test(text)
+      ? Number(text) : null;
+  };
+  const limit = integer('x-ratelimit-limit-requests');
+  const remaining = integer('x-ratelimit-remaining-requests');
+  if (limit === null || limit < 1 || remaining === null || remaining > limit) return null;
+  const reset = headers.get('x-ratelimit-reset-requests');
+  if (typeof reset !== 'string' || reset.length > 48) return null;
+  const multipliers = {d: 86400000, h: 3600000, m: 60000, s: 1000};
+  const rank = {d: 4, h: 3, m: 2, s: 1};
+  const chunks = /(\d+(?:\.\d+)?)([dhms])/g;
+  let found, end = 0, lastRank = 5, milliseconds = 0;
+  while ((found = chunks.exec(reset)) !== null) {
+    if (found.index !== end || rank[found[2]] >= lastRank) return null;
+    const part = Number(found[1]);
+    if (!Number.isFinite(part)) return null;
+    milliseconds += part * multipliers[found[2]];
+    end = chunks.lastIndex;
+    lastRank = rank[found[2]];
+  }
+  if (!end || end !== reset.length || milliseconds <= 0 ||
+      milliseconds > 2 * 86400000 || !Number.isFinite(milliseconds)) return null;
+  const resetsAt = observedAt + Math.ceil(milliseconds);
+  if (!Number.isSafeInteger(resetsAt)) return null;
+  return {
+    unit: 'requests_per_day',
+    used: limit - remaining,
+    limit,
+    remaining,
+    resets_at: resetsAt,
+    observed_at: observedAt,
+    source: 'authenticated_groq_rpd_response_headers',
+    scope: 'provider_account'
+  };
+}
+
 // Bound to the existing owner-private Site; model eligibility remains in runtime.mjs.
 export function createCloudOperations(base, cloud) {
  // Register the immutable, bundled canonical feeder once. No browser or service caller
@@ -121,13 +165,17 @@ export function createCloudOperations(base, cloud) {
   try{
    const response=await fetcher(url,{method:'GET',redirect:'manual',headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
    if(!response.ok){await response.body?.cancel();return {provider,status:'http_'+response.status};}
+   // Read authenticated provider quota headers without inferring limits from catalog entries.
+   const quotaObservation=provider==='groq'?readGroqRpd(response.headers,Date.now()):null;
    const data=await bounded(response,4194304),rows=data.data||data.models||data.result;
    if(!Array.isArray(rows))return {provider,status:'unrecognized_catalog'};
    const models=rows.filter(m=>m&&typeof(m.id||m.name)==='string').filter(m=>provider!=='openrouter'||(m.id.endsWith(':free')&&m.pricing?.prompt!=null&&m.pricing?.completion!=null&&Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0)).slice(0,20).map(m=>({
     id:String(m.id||m.name).slice(0,200),context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
     catalog_zero_price:provider==='openrouter'?true:null
    }));
-   return {provider,status:'catalog_received',observed_at:Date.now(),models,billing_verified:false,quota_verified:false,canary_verified:false};
+   return {provider,status:'catalog_received',observed_at:Date.now(),models,
+    ...(quotaObservation?{quota_observation:quotaObservation}:{}),
+    billing_verified:false,quota_verified:quotaObservation!==null,canary_verified:false};
   }catch(error){const message=String(error?.message||'');const category=/illegal invocation|illegal receiver/i.test(message)?'unbound_runtime_call':/not a function/i.test(message)?'missing_runtime_api':/timeout|timed out/i.test(message)?'timeout':/network|fetch|connect|dns|resolve/i.test(message)?'network':/abort/i.test(message)?'aborted':'runtime_or_catalog';return {provider,status:'catalog_unavailable',error_message:message.replaceAll(key,'[redacted]').replace(/[A-Za-z0-9_=\/-]{24,}/g,'[redacted]').slice(0,180),error_category:category,error_name:['TypeError','ReferenceError','TimeoutError','AbortError','SyntaxError','Error'].includes(error?.name)?error.name:'unknown'};}
  }
  const tools=[
