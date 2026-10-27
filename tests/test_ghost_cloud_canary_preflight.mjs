@@ -135,6 +135,27 @@ test('quota exhaustion blocks a new canary without a model request',async()=>{
  assert.equal(sqlite.prepare('SELECT count(*) n FROM ghost_cloud_attempts').get().n,1);
 });
 
+test('canary accepts only the exact marker with harmless surrounding whitespace',async()=>{
+ const {env,sqlite}=setup(),cfg=config('openrouter'),a=approval('openrouter',cfg);
+ const out=await runCanary({provider:'openrouter',cfg,env,approval:a,now:NOW,
+  fetcher:async()=>success(' \\n  '+marker(a)+'  \\r\\n',cfg.model)});
+ assert.equal(out.status,'needs_review');
+ assert.equal(out.actual_model,cfg.model);
+ assert.equal(out.human_review,'not_recorded');
+ assert.equal(sqlite.prepare('SELECT output FROM ghost_cloud_attempts').get().output,null);
+});
+test('canary still rejects extra text, markdown wrappers and wrong markers',async()=>{
+ for(const text of ['Here is '+marker(approval()),'\\x60'+marker(approval())+'\\x60',
+                  marker(approval())+' extra',marker(approval()).replace('CANARY','CANARX')]){
+  const {env,sqlite}=setup(),cfg=config(),a=approval();
+  const out=await runCanary({provider:'groq',cfg,env,approval:a,now:NOW,
+   fetcher:async()=>success(text,cfg.model)});
+  assert.equal(out.status,'failed');
+  assert.equal(out.reason,'canary_mismatch');
+  assert.equal(out.canary_sha256,null);
+  assert.equal(sqlite.prepare('SELECT output FROM ghost_cloud_attempts').get().output,null);
+ }
+});
 test('HTTP429, model mismatch and malformed responses are never canary-verified',async()=>{
  for(const [reply,expected] of [
   [new Response('secret response',{status:429}),'rate_limited'],
