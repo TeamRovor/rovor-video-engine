@@ -80,7 +80,7 @@ function inferenceGroqRpd(headers, observedAt) {
  if(limit===null||limit<1||remaining===null||remaining>limit||
     typeof reset!=='string'||reset.length>48)return null;
  const multiplier={d:86400000,h:3600000,m:60000,s:1000};
- const rank={d:4,h:3,m:2,s:1},matches=/(\\d+(?:\\.\\d+)?)([dhms])/g;
+ const rank={d:4,h:3,m:2,s:1},matches=/(\d+(?:\.\d+)?)([dhms])/g;
  let match,end=0,lastRank=5,ms=0;
  while((match=matches.exec(reset))!==null){
   if(match.index!==end||rank[match[2]]>=lastRank)return null;
