@@ -63,22 +63,25 @@ async function main(){
   // Nine overview tiles remain visible and independent of detailed model rows.
   assert.equal(await evalJS('return document.querySelectorAll(".rvq-overview-tile").length'),9);
   if(name==='iphone-portrait'){
-    // A user reviewing a provider must not lose the expanded state, focus, or
-    // trigger a second redundant 24h query every time the quota board refreshes.
+    // The original workload module may replace its own global; the shared
+    // read-only snapshot hook must remain independent and correctly scoped.
+    assert(await evalJS('return !!window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT?.()'),
+      '24h live snapshot hook must survive legacy workload module initialization');
+    // A user reviewing a provider must not lose expanded state or keyboard
+    // focus, even if both the popup and quota board refresh during inspection.
     assert(await evalJS('return !!document.querySelector(".rvq-more summary")'));
-    await evalJS('window.__quotaDiag=[];const q=window.ROVOR_QUOTA_BOARD;const cap=q.captureState,res=q.restoreState;q.captureState=function(...a){const x=cap(...a);window.__quotaDiag.push(["capture",x?.details?.length??null]);return x};q.restoreState=function(...a){window.__quotaDiag.push(["restore",a[1]?.details?.length??null]);return res(...a)};return true');
     const baseline=await evalJS('return performance.getEntriesByType("resource").filter(e=>e.name.includes("/api/hud/omniroute?period=24h")).length');
     await evalJS('const s=document.querySelector(".rvq-more summary");s.click();s.focus();return true');
-    const diagnostic=()=>evalJS('return {rings:document.querySelectorAll(".rvq-provider").length,more:document.querySelectorAll(".rvq-more").length,open:document.querySelectorAll(".rvq-more[open]").length,focus:document.activeElement?.tagName,record:window.ROVOR_QUOTA_BOARD?.captureState?.(document),shared:!!window.ROVOR_WORKLOAD?.getQuotaSnapshot?.()}');
-    console.log('INSPECTION_T0',JSON.stringify(await diagnostic()));
-    await delay(6000);
-    console.log('INSPECTION_T6',JSON.stringify(await diagnostic()),JSON.stringify(await evalJS('return {trace:window.__quotaDiag.slice(-20),keys:Object.keys(window.ROVOR_WORKLOAD||{}),value:window.ROVOR_WORKLOAD?.getQuotaSnapshot?.()?.period??"none"}')));
-    await delay(5500);
-    console.log('INSPECTION_T11',JSON.stringify(await diagnostic()),JSON.stringify(await evalJS('return window.__quotaDiag.slice(-20)')));
-    assert(await evalJS('return !!document.querySelector(".rvq-more[open]")'),'expanded quota must survive all refreshes');
-    assert(await evalJS('return document.activeElement?.closest(".rvq-more")!==null'),'focused summary must survive refresh');
+    await delay(11500);
+    assert(await evalJS('return !!document.querySelector(".rvq-more[open]")'),
+      'expanded quota must survive all refreshes');
+    assert(await evalJS('return document.activeElement?.closest(".rvq-more")!==null'),
+      'focused summary must survive refresh');
     const requestsNow=await evalJS('return performance.getEntriesByType("resource").filter(e=>e.name.includes("/api/hud/omniroute?period=24h")).length');
     assert(requestsNow-baseline<=4,'duplicate quota polling detected');
+    await evalJS('document.querySelector(".rvq-more[open] summary").click();return true');
+    assert(await evalJS('return !document.querySelector(".rvq-more").open'),
+      'owner can close the expanded provider details');
   }
 
   assert(await evalJS('return document.querySelector("[role=meter]").getAttribute("aria-valuenow")==="70"'));
