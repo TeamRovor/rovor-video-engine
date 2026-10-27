@@ -7,7 +7,7 @@ const LOGIN = `<!doctype html><meta name="viewport" content="width=device-width"
 <p>Sign in to view private usage and employee reports on this device.</p>
 <form id="login"><label>HUD viewing key <input id="key" type="password" autocomplete="current-password" required></label> <button>Sign in</button></form>
 <p id="status" role="status"></p><script>document.getElementById('login').onsubmit=async e=>{e.preventDefault();const key=document.getElementById('key');try{const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:key.value})});key.value='';if(r.ok)location.replace('/');else document.getElementById('status').textContent='Sign-in failed.'}catch{document.getElementById('status').textContent='Connection unavailable.'}}</script>`;
-const CLOUD_START = `<script src="/live-quota-board.js"></script><script>document.getElementById('connectOmniRoute')?.remove();window.ROVOR_OMNIROUTE_REQUEST=(resource,opts)=>fetch(resource,{...opts,credentials:'same-origin'});window.ROVOR_START_OMNIROUTE?.();window.ROVOR_QUOTA_BOARD?.start?.();</script>`;
+const CLOUD_START = `<script src="/hud-quota.js"></script><script>document.getElementById('connectOmniRoute')?.remove();window.ROVOR_OMNIROUTE_REQUEST=(resource,opts)=>fetch(resource,{...opts,credentials:'same-origin'});window.ROVOR_START_OMNIROUTE?.();window.ROVOR_QUOTA_BOARD?.start?.();</script>`;
 const response = (status, body) => Response.json(body, {status, headers: {
   'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
@@ -260,6 +260,12 @@ export async function handle(request, env, now = Date.now()) {
       return response(200, {accepted: results[0].meta.changes > 0, observed_at: doc.snapshot_at});
     }
     if (ingest) return response(405, {error: 'method_not_allowed'});
+    // Standalone Cloudflare host: map the original Site quota URL to the
+    // *tracked* GitHub asset. The owner-private ChatGPT Site adapter still
+    // owns this same URL separately, so neither hosting path breaks.
+    if (request.method === 'GET' && url.pathname === '/hud-quota.js' && env.ASSETS) {
+      return env.ASSETS.fetch(new Request(new URL('/live-quota-board.js', url.origin), request));
+    }
     if (request.method === 'GET' && ['/api/hud/status', '/api/hud/omniroute'].includes(url.pathname)) {
       const period = url.searchParams.get('period') || '24h';
       if (!PERIODS.has(period)) return response(400, {error: 'period_invalid'});
