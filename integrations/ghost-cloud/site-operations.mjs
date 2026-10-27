@@ -231,8 +231,8 @@ export function createCloudOperations(base, cloud) {
      meter.setAttribute('aria-label',p.provider+' verified request allowance used');
      card.append(meter);
     }else card.append(el('p','USAGE LIMIT UNKNOWN · quota and reset not verified'));
-    card.append(el('p',(p.dispatch_gate?'Claim gate: '+p.dispatch_gate.reason.replaceAll('_',' ')+
-      (Number.isSafeInteger(p.dispatch_gate.next_eligible_at)?' · next eligible '+new Date(p.dispatch_gate.next_eligible_at).toLocaleString():''):'Claim gate unknown')+
+    card.append(el('p',(p.dispatch_gate?'current claim gate: '+p.dispatch_gate.reason.replaceAll('_',' ')+
+      (Number.isSafeInteger(p.dispatch_gate.next_eligible_at)?' · next eligible '+new Date(p.dispatch_gate.next_eligible_at).toLocaleString():''):'current claim gate unknown')+
      (p.last_check?' · last catalog check '+p.last_check.status+' at '+new Date(p.last_check.observed_at).toLocaleString():' · catalog not checked')));
     section.append(card);
    }
