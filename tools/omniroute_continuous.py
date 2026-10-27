@@ -379,7 +379,15 @@ def tick(state, workspace, *, max_claims=144, interval=601, now=None,
         fleet = (verified_fleet_provider(queued['id'], json.loads(queued['payload']),
                                          time.time() if now is None else now)
                  if queued and verified_fleet_provider is not None else None)
-        route_blocked = False
+        # An incomplete callback is not legacy admission or authenticated capacity.
+        route_blocked = fleet is not None and not (
+            isinstance(fleet, dict)
+            and fleet.get('host_evidence_authenticated') is True
+            and type(fleet.get('independent_pool_limits', False)) is bool
+            and isinstance(fleet.get('task'), dict)
+            and isinstance(fleet.get('models'), list)
+            and isinstance(fleet.get('routes'), dict)
+            and isinstance(fleet.get('catalog'), list))
         if queued and fleet is None:
             # shortcut: catalog can change after preflight; execute rechecks before POST.
             import ghost_omniroute_job as gateway
@@ -406,8 +414,9 @@ def tick(state, workspace, *, max_claims=144, interval=601, now=None,
                       'review_status') == 'draft_ready_for_human_review')}
         if route_blocked:
             output['route_policy'] = 'requires_review_before_claim'
-        if (isinstance(fleet, dict)
-                and fleet.get('independent_pool_limits') is True):
+        if (not route_blocked and isinstance(fleet, dict)
+                and fleet.get('independent_pool_limits') is True
+                and fleet.get('host_evidence_authenticated') is True):
             output['dispatch_mode'] = 'verified_independent_pool_opt_in'
             output['dispatch'] = {
                 'reason': 'independent_pool_capacity_checked_per_claim',
