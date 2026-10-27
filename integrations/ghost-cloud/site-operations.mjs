@@ -142,7 +142,16 @@ export function createCloudOperations(base, cloud) {
   const allowed={rovor_cloud_workforce_status:[],rovor_provider_inventory:['provider'],rovor_cloud_control:['enabled'],rovor_cloud_replenish:[],rovor_cloud_tick:[],rovor_cloud_canary:['canary_id']};
   if(!args||typeof args!=='object'||Array.isArray(args)||Object.keys(args).some(k=>!allowed[name].includes(k)))throw Error('invalid_arguments');
   if(name==='rovor_cloud_workforce_status')return status(env);
-  if(name==='rovor_provider_inventory')return inventory(env,args.provider);
+  if(name==='rovor_provider_inventory'){
+   // A successful read of an external catalog is operational monitoring
+   // evidence, not proof of billing, free eligibility or a live model call.
+   // Persist its bounded public status so the existing HUD can report when
+   // this exact provider was last checked rather than a stale historical row.
+   const report=await inventory(env,args.provider);
+   await sql(env,'INSERT INTO ghost_cloud_provider_checks(provider,observed_at,status,error_category) VALUES(?,?,?,?) ON CONFLICT(provider) DO UPDATE SET observed_at=excluded.observed_at,status=excluded.status,error_category=excluded.error_category',
+    args.provider,Number.isSafeInteger(report.observed_at)?report.observed_at:Date.now(),report.status,report.error_category||null).run();
+   return report;
+  }
   if(name==='rovor_cloud_control')return control(env,args.enabled);
   if(name==='rovor_cloud_replenish')return replenish(env);
   if(name==='rovor_cloud_tick')return cloud.tick(env);
