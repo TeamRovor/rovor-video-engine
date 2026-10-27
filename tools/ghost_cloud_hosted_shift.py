@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import json
 import os
+import socket
+import ssl
 import sys
 import urllib.error
 import urllib.request
@@ -98,8 +100,31 @@ def main() -> int:
         # No exception body; never follow auth redirects or echo private data.
         print(json.dumps({"state": "dispatch_failed", "http_status": error.code}))
         return 1
+    except urllib.error.URLError as error:
+        # The URL, server exception, TLS details and any credential are private.
+        if isinstance(error.reason, (socket.timeout, TimeoutError)):
+            reason = "private_service_timeout"
+        elif isinstance(error.reason, ssl.SSLError):
+            reason = "private_service_tls_failure"
+        else:
+            reason = "private_service_connection_failure"
+        print(json.dumps({"state": "dispatch_failed", "reason": reason}))
+        return 1
+    except (socket.timeout, TimeoutError):
+        print(json.dumps({"state": "dispatch_failed", "reason": "private_service_timeout"}))
+        return 1
+    except ValueError as error:
+        # Whitelist only local parser codes. Never print arbitrary exception text.
+        reason = str(error)
+        if reason not in {
+            "unexpected_http_status", "response_too_large",
+            "non_json_receipt", "invalid_shift_receipt",
+        }:
+            reason = "private_service_validation_failure"
+        print(json.dumps({"state": "dispatch_failed", "reason": reason}))
+        return 1
     except Exception:
-        print(json.dumps({"state": "dispatch_failed", "reason": "private_service_unavailable_or_bad_receipt"}))
+        print(json.dumps({"state": "dispatch_failed", "reason": "private_service_unknown_failure"}))
         return 1
     print(json.dumps(result, sort_keys=True))
     return 0
