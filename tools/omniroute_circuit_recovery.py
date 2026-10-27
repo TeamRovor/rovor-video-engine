@@ -149,7 +149,7 @@ def main():
         if len(ids) != 3:
             raise SystemExit('Three consecutive failed jobs are not present.')
         receipt = release(conn, state)
-        print(json.dumps({'released': True, 'reviewed_job_ids': receipt['reviewed_job_ids'],
+        print(json.dumps({'recovery_canary_approved': True, 'reviewed_job_ids': receipt['reviewed_job_ids'],
                           'model_requests': 0}, sort_keys=True))
     except ValueError as exc:
         raise SystemExit(f'Circuit recovery blocked: {exc}') from None
