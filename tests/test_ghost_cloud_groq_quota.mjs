@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readGroqRpd} from '../integrations/ghost-cloud/groq-quota.mjs';
+import {readGroqRpd} from '../integrations/ghost-cloud/site-operations.mjs';
 
 const now = 1793074000000;
 const good = () => new Headers({
