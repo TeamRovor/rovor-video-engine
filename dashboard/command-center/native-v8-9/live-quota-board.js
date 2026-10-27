@@ -38,7 +38,7 @@ const resetText=s=>{
 };
 // Pure presentation of an authenticated, already-vetted percentage.
 // A provider with missing or contradictory evidence receives NO filled ring.
-function usageRing(percent,label){
+function usageRing(percent,label,kind='quota'){
  if(percent===null){
   return '<div class="rvq-ring rvq-ring-unknown" role="img" aria-label="Provider quota unknown">'+
    '<div class="rvq-ring-core"><strong>—</strong><small>UNKNOWN</small></div></div>';
@@ -46,8 +46,8 @@ function usageRing(percent,label){
  const pct=percent.toFixed(1);
  return '<div class="rvq-ring" role="progressbar" aria-label="'+esc(label)+
   '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+
-  '" aria-valuetext="'+pct+' percent of verified allowance used" style="--rvq-angle:'+pct+'%">'+
-  '<div class="rvq-ring-core"><strong>'+pct+'%</strong><small>USED</small></div></div>';
+  '" aria-valuetext="'+pct+(kind==='activity'?' percent of recorded Mac requests':' percent of verified allowance used')+'" style="--rvq-angle:'+pct+'%">'+
+  '<div class="rvq-ring-core"><strong>'+pct+'%</strong><small>'+(kind==='activity'?'TRAFFIC':'USED')+'</small></div></div>';
 }
 function meter(q){
  const used=q?.used,total=q?.total;
@@ -213,7 +213,44 @@ function cloudEmployeeUsage(attempts,fresh){
    '<ul class="rvq-emp-grid">'+rows+'</ul></section>';
 }
 
-function card(group,quota,live,index,slot,cloud,attempts){
+// Source-authentic, complete 24-hour Mac request usage. A connection is not
+// proof of requests; zero means zero ONLY when the complete aggregate is fresh.
+// The public gateway usage model is provider-wide, not account-slot-attributed.
+function macActivity(data,live){
+ if(!live||data?.period!=='24h'||data?.usage_coverage!=='complete_aggregate'||
+    !Array.isArray(data.models)||!Number.isSafeInteger(data.request_count)||
+    data.request_count<0)return null;
+ let total=0;
+ const groups=new Map();
+ for(const model of data.models){
+   if(!model||typeof model.provider!=='string'||
+      !Number.isSafeInteger(model.requests)||model.requests<0||
+      !Number.isSafeInteger(model.tokens)||model.tokens<0)return null;
+   total+=model.requests;
+   if(!Number.isSafeInteger(total))return null;
+   const old=groups.get(model.provider)||{requests:0,tokens:0};
+   old.requests+=model.requests;old.tokens+=model.tokens;
+   if(!Number.isSafeInteger(old.requests)||!Number.isSafeInteger(old.tokens))return null;
+   groups.set(model.provider,old);
+ }
+ // Partial, inconsistent or mismatched aggregates must never produce fake
+ // per-provider zeros or percentages.
+ if(total!==data.request_count)return null;
+ return {total,groups};
+}
+function providerActivity(activity,provider){
+ if(!activity)return null;
+ const found=activity.groups.get(provider)||{requests:0,tokens:0};
+ return {...found,share:activity.total?100*found.requests/activity.total:0};
+}
+function activityLabel(activity,live){
+ if(!live||!activity)return '<div class="rvq-activity rvq-unreported">MAC 24H REQUESTS · not currently verified</div>';
+ return '<div class="rvq-activity">MAC 24H PROVIDER TOTAL · <strong>'+fmt(activity.requests)+
+   ' requests</strong> · '+fmt(activity.tokens)+' reported tokens'+
+   '<span>Per-provider aggregate; not an account-slot counter or remaining quota</span></div>';
+}
+
+function card(group,quota,live,index,slot,cloud,attempts,activity){
  const entries=live&&slot.enabled!==false?quota.filter(q=>q.provider===group.provider&&q.account_slot===slot.account_slot&&
    (!q.reset_at||Date.parse(q.reset_at)>Date.now())):[];
  const rows=entries.map(meter);
@@ -223,12 +260,12 @@ function card(group,quota,live,index,slot,cloud,attempts){
  const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
  return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
- '<div class="rvq-provider-content">'+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
+ '<div class="rvq-provider-content">'+activityLabel(activity,live)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
 }
 
 // Nine-provider glance cards are a visualization of one explicitly labeled
 // validated quota source per slot. They never sum Mac and cloud counters.
-function overviewSlot(slot,quota,live,cloud,index){
+function overviewSlot(slot,quota,live,cloud,index,activity){
  const local=live&&slot.enabled!==false?quota.find(q=>q.provider===slot.group.provider&&
    q.account_slot===slot.account_slot&&Number.isSafeInteger(q.used)&&
    Number.isSafeInteger(q.total)&&q.total>0&&q.used>=0&&q.used<=q.total&&
@@ -244,10 +281,12 @@ function overviewSlot(slot,quota,live,cloud,index){
  const pct=local?100*local.used/local.total:verified?100*used/limit:null;
  const evidence=local?'MAC QUOTA CACHE':verified?'CLOUD LIMIT':'QUOTA UNKNOWN';
  const name=pretty(slot.group.name||slot.group.provider);
+ const traffic=activity?usageRing(activity.share,'Mac 24-hour recorded request share for '+name,'activity'):'';
  return '<div class="rvq-overview-tile" aria-label="'+esc(name)+' connection '+fmt(slot.account_slot)+' · '+evidence+'">'+
    '<span class="rvq-overview-name">'+esc(name)+'</span>'+
-   usageRing(pct,evidence+' for '+name)+
-   '<span class="rvq-overview-source">'+evidence+'</span></div>';
+   '<div class="rvq-overview-rings">'+usageRing(pct,evidence+' for '+name)+traffic+'</div>'+
+   '<span class="rvq-overview-source">'+evidence+'</span>'+
+   '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac requests / 24h':'Mac requests unverified')+'</span></div>';
 }
 function dispatchInfo(workforce,live){
  const d=live?workforce?.dispatch:null;
@@ -373,10 +412,16 @@ const css=`
 /* Visible nine-slot quota dashboard above verbose evidence panels. */
 #rovor-workload-popup .rvq-overview{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:7px;margin:0 0 15px}
 #rovor-workload-popup .rvq-overview-tile{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:start;gap:8px;padding:10px 4px 9px;border:1px solid rgba(83,159,211,.4);border-radius:11px;background:linear-gradient(145deg,#0c304e,#051b32);text-align:center}
+#rovor-workload-popup .rvq-overview-rings{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
+#rovor-workload-popup .rvq-overview-requests{color:#d4efff;font:700 9px/1.25 system-ui;text-align:center}
+#rovor-workload-popup .rvq-activity{margin:12px 0 0;color:#a2d9fa;font:700 10px/1.5 system-ui;letter-spacing:.03em}
+#rovor-workload-popup .rvq-activity strong{color:#e6faff}
+#rovor-workload-popup .rvq-activity span{display:block;color:#8ba9bc;font:10px/1.4 system-ui;letter-spacing:0}
+#rovor-workload-popup .rvq-activity.rvq-unreported{color:#8ba9bc}
 #rovor-workload-popup .rvq-overview-name{color:#d8f2ff;font:700 10px/1.35 system-ui;min-height:28px;max-width:100%;overflow-wrap:anywhere}
-#rovor-workload-popup .rvq-overview .rvq-ring{width:68px;height:68px}
+#rovor-workload-popup .rvq-overview .rvq-ring{width:47px;height:47px}
 #rovor-workload-popup .rvq-overview .rvq-ring:before{inset:8px}
-#rovor-workload-popup .rvq-overview .rvq-ring-core strong{font-size:13px}
+#rovor-workload-popup .rvq-overview .rvq-ring-core strong{font-size:11px}
 #rovor-workload-popup .rvq-overview .rvq-ring-core small{font-size:6px}
 #rovor-workload-popup .rvq-overview .rvq-ring-unknown .rvq-ring-core strong{font-size:16px}
 #rovor-workload-popup .rvq-overview-source{color:#91c3dd;font:700 8px/1.25 system-ui;letter-spacing:.06em;overflow-wrap:anywhere}
@@ -431,6 +476,7 @@ function render(data,live,cloud=null){
  const connections=Array.isArray(data?.connections)?data.connections:
    cloudFresh?cloud.providers.filter(p=>p?.credentials_configured===true&&typeof p.provider==='string')
      .map(p=>({provider:p.provider,name:p.provider,connection_count:1,enabled_count:0})) : [];
+ const activity=macActivity(data,live);
  const quota=live&&Array.isArray(data?.quota?.records)?data.quota.records.filter(q=>{const t=Date.parse(q?.fetched_at||'');const age=Date.now()-t;return Number.isFinite(age)&&age>=-5000&&age<=900000&&(!q.reset_at||Date.parse(q.reset_at)>Date.now());}):[];
  // Sanitized slot status is optional to preserve compatibility with older Mac reporters.
  // Never infer which specific account is enabled from a provider-level enabled count.
@@ -451,10 +497,10 @@ function render(data,live,cloud=null){
  '<div class="rvq-stat"><span class="rvq-stat-label">LIMIT REPORTS</span><strong class="rvq-stat-value">'+(live?quota.length:'—')+'</strong></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
- return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Each configured connection gets its own status and quota/reset meter. Actual inference is unverified without a model execution receipt.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':'REPORT DISCONNECTED')+'</span></div>'+
- (slots.length?'<div class="rvq-overview" aria-label="Nine-provider quota overview">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i)).join('')+'</div>':'')+summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
- '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+
- '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Local quota bars are cached gateway limits; separate cloud bars require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
+ return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Each connection shows independently labeled Mac request activity and quota/reset evidence. Traffic share is not remaining quota or proof of an employee executing.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':'REPORT DISCONNECTED')+'</span></div>'+
+ (slots.length?'<div class="rvq-overview" aria-label="Nine-provider quota overview">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider))).join('')+'</div>':'')+summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
+ '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts,providerActivity(activity,s.group.provider))).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+
+ '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Mac traffic percentages are shares of recorded provider requests, NOT quota usage. Local quota rings are cached gateway limits; separate cloud quota rings require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
 }
 // Preserve owner inspection context even when live evidence must be refreshed.
 function captureState(root){

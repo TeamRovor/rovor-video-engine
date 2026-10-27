@@ -60,6 +60,41 @@ test('verified cloud quota displays separate usage ring; expired evidence does n
  assert.doesNotMatch(expired,/--rvq-angle:12.0%/);
  assert.match(expired,/Cloud quota and reset: unknown/);
 });
+test('all nine configured providers show measured Mac requests separately from quota',()=>{
+ const rows=[{provider:'openrouter',name:'OpenRouter',connection_count:1,enabled_count:1},
+   {provider:'mistral',name:'Mistral',connection_count:1,enabled_count:1},
+   ...providers.filter(p=>!['openrouter','mistral'].includes(p)).map(provider=>({
+     provider,name:provider,connection_count:1,enabled_count:1}))];
+ const data={source:'local_omniroute_read_only_bridge',period:'24h',
+   snapshot_at:new Date().toISOString(),usage_coverage:'complete_aggregate',
+   request_count:4,connections:rows,
+   connection_slots:rows.map(g=>({provider:g.provider,account_slot:1,enabled:true})),
+   models:[{provider:'openrouter',requests:3,tokens:120},
+           {provider:'mistral',requests:1,tokens:10}],quota:{records:[]}};
+ const html=board().render(data,true,cloud());
+ assert.equal((html.match(/class="rvq-overview-tile"/g)||[]).length,9);
+ assert.equal((html.match(/percent of recorded Mac requests/g)||[]).length,9);
+ assert.match(html,/--rvq-angle:75\.0%/);
+ assert.match(html,/--rvq-angle:25\.0%/);
+ assert.match(html,/--rvq-angle:0\.0%/);
+ assert.match(html,/3 Mac requests \/ 24h/);
+ assert.match(html,/0 Mac requests \/ 24h/);
+ assert.match(html,/120 reported tokens/);
+ assert.match(html,/Per-provider aggregate; not an account-slot counter or remaining quota/);
+ assert.equal((html.match(/role="img" aria-label="Provider quota unknown"/g)||[]).length,18);
+});
+test('no fabricated zero requests when 24-hour completeness is absent',()=>{
+ const snapshot={period:'24h',request_count:8,usage_coverage:'partial',
+   connections:[{provider:'openrouter',name:'OpenRouter',connection_count:1,enabled_count:1}],
+   models:[{provider:'openrouter',requests:7,tokens:15}],quota:{records:[]}};
+ let html=board().render(snapshot,true);
+ assert.match(html,/Mac requests unverified/);
+ assert.doesNotMatch(html,/7 Mac requests \/ 24h/);
+ snapshot.usage_coverage='complete_aggregate'; // still inconsistent aggregate
+ html=board().render(snapshot,true);
+ assert.match(html,/Mac requests unverified/);
+ assert.doesNotMatch(html,/percent of recorded Mac requests/);
+});
 test('small-screen rings have responsive widths',()=>{
  assert.match(source,/max-width:380px/);
  assert.match(source,/grid-template-columns:80px minmax\(0,1fr\)/);
