@@ -94,6 +94,17 @@ def main() -> int:
         if os.environ.get("GITHUB_ACTIONS") == "true":
             print("::error title=ROVOR cloud scheduler not armed::Configure the ROVOR_GHOST_SERVICE_TOKEN Actions secret; zero cloud jobs were dispatched.")
         return 2
+    if len(token) < 32:
+        # This is a locally invalid GitHub Actions secret, not a Site outage.
+        # Do not emit the value, length, hash, prefix, or any header data.
+        print(json.dumps({
+            "state": "not_armed",
+            "reason": "repository_service_secret_too_short",
+            "dispatched": 0,
+        }))
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print("::error title=ROVOR cloud scheduler credential invalid::Replace the matching GitHub Actions and private Site service credentials with one dedicated secret of at least 32 characters. Zero cloud jobs were dispatched.")
+        return 2
     try:
         result = send_shift(token=token)
     except urllib.error.HTTPError as error:
