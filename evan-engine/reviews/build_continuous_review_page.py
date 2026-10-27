@@ -1,7 +1,8 @@
 """Local playback index; timing flags remain unresolved and unchanged."""
 from pathlib import Path
-import json,html,math,hashlib
-root=Path(__file__).resolve().parents[4];out=root/'outputs/evan-cartoon-continuous'
+import json,html,math,hashlib,sys
+root=Path(__file__).resolve().parents[4];out=(root/'outputs'/(sys.argv[1] if len(sys.argv)>1 else 'evan-cartoon-continuous')).resolve()
+if out.parent!=root/'outputs' or not out.is_dir():raise ValueError('Expected an existing review folder directly inside outputs')
 p=root/'work/engine/evan-engine/reviews/evan-reference-timing-v1.json';review=json.loads(p.read_text());words=review['words'];assert len(words)==18
 rows=[];markers=[]
 for w in words:

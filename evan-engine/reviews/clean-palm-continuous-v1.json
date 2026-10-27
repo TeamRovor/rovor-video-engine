@@ -1,0 +1,63 @@
+{
+  "frames": 552,
+  "updatedHandFrames": 532,
+  "closingFramesByteExact": 20,
+  "cachedRightHandRegionCalibrationExactFrames": 532,
+  "outsideRightHandRegionExactFrames": 532,
+  "faceLeftArmAndBrandExact": true,
+  "halfAlphaRightArmStageBoundsClearFrames": 532,
+  "minimumArmArea2": 135.35096196660686,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 552,
+      "sha256": "048ea8360c484f71928f8846336239fc04b717221a86ac05e38785f5ad404a91"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 2208,
+      "sha256": "e3a60a9fb8bbde6f5edeb897f9d8082ea394a7e18ede7e883634a0ee2b284c82"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 368000,
+    "decodedPcm16Samples": 368000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourceWavByteExact": true,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "sourceSha256": "aa1cb4988ec08d47865d9cd1787806440ef076898c916331751c84fb398a73e4",
+  "registeredSkinSha256": "fc387e3331450625dd0d9bc3435c4f3868a1817b7e01568c08e95d65f0140e37",
+  "fullFilmUpdated": true,
+  "defaultChanged": false,
+  "sourceAlphaModified": false,
+  "fingerArticulated": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "status": "full-length-registered-palm-review-verified",
+  "runtimeParent": "4001d4e24dcd518e0a2a9890f78faabb3233c4f4",
+  "nativeFramesSampledAndInspected": 100,
+  "overviewFramesInspected": 37,
+  "encodedNormalFramesInspected": [
+    69,
+    276,
+    374,
+    540
+  ],
+  "encodedSlowFramesInspected": [
+    276,
+    1496
+  ],
+  "pixelExactChecksApplyTo": "Rendered PNG frames before lossy H264 encoding",
+  "frameHashesVerified": 552,
+  "frameAuditJournalRowsVerified": 532,
+  "timingMarkersRetained": 18,
+  "flagsCleared": 0,
+  "sourceManifestSha256": "bdb45e71f852023fbffe66f69f4017baf587f45039613c581b67cd09253d4636",
+  "outlineTraceSha256": "e681ad168c8a1093fa2e457e562e2d70e33157544139eec7acec887e7f15db5d",
+  "defaultSceneChanged": false,
+  "productionAccepted": false,
+  "localOutput": "outputs/evan-cartoon-clean-palm-continuous",
+  "next": "Address visibly lighter right-hand ink: compare native source strokes, then one targeted heavier-ink source sibling if confirmed; no new cues or camera variants"
+}
