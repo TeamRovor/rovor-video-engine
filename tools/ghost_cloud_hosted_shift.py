@@ -87,7 +87,11 @@ def main() -> int:
             "reason": "repository_service_secret_not_configured",
             "dispatched": 0,
         }))
-        return 0
+        # A green scheduled Actions run with zero credentials is misleading:
+        # no Site call occurred and no cloud employees were dispatched.
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print("::error title=ROVOR cloud scheduler not armed::Configure the ROVOR_GHOST_SERVICE_TOKEN Actions secret; zero cloud jobs were dispatched.")
+        return 2
     try:
         result = send_shift(token=token)
     except urllib.error.HTTPError as error:
