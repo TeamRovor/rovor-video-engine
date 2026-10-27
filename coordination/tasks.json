@@ -5662,8 +5662,8 @@
       ],
       "depends_on": [],
       "updated_at": "2026-10-27T20:20:00Z",
-      "next_update": "After the bounded stale-source/PR-attribution fix and hosted HUD checks are read back.",
-      "next_action": "Improve the existing Pages-staged TEAM panel so failed GitHub polls cannot look newly verified and PR history is not silently truncated to 100 updated PRs; run team-contributions and Pages HUD checks. Keep GitHub evidence separate from private OmniRoute quota/reset and worker receipts. Do not claim private Site or Mac runtime verification.",
+      "next_update": "After PR #263 hosted checks complete and the existing HUD preview is reviewed.",
+      "next_action": "Improve the existing Pages-staged TEAM panel so failed GitHub polls cannot look newly verified; run team-contributions and Pages HUD checks. Keep GitHub evidence separate from private OmniRoute quota/reset and worker receipts. Do not claim private Site or Mac runtime verification.",
       "acceptance": "Document exact published HUD deployment SHA, human contribution URLs, independently verified or unknown provider reset/usage evidence and real worker receipt status; do not conflate GitHub checks, branch commits and 24/7 model execution.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/208"
