@@ -3,8 +3,11 @@ import contextlib
 import io
 import json
 import os
+import socket
+import ssl
 import sys
 import unittest
+import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 
@@ -105,6 +108,29 @@ class HostedShiftTests(unittest.TestCase):
         self.assertEqual(json.loads(lines[0])["dispatched"], 0)
         self.assertIn("::error title=ROVOR cloud scheduler not armed::", lines[1])
         self.assertNotIn(TOKEN, output.getvalue())
+
+    def test_safe_dispatch_failure_categories_are_visible_without_secrets(self):
+        cases = [
+            (urllib.error.URLError(socket.timeout("sensitive-token")), "private_service_timeout"),
+            (urllib.error.URLError(ssl.SSLError("sensitive-token")), "private_service_tls_failure"),
+            (urllib.error.URLError(OSError("sensitive-token")), "private_service_connection_failure"),
+            (ValueError("non_json_receipt"), "non_json_receipt"),
+            (ValueError("invalid_shift_receipt"), "invalid_shift_receipt"),
+            (ValueError("sensitive-token"), "private_service_validation_failure"),
+            (RuntimeError("sensitive-token"), "private_service_unknown_failure"),
+        ]
+        for raised, expected in cases:
+            with self.subTest(reason=expected):
+                output = io.StringIO()
+                with patch.dict(os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": TOKEN}):
+                    with patch.object(runner, "send_shift", side_effect=raised):
+                        with contextlib.redirect_stdout(output):
+                            code = runner.main()
+                self.assertEqual(code, 1)
+                self.assertEqual(json.loads(output.getvalue()),
+                                 {"state": "dispatch_failed", "reason": expected})
+                self.assertNotIn("sensitive-token", output.getvalue())
+                self.assertNotIn(TOKEN, output.getvalue())
 
     def test_no_redirects_to_untrusted_origin(self):
         handler = runner.NoRedirect()
