@@ -1,12 +1,16 @@
 import json
 from pathlib import Path
 import sqlite3
+import plistlib
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 import mac_omniroute_recovery as recovery
+import ghost_worker as worker
+import omniroute_dispatch_pacing as pacing
 
 
 class RecoveryAuditTests(unittest.TestCase):
@@ -64,6 +68,46 @@ class RecoveryAuditTests(unittest.TestCase):
                     copied.execute("INSERT INTO evidence VALUES('forbidden')")
             self.assertEqual(before, {q.name: q.read_bytes() for q in Path(folder).iterdir()})
             conn.close()
+
+    def test_audit_redacts_real_private_job_ids_from_serialized_report(self):
+        # Recreate an actual worker DB and installed policy without any model
+        # call, service change, credential lookup or public receipt.
+        with tempfile.TemporaryDirectory() as folder:
+            home = Path(folder).resolve()
+            state = home / 'private-worker-state'
+            marker = 'private-sentinel-id-never-publish-123'
+            conn = worker.connect(state)
+            try:
+                conn.execute(
+                    'INSERT INTO jobs(id,kind,payload,dedupe_key,status,result,created_at,updated_at) '
+                    'VALUES(?,?,?,?,?,?,?,?)',
+                    (marker, worker.OMNI_KIND, '{}', 'sentinel-test',
+                     'needs_review',
+                     json.dumps({'draft_status': 'needs_review_no_auto_retry'}),
+                     900, 900))
+                conn.execute(
+                    'INSERT INTO events(job_id,event,detail,timestamp) VALUES(?,?,?,?)',
+                    (marker, 'claimed', '{}', 900))
+            finally:
+                conn.close()
+            agent = home / 'Library' / 'LaunchAgents'
+            agent.mkdir(parents=True)
+            (agent / (pacing.LABEL + '.plist')).write_bytes(plistlib.dumps({
+                'Label': pacing.LABEL,
+                'ProgramArguments': [
+                    '/pinned/python', '/safe/omniroute_continuous.py',
+                    '--state', str(state), '--workspace', str(home),
+                    '--max-claims-per-day', '50',
+                    '--min-interval-seconds', '1730']
+            }))
+            with mock.patch.object(recovery, 'service_evidence', return_value=[]):
+                report = recovery.audit(home=home, now=1000)
+            self.assertEqual(report['last_three_claims'], [
+                {'status': 'needs_review',
+                 'draft_status': 'needs_review_no_auto_retry'}])
+            self.assertNotIn(marker, json.dumps(report, sort_keys=True))
+            self.assertEqual(report['model_requests'], 0)
+            self.assertFalse(report['installed_state_modified'])
 
     def test_offset_and_future_observations_are_not_retimestamped(self):
         utc = recovery.timestamp('2026-10-26T00:00:00Z')
