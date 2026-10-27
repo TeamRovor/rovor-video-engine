@@ -96,6 +96,52 @@ test('symlinked worker target refuses mutation',()=>{
  }finally{f.cleanup();}
 });
 
+test('interrupted apply safely resumes at every exact write boundary',()=>{
+ for(const stage of ['migration_sql','migration_journal','worker','dist_worker']) {
+  const f=fixture();try{
+   assert.throws(()=>composeSite(f.dir,{sourceDirectory:f.src,apply:true,
+     afterWrite:written=>{if(written===stage)throw Error('injected_interruption');}
+   }),/injected_interruption/,stage);
+   // Inspection and dry run must never need manual deletion of a staged file.
+   const preview=planSite(f.dir,{sourceDirectory:f.src});
+   assert.equal(preview.project_id,'appgprj_6add1e2cc8c08191839344b34d7dbf50');
+   composeSite(f.dir,{sourceDirectory:f.src,apply:true});
+   const worker=fs.readFileSync(path.join(f.dir,'worker/index.js'),'utf8');
+   assert.ok(worker.includes('ROVOR_GHOST_SITE_MOUNT_V1:'));
+   assert.equal(worker,fs.readFileSync(path.join(f.dir,'dist/server/index.js'),'utf8'));
+   assert.equal(JSON.parse(fs.readFileSync(path.join(f.dir,'drizzle/meta/_journal.json'),'utf8')).entries.length,2);
+   assert.equal(composeSite(f.dir,{sourceDirectory:f.src,apply:true}).already_composed,true);
+  }finally{f.cleanup();}
+ }
+});
+test('divergent staged SQL or first Worker never gets silently overwritten',()=>{
+ for(const [stage,file] of [
+  ['migration_sql','drizzle/0001_ghost_cloud.sql'],
+  ['worker','worker/index.js'],
+ ]) {
+  const f=fixture();try{
+   assert.throws(()=>composeSite(f.dir,{sourceDirectory:f.src,apply:true,
+     afterWrite:written=>{if(written===stage)throw Error('interrupt');}
+   }),/interrupt/);
+   const filename=path.join(f.dir,file);
+   fs.appendFileSync(filename,'\n// external-owner-change');
+   assert.throws(()=>composeSite(f.dir,{sourceDirectory:f.src,apply:true}),
+     /migration_path_collision|site_bundle_mismatch/);
+   assert.ok(fs.readFileSync(filename,'utf8').includes('external-owner-change'));
+  }finally{f.cleanup();}
+ }
+});
+test('concurrent owner drift between planning and later write aborts',()=>{
+ const f=fixture();try{
+  assert.throws(()=>composeSite(f.dir,{sourceDirectory:f.src,apply:true,
+    afterWrite:written=>{
+     if(written==='migration_sql')fs.writeFileSync(path.join(f.dir,'worker/index.js'),site+'// owner edit');
+    }
+  }),/source_changed_during_apply/);
+  assert.ok(fs.readFileSync(path.join(f.dir,'worker/index.js'),'utf8').endsWith('// owner edit'));
+ }finally{f.cleanup();}
+});
+
 // Runs against the exact current source on GitHub CI; synthetic fixtures remain
 // useful for local/offline tests without fetching any private Site checkout.
 const repoRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
