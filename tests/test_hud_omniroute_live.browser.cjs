@@ -57,8 +57,8 @@ async function main(){
   const addonSource=await (await fetch(origin+'/hud-quota.js',{headers:{Cookie:'rovor_hud='+session}})).text();
   console.log('QUOTA_ADDON_SOURCE',addonSource.includes('ROVOR_QUOTA_BOARD'),addonSource.length);
   await poll(()=>evalJS('return document.querySelectorAll(".rvq-provider").length===9'));
-  assert.equal(await evalJS('return document.querySelector(".rvq-track[role=progressbar]")?.getAttribute("aria-valuenow")'),'25.0');
-  assert(await evalJS('return !!document.querySelector(".rvq-unknown")'));
+  assert.equal(await evalJS('return document.querySelector(".rvq-ring[role=progressbar]")?.getAttribute("aria-valuenow")'),'25.0');
+  assert(await evalJS('return !!document.querySelector(".rvq-ring-unknown")'));
   assert(await evalJS('return document.querySelector(".rvq-board").textContent.includes("RESET WINDOW")'));
 
   assert(await evalJS('return document.querySelector("[role=meter]").getAttribute("aria-valuenow")==="70"'));
