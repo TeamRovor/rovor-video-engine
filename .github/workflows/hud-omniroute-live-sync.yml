@@ -9,6 +9,7 @@ on:
       - 'dashboard/command-center/native-v8-9/live-omniroute.js'
       - 'dashboard/command-center/native-v8-9/live-quota-board.js'
       - 'tests/test_hud_verified_quota.mjs'
+      - 'tests/test_hud_ios_quota_rings.mjs'
       - 'tests/test_hud_omniroute*'
       - '.github/workflows/hud-omniroute-live-sync.yml'
   push:
@@ -34,6 +35,8 @@ jobs:
       - run: python3 -m unittest discover -s tests -p test_hud_employee_snapshot.py -v
       - run: node --test tests/test_hud_omniroute_bridge.mjs
       - run: node --test tests/test_hud_verified_quota.mjs
+      - run: node --check dashboard/command-center/native-v8-9/live-quota-board.js
+      - run: node --test tests/test_hud_ios_quota_rings.mjs
       - run: node tests/test_hud_omniroute_live.browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()

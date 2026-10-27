@@ -57,6 +57,19 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
  await flush();await flush();
  assert.equal(reads,2,'rendered panel must still refresh its source');
  assert.equal(writes,2,'rendered panel must be replaced with fresh evidence');
+ // Once a validated 24h report is already in the main HUD, reuse it instead
+ // of requesting exactly the same source from the server a second time.
+ clock+=11000;
+ context.window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT=()=>({
+   source:'local_omniroute_read_only_bridge',period:'24h',
+   snapshot_at:new Date(clock).toISOString(),
+   connections:[{provider:'groq',name:'groq',connection_count:1,enabled_count:1}],
+   connection_slots:[{provider:'groq',account_slot:1,enabled:true}],
+   quota:{records:[]}
+ });
+ intervals[0]();await flush();await flush();
+ assert.equal(reads,2,'verified shared 24h snapshot avoids redundant HTTP polling');
+ assert.equal(writes,3,'shared telemetry still refreshes the rendered popup');
  document.hidden=true;clock+=11000;
  intervals[0]();await flush();
  assert.equal(reads,2,'hidden HUD must not poll');
