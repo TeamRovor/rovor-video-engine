@@ -128,7 +128,7 @@ test('owner inventory checks refresh the exact provider HUD health row without c
  const {env,db,ops}=setup();
  let deny=false,seen=0;
  t.mock.method(globalThis,'fetch',async(url,options)=>{
-  seen++;assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models');
+  seen++;assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/openai/models');
   assert.equal(options.method,'GET');assert.equal(options.redirect,'manual');
   return deny?new Response('private upstream error body',{status:403}):
    Response.json({models:[{name:'models/gemini-2.5-flash'}],secret:'never displayed'});
