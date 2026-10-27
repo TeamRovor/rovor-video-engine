@@ -37,6 +37,38 @@ jobs:
       - name: Offline scheduler safety tests
         run: python3 -m unittest discover -s tests -p test_ghost_cloud_hosted_shift.py -v
 
+
+  service-credential-preflight:
+    # Run on trusted main pushes ONLY. Never expose Actions secrets to PR code
+    # or shell arguments. No checkout, network request, or model invocation.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Verify hosted service secret shape without revealing value
+        env:
+          ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+
+          token = os.environ.get("ROVOR_GHOST_SERVICE_TOKEN", "")
+          if not token:
+              reason = "repository_service_secret_not_configured"
+          elif len(token) < 32:
+              reason = "repository_service_secret_too_short"
+          else:
+              reason = "repository_service_secret_shape_ok"
+          print(json.dumps({"state": reason, "dispatched": 0}))
+          if reason != "repository_service_secret_shape_ok":
+              print("::error title=ROVOR hosted secret invalid::Configure a matching dedicated 32+ character service credential in Actions and the existing private Site.")
+              sys.exit(1)
+          print("Credential shape passes; matching Site configuration and live shift remain unverified.")
+          PY
+
   shift:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
