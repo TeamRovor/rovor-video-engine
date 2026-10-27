@@ -27,7 +27,7 @@ async function main(){
  publicServer=http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'text/html'});let page=fs.readFileSync(file,'utf8');page=page.replace("const trusted=url=>url.protocol==='https:'","const trusted=url=>url.origin==='"+publicOriginHolder.bridge+"'||url.protocol==='https:'");res.end(page);});
  await new Promise(r=>publicServer.listen(0,'127.0.0.1',r));
  const publicOrigin='http://127.0.0.1:'+publicServer.address().port;
- const b=createBridge({viewerOrigin:publicOrigin,hud:fs.readFileSync(file,'utf8'),adapter:fs.readFileSync(path.join(root,'native-v8-9/live-omniroute.js'),'utf8'),quotaAddon:fs.readFileSync(path.join(root,'native-v8-9/live-quota-board.js'),'utf8'),pairCode:'test-only',collect:async period=>{if(offline)throw Error('offline');return {schema_version:1,source:'local_omniroute_read_only_bridge',snapshot_at:new Date().toISOString(),period,inventory_count:12,request_count:10,usage_coverage:'complete_aggregate',connections:Array.from({length:9},(_,i)=>({provider:i?'connected-'+i:'provider',name:i?'connected-'+i:'provider',connection_count:1,enabled_count:1})),quota:{records:[{provider:'provider',account_slot:1,model_id:'provider/model-0',used:25,total:100,used_percent:25,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:new Date().toISOString()}]},models:Array.from({length:12},(_,i)=>({id:'provider/model-'+i,name:'provider/model-'+i,provider:'provider',requests:i===0?requests:0,tokens:i===0?70:0,request_share_percent:i===0?requests*10:0}))};}});
+ const b=createBridge({viewerOrigin:publicOrigin,hud:fs.readFileSync(file,'utf8'),adapter:fs.readFileSync(path.join(root,'native-v8-9/live-omniroute.js'),'utf8'),quotaAddon:fs.readFileSync(path.join(root,'native-v8-9/live-quota-board.js'),'utf8'),pairCode:'test-only',collect:async period=>{if(offline)throw Error('offline');return {schema_version:1,source:'local_omniroute_read_only_bridge',snapshot_at:new Date().toISOString(),period,inventory_count:12,request_count:10,usage_coverage:'complete_aggregate',connections:Array.from({length:9},(_,i)=>({provider:i?'connected-'+i:'provider',name:i?'connected-'+i:'provider',connection_count:1,enabled_count:1})),quota:{records:[{provider:'provider',account_slot:1,model_id:'provider/model-0',used:25,total:100,used_percent:25,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:new Date().toISOString()},{provider:'provider',account_slot:1,model_id:'provider/model-1',used:10,total:100,used_percent:10,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:new Date().toISOString()},{provider:'provider',account_slot:1,model_id:'provider/model-2',used:40,total:100,used_percent:40,unit:'requests',reset_at:'2030-01-01T00:00:00Z',fetched_at:new Date().toISOString()}]},models:Array.from({length:12},(_,i)=>({id:'provider/model-'+i,name:'provider/model-'+i,provider:'provider',requests:i===0?requests:0,tokens:i===0?70:0,request_share_percent:i===0?requests*10:0}))};}});
  const port=await b.listen();server=b.server;
  const origin='http://127.0.0.1:'+port;publicOriginHolder.bridge=origin;
  const paired=await fetch(origin+'/pair',{method:'POST',headers:{Origin:origin},body:'{"code":"test-only"}'});
@@ -60,6 +60,20 @@ async function main(){
   assert.equal(await evalJS('return document.querySelector(".rvq-ring[role=progressbar]")?.getAttribute("aria-valuenow")'),'25.0');
   assert(await evalJS('return !!document.querySelector(".rvq-ring-unknown")'));
   assert(await evalJS('return document.querySelector(".rvq-board").textContent.includes("RESET WINDOW")'));
+  // Nine overview tiles remain visible and independent of detailed model rows.
+  assert.equal(await evalJS('return document.querySelectorAll(".rvq-overview-tile").length'),9);
+  if(name==='iphone-portrait'){
+    // A user reviewing a provider must not lose the expanded state, focus, or
+    // trigger a second redundant 24h query every time the quota board refreshes.
+    assert(await evalJS('return !!document.querySelector(".rvq-more summary")'));
+    const baseline=await evalJS('return performance.getEntriesByType("resource").filter(e=>e.name.includes("/api/hud/omniroute?period=24h")).length');
+    await evalJS('const s=document.querySelector(".rvq-more summary");s.click();s.focus();return true');
+    await delay(11500);
+    assert(await evalJS('return !!document.querySelector(".rvq-more[open]")'),'expanded quota must survive all refreshes');
+    assert(await evalJS('return document.activeElement?.closest(".rvq-more")!==null'),'focused summary must survive refresh');
+    const requestsNow=await evalJS('return performance.getEntriesByType("resource").filter(e=>e.name.includes("/api/hud/omniroute?period=24h")).length');
+    assert(requestsNow-baseline<=4,'duplicate quota polling detected');
+  }
 
   assert(await evalJS('return document.querySelector("[role=meter]").getAttribute("aria-valuenow")==="70"'));
   const geometry=await evalJS('const r=document.querySelector(".drawer").getBoundingClientRect();return {width:r.width,height:r.height}');assert(geometry.width<=width+2&&geometry.height<=height+2);
