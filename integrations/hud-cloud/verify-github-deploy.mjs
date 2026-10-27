@@ -2,6 +2,7 @@
 // Post-deploy checks use the deployed origin, never a GitHub source claim.
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {setTimeout as delay} from 'node:timers/promises';
 
 export function verifiedOrigin(raw) {
   if (typeof raw !== 'string') throw Error('explicit_private_hud_origin_required');
@@ -15,6 +16,30 @@ export function verifiedOrigin(raw) {
   return url.origin;
 }
 
+
+export async function verifyAnonymousTelemetry(read, {attempts = 9, pause = delay, intervalMs = 3000} = {}) {
+  if (!Number.isSafeInteger(attempts) || attempts < 1 || attempts > 20)
+    throw Error('invalid_anonymous_verification_attempts');
+  let last = 'unavailable';
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const result = await read('/api/hud/status', false);
+      if (result.status === 401) return true;
+      if (result.status === 200) throw Error('anonymous_telemetry_exposed_http_200');
+      // Retry only the transient statuses expected during Workers routing.
+      // 3xx and 403 fail immediately instead of claiming app-level auth.
+      if (result.status !== 404 && result.status !== 429 && result.status < 500)
+        throw Error('anonymous_telemetry_unexpected_http_' + result.status);
+      last = 'http_' + result.status;
+    } catch (error) {
+      if (error.message?.startsWith('anonymous_telemetry_')) throw error;
+      last = 'transport_unavailable';
+    }
+    if (attempt < attempts) await pause(intervalMs);
+  }
+  throw Error('anonymous_telemetry_not_verified_' + last);
+}
+
 export async function verifyGithubHud({origin, readerToken, send = fetch}) {
   origin = verifiedOrigin(origin);
   if (typeof readerToken !== 'string' || readerToken.length < 32)
@@ -24,8 +49,12 @@ export async function verifyGithubHud({origin, readerToken, send = fetch}) {
     headers: authorized ? {Authorization: 'Bearer ' + readerToken} : {},
     signal: AbortSignal.timeout(12000)
   });
-  const anonymous = await read('/api/hud/status', false);
-  if (anonymous.status !== 401) throw Error('anonymous_telemetry_was_not_denied');
+
+  // Cloudflare's initial route/secret rollout can briefly answer 404/5xx.
+  // Never treat a 200 or redirect as private and never request any private
+  // body in this probe. After retry exhaustion, report the actual HTTP code.
+  await verifyAnonymousTelemetry(read);
+
   const anonymousScript = await read('/hud-quota.js', false);
   if (anonymousScript.status !== 401) throw Error('anonymous_quota_asset_was_not_denied');
   const anonymousRoot = await read('/', false);

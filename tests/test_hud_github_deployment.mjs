@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {
   validateDeploymentSecrets, prepareConfig, assertGithubReleaseContext
 } from '../integrations/hud-cloud/prepare-github-deploy.mjs';
-import {verifyGithubHud, verifiedOrigin} from '../integrations/hud-cloud/verify-github-deploy.mjs';
+import {verifyGithubHud, verifyAnonymousTelemetry, verifiedOrigin} from '../integrations/hud-cloud/verify-github-deploy.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 
 const dir = new URL('../integrations/hud-cloud/', import.meta.url);
@@ -99,6 +99,29 @@ test('readback requires actual auth and live assets, not mere deploy success', a
         return new Response('PUBLIC', {status:200});
       return fetchOK(url,opts);
     }}), /anonymous_quota_asset/);
+});
+
+test('live verifier tolerates short rollout gaps but never accepts anonymous exposure', async () => {
+  let tries = 0, sleeps = 0;
+  const read = async () => new Response(null, {status: ++tries < 3 ? 503 : 401});
+  assert.equal(await verifyAnonymousTelemetry(read, {attempts: 4,
+    pause: async () => {sleeps++;},intervalMs:0}), true);
+  assert.equal(tries,3);
+  assert.equal(sleeps,2);
+  let exposedTries = 0;
+  await assert.rejects(() => verifyAnonymousTelemetry(async () => {
+    exposedTries++;return new Response('EXPOSED', {status:200});
+  }, {attempts:4,pause:async()=>{}}),/anonymous_telemetry_exposed_http_200/);
+  assert.equal(exposedTries,1);
+  await assert.rejects(() => verifyAnonymousTelemetry(async () =>
+    new Response('No route', {status:404}), {attempts:2,pause:async()=>{}}),
+    /anonymous_telemetry_not_verified_http_404/);
+  await assert.rejects(() => verifyAnonymousTelemetry(async () =>
+    new Response(null, {status:302,headers:{Location:'/login'}}),
+    {attempts:4,pause:async()=>{}}), /anonymous_telemetry_unexpected_http_302/);
+  await assert.rejects(() => verifyAnonymousTelemetry(async () => {
+    throw new TypeError('network_error');
+  },{attempts:2,pause:async()=>{}}),/anonymous_telemetry_not_verified_transport_unavailable/);
 });
 
 test('GitHub deployment requires main and explicit opt-in for unattended releases', () => {
