@@ -133,7 +133,7 @@ class HostedShiftTests(unittest.TestCase):
     def test_malformed_service_credential_is_rejected_before_any_request(self):
         for bad_token in ("x" * 32 + "\n", "x" * 32 + "\r",
                           "x" * 20 + " " + "x" * 20,
-                          "x" * 32 + "\x00", "x" * 32 + "é"):
+                          "x" * 32 + "é"):
             with self.subTest(category="header_format"), patch.dict(
                     os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": bad_token,
                                  "GITHUB_ACTIONS": "true"}):
@@ -151,6 +151,11 @@ class HostedShiftTests(unittest.TestCase):
                 self.assertNotIn(bad_token, output.getvalue())
                 with self.assertRaisesRegex(ValueError, "service_secret_invalid_bearer_format"):
                     runner.send_shift(token=bad_token, opener=Client(Reply(receipt())))
+
+        # OS environment variables cannot contain NUL; assert direct API guard.
+        with self.assertRaisesRegex(ValueError, "service_secret_invalid_bearer_format"):
+            runner.send_shift(token="x" * 32 + "\x00",
+                              opener=Client(Reply(receipt())))
 
     def test_32_character_service_secret_reaches_guarded_sender(self):
         token = "x" * 32
