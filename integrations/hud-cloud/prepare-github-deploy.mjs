@@ -5,6 +5,7 @@
 import {readFileSync, writeFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {verifiedOrigin} from './verify-github-deploy.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const D1_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,6 +49,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   try {
     assertGithubReleaseContext(process.env);
     validateDeploymentSecrets(process.env);
+    // Reject a release with no independent live URL to verify before any cloud write.
+    verifiedOrigin(process.env.ROVOR_HUD_DEPLOY_ORIGIN);
     const prepared = prepareConfig(readFileSync(path.join(here, 'wrangler.jsonc'), 'utf8'),
       process.env.ROVOR_HUD_D1_ID);
     writeFileSync(path.join(here, 'wrangler.github.jsonc'), JSON.stringify(prepared, null, 2) + '\n',
