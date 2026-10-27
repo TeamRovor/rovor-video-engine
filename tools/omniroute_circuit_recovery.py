@@ -135,9 +135,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--state', type=Path, required=True)
     args = parser.parse_args()
-    state = args.state
+    state = args.state.expanduser()
     if not sys.stdin.isatty():
         raise SystemExit('Run from the owner Terminal session.')
+    if (state.is_symlink() or not state.is_dir() or
+            (state / 'jobs.sqlite3').is_symlink() or
+            not (state / 'jobs.sqlite3').is_file()):
+        raise SystemExit('Existing private worker state is required.')
     conn = ghost_worker.connect(state)
     try:
         failures = _latest_failures(conn, time.time())
