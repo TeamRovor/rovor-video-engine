@@ -80,6 +80,69 @@ test('model receives only a proportional eligible public task',async()=>{
  assert.equal(sqlite.prepare('SELECT job_id FROM ghost_cloud_attempts').get().job_id,'correct');
 });
 
+test('a genuine Groq inference response updates the existing D1 account quota meter',async()=>{
+ const {env,sqlite}=setup();sqlite.exec(readFileSync(
+  new URL('../integrations/ghost-cloud/quota-observations.sql',import.meta.url),'utf8'));
+ enable(sqlite);enqueue(sqlite,job('groq-rpd-inference'));
+ let calls=0;
+ const result=await tick(env,async()=>{
+  calls++;
+  return new Response(JSON.stringify({
+   model:'test-pinned-1',
+   choices:[{message:{content:'Real private review-ready result.'},finish_reason:'stop'}],
+   usage:{prompt_tokens:15,completion_tokens:22}
+  }),{headers:{
+   'x-ratelimit-limit-requests':'1000',
+   'x-ratelimit-remaining-requests':'973',
+   'x-ratelimit-reset-requests':'2m59.56s'
+  }});
+ },NOW);
+ assert.equal(result.dispatched,1);
+ assert.equal(calls,1,'quota observation must not generate a second model call');
+ const receipt=sqlite.prepare("SELECT status,actual_model,tokens_input FROM ghost_cloud_attempts WHERE job_id='groq-rpd-inference'").get();
+ assert.equal(receipt.status,'needs_review');assert.equal(receipt.actual_model,'test-pinned-1');assert.equal(receipt.tokens_input,15);
+ const row=sqlite.prepare('SELECT * FROM ghost_cloud_provider_quota WHERE provider=?').get('groq');
+ assert.equal(row.used,27);assert.equal(row.quota_limit,1000);
+ assert.equal(row.remaining,973);assert.equal(row.unit,'requests');
+ assert.equal(row.source,'authenticated_groq_rpd_response_headers');
+ assert(row.resets_at>=NOW+179560);
+});
+
+test('malformed quota or missing optional migration never erases an actual inference receipt',async()=>{
+ for(const withMigration of [false,true]){
+  const {env,sqlite}=setup();if(withMigration)sqlite.exec(readFileSync(
+   new URL('../integrations/ghost-cloud/quota-observations.sql',import.meta.url),'utf8'));
+  enable(sqlite);enqueue(sqlite,job('missing-rpd-'+withMigration));
+  const reply=new Response(JSON.stringify({
+   model:'test-pinned-1',
+   choices:[{message:{content:'Completed valid draft'},finish_reason:'stop'}],
+   usage:{prompt_tokens:2,completion_tokens:3}
+  }),{headers:{
+   'x-ratelimit-limit-requests':'1000',
+   'x-ratelimit-remaining-requests':withMigration?'1001':'973',
+   'x-ratelimit-reset-requests':'2m'
+  }});
+  const out=await tick(env,async()=>reply,NOW);
+  assert.equal(out.dispatched,1);
+  assert.equal(sqlite.prepare('SELECT status FROM ghost_cloud_attempts').get().status,'needs_review');
+  if(withMigration)assert.equal(sqlite.prepare('SELECT count(*) n FROM ghost_cloud_provider_quota').get().n,0);
+ }
+});
+
+test('a Groq 429 with authenticated quota headers persists the safe reset evidence',async()=>{
+ const {env,sqlite}=setup();sqlite.exec(readFileSync(
+  new URL('../integrations/ghost-cloud/quota-observations.sql',import.meta.url),'utf8'));
+ enable(sqlite);enqueue(sqlite,job('groq-429-with-rpd'));
+ const out=await tick(env,async()=>new Response('',{status:429,headers:{
+  'Retry-After':'120','x-ratelimit-limit-requests':'1000',
+  'x-ratelimit-remaining-requests':'0','x-ratelimit-reset-requests':'1h'
+ }}),NOW);
+ assert.equal(out.dispatched,1);
+ assert.equal(sqlite.prepare('SELECT error_code FROM ghost_cloud_attempts').get().error_code,'rate_limited');
+ const q=sqlite.prepare("SELECT used,remaining,quota_limit FROM ghost_cloud_provider_quota WHERE provider='groq'").get();
+ assert.equal(q.used,1000);assert.equal(q.remaining,0);assert.equal(q.quota_limit,1000);
+});
+
 test('429 respects retry-after across new jobs in a shared pool',async()=>{
  const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('limited'));enqueue(sqlite,job('replacement'));
  await tick(env,async()=>new Response('private vendor error',{status:429,headers:{'Retry-After':'120'}}),NOW);
