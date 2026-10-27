@@ -60,6 +60,8 @@ jobs:
               reason = "repository_service_secret_not_configured"
           elif len(token) < 32:
               reason = "repository_service_secret_too_short"
+          elif any(not ("!" <= ch <= "~") for ch in token):
+              reason = "repository_service_secret_invalid_bearer_format"
           else:
               reason = "repository_service_secret_shape_ok"
           print(json.dumps({"state": reason, "dispatched": 0}))

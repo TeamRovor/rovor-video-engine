@@ -18,6 +18,11 @@ TARGET = "https://rovor-private-hud.mm98z652cq.chatgpt.site/api/ghost/service"
 MAX_BYTES = 65536
 
 
+def service_credential_header_safe(token: str) -> bool:
+    """Strict printable-ASCII bearer text; never normalize an owner secret."""
+    return isinstance(token, str) and all("!" <= ch <= "~" for ch in token)
+
+
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, request, fp, code, msg, headers, newurl):
         return None
@@ -29,6 +34,8 @@ def send_shift(*, token: str, url: str = TARGET, opener=None) -> dict:
         raise ValueError("unapproved_target")
     if not isinstance(token, str) or len(token) < 32:
         raise ValueError("service_secret_missing_or_short")
+    if not service_credential_header_safe(token):
+        raise ValueError("service_secret_invalid_bearer_format")
 
     request = urllib.request.Request(
         url,
@@ -104,6 +111,18 @@ def main() -> int:
         }))
         if os.environ.get("GITHUB_ACTIONS") == "true":
             print("::error title=ROVOR cloud scheduler credential invalid::Replace the matching GitHub Actions and private Site service credentials with one dedicated secret of at least 32 characters. Zero cloud jobs were dispatched.")
+        return 2
+    if not service_credential_header_safe(token):
+        # A hidden newline, control, whitespace, or non-ASCII character can
+        # invalidate the Authorization header before reaching the private Site.
+        # Do not strip it: the Site must hold an EXACT matching credential.
+        print(json.dumps({
+            "state": "not_armed",
+            "reason": "repository_service_secret_invalid_bearer_format",
+            "dispatched": 0,
+        }))
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print("::error title=ROVOR hosted service credential malformed::Set one matching printable-ASCII 32+ character machine credential on GitHub and the private Site. No model calls made.")
         return 2
     try:
         result = send_shift(token=token)
