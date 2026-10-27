@@ -6,6 +6,7 @@ window.ROVOR_START_OMNIROUTE=()=>{
   let selectedEmployee='';
   let snapshot=null,problem='Connecting to OmniRoute…',period='24h',tab='models',filter='',selected='',inFlight=false;
   let previewHost,previewOpen,popupHost,timer;
+  let quotaInspectionState=null;
   const fresh=()=>snapshot&&Date.now()-Date.parse(snapshot.snapshot_at)<15000;
   const stamp=()=>snapshot?new Date(snapshot.snapshot_at).toLocaleTimeString():'—';
   const stateLabel=()=>fresh()?'CONNECTED · '+stamp():snapshot?'STALE · '+stamp():problem;
@@ -30,9 +31,15 @@ window.ROVOR_START_OMNIROUTE=()=>{
     const cursor=focused?document.activeElement.selectionStart:0;
     const footnote=document.querySelector('.drawer-footnote');if(footnote)footnote.textContent='READ-ONLY OMNIROUTE · '+stateLabel()+' · REQUEST SHARE IS NOT REMAINING QUOTA OR LIVE WORKER LOAD.';
     const list=models().filter(m=>(m.name+' '+m.provider).toLowerCase().includes(filter.toLowerCase()));
+    // Maintain expanded provider details while fresh snapshots repaint the popup.
+    const inspected=window.ROVOR_QUOTA_BOARD?.captureState?.(popupHost);
+    if(inspected)quotaInspectionState=inspected;
     popupHost.innerHTML=`<div id="rovor-workload-popup">${linkState()}<div class="wl-toolbar"><button class="wl-button" data-live-tab="models">OMNIROUTE</button><button class="wl-button" data-live-tab="employees">EMPLOYEES</button><div class="wl-period">${['1h','24h','7d'].map(p=>`<button class="wl-button" data-live-period="${p}" aria-pressed="${period===p}">${p.toUpperCase()}</button>`).join('')}</div><div class="wl-kicker">${snapshot?.connection_count??'—'} configured connections · ${models().length} recorded models · ${snapshot?.usage_coverage==='complete_aggregate'?'complete aggregate':'partial / unknown coverage'}</div></div>${tab==='employees'?`<div class="wl-notice">Mac heartbeat: ${snapshot?.workforce?.heartbeat?.age_seconds??'unknown'} seconds ago · ${esc(readable(snapshot?.workforce?.heartbeat?.last_tick_dispatch))}. ${snapshot?.workforce?.unassigned_jobs??'Unknown'} jobs lack employee attribution. This is host heartbeat, not proof each employee is online.</div><div class="wl-employees-live">${workerCards()}</div>`:''}<input class="tool-input" data-live-search aria-label="Find model" placeholder="Find your model…" value="${esc(filter)}"><section class="wl-card"><h3>YOUR OMNIROUTE CONNECTIONS</h3>${connections().map(g=>`<p class="wl-empty">${esc(g.name)} · ${g.connection_count} configured · ${g.enabled_count} enabled</p>`).join('')||'<p class="wl-empty">Restart the Mac bridge to load your configured connections.</p>'}</section><section class="wl-card"><h3>MEASURED MODEL REQUESTS / ${period.toUpperCase()}</h3><p class="wl-empty">${number(snapshot?.request_count)} recorded requests. Models without attributable rows stay unknown rather than showing an invented zero. Only recorded models matched to your configured providers are listed; unused model identities are not guessed.</p><div class="wl-model-scroll" tabindex="0" style="max-height:44vh;overflow:auto"><div class="wl-models">${list.map(m=>`<button type="button" class="wl-model-entry" data-live-model="${esc(m.id)}" aria-pressed="${selected===m.id}"><span class="wl-row"><strong>${esc(m.name)}</strong><small>${fresh()?number(m.requests):'—'} requests</small></span>${meter(m)}<span class="wl-row"><small>${fresh()&&m.request_share_percent!==null?m.request_share_percent.toFixed(1)+'% of recorded requests':'No current attribution'}</small><small>${fresh()?number(m.tokens):'—'} tokens</small></span></button>`).join('')||'<p class="wl-empty">No matching model records available.</p>'}</div></div></section><section class="wl-card"><h3>QUOTA / EMPLOYEE STATUS</h3><p class="wl-empty">Provider limits and quota resets remain unavailable. Employee cards use worker records separately; configured models are not proof of an actual upstream model. Request-share bars do not represent quota remaining. No model calls are made by this HUD.</p></section></div>`;
     const quotaSlot=popupHost.querySelector('.wl-card');
-    if(quotaSlot&&window.ROVOR_QUOTA_BOARD)quotaSlot.outerHTML=window.ROVOR_QUOTA_BOARD.render(snapshot,!!fresh());
+    if(quotaSlot&&window.ROVOR_QUOTA_BOARD){
+      quotaSlot.outerHTML=window.ROVOR_QUOTA_BOARD.render(snapshot,!!fresh());
+      window.ROVOR_QUOTA_BOARD.restoreState?.(popupHost,quotaInspectionState);
+    }
     popupHost.querySelector('.wl-model-scroll').scrollTop=scroll;
     if(tab==='employees'){popupHost.querySelector('[data-live-search]').hidden=true;for(const card of popupHost.querySelectorAll('.wl-card'))if(!card.closest('.wl-employees-live'))card.hidden=true;}
     if(focused){const input=popupHost.querySelector('[data-live-search]');input.focus();input.setSelectionRange(cursor,cursor);}
@@ -61,7 +68,13 @@ window.ROVOR_START_OMNIROUTE=()=>{
   });
   document.addEventListener('input',event=>{if(event.target.hasAttribute('data-live-search')){filter=event.target.value;paintPopup();}});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
-  window.ROVOR_WORKLOAD={mountPreview,mount,resetPopup(){popupHost=null;filter='';selected='';}};
+  window.ROVOR_WORKLOAD={mountPreview,mount,
+    // Only a fresh, source-validated 24h snapshot can feed quota widgets.
+    getQuotaSnapshot(){
+      return period==='24h'&&fresh()&&Array.isArray(snapshot?.connections)?snapshot:null;
+    },
+    resetPopup(){popupHost=null;filter='';selected='';quotaInspectionState=null;}
+  };
   mountPreview(document.getElementById('workloadPanel'),()=>window.ROVOR_NATIVE.open('workload'));
   poll();
 };
