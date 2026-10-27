@@ -130,6 +130,28 @@ class HostedShiftTests(unittest.TestCase):
         self.assertNotIn(short_secret, output.getvalue())
         self.assertNotIn("must not dispatch", output.getvalue())
 
+    def test_malformed_service_credential_is_rejected_before_any_request(self):
+        for bad_token in ("x" * 32 + "\n", "x" * 32 + "\r",
+                          "x" * 20 + " " + "x" * 20,
+                          "x" * 32 + "\x00", "x" * 32 + "é"):
+            with self.subTest(category="header_format"), patch.dict(
+                    os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": bad_token,
+                                 "GITHUB_ACTIONS": "true"}):
+                output = io.StringIO()
+                with patch.object(runner, "send_shift",
+                                  side_effect=AssertionError("unexpected network")) as send:
+                    with contextlib.redirect_stdout(output):
+                        code = runner.main()
+                self.assertEqual(code, 2)
+                send.assert_not_called()
+                self.assertEqual(json.loads(output.getvalue().splitlines()[0]),
+                                 {"state": "not_armed",
+                                  "reason": "repository_service_secret_invalid_bearer_format",
+                                  "dispatched": 0})
+                self.assertNotIn(bad_token, output.getvalue())
+                with self.assertRaisesRegex(ValueError, "service_secret_invalid_bearer_format"):
+                    runner.send_shift(token=bad_token, opener=Client(Reply(receipt())))
+
     def test_32_character_service_secret_reaches_guarded_sender(self):
         token = "x" * 32
         with patch.dict(os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": token}):
@@ -184,6 +206,7 @@ class HostedShiftTests(unittest.TestCase):
         self.assertNotIn("actions/checkout", preflight)
         self.assertNotIn("tools/ghost_cloud_hosted_shift.py", preflight)
         self.assertIn("repository_service_secret_too_short", preflight)
+        self.assertIn("repository_service_secret_invalid_bearer_format", preflight)
         self.assertIn("repository_service_secret_shape_ok", preflight)
 
 
