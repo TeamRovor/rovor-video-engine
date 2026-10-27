@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -12,6 +13,7 @@ import ghost_worker as worker
 import ghost_omniroute_feed as feed
 import ghost_omniroute_job as omni
 import omniroute_recovery_canary as canary
+import omniroute_circuit_recovery as circuit
 
 
 def catalog():
@@ -49,10 +51,27 @@ class RecoveryTests(unittest.TestCase):
             self.assertIsNotNone(claimed)
             self.db.execute("UPDATE jobs SET status='needs_review',result=? WHERE id=?",
                             (json.dumps({"draft_status":"needs_review_no_auto_retry"}),j))
-        with mock.patch.object(omni,"execute",return_value={
-            "packet":"walter-v2-recovery-proof",
-            "draft_status":"draft_completed_needs_review",
-            "review_status":"draft_ready_for_human_review"}) as model:
+        # Caller flags alone cannot release the open circuit: review the
+        # exact three failures with a fresh authenticated owner-only receipt.
+        valid_preflight = {"ok": True, "read_only": True,
+            "free_routes_verified": True, "endpoint_key_available": True,
+            "loopback_auth_verified": True, "model_requests": 0}
+        with mock.patch.object(omni, "background_preflight",
+                               return_value=valid_preflight), \
+             mock.patch.object(omni,"execute",return_value={
+                 "packet":"walter-v2-recovery-proof",
+                 "draft_status":"draft_completed_needs_review",
+                 "review_status":"draft_ready_for_human_review"}) as model:
+            denied=self.run_canary(approve=True,acknowledge_circuit=True)
+            self.assertEqual(denied["status"],"no_claim_circuit_quota_or_stop")
+            model.assert_not_called()
+            failed_ids=[row["id"] for row in circuit._latest_failures(
+                self.db,time.time())]
+            with mock.patch("sys.stdin.isatty",return_value=True), \
+                 mock.patch("builtins.input",
+                            side_effect=[",".join(failed_ids),"RELEASE CIRCUIT"]):
+                receipt=circuit.release(self.db,self.state)
+            self.assertEqual(receipt["reviewed_job_ids"],failed_ids)
             result=self.run_canary(approve=True,acknowledge_circuit=True)
             self.assertEqual(result["status"],"completed_requires_human_review")
             self.assertEqual(result["maximum_single_gateway_completion_posts"],1)
@@ -95,7 +114,13 @@ class RecoveryTests(unittest.TestCase):
                             omni_max_24h=14)
             self.assertIsNotNone(cl)
             self.db.execute("UPDATE jobs SET status='needs_review' WHERE id=?",(j,))
-        with mock.patch.object(omni,"execute") as call:
+        with mock.patch.object(omni,"background_preflight",
+                               return_value={"ok": True, "read_only": True,
+                                 "free_routes_verified": True,
+                                 "endpoint_key_available": True,
+                                 "loopback_auth_verified": True,
+                                 "model_requests": 0}), \
+             mock.patch.object(omni,"execute") as call:
             result=self.run_canary(approve=True,acknowledge_circuit=True)
             self.assertEqual(result["status"],"no_claim_circuit_quota_or_stop")
             call.assert_not_called()
