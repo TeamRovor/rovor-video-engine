@@ -3732,8 +3732,8 @@
       "title": "Integrate paced continuous research ticks, larger distinct backlog and same-service rollout",
       "priority": 1,
       "status": "active",
-      "owner": "Codex / Amar continuous-runtime session 2026-10-24",
-      "branch": "fix/omniroute-continuous-runtime",
+      "owner": "Codex / Amar MacBook-side recovery lead 2026-10-26",
+      "branch": "mac-omniroute-recovery-20261026",
       "scopes": [
         "tools/ghost_worker.py",
         "tools/omniroute_continuous.py",
@@ -3741,14 +3741,16 @@
         "tests/test_omniroute_continuous.py",
         "tests/test_install_continuous_worker.py",
         ".github/workflows/omniroute-continuous.yml",
-        "integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md"
+        "integrations/open-interpreter/OMNIROUTE-CONTINUOUS.md",
+        "tools/mac_omniroute_recovery.py",
+        "tests/test_mac_omniroute_recovery.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-24T10:15:00Z",
-      "next_update": "After a controlled same-service Mac rollout and verified new private review receipts using new proportional source-context budgets; measure before/after draft readiness instead of claim counts.",
-      "next_action": "PR155 merged into existing PR137 development branch at 896ffd2: actual continuous workpack execution now uses context budgets 9000 (checklist,handoff)/11000(plan)/14500(tests) source chars with 250/300/350/450 requested words; full source hashes, deterministic disclosed excerpts, fixed receipt profile, later review integrity; no replays, no extra gateway requests. Mac installed original pinned b736610 is untouched. Seven suites passed including macOS+Ubuntu Python3.9/3.11. Next, verified safe same-service integration and real A/B outcomes by form + capability/zero-cost provider evidence; continue no-loops and avoid requesting multiple redundant Terminal scripts.",
+      "updated_at": "2026-10-27T01:38:13.258Z",
+      "next_update": "After preclaim regression, installed-state audit and safe installer dry run",
+      "next_action": "User-authorized Mac recovery: correct incomplete-fleet preclaim bypass on a separate branch; audit installed account/model/circuit evidence without inference or clearing failures. Preserve all iPhone cloud files.",
       "acceptance": "Pacing/quota atomic under concurrent claims; existing defaults preserved; new assignments deduped and review-only, free route unchanged, failure/STOP guard retained. Rollout dry-run by default, single existing label, backup and rollback, no active job replacement. Focused offline checks plus exact activation command; source tests do not claim live operation.",
-      "blocker": "Source code integrated/tested but current real Mac installed worker is still original pinned b736610. Live improvement from shorter prompts not yet measured; 31 claim snapshots had 10 ready/12 nonready/8 pending review/1 running, provider quota/9 distinct model activation still unverified.",
+      "blocker": "Installed mixed Combo drift and open failure circuit; trusted direct-provider zero-cost/commercial entitlement evidence absent. Shell sandbox blocks local network/process inspection and installed-state mutation.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/pull/137",
         "https://github.com/TeamRovor/rovor-video-engine/actions/runs/40072143609",
