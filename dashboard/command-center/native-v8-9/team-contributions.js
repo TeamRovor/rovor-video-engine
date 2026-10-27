@@ -211,5 +211,5 @@
   ensurePreview();
   refresh();
   setInterval(refresh, 15 * 60 * 1000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && (!lastChecked || Date.now() - Date.parse(lastChecked) > 15 * 60 * 1000)) refresh(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && (!lastAttempted || Date.now() - Date.parse(lastAttempted) > 15 * 60 * 1000)) refresh(); });
 })();
