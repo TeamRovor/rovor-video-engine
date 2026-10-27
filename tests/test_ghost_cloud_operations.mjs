@@ -161,7 +161,7 @@ test('fixed-endpoint GET inventory returns bounded public model metadata only',a
 test('Cloudflare model discovery uses runnable @cf name, never catalog UUID',async()=>{
  const {env,ops}=setup();
  const result=await ops.inventory(env,'cloudflare-ai',async(url,opts)=>{
-  assert.match(url,/\\/ai\\/models\\/search$/);
+  assert(url.endsWith('/ai/models/search'));
   assert.equal(opts.method,'GET');
   return Response.json({result:[
    {id:'fe8904cf-e20e-4884-b829-ed7cec0a01cb',name:'@cf/meta/llama-3.1-8b-instruct'},
