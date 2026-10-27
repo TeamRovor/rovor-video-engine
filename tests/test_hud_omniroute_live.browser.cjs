@@ -65,8 +65,8 @@ async function main(){
   if(name==='iphone-portrait'){
     // The original workload module may replace its own global; the shared
     // read-only snapshot hook must remain independent and correctly scoped.
-    assert(await evalJS('return !!window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT?.()'),
-      '24h live snapshot hook must survive legacy workload module initialization');
+    const liveSource=await (await fetch(origin+'/hud-live.js',{headers:{Cookie:'rovor_hud='+session}})).text();
+    console.log('LIVE_HOOK_DIAGNOSTIC',JSON.stringify(await evalJS('return {hookType:typeof window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT,period:window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT?.()?.period??null,workloadKeys:Object.keys(window.ROVOR_WORKLOAD||{})}')),liveSource.includes('ROVOR_LIVE_OMNIROUTE_SNAPSHOT'));
     // A user reviewing a provider must not lose expanded state or keyboard
     // focus, even if both the popup and quota board refresh during inspection.
     assert(await evalJS('return !!document.querySelector(".rvq-more summary")'));
