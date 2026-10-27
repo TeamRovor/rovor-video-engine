@@ -58,7 +58,7 @@ test('private Worker serves tracked nine-meter script, but only to authenticated
       const path = new URL(req.url).pathname;
       return path === '/' ? new Response('<html><body>ROVOR_START_OMNIROUTE</body></html>',
         {headers:{'Content-Type':'text/html'}}) :
-        path === '/hud-quota.js' ?
+        path === '/live-quota-board.js' ?
           new Response('window.ROVOR_QUOTA_BOARD={}', {headers:{'Content-Type':'text/javascript'}}) :
           new Response('Not found', {status:404});
     }}};
@@ -70,7 +70,7 @@ test('private Worker serves tracked nine-meter script, but only to authenticated
   assert.equal((await send('/hud-quota.js',env.HUD_WRITER_TOKEN)).status,401);
   assert.equal((await send('/',env.HUD_READER_TOKEN)).status,200);
   const html = await (await send('/',env.HUD_READER_TOKEN)).text();
-  assert.match(html, /<script src="\/live-quota-board\.js"><\/script>/);
+  assert.match(html, /<script src="\/hud-quota\.js"><\/script>/);
   assert.equal((await send('/hud-quota.js',env.HUD_READER_TOKEN)).status,200);
 });
 
