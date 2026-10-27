@@ -177,6 +177,14 @@ class HostedShiftTests(unittest.TestCase):
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn("ROVOR_GHOST_SERVICE_TOKEN: " + chr(36) + "{{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}", workflow)
         self.assertNotIn("pull_request_target", workflow)
+        # Secret shape check may run on main pushes, but never on PRs.
+        self.assertIn("if: github.event_name == 'push' && github.ref == 'refs/heads/main'", workflow)
+        self.assertIn("service-credential-preflight:", workflow)
+        preflight = workflow.split("  service-credential-preflight:", 1)[1].split("\n  shift:", 1)[0]
+        self.assertNotIn("actions/checkout", preflight)
+        self.assertNotIn("tools/ghost_cloud_hosted_shift.py", preflight)
+        self.assertIn("repository_service_secret_too_short", preflight)
+        self.assertIn("repository_service_secret_shape_ok", preflight)
 
 
 if __name__ == "__main__":
