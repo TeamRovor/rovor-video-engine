@@ -1,30 +1,75 @@
 {
-  "status": "render-in-progress",
+  "status": "export-verified-frame-review-complete",
   "runtimeCommit": "02c5003c7972096f2aa989efacd33aedc374494a",
-  "progress": {
-    "lastFrame": 168,
-    "totalFrames": 552,
-    "elapsedSeconds": 510.74980690097436,
-    "commit": "02c5003c7972096f2aa989efacd33aedc374494a"
+  "verification": {
+    "manifest": {
+      "commit": "02c5003c7972096f2aa989efacd33aedc374494a",
+      "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+      "audioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+      "tailVerificationSha256": "cb3223b885e13c5c6e6f9cecebec627cea9e15cbc66e762d698d6371336a9bec",
+      "scriptSha256": "fd69101dd86881c55e4ed6253485bb03c5815a0ad15237de40a67d3981909565",
+      "fps": 24,
+      "frames": 552,
+      "sourceAudioEnd": 22.047375,
+      "defaultChanged": false
+    },
+    "freshFrames": 456,
+    "verifiedCopiedEndingFrames": 96,
+    "calibrations": [
+      456,
+      504
+    ],
+    "films": {
+      "Normal.mp4": {
+        "decodedFrames": 552,
+        "sha256": "252e389c47a4726764e0fc729a5f0ca47222e5e4368174fa967a69ac104b35c6"
+      },
+      "Quarter-Speed.mp4": {
+        "decodedFrames": 2208,
+        "sha256": "23722523ff4c42cf675c6e2ed58ba8ce722c8367067df0ee71af0a36ec03bd4d"
+      }
+    },
+    "audio": {
+      "sourcePcm16Samples": 368000,
+      "decodedPcm16Samples": 368000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": ""
+    },
+    "sourcePcmSamples": 352758,
+    "zeroPadSamples": 15242,
+    "wavPrefixByteExact": true,
+    "firstRaised24fpsFrame": 532,
+    "firstRaisedTime": 22.166666666666668,
+    "sourceCut48fps": 22.145833333333332,
+    "minimumJawArea2": 45.5,
+    "minimumOralArea2": 0.0372416190803051,
+    "defaultChanged": false,
+    "independentListeningAccepted": false,
+    "realTimeActingAccepted": false,
+    "polishedMilestoneReady": false
   },
-  "execSessionId": 27135,
-  "calibration24fpsFramesPassed": [
-    456,
-    504
-  ],
-  "plannedFreshFrames": 456,
-  "plannedCopiedEndingFrames": 96,
-  "plannedNormalFrames": 552,
-  "plannedSlowFrames": 2208,
-  "normalAndSlowExportVerified": false,
-  "sourceRecordingAndPlanModified": false,
+  "normalAndSlowExportVerified": true,
+  "workerRunning": false,
+  "all552FrameHashesVerified": true,
+  "all96EndingSamplesHashExact": true,
+  "fullOriginalPcmPlusSilenceByteExact": true,
+  "actingOverviewFramesInspected": 24,
+  "flaggedWordPosePairsInspected": 18,
+  "flaggedWordsCovered": 18,
   "flagsCleared": 0,
   "visualTimingRegionsRechecked": 6,
-  "flaggedWordsCovered": 18,
+  "completeContactSheetsExecuted": true,
+  "reviewPageBuilt": true,
+  "independentListeningAccepted": false,
+  "realTimePlaybackAccepted": false,
   "polishedMilestoneReady": false,
   "localOutput": "outputs/evan-cartoon-continuous",
-  "next": "Read Progress/Render.log/Failure/Verification and existing session; do not start duplicate render. After export, run contact-sheet/page builders, inspect actual films/frame evidence, then update this pending review.",
-  "workerRunningAtCheckpoint": true,
-  "reviewBuildersSyntaxChecked": 3,
-  "completeContactSheetsExecuted": false
+  "visualFindings": [
+    "Long near-neutral arm spans in definition10.2\u201314.4s",
+    "Limited cheek/upper-face contrast versus cartoon design sheet",
+    "Fixed hand drawings and static lower body",
+    "Clearer guarded raised-hand ending, still a discrete cut"
+  ],
+  "next": "Review definition palm hold candidate; then one word-anchored upper-face contrast for browser misconception, keeping lip/jaw timing fixed"
 }

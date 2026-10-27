@@ -15,7 +15,9 @@ for k,w in enumerate(markers):
 sheet.save(out/'Flagged-Word-Pose-Pairs.png')
 for first in [0,192,384]:
  sheet=Image.new('RGB',(1280,800),'#eee8dd');d=ImageDraw.Draw(sheet)
- for k,n in enumerate(range(first,min(first+192,552),24)):
+ samples=list(range(first,min(first+192,552),24))
+ if first==384:samples.append(551)
+ for k,n in enumerate(samples):
   x=k%2*640;y=k//2*200;im=Image.open(frames/f'{n:06}.png');sheet.paste(im.resize((320,180)),(x,y+20));d.text((x+4,y+2),f'{n/24:.2f}s',fill='#233442')
   box=(140,225,255,280)if n>=532 else(230,135,350,215);sheet.paste(im.crop(box),(x+350,y+45))
  sheet.save(out/f'Acting-Overview-{first}.png')
