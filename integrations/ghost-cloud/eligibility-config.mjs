@@ -38,6 +38,11 @@ function validateEvidence(provider, evidence, now) {
       !integer(limits.min_interval_ms, DAY) || !integer(limits.max_input_bytes, 14_500) ||
       !integer(limits.max_output_tokens, 2_400) ||
       !validSet(limits.roles, ROLES) || !validSet(limits.kinds, KINDS)) return 'invalid_or_excessive_limits';
+  // A generic successful canary cannot authorize every workload kind. Each
+  // enabled kind must be explicitly covered by this exact-model attestation.
+  // verified_kinds is private operator evidence, not an inferred capability.
+  if (!validSet(canary.verified_kinds, KINDS) ||
+      !limits.kinds.every(kind => canary.verified_kinds.includes(kind))) return 'canary_scope_unverified';
   const verifiedAt = Math.max(billing.checked_at, quota.checked_at);
   if (now - verifiedAt > DAY || now >= Math.min(verifiedAt + DAY, quota.reset_at)) return 'eligibility_expired';
   return null;
@@ -59,7 +64,9 @@ export async function compileFleetConfig(attestations, env, now = Date.now()) {
     if (reason) { config[provider] = { enabled: false }; states[provider] = reason; continue; }
     const verifiedAt = Math.max(a.billing.checked_at, a.quota.checked_at);
     const material = JSON.stringify([provider, a.model, a.pool, a.billing.sha256,
-      a.quota.sha256, a.canary.sha256, verifiedAt, a.quota.reset_at]);
+      a.quota.sha256, a.canary.sha256,
+      [...a.canary.verified_kinds].sort(), [...a.limits.kinds].sort(),
+      verifiedAt, a.quota.reset_at]);
     const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(material));
     const evidenceDigest = Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, '0')).join('');
     const cfg = {
