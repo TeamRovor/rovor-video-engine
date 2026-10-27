@@ -18,7 +18,8 @@ function cloud(){
 test('nine disconnected slots show unknown rings instead of zero quota',()=>{
  const html=board().render(null,false,cloud());
  assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
- assert.equal((html.match(/role="img" aria-label="Provider quota unknown"/g)||[]).length,9);
+ assert.equal((html.match(/role="img" aria-label="Provider quota unknown"/g)||[]).length,18);
+ assert.equal((html.match(/class="rvq-overview-tile"/g)||[]).length,9);
  assert.equal((html.match(/role="progressbar" aria-label="Reported quota used"/g)||[]).length,0);
  assert.match(html,/Unknown/);
  assert.doesNotMatch(html,/0.0%/);
@@ -31,6 +32,7 @@ test('verified local quota shows circular 25 percent plus 75 remaining',()=>{
    used_percent:25,unit:'requests',fetched_at:new Date().toISOString(),
    reset_at:new Date(Date.now()+3600000).toISOString()}]}},true);
  assert.match(html,/aria-label="Reported quota used"/);
+ assert.equal((html.match(/class="rvq-overview-tile"/g)||[]).length,1);
  assert.match(html,/aria-valuetext="25.0 percent of verified allowance used"/);
  assert.match(html,/--rvq-angle:25.0%/);
  assert.match(html,/75 \/ 100 requests/);
