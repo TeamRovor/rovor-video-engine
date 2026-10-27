@@ -1,5 +1,5 @@
 {
-  "status": "full-render-in-progress",
+  "status": "full-render-verified-and-sampled-review-complete",
   "worker": 94355,
   "outputFolder": "outputs/evan-cartoon-filtered-continuous",
   "renderSource": "work/filtered-continuous-review/render.py",
@@ -11,15 +11,64 @@
   "expectedTotalFrames": 552,
   "expectedNormalSeconds": 23,
   "expectedSlowSeconds": 92,
-  "fullFilmUpdated": false,
+  "fullFilmUpdated": true,
   "sourceArtworkGenerated": false,
   "sourceAlphaModified": false,
   "derivativeAlphaResampled": true,
   "defaultChanged": false,
   "phonemeTimingChanged": false,
   "flagsCleared": 0,
-  "pendingJobs": true,
+  "pendingJobs": false,
   "polishedMilestoneReady": false,
   "mohoProbed": false,
-  "nextConcreteWork": "Poll worker94355 without restarting; require Verification.json/full decoding. Run work/filtered-continuous-review/review.py and inspect100native/37overview plus encoded samples; validate all source/frame hashes and original narration. Do not overwrite the prior2s shot or clear timing flags."
+  "nextConcreteWork": "Audit four remaining low-energy phone concerns but/B184,whole/HH195,way/W207,all/AO228 against exact PCM, waveform/spectrogram and actual oral controls/decoded frames. Current18word markers already match acoustic-forced plan; do not retime to obsolete anchors or infer precise boundaries from coverage.",
+  "frames": 552,
+  "updatedHandFrames": 532,
+  "closingFramesByteExact": 20,
+  "cachedRightHandRegionCalibrationExactFrames": 532,
+  "outsideRightHandRegionExactFrames": 532,
+  "faceLeftArmAndBrandExact": true,
+  "halfAlphaRightArmStageBoundsClearFrames": 532,
+  "minimumArmArea2": 135.35096196660686,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 552,
+      "sha256": "23055137765fa65011952ee172124ca9b7842444892462251a16db1207a49668"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 2208,
+      "sha256": "4589ec3c5f0bc4dc8ff99b02ebd9c3511c36ba336856c83daa353ef4b727ee5c"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 368000,
+    "decodedPcm16Samples": 368000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourceWavByteExact": true,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "sourceSha256": "c717b774eb0f1ad82a68287c0b6c756365b358a7ff5823aea08708f1ac6c6d0f",
+  "registeredSkinSha256": "eee0f4bca7935860a789229daee96ed77e7af38ceb2a1b10ea28559038014df2",
+  "fingerArticulated": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "workerCompleted": true,
+  "all552FramesOutsideHandRegionExactToPrevious": true,
+  "nativeSamplesInspected": 100,
+  "overviewFramesInspected": 37,
+  "decodedNormalFramesInspected": [
+    69,
+    276,
+    374,
+    540
+  ],
+  "decodedSlowFramesInspected": [
+    276,
+    1496
+  ],
+  "sourceManifestSha256": "61802253b886402458d3b6b5dc6b6d5c3d823f3b6d19c1cd62dadb91bc0dad23",
+  "all18MarkersMatchCurrentAcousticPlan": true,
+  "visualConclusion": "Filtered hand substantially reduces contour stippling through the sampled full speech poses and encoded delivery-size frames. No new open wrist seam observed. Slightly softer/heavier contour, fixed fingers, dense cuff folds and restrained face/body acting remain. Sampled still inspection is not real-time acting or listening approval."
 }
