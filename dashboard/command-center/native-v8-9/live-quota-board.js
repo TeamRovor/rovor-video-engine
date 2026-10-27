@@ -4,7 +4,6 @@
 window.ROVOR_QUOTA_BOARD=(()=>{
 'use strict';
 const expandedSlots=new Set();
-let focusedQuotaSlot=null;
 // Keep UI inspection state independent of whichever legacy module redraws the popup.
 function listenForQuotaInteraction(){
  if(typeof document.addEventListener!=='function')return;
@@ -17,27 +16,9 @@ function listenForQuotaInteraction(){
    if(detail.open)expandedSlots.delete(key);
    else expandedSlots.add(key);
  },true);
- document.addEventListener('focusin',event=>{
-   const summary=event.target?.closest?.('.rvq-more summary');
-   if(summary)focusedQuotaSlot=summary.closest('[data-rvq-slot]')?.getAttribute('data-rvq-slot')||null;
- },true);
- // A programmatic focus change during repaint is not an owner's choice to
- // leave the detail. Clear the selection only for real navigation away.
- document.addEventListener('pointerdown',event=>{
-   if(!event.target?.closest?.('.rvq-more summary'))focusedQuotaSlot=null;
- },true);
- document.addEventListener('keydown',event=>{
-   if(event.key==='Tab'||event.key==='Escape')focusedQuotaSlot=null;
- },true);
+
 }
-function restoreFocusedQuota(root){
- if(!focusedQuotaSlot)return;
- const board=root?.classList?.contains('rvq-board')?root:root?.querySelector?.('.rvq-board');
- if(!board)return;
- const card=[...board.querySelectorAll('[data-rvq-slot]')].find(
-   n=>n.getAttribute('data-rvq-slot')===focusedQuotaSlot);
- card?.querySelector('.rvq-more summary')?.focus({preventScroll:true});
-}
+
 
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>typeof n==='number'&&Number.isFinite(n)?n.toLocaleString():'—';
@@ -586,9 +567,7 @@ function start(){
  const observer=new MutationObserver(()=>{
    if([...document.querySelectorAll('#rovor-workload-popup .wl-card')].some(
        n=>!n.hidden&&isOriginal(n)))void sync();
-   // A legacy popup replacement can discard focus without calling our API.
-   // Reassert it only when focus fell back to body after such a replacement.
-   restoreFocusedQuota(slot());
+
  });
  observer.observe(document.body,{childList:true,subtree:true});
  // Refresh the EXISTING popup even after its original heading was replaced.
