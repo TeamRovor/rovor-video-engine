@@ -1,5 +1,5 @@
 {
-  "status": "registered-source-and-eight-frame-pilot; full render in progress",
+  "status": "full-render-verified-and-sampled-review-complete",
   "source": "evan-character/cartoon-v1/open-palm-ink-v1/source-v1.png",
   "sourceSha256": "c717b774eb0f1ad82a68287c0b6c756365b358a7ff5823aea08708f1ac6c6d0f",
   "registeredSkinSha256": "6d987eb718d86172dce48d1ed7fe86de4e9ff0e00b0291c8593ee59661710219",
@@ -21,11 +21,11 @@
   "pilotOutsideRightHandRegionExact": true,
   "pilotFaceLeftArmAndBrandExact": true,
   "reusedComponentGuardTests": 3,
-  "fullFilmUpdated": false,
+  "fullFilmUpdated": true,
   "fullRenderWorker": 60000,
   "fullRenderFolder": "outputs/evan-cartoon-ink-palm",
   "previousVerifiedFullReview": "outputs/evan-cartoon-clean-palm-continuous/Review.html",
-  "visualInspection": "Raw source at full resolution; all eight native pilot crops at original resolution; full stage frame276. Five digits retained, no finger joint bands, contour is heavier; native edge stippling remains. No new open wrist seam observed in these samples.",
+  "visualInspection": "All100native samples and37stage overview poses inspected, plus four decoded normal and two slow frames at1280x720. Bolder hand reads better at delivery size; native edges remain stippled and ink is slightly heavier than opposite drawing. No new open wrist seam observed in inspected samples. Fixed fingers, dense cuff folds and restrained face/body acting remain.",
   "inkTrace": {
     "threshold": 80,
     "leftAreaPerBoundary": 2.2940038684719535,
@@ -38,5 +38,122 @@
   "timingChanged": false,
   "polishedMilestoneReady": false,
   "defaultChanged": false,
-  "mohoProbed": false
+  "mohoProbed": false,
+  "frames": 552,
+  "updatedHandFrames": 532,
+  "closingFramesByteExact": 20,
+  "cachedRightHandRegionCalibrationExactFrames": 532,
+  "outsideRightHandRegionExactFrames": 532,
+  "faceLeftArmAndBrandExact": true,
+  "halfAlphaRightArmStageBoundsClearFrames": 532,
+  "minimumArmArea2": 135.35096196660686,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 552,
+      "sha256": "ca97b78e3ed726a924596a49d2bc84b365c20a491841c55887e982a47156b96b"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 2208,
+      "sha256": "8a3123e6e99e4f16c80e8866bb06a2b01a9a238f931258369b716f1a86c2ee5b"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 368000,
+    "decodedPcm16Samples": 368000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourceWavByteExact": true,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "fingerArticulated": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "pendingJobs": false,
+  "fullRenderWorkerCompleted": true,
+  "nativeSamplesInspected": 100,
+  "overviewFramesInspected": 37,
+  "decodedNormalFramesInspected": [
+    69,
+    276,
+    374,
+    540
+  ],
+  "decodedSlowFramesInspected": [
+    276,
+    1496
+  ],
+  "allNativeFramesVisuallyInspected": false,
+  "previousCleanFilmOutsideHandRegionExactFrames": 552,
+  "deliverySizeInkReadImproved": true,
+  "preciseStrokeMatchAccepted": false,
+  "nextConcreteWork": "Compare native registration downsampling to a correctly filtered source footprint at one strong-wrist pose; preserve raw artwork/registration/guards, judge at delivery size, do not assume triangle holes.",
+  "sourceManifestSha256": "3c937a2ddb36c9c9105beeba926400b1282318703d3698e4aa94ef90bcf1a1f6",
+  "samplingTrace": {
+    "method": "Identical premultiplied image, cubic sampler and hierarchical hand parent; compare alpha in s>=70 rigid distal region only. Not an antialias fix or artist approval.",
+    "sourceModified": false,
+    "defaultChanged": false,
+    "rows": [
+      {
+        "angles": [
+          -2,
+          0,
+          0
+        ],
+        "distalUnionPixels": 5712,
+        "alphaDifferentPixels": 4,
+        "alphaDifferenceOver8": 0,
+        "maxAlphaDifference": 1,
+        "expectedOpaqueMissingInActual": 0
+      },
+      {
+        "angles": [
+          -8,
+          -34,
+          -30
+        ],
+        "distalUnionPixels": 5712,
+        "alphaDifferentPixels": 3,
+        "alphaDifferenceOver8": 0,
+        "maxAlphaDifference": 1,
+        "expectedOpaqueMissingInActual": 0
+      },
+      {
+        "angles": [
+          -3,
+          -38,
+          -5
+        ],
+        "distalUnionPixels": 5720,
+        "alphaDifferentPixels": 4,
+        "alphaDifferenceOver8": 0,
+        "maxAlphaDifference": 1,
+        "expectedOpaqueMissingInActual": 0
+      },
+      {
+        "angles": [
+          -6,
+          -30,
+          -30
+        ],
+        "distalUnionPixels": 5708,
+        "alphaDifferentPixels": 9,
+        "alphaDifferenceOver8": 0,
+        "maxAlphaDifference": 1,
+        "expectedOpaqueMissingInActual": 0
+      },
+      {
+        "angles": [
+          -5,
+          -24,
+          16
+        ],
+        "distalUnionPixels": 5716,
+        "alphaDifferentPixels": 3,
+        "alphaDifferenceOver8": 0,
+        "maxAlphaDifference": 1,
+        "expectedOpaqueMissingInActual": 0
+      }
+    ]
+  }
 }
