@@ -3,6 +3,12 @@ export function createCloudOperations(base, cloud) {
  // Register the immutable, bundled canonical feeder once. No browser or service caller
  // can supply feeder code or job prompts; all task admission remains in approved-feed.mjs.
  let canonicalFeeder = null;
+ let hostedShiftRunner = null;
+ function installHostedShiftRunner(run) {
+  if(hostedShiftRunner)throw Error('hosted_shift_already_registered');
+  if(typeof run !== 'function')throw Error('invalid_hosted_shift_runner');
+  hostedShiftRunner = run;
+ }
  function installApprovedFeeder(feed) {
   if(canonicalFeeder)throw Error('canonical_feed_already_registered');
   if(!feed || typeof feed.replenishApprovedJobs !== 'function')throw Error('invalid_canonical_feeder');
@@ -244,7 +250,7 @@ export function createCloudOperations(base, cloud) {
  }
  const script='<script>('+browserUI.toString()+')();</script>';
  return {
-  inventory,status,control,replenish,installApprovedFeeder,
+  inventory,status,control,replenish,installApprovedFeeder,installHostedShiftRunner,
   async fetch(request,env){
    const url=new URL(request.url),actor=owner(request);
    // Only the registered owner-private Site's dispatch may invoke this shared
@@ -259,6 +265,9 @@ export function createCloudOperations(base, cloud) {
      if(body.operation==='status')return json(await status(env));
      if(body.operation==='inventory'){const result=await inventory(env,body.provider);await sql(env,'INSERT INTO ghost_cloud_provider_checks(provider,observed_at,status,error_category) VALUES(?,?,?,?) ON CONFLICT(provider) DO UPDATE SET observed_at=excluded.observed_at,status=excluded.status,error_category=excluded.error_category',body.provider,Date.now(),result.status,result.error_category||null).run();return json(result);}
      if(body.operation==='shift'){
+      // A compiled scheduled Site registers the durable D1 shift ledger.
+      // Reuse this authenticated route; never report a hosted wakeup as native.
+      if(hostedShiftRunner)return json(await hostedShiftRunner(env));
       const intake=await replenish(env);
       const result=await cloud.tick(env);
       return json({intake,result,observed_at:Date.now()});
