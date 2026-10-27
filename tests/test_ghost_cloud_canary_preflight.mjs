@@ -138,14 +138,14 @@ test('quota exhaustion blocks a new canary without a model request',async()=>{
 test('canary accepts only the exact marker with harmless surrounding whitespace',async()=>{
  const {env,sqlite}=setup(),cfg=config('openrouter'),a=approval('openrouter',cfg);
  const out=await runCanary({provider:'openrouter',cfg,env,approval:a,now:NOW,
-  fetcher:async()=>success(' \\n  '+marker(a)+'  \\r\\n',cfg.model)});
+  fetcher:async()=>success(' \n  '+marker(a)+'  \r\n',cfg.model)});
  assert.equal(out.status,'needs_review');
  assert.equal(out.actual_model,cfg.model);
  assert.equal(out.human_review,'not_recorded');
  assert.equal(sqlite.prepare('SELECT output FROM ghost_cloud_attempts').get().output,null);
 });
 test('canary still rejects extra text, markdown wrappers and wrong markers',async()=>{
- for(const text of ['Here is '+marker(approval()),'\\x60'+marker(approval())+'\\x60',
+ for(const text of ['Here is '+marker(approval()),'\x60'+marker(approval())+'\x60',
                   marker(approval())+' extra',marker(approval()).replace('CANARY','CANARX')]){
   const {env,sqlite}=setup(),cfg=config(),a=approval();
   const out=await runCanary({provider:'groq',cfg,env,approval:a,now:NOW,
