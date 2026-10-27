@@ -186,7 +186,7 @@ def audit(home=None, now=None):
             failures = conn.execute('''SELECT j.id,j.status,j.result FROM jobs j JOIN events e ON e.job_id=j.id
                 WHERE j.kind=? AND e.event='claimed' ORDER BY e.timestamp DESC,e.id DESC LIMIT 3''',
                 ('research.omniroute',)).fetchall()
-            report['last_three_claims'] = [{'id': r['id'], 'status': r['status'],
+            report['last_three_claims'] = [{'status': r['status'],
                 'draft_status': safe_id(json.loads(r['result'] or '{}').get('draft_status'))} for r in failures]
     except (OSError, ValueError, KeyError, TypeError, sqlite3.Error):
         report['worker_evidence'] = 'unavailable_or_schema_changed'
