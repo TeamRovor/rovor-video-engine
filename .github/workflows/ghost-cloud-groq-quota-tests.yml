@@ -3,12 +3,16 @@ on:
   pull_request:
     paths:
       - 'integrations/ghost-cloud/site-operations.mjs'
+      - 'integrations/ghost-cloud/runtime.mjs'
+      - 'tests/test_ghost_cloud.mjs'
       - 'tests/test_ghost_cloud_groq_quota.mjs'
       - '.github/workflows/ghost-cloud-groq-quota-tests.yml'
   push:
     branches: [main]
     paths:
       - 'integrations/ghost-cloud/site-operations.mjs'
+      - 'integrations/ghost-cloud/runtime.mjs'
+      - 'tests/test_ghost_cloud.mjs'
       - 'tests/test_ghost_cloud_groq_quota.mjs'
       - '.github/workflows/ghost-cloud-groq-quota-tests.yml'
 permissions:
@@ -22,4 +26,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/test_ghost_cloud_groq_quota.mjs
+      - run: node --test tests/test_ghost_cloud_groq_quota.mjs tests/test_ghost_cloud.mjs
