@@ -169,6 +169,29 @@ export function createCloudOperations(base, cloud) {
   }
   return {queued,duplicates};
  }
+ // Catalog identifiers are not always inference model names. Cloudflare's
+ // model search returns UUIDs in 'id' and runnable '@cf/...' names; Gemini's
+ // REST catalog prefixes OpenAI-compatible IDs with 'models/'.
+ // This is read-only discovery: never use a returned name to authorize spend.
+ function catalogModel(provider,entry) {
+  if(!entry||typeof entry!=='object')return null;
+  let model=provider==='cloudflare-ai'?entry.name:(entry.id||entry.name);
+  if(typeof model!=='string')return null;
+  if(provider==='gemini'&&model.startsWith('models/'))model=model.slice(7);
+  if(!/^[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}$/.test(model))return null;
+  if(provider==='cloudflare-ai'&&!model.startsWith('@cf/'))return null;
+  if(provider==='openrouter'&&(
+   !model.endsWith(':free')||entry.pricing?.prompt==null||
+   entry.pricing?.completion==null||Number(entry.pricing.prompt)!==0||
+   Number(entry.pricing.completion)!==0))return null;
+  return {
+   id:model,
+   context_length:Number.isSafeInteger(entry.context_length)?entry.context_length:null,
+   catalog_zero_price:provider==='openrouter'?true:null,
+   // Keep moving aliases visible, but do not present them as pinned candidates.
+   pinned_model_candidate:!/(^|[/:-])(auto|latest)([/:-]|$)/i.test(model)
+  };
+ }
  const endpoints={
   groq:'https://api.groq.com/openai/v1/models',
   gemini:'https://generativelanguage.googleapis.com/v1beta/openai/models',
@@ -192,10 +215,12 @@ export function createCloudOperations(base, cloud) {
    const quotaObservation=provider==='groq'?readGroqRpd(response.headers,Date.now()):null;
    const data=await bounded(response,4194304),rows=data.data||data.models||data.result;
    if(!Array.isArray(rows))return {provider,status:'unrecognized_catalog'};
-   const models=rows.filter(m=>m&&typeof(m.id||m.name)==='string').filter(m=>provider!=='openrouter'||(m.id.endsWith(':free')&&m.pricing?.prompt!=null&&m.pricing?.completion!=null&&Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0)).slice(0,20).map(m=>({
-    id:String(m.id||m.name).slice(0,200),context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
-    catalog_zero_price:provider==='openrouter'?true:null
-   }));
+   const models=[];
+   for(const entry of rows){
+    const model=catalogModel(provider,entry);
+    if(model)models.push(model);
+    if(models.length===20)break;
+   }
    return {provider,status:'catalog_received',observed_at:Date.now(),models,
     ...(quotaObservation?{quota_observation:quotaObservation}:{}),
     billing_verified:false,quota_verified:quotaObservation!==null,canary_verified:false};

@@ -158,6 +158,55 @@ test('fixed-endpoint GET inventory returns bounded public model metadata only',a
  assert.equal(calls,1);assert.deepEqual(result.models.map(m=>m.id),['known/free:free']);assert.equal(result.billing_verified,false);assert.equal(result.quota_verified,false);assert.ok(!JSON.stringify(result).includes('must not return'));
  await assert.rejects(ops.inventory(env,'https://attacker.invalid',async()=>{throw Error();}));
 });
+test('Cloudflare model discovery uses runnable @cf name, never catalog UUID',async()=>{
+ const {env,ops}=setup();
+ const result=await ops.inventory(env,'cloudflare-ai',async(url,opts)=>{
+  assert(url.endsWith('/ai/models/search'));
+  assert.equal(opts.method,'GET');
+  return Response.json({result:[
+   {id:'fe8904cf-e20e-4884-b829-ed7cec0a01cb',name:'@cf/meta/llama-3.1-8b-instruct'},
+   {id:'d9dc8363-66f4-4bb0-8641-464ee7bfc131',name:''},
+   {id:'beef',name:'https://untrusted.example/?secret=x'}
+  ]});
+ });
+ assert.equal(result.status,'catalog_received');
+ assert.deepEqual(result.models.map(m=>m.id),['@cf/meta/llama-3.1-8b-instruct']);
+ assert.equal(result.models[0].pinned_model_candidate,true);
+ assert.equal(result.billing_verified,false);
+ assert.equal(result.canary_verified,false);
+ assert.equal(result.quota_verified,false);
+ assert.equal(JSON.stringify(result).includes('fe8904cf'),false);
+});
+
+test('Gemini model discovery strips REST catalog prefix for OpenAI compatible inference',async()=>{
+ const {env,ops}=setup();
+ const report=await ops.inventory(env,'gemini',async()=>Response.json({models:[
+  {name:'models/gemini-2.5-flash'},
+  {name:'models/gemini-flash-latest'},
+  {name:'models/../invalid?'},
+  {name:'models/gemini-2.5-flash-lite'}
+ ]}));
+ assert.deepEqual(report.models.map(m=>m.id),[
+  'gemini-2.5-flash','gemini-flash-latest','gemini-2.5-flash-lite'
+ ]);
+ assert.deepEqual(report.models.map(m=>m.pinned_model_candidate),[true,false,true]);
+ assert.equal(report.billing_verified,false);
+});
+
+test('OpenRouter catalog filters paid models before 20-result bound',async()=>{
+ const {env,ops}=setup();
+ const paid=Array.from({length:30},(_,i)=>({id:'vendor/paid-'+i,pricing:{prompt:'0.01',completion:'0'}}));
+ const report=await ops.inventory(env,'openrouter',async()=>Response.json({data:[
+  ...paid,
+  {id:'vendor/explicit:free',pricing:{prompt:'0',completion:'0'}},
+  {id:'vendor/unknown:free',pricing:{prompt:null,completion:null}}
+ ]}));
+ assert.deepEqual(report.models.map(m=>m.id),['vendor/explicit:free']);
+ assert.equal(report.models[0].catalog_zero_price,true);
+ assert.equal(report.billing_verified,false);
+ assert.equal(report.canary_verified,false);
+});
+
 test('inventory errors do not leak key or vendor body',async()=>{
  const {env,ops}=setup();const result=await ops.inventory(env,'groq',async()=>new Response('sensitive upstream',{status:403}));
  assert.deepEqual(result,{provider:'groq',status:'http_403'});
