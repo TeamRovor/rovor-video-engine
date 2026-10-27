@@ -166,6 +166,26 @@ class ContinuousTests(unittest.TestCase):
                                            (job,)).fetchone()[0], 'queued')
         self.assertEqual(self.conn.execute("SELECT count(*) FROM events WHERE event='claimed'").fetchone()[0], 0)
 
+    def test_incomplete_fleet_never_claims_or_reports_capacity_checked(self):
+        for fleet in ({}, {'independent_pool_limits': False},
+                      {'independent_pool_limits': True},
+                      {'independent_pool_limits': True, 'host_evidence_authenticated': False},
+                      [], 'PRIVATE_CALLBACK_TEXT', True):
+            with self.subTest(fleet=fleet):
+                if not self.conn.execute('SELECT 1 FROM jobs').fetchone():
+                    job = self.enqueue(next(iter(continuous.assignments())))
+                with mock.patch.object(worker, 'run_once', side_effect=AssertionError('claimed')):
+                    result = continuous.tick(self.state, self.workspace, now=1000,
+                        verified_fleet_provider=lambda *_: fleet)
+                self.assertEqual(result['status'], 'route_preflight_requires_review')
+                self.assertEqual(result['executed'], 0)
+                self.assertFalse(result['dispatch']['allowed'])
+                self.assertNotIn('dispatch_mode', result)
+                self.assertNotIn('PRIVATE_CALLBACK_TEXT', json.dumps(result))
+                self.assertEqual(self.conn.execute('SELECT status FROM jobs WHERE id=?',
+                                                   (job,)).fetchone()[0], 'queued')
+                self.assertEqual(self.conn.execute("SELECT count(*) FROM events WHERE event='claimed'").fetchone()[0], 0)
+
     def test_unknown_assignment_is_rejected_before_queue_write(self):
         with self.assertRaises(ValueError):
             self.enqueue('not-approved')
