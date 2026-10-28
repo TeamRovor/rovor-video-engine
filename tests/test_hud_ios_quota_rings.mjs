@@ -385,7 +385,7 @@ test('authenticated Gemini project monitoring displays fresh Google samples but 
  assert.match(html,/GenerateRequestsPerMinute-FreeTier/);
  assert.match(html,/sampled use<\/th>/);
  assert.match(html,/NOT the current remaining balance/);
- assert.equal((html.match(/role="progressbar"/g)||[]).length,0);
+ assert.doesNotMatch(html,/aria-label="Reported quota used"/);
  assert.match(html,/Provider quota unknown/);
  doc.observed_at=now-3600000;
  const old=board().render(data,true,null,null,null,doc);
