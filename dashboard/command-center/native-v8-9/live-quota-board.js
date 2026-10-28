@@ -4,19 +4,37 @@
 window.ROVOR_QUOTA_BOARD=(()=>{
 'use strict';
 const expandedSlots=new Set();
+const expandedProviders=new Set();
 // Keep UI inspection state independent of whichever legacy module redraws the popup.
 function listenForQuotaInteraction(){
  if(typeof document.addEventListener!=='function')return;
+ // Disclosures survive the existing 10-second read-only refresh.
  document.addEventListener('click',event=>{
-   const summary=event.target?.closest?.('.rvq-more summary');
+   const summary=event.target?.closest?.('summary');
    if(!summary)return;
-   const detail=summary.parentElement;
-   const key=detail?.closest?.('[data-rvq-slot]')?.getAttribute('data-rvq-slot');
+   const section=summary.parentElement;
+   const key=section?.closest?.('[data-rvq-slot]')?.getAttribute('data-rvq-slot');
    if(!key)return;
-   if(detail.open)expandedSlots.delete(key);
-   else expandedSlots.add(key);
+   const set=section.classList.contains('rvq-provider-details')?expandedProviders:
+     section.classList.contains('rvq-more')?expandedSlots:null;
+   if(!set)return;
+   if(section.open)set.delete(key);else set.add(key);
  },true);
-
+ document.addEventListener('click',event=>{
+   const tile=event.target?.closest?.('a[data-rvq-open-slot]');
+   const board=tile?.closest?.('.rvq-board');
+   if(!board)return;
+   event.preventDefault();
+   const key=tile.getAttribute('data-rvq-open-slot');
+   const provider=[...board.querySelectorAll('[data-rvq-slot]')].find(
+     card=>card.getAttribute('data-rvq-slot')===key);
+   const detail=provider?.querySelector('.rvq-provider-details');
+   if(!detail)return;
+   detail.open=true;
+   expandedProviders.add(key);
+   detail.querySelector('summary')?.focus({preventScroll:true});
+   provider.scrollIntoView?.({block:'start',behavior:'auto'});
+ });
 }
 
 
@@ -423,13 +441,15 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,
  const rows=entries.map(meter);
  if(!rows.length)rows.push(unknownModel(null));
  const first=rows.slice(0,2).join('');
- const extra=rows.length>2?'<details class="rvq-more"'+(expandedSlots.has(group.provider+':'+slot.account_slot)?' open':'')+'><summary>Show '+(rows.length-2)+' more model'+(rows.length===3?'':'s')+'</summary>'+rows.slice(2).join('')+'</details>':'';
- const state= !live?'TELEMETRY STALE':slot.enabled===false?'DISABLED':slot.enabled===true?'GATEWAY ENABLED · PROVIDER UNVERIFIED':'ENABLEMENT UNKNOWN';
+ const key=group.provider+':'+slot.account_slot;
+ const extra=rows.length>2?'<details class="rvq-more"'+(expandedSlots.has(key)?' open':'')+'><summary>Show '+(rows.length-2)+' more model'+(rows.length===3?'':'s')+'</summary>'+rows.slice(2).join('')+'</details>':'';
+ const state=!live?'TELEMETRY STALE':slot.enabled===false?'DISABLED':slot.enabled===true?'GATEWAY ENABLED · PROVIDER UNVERIFIED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
- return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
- '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+geminiProjectMonitoring(group.provider,geminiProject)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
+ const name=pretty(group.name||group.provider);
+ // The full original per-provider report is retained, now under one accessible disclosure.
+ return '<article class="rvq-provider" data-rvq-slot="'+esc(key)+'"><details class="rvq-provider-details"'+(expandedProviders.has(key)?' open':'')+'><summary class="rvq-provider-head"><span class="rvq-provider-icon">'+esc(name.slice(0,1).toUpperCase())+'</span><span class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(name)+'</span><span class="rvq-provider-name">'+esc(name)+' · Slot '+fmt(slot.account_slot)+'</span><span class="rvq-provider-connection">'+state+'</span></span><span class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</span></summary>'+
+  '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+geminiProjectMonitoring(group.provider,geminiProject)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></details></article>';
 }
-
 // Nine-provider glance cards are a visualization of one explicitly labeled
 // validated quota source per slot. They never sum Mac and cloud counters.
 function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
@@ -449,7 +469,7 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
  const evidence=local?'MAC QUOTA CACHE':verified?'CLOUD LIMIT':'QUOTA UNKNOWN';
  const name=pretty(slot.group.name||slot.group.provider);
  const traffic=activity?usageRing(activity.share,'Mac 24-hour recorded request share for '+name,'activity'):'';
- return '<div class="rvq-overview-tile" aria-label="'+esc(name)+' connection '+fmt(slot.account_slot)+' · '+evidence+'">'+
+ return '<a class="rvq-overview-tile" href="#rvq-reports" data-rvq-open-slot="'+esc(slot.group.provider+':'+slot.account_slot)+'" aria-label="View '+esc(name)+' connection '+fmt(slot.account_slot)+' full report · '+evidence+'">'+
    '<span class="rvq-overview-name">'+esc(name)+'</span>'+
    // Prioritize the real 24h usage ring in each of the nine connection tiles.
    // Unknown account quota remains a separate visible ring; never present traffic as quota.
@@ -457,7 +477,7 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
    '<span class="rvq-overview-source">'+evidence+'</span>'+
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span>'+
    '<span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
-   '<span class="rvq-overview-minute">'+(minute?fmt(minute.requests)+' / 1m':'1m unverified')+'</span></div>';
+   '<span class="rvq-overview-minute">'+(minute?fmt(minute.requests)+' / 1m':'1m unverified')+'</span><span class="rvq-overview-drill">VIEW DETAILS</span></a>';
 }
 function dispatchInfo(workforce,live){
  const d=live?workforce?.dispatch:null;
@@ -519,7 +539,14 @@ const css=`
 #rovor-workload-popup .rvq-stat-value.rvq-small{font-size:13px;min-height:25px}
 #rovor-workload-popup .rvq-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
 #rovor-workload-popup .rvq-provider{min-width:0;background:linear-gradient(145deg,rgba(13,48,77,.88),rgba(5,25,44,.95));border:1px solid rgba(90,164,204,.38);border-radius:12px;overflow:hidden;box-shadow:inset 0 1px rgba(153,219,252,.07)}
-#rovor-workload-popup .rvq-provider-head{display:flex;align-items:center;gap:10px;padding:15px;border-bottom:1px solid rgba(95,175,213,.22)}
+#rovor-workload-popup .rvq-provider-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;list-style:none}
+#rovor-workload-popup .rvq-provider-head::-webkit-details-marker{display:none}
+#rovor-workload-popup .rvq-provider-head:focus-visible{outline:2px solid #a9e1ff;outline-offset:-3px}
+#rovor-workload-popup .rvq-provider-head:after{content:'+';font:700 19px system-ui;color:#a9dcff;flex:none}
+#rovor-workload-popup .rvq-provider-details[open]>.rvq-provider-head{border-bottom:1px solid rgba(95,175,213,.22)}
+#rovor-workload-popup .rvq-provider-details[open]>.rvq-provider-head:after{content:'−'}
+#rovor-workload-popup .rvq-provider-name{display:block;margin:3px 0 2px;color:#ecfaff;font:700 14px/1.32 system-ui;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-provider-connection{display:block;color:#9ec5d8;font:11px/1.4 system-ui}
 #rovor-workload-popup .rvq-provider-icon{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:9px;border:1px solid rgba(116,205,255,.49);background:radial-gradient(circle at 30% 25%,#236b9e,#0b3154);color:#eafaff;font:700 16px system-ui}
 #rovor-workload-popup .rvq-provider-ident{min-width:0;flex:1}
 #rovor-workload-popup .rvq-provider-index{display:block;color:#8bb7ce;font:700 9px system-ui;letter-spacing:.13em}
@@ -587,8 +614,17 @@ const css=`
 @media(max-width:380px){#rovor-workload-popup .rvq-ring-layout{grid-template-columns:80px minmax(0,1fr);gap:9px}#rovor-workload-popup .rvq-ring-layout .rvq-ring{width:80px;height:80px}#rovor-workload-popup .rvq-ring-layout .rvq-ring:before{inset:9px}#rovor-workload-popup .rvq-ring-layout .rvq-ring-core strong{font-size:15px}#rovor-workload-popup .rvq-ring-layout .rvq-ring-core small{font-size:7px}}
 /* Visible nine-slot quota dashboard above verbose evidence panels. */
 #rovor-workload-popup .rvq-overview{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 15px}
-#rovor-workload-popup .rvq-overview-tile{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:start;gap:8px;padding:12px 8px 11px;border:1px solid rgba(83,159,211,.4);border-radius:11px;background:linear-gradient(145deg,#0c304e,#051b32);text-align:center}
+#rovor-workload-popup .rvq-overview-tile{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:start;gap:8px;padding:12px 8px 11px;text-decoration:none;cursor:pointer;touch-action:manipulation;border:1px solid rgba(83,159,211,.4);border-radius:11px;background:linear-gradient(145deg,#0c304e,#051b32);text-align:center}
 #rovor-workload-popup .rvq-overview-rings{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
+#rovor-workload-popup .rvq-overview-tile:hover,#rovor-workload-popup .rvq-overview-tile:focus-visible{border-color:#b9eaff;outline:2px solid #87c9fa;outline-offset:1px;background:#103b60}
+#rovor-workload-popup .rvq-overview-drill{color:#a9dfff;font:700 10px/1.35 system-ui;letter-spacing:.05em;margin-top:auto}
+#rovor-workload-popup .rvq-source-notes{margin-top:12px;color:#9bc4dd;font:11px/1.55 system-ui}
+#rovor-workload-popup .rvq-source-notes summary{cursor:pointer;color:#a9e5ff;padding:8px 0}
+#rovor-workload-popup .rvq-source-notes p{margin:6px 0}
+#rovor-workload-popup .rvq-jump-nav{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 14px}
+#rovor-workload-popup .rvq-jump-nav a{display:inline-flex;align-items:center;min-height:44px;padding:9px 12px;border:1px solid rgba(92,178,233,.48);background:#0b2949;color:#c7edff;text-decoration:none;font:700 11px system-ui;letter-spacing:.04em}
+#rovor-workload-popup .rvq-jump-nav a:hover,#rovor-workload-popup .rvq-jump-nav a:focus-visible{outline:2px solid #8ccffc;outline-offset:1px}
+#rovor-workload-popup .rvq-details-heading{color:#b9e8ff;font:700 12px/1.5 system-ui;letter-spacing:.1em;margin:20px 0 9px}
 #rovor-workload-popup .rvq-overview-requests{color:#d4efff;font:700 11px/1.35 system-ui;text-align:center}
 #rovor-workload-popup .rvq-overview-hourly{color:#9bdfff;font:700 10px/1.35 system-ui;text-align:center}
 #rovor-workload-popup .rvq-overview-minute{color:#b3edff;font:700 10px/1.35 system-ui;text-align:center}
