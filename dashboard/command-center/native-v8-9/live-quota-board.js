@@ -483,7 +483,7 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,
 }
 // Nine-provider glance cards are a visualization of one explicitly labeled
 // validated quota source per slot. They never sum Mac and cloud counters.
-const ACTION_GATES=new Set(['missing_secret','unpinned_model','eligibility_unverified','eligibility_expired','canary_unverified','invalid_limits','missing_account','paid_route_denied','unpinned_upstream','failure_circuit_requires_review']);
+const ACTION_GATES=new Set(['missing_secret','unpinned_model','eligibility_unverified','eligibility_expired','canary_unverified','invalid_limits','missing_account','unpinned_upstream','failure_circuit_requires_review']);
 const needsSetupReview=p=>ACTION_GATES.has(p?.dispatch_gate?.reason);
 function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
  const local=live&&slot.enabled!==false?quota.find(q=>q.provider===slot.group.provider&&
