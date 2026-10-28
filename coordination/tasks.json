@@ -4694,9 +4694,9 @@
       "priority": 1,
       "status": "active",
       "owner": "Codex / Amar persistent HUD telemetry release continuation 2026-10-28",
-      "updated_at": "2026-10-28T08:22:18.218Z",
-      "next_update": "After packaging regression verification and release CI",
-      "branch": "ux/nine-provider-glance-readability-20261028",
+      "updated_at": "2026-10-28T08:26:07.890Z",
+      "next_update": "After focused verifier tests and PR",
+      "branch": "fix/hud-release-asset-readback-20261028",
       "scopes": [
         "integrations/hud-cloud",
         "tools/hud_telemetry_publisher.mjs",
@@ -4709,10 +4709,11 @@
         ".github/workflows/hud-cloud-reviews.yml",
         "coordination/cloud-reviews",
         "tests/test_hud_cloud_reviews.mjs",
-        "coordination/cloud-shifts/walter-pr186.json"
+        "coordination/cloud-shifts/walter-pr186.json",
+        "tests/test_hud_github_deployment.mjs"
       ],
       "depends_on": [],
-      "next_action": "Repair self-contained Site bundle dependency on Gemini monitor, reproduce import failure and run bundle tests; release existing HUD PR276. No provider or auth changes.",
+      "next_action": "Require authenticated served quota JS to match the checkout during CLI release verification; add stale-asset regression and preserve private authentication. PR276 merged; manual production deployment not yet observed.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
