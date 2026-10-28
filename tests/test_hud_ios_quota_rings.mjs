@@ -307,3 +307,28 @@ test('Mistral cloud minute headers render accurate rings without falsifying acco
  assert.match(expired,/Mistral authenticated minute limits: unverified or expired/);
  assert.doesNotMatch(expired,/Verified Mistral model minute tokens used/);
 });
+
+
+test('Cloudflare workload explicitly links owner PASS/FAIL to private Site without pretending to save reviews',()=>{
+ const html=board().render(null,false,cloud());
+ assert.match(html,/OWNER PASS \/ FAIL REVIEWS/);
+ assert.match(html,/read-only and cannot save owner decisions/);
+ assert.match(html,/https:\/\/rovor-private-hud\.mm98z652cq\.chatgpt\.site\//);
+ assert.match(html,/rel="noopener noreferrer"/);
+ assert.doesNotMatch(html,/<button[^>]*>PASS<\/button>/);
+});
+test('Groq organization base limits appear as owner reference, not authenticated quota or filled ring',()=>{
+ const data={source:'local_omniroute_read_only_bridge',period:'24h',
+  snapshot_at:new Date().toISOString(),usage_coverage:'complete_aggregate',
+  request_count:0,connections:[{provider:'groq',name:'groq',connection_count:1,enabled_count:1}],
+  connection_slots:[{provider:'groq',account_slot:1,enabled:true}],
+  models:[],quota:{records:[]}};
+ const html=board().render(data,true);
+ assert.match(html,/GROQ · ORGANIZATION BASE LIMITS/);
+ assert.match(html,/openai\/gpt-oss-20b/);
+ assert.match(html,/<td>30<\/td><td>1,000<\/td><td>8,000<\/td><td>200,000<\/td>/);
+ assert.match(html,/Per-project overrides may differ/);
+ assert.match(html,/capacity ceilings, not live consumed\/remaining/);
+ assert.match(html,/Provider quota unknown/);
+ assert.doesNotMatch(html,/verified allowance used/);
+});
