@@ -55,7 +55,7 @@ test('one provider with actual Mac limit receipts is not nine verified providers
      reset_at:new Date(now.getTime()+3600000).toISOString()}]},models:[]
  };
  const html=render(data,true);
- assert.match(html,/PROVIDERS WITH MAC LIMIT DATA/);
+ assert.match(html,/CONNECTION SLOTS WITH MAC LIMIT DATA/);
  assert.match(html,/1 \/ 9/);
  assert.match(html,/Limit records: 1/);
  assert.match(html,/--rvq-angle:20.0%/);
@@ -191,4 +191,20 @@ test('Mac report age is explicit and stale inventory never implies live quota',(
  assert.match(missing,/Mac last-report time unknown/);
  const future=render({...data,snapshot_at:new Date(Date.now()+120000).toISOString()},false);
  assert.match(future,/Mac reporter clock is ahead · freshness uncertain/);
+});
+
+test('quota coverage counts observed connection slots, not provider names or stray records',()=>{
+ const now=new Date(), base={provider:'groq',account_slot:1,model_id:'model-a',
+  used:1,total:2,used_percent:50,unit:'requests',fetched_at:now.toISOString(),
+  reset_at:new Date(now.getTime()+3600000).toISOString()};
+ const data={connections:[
+   {provider:'groq',name:'Groq',connection_count:2,enabled_count:2},
+   {provider:'openrouter',name:'OpenRouter',connection_count:1,enabled_count:1}],
+   quota:{records:[base,{...base,model_id:'model-b'},
+     {...base,provider:'ghost-provider',account_slot:17}]}};
+ const html=render(data,true);
+ assert.match(html,/CONNECTION SLOTS WITH MAC LIMIT DATA/);
+ assert.match(html,/1 \/ 3/);
+ assert.match(html,/Limit records: 3/);
+ assert.doesNotMatch(html,/3 \/ 3/);
 });
