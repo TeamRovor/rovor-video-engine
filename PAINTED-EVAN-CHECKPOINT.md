@@ -5,6 +5,15 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: corrected v3 fingers in narrated definition component; full-context candidate next
+CARTOON-EVAN-DEFINITION-DIGIT-FLEX.md / evan-engine/reviews/definition-digit-flex-v1.json. Separate digit-curl-v3 reassigns1138visible pixels by complete near-opaque components belowy900, then fullalpha nearestcore ownership. Alpha250 is SEED only; NO rawRGB/alpha cleanup. FourrootFreeze60sourcepx fixes sharedpalm gaps. Legacyv1/v2/defaultfolder preserved. Twenty tests pass(11new), incl componentownership, exactrest,481partialgeometry/fixedroots, rootcoverage44070opaque pixels exact(v2lost178), boundedcue/shift/fallback/invalids. Fullv3stroke folds/rejected; nofistclaim.
+
+New opt-in tiny/version indices33/34cue10.73/11.03/11.41/11.75 drives0..0.2partial flex. Existing arm/head/brow/mouth/timing unchanged. Component10–13s:72frames,24new258..281+48offcue byte-exactcurrentcollar copies. Fullbaseline/nativeoraljaw/audit/otherlayers/outsidehand exact, actualarmmeshes positive. Normal3s/slow12s decode72/288; exactPCM160000:20800048000samples; AAC/H264lossy. All144native/stagehashes/24selectedfrozen sources/films verified. Workers27453/94521COMPLETED; NO pending jobs.
+
+InspectedALL24native320x320pairs,3raw680x722poses/peaklightgapcrop,12overview and6normal+3slow1280x720decoded. Prior opaque gapthreads reduced; wrist/roots connected in samples, separated contours/continuoussmallflex. Deliveryaccent subtle; no closedpoint/depthturn/broaderacting claim. Componentconstruction reviewed, listening/realtime/polished NOTaccepted. Currentfullfilm collar-continuous/20closing/18unresolvedflags preserved. No sourcegeneration/default/Moho/merge/deploy.
+
+NEXT: create SEPARATE fullcontinuous candidate from24reviewed frames258..281 +528currentPNGs byte-exact, including20closing. PreservefullPCM/18currentmarkers/exactcontexts; verify552/2208decodes/sourcehashes andinspectcueboundaries/fullcontext. No strongercurl/pointdrawings. Automationactive; polishedNOTready.
+
 ## Current task: v2 ownership/bounded flex reviewed; faint contour threads next
 CARTOON-EVAN-DIGIT-CURL-V2.md / evan-engine/reviews/digit-curl-v2.json. Separate digit-curl-v2: masks expand12sourcepx, nearest joint-polyline ownership, protected index, thumb first60axispxfixed. Rawsource/alpha/v1 unchanged; CartoonDigitCurl defaultfolder remainsv1; scene defaults unchanged. Nine tests pass (6newv2): exactrest/source, actualgeometry/fixedroots, invalidinputs, selectedcontour/index guards. Legacyfullangle construction minarea2=1.52364442; legacy11bound retained onv1, positivegeometry required forv2.
 

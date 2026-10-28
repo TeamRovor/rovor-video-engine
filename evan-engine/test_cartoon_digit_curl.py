@@ -8,15 +8,18 @@ from cartoon_digit_curl import CartoonDigitCurl,partial_curl_controls
 class DigitCurlTests(unittest.TestCase):
  folder_name='digit-curl-v1'
  minimum_area2=11
+ maximum_amplitude=1.
+ partial_spread=False
+ full_stroke_folds=False
  @classmethod
- def setUpClass(cls):cv2.setNumThreads(1);cls.rig=CartoonDigitCurl(folder_name=cls.folder_name)
+ def setUpClass(cls):cv2.setNumThreads(1);cls.rig=CartoonDigitCurl(folder_name=cls.folder_name);cls.meta=json.loads((ROOT/cls.folder_name/'manifest.json').read_text())
  def test_partition_rest_and_source_preservation(self):
   meta=json.loads((ROOT/self.folder_name/'manifest.json').read_text());source=ROOT/'open-palm-filtered-v1/source-v1.png';self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(),meta['sourceSha256']);raw=np.array(Image.open(source));rest=np.array(self.rig.render({name:[0,0,0]for name in self.rig.digits}));visible=raw[:,:,3]>0;np.testing.assert_array_equal(raw[visible],rest[visible]);np.testing.assert_array_equal(raw[:,:,3],rest[:,:,3])
  def test_continuous_four_digit_meshes_and_fixed_roots(self):
   minimum=1e9
-  for u in np.linspace(0,1,481):
+  for u in np.linspace(0,self.maximum_amplitude,481):
    for name,d in self.rig.digits.items():
-    c=np.array([12,16,8]if name=='thumb'else[-8,-30,-18])*u;posed=d.posed_vertices(c);fixed=(d.vertices-d.joints[0])@d.axis<=0;np.testing.assert_allclose(posed[fixed],d.vertices[fixed],atol=1e-4);p=posed[np.array(d.triangles)];v=p[:,1:]-p[:,0,None];minimum=min(minimum,float((v[:,0,0]*v[:,1,1]-v[:,0,1]*v[:,1,0]).min()))
+    c=partial_curl_controls(u)[name]if self.partial_spread else np.array([12,16,8]if name=='thumb'else[-8,-30,-18])*u;posed=d.posed_vertices(c);fixed=(d.vertices-d.joints[0])@d.axis<=self.meta.get('rootFreeze',{}).get(name,0);np.testing.assert_allclose(posed[fixed],d.vertices[fixed],atol=1e-4);p=posed[np.array(d.triangles)];v=p[:,1:]-p[:,0,None];minimum=min(minimum,float((v[:,0,0]*v[:,1,1]-v[:,0,1]*v[:,1,0]).min()))
   self.assertGreater(minimum,self.minimum_area2)
   ring=self.rig.digits['ring'];before=ring.posed_vertices([0,0,0]);self.rig.digits['little'].posed_vertices([-8,-30,-18]);np.testing.assert_array_equal(before,ring.posed_vertices([0,0,0]))
  def test_invalid_controls(self):
@@ -36,6 +39,9 @@ class DigitCurlV2Tests(DigitCurlTests):
  def test_bounded_stroke_avoids_index_and_full_stroke_is_detected(self):
   meta=json.loads((ROOT/self.folder_name/'manifest.json').read_text());palm=np.array(self.rig.palm);yy,xx=np.mgrid[:palm.shape[0],:palm.shape[1]];mask=Image.new('L',self.rig.palm.size);ImageDraw.Draw(mask).polygon(meta['indexProtectionPolygon'],fill=255);index=(np.array(mask)>0)&(palm[:,:,3]>127)&((xx-960)*.86+(yy-790)*.51>80)
   for u in [0,.05,.1,.15,.2,1]:
+   if u==1 and self.full_stroke_folds:
+    with self.assertRaises(ValueError):self.rig.render({name:([12,16,8]if name=='thumb'else[-8,-30,-18])for name in self.rig.digits})
+    continue
    overlap=0;alphas=[]
    for name,d in self.rig.digits.items():
     saved=d.source.copy();s=(xx-d.joints[0][0])*d.axis[0]+(yy-d.joints[0][1])*d.axis[1]
@@ -50,5 +56,21 @@ class DigitCurlV2Tests(DigitCurlTests):
  def test_partial_amount_bounds(self):
   for amount in [-.001,.201,float('nan'),float('inf')]:
    with self.assertRaises(ValueError):partial_curl_controls(amount)
+
+class DigitCurlV3Tests(DigitCurlV2Tests):
+ folder_name='digit-curl-v3'
+ maximum_amplitude=.2
+ partial_spread=True
+ full_stroke_folds=True
+ def test_whole_distal_core_components_have_one_owner(self):
+  raw=np.array(Image.open(ROOT/'open-palm-filtered-v1/source-v1.png'));core=raw[:,:,3]>=250;core[:900]=False;count,labels,stats,centers=cv2.connectedComponentsWithStats(core.astype('uint8'),8);large=sorted([k for k in range(1,count)if stats[k,4]>1000],key=lambda k:centers[k,0]);self.assertEqual(len(large),4);owned=np.array(Image.open(ROOT/self.folder_name/'ownership.png'));old=np.array(Image.open(ROOT/'digit-curl-v2/ownership.png'));old_foreign=0
+  for k,owner in zip(large,[2,3,4,0]):self.assertTrue((owned[labels==k]==owner).all());old_foreign+=int((old[labels==k]!=owner).sum())
+  self.assertGreater(old_foreign,300)
+
+ def test_shared_opaque_roots_keep_exact_source_alpha(self):
+  raw=np.array(Image.open(ROOT/'open-palm-filtered-v1/source-v1.png'));owned=np.array(Image.open(ROOT/self.folder_name/'ownership.png'));yy,xx=np.mgrid[:raw.shape[0],:raw.shape[1]];fixed=np.zeros(owned.shape,bool)
+  for name,owner in [('thumb',1),('little',2),('ring',3),('middle',4)]:
+   d=self.rig.digits[name];s=(xx-d.joints[0][0])*d.axis[0]+(yy-d.joints[0][1])*d.axis[1];fixed|=(owned==owner)&(s<=40)&(raw[:,:,3]>=250)
+  image=np.array(self.rig.render(partial_curl_controls(.2)));self.assertGreater(int(fixed.sum()),40000);np.testing.assert_array_equal(image[:,:,3][fixed],raw[:,:,3][fixed])
 
 if __name__=='__main__':unittest.main()
