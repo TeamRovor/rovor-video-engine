@@ -25,7 +25,7 @@ export function validateTarget(value) {
 export function isAllowedLocalReadPath(resource) {
   return resource === '/api/providers' ||
     resource === '/api/usage/provider-limits' ||
-    (typeof resource === 'string' && resource.startsWith('/api/usage/analytics?'));
+    (typeof resource === 'string' && (resource.startsWith('/api/usage/analytics?') || resource.startsWith('/api/usage/call-logs?')));
 }
 
 async function localReader() {
@@ -76,6 +76,9 @@ export async function publishOnce({origin, token, serviceToken, collect, workers
       ...(serviceToken ? {'OAI-Sites-Authorization': 'Bearer ' + serviceToken} : {})}, body,
       redirect: 'error', signal: AbortSignal.timeout(10000)});
     if (!result.ok) throw Error('cloud_report_rejected');
+    let acknowledgment;
+    try { acknowledgment = await result.json(); } catch { throw Error('cloud_report_unconfirmed'); }
+    if (acknowledgment?.accepted !== true) throw Error('cloud_report_unconfirmed');
   }
 }
 

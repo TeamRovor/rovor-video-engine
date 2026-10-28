@@ -88,6 +88,55 @@ function expireQuota(snapshot, now) {
   return snapshot;
 }
 
+const USAGE_PROVIDERS = new Set(['gemini', 'groq', 'openrouter', 'mistral', 'cloudflare', 'cohere', 'nvidia', 'sambanova', 'huggingface']);
+const USAGE_STATES = new Set(['fresh', 'stale', 'unavailable']);
+const USAGE_COVERAGE = new Set(['complete', 'partial', 'stale', 'unavailable']);
+const USAGE_PERIODS = ['rolling_minute', 'rolling_hour', 'pacific_day'];
+function sanitizeRequestUsage(input, now) {
+  const empty = {source: 'omniroute_durable_call_logs', freshness: 'unavailable', coverage: 'unavailable',
+    observed_at: new Date(now).toISOString(), rolling_window_start: null, pacific_day_start: null, pacific_day_reset: null, providers: []};
+  if (input == null) return empty;
+  if (input.source !== empty.source || !USAGE_STATES.has(input.freshness) || !USAGE_COVERAGE.has(input.coverage) ||
+      !Array.isArray(input.providers) || input.providers.length !== USAGE_PROVIDERS.size) fail();
+  const date = value => {
+    const time = Date.parse(value);
+    if (!Number.isFinite(time) || time > now + 26 * 60 * 60 * 1000 || time < now - 26 * 60 * 60 * 1000) fail();
+    return new Date(time).toISOString();
+  };
+  const count = value => value == null ? null : integer(value);
+  const tokenCoverage = value => ['complete', 'partial', 'unknown'].includes(value) ? value : fail();
+  const counters = value => Object.fromEntries(USAGE_PERIODS.flatMap(period => [
+    ['attempts_' + period, integer(value['attempts_' + period])],
+    ['successes_' + period, integer(value['successes_' + period])],
+    ['failures_' + period, integer(value['failures_' + period])],
+    ['rate_limit_errors_' + period, integer(value['rate_limit_errors_' + period])],
+    ...['input', 'output'].flatMap(kind => [
+      [kind + '_tokens_recorded_' + period, count(value[kind + '_tokens_recorded_' + period])],
+      [kind + '_tokens_coverage_' + period, tokenCoverage(value[kind + '_tokens_coverage_' + period])]])
+  ]));
+  const seen = new Set();
+  const providers = input.providers.map(p => {
+    const provider = label(p?.provider);
+    if (!USAGE_PROVIDERS.has(provider) || seen.has(provider)) fail();
+    seen.add(provider);
+    if (!Array.isArray(p.models) || p.models.length > 500) fail();
+    const modelIDs = new Set();
+    const models = p.models.map(m => {
+      const model_id = label(m?.model_id);
+      if (modelIDs.has(model_id)) fail();
+      modelIDs.add(model_id);
+      return {model_id, ...counters(m), last_rate_limit_at: m.last_rate_limit_at == null ? null : date(m.last_rate_limit_at),
+        retry_after_at: m.retry_after_at == null ? null : date(m.retry_after_at)};
+    });
+    return {provider, configured: flag(p.configured), ...counters(p), last_rate_limit_at: p.last_rate_limit_at == null ? null : date(p.last_rate_limit_at),
+      retry_after_at: p.retry_after_at == null ? null : date(p.retry_after_at), employee_attribution: p.employee_attribution === 'unknown' ? 'unknown' : fail(), models};
+  });
+  if (seen.size !== USAGE_PROVIDERS.size) fail();
+  return {source: empty.source, freshness: input.freshness, coverage: input.coverage, observed_at: date(input.observed_at),
+    rolling_window_start: date(input.rolling_window_start), pacific_day_start: date(input.pacific_day_start),
+    pacific_day_reset: date(input.pacific_day_reset), providers};
+}
+
 // Bound and allowlist scheduler counters received from the Mac. This is
 // diagnostic evidence only and does not authorize dispatch or infer success.
 function sanitizeDispatch(input, now, recentHeartbeat) {
@@ -178,6 +227,7 @@ export function sanitize(doc, now = Date.now()) {
     request_count: integer(doc.request_count), connection_count: integer(doc.connection_count), inventory_count: models.length,
     usage_coverage: ['complete_aggregate', 'partial_top_50_or_unattributed'].includes(doc.usage_coverage) ? doc.usage_coverage : fail(),
     quota_state: 'unknown_not_estimated', models, connections, connection_slots, quota: sanitizeQuota(doc.quota, connections, now),
+    request_usage: sanitizeRequestUsage(doc.request_usage, now),
     workforce: {source: workforce.source, employees, unassigned_jobs: optional(workforce.unassigned_jobs),
       dispatch: sanitizeDispatch(workforce.dispatch, now, h.recent === true),
       heartbeat: {available: flag(h.available), recent: h.recent === true, age_seconds: optional(h.age_seconds),

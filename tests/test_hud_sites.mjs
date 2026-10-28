@@ -120,7 +120,7 @@ test('publisher authenticates private Sites service access separately from inges
   const sent = [];
   await publishOnce({origin: 'https://private.chatgpt.site', token: env.HUD_WRITER_TOKEN, serviceToken: 'private-service-token',
     workers: async () => ({}), collect: async period => ({period}),
-    send: async (url, options) => {sent.push({url, options}); return new Response('{}');}});
+    send: async (url, options) => {sent.push({url, options}); return Response.json({accepted: true});}});
   for (const s of sent) {
     assert.equal(s.url, 'https://private.chatgpt.site/api/hud/ingest');
     assert.equal(s.options.headers.Authorization, 'Bearer ' + env.HUD_WRITER_TOKEN);

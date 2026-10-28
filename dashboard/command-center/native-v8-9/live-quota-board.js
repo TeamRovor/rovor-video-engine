@@ -494,7 +494,17 @@ function minuteLabel(minute,live){
  return '<div class="rvq-minute">LIVE LAST MINUTE · <strong>'+fmt(minute.requests)+' request'+(minute.requests===1?'':'s')+'</strong> · '+fmt(minute.tokens)+' reported tokens'+
   '<span>Rolling 60-second OmniRoute sample · not Mistral organization-wide usage or remaining quota</span></div>';
 }
-function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,geminiProject=null){
+function trackedEvidence(usage,provider,quota,accountSlot){
+ const aliases={'google-ai-studio':'gemini',google_ai_studio:'gemini','cloudflare-ai':'cloudflare','cloudflare-workers-ai':'cloudflare',cloudflare_workers_ai:'cloudflare','nvidia-nim':'nvidia',nvidia_nim:'nvidia','hugging-face':'huggingface',hugging_face:'huggingface'};
+ const canonical=aliases[provider]||provider,p=usage?.providers?.find(x=>x.provider===canonical);
+ if(usage?.freshness!=='fresh'||!p)return '<div class="rvq-cloud"><strong>OMNIROUTE TRACKED USAGE · '+esc(usage?.freshness||'unavailable').toUpperCase()+'</strong><span>Requests, successes, failures, 429s, tokens and models: UNKNOWN</span><span>Account-wide remaining and provider limits: UNKNOWN</span></div>';
+ const qs=(quota||[]).filter(x=>(x.provider===provider||x.provider===canonical)&&x.account_slot===accountSlot);
+ const limited=!!(p.retry_after_at&&Date.parse(p.retry_after_at)>Date.now())||!!(p.last_rate_limit_at&&Date.now()-Date.parse(p.last_rate_limit_at)<60000);
+ const capacity=limited?'RATE LIMITED':qs.length?(qs.some(x=>x.used_percent>=80)?'NEARING LIMIT':'AVAILABLE · VERIFIED METERS'):'UNKNOWN';
+ const models=p.models.map(m=>'<span>'+esc(m.model_id)+(m.model_id==='connection-test'?' · connection test, not inference receipt':'')+' · 1m '+fmt(m.attempts_rolling_minute)+' req · 1h '+fmt(m.attempts_rolling_hour)+' req · day '+fmt(m.attempts_pacific_day)+' req · tokens in/out '+fmt(m.input_tokens_recorded_pacific_day)+' / '+fmt(m.output_tokens_recorded_pacific_day)+'</span>').join('');
+ return '<div class="rvq-cloud"><strong>OMNIROUTE TRACKED USAGE · '+esc(usage.coverage).toUpperCase()+'</strong><span>CAPACITY: '+capacity+(qs.length?' · '+qs.length+' verified quota meter(s) above':'')+'</span><span>1 minute: '+fmt(p.attempts_rolling_minute)+' requests · '+fmt(p.successes_rolling_minute)+' success · '+fmt(p.failures_rolling_minute)+' failure · '+fmt(p.rate_limit_errors_rolling_minute)+' HTTP 429</span><span>1 hour: '+fmt(p.attempts_rolling_hour)+' requests · '+fmt(p.successes_rolling_hour)+' success · '+fmt(p.failures_rolling_hour)+' failure</span><span>Pacific day: '+fmt(p.attempts_pacific_day)+' requests · '+fmt(p.successes_pacific_day)+' success · '+fmt(p.failures_pacific_day)+' failure · '+fmt(p.rate_limit_errors_pacific_day)+' HTTP 429</span><span>Input/output tokens today: '+fmt(p.input_tokens_recorded_pacific_day)+' / '+fmt(p.output_tokens_recorded_pacific_day)+' · employee: '+esc(p.employee_attribution)+'</span><span>Account-wide remaining: UNKNOWN · reset '+esc(resetText(usage.pacific_day_reset))+' · observed '+esc(prettyTime(usage.observed_at))+'</span>'+models+'</div>';
+}
+function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,geminiProject=null,requestUsage=null){
  const entries=live&&slot.enabled!==false?quota.filter(q=>q.provider===group.provider&&q.account_slot===slot.account_slot&&
    (!q.reset_at||Date.parse(q.reset_at)>Date.now())):[];
  const rows=entries.map(meter);
@@ -507,7 +517,7 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,
  const name=pretty(group.name||group.provider);
  // The full original per-provider report is retained, now under one accessible disclosure.
  return '<article class="rvq-provider" data-rvq-slot="'+esc(key)+'"><details class="rvq-provider-details"'+(expandedProviders.has(key)?' open':'')+'><summary class="rvq-provider-head"><span class="rvq-provider-icon">'+esc(name.slice(0,1).toUpperCase())+'</span><span class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(name)+'</span><span class="rvq-provider-name">'+esc(name)+' · Slot '+fmt(slot.account_slot)+'</span><span class="rvq-provider-connection">'+state+'</span></span><span class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</span></summary>'+
-  '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+geminiProjectMonitoring(group.provider,geminiProject)+first+extra+cloudEvidence(cloud,slot)+jobReceipts(group.provider,attempts)+'</div></details></article>';
+  '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+trackedEvidence(requestUsage,group.provider,quota,slot.account_slot)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+geminiProjectMonitoring(group.provider,geminiProject)+first+extra+cloudEvidence(cloud,slot)+jobReceipts(group.provider,attempts)+'</div></details></article>';
 }
 // Nine-provider glance cards are a visualization of one explicitly labeled
 // validated quota source per slot. They never sum Mac and cloud counters.
@@ -830,6 +840,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
    cloudFresh?cloud.providers.filter(p=>p?.credentials_configured===true&&typeof p.provider==='string')
      .map(p=>({provider:p.provider,name:p.provider,connection_count:1,enabled_count:0})) : [];
  const activity=macActivity(data,live);
+ const requestUsage=live?data?.request_usage:null;
  // The one-hour aggregate has its own signed report and completeness gate.
  // Do not derive it from the rolling 24h percentage or cached history.
  const hourActivity=macActivity(hourly,live,'1h');
@@ -870,7 +881,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
  '<div id="rvq-team">'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+'</div>'+
  '<h4 class="rvq-details-heading">PROVIDER REPORTS · EXPAND ANY PROVIDER</h4>'+
- '<div id="rvq-reports" class="rvq-grid">'+(slots.length?slots.map((slot,i)=>card(slot.group,quota,live,i,slot,cloudProviders.get(slot.group.provider),cloudAttempts,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider),geminiProject)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+
+ '<div id="rvq-reports" class="rvq-grid">'+(slots.length?slots.map((slot,i)=>card(slot.group,quota,live,i,slot,cloudProviders.get(slot.group.provider),cloudAttempts,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider),geminiProject,requestUsage)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+
  '<details class="rvq-source-notes"><summary>DATA SOURCES & VERIFICATION RULES</summary><p>Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Mac traffic percentages are shares of recorded provider requests, NOT quota usage. Local quota rings are cached gateway limits; separate cloud quota rings require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></details></section>';
 }
 // Preserve owner inspection context even when live evidence must be refreshed.
