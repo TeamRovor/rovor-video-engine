@@ -15,7 +15,7 @@ const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const ID=/^[a-zA-Z0-9][a-zA-Z0-9._:/+@-]{0,199}$/;
 const safeID=x=>typeof x==='string'&&ID.test(x)?x:null;
 const count=x=>Number.isSafeInteger(x)&&x>=0?x:null;
-const WINDOWS={'1h':3600000,'24h':86400000,'7d':604800000};
+const WINDOWS={'1m':60000,'1h':3600000,'24h':86400000,'7d':604800000};
 const same=(a,b)=>{if(typeof a!=='string'||typeof b!=='string')return false;const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&crypto.timingSafeEqual(x,y);};
 
 export function normalize(catalog,analytics,{period='24h',now=Date.now(),start,end,allowEmpty=false}={}){
