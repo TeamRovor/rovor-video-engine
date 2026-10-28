@@ -108,11 +108,12 @@ test('attention filter covers fresh actionable gates without treating idle or st
  assert.doesNotMatch(old,/data-rvq-attention="true"/);
 });
 
-test('compact workload calls historical records historical and uses Chicago daylight rules',()=>{
+test('the original bundled workload preview remains explicitly unverified rather than live',()=>{
  const js=fs.readFileSync(path.join(__dirname,'../dashboard/command-center/native-v8-9/workload-popup.js'),'utf8');
- assert.match(js,/HISTORICAL MAC SNAPSHOT/);
- assert.match(js,/31 PAST CLAIMS/);
- assert.match(js,/timeZoneName:'short'/);
- assert.doesNotMatch(js,/\+' CDT'/);
- assert.doesNotMatch(js,/3 ROUTED \/ 9 CONNECTIONS/);
+ assert.match(js,/Owner-published Mac observation, not a live connection or inference proof/);
+ assert.match(js,/LAST REPORT/);
+ assert.match(js,/USAGE UNKNOWN/);
+ assert.match(js,/No live link/);
+ assert.match(js,/Live link missing/);
+ assert.match(js,/NO VERIFIED LIVE MODEL TELEMETRY/);
 });
