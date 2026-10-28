@@ -394,3 +394,18 @@ test('authenticated Gemini project monitoring displays fresh Google samples but 
  assert.doesNotMatch(old,/GenerateRequestsPerMinute-FreeTier/);
  assert.match(old,/not an authenticated live remaining-quota reading yet/);
 });
+
+test('multi-key cloud quota requires exact slot attribution',()=>{
+ const now=Date.now(),q={status:'verified',observed_at:now,limit:100,used:40,
+  unit:'requests',resets_at:now+3600000,scope:'provider_account'};
+ const inventory={connections:[{provider:'groq',name:'Groq',connection_count:2,enabled_count:2}]};
+ const cloud={execution_source:'cloud_provider',observed_at:now,
+  providers:[{provider:'groq',credentials_configured:true,quota:q}]};
+ const rendered=board().render(inventory,false,cloud);
+ assert.equal((rendered.match(/aria-label="CLOUD ACCOUNT LIMIT for Groq"/g)||[]).length,0);
+ assert.doesNotMatch(rendered,/Verified cloud ledger quota used/);
+ cloud.providers[0].quota={...q,scope:'account_slot',account_slot:2};
+ const scoped=board().render(inventory,false,cloud);
+ assert.equal((scoped.match(/aria-label="CLOUD ACCOUNT LIMIT for Groq"/g)||[]).length,1);
+ assert.equal((scoped.match(/Verified cloud ledger quota used/g)||[]).length,1);
+});
