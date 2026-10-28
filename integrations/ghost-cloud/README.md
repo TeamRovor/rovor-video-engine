@@ -248,3 +248,27 @@ Official adapter references checked during implementation:
 * https://docs.sambanova.ai/docs/en/get-started/api-keys-urls
 * https://docs.cohere.com/docs/compatibility-api
 * https://huggingface.co/docs/inference-providers/index
+
+
+## Mistral minute rate-limit evidence (optional forward migration)
+
+mistral-minute-quota.sql defines a NEW, schema-only private D1 table for
+per-model minute token/request allowances captured from authenticated
+Mistral inference response headers. Apply it as a NEW forward-only migration
+to the owner-private Site; never edit any already applied migrations.
+
+Only paired x-ratelimit-limit-tokens-minute / x-ratelimit-remaining-tokens-minute
+or x-ratelimit-limit-req-minute / x-ratelimit-remaining-req-minute fields
+are accepted. The returned model must exactly match the pinned request.
+Headers cannot establish free billing, monthly consumption or a reset time.
+No keys or prompts are persisted. The status layer expires evidence after
+60 seconds; absent migration, mismatch or stale data means UNKNOWN.
+
+No additional inference or quota polling occurs. Mistral must already
+be genuinely approved for free-only inference before headers can be observed.
+This code does not relax STOP, refresh stale eligibility, or authorize any
+new route. The owner must separately integrate the updated cloud runtime
+with the existing private Site, apply the optional migration, and verify
+a genuine header-bearing response before claiming active Mistral quota.
+The standalone Cloudflare HUD can only show separate cloud quota evidence
+when its authenticated /api/ghost/status integration is available.
