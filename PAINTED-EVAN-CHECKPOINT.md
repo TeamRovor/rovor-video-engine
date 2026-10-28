@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: neck-fringe correction motion validation pending
+CARTOON-EVAN-COLLAR-MOTION.md / evan-engine/reviews/collar-motion-v1.json. PENDING worker9788: work/collar-motion-review/render.py renders15–17s(source360..407) into outputs/evan-cartoon-collar-motion. Expected48frames/normal2s/slow8s decode48/192; exactPCM240000:27200032000samples. DO NOT restart. Executed Source/ and Launch-Source-Manifest.json frozen.
+
+Actual separated face and existing payoff_controls; opt-in trim_left_neck_stub only. Everyframe defaultfullstage must pixelcalibrate to payoff-continuous, originalframehash match, and newhead retain exact nativeoraljaw/audit plus neck/torso/armlayers. Stage differences confined to head. No new sourceart/actingcue/default/timing change. Previous10neck/payofftests remain passed; newrender guards are perframe assertions, not polishedacceptance.
+
+NEXT: poll9788; require Verification.json and48/192decode. Run work/collar-motion-review/review.py; inspect all48native120x140joinpairs,12overview,4normal+2slow1280x720samples. Verify32000sample exactPCM and source/frame/film hashes. Fullspeech follow-up must evaluate532poses withtrim; preserve20closing/18unresolvedflags. Currentfullfilm stays payoff-continuous. Automation active/polished NOTready.
+
 ## Current bounded fix: original neck fringe ownership
 CARTOON-EVAN-COLLAR-OWNERSHIP.md / evan-engine/reviews/collar-ownership-v1.json; outputs/evan-cartoon-collar-ownership/Review.html. Frame374held fullstage exactly calibrated; individualhead/neck/torso3xnative sheets identify a dangling ORIGINAL neck edge in headplane x208..213belowjaw. Split ownership formerly starts214. Torso collar is separate, not source of that tail.
 

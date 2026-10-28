@@ -1,0 +1,45 @@
+{
+  "status": "opt-in-collar-correction-motion-render-in-progress",
+  "sourceFrameRange": [
+    360,
+    408
+  ],
+  "sourceSeconds": [
+    15,
+    17
+  ],
+  "expectedFrames": 48,
+  "expectedNormalSeconds": 2,
+  "expectedQuarterSpeedSeconds": 8,
+  "expectedSourcePcmSamples": [
+    240000,
+    272000
+  ],
+  "expectedSourcePcm16Count": 32000,
+  "correction": "Opt-in trim_left_neck_stub=True; existing payoff_controls and separated face unchanged.",
+  "perFrameGuards": [
+    "complete default stage pixel-exact to payoff-continuous",
+    "native oral/jaw arrays and face audit exact",
+    "registered neck, torso and arms exact",
+    "stage changes confined to head region",
+    "source frame hash matches preceding full-film manifest"
+  ],
+  "pendingJobs": true,
+  "worker": 9788,
+  "launchSourceManifestSha256": "6a1acb179f4236d4a31cd0f77f5e877411ae31bb8c99759e569e6e185692fba6",
+  "normalSlowExportsVerified": false,
+  "allNativeJoinPairsVisuallyInspected": false,
+  "newArtwork": false,
+  "sourceArtworkModified": false,
+  "defaultChanged": false,
+  "fullFilmUpdated": false,
+  "phonemeTimingChanged": false,
+  "flagsCleared": 0,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "nextConcreteWork": "Poll9788 without restarting. Require Verification.json and48/192fully decoded frames, run work/collar-motion-review/review.py, inspect48native before/after pairs,12overview poses and4normal/2slow1280x720samples. Verify exact32000sample PCM, source/frame/film hashes and nativeoraljaw/necktorsolayer preservation. Before full integration evaluate all532speech poses with trim enabled; preserve20closing frames and18flags."
+}
