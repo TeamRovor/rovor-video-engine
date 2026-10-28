@@ -361,7 +361,9 @@ test('Gemini reference leaves nine-provider quota coverage at 0 when cache has n
   })),connection_slots:providers.map(provider=>({provider,account_slot:1,enabled:true})),
   models:[],quota:{records:[]}};
  const html=board().render(data,true);
- assert.match(html,/LIMIT REPORTS<\/span><strong class="rvq-stat-value">0<\/strong>/);
+  // Coverage reflects authenticated per-provider Mac limit records, not Gemini static references.
+  assert.match(html,/CONNECTION SLOTS WITH MAC LIMIT DATA<\/span><strong class="rvq-stat-value">0 \/ 9<\/strong>/);
+  assert.match(html,/Limit records: 0/);
  assert.equal((html.match(/role="img" aria-label="Provider quota unknown"/g)||[]).length,18);
  assert.match(html,/GEMINI · FREE TIER PROJECT LIMITS/);
 });
@@ -391,4 +393,19 @@ test('authenticated Gemini project monitoring displays fresh Google samples but 
  const old=board().render(data,true,null,null,null,doc);
  assert.doesNotMatch(old,/GenerateRequestsPerMinute-FreeTier/);
  assert.match(old,/not an authenticated live remaining-quota reading yet/);
+});
+
+test('multi-key cloud quota requires exact slot attribution',()=>{
+ const now=Date.now(),q={status:'verified',observed_at:now,limit:100,used:40,
+  unit:'requests',resets_at:now+3600000,scope:'provider_account'};
+ const inventory={connections:[{provider:'groq',name:'Groq',connection_count:2,enabled_count:2}]};
+ const cloud={execution_source:'cloud_provider',observed_at:now,
+  providers:[{provider:'groq',credentials_configured:true,quota:q}]};
+ const rendered=board().render(inventory,false,cloud);
+ assert.equal((rendered.match(/aria-label="CLOUD ACCOUNT LIMIT for Groq"/g)||[]).length,0);
+ assert.doesNotMatch(rendered,/Verified cloud ledger quota used/);
+ cloud.providers[0].quota={...q,scope:'account_slot',account_slot:2};
+ const scoped=board().render(inventory,false,cloud);
+ assert.equal((scoped.match(/aria-label="CLOUD ACCOUNT LIMIT for Groq"/g)||[]).length,1);
+ assert.equal((scoped.match(/Verified cloud ledger quota used/g)||[]).length,1);
 });

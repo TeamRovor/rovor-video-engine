@@ -4,19 +4,68 @@
 window.ROVOR_QUOTA_BOARD=(()=>{
 'use strict';
 const expandedSlots=new Set();
+const expandedProviders=new Set();
+let overviewFilter='all'; // Retain user choice while telemetry refreshes.
 // Keep UI inspection state independent of whichever legacy module redraws the popup.
 function listenForQuotaInteraction(){
  if(typeof document.addEventListener!=='function')return;
+ // Disclosures survive the existing 10-second read-only refresh.
  document.addEventListener('click',event=>{
-   const summary=event.target?.closest?.('.rvq-more summary');
+   const summary=event.target?.closest?.('summary');
    if(!summary)return;
-   const detail=summary.parentElement;
-   const key=detail?.closest?.('[data-rvq-slot]')?.getAttribute('data-rvq-slot');
+   const section=summary.parentElement;
+   const key=section?.closest?.('[data-rvq-slot]')?.getAttribute('data-rvq-slot');
    if(!key)return;
-   if(detail.open)expandedSlots.delete(key);
-   else expandedSlots.add(key);
+   const set=section.classList.contains('rvq-provider-details')?expandedProviders:
+     section.classList.contains('rvq-more')?expandedSlots:null;
+   if(!set)return;
+   if(section.open)set.delete(key);else set.add(key);
  },true);
-
+ document.addEventListener('click',event=>{
+   const tile=event.target?.closest?.('a[data-rvq-open-slot]');
+   const board=tile?.closest?.('.rvq-board');
+   if(!board)return;
+   event.preventDefault();
+   const key=tile.getAttribute('data-rvq-open-slot');
+   const provider=[...board.querySelectorAll('[data-rvq-slot]')].find(
+     card=>card.getAttribute('data-rvq-slot')===key);
+   const detail=provider?.querySelector('.rvq-provider-details');
+   if(!detail)return;
+   detail.open=true;
+   expandedProviders.add(key);
+   detail.querySelector('summary')?.focus({preventScroll:true});
+   provider.scrollIntoView?.({block:'start',behavior:'auto'});
+ });
+ // Filtering never alters the order or availability of full provider reports.
+ document.addEventListener('click',event=>{
+   const button=event.target?.closest?.('button[data-rvq-filter]');
+   const board=button?.closest?.('.rvq-board');
+   if(!board)return;
+   overviewFilter=button.getAttribute('data-rvq-filter')==='attention'?'attention':'all';
+   const tiles=[...board.querySelectorAll('.rvq-overview-tile')];
+   let visible=0;
+   for(const tile of tiles){
+     tile.hidden=overviewFilter==='attention'&&tile.getAttribute('data-rvq-attention')!=='true';
+     if(!tile.hidden)visible++;
+   }
+   for(const b of board.querySelectorAll('button[data-rvq-filter]'))
+     b.setAttribute('aria-pressed',String(b.getAttribute('data-rvq-filter')===overviewFilter));
+   const note=board.querySelector('.rvq-filter-note');
+   if(note)note.textContent=overviewFilter==='attention'
+      ?'Showing '+visible+' connections with setup or human-review gates'
+      :'Showing all '+tiles.length+' configured connections';
+ });
+ // Navigate only the current HUD drawer; avoid modifying the private Site URL.
+ document.addEventListener('click',event=>{
+   const link=event.target?.closest?.('.rvq-jump-nav a');
+   const board=link?.closest?.('.rvq-board');
+   if(!board)return;
+   const id=link.getAttribute('href')?.slice(1);
+   const target=id?[...board.querySelectorAll('[id]')].find(el=>el.id===id):null;
+   if(!target)return;
+   event.preventDefault();
+   target.scrollIntoView?.({block:'start',behavior:'auto'});
+ });
 }
 
 
@@ -44,7 +93,7 @@ function usageRing(percent,label,kind='quota'){
    '<div class="rvq-ring-core"><strong>—</strong><small>UNKNOWN</small></div></div>';
  }
  const pct=percent.toFixed(1);
- return '<div class="rvq-ring" role="progressbar" aria-label="'+esc(label)+
+ return '<div class="rvq-ring'+(kind==='activity'?' rvq-ring-traffic':'')+'" role="progressbar" aria-label="'+esc(label)+
   '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+
   '" aria-valuetext="'+pct+(kind==='activity'?' percent of recorded Mac requests':' percent of verified allowance used')+'" style="--rvq-angle:'+pct+'%">'+
   '<div class="rvq-ring-core"><strong>'+pct+'%</strong><small>'+(kind==='activity'?'TRAFFIC':'USED')+'</small></div></div>';
@@ -81,7 +130,7 @@ function unknownModel(m){
 // Public telemetry has only safe per-provider account ordinals; no keys or IDs.
 // Separate authenticated cloud-ledger evidence; do NOT mix with local OmniRoute cache.
 // Cloud provider admission/verification may be disabled even when the local gateway has a key.
-function cloudEvidence(p){
+function cloudEvidence(p,slot=null){
  if(!p)return '<div class="rvq-cloud">CLOUD EXECUTION · not connected to private ledger</div>';
  const eligible=p.admission==='eligible';
  const recorded=Number.isSafeInteger(p.recorded_24h?.requests)?p.recorded_24h.requests:null;
@@ -124,7 +173,7 @@ function cloudEvidence(p){
  const active=q?.status==='verified'&&Number.isFinite(time)&&time<=Date.now()+300000&&time>Date.now()-90*60000;
  const used=Number(q?.used),limit=Number(q?.limit);
  const reset=q?.resets_at==null?null:new Date(q.resets_at);
- if(active&&Number.isSafeInteger(used)&&Number.isSafeInteger(limit)&&limit>0&&used>=0&&used<=limit&&
+ if((!slot||slot.group.connection_count===1||(q?.scope==='account_slot'&&q?.account_slot===slot.account_slot))&&active&&Number.isSafeInteger(used)&&Number.isSafeInteger(limit)&&limit>0&&used>=0&&used<=limit&&
     (reset===null||(Number.isFinite(reset.getTime())&&reset.getTime()>Date.now()))){
    const pct=Math.max(0,Math.min(100,100*used/limit)).toFixed(1);
    result.push('<div class="rvq-cloud-ring-layout">'+
@@ -184,6 +233,34 @@ function jobReceipts(provider,attempts){
     '<p>Account-slot attribution requires a separate receipt; human review controls are not connected here.</p></div>';
 }
 
+// Only distinct, explicitly unreviewed inference receipts. This is a
+// returned sample, not an authoritative count of the private review queue.
+function reviewSample(attempts,fresh){
+ if(!fresh)return {known:false,pending:[],received:0};
+ const seen=new Set(),pending=[];
+ for(const a of attempts){
+  if(!a||typeof a.id!=='string'||!a.id||seen.has(a.id))continue;
+  seen.add(a.id);
+  if(a.status!=='needs_review'||a.human_review!=='not_recorded')continue;
+  if(String(a.job_id||'').startsWith('canary-')||
+     String(a.title||'').startsWith('PROVIDER CANARY'))continue;
+  if(!Number.isSafeInteger(a.started_at)||a.started_at>Date.now()+300000||a.started_at<=0)continue;
+  pending.push(a);
+ }
+ pending.sort((a,b)=>b.started_at-a.started_at);
+ return {known:true,pending,received:seen.size};
+}
+function reviewPulse(review){
+ if(!review.known)return '<p class="rvq-review-status">No fresh private cloud review sample. Open the owner queue to check actual pending decisions.</p>';
+ const count=review.pending.length;
+ const latest=review.pending.slice(0,3).map(a=>
+  '<li><strong>'+esc(String(a.title||a.task_id||'Untitled').slice(0,90))+'</strong><span>'+
+  esc(String(a.employee||'Unassigned').slice(0,32))+' · '+esc(prettyTime(new Date(a.started_at).toISOString()))+'</span></li>').join('');
+ return '<p class="rvq-review-status">'+fmt(count)+' returned cloud receipt'+(count===1?'':'s')+
+  ' awaiting PASS / FAIL'+(count?' · latest three below':'')+
+  '. This sample is not the complete private owner queue.</p>'+
+  (latest?'<ol class="rvq-review-sample">'+latest+'</ol>':'');
+}
 const CLOUD_ROSTER=['Walter','Mike','Jane','Jesse','Gale','Gus','Saul','Hank'];
 // Employee meters are shares of returned, receipt-attributed cloud attempts,
 // never percentages of provider quota or proof an employee is running now.
@@ -423,41 +500,61 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,
  const rows=entries.map(meter);
  if(!rows.length)rows.push(unknownModel(null));
  const first=rows.slice(0,2).join('');
- const extra=rows.length>2?'<details class="rvq-more"'+(expandedSlots.has(group.provider+':'+slot.account_slot)?' open':'')+'><summary>Show '+(rows.length-2)+' more model'+(rows.length===3?'':'s')+'</summary>'+rows.slice(2).join('')+'</details>':'';
- const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
+ const key=group.provider+':'+slot.account_slot;
+ const extra=rows.length>2?'<details class="rvq-more"'+(expandedSlots.has(key)?' open':'')+'><summary>Show '+(rows.length-2)+' more model'+(rows.length===3?'':'s')+'</summary>'+rows.slice(2).join('')+'</details>':'';
+ const state=!live?'TELEMETRY STALE':slot.enabled===false?'DISABLED':slot.enabled===true?'GATEWAY ENABLED · PROVIDER UNVERIFIED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
- return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
- '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+geminiProjectMonitoring(group.provider,geminiProject)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
+ const name=pretty(group.name||group.provider);
+ // The full original per-provider report is retained, now under one accessible disclosure.
+ return '<article class="rvq-provider" data-rvq-slot="'+esc(key)+'"><details class="rvq-provider-details"'+(expandedProviders.has(key)?' open':'')+'><summary class="rvq-provider-head"><span class="rvq-provider-icon">'+esc(name.slice(0,1).toUpperCase())+'</span><span class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(name)+'</span><span class="rvq-provider-name">'+esc(name)+' · Slot '+fmt(slot.account_slot)+'</span><span class="rvq-provider-connection">'+state+'</span></span><span class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</span></summary>'+
+  '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+geminiProjectMonitoring(group.provider,geminiProject)+first+extra+cloudEvidence(cloud,slot)+jobReceipts(group.provider,attempts)+'</div></details></article>';
 }
-
 // Nine-provider glance cards are a visualization of one explicitly labeled
 // validated quota source per slot. They never sum Mac and cloud counters.
+const ACTION_GATES=new Set(['missing_secret','unpinned_model','eligibility_unverified','eligibility_expired','canary_unverified','invalid_limits','missing_account','unpinned_upstream','failure_circuit_requires_review']);
+function setupReviewLabel(p){
+ if(!p)return '';
+ if(ACTION_GATES.has(p.dispatch_gate?.reason)){
+  if(p.dispatch_gate.reason==='failure_circuit_requires_review')return 'CLOUD REVIEW REQUIRED';
+  if(p.dispatch_gate.reason==='missing_secret')return 'CLOUD KEY UNAVAILABLE';
+  return 'CLOUD SETUP REQUIRED';
+ }
+ if(p.admission==='eligibility_expired')return 'CLOUD ELIGIBILITY EXPIRED';
+ if(p.admission==='disabled_pending_verification')return 'CLOUD VERIFICATION PENDING';
+ return '';
+}
+const needsSetupReview=p=>Boolean(setupReviewLabel(p));
 function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
- const local=live&&slot.enabled!==false?quota.find(q=>q.provider===slot.group.provider&&
+ const localLimits=live&&slot.enabled!==false?quota.filter(q=>q.provider===slot.group.provider&&
    q.account_slot===slot.account_slot&&Number.isSafeInteger(q.used)&&
    Number.isSafeInteger(q.total)&&q.total>0&&q.used>=0&&q.used<=q.total&&
    (q.used_percent===undefined||
-    (Number.isFinite(q.used_percent)&&Math.abs(q.used_percent-100*q.used/q.total)<=0.11))):null;
+    (Number.isFinite(q.used_percent)&&Math.abs(q.used_percent-100*q.used/q.total)<=0.11))):[];
+ // Do not show an arbitrary model's allowance as an account-wide percentage.
+ const local=localLimits.length===1?localLimits[0]:null;
  const cq=cloud?.quota;
  const observed=Number(cq?.observed_at),limit=Number(cq?.limit),used=Number(cq?.used);
  const reset=cq?.resets_at;
- const verified=!local&&cq?.status==='verified'&&Number.isFinite(observed)&&
+ const verified=!local&&(slot.group.connection_count===1||(cq?.scope==='account_slot'&&cq?.account_slot===slot.account_slot))&&cq?.status==='verified'&&Number.isFinite(observed)&&
    observed>Date.now()-90*60000&&observed<=Date.now()+300000&&
    Number.isSafeInteger(used)&&Number.isSafeInteger(limit)&&limit>0&&used>=0&&used<=limit&&
    (reset===null||reset===undefined||(Number.isSafeInteger(reset)&&reset>Date.now()));
  const pct=local?100*local.used/local.total:verified?100*used/limit:null;
- const evidence=local?'MAC QUOTA CACHE':verified?'CLOUD LIMIT':'QUOTA UNKNOWN';
+ const evidence=local?'MAC MODEL LIMIT':verified?'CLOUD ACCOUNT LIMIT':localLimits.length>1?'MULTIPLE MODEL LIMITS':'QUOTA UNKNOWN';
  const name=pretty(slot.group.name||slot.group.provider);
  const traffic=activity?usageRing(activity.share,'Mac 24-hour recorded request share for '+name,'activity'):'';
- return '<div class="rvq-overview-tile" aria-label="'+esc(name)+' connection '+fmt(slot.account_slot)+' · '+evidence+'">'+
+ const alertLabel=setupReviewLabel(cloud);
+ const attention=Boolean(alertLabel);
+ return '<a class="rvq-overview-tile" href="#rvq-reports" data-rvq-attention="'+String(attention)+'"'+(overviewFilter==='attention'&&!attention?' hidden':'')+' data-rvq-open-slot="'+esc(slot.group.provider+':'+slot.account_slot)+'" aria-label="View '+esc(name)+' connection '+fmt(slot.account_slot)+' full report · '+evidence+(attention?' · setup or review required':'')+'">'+
    '<span class="rvq-overview-name">'+esc(name)+'</span>'+
    // Prioritize the real 24h usage ring in each of the nine connection tiles.
    // Unknown account quota remains a separate visible ring; never present traffic as quota.
-   '<div class="rvq-overview-rings">'+(activity?traffic+usageRing(pct,evidence+' for '+name):usageRing(pct,evidence+' for '+name))+'</div>'+
-   '<span class="rvq-overview-source">'+evidence+'</span>'+
+   '<div class="rvq-overview-rings">'+(activity?'<span class="rvq-overview-ring-group">'+traffic+'<span class="rvq-ring-label">MAC TRAFFIC</span></span>':'')+'<span class="rvq-overview-ring-group">'+usageRing(pct,evidence+' for '+name)+'<span class="rvq-ring-label">QUOTA USED</span></span></div>'+
+   (attention?'<span class="rvq-overview-alert">'+esc(alertLabel)+'</span>':'')+
+   '<span class="rvq-overview-source">'+evidence+(localLimits.length>1&&!verified?' · '+fmt(localLimits.length)+' separate limits':'')+'</span>'+ (local&&typeof local.model_id==='string'?'<span class="rvq-overview-model" title="'+esc(local.model_id)+'">MODEL · '+esc(local.model_id)+'</span>':'')+
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span>'+
-   '<span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
-   '<span class="rvq-overview-minute">'+(minute?fmt(minute.requests)+' / 1m':'1m unverified')+'</span></div>';
+   '<span class="rvq-overview-intervals"><span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
+   '<span class="rvq-overview-minute">'+(minute?fmt(minute.requests)+' / 1m':'1m unverified')+'</span></span><span class="rvq-overview-drill">VIEW DETAILS</span></a>';
 }
 function dispatchInfo(workforce,live){
  const d=live?workforce?.dispatch:null;
@@ -503,6 +600,12 @@ function localEmployeeSection(workforce,live){
 const css=`
 #rovor-workload-popup .rvq-review-entry{display:grid;gap:7px;margin:0 0 14px;padding:12px 14px;border:1px solid rgba(99,183,227,.45);border-radius:9px;background:rgba(6,36,65,.75);color:#b0d7ea;font:12px/1.45 system-ui}
 #rovor-workload-popup .rvq-review-entry strong{color:#e1f7ff;font-size:12px}
+#rovor-workload-popup .rvq-review-sample{list-style:none;display:grid;gap:7px;padding:0;margin:4px 0}
+#rovor-workload-popup .rvq-review-sample li{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;padding:9px 10px;border:1px solid rgba(106,181,231,.26);background:rgba(19,68,102,.3)}
+#rovor-workload-popup .rvq-review-sample strong{font-size:11px;color:#e5f8ff}
+#rovor-workload-popup .rvq-review-sample span{font-size:10px;color:#a9d4eb}
+#rovor-workload-popup .rvq-review-status{color:#d5edfa}
+#rovor-workload-popup .rvq-last-report{margin:0 0 11px;color:#c1e8ff;font:700 11px/1.45 system-ui;letter-spacing:.02em;overflow-wrap:anywhere}
 #rovor-workload-popup .rvq-review-entry p{margin:0}
 #rovor-workload-popup .rvq-review-entry a{color:#77d5ff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 
@@ -517,9 +620,17 @@ const css=`
 #rovor-workload-popup .rvq-stat-label{display:block;color:#8fb9d1;font:700 10px system-ui;letter-spacing:.12em;margin-bottom:8px}
 #rovor-workload-popup .rvq-stat-value{display:block;color:#f2fbff;font:600 19px/1.3 system-ui;overflow-wrap:anywhere}
 #rovor-workload-popup .rvq-stat-value.rvq-small{font-size:13px;min-height:25px}
+#rovor-workload-popup .rvq-stat-secondary{display:block;color:#98bdd5;font:10px/1.4 system-ui;margin-top:5px}
 #rovor-workload-popup .rvq-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
 #rovor-workload-popup .rvq-provider{min-width:0;background:linear-gradient(145deg,rgba(13,48,77,.88),rgba(5,25,44,.95));border:1px solid rgba(90,164,204,.38);border-radius:12px;overflow:hidden;box-shadow:inset 0 1px rgba(153,219,252,.07)}
-#rovor-workload-popup .rvq-provider-head{display:flex;align-items:center;gap:10px;padding:15px;border-bottom:1px solid rgba(95,175,213,.22)}
+#rovor-workload-popup .rvq-provider-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;list-style:none}
+#rovor-workload-popup .rvq-provider-head::-webkit-details-marker{display:none}
+#rovor-workload-popup .rvq-provider-head:focus-visible{outline:2px solid #a9e1ff;outline-offset:-3px}
+#rovor-workload-popup .rvq-provider-head:after{content:'+';font:700 19px system-ui;color:#a9dcff;flex:none}
+#rovor-workload-popup .rvq-provider-details[open]>.rvq-provider-head{border-bottom:1px solid rgba(95,175,213,.22)}
+#rovor-workload-popup .rvq-provider-details[open]>.rvq-provider-head:after{content:'−'}
+#rovor-workload-popup .rvq-provider-name{display:block;margin:3px 0 2px;color:#ecfaff;font:700 14px/1.32 system-ui;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-provider-connection{display:block;color:#9ec5d8;font:11px/1.4 system-ui}
 #rovor-workload-popup .rvq-provider-icon{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:9px;border:1px solid rgba(116,205,255,.49);background:radial-gradient(circle at 30% 25%,#236b9e,#0b3154);color:#eafaff;font:700 16px system-ui}
 #rovor-workload-popup .rvq-provider-ident{min-width:0;flex:1}
 #rovor-workload-popup .rvq-provider-index{display:block;color:#8bb7ce;font:700 9px system-ui;letter-spacing:.13em}
@@ -586,12 +697,31 @@ const css=`
 #rovor-workload-popup .rvq-cloud-ring-layout .rvq-ring-core small{font-size:7px}
 @media(max-width:380px){#rovor-workload-popup .rvq-ring-layout{grid-template-columns:80px minmax(0,1fr);gap:9px}#rovor-workload-popup .rvq-ring-layout .rvq-ring{width:80px;height:80px}#rovor-workload-popup .rvq-ring-layout .rvq-ring:before{inset:9px}#rovor-workload-popup .rvq-ring-layout .rvq-ring-core strong{font-size:15px}#rovor-workload-popup .rvq-ring-layout .rvq-ring-core small{font-size:7px}}
 /* Visible nine-slot quota dashboard above verbose evidence panels. */
-#rovor-workload-popup .rvq-overview{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:7px;margin:0 0 15px}
-#rovor-workload-popup .rvq-overview-tile{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:start;gap:8px;padding:10px 4px 9px;border:1px solid rgba(83,159,211,.4);border-radius:11px;background:linear-gradient(145deg,#0c304e,#051b32);text-align:center}
-#rovor-workload-popup .rvq-overview-rings{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
-#rovor-workload-popup .rvq-overview-requests{color:#d4efff;font:700 9px/1.25 system-ui;text-align:center}
-#rovor-workload-popup .rvq-overview-hourly{color:#9bdfff;font:700 9px/1.25 system-ui;text-align:center}
-#rovor-workload-popup .rvq-overview-minute{color:#b3edff;font:700 9px/1.25 system-ui;text-align:center}
+#rovor-workload-popup .rvq-overview{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 15px}
+#rovor-workload-popup .rvq-overview-tile{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:start;gap:8px;padding:12px 8px 11px;text-decoration:none;cursor:pointer;touch-action:manipulation;border:1px solid rgba(83,159,211,.4);border-radius:11px;background:linear-gradient(145deg,#0c304e,#051b32);text-align:center}
+#rovor-workload-popup .rvq-overview-tile[hidden]{display:none!important}
+#rovor-workload-popup .rvq-overview-alert{border:1px solid #9ab9e8;padding:4px 7px;color:#e7f4ff;background:#1a3e60;font:700 9px system-ui;letter-spacing:.07em}
+#rovor-workload-popup .rvq-overview-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+#rovor-workload-popup .rvq-overview-controls button{min-height:44px;padding:8px 12px;background:#0a2948;color:#b9dbef;border:1px solid #3d779f;cursor:pointer;font:700 11px system-ui}
+#rovor-workload-popup .rvq-overview-controls button[aria-pressed="true"]{background:#185784;color:#f0faff;border-color:#a2dfff}
+#rovor-workload-popup .rvq-overview-controls button:focus-visible{outline:2px solid #d5f2ff;outline-offset:2px}
+#rovor-workload-popup .rvq-filter-note{font:11px/1.4 system-ui;color:#94c4e5}
+#rovor-workload-popup .rvq-overview-rings{display:flex;justify-content:center;align-items:flex-start;gap:7px;flex-wrap:wrap}
+#rovor-workload-popup .rvq-overview-ring-group{display:flex;flex-direction:column;align-items:center;gap:5px}
+#rovor-workload-popup .rvq-ring-label{color:#a9cde7;font:700 9px/1.25 system-ui;letter-spacing:.04em}
+#rovor-workload-popup .rvq-overview-tile:hover,#rovor-workload-popup .rvq-overview-tile:focus-visible{border-color:#b9eaff;outline:2px solid #87c9fa;outline-offset:1px;background:#103b60}
+#rovor-workload-popup .rvq-overview-drill{color:#a9dfff;font:700 10px/1.35 system-ui;letter-spacing:.05em;margin-top:auto}
+#rovor-workload-popup .rvq-source-notes{margin-top:12px;color:#9bc4dd;font:11px/1.55 system-ui}
+#rovor-workload-popup .rvq-source-notes summary{cursor:pointer;color:#a9e5ff;padding:8px 0}
+#rovor-workload-popup .rvq-source-notes p{margin:6px 0}
+#rovor-workload-popup .rvq-jump-nav{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 14px}
+#rovor-workload-popup .rvq-jump-nav a{display:inline-flex;align-items:center;min-height:44px;padding:9px 12px;border:1px solid rgba(92,178,233,.48);background:#0b2949;color:#c7edff;text-decoration:none;font:700 11px system-ui;letter-spacing:.04em}
+#rovor-workload-popup .rvq-jump-nav a:hover,#rovor-workload-popup .rvq-jump-nav a:focus-visible{outline:2px solid #8ccffc;outline-offset:1px}
+#rovor-workload-popup .rvq-details-heading{color:#b9e8ff;font:700 12px/1.5 system-ui;letter-spacing:.1em;margin:20px 0 9px}
+#rovor-workload-popup .rvq-overview-requests{color:#d4efff;font:700 11px/1.35 system-ui;text-align:center}
+#rovor-workload-popup .rvq-overview-intervals{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;width:100%}
+#rovor-workload-popup .rvq-overview-hourly{color:#9bdfff;font:700 10px/1.35 system-ui;text-align:center}
+#rovor-workload-popup .rvq-overview-minute{color:#b3edff;font:700 10px/1.35 system-ui;text-align:center}
 #rovor-workload-popup .rvq-activity{margin:12px 0 0;color:#a2d9fa;font:700 10px/1.5 system-ui;letter-spacing:.03em}
 #rovor-workload-popup .rvq-activity strong{color:#e6faff}
 #rovor-workload-popup .rvq-activity span{display:block;color:#8ba9bc;font:10px/1.4 system-ui;letter-spacing:0}
@@ -622,19 +752,24 @@ const css=`
 #rovor-workload-popup .rvq-observed-model-top>strong{white-space:nowrap;color:#a9d7ef}
 #rovor-workload-popup .rvq-observed-model .rvq-track{height:7px;margin:5px 0}
 #rovor-workload-popup .rvq-observed-model-meta{color:#8fb6cd;font:10px/1.4 system-ui}
-#rovor-workload-popup .rvq-overview-name{color:#d8f2ff;font:700 10px/1.35 system-ui;min-height:28px;max-width:100%;overflow-wrap:anywhere}
-#rovor-workload-popup .rvq-overview .rvq-ring{width:47px;height:47px}
-#rovor-workload-popup .rvq-overview .rvq-ring:before{inset:8px}
-#rovor-workload-popup .rvq-overview .rvq-ring-core strong{font-size:11px}
-#rovor-workload-popup .rvq-overview .rvq-ring-core small{font-size:6px}
-#rovor-workload-popup .rvq-overview .rvq-ring-unknown .rvq-ring-core strong{font-size:16px}
-#rovor-workload-popup .rvq-overview-source{color:#91c3dd;font:700 8px/1.25 system-ui;letter-spacing:.06em;overflow-wrap:anywhere}
-@media(max-width:1150px){#rovor-workload-popup .rvq-overview{grid-template-columns:repeat(5,minmax(0,1fr))}}
+#rovor-workload-popup .rvq-overview-name{color:#d8f2ff;font:700 12px/1.35 system-ui;min-height:32px;max-width:100%;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-overview .rvq-ring{width:68px;height:68px}
+#rovor-workload-popup .rvq-overview .rvq-ring:before{inset:9px}
+#rovor-workload-popup .rvq-overview .rvq-ring-core strong{font-size:12px}
+#rovor-workload-popup .rvq-overview .rvq-ring-core small{font-size:9px}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic{width:48px;height:48px;opacity:.84}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic:before{inset:7px}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic .rvq-ring-core strong{font-size:11px}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic .rvq-ring-core small{font-size:6px}
+#rovor-workload-popup .rvq-overview .rvq-ring-unknown .rvq-ring-core strong{font-size:18px}
+#rovor-workload-popup .rvq-overview-source{color:#91c3dd;font:700 10px/1.3 system-ui;letter-spacing:.03em;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-overview-model{color:#afdcf2;font:9px/1.4 system-ui;max-width:100%;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media(max-width:1150px){#rovor-workload-popup .rvq-overview{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){
- #rovor-workload-popup .rvq-overview{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:11px}
- #rovor-workload-popup .rvq-overview-tile{padding:7px 2px;gap:5px}
- #rovor-workload-popup .rvq-overview-name{min-height:0;font-size:9px}
- #rovor-workload-popup .rvq-overview-source{font-size:7px}
+ #rovor-workload-popup .rvq-overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:11px}
+ #rovor-workload-popup .rvq-overview-tile{padding:10px 6px;gap:6px}
+ #rovor-workload-popup .rvq-overview-name{min-height:0;font-size:12px}
+ #rovor-workload-popup .rvq-overview-source{font-size:10px}
  #rovor-workload-popup .rvq-head{margin-bottom:8px;gap:6px}
  #rovor-workload-popup .rvq-head .rvq-sub{display:none}
  #rovor-workload-popup .rvq-board>.rvq-sub{font-size:10px;margin-bottom:8px!important}
@@ -669,12 +804,26 @@ function mount(){
  listenForQuotaInteraction();
  const s=document.createElement('style');s.id='rvq-style';s.textContent=css;document.head.append(s);
 }
+function reportAgeLabel(timestamp){
+ const when=typeof timestamp==='string'?Date.parse(timestamp):NaN;
+ if(!Number.isFinite(when))return 'Mac last-report time unknown';
+ const elapsed=Date.now()-when;
+ if(elapsed < -30000)return 'Mac reporter clock is ahead · freshness uncertain';
+ if(elapsed<60000)return 'Mac last report · under 1 minute ago';
+ const minutes=Math.floor(elapsed/60000);
+ if(minutes<60)return 'Mac last report · '+minutes+' minute'+(minutes===1?'':'s')+' ago';
+ const hours=Math.floor(minutes/60), remainder=minutes%60;
+ if(hours<24)return 'Mac last report · '+hours+'h '+remainder+'m ago';
+ const days=Math.floor(hours/24);
+ return 'Mac last report · '+days+'d '+hours%24+'h ago';
+}
 function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null){
  mount();
  const cloudFresh=cloud?.execution_source==='cloud_provider'&&Number.isFinite(cloud.observed_at)&&
    Math.abs(Date.now()-cloud.observed_at)<=15000&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
  const cloudProviders=cloudFresh?new Map(cloud.providers.filter(p=>p&&typeof p.provider==='string').map(p=>[p.provider,p])):new Map();
  const cloudAttempts=cloudFresh&&Array.isArray(cloud.attempts)&&cloud.attempts.length<=500?cloud.attempts:[];
+ const review=reviewSample(cloudAttempts,cloudFresh&&Array.isArray(cloud?.attempts)&&cloud.attempts.length<=500);
  // When the Mac is off, cloud provider credentials and past gateway inventory
  // remain distinguishable: this is NOT a live Mac connection.
  const connections=Array.isArray(data?.connections)?data.connections:
@@ -698,20 +847,31 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
      slots.push({group,account_slot:n,enabled:typeof evidence?.enabled==='boolean'?evidence.enabled:null});
    }
  }
- const resets=quota.map(q=>Date.parse(q.reset_at||'')).filter(t=>Number.isFinite(t)&&t>Date.now());
+ const observedKeys=new Set(slots.map(slot=>slot.group.provider+':'+slot.account_slot));
+ const slotQuota=quota.filter(q=>observedKeys.has(q.provider+':'+q.account_slot));
+ const resets=slotQuota.map(q=>Date.parse(q.reset_at||'')).filter(t=>Number.isFinite(t)&&t>Date.now());
  const next=resets.length?new Date(Math.min(...resets)).toISOString():null;
  const enabled=live&&observedSlots?slots.filter(s=>s.enabled===true).length:null;
+ const coverage=live?new Set(slotQuota.map(q=>q.provider+':'+q.account_slot)).size:null;
+ const attentionCount=slots.filter(slot=>needsSetupReview(cloudProviders.get(slot.group.provider))).length;
+ if(!attentionCount||attentionCount===slots.length)overviewFilter='all';
  const summary='<div class="rvq-stats"><div class="rvq-stat"><span class="rvq-stat-label">REPORTED CONNECTION SLOTS</span><strong class="rvq-stat-value">'+fmt(slots.length)+'</strong></div>'+
- '<div class="rvq-stat"><span class="rvq-stat-label">LIMIT REPORTS</span><strong class="rvq-stat-value">'+(live?quota.length:'—')+'</strong></div>'+
+ '<div class="rvq-stat"><span class="rvq-stat-label">CONNECTION SLOTS WITH MAC LIMIT DATA</span><strong class="rvq-stat-value">'+(coverage===null?'—':fmt(coverage)+' / '+fmt(slots.length))+'</strong><span class="rvq-stat-secondary">Limit records: '+(live?fmt(slotQuota.length):'—')+'</span></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
- return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Each connection shows independently labeled Mac request activity and quota/reset evidence. Traffic share is not remaining quota or proof of an employee executing.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':'REPORT DISCONNECTED')+'</span></div>'+
- (slots.length?'<div class="rvq-overview" aria-label="Nine-provider quota overview">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
- '<div class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+
+ const macAge=reportAgeLabel(data?.snapshot_at);
+ const macFreshness='<p class="rvq-last-report" role="status">'+esc(macAge)+(live?' · Mac telemetry accepted':' · cached inventory only; do not infer current traffic or quota')+'</p>';
+ return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
+ '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
+ summary+macFreshness+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
+ (slots.length?(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
+ '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
  '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
- '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts,providerActivity(activity,s.group.provider),providerActivity(hourActivity,s.group.provider),providerActivity(minuteActivity,s.group.provider),geminiProject)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+
- '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Mac traffic percentages are shares of recorded provider requests, NOT quota usage. Local quota rings are cached gateway limits; separate cloud quota rings require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
+ '<div id="rvq-team">'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+'</div>'+
+ '<h4 class="rvq-details-heading">PROVIDER REPORTS · EXPAND ANY PROVIDER</h4>'+
+ '<div id="rvq-reports" class="rvq-grid">'+(slots.length?slots.map((slot,i)=>card(slot.group,quota,live,i,slot,cloudProviders.get(slot.group.provider),cloudAttempts,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider),geminiProject)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+
+ '<details class="rvq-source-notes"><summary>DATA SOURCES & VERIFICATION RULES</summary><p>Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Mac traffic percentages are shares of recorded provider requests, NOT quota usage. Local quota rings are cached gateway limits; separate cloud quota rings require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></details></section>';
 }
 // Preserve owner inspection context even when live evidence must be refreshed.
 function captureState(root){
@@ -732,6 +892,7 @@ function captureState(root){
  other.forEach((node,i)=>{if(node.scrollTop)state.scrolls.push({key:'$other',index:i,top:node.scrollTop})});
  const active=document.activeElement;
  if(active&&board.contains(active)){
+  if(active.matches?.('button[data-rvq-filter]'))state.focusedFilter=active.getAttribute('data-rvq-filter');
   const card=active.closest('[data-rvq-slot]');
   if(card&&active.tagName==='SUMMARY'){
    const details=[...card.querySelectorAll('details')];
@@ -754,6 +915,10 @@ function restoreState(root,state){
   const els=item.key==='$other'?[...board.querySelectorAll('.rvq-staff-list,.rvq-emp-grid')]:
     [...(getCard(item.key)?.querySelectorAll('.rvq-job-list')||[])];
   if(els[item.index])els[item.index].scrollTop=item.top;
+ }
+ if(state.focusedFilter){
+  const button=[...board.querySelectorAll('button[data-rvq-filter]')].find(b=>b.getAttribute('data-rvq-filter')===state.focusedFilter);
+  button?.focus({preventScroll:true});
  }
  if(state.focused){
   const d=getCard(state.focused.key)?.querySelectorAll('details')[state.focused.index];

@@ -74,6 +74,9 @@ test('self-contained bundle preserves original HUD and imports without dependenc
   assert.equal(a, b);
   const module = await import('data:text/javascript;base64,' + Buffer.from(a).toString('base64'));
   assert.equal(typeof module.default.fetch, 'function');
+  const quota = await module.default.fetch(req('/api/hud/gemini/project-quota', {identity: 'owner-id'}), env);
+  assert.equal(quota.status, 200);
+  assert.equal((await quota.json()).status, 'not_configured');
   const response = await module.default.fetch(req('/', {identity: 'owner-id'}), env);
   assert.equal(response.status, 200);
   assert.ok((await response.text()).startsWith(html.slice(0, 1000)));

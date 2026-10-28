@@ -24,6 +24,7 @@ test('Workload Distribution opens only existing native focus popup, never a new 
 
 test('Bundled native script and CSS match reviewable workload sources',()=>{
   assert.ok(html.includes(popup.trim()),'Runtime bundle must contain exact Workload module code');
+  assert.ok(html.includes(css.trim()),'Runtime bundle must contain exact reviewed Workload CSS');
   // Native HUD retains its own stylesheet; check reviewed scoped selector rules,
   // not a single contiguous CSS blob that may be separated by legacy styles.
   for(const rule of [
@@ -58,6 +59,11 @@ test('Popup defaults to unverified without network, keys or made-up model names'
   assert.match(popup,/VIEW SAMPLE LAYOUT/);
   assert.match(popup,/function mountPreview\(container,openDetails\)/);
   assert.match(popup,/LAST REPORT/);
+  assert.match(popup,/LAST REPORT · HISTORICAL/);
+  assert.match(popup,/31 PAST CLAIMS/);
+  assert.match(popup,/OCT 24 ARCHIVE/);
+  assert.match(popup,/timeZoneName:'short'/);
+  assert.doesNotMatch(popup,/\+' CDT'/);
   assert.match(popup,/3 ROUTED \/ 9 CONNECTIONS/);
   assert.match(css,/#workloadPanel \.wl-compact-row/);
   assert.doesNotMatch(popup,/(fetch\(|XMLHttpRequest|localStorage|sessionStorage|Authorization|Bearer)/);
