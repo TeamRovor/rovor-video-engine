@@ -4,11 +4,12 @@ import {readFileSync} from 'node:fs';
 import {
   validateDeploymentSecrets, prepareConfig, assertGithubReleaseContext
 } from '../integrations/hud-cloud/prepare-github-deploy.mjs';
-import {verifyGithubHud, verifyAnonymousTelemetry, verifiedOrigin} from '../integrations/hud-cloud/verify-github-deploy.mjs';
+import {verifyGithubHud, verifyAnonymousTelemetry, verifiedOrigin, hasNineProviderMeterAsset} from '../integrations/hud-cloud/verify-github-deploy.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 
 const dir = new URL('../integrations/hud-cloud/', import.meta.url);
 const template = readFileSync(new URL('wrangler.jsonc', dir), 'utf8');
+const actualNineMeterAsset = readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js', import.meta.url), 'utf8');
 const D1 = 'abcdefff-1111-2222-3333-0123456789ab';
 const secrets = {CLOUDFLARE_API_TOKEN: 'cloudflare-scope-limited-token',
   CLOUDFLARE_ACCOUNT_ID: 'a'.repeat(32), ROVOR_HUD_D1_ID: D1,
@@ -84,7 +85,7 @@ test('readback requires actual auth and live assets, not mere deploy success', a
     if (!auth) return new Response('{}', {status:401});
     if (path === '/') return new Response('<html><body>ROVOR_START_OMNIROUTE<script src="/hud-quota.js"></script></body></html>');
     if (path === '/hud-quota.js')
-      return new Response('window.ROVOR_QUOTA_BOARD={}; rvq-overview rvq-ring Mac requests / 24h');
+      return new Response(actualNineMeterAsset, {headers:{'Content-Type':'text/javascript'}});
     if (path === '/api/hud/status') return Response.json({
       source:'cloud_hud_telemetry',connection:'never_received',snapshot:null});
     return new Response('{}', {status:404});
@@ -99,6 +100,36 @@ test('readback requires actual auth and live assets, not mere deploy success', a
         return new Response('PUBLIC', {status:200});
       return fetchOK(url,opts);
     }}), /anonymous_quota_asset/);
+});
+
+test('release readback checks the current shipped quota asset without coupling to copywriting', async () => {
+  assert.equal(hasNineProviderMeterAsset(actualNineMeterAsset), true);
+  // The last deploy failed because this grammar string was made dynamic.
+  assert.equal(actualNineMeterAsset.includes("' Mac requests / 24h'"), false);
+  assert.equal(hasNineProviderMeterAsset(actualNineMeterAsset.replaceAll('Mac request', 'Observed call')), true);
+  for (const required of ['function overviewSlot(', 'function usageRing(',
+    'function macActivity(', 'function modelActivity(', 'rvq-observed-model',
+    'QUOTA UNKNOWN', 'window.ROVOR_QUOTA_BOARD=']) {
+    assert.equal(hasNineProviderMeterAsset(actualNineMeterAsset.replaceAll(required,'REMOVED_CONTRACT_MARKER')), false,
+      'missing functional marker must fail closed: '+required);
+  }
+  assert.equal(hasNineProviderMeterAsset('window.ROVOR_QUOTA_BOARD={}; rvq-overview rvq-ring Mac requests / 24h'), false);
+});
+
+test('authenticated readback still rejects an asset without model activity', async () => {
+  const token='r'.repeat(40);
+  const send=async (url, opts) => {
+    const resource=new URL(url).pathname;
+    const auth=opts.headers.Authorization === 'Bearer ' + token;
+    if (!auth && resource === '/') return new Response(null, {status:303,
+      headers:{Location:'https://hud.example/login'}});
+    if (!auth) return new Response('{}',{status:401});
+    if (resource === '/') return new Response('<body>ROVOR_START_OMNIROUTE<script src="/hud-quota.js"></script></body>');
+    if (resource === '/hud-quota.js') return new Response(actualNineMeterAsset.replace('function modelActivity(', 'function missingActivity('));
+    return Response.json({source:'cloud_hud_telemetry',connection:'stale',snapshot:null});
+  };
+  await assert.rejects(() => verifyGithubHud({origin:'https://hud.example',readerToken:token,send}),
+    /nine_provider_meter_asset_missing/);
 });
 
 test('live verifier tolerates short rollout gaps but never accepts anonymous exposure', async () => {

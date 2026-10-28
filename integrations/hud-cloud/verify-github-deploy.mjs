@@ -40,6 +40,23 @@ export async function verifyAnonymousTelemetry(read, {attempts = 9, pause = dela
   throw Error('anonymous_telemetry_not_verified_' + last);
 }
 
+// Verify the structural telemetry UI contract, not a copywriting sentence.
+// Singular/plural labels, localization and explanatory wording can change
+// without removing the nine connection meters or their model activity views.
+export function hasNineProviderMeterAsset(js) {
+  return typeof js === 'string' && [
+    'window.ROVOR_QUOTA_BOARD=',
+    'function overviewSlot(',
+    'function usageRing(',
+    'function macActivity(',
+    'function modelActivity(',
+    'rvq-overview-tile',
+    'rvq-observed-model',
+    'QUOTA UNKNOWN',
+    'function render(data,live,cloud=null)'
+  ].every(marker => js.includes(marker));
+}
+
 export async function verifyGithubHud({origin, readerToken, send = fetch}) {
   origin = verifiedOrigin(origin);
   if (typeof readerToken !== 'string' || readerToken.length < 32)
@@ -70,9 +87,7 @@ export async function verifyGithubHud({origin, readerToken, send = fetch}) {
   const script = await read('/hud-quota.js', true);
   if (script.status !== 200) throw Error('authenticated_quota_asset_unavailable');
   const js = await script.text();
-  if (!js.includes('window.ROVOR_QUOTA_BOARD=') ||
-      !js.includes('rvq-overview') || !js.includes('rvq-ring') ||
-      !js.includes('Mac requests / 24h'))
+  if (!hasNineProviderMeterAsset(js))
     throw Error('nine_provider_meter_asset_missing');
   const status = await read('/api/hud/status?period=24h', true);
   if (status.status !== 200) throw Error('private_D1_status_unavailable');
