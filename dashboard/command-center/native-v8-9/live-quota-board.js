@@ -332,6 +332,41 @@ function groqLimitReferences(provider){
   '<tr><td>'+fmt(q.rpm)+'</td><td>'+fmt(q.rpd)+'</td><td>'+fmt(q.tpm)+'</td><td>'+fmt(q.tpd)+'</td></tr></tbody></table>'+
   '<p>The live request/token figures above include only observed OmniRoute traffic; other account usage is not measured. No verified remaining-quota percentage or reset is asserted.</p></section>';
 }
+// Owner-supplied Google AI Studio Free tier project rate-limits view.
+// It displays 28-day PEAK observed use, not current balance or a live quota
+// API. Model display names are NOT stable API model IDs. No new model route,
+// commercial eligibility, quota record or provider health is implied.
+const GEMINI_OWNER_FREE_LIMITS=[
+ ['Gemini 3.8 Flash',5,250000,20],
+ ['Gemini 2.5 Flash',5,250000,20],
+ ['Gemini 2.5 Flash Lite',10,250000,20],
+ ['Gemini 3 Flash',5,250000,20],
+ ['Gemini 3.1 Flash Lite',15,250000,500],
+ ['Gemini 3.5 Flash Lite',15,250000,500],
+ ['Gemini 3.6 Flash',5,250000,20]
+];
+const GEMINI_OWNER_OTHER_LIMITS=[
+ ['Gemma 4 26B',30,16000,14400],
+ ['Gemma 4 31B',30,16000,14400],
+ ['Gemini Embedding 1',100,30000,1000],
+ ['Gemini Embedding 2',100,30000,1000]
+];
+function geminiLimitReferences(provider){
+ if(provider!=='gemini')return '';
+ const trs=rows=>rows.map(([name,rpm,tpm,rpd])=>
+  '<tr><td>'+esc(name)+'</td><td>'+fmt(rpm)+'</td><td>'+fmt(tpm)+'</td><td>'+fmt(rpd)+'</td></tr>').join('');
+ return '<section class="rvq-mistral-reference" aria-label="Owner-supplied Gemini project Free tier capacity references">'+
+  '<strong>GEMINI · FREE TIER PROJECT LIMITS (OWNER SNAPSHOT)</strong>'+
+  '<p>Observed October 27, 2026 · Default Gemini Project · Google AI Studio. These are project-scoped rate-limit ceilings, not remaining balance, current usage, direct model availability or free/commercial-use proof for OmniRoute routes.</p>'+
+  '<table><thead><tr><th>Text-out model</th><th>Requests/min</th><th>Tokens/min</th><th>Requests/day</th></tr></thead><tbody>'+
+   trs(GEMINI_OWNER_FREE_LIMITS)+'</tbody></table>'+
+  '<details><summary>Other usable categories in this project snapshot</summary>'+
+   '<table><thead><tr><th>Other model</th><th>Requests/min</th><th>Tokens/min</th><th>Requests/day</th></tr></thead><tbody>'+
+   trs(GEMINI_OWNER_OTHER_LIMITS)+'</tbody></table>'+
+   '<p>Gemma and embedding categories are not automatically interchangeable with Gemini text-out inference.</p></details>'+
+  '<p>28-day peak for Gemini 3.8 Flash: 3 / 5 RPM, 51 / 250,000 TPM, 4 / 20 RPD. This is NOT current remaining quota. Models showing 0 / 0 have no positive allowance in the selected view.</p>'+
+  '<p>Project-wide consumption outside OmniRoute is not included in gateway activity. No limit percentages, resets, worker status or verified billing are invented from this reference.</p></section>';
+}
 function mistralLimitReferences(provider,activity){
  if(provider!=='mistral')return '';
  const recorded=activity?.models||[];
@@ -360,7 +395,7 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute)
  const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
  return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
- '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
+ '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
 }
 
 // Nine-provider glance cards are a visualization of one explicitly labeled
