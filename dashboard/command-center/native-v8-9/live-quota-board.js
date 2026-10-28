@@ -535,7 +535,7 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
  const cq=cloud?.quota;
  const observed=Number(cq?.observed_at),limit=Number(cq?.limit),used=Number(cq?.used);
  const reset=cq?.resets_at;
- const verified=!local&&cq?.status==='verified'&&Number.isFinite(observed)&&
+ const verified=!local&&(slot.group.connection_count===1||(cq?.scope==='account_slot'&&cq?.account_slot===slot.account_slot))&&cq?.status==='verified'&&Number.isFinite(observed)&&
    observed>Date.now()-90*60000&&observed<=Date.now()+300000&&
    Number.isSafeInteger(used)&&Number.isSafeInteger(limit)&&limit>0&&used>=0&&used<=limit&&
    (reset===null||reset===undefined||(Number.isSafeInteger(reset)&&reset>Date.now()));
