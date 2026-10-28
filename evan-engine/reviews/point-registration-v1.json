@@ -1,0 +1,237 @@
+{
+  "sourceSha256": "b0020f3504d49d8410dee3566380ae9e4ec7ab81abf748ffc29911f91033e5d2",
+  "scale": 0.192,
+  "sourceUnchanged": true,
+  "sourceArtworkNewlyGenerated": false,
+  "poses": [
+    {
+      "pose": "open",
+      "distalArea": 8815,
+      "distalBounds": [
+        794,
+        775,
+        921,
+        894
+      ],
+      "proximalOriginalExact": true
+    },
+    {
+      "pose": "point",
+      "distalArea": 5891,
+      "distalBounds": [
+        792,
+        782,
+        913,
+        901
+      ],
+      "proximalOriginalExact": true
+    }
+  ],
+  "meshSamples": [
+    {
+      "frame": 0,
+      "pose": "open",
+      "minimumArea2": 432.00001163166047,
+      "nativeCropBox": [
+        942,
+        657,
+        1262,
+        977
+      ]
+    },
+    {
+      "frame": 0,
+      "pose": "point",
+      "minimumArea2": 432.00001163166047,
+      "nativeCropBox": [
+        942,
+        657,
+        1262,
+        977
+      ]
+    },
+    {
+      "frame": 69,
+      "pose": "open",
+      "minimumArea2": 136.25232095314837,
+      "nativeCropBox": [
+        1036,
+        575,
+        1356,
+        895
+      ]
+    },
+    {
+      "frame": 69,
+      "pose": "point",
+      "minimumArea2": 136.25232095314837,
+      "nativeCropBox": [
+        1036,
+        575,
+        1356,
+        895
+      ]
+    },
+    {
+      "frame": 248,
+      "pose": "open",
+      "minimumArea2": 195.01484516282602,
+      "nativeCropBox": [
+        1016,
+        585,
+        1336,
+        905
+      ]
+    },
+    {
+      "frame": 248,
+      "pose": "point",
+      "minimumArea2": 195.01484516282602,
+      "nativeCropBox": [
+        1016,
+        585,
+        1336,
+        905
+      ]
+    },
+    {
+      "frame": 374,
+      "pose": "open",
+      "minimumArea2": 135.35224293485436,
+      "nativeCropBox": [
+        1022,
+        592,
+        1342,
+        912
+      ]
+    },
+    {
+      "frame": 374,
+      "pose": "point",
+      "minimumArea2": 135.35224293485436,
+      "nativeCropBox": [
+        1022,
+        592,
+        1342,
+        912
+      ]
+    },
+    {
+      "frame": 504,
+      "pose": "open",
+      "minimumArea2": 407.925509537083,
+      "nativeCropBox": [
+        985,
+        631,
+        1305,
+        951
+      ]
+    },
+    {
+      "frame": 504,
+      "pose": "point",
+      "minimumArea2": 407.925509537083,
+      "nativeCropBox": [
+        985,
+        631,
+        1305,
+        951
+      ]
+    }
+  ],
+  "defaultChanged": false,
+  "poseSwitchImplemented": false,
+  "status": "registered-pointing-hand-static-construction-reviewed",
+  "stagePilots": [
+    {
+      "frame": 69,
+      "time": 2.875,
+      "baselineStagePixelExact": true,
+      "outsideRightHandRegionExact": true,
+      "faceLeftArmAndBrandExact": true,
+      "poseSwitchImplemented": false,
+      "changedStagePixels": 5191
+    },
+    {
+      "frame": 248,
+      "time": 10.333333333333334,
+      "baselineStagePixelExact": true,
+      "outsideRightHandRegionExact": true,
+      "faceLeftArmAndBrandExact": true,
+      "poseSwitchImplemented": false,
+      "changedStagePixels": 5233
+    },
+    {
+      "frame": 374,
+      "time": 15.583333333333334,
+      "baselineStagePixelExact": true,
+      "outsideRightHandRegionExact": true,
+      "faceLeftArmAndBrandExact": true,
+      "poseSwitchImplemented": false,
+      "changedStagePixels": 5178
+    }
+  ],
+  "testsPassed": 2,
+  "nativeArmPosePairsVisuallyInspected": [
+    0,
+    69,
+    248,
+    374,
+    504
+  ],
+  "deliveryPosesVisuallyInspected": [
+    69,
+    248,
+    374
+  ],
+  "rawSourceSize": [
+    1254,
+    1254
+  ],
+  "registrationWrist": [
+    457,
+    531
+  ],
+  "targetWrist": [
+    810,
+    762
+  ],
+  "registrationDegrees": 15,
+  "registrationSigma": 2.5557159520920507,
+  "derivedAssets": "evan-character/cartoon-v1/point-hand-fit-v1",
+  "rawSourceAlphaModified": false,
+  "derivativeAlphaResampled": true,
+  "allCurrentSpeechArmMeshesPositive48Hz": true,
+  "isolatedRebuildExact": true,
+  "sourceHashes": {
+    "work/point-registration-review/probe.py": "02542c3ac3d563ed1e39983777e1caf2b7f52bdcd4442c039ab3ebb580a1b0bf",
+    "work/point-registration-review/stage.py": "1a63a3cdad398bc9d4e4d0084983c9317fa7615838bad86e967da8f83830c87f",
+    "work/engine/evan-engine/build_relaxed_cartoon_hand.py": "c1533a614ccdee668f6f01af944a7b14a005a236b0c401465674835a331a7006",
+    "work/engine/evan-engine/test_point_hand_fit.py": "5298f53eeb75c5fd5c84ca6aee7ffa20f5d86de08f46c4153e8b2bbeccd937e4",
+    "work/engine/evan-engine/relaxed_cartoon_scene.py": "32e9fdd022b7c36b678a3388a296363974a15fff4c9a1d1d5fea64027536744a",
+    "work/engine/evan-engine/joined_cartoon_wrist.py": "2c9d40b5d69fadff20c131835c39879aaf4ca54b0f3c41b321129b376a01fc84",
+    "work/engine/evan-engine/payoff_cartoon_review.py": "b2b612d369da7b4a957657ba12714182a1d65568b1570a20f1d1ae96452b3c7b",
+    "work/engine/evan-character/cartoon-v1/point-hand-fit-v1/blend-mask.png": "f7e7ae74f6f561cf42f9e8bfb03f67c7ec3afab98b04d67c4159a1dfbf3cbc28",
+    "work/engine/evan-character/cartoon-v1/point-hand-fit-v1/right-skin.png": "5bedf194e956b21549637a201011e7a37aa9ba4c7ccf8bd76fd7a9ddd0360da5",
+    "work/engine/evan-character/cartoon-v1/point-hand-fit-v1/registered-hand.png": "dff5312067e2dae2393c771a931ace6d100d61c61a8214fb968cc08325f9dacb",
+    "work/engine/evan-character/cartoon-v1/point-hand-fit-v1/manifest.json": "05ad590608ec491af1949664aab6be2298e2253c23fff63547d373bbb1b0059a",
+    "work/engine/evan-character/cartoon-v1/hand-source/right-point-v1.png": "b0020f3504d49d8410dee3566380ae9e4ec7ab81abf748ffc29911f91033e5d2",
+    "work/engine/evan-character/cartoon-v1/hand-rig/manifest.json": "e6b948bf71b0b646a3a44373669f0c093fdd9c2163d7c4be11c0d354717a42cd",
+    "work/engine/evan-character/cartoon-v1/source/design-sheet-v1.png": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7",
+    "outputs/evan-speech-alignment/Aligned-Speech-Plan.json": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e"
+  },
+  "pendingJobs": false,
+  "newArtwork": false,
+  "fullFilmUpdated": false,
+  "phonemeTimingChanged": false,
+  "flagsCleared": 0,
+  "fingersIndividuallyArticulated": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "visualAssessment": "Five digits remain coherent and wrist joins read continuously at five native poses. Folded pointing palm is expected to have smaller alpha area than the spread open palm; distal extents are comparable. Point contour remains thinner than current open-palm contour. Static stage poses read as pointing, but no pose transition or exact target alignment is implemented.",
+  "nextConcreteWork": "Calibrate a pointing ray to the illustrated browser globe during the existing opening indication phrase. Reuse current acoustic word anchors and arm controls; evaluate one opt-in replacement hand cue under a short wrist turn, with no digit dissolve or articulated-finger claim. Require normal/slow motion and all native transition frames before full-film integration; preserve existing definition/payoff open palms and20closing frames."
+}

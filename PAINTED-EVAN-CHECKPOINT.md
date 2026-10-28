@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current hand work: existing point source registered and statically reviewed
+CARTOON-EVAN-POINT-REGISTRATION.md / evan-engine/reviews/point-registration-v1.json; outputs/evan-cartoon-point-registration/Review.html. Original1254point source inspected atfullres againstdesignsheet, SHA b0020f3504d49d8410dee3566380ae9e4ec7ab81abf748ffc29911f91033e5d2 unchanged. Old .16hand-rig preserved. New separate point-hand-fit-v1 derives current .192scale/wrist457,531→810,762/15deg/associatedRGBAprefilter sigma2.5557 with existing wristfit. Rawart/alpha unchanged; derivativealpha intentionally resampled. Not animationReady or individualfingerrig.
+
+2tests passed: input/proximal/bounds, current speech48Hz positivearmmesh and isolatedexact3derivatives+manifest rebuild. Originalproximalarm axial≤−36exact. Five shared-wrist native320x320open/pointpairs0/69/248/374/504inspected retainingcompletefingers; three1280x720stagepilots69/248/374baselineexactcurrentfilm andoutsidehandregionexact. Pointerthincontour remains, foldedpalm area5891vs8815(expectedshapechange, notscaleproof), comparable distalextents. Static usefulpoint reads, but no targetray calibration or transition yet. Frozen local work/point-registration-review/{probe,stage}.py/Source-Manifest.json. NO pending jobs.
+
+NEXT: calibrate pointerray toward existingillustratedglobe during openingindication phrase usingCURRENT acousticanchors. Evaluate ONE opt-in replacementhand cue underbriefwristturn, no fingerdissolve/articulationclaim. Require normal/slow and allnative transitionframes before integration. Keepdefinition/payoffpalms/20closing. No newart/timing/default. Fullfilm remains collar-continuous; automationactive/polished NOTready.
+
 ## Current complete candidate: collar ownership corrected across speech
 CARTOON-EVAN-COLLAR-CONTINUOUS.md / evan-engine/reviews/collar-continuous-v1.json; outputs/evan-cartoon-collar-continuous/Review.html. Worker12979COMPLETED. NO pending jobs. All532default speechstages calibratedexact to payoff-continuous; nativeoraljaw/audit,neck/torso/armlayers andoutsideheadstage exact.511speechPNGschange,21zero-diff speech+20closing copies byte-exact. Optional6pxheadalphacut only; no art/timing/actingcue/default changes.
 
@@ -12,7 +19,7 @@ Normal23s/slow92s decode552/2208;532journalrows/552source-outputhashes/source-fi
 
 The15–17s component(worker9788completed) remains in collar-motion/Review.html:48/192decode,32000exactPCM, all48nativepairs/12overview/6decoded inspected.10neck/payofftests previouslypassed. No furthercollarvariant warranted absent defect.
 
-NEXT: inspect original hand-source/right-point-v1.png against currentfilteredpalm/designsheet. Old .16point derivative is documented undersized/thinner; DO NOT install it. Evaluate separate .192registration at currentpalm proportions and severalexistingarmposes before choosing narration-linked handpose transition. Preserveoriginals/defaults; no fingerdissolve or unsupportedarticulation claim. Automation active/polished NOTready.
+The planned point source inspection and separate registration are complete above; the old .16derivative is still preserved.
 
 ## Current bounded fix: original neck fringe ownership
 CARTOON-EVAN-COLLAR-OWNERSHIP.md / evan-engine/reviews/collar-ownership-v1.json; outputs/evan-cartoon-collar-ownership/Review.html. Frame374held fullstage exactly calibrated; individualhead/neck/torso3xnative sheets identify a dangling ORIGINAL neck edge in headplane x208..213belowjaw. Split ownership formerly starts214. Torso collar is separate, not source of that tail.
