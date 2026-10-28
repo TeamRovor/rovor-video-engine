@@ -94,6 +94,16 @@ test('readback requires actual auth and live assets, not mere deploy success', a
   assert.equal(verified.private_auth_verified,true);
   assert.equal(verified.quota_board_verified,true);
   assert.equal(verified.all_nine_live_verified,false);
+  assert.equal(verified.quota_asset_matches_checkout,null);
+  const current = await verifyGithubHud({origin:'https://hud.example',readerToken:token,
+    send:fetchOK,expectedQuotaAsset:actualNineMeterAsset});
+  assert.equal(current.quota_asset_matches_checkout,true);
+  await assert.rejects(() => verifyGithubHud({origin:'https://hud.example',readerToken:token,
+    expectedQuotaAsset:actualNineMeterAsset,send:async(url,opts)=>{
+      if(opts.headers.Authorization && new URL(url).pathname==='/hud-quota.js')
+        return new Response(actualNineMeterAsset+'\n// previous release');
+      return fetchOK(url,opts);
+    }}),/deployed_quota_asset_differs_from_checkout/);
   await assert.rejects(() => verifyGithubHud({origin:'https://hud.example',
     readerToken:token, send:async (url,opts) => {
       if (!opts.headers.Authorization && new URL(url).pathname==='/hud-quota.js')
