@@ -124,7 +124,7 @@ test('all nine enabled providers show real gateway traffic and observed routed m
  assert.match(html,/nvidia\/nemotron-3\.5-super-vl:free/);
  assert.match(html,/41 requests/);
  assert.match(html,/140,957 reported tokens/);
- assert.match(html,/85\.4% of this gateway provider&#39;s requests/);
+ assert.match(html,/85\.4% of this gateway provider's requests/);
  assert.match(html,/No recorded model requests through Cohere/);
  assert.match(html,/No recorded model requests through NVIDIA NIM/);
  assert.equal((html.match(/aria-label="Provider quota unknown"/g)||[]).length,18);
