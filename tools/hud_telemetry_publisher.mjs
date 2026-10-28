@@ -67,7 +67,7 @@ export async function publishOnce({origin, token, serviceToken, collect, workers
   if (typeof token !== 'string' || token.length < 32 || token.length > 200 || /[\r\n]/.test(token)) throw Error('writer_token_missing');
   if (serviceToken !== undefined && (typeof serviceToken !== 'string' || !serviceToken || serviceToken.length > 4096 || /[\r\n]/.test(serviceToken))) throw Error('service_token_invalid');
   const workforce = await workers();
-  for (const period of ['24h', '1h', '7d']) {
+  for (const period of ['24h', '1h', '7d', '1m']) {
     const snapshot = {...await collect(period), workforce};
     const body = JSON.stringify(snapshot);
     if (Buffer.byteLength(body) > 32768) throw Error('snapshot_too_large');
