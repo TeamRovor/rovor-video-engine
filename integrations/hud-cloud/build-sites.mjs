@@ -12,7 +12,11 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   if (core.split(coreEnd).length !== 2 || adapter.split(adapterImport).length !== 2) throw Error('Unexpected source module shape');
   if (!html.includes('window.ROVOR_START_OMNIROUTE') || !html.includes('</body>')) throw Error('Original HUD live adapter missing');
   const plain = code => code.replace(/^export (?=(?:async )?function )/gm, '');
-  return plain(core.replace(coreEnd, '')) + '\n' + plain(adapter.replace(adapterImport, '')) +
+  const monitorImport = "import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';";
+  if (core.split(monitorImport).length !== 2) throw Error('Unexpected Gemini monitoring import');
+  const monitor = fs.readFileSync(path.join(here, 'gemini-cloud-monitoring.mjs'), 'utf8');
+  const dependency = 'const {readGoogleGeminiQuota} = (() => {\n' + plain(monitor) + '\nreturn {readGoogleGeminiQuota};})();\n';
+  return dependency + plain(core.replace(monitorImport, '').replace(coreEnd, '')) + '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
 }
 
