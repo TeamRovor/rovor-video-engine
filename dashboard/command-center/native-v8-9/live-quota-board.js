@@ -512,7 +512,18 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,
 // Nine-provider glance cards are a visualization of one explicitly labeled
 // validated quota source per slot. They never sum Mac and cloud counters.
 const ACTION_GATES=new Set(['missing_secret','unpinned_model','eligibility_unverified','eligibility_expired','canary_unverified','invalid_limits','missing_account','unpinned_upstream','failure_circuit_requires_review']);
-const needsSetupReview=p=>ACTION_GATES.has(p?.dispatch_gate?.reason);
+function setupReviewLabel(p){
+ if(!p)return '';
+ if(ACTION_GATES.has(p.dispatch_gate?.reason)){
+  if(p.dispatch_gate.reason==='failure_circuit_requires_review')return 'CLOUD REVIEW REQUIRED';
+  if(p.dispatch_gate.reason==='missing_secret')return 'CLOUD KEY UNAVAILABLE';
+  return 'CLOUD SETUP REQUIRED';
+ }
+ if(p.admission==='eligibility_expired')return 'CLOUD ELIGIBILITY EXPIRED';
+ if(p.admission==='disabled_pending_verification')return 'CLOUD VERIFICATION PENDING';
+ return '';
+}
+const needsSetupReview=p=>Boolean(setupReviewLabel(p));
 function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
  const localLimits=live&&slot.enabled!==false?quota.filter(q=>q.provider===slot.group.provider&&
    q.account_slot===slot.account_slot&&Number.isSafeInteger(q.used)&&
@@ -532,13 +543,14 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
  const evidence=local?'MAC MODEL LIMIT':verified?'CLOUD ACCOUNT LIMIT':localLimits.length>1?'MULTIPLE MODEL LIMITS':'QUOTA UNKNOWN';
  const name=pretty(slot.group.name||slot.group.provider);
  const traffic=activity?usageRing(activity.share,'Mac 24-hour recorded request share for '+name,'activity'):'';
- const attention=needsSetupReview(cloud);
+ const alertLabel=setupReviewLabel(cloud);
+ const attention=Boolean(alertLabel);
  return '<a class="rvq-overview-tile" href="#rvq-reports" data-rvq-attention="'+String(attention)+'"'+(overviewFilter==='attention'&&!attention?' hidden':'')+' data-rvq-open-slot="'+esc(slot.group.provider+':'+slot.account_slot)+'" aria-label="View '+esc(name)+' connection '+fmt(slot.account_slot)+' full report · '+evidence+(attention?' · setup or review required':'')+'">'+
    '<span class="rvq-overview-name">'+esc(name)+'</span>'+
    // Prioritize the real 24h usage ring in each of the nine connection tiles.
    // Unknown account quota remains a separate visible ring; never present traffic as quota.
    '<div class="rvq-overview-rings">'+(activity?'<span class="rvq-overview-ring-group">'+traffic+'<span class="rvq-ring-label">MAC TRAFFIC</span></span>':'')+'<span class="rvq-overview-ring-group">'+usageRing(pct,evidence+' for '+name)+'<span class="rvq-ring-label">QUOTA USED</span></span></div>'+
-   (attention?'<span class="rvq-overview-alert">SETUP / REVIEW</span>':'')+
+   (attention?'<span class="rvq-overview-alert">'+esc(alertLabel)+'</span>':'')+
    '<span class="rvq-overview-source">'+evidence+(localLimits.length>1&&!verified?' · '+fmt(localLimits.length)+' separate limits':'')+'</span>'+
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span>'+
    '<span class="rvq-overview-intervals"><span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
@@ -825,7 +837,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  const enabled=live&&observedSlots?slots.filter(s=>s.enabled===true).length:null;
  const coverage=live?new Set(quota.map(q=>q.provider+':'+q.account_slot)).size:null;
  const attentionCount=slots.filter(slot=>needsSetupReview(cloudProviders.get(slot.group.provider))).length;
- if(!attentionCount)overviewFilter='all';
+ if(!attentionCount||attentionCount===slots.length)overviewFilter='all';
  const summary='<div class="rvq-stats"><div class="rvq-stat"><span class="rvq-stat-label">REPORTED CONNECTION SLOTS</span><strong class="rvq-stat-value">'+fmt(slots.length)+'</strong></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">PROVIDERS WITH MAC LIMIT DATA</span><strong class="rvq-stat-value">'+(coverage===null?'—':fmt(coverage)+' / '+fmt(slots.length))+'</strong><span class="rvq-stat-secondary">Limit records: '+(live?fmt(quota.length):'—')+'</span></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
@@ -833,7 +845,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length):'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
  summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
- (slots.length?(attentionCount?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
+ (slots.length?(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
  '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
