@@ -233,6 +233,34 @@ function jobReceipts(provider,attempts){
     '<p>Account-slot attribution requires a separate receipt; human review controls are not connected here.</p></div>';
 }
 
+// Only distinct, explicitly unreviewed inference receipts. This is a
+// returned sample, not an authoritative count of the private review queue.
+function reviewSample(attempts,fresh){
+ if(!fresh)return {known:false,pending:[],received:0};
+ const seen=new Set(),pending=[];
+ for(const a of attempts){
+  if(!a||typeof a.id!=='string'||!a.id||seen.has(a.id))continue;
+  seen.add(a.id);
+  if(a.status!=='needs_review'||a.human_review!=='not_recorded')continue;
+  if(String(a.job_id||'').startsWith('canary-')||
+     String(a.title||'').startsWith('PROVIDER CANARY'))continue;
+  if(!Number.isSafeInteger(a.started_at)||a.started_at>Date.now()+300000||a.started_at<=0)continue;
+  pending.push(a);
+ }
+ pending.sort((a,b)=>b.started_at-a.started_at);
+ return {known:true,pending,received:seen.size};
+}
+function reviewPulse(review){
+ if(!review.known)return '<p class="rvq-review-status">No fresh private cloud review sample. Open the owner queue to check actual pending decisions.</p>';
+ const count=review.pending.length;
+ const latest=review.pending.slice(0,3).map(a=>
+  '<li><strong>'+esc(String(a.title||a.task_id||'Untitled').slice(0,90))+'</strong><span>'+
+  esc(String(a.employee||'Unassigned').slice(0,32))+' · '+esc(prettyTime(a.started_at))+'</span></li>').join('');
+ return '<p class="rvq-review-status">'+fmt(count)+' returned cloud receipt'+(count===1?'':'s')+
+  ' awaiting PASS / FAIL'+(count?' · latest three below':'')+
+  '. This sample is not the complete private owner queue.</p>'+
+  (latest?'<ol class="rvq-review-sample">'+latest+'</ol>':'');
+}
 const CLOUD_ROSTER=['Walter','Mike','Jane','Jesse','Gale','Gus','Saul','Hank'];
 // Employee meters are shares of returned, receipt-attributed cloud attempts,
 // never percentages of provider quota or proof an employee is running now.
