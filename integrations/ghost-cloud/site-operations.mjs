@@ -315,14 +315,14 @@ export function createCloudOperations(base, cloud) {
   }
   function disconnect(){
    connection='offline';data=null;painted='';
-   for(const name of ['rovor-cloud-live','rovor-cloud-results'])document.getElementById(name)?.remove();
+   for(const name of ['rovor-cloud-live','rovor-cloud-results','rovor-review-quick'])document.getElementById(name)?.remove();
    linkState();
   }
   function paint(){
    linkState();
    const panel=document.getElementById('workloadPanel'),activity=document.getElementById('activityPanel');if(!panel||!activity||!data)return;
    const key=JSON.stringify([data.enabled,data.providers,data.attempts,data.review_queue]);
-   if(key===painted&&document.getElementById('rovor-cloud-live')&&document.getElementById('rovor-cloud-results'))return;
+   if(key===painted&&document.getElementById('rovor-cloud-live')&&document.getElementById('rovor-cloud-results')&&document.getElementById('rovor-review-quick'))return;
    painted=key;
    const section=el('section');section.id='rovor-cloud-live';section.className='wl-card';
    section.append(el('strong','CLOUD EMPLOYEES · '+(data.enabled?'DISPATCH ENABLED':'DISPATCH PAUSED')));
@@ -368,8 +368,63 @@ export function createCloudOperations(base, cloud) {
     section.append(card);
    }
    const old=document.getElementById(section.id);if(old)old.replaceWith(section);else panel.prepend(section);
-   const results=el('section');results.id='rovor-cloud-results';
    const pending=data.review_queue.items,count=data.review_queue.pending_count;
+   function reviewRow(a,expanded=false){
+    const row=el('details');row.className='wl-card';row.open=expanded;
+    row.append(el('summary','REVIEW · '+a.employee+' · '+a.provider+' · '+a.status+' · '+a.human_review));
+    row.append(el('p',a.title));
+    row.append(el('p','Actual model: '+(a.actual_model||'unknown')+' · tokens: '+(a.tokens_input??'?')+' / '+(a.tokens_output??'?')));
+    if(a.finished_at)row.append(el('p',new Date(a.finished_at).toLocaleString()));
+    if(a.status==='needs_review'&&a.human_review==='not_recorded'){
+     const view=el('button','VIEW OUTPUT TO ENABLE PASS / FAIL');view.className='wl-button';view.type='button';
+     const notice=el('p','Owner decisions become available only after the draft is loaded. No automatic approval.');
+     const output=el('pre');output.style.cssText='white-space:pre-wrap;max-height:240px;overflow:auto';
+     const controls=el('div');controls.hidden=true;
+     for(const [label,verdict] of [['PASS','passed'],['FAIL','failed']]){
+      const b=el('button',label);b.className='wl-button';b.type='button';
+      b.onclick=async()=>{
+       if(controls.hidden||b.disabled)return;
+       for(const button of controls.querySelectorAll('button'))button.disabled=true;
+       try{
+        const r=await fetch('/api/ghost/review',{method:'POST',
+         headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:a.job_id,verdict})});
+        if(!r.ok)throw Error('owner_review_not_saved');
+        await poll();
+       }catch{notice.textContent='Review could not be saved. Refresh status before trying again.';
+        for(const button of controls.querySelectorAll('button'))button.disabled=false;}
+      };
+      controls.append(b);
+     }
+     view.onclick=async()=>{
+      if(view.disabled)return;view.disabled=true;
+      try{
+       const r=await fetch('/api/ghost/jobs/'+encodeURIComponent(a.job_id),{cache:'no-store'});
+       if(!r.ok)throw Error('draft_unavailable');
+       const j=await r.json();
+       if(typeof j.output!=='string'||!j.output.trim())throw Error('empty_draft');
+       output.textContent=j.output;
+       controls.hidden=false;
+       notice.textContent='Review this exact draft, then select PASS or FAIL. The decision is saved privately.';
+      }catch{
+       controls.hidden=true;output.textContent='';
+       notice.textContent='Draft unavailable. No decision has been submitted.';
+      }finally{view.disabled=false;}
+     };
+     row.append(view,notice,output,controls);
+    }
+    return row;
+   }
+   // Put the oldest actionable decisions in the Workload view itself.
+   // The standalone Cloudflare telemetry viewer cannot issue Site owner
+   // review POSTs; only this authenticated, same-origin Site can.
+   const quick=el('section');quick.id='rovor-review-quick';quick.className='wl-card';
+   quick.append(el('strong','OWNER PASS / FAIL REVIEWS · '+count+' PENDING'));
+   if(count){
+    quick.append(el('p','Review the actual draft first. The oldest three pending decisions are available here; open Recent Activity for the full queue.'));
+    for(const a of pending.slice(0,3))quick.append(reviewRow(a,true));
+   }else quick.append(el('p','No owner decisions pending. This does not mean new jobs are queued.'));
+   const priorQuick=document.getElementById(quick.id);if(priorQuick)priorQuick.replaceWith(quick);else panel.prepend(quick);
+   const results=el('section');results.id='rovor-cloud-results';
    results.append(el('strong','OWNER REVIEW QUEUE · '+count+' PENDING'));
    if(count){
     const oldest=data.review_queue.oldest_finished_at;
@@ -381,19 +436,7 @@ export function createCloudOperations(base, cloud) {
    if(!data.attempts.length&&!pending.length)results.append(el('p','No cloud request has completed yet.'));
    const pendingIds=new Set(pending.map(a=>a.id));
    const shown=[...pending,...data.attempts.filter(a=>!pendingIds.has(a.id))].slice(0,20);
-   for(const a of shown){
-    const row=el('details');row.className='wl-card';row.append(el('summary',a.employee+' · '+a.provider+' · '+a.status+' · '+a.human_review));
-    row.append(el('p',a.title));row.append(el('p','Actual model: '+(a.actual_model||'unknown')+' · tokens: '+(a.tokens_input??'?')+' / '+(a.tokens_output??'?')));
-    if(a.finished_at)row.append(el('p',new Date(a.finished_at).toLocaleString()));
-    if(a.status==='needs_review'&&a.human_review==='not_recorded'){
-     const view=el('button','VIEW OUTPUT');view.className='wl-button';const output=el('pre');output.style.cssText='white-space:pre-wrap;max-height:240px;overflow:auto';
-     const controls=el('div');controls.hidden=true;
-     for(const [label,verdict] of [['PASS','passed'],['FAIL','failed']]){const b=el('button',label);b.className='wl-button';b.onclick=async()=>{const r=await fetch('/api/ghost/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:a.job_id,verdict})});if(r.ok)await poll();else output.textContent='Review could not be saved.';};controls.append(b);}
-     view.onclick=async()=>{const r=await fetch('/api/ghost/jobs/'+encodeURIComponent(a.job_id));if(r.ok){const j=await r.json();output.textContent=j.output||'No reviewable draft.';controls.hidden=!j.output;}};
-     row.append(view,output,controls);
-    }
-    results.append(row);
-   }
+   for(const a of shown)results.append(reviewRow(a));
    const prior=document.getElementById(results.id);if(prior)prior.replaceWith(results);else activity.prepend(results);
   }
   async function poll(){
