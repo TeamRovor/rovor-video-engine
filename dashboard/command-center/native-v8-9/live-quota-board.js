@@ -35,6 +35,17 @@ function listenForQuotaInteraction(){
    detail.querySelector('summary')?.focus({preventScroll:true});
    provider.scrollIntoView?.({block:'start',behavior:'auto'});
  });
+ // Navigate only the current HUD drawer; avoid modifying the private Site URL.
+ document.addEventListener('click',event=>{
+   const link=event.target?.closest?.('.rvq-jump-nav a');
+   const board=link?.closest?.('.rvq-board');
+   if(!board)return;
+   const id=link.getAttribute('href')?.slice(1);
+   const target=id?[...board.querySelectorAll('[id]')].find(el=>el.id===id):null;
+   if(!target)return;
+   event.preventDefault();
+   target.scrollIntoView?.({block:'start',behavior:'auto'});
+ });
 }
 
 
@@ -476,8 +487,8 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
    '<div class="rvq-overview-rings">'+(activity?traffic+usageRing(pct,evidence+' for '+name):usageRing(pct,evidence+' for '+name))+'</div>'+
    '<span class="rvq-overview-source">'+evidence+'</span>'+
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span>'+
-   '<span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
-   '<span class="rvq-overview-minute">'+(minute?fmt(minute.requests)+' / 1m':'1m unverified')+'</span><span class="rvq-overview-drill">VIEW DETAILS</span></a>';
+   '<span class="rvq-overview-intervals"><span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
+   '<span class="rvq-overview-minute">'+(minute?fmt(minute.requests)+' / 1m':'1m unverified')+'</span></span><span class="rvq-overview-drill">VIEW DETAILS</span></a>';
 }
 function dispatchInfo(workforce,live){
  const d=live?workforce?.dispatch:null;
@@ -627,6 +638,7 @@ const css=`
 #rovor-workload-popup .rvq-jump-nav a:hover,#rovor-workload-popup .rvq-jump-nav a:focus-visible{outline:2px solid #8ccffc;outline-offset:1px}
 #rovor-workload-popup .rvq-details-heading{color:#b9e8ff;font:700 12px/1.5 system-ui;letter-spacing:.1em;margin:20px 0 9px}
 #rovor-workload-popup .rvq-overview-requests{color:#d4efff;font:700 11px/1.35 system-ui;text-align:center}
+#rovor-workload-popup .rvq-overview-intervals{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;width:100%}
 #rovor-workload-popup .rvq-overview-hourly{color:#9bdfff;font:700 10px/1.35 system-ui;text-align:center}
 #rovor-workload-popup .rvq-overview-minute{color:#b3edff;font:700 10px/1.35 system-ui;text-align:center}
 #rovor-workload-popup .rvq-activity{margin:12px 0 0;color:#a2d9fa;font:700 10px/1.5 system-ui;letter-spacing:.03em}
