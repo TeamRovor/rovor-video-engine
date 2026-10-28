@@ -1,5 +1,18 @@
+import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';
 // Private telemetry only: no inference, job dispatch, or Mac control.
 const PERIODS = new Set(['1m', '1h', '24h', '7d']);
+// Private read-only short cache: never store access tokens, raw Google responses or credentials.
+let geminiQuotaCache=null,geminiQuotaPending=null;
+async function cachedGeminiQuota(env,now=Date.now()){
+ if(geminiQuotaCache&&now-geminiQuotaCache.at<60000)return geminiQuotaCache.value;
+ if(geminiQuotaPending)return geminiQuotaPending;
+ const pending=readGoogleGeminiQuota(env,{now}).then(value=>{
+   // Unconfigured/permission error state retries sooner than healthy readings.
+   geminiQuotaCache={at:now,value};return value;
+ }).finally(()=>{geminiQuotaPending=null;});
+ geminiQuotaPending=pending;return pending;
+}
+
 const ROLES = new Set(['walter', 'mike', 'jane', 'jesse', 'gale', 'gus', 'saul', 'hank']);
 const LIMIT = 32768;
 const LOGIN = `<!doctype html><meta name="viewport" content="width=device-width"><title>ROVOR HUD sign in</title>
@@ -265,6 +278,11 @@ export async function handle(request, env, now = Date.now()) {
     // owns this same URL separately, so neither hosting path breaks.
     if (request.method === 'GET' && url.pathname === '/hud-quota.js' && env.ASSETS) {
       return env.ASSETS.fetch(new Request(new URL('/live-quota-board.js', url.origin), request));
+    }
+    if (url.pathname === '/api/hud/gemini/project-quota') {
+      if (request.method !== 'GET') return response(405, {error: 'method_not_allowed'});
+      // Reader auth has already been validated; NEVER expose secrets or proxy arbitrary URLs.
+      return response(200, await cachedGeminiQuota(env, now));
     }
     if (request.method === 'GET' && ['/api/hud/status', '/api/hud/omniroute'].includes(url.pathname)) {
       const period = url.searchParams.get('period') || '24h';
