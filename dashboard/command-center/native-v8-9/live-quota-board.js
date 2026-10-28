@@ -130,7 +130,7 @@ function unknownModel(m){
 // Public telemetry has only safe per-provider account ordinals; no keys or IDs.
 // Separate authenticated cloud-ledger evidence; do NOT mix with local OmniRoute cache.
 // Cloud provider admission/verification may be disabled even when the local gateway has a key.
-function cloudEvidence(p){
+function cloudEvidence(p,slot=null){
  if(!p)return '<div class="rvq-cloud">CLOUD EXECUTION · not connected to private ledger</div>';
  const eligible=p.admission==='eligible';
  const recorded=Number.isSafeInteger(p.recorded_24h?.requests)?p.recorded_24h.requests:null;
@@ -173,7 +173,7 @@ function cloudEvidence(p){
  const active=q?.status==='verified'&&Number.isFinite(time)&&time<=Date.now()+300000&&time>Date.now()-90*60000;
  const used=Number(q?.used),limit=Number(q?.limit);
  const reset=q?.resets_at==null?null:new Date(q.resets_at);
- if(active&&Number.isSafeInteger(used)&&Number.isSafeInteger(limit)&&limit>0&&used>=0&&used<=limit&&
+ if((!slot||slot.group.connection_count===1||(q?.scope==='account_slot'&&q?.account_slot===slot.account_slot))&&active&&Number.isSafeInteger(used)&&Number.isSafeInteger(limit)&&limit>0&&used>=0&&used<=limit&&
     (reset===null||(Number.isFinite(reset.getTime())&&reset.getTime()>Date.now()))){
    const pct=Math.max(0,Math.min(100,100*used/limit)).toFixed(1);
    result.push('<div class="rvq-cloud-ring-layout">'+
@@ -507,7 +507,7 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,
  const name=pretty(group.name||group.provider);
  // The full original per-provider report is retained, now under one accessible disclosure.
  return '<article class="rvq-provider" data-rvq-slot="'+esc(key)+'"><details class="rvq-provider-details"'+(expandedProviders.has(key)?' open':'')+'><summary class="rvq-provider-head"><span class="rvq-provider-icon">'+esc(name.slice(0,1).toUpperCase())+'</span><span class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(name)+'</span><span class="rvq-provider-name">'+esc(name)+' · Slot '+fmt(slot.account_slot)+'</span><span class="rvq-provider-connection">'+state+'</span></span><span class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</span></summary>'+
-  '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+geminiProjectMonitoring(group.provider,geminiProject)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></details></article>';
+  '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+geminiProjectMonitoring(group.provider,geminiProject)+first+extra+cloudEvidence(cloud,slot)+jobReceipts(group.provider,attempts)+'</div></details></article>';
 }
 // Nine-provider glance cards are a visualization of one explicitly labeled
 // validated quota source per slot. They never sum Mac and cloud counters.
