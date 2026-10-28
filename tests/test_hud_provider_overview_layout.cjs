@@ -176,3 +176,19 @@ test('cloud verification gates stay distinct from Mac and paid-route safety',()=
  assert.equal((html.match(/data-rvq-attention="true"/g)||[]).length,2);
  assert.equal((html.match(/data-rvq-attention="false"/g)||[]).length,1);
 });
+
+test('Mac report age is explicit and stale inventory never implies live quota',()=>{
+ const data={connections:nine(),quota:{records:[]},
+  snapshot_at:new Date(Date.now()-3*3600000-5*60000).toISOString()};
+ const stale=render(data,false);
+ assert.match(stale,/Mac last report · 3h 5m ago/);
+ assert.match(stale,/cached inventory only; do not infer current traffic or quota/);
+ assert.match(stale,/MAC REPORT STALE/);
+ const fresh=render({...data,snapshot_at:new Date().toISOString()},true);
+ assert.match(fresh,/Mac last report · under 1 minute ago/);
+ assert.match(fresh,/Mac telemetry accepted/);
+ const missing=render({connections:nine()},false);
+ assert.match(missing,/Mac last-report time unknown/);
+ const future=render({...data,snapshot_at:new Date(Date.now()+120000).toISOString()},false);
+ assert.match(future,/Mac reporter clock is ahead · freshness uncertain/);
+});
