@@ -23,7 +23,7 @@ test('compact nine-provider rings remain readable at desktop, tablet and phone w
  assert.match(boardSource,/@media\(max-width:1150px\)\{#rovor-workload-popup \.rvq-overview\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}\}/);
  assert.match(boardSource,/@media\(max-width:650px\)\{[\s\S]*?\.rvq-overview\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.match(boardSource,/\.rvq-overview \.rvq-ring\{width:68px;height:68px\}/);
- assert.match(boardSource,/\.rvq-overview-name\{[^\\n]*font:700 12px/);
+ assert.match(boardSource,/\.rvq-overview-name\{[^\n]*font:700 12px/);
  assert.match(boardSource,/\.rvq-overview-tile:hover,.*\.rvq-overview-tile:focus-visible/);
 });
 
