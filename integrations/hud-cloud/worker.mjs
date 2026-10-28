@@ -1,5 +1,5 @@
 // Private telemetry only: no inference, job dispatch, or Mac control.
-const PERIODS = new Set(['1h', '24h', '7d']);
+const PERIODS = new Set(['1m', '1h', '24h', '7d']);
 const ROLES = new Set(['walter', 'mike', 'jane', 'jesse', 'gale', 'gus', 'saul', 'hank']);
 const LIMIT = 32768;
 const LOGIN = `<!doctype html><meta name="viewport" content="width=device-width"><title>ROVOR HUD sign in</title>

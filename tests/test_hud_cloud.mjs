@@ -57,9 +57,12 @@ test('empty service explicitly says never received', async () => {
 });
 test('stores all periods separately and existing HUD response preserves source timestamp', async () => {
   const env = environment();
-  for (const period of ['1h', '24h', '7d']) assert.equal((await ingest(env, sample(period))).status, 200);
+  for (const period of ['1m', '1h', '24h', '7d']) assert.equal((await ingest(env, sample(period))).status, 200);
   const data = await (await handle(request('/api/hud/omniroute?period=1h'), env, NOW)).json();
   assert.equal(data.period, '1h'); assert.equal(data.snapshot_at, sample().snapshot_at); assert.equal(data.transport.connection, 'fresh');
+  const minute=await (await handle(request('/api/hud/omniroute?period=1m'),env,NOW)).json();
+  assert.equal(minute.period,'1m'); assert.equal(minute.transport.connection,'fresh');
+  assert.equal((await latest(env.DB,'1m',NOW)).snapshot.request_count,4);
 });
 test('closure and restart preserve reports through durable database, stale report remains stale', async () => {
   const env = environment(); await ingest(env);
@@ -149,7 +152,7 @@ test('publisher uses only pinned HTTPS ingest, no cookies or redirects, exact ev
   const sent = [];
   await publishOnce({origin: 'https://hud.example', token: WRITER, collect: async p => sample(p), workers: async () => sample().workforce,
     send: async (url, options) => { sent.push({url, options}); return new Response('{}'); }});
-  assert.equal(sent.length, 3);
+  assert.equal(sent.length, 4);
   for (const {url, options} of sent) {
     assert.equal(url, 'https://hud.example/api/hud/ingest'); assert.equal(options.redirect, 'error');
     assert.equal(options.headers.Authorization, 'Bearer ' + WRITER); assert.equal(JSON.parse(options.body).snapshot_at, sample().snapshot_at);
