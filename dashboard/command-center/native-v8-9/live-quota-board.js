@@ -850,11 +850,12 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  const resets=quota.map(q=>Date.parse(q.reset_at||'')).filter(t=>Number.isFinite(t)&&t>Date.now());
  const next=resets.length?new Date(Math.min(...resets)).toISOString():null;
  const enabled=live&&observedSlots?slots.filter(s=>s.enabled===true).length:null;
- const coverage=live?new Set(quota.map(q=>q.provider+':'+q.account_slot)).size:null;
+ const observedKeys=new Set(slots.map(slot=>slot.group.provider+':'+slot.account_slot));
+ const coverage=live?new Set(quota.map(q=>q.provider+':'+q.account_slot).filter(key=>observedKeys.has(key))).size:null;
  const attentionCount=slots.filter(slot=>needsSetupReview(cloudProviders.get(slot.group.provider))).length;
  if(!attentionCount||attentionCount===slots.length)overviewFilter='all';
  const summary='<div class="rvq-stats"><div class="rvq-stat"><span class="rvq-stat-label">REPORTED CONNECTION SLOTS</span><strong class="rvq-stat-value">'+fmt(slots.length)+'</strong></div>'+
- '<div class="rvq-stat"><span class="rvq-stat-label">PROVIDERS WITH MAC LIMIT DATA</span><strong class="rvq-stat-value">'+(coverage===null?'—':fmt(coverage)+' / '+fmt(slots.length))+'</strong><span class="rvq-stat-secondary">Limit records: '+(live?fmt(quota.length):'—')+'</span></div>'+
+ '<div class="rvq-stat"><span class="rvq-stat-label">CONNECTION SLOTS WITH MAC LIMIT DATA</span><strong class="rvq-stat-value">'+(coverage===null?'—':fmt(coverage)+' / '+fmt(slots.length))+'</strong><span class="rvq-stat-secondary">Limit records: '+(live?fmt(quota.length):'—')+'</span></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
  const macAge=reportAgeLabel(data?.snapshot_at);
