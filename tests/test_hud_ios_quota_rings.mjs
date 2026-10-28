@@ -362,7 +362,7 @@ test('Gemini reference leaves nine-provider quota coverage at 0 when cache has n
   models:[],quota:{records:[]}};
  const html=board().render(data,true);
   // Coverage reflects authenticated per-provider Mac limit records, not Gemini static references.
-  assert.match(html,/PROVIDERS WITH MAC LIMIT DATA<\/span><strong class="rvq-stat-value">0 \/ 9<\/strong>/);
+  assert.match(html,/CONNECTION SLOTS WITH MAC LIMIT DATA<\/span><strong class="rvq-stat-value">0 \/ 9<\/strong>/);
   assert.match(html,/Limit records: 0/);
  assert.equal((html.match(/role="img" aria-label="Provider quota unknown"/g)||[]).length,18);
  assert.match(html,/GEMINI · FREE TIER PROJECT LIMITS/);
