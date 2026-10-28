@@ -117,3 +117,57 @@ test('the original bundled workload preview remains explicitly unverified rather
  assert.match(js,/Live link missing/);
  assert.match(js,/NO VERIFIED LIVE MODEL TELEMETRY/);
 });
+
+test('different model allowances are never conflated into one provider-wide ring',()=>{
+ const now=Date.now(),stamp=new Date(now).toISOString();
+ const a={provider:'groq',account_slot:1,model_id:'model-a',used:5,total:20,used_percent:25,
+   unit:'requests',fetched_at:stamp,reset_at:new Date(now+3600000).toISOString()};
+ const data={connections:[{provider:'groq',name:'groq',connection_count:1,enabled_count:1}],
+   quota:{records:[a,{...a,model_id:'model-b',used:2,total:10,used_percent:20}]}};
+ const html=render(data,true);
+ const tile=html.slice(html.indexOf('class="rvq-overview-tile"'),html.indexOf('id="rvq-review"'));
+ assert.match(tile,/MULTIPLE MODEL LIMITS/);
+ assert.match(tile,/2 separate limits/);
+ assert.doesNotMatch(tile,/role="progressbar"/);
+ assert.match(html,/model-a/);
+ assert.match(html,/model-b/);
+ assert.match(html,/25\.0%/);
+ assert.match(html,/20\.0%/);
+});
+
+test('fresh private review receipts give a truthful sample, not a claimed queue total',()=>{
+ const now=Date.now();
+ const cloud={execution_source:'cloud_provider',observed_at:now,
+  providers:providers.map(provider=>({provider,credentials_configured:true})),
+  attempts:[
+   {id:'r1',provider:'groq',status:'needs_review',human_review:'not_recorded',started_at:now-1000,employee:'Mike',title:'Audit draft'},
+   {id:'r1',provider:'groq',status:'needs_review',human_review:'not_recorded',started_at:now-1000,employee:'Mike',title:'Duplicated draft'},
+   {id:'r2',provider:'groq',status:'needs_review',human_review:'passed',started_at:now-2000,title:'Approved draft'},
+   {id:'r3',provider:'groq',status:'needs_review',human_review:'not_recorded',started_at:now-3000,job_id:'canary-test',title:'Canary draft'}
+  ]};
+ const html=render(null,false,cloud);
+ const review=html.slice(html.indexOf('id="rvq-review"'),html.indexOf('id="rvq-team"'));
+ assert.match(html,/REVIEW · 1/);
+ assert.match(review,/1 returned cloud receipt awaiting PASS \/ FAIL/);
+ assert.match(review,/Audit draft/);
+ assert.doesNotMatch(review,/Duplicated draft|Canary draft|Approved draft/);
+ assert.match(review,/not the complete private owner queue/);
+ const stale=render(null,false,{...cloud,observed_at:now-600000});
+ assert.match(stale,/No fresh private cloud review sample/);
+ assert.doesNotMatch(stale,/REVIEW · 1/);
+});
+
+test('cloud verification gates stay distinct from Mac and paid-route safety',()=>{
+ const cloud={execution_source:'cloud_provider',observed_at:Date.now(),
+  providers:[
+   {provider:'groq',credentials_configured:true,admission:'eligibility_expired'},
+   {provider:'openrouter',credentials_configured:true,admission:'disabled_pending_verification'},
+   {provider:'gemini',credentials_configured:true,admission:'eligible',dispatch_gate:{reason:'paid_route_denied'}}
+  ]};
+ const html=render(null,false,cloud);
+ assert.match(html,/CLOUD ELIGIBILITY EXPIRED/);
+ assert.match(html,/CLOUD VERIFICATION PENDING/);
+ assert.match(html,/SETUP \/ REVIEW 2/);
+ assert.equal((html.match(/data-rvq-attention="true"/g)||[]).length,2);
+ assert.equal((html.match(/data-rvq-attention="false"/g)||[]).length,1);
+});
