@@ -95,7 +95,7 @@ test('traffic and allowance instruments use different visual hierarchy',()=>{
 test('attention filter covers fresh actionable gates without treating idle or stale as blocked',()=>{
  const now=Date.now();
  const cloud={execution_source:'cloud_provider',observed_at:now,providers:providers.map(provider=>({
-  provider,credentials_configured:true,dispatch_gate:{reason:provider==='groq'?'missing_secret':'no_matching_unattempted_job'}
+  provider,credentials_configured:true,dispatch_gate:{reason:provider==='groq'?'missing_secret':provider==='openrouter'?'paid_route_denied':'no_matching_unattempted_job'}
  }))};
  const html=render(null,false,cloud);
  assert.match(html,/SETUP \/ REVIEW 1/);
