@@ -605,6 +605,7 @@ const css=`
 #rovor-workload-popup .rvq-review-sample strong{font-size:11px;color:#e5f8ff}
 #rovor-workload-popup .rvq-review-sample span{font-size:10px;color:#a9d4eb}
 #rovor-workload-popup .rvq-review-status{color:#d5edfa}
+#rovor-workload-popup .rvq-last-report{margin:0 0 11px;color:#c1e8ff;font:700 11px/1.45 system-ui;letter-spacing:.02em;overflow-wrap:anywhere}
 #rovor-workload-popup .rvq-review-entry p{margin:0}
 #rovor-workload-popup .rvq-review-entry a{color:#77d5ff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 
@@ -803,6 +804,19 @@ function mount(){
  listenForQuotaInteraction();
  const s=document.createElement('style');s.id='rvq-style';s.textContent=css;document.head.append(s);
 }
+function reportAgeLabel(timestamp){
+ const when=typeof timestamp==='string'?Date.parse(timestamp):NaN;
+ if(!Number.isFinite(when))return 'Mac last-report time unknown';
+ const elapsed=Date.now()-when;
+ if(elapsed < -30000)return 'Mac reporter clock is ahead · freshness uncertain';
+ if(elapsed<60000)return 'Mac last report · under 1 minute ago';
+ const minutes=Math.floor(elapsed/60000);
+ if(minutes<60)return 'Mac last report · '+minutes+' minute'+(minutes===1?'':'s')+' ago';
+ const hours=Math.floor(minutes/60), remainder=minutes%60;
+ if(hours<24)return 'Mac last report · '+hours+'h '+remainder+'m ago';
+ const days=Math.floor(hours/24);
+ return 'Mac last report · '+days+'d '+hours%24+'h ago';
+}
 function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null){
  mount();
  const cloudFresh=cloud?.execution_source==='cloud_provider'&&Number.isFinite(cloud.observed_at)&&
@@ -843,9 +857,11 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  '<div class="rvq-stat"><span class="rvq-stat-label">PROVIDERS WITH MAC LIMIT DATA</span><strong class="rvq-stat-value">'+(coverage===null?'—':fmt(coverage)+' / '+fmt(slots.length))+'</strong><span class="rvq-stat-secondary">Limit records: '+(live?fmt(quota.length):'—')+'</span></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
+ const macAge=reportAgeLabel(data?.snapshot_at);
+ const macFreshness='<p class="rvq-last-report" role="status">'+esc(macAge)+(live?' · Mac telemetry accepted':' · cached inventory only; do not infer current traffic or quota')+'</p>';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
- summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
+ summary+macFreshness+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
  (slots.length?(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
