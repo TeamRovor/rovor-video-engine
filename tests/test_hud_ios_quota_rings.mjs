@@ -157,6 +157,65 @@ test('recorded model names are escaped and percent is never fabricated as quota'
  assert.match(html,/QUOTA UNKNOWN/);
 });
 
+
+test('nine gateway connections show independent 24h and 1h measured totals',()=>{
+ const rows=providers.map(provider=>({provider,name:provider,connection_count:1,enabled_count:1}));
+ const daily={source:'local_omniroute_read_only_bridge',period:'24h',
+   snapshot_at:new Date().toISOString(),request_count:6,usage_coverage:'complete_aggregate',
+   connections:rows,connection_slots:rows.map(x=>({provider:x.provider,account_slot:1,enabled:true})),
+   models:[{provider:'openrouter',name:'cohere/north-mini-code:free',requests:5,tokens:100},
+     {provider:'groq',name:'openai/gpt-oss-120b',requests:1,tokens:10}],
+   quota:{records:[]}};
+ const hourly={source:'local_omniroute_read_only_bridge',period:'1h',
+   snapshot_at:new Date().toISOString(),request_count:2,usage_coverage:'complete_aggregate',
+   models:[{provider:'openrouter',name:'cohere/north-mini-code:free',requests:2,tokens:33}]};
+ const html=board().render(daily,true,null,hourly);
+ assert.equal((html.match(/class="rvq-overview-tile"/g)||[]).length,9);
+ assert.match(html,/5 Mac requests \/ 24h/);
+ assert.match(html,/2 \/ 1h/);
+ assert.match(html,/LAST HOUR · <strong>2 requests<\/strong> · 33 reported tokens/);
+ assert.match(html,/LAST HOUR · <strong>0 requests<\/strong> · 0 reported tokens/);
+ assert.match(html,/LAST HOUR · 2 requests · 33 reported tokens/);
+ assert.match(html,/LAST HOUR · 0 requests · 0 reported tokens/);
+ assert.match(html,/1h.*quota percentage/i);
+ // The 1h counter never fills any previously unknown quota ring.
+ assert.equal((html.match(/aria-label="Provider quota unknown"/g)||[]).length,18);
+});
+test('missing and inconsistent 1h reports never become false zero usage',()=>{
+ const rows=[{provider:'groq',name:'groq',connection_count:1,enabled_count:1}];
+ const daily={period:'24h',request_count:1,usage_coverage:'complete_aggregate',
+   connections:rows,connection_slots:[{provider:'groq',account_slot:1,enabled:true}],
+   models:[{provider:'groq',name:'openai/gpt-oss-120b',requests:1,tokens:10}],
+   quota:{records:[]}};
+ const partial={period:'1h',request_count:2,usage_coverage:'partial_top_50_or_unattributed',
+   models:[{provider:'groq',name:'openai/gpt-oss-120b',requests:1,tokens:5}]};
+ let html=board().render(daily,true,null,partial);
+ assert.match(html,/1h unverified/);
+ assert.match(html,/LAST HOUR · independently verified data unavailable/);
+ assert.doesNotMatch(html,/LAST HOUR · 0 requests/);
+ partial.usage_coverage='complete_aggregate';
+ html=board().render(daily,true,null,partial); // total mismatch still must fail closed
+ assert.match(html,/1h unverified/);
+ partial.request_count=1;
+ partial.period='24h'; // wrong period
+ html=board().render(daily,true,null,partial);
+ assert.match(html,/1h unverified/);
+ html=board().render(daily,false,null,{...partial,period:'1h'});
+ assert.match(html,/1h unverified/);
+});
+test('one-hour model names are escaped and never mistaken for direct upstream API-key traffic',()=>{
+ const daily={period:'24h',request_count:1,usage_coverage:'complete_aggregate',
+   connections:[{provider:'openrouter',name:'openrouter',connection_count:1,enabled_count:1}],
+   models:[{provider:'openrouter',name:'<unsafe>',requests:1,tokens:5}],quota:{records:[]}};
+ const hourly={period:'1h',request_count:1,usage_coverage:'complete_aggregate',
+   models:[{provider:'openrouter',name:'<unsafe>',requests:1,tokens:3}]};
+ const html=board().render(daily,true,null,hourly);
+ assert.match(html,/&lt;unsafe&gt;/);
+ assert.doesNotMatch(html,/<unsafe>/);
+ assert.match(html,/LAST HOUR · 1 request · 3 reported tokens/);
+ assert.match(html,/not an account-slot counter or remaining quota/);
+});
+
 test('small-screen rings have responsive widths',()=>{
  assert.match(source,/max-width:380px/);
  assert.match(source,/grid-template-columns:80px minmax\(0,1fr\)/);
