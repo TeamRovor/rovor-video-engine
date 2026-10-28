@@ -2,6 +2,7 @@
 // Post-deploy checks use the deployed origin, never a GitHub source claim.
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {readFileSync} from 'node:fs';
 import {setTimeout as delay} from 'node:timers/promises';
 
 export function verifiedOrigin(raw) {
@@ -57,7 +58,7 @@ export function hasNineProviderMeterAsset(js) {
   ].every(marker => js.includes(marker));
 }
 
-export async function verifyGithubHud({origin, readerToken, send = fetch}) {
+export async function verifyGithubHud({origin, readerToken, send = fetch, expectedQuotaAsset = null}) {
   origin = verifiedOrigin(origin);
   if (typeof readerToken !== 'string' || readerToken.length < 32)
     throw Error('readback_credentials_missing');
@@ -89,6 +90,8 @@ export async function verifyGithubHud({origin, readerToken, send = fetch}) {
   const js = await script.text();
   if (!hasNineProviderMeterAsset(js))
     throw Error('nine_provider_meter_asset_missing');
+  if (expectedQuotaAsset !== null && js !== expectedQuotaAsset)
+    throw Error('deployed_quota_asset_differs_from_checkout_run_deployment');
   const status = await read('/api/hud/status?period=24h', true);
   if (status.status !== 200) throw Error('private_D1_status_unavailable');
   const telemetry = await status.json();
@@ -97,6 +100,7 @@ export async function verifyGithubHud({origin, readerToken, send = fetch}) {
     throw Error('private_D1_contract_invalid');
   return {private_auth_verified: true, original_hud_verified: true,
     quota_board_verified: true, database_api_verified: true,
+    quota_asset_matches_checkout: expectedQuotaAsset === null ? null : true,
     telemetry_connection: telemetry.connection,
     providers_observed: Array.isArray(telemetry.snapshot?.connections)
       ? telemetry.snapshot.connections.length : 0,
@@ -107,7 +111,8 @@ export async function verifyGithubHud({origin, readerToken, send = fetch}) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   verifyGithubHud({origin: process.env.ROVOR_HUD_DEPLOY_ORIGIN,
-    readerToken: process.env.ROVOR_HUD_READER_TOKEN})
+    readerToken: process.env.ROVOR_HUD_READER_TOKEN,
+    expectedQuotaAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/live-quota-board.js', import.meta.url), 'utf8')})
     .then(result => console.log(JSON.stringify(result)))
     .catch(error => {console.error('Private HUD release readback failed: ' + error.message);
       process.exitCode = 1;});
