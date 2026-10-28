@@ -440,3 +440,27 @@ test('existing private Site without quota migration continues to render unknown,
  const snapshot=await ops.status(env);
  assert.equal(snapshot.providers.find(p=>p.provider==='groq').quota,null);
 });
+
+test('Mistral per-model minute evidence appears only while fresh; missing migration fails closed',async()=>{
+ const s=setup();
+ let current=await s.ops.status(s.env);
+ assert.deepEqual(current.providers.find(p=>p.provider==='mistral').minute_rate_limits,[]);
+ s.db.exec(read('mistral-minute-quota.sql'));
+ const now=Date.now();
+ s.db.prepare('INSERT INTO ghost_cloud_mistral_minute_quota(model,unit,observed_at,used,quota_limit,remaining,source) VALUES(?,?,?,?,?,?,?)')
+  .run('codestral-2508','tokens',now-1000,30,625000,624970,'authenticated_mistral_inference_minute_headers');
+ current=await s.ops.status(s.env);
+ const mistral=current.providers.find(p=>p.provider==='mistral');
+ assert.equal(mistral.minute_rate_limits.length,1);
+ assert.equal(mistral.minute_rate_limits[0].model,'codestral-2508');
+ assert.equal(mistral.minute_rate_limits[0].used,30);
+ assert.equal(mistral.minute_rate_limits[0].remaining,624970);
+ assert.equal(mistral.minute_rate_limits[0].resets_at,null);
+ assert.equal(mistral.quota,null);
+ assert.equal(current.providers.find(p=>p.provider==='groq').minute_rate_limits,undefined);
+ const snapshot=JSON.stringify(current);
+ assert.equal(snapshot.includes(s.env.MISTRAL_API_KEY),false);
+ s.db.prepare('UPDATE ghost_cloud_mistral_minute_quota SET observed_at=?').run(now-120000);
+ current=await s.ops.status(s.env);
+ assert.deepEqual(current.providers.find(p=>p.provider==='mistral').minute_rate_limits,[]);
+});
