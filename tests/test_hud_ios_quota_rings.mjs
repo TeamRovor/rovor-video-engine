@@ -332,3 +332,36 @@ test('Groq organization base limits appear as owner reference, not authenticated
  assert.match(html,/Provider quota unknown/);
  assert.doesNotMatch(html,/verified allowance used/);
 });
+
+
+test('Gemini owner Free tier project rate limits are visible without inventing remaining balance',()=>{
+ const data={source:'local_omniroute_read_only_bridge',period:'24h',
+  snapshot_at:new Date().toISOString(),usage_coverage:'complete_aggregate',
+  request_count:0,connections:[{provider:'gemini',name:'gemini',connection_count:1,enabled_count:1}],
+  connection_slots:[{provider:'gemini',account_slot:1,enabled:true}],
+  models:[],quota:{records:[]}};
+ const html=board().render(data,true);
+ assert.match(html,/GEMINI · FREE TIER PROJECT LIMITS/);
+ assert.match(html,/Default Gemini Project/);
+ assert.match(html,/Gemini 3.8 Flash/);
+ assert.match(html,/<td>Gemini 3.1 Flash Lite<\/td><td>15<\/td><td>250,000<\/td><td>500<\/td>/);
+ assert.match(html,/<td>Gemini 3.5 Flash Lite<\/td><td>15<\/td><td>250,000<\/td><td>500<\/td>/);
+ assert.match(html,/Gemma 4 26B/);
+ assert.match(html,/28-day peak for Gemini 3.8 Flash: 3 \/ 5 RPM/);
+ assert.match(html,/NOT current remaining quota/);
+ assert.match(html,/Project-wide consumption outside OmniRoute/);
+ assert.match(html,/Provider quota unknown/);
+ assert.doesNotMatch(html,/aria-valuetext="[0-9.]+ percent of verified allowance used"/);
+});
+test('Gemini reference leaves nine-provider quota coverage at 0 when cache has no authenticated limits',()=>{
+ const data={source:'local_omniroute_read_only_bridge',period:'24h',
+  snapshot_at:new Date().toISOString(),usage_coverage:'complete_aggregate',
+  request_count:0,connections:providers.map(provider=>({
+   provider,name:provider,connection_count:1,enabled_count:1
+  })),connection_slots:providers.map(provider=>({provider,account_slot:1,enabled:true})),
+  models:[],quota:{records:[]}};
+ const html=board().render(data,true);
+ assert.match(html,/LIMIT REPORTS<\/span><strong class="rvq-stat-value">0<\/strong>/);
+ assert.equal((html.match(/role="img" aria-label="Provider quota unknown"/g)||[]).length,18);
+ assert.match(html,/GEMINI · FREE TIER PROJECT LIMITS/);
+});
