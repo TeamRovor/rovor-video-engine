@@ -94,6 +94,30 @@ function inferenceGroqRpd(headers, observedAt) {
   source:'authenticated_groq_rpd_response_headers',scope:'provider_account'};
 }
 
+// Only paired Mistral minute-window headers from a model-specific inference.
+// These do NOT establish billing, free-tier eligibility or any reset timestamp.
+// The generic x-ratelimit-remaining header has ambiguous units and is ignored.
+export function readMistralMinuteLimits(headers,model,observedAt) {
+ if(!headers||typeof headers.get!=='function'||
+    typeof model!=='string'||! /^[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}$/.test(model)||
+    !Number.isSafeInteger(observedAt)||observedAt<=0)return [];
+ const integer=k=>{
+  const v=headers.get(k);
+  return typeof v==='string'&&/^(0|[1-9][0-9]{0,9})$/.test(v)?Number(v):null;
+ };
+ const pairs=[
+  ['tokens','x-ratelimit-limit-tokens-minute','x-ratelimit-remaining-tokens-minute'],
+  ['requests','x-ratelimit-limit-req-minute','x-ratelimit-remaining-req-minute']
+ ];
+ return pairs.flatMap(([unit,lim,rem])=>{
+  const limit=integer(lim),remaining=integer(rem);
+  if(limit===null||limit<=0||remaining===null||remaining>limit)return [];
+  return [{model,unit,limit,used:limit-remaining,remaining,observed_at:observedAt,
+   resets_at:null,source:'authenticated_mistral_inference_minute_headers',
+   scope:'model_on_provider_account'}];
+ });
+}
+
 export async function infer(provider,cfg,env,prompt,fetcher=(...args)=>globalThis.fetch(...args),now=Date.now()) {
  const denied=eligibility(provider,cfg,env,now);if(denied)throw Error(denied);
  if(bytes(prompt)>cfg.max_input_bytes)throw Error('input_too_large');
@@ -110,10 +134,13 @@ export async function infer(provider,cfg,env,prompt,fetcher=(...args)=>globalThi
   const data=await boundedJson(response), choice=data.choices?.[0], text=choice?.message?.content;
   const usage=data.usage || {}, count=n=>Number.isSafeInteger(n)&&n>=0?n:null;
   const info={actual_model:typeof data.model==='string'&&data.model.length<=200?data.model:null,tokens_input:count(usage.prompt_tokens),tokens_output:count(usage.completion_tokens)};
+  // Never attribute rate limits when the returned model differs from the pinned request.
+  const rate_limit_observations=provider==='mistral'&&info.actual_model===cfg.model?
+   readMistralMinuteLimits(response.headers,cfg.model,now):[];
   if(typeof text!=='string'||!text.trim()||bytes(text)>32768||choice.finish_reason!=='stop')return {...info,status:'failed',error_code:'incomplete_output',retry_after:null,
-   ...(quota_observation?{quota_observation}:{})};
+   ...(quota_observation?{quota_observation}:{}),...(rate_limit_observations.length?{rate_limit_observations}:{})};
   return {...info,status:'needs_review',error_code:null,output:text,retry_after:null,
-   ...(quota_observation?{quota_observation}:{})};
+   ...(quota_observation?{quota_observation}:{}),...(rate_limit_observations.length?{rate_limit_observations}:{})};
  } catch { return {status:'uncertain',error_code:'transport_or_response_failure',retry_after:null}; }
 }
 
@@ -245,6 +272,29 @@ export async function tick(env,fetcher=(...args)=>globalThis.fetch(...args),now=
      WHERE excluded.observed_at>=ghost_cloud_provider_quota.observed_at`,
      provider,q.observed_at,'requests',q.used,q.limit,q.remaining,q.resets_at,q.source).run();
    }catch{/* Missing optional private migration: leave quota unknown. */}
+  }
+  // Model-scoped minute rates are distinct from Groq's provider RPD table.
+  // Never replay inference when the forward-only optional migration is absent.
+  if(provider==='mistral'&&Array.isArray(outcome.rate_limit_observations)){
+   for(const q of outcome.rate_limit_observations){
+    if(q.model!==cfg.model||q.scope!=='model_on_provider_account'||
+       q.source!=='authenticated_mistral_inference_minute_headers'||
+       !['tokens','requests'].includes(q.unit)||
+       !Number.isSafeInteger(q.observed_at)||q.observed_at<=0||
+       !Number.isSafeInteger(q.limit)||q.limit<=0||
+       !Number.isSafeInteger(q.remaining)||q.remaining<0||q.remaining>q.limit||
+       q.used!==q.limit-q.remaining)continue;
+    try{
+     await run(db,`INSERT INTO ghost_cloud_mistral_minute_quota
+      (model,unit,observed_at,used,quota_limit,remaining,source)
+      VALUES(?,?,?,?,?,?,?)
+      ON CONFLICT(model,unit) DO UPDATE SET
+      observed_at=excluded.observed_at,used=excluded.used,
+      quota_limit=excluded.quota_limit,remaining=excluded.remaining,source=excluded.source
+      WHERE excluded.observed_at>=ghost_cloud_mistral_minute_quota.observed_at`,
+      q.model,q.unit,q.observed_at,q.used,q.limit,q.remaining,q.source).run();
+    }catch{/* Optional forward migration unavailable: leave rate limits unknown. */}
+   }
   }
  }
  return {enabled:true,dispatched,denied,blocked};

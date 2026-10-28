@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {PROVIDERS,eligibility,requestFor,infer,claim,tick,validateJob,diagnosePending} from '../integrations/ghost-cloud/runtime.mjs';
+import {PROVIDERS,eligibility,requestFor,infer,claim,tick,validateJob,diagnosePending,readMistralMinuteLimits} from '../integrations/ghost-cloud/runtime.mjs';
 import worker from '../integrations/ghost-cloud/worker.mjs';
 
 const NOW=Date.now();
@@ -304,4 +304,93 @@ test('read-only claim gate snapshot distinguishes STOP, eligible and accounted c
  assert.ok(!copy.includes('Compare these two public interfaces.'));
  assert.ok(!copy.includes('secret-value-never-returned'));
  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,1);
+});
+
+test('Mistral paired minute response headers are exact, model-scoped and have no fabricated reset',()=>{
+ const headers=new Headers({
+  'x-ratelimit-limit-tokens-minute':'625000',
+  'x-ratelimit-remaining-tokens-minute':'624550',
+  'x-ratelimit-limit-req-minute':'120',
+  'x-ratelimit-remaining-req-minute':'117',
+  'x-ratelimit-remaining':'999999'
+ });
+ const out=readMistralMinuteLimits(headers,'codestral-2508',NOW);
+ assert.deepEqual(out,[
+  {model:'codestral-2508',unit:'tokens',limit:625000,used:450,remaining:624550,
+   observed_at:NOW,resets_at:null,source:'authenticated_mistral_inference_minute_headers',scope:'model_on_provider_account'},
+  {model:'codestral-2508',unit:'requests',limit:120,used:3,remaining:117,
+   observed_at:NOW,resets_at:null,source:'authenticated_mistral_inference_minute_headers',scope:'model_on_provider_account'}
+ ]);
+ assert.equal(JSON.stringify(out).includes('999999'),false);
+ assert.equal(readMistralMinuteLimits(headers,'devstral-latest',NaN).length,0);
+ assert.equal(readMistralMinuteLimits(headers,'<script>',NOW).length,0);
+});
+test('Mistral malformed/partial headers never fabricate measured usage',()=>{
+ const base={'x-ratelimit-limit-req-minute':'120','x-ratelimit-remaining-req-minute':'117'};
+ for(const modified of [
+  {'x-ratelimit-limit-req-minute':'n/a'},
+  {'x-ratelimit-remaining-req-minute':'121'},
+  {'x-ratelimit-limit-req-minute':'0'},
+  {'x-ratelimit-remaining-req-minute':'-3'},
+  {'x-ratelimit-remaining-req-minute':'1.5'},
+  {'x-ratelimit-limit-req-minute':'99999999999999999'},
+  {'x-ratelimit-remaining-req-minute':null}
+ ]){
+  const head=new Headers({...base,...modified});
+  assert.deepEqual(readMistralMinuteLimits(head,'codestral-2508',NOW),[]);
+ }
+ assert.deepEqual(readMistralMinuteLimits(new Headers({'x-ratelimit-remaining':'95'}),'codestral-2508',NOW),[]);
+});
+test('only an eligible exact-model Mistral response yields minute allowance; no extra calls',async()=>{
+ const {env}=setup({mistral:configFor('mistral',{model:'codestral-2508'})});
+ let calls=0;
+ const get=async(_url,opts)=>{
+  calls++;assert.equal(JSON.parse(opts.body).model,'codestral-2508');
+  return new Response(JSON.stringify({model:'codestral-2508',choices:[{message:{content:'Review-ready content'},finish_reason:'stop'}],usage:{prompt_tokens:12,completion_tokens:18}}),
+   {headers:{'x-ratelimit-limit-tokens-minute':'625000','x-ratelimit-remaining-tokens-minute':'624950',
+      'x-ratelimit-limit-req-minute':'125','x-ratelimit-remaining-req-minute':'124'}});
+ };
+ const result=await infer('mistral',configFor('mistral',{model:'codestral-2508'}),env,'public prompt',get,NOW);
+ assert.equal(calls,1);
+ assert.equal(result.status,'needs_review');
+ assert.equal(result.rate_limit_observations.length,2);
+ const mismatched=await infer('mistral',configFor('mistral',{model:'codestral-2508'}),env,'public prompt',
+  async()=>new Response(JSON.stringify({model:'different-model',choices:[{message:{content:'Review-ready content'},finish_reason:'stop'}],usage:{prompt_tokens:10,completion_tokens:5}}),
+   {headers:{'x-ratelimit-limit-req-minute':'125','x-ratelimit-remaining-req-minute':'124'}}),NOW);
+ assert.equal(Object.hasOwn(mismatched,'rate_limit_observations'),false);
+ const failed=await infer('mistral',configFor('mistral',{model:'codestral-2508'}),env,'public prompt',
+  async()=>new Response('rate limit',{status:429,headers:{'x-ratelimit-limit-req-minute':'125','x-ratelimit-remaining-req-minute':'124'}}),NOW);
+ assert.equal(Object.hasOwn(failed,'rate_limit_observations'),false);
+});
+test('Mistral inference persists only to its optional forward-only table and never replays',async()=>{
+ const {env,sqlite}=setup({mistral:configFor('mistral',{model:'codestral-2508'})});
+ sqlite.exec(readFileSync(new URL('../integrations/ghost-cloud/mistral-minute-quota.sql',import.meta.url),'utf8'));
+ enable(sqlite);enqueue(sqlite,job('mistral-minute-record'));
+ let calls=0;
+ const result=await tick(env,async()=>{calls++;return new Response(JSON.stringify({
+  model:'codestral-2508',choices:[{message:{content:'Private draft for review'},finish_reason:'stop'}],
+  usage:{prompt_tokens:12,completion_tokens:18}
+ }),{headers:{'x-ratelimit-limit-tokens-minute':'625000','x-ratelimit-remaining-tokens-minute':'624950',
+             'x-ratelimit-limit-req-minute':'125','x-ratelimit-remaining-req-minute':'124'}});},NOW);
+ assert.equal(result.dispatched,1);assert.equal(calls,1);
+ const rows=sqlite.prepare('SELECT model,unit,used,quota_limit,remaining,source FROM ghost_cloud_mistral_minute_quota ORDER BY unit').all();
+ assert.equal(rows.length,2);
+ assert.deepEqual(rows.map(r=>r.unit),['requests','tokens']);
+ assert.equal(rows.find(r=>r.unit==='tokens').used,50);
+ assert.equal(rows.find(r=>r.unit==='requests').remaining,124);
+ assert.equal(rows[0].model,'codestral-2508');
+ const before=sqlite.prepare("SELECT status FROM ghost_cloud_attempts WHERE job_id='mistral-minute-record'").get();
+ assert.equal(before.status,'needs_review');
+ const again=await tick(env,async()=>{throw Error('must not retry');},NOW+3);
+ assert.equal(again.dispatched,0);
+});
+test('missing optional Mistral rate table does not erase immutable private receipt',async()=>{
+ const {env,sqlite}=setup({mistral:configFor('mistral',{model:'codestral-2508'})});
+ enable(sqlite);enqueue(sqlite,job('mistral-no-schema'));
+ const result=await tick(env,async()=>new Response(JSON.stringify({
+  model:'codestral-2508',choices:[{message:{content:'Private draft for review'},finish_reason:'stop'}],
+  usage:{prompt_tokens:12,completion_tokens:18}
+ }),{headers:{'x-ratelimit-limit-req-minute':'125','x-ratelimit-remaining-req-minute':'124'}}),NOW);
+ assert.equal(result.dispatched,1);
+ assert.equal(sqlite.prepare("SELECT status FROM ghost_cloud_attempts WHERE job_id='mistral-no-schema'").get().status,'needs_review');
 });

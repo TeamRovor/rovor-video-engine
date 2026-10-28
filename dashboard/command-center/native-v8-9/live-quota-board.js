@@ -133,6 +133,27 @@ function cloudEvidence(p){
      '<span>Cloud reset: '+esc(reset?resetText(reset.toISOString()):'Not reported')+'</span>'+
      '<span>Independent cloud account limit · not OmniRoute cached usage</span></div></div>');
  }else result.push('<span>Cloud quota and reset: unknown / not currently verified</span>');
+ // Private Site cloud minute-limit reports are distinct from Mac telemetry.
+ // Never claim these are organization-wide totals or reset evidence.
+ if(p.provider==='mistral'&&Array.isArray(p.minute_rate_limits)){
+  const valid=p.minute_rate_limits.filter(q=>
+    q?.status==='verified'&&q.source==='authenticated_mistral_inference_minute_headers'&&
+    q.scope==='model_on_provider_account'&&['requests','tokens'].includes(q.unit)&&
+    typeof q.model==='string'&&/^[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}$/.test(q.model)&&
+    Number.isSafeInteger(q.observed_at)&&q.observed_at<=Date.now()+5000&&
+    q.observed_at>=Date.now()-60000&&
+    Number.isSafeInteger(q.used)&&q.used>=0&&Number.isSafeInteger(q.limit)&&
+    q.limit>0&&q.used<=q.limit&&q.remaining===q.limit-q.used).slice(0,8);
+  for(const q of valid){
+   result.push('<div class="rvq-cloud-ring-layout">'+usageRing(100*q.used/q.limit,
+     'Verified Mistral model minute '+q.unit+' used')+
+     '<div class="rvq-cloud-ring-copy"><span>'+esc(q.model)+' · '+esc(q.unit)+
+     ' per minute: '+fmt(q.used)+' / '+fmt(q.limit)+' used</span>'+
+     '<span>Authenticated inference headers · '+esc(new Date(q.observed_at).toLocaleTimeString())+
+     ' · reset not reported · never billing proof</span></div></div>');
+  }
+  if(!valid.length)result.push('<span>Mistral authenticated minute limits: unverified or expired</span>');
+ }
  result.push('</div>');return result.join('');
 }
 

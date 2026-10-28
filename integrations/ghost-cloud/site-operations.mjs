@@ -129,6 +129,25 @@ export function createCloudOperations(base, cloud) {
     remaining:q.remaining,resets_at:q.resets_at,observed_at:q.observed_at,
     source:q.source,scope:'provider_account'};
   };
+  // Additive model-scoped minute evidence. Missing migrations leave UNKNOWN.
+  let mistralRows=[];
+  try{
+   mistralRows=(await sql(env,`SELECT model,unit,observed_at,used,quota_limit,remaining,source
+     FROM ghost_cloud_mistral_minute_quota ORDER BY observed_at DESC LIMIT 100`).all()).results;
+  }catch{mistralRows=[];}
+  const mistralRates=mistralRows.filter(q=>
+    typeof q.model==='string'&&/^[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}$/.test(q.model)&&
+    ['tokens','requests'].includes(q.unit)&&
+    q.source==='authenticated_mistral_inference_minute_headers'&&
+    Number.isSafeInteger(q.observed_at)&&q.observed_at<=now+5000&&
+    now-q.observed_at>=0&&now-q.observed_at<=60000&&
+    Number.isSafeInteger(q.quota_limit)&&q.quota_limit>0&&
+    Number.isSafeInteger(q.remaining)&&q.remaining>=0&&q.remaining<=q.quota_limit&&
+    Number.isSafeInteger(q.used)&&q.used===q.quota_limit-q.remaining
+   ).map(q=>({model:q.model,unit:q.unit,observed_at:q.observed_at,
+    used:q.used,limit:q.quota_limit,remaining:q.remaining,
+    resets_at:null,source:q.source,scope:'model_on_provider_account',
+    status:'verified'}));
   // Last-50 activity samples can hide older actionable review work. This
   // oldest-first index is bounded and contains metadata only, never output.
   const reviewCount=await sql(env,"SELECT COUNT(*) AS pending_count, MIN(finished_at) AS oldest_finished_at FROM ghost_cloud_attempts WHERE status='needs_review' AND human_review='not_recorded'").first();
@@ -137,7 +156,8 @@ export function createCloudOperations(base, cloud) {
    j.employee,j.task_id,j.title FROM ghost_cloud_attempts a JOIN ghost_cloud_jobs j ON a.job_id=j.id
    WHERE a.status='needs_review' AND a.human_review='not_recorded'
    ORDER BY COALESCE(a.finished_at,a.started_at) ASC,a.id ASC LIMIT 50`).all();
-  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null)})),
+  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null),
+    ...(p.provider==='mistral'?{minute_rate_limits:mistralRates}:{})})),
    attempts:results,review_queue:{pending_count:reviewCount?.pending_count??0,
     oldest_finished_at:reviewCount?.oldest_finished_at??null,items:reviewItems}};
  }
@@ -328,6 +348,20 @@ export function createCloudOperations(base, cloud) {
      meter.setAttribute('aria-label',p.provider+' verified request allowance used');
      card.append(meter);
     }else card.append(el('p','USAGE LIMIT UNKNOWN · quota and reset not verified'));
+    // Mistral per-minute headers are not a daily or billing quota.
+    if(p.provider==='mistral'&&Array.isArray(p.minute_rate_limits)){
+     for(const rate of p.minute_rate_limits.slice(0,8)){
+      if(rate.status!=='verified'||!['tokens','requests'].includes(rate.unit)||
+         !Number.isSafeInteger(rate.used)||rate.used<0||
+         !Number.isSafeInteger(rate.limit)||rate.limit<1||rate.used>rate.limit)continue;
+      card.append(el('p',rate.model+' · VERIFIED MINUTE '+rate.unit.toUpperCase()+
+        ' · '+rate.used+' / '+rate.limit+' used · reset not reported'));
+      const meter=el('progress');meter.max=rate.limit;meter.value=rate.used;
+      meter.style.accentColor='#4cc9ff';meter.style.width='100%';
+      meter.setAttribute('aria-label','Mistral '+rate.model+' verified per-minute '+rate.unit+' usage');
+      card.append(meter);
+     }
+    }
     card.append(el('p',(p.dispatch_gate?'current claim gate: '+p.dispatch_gate.reason.replaceAll('_',' ')+
       (Number.isSafeInteger(p.dispatch_gate.next_eligible_at)?' · next eligible '+new Date(p.dispatch_gate.next_eligible_at).toLocaleString():''):'current claim gate unknown')+
      (p.last_check?' · last catalog check '+p.last_check.status+' at '+new Date(p.last_check.observed_at).toLocaleString():' · catalog not checked')));
