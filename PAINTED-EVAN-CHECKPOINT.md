@@ -5,6 +5,17 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: four continuous digits prototyped; ownership/occlusion correction next
+CARTOON-EVAN-DIGIT-CURL.md / evan-engine/reviews/digit-curl-v1.json. New opt-in cartoon_digit_curl reuses IndexRig matrices/triangle renderer:4independent thumb/middle/ring/little planes,3joints each, fixed proximal roots/palm-index. One original clean-open source; no drawing switches/dissolve/newart/default change. Separate digit-curl-v1ownership assets and manual landmarks; raw source unchanged. Initial overlay/4planes inspected1402x1122, two polygons corrected. Rest visibleRGBA/allalpha exact.
+
+3tests pass: sourcehash/restreconstruction,481amplitudes×4actualmeshes/fixedroots/independence(minarea2=11.97898486), invalidinputs. Folded triangles rejected. These do NOTguard ownership remnants or inter-digit collisions.
+
+Muted2s open/curl/open held-frame69construction study; normal/slow2s/8s decode48/192. All48native+48stagehashes/18frozen sources/films verified. Rest registeredskin/currentstage exact; outsidehand exact. No narration-driven staging in this diagnostic. Workers73683/67090COMPLETED; NO pending jobs.
+
+REJECT fullstroke: fingers bend sideways/cross index; detached distal ink slivers remain on fixedplane, thumbcontour seam visible. Inspected12native680x722samples and6decoded1280x720normal/slow. Fullamplitude probe12439movingpair-overlap/11953moving-over-distal-indexpixels vs0rest; diagnostic ROI, not accuracy threshold. Fixedindex is overpainted, not geometricallydeformed. In-plane bones do not supply closed-fist depth. Current fullfilm collar-continuous retained;18flags unresolved; listening/realtime/polished unaccepted.
+
+NEXT: repair ownership polygons so no distal finger contour remains on palm-index. Inspect separatedplanes/reconstructrest; add contour-remnant and index-occlusion guards. Then ONE bounded partialcurl withoutcrossings before depth/foreshortening/point work. No replacement swaps/fullfilm rerender while anatomy fails. No Moho/merge/deploy; automationactive.
+
 ## Current task: half-open registration reviewed; three-drawing transition rejected
 CARTOON-EVAN-HALF-OPEN-HAND.md / evan-engine/reviews/half-open-hand-v2.json. Separate half-open-hand-fit-v2 uses existing builder: wrist551/510→810/762, scale.192/15deg, associatedRGBA prefilter. Raw source/alpha unchanged; original proximal≤−36 exact; animationReady=false. Four registration tests pass (two new half-open cases): hashes/bounds/proximal/current48Hz speech meshes and isolated exact3derivative+manifest rebuild. No production builder/default/control change.
 
