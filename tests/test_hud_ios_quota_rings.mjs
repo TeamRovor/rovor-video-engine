@@ -249,6 +249,38 @@ test('Mistral model reference never leaks into another provider or invents a per
  assert.doesNotMatch(noReport,/MISTRAL ORGANIZATION LIMITS/);
 });
 
+test('Mistral last-minute traffic is measured, not an assumed quota percentage',()=>{
+ const daily={period:'24h',request_count:3,usage_coverage:'complete_aggregate',
+  connections:[{provider:'mistral',name:'mistral',connection_count:1,enabled_count:1}],
+  connection_slots:[{provider:'mistral',account_slot:1,enabled:true}],
+  models:[{provider:'mistral',name:'devstral-latest',requests:3,tokens:60}],quota:{records:[]}};
+ const hour={period:'1h',request_count:2,usage_coverage:'complete_aggregate',
+  models:[{provider:'mistral',name:'devstral-latest',requests:2,tokens:30}]};
+ const minute={period:'1m',request_count:1,usage_coverage:'complete_aggregate',
+  models:[{provider:'mistral',name:'devstral-latest',requests:1,tokens:15}]};
+ const html=board().render(daily,true,null,hour,minute);
+ assert.match(html,/LIVE LAST MINUTE · <strong>1 request<\/strong> · 15 reported tokens/);
+ assert.match(html,/LAST MINUTE · 1 request · 15 reported tokens/);
+ assert.match(html,/1 \/ 1m/);
+ assert.match(html,/Rolling 60-second OmniRoute sample/);
+ assert.match(html,/not Mistral organization-wide usage or remaining quota/);
+ assert.match(html,/QUOTA UNKNOWN/);
+ assert.equal((html.match(/aria-label="Provider quota unknown"/g)||[]).length,2);
+});
+test('invalid rolling-minute data cannot display a made-up zero',()=>{
+ const daily={period:'24h',request_count:1,usage_coverage:'complete_aggregate',
+  connections:[{provider:'mistral',name:'mistral',connection_count:1,enabled_count:1}],
+  models:[{provider:'mistral',name:'devstral-latest',requests:1,tokens:15}],quota:{records:[]}};
+ const partial={period:'1m',request_count:2,usage_coverage:'partial_top_50_or_unattributed',
+  models:[{provider:'mistral',name:'devstral-latest',requests:1,tokens:15}]};
+ const html=board().render(daily,true,null,null,partial);
+ assert.match(html,/1m unverified/);
+ assert.match(html,/LIVE LAST MINUTE · independently verified data unavailable/);
+ assert.doesNotMatch(html,/LIVE LAST MINUTE · <strong>0 requests/);
+ const complete={period:'1m',request_count:0,usage_coverage:'complete_aggregate',models:[]};
+ const zero=board().render(daily,true,null,null,complete);
+ assert.match(zero,/LIVE LAST MINUTE · <strong>0 requests<\/strong> · 0 reported tokens/);
+});
 test('small-screen rings have responsive widths',()=>{
  assert.match(source,/max-width:380px/);
  assert.match(source,/grid-template-columns:80px minmax\(0,1fr\)/);
