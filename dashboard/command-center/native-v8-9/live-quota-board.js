@@ -277,6 +277,34 @@ function hourLabel(hourly,live){
  return '<div class="rvq-hourly">LAST HOUR · <strong>'+fmt(hourly.requests)+' request'+(hourly.requests===1?'':'s')+'</strong> · '+fmt(hourly.tokens)+' reported tokens'+
   '<span>Separate complete 1h gateway window · not a rate-limit or quota percentage</span></div>';
 }
+// Explicit owner-supplied organization capacity snapshot (Oct 27, 2026).
+// This is NOT a live rate-limit cache, a measured usage denominator, nor a
+// verification that any listed model is free, currently routable, or billable.
+// Do not merge these references into quota.records or filled circular meters.
+const MISTRAL_OWNER_LIMITS=[
+ ['codestral-2508',625000,2.08],
+ ['labs-leanstral-1-5-1',5000000,0.63],
+ ['ministral-14b-2512',937500,0.50],
+ ['ministral-3b-2512',1300000,12.50],
+ ['ministral-8b-2512',625000,3.13],
+ ['mistral-medium-latest',20000,1.00],
+ ['mistral-large-2512',250000,1.00],
+ ['mistral-small-2603',20000,1.00],
+ ['mistral-large-4',20000,0.83]
+];
+function mistralLimitReferences(provider,activity){
+ if(provider!=='mistral')return '';
+ const recorded=activity?.models||[];
+ const historical=recorded.filter(m=>!MISTRAL_OWNER_LIMITS.some(row=>row[0]===m.name));
+ const cells=MISTRAL_OWNER_LIMITS.map(([name,tpm,rps])=>
+   '<tr><td>'+esc(name)+'</td><td>'+fmt(tpm)+'</td><td>'+Number(rps).toFixed(2)+'</td></tr>').join('');
+ return '<section class="rvq-mistral-reference" aria-label="Owner supplied Mistral rate limit reference">'+
+   '<strong>MISTRAL ORGANIZATION LIMITS · OWNER SNAPSHOT</strong>'+
+   '<p>Observed October 27, 2026 · Global. TPM and RPS are per-model capacity settings, not measured consumption, available quota, free-tier eligibility, or reset times. They may change.</p>'+
+   '<table><thead><tr><th>Model</th><th>Tokens/min</th><th>Requests/sec</th></tr></thead><tbody>'+cells+'</tbody></table>'+
+   (historical.length?'<p class="rvq-limit-mismatch">Recorded model without a supplied matching limit: '+historical.map(m=>esc(m.name)).join(', ')+'. No limit or quota percentage assigned.</p>':'')+
+   '<p>Live Mistral usage above is OmniRoute-only. Organization-wide used/remaining still requires verified API telemetry.</p></section>';
+}
 function card(group,quota,live,index,slot,cloud,attempts,activity,hourly){
  const entries=live&&slot.enabled!==false?quota.filter(q=>q.provider===group.provider&&q.account_slot===slot.account_slot&&
    (!q.reset_at||Date.parse(q.reset_at)>Date.now())):[];
@@ -287,7 +315,7 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly){
  const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
  return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
- '<div class="rvq-provider-content">'+activityLabel(activity,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
+ '<div class="rvq-provider-content">'+activityLabel(activity,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly)+mistralLimitReferences(group.provider,activity)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
 }
 
 // Nine-provider glance cards are a visualization of one explicitly labeled
@@ -448,6 +476,13 @@ const css=`
 #rovor-workload-popup .rvq-activity{margin:12px 0 0;color:#a2d9fa;font:700 10px/1.5 system-ui;letter-spacing:.03em}
 #rovor-workload-popup .rvq-activity strong{color:#e6faff}
 #rovor-workload-popup .rvq-activity span{display:block;color:#8ba9bc;font:10px/1.4 system-ui;letter-spacing:0}
+#rovor-workload-popup .rvq-mistral-reference{margin:12px 0;padding:10px;border:1px solid rgba(105,189,236,.33);border-radius:9px;background:rgba(2,24,43,.66);color:#a7d5ed;font:10px/1.5 system-ui}
+#rovor-workload-popup .rvq-mistral-reference>strong{display:block;font:700 10px/1.4 system-ui;color:#9ee0ff;letter-spacing:.06em}
+#rovor-workload-popup .rvq-mistral-reference p{margin:7px 0;color:#a4c8dc}
+#rovor-workload-popup .rvq-mistral-reference table{width:100%;border-collapse:collapse;font:10px/1.5 system-ui}
+#rovor-workload-popup .rvq-mistral-reference th,#rovor-workload-popup .rvq-mistral-reference td{padding:5px 3px;border-bottom:1px solid rgba(101,168,208,.2);text-align:left;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-mistral-reference th{color:#a6dfff;font-weight:700}
+#rovor-workload-popup .rvq-mistral-reference .rvq-limit-mismatch{color:#f0c5a4}
 #rovor-workload-popup .rvq-activity.rvq-unreported{color:#8ba9bc}
 #rovor-workload-popup .rvq-hourly{margin:7px 0;color:#bbdff2;font:700 10px/1.5 system-ui;letter-spacing:.02em}
 #rovor-workload-popup .rvq-hourly strong{color:#e6faff}
