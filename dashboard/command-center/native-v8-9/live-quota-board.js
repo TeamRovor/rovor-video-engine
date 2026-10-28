@@ -514,11 +514,13 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,
 const ACTION_GATES=new Set(['missing_secret','unpinned_model','eligibility_unverified','eligibility_expired','canary_unverified','invalid_limits','missing_account','unpinned_upstream','failure_circuit_requires_review']);
 const needsSetupReview=p=>ACTION_GATES.has(p?.dispatch_gate?.reason);
 function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
- const local=live&&slot.enabled!==false?quota.find(q=>q.provider===slot.group.provider&&
+ const localLimits=live&&slot.enabled!==false?quota.filter(q=>q.provider===slot.group.provider&&
    q.account_slot===slot.account_slot&&Number.isSafeInteger(q.used)&&
    Number.isSafeInteger(q.total)&&q.total>0&&q.used>=0&&q.used<=q.total&&
    (q.used_percent===undefined||
-    (Number.isFinite(q.used_percent)&&Math.abs(q.used_percent-100*q.used/q.total)<=0.11))):null;
+    (Number.isFinite(q.used_percent)&&Math.abs(q.used_percent-100*q.used/q.total)<=0.11))):[];
+ // Do not show an arbitrary model's allowance as an account-wide percentage.
+ const local=localLimits.length===1?localLimits[0]:null;
  const cq=cloud?.quota;
  const observed=Number(cq?.observed_at),limit=Number(cq?.limit),used=Number(cq?.used);
  const reset=cq?.resets_at;
@@ -527,7 +529,7 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
    Number.isSafeInteger(used)&&Number.isSafeInteger(limit)&&limit>0&&used>=0&&used<=limit&&
    (reset===null||reset===undefined||(Number.isSafeInteger(reset)&&reset>Date.now()));
  const pct=local?100*local.used/local.total:verified?100*used/limit:null;
- const evidence=local?'MAC QUOTA CACHE':verified?'CLOUD LIMIT':'QUOTA UNKNOWN';
+ const evidence=local?'MAC MODEL LIMIT':verified?'CLOUD ACCOUNT LIMIT':localLimits.length>1?'MULTIPLE MODEL LIMITS':'QUOTA UNKNOWN';
  const name=pretty(slot.group.name||slot.group.provider);
  const traffic=activity?usageRing(activity.share,'Mac 24-hour recorded request share for '+name,'activity'):'';
  const attention=needsSetupReview(cloud);
@@ -537,7 +539,7 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
    // Unknown account quota remains a separate visible ring; never present traffic as quota.
    '<div class="rvq-overview-rings">'+(activity?'<span class="rvq-overview-ring-group">'+traffic+'<span class="rvq-ring-label">MAC TRAFFIC</span></span>':'')+'<span class="rvq-overview-ring-group">'+usageRing(pct,evidence+' for '+name)+'<span class="rvq-ring-label">QUOTA USED</span></span></div>'+
    (attention?'<span class="rvq-overview-alert">SETUP / REVIEW</span>':'')+
-   '<span class="rvq-overview-source">'+evidence+'</span>'+
+   '<span class="rvq-overview-source">'+evidence+(localLimits.length>1&&!verified?' · '+fmt(localLimits.length)+' separate limits':'')+'</span>'+
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span>'+
    '<span class="rvq-overview-intervals"><span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
    '<span class="rvq-overview-minute">'+(minute?fmt(minute.requests)+' / 1m':'1m unverified')+'</span></span><span class="rvq-overview-drill">VIEW DETAILS</span></a>';
