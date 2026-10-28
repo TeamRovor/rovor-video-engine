@@ -110,7 +110,7 @@ test('release readback checks the current shipped quota asset without coupling t
   for (const required of ['function overviewSlot(', 'function usageRing(',
     'function macActivity(', 'function modelActivity(', 'rvq-observed-model',
     'QUOTA UNKNOWN', 'window.ROVOR_QUOTA_BOARD=']) {
-    assert.equal(hasNineProviderMeterAsset(actualNineMeterAsset.replace(required,'REMOVED_CONTRACT_MARKER')), false,
+    assert.equal(hasNineProviderMeterAsset(actualNineMeterAsset.replaceAll(required,'REMOVED_CONTRACT_MARKER')), false,
       'missing functional marker must fail closed: '+required);
   }
   assert.equal(hasNineProviderMeterAsset('window.ROVOR_QUOTA_BOARD={}; rvq-overview rvq-ring Mac requests / 24h'), false);
