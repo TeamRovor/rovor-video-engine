@@ -1,0 +1,136 @@
+{
+  "status": "opt-in-opening-point-authored-aim-pilots-verified-motion-pending",
+  "event": {
+    "anticipate": 1.65,
+    "arrive": 2.84,
+    "hold": 3.99,
+    "settle": 5.28,
+    "poseOn": 2.35,
+    "poseOff": 4.7,
+    "scriptIndices": [
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17
+    ]
+  },
+  "manualSourceIndexCenterline": [
+    [
+      975,
+      930
+    ],
+    [
+      1110,
+      1060
+    ]
+  ],
+  "targetStage": [
+    803,
+    379
+  ],
+  "rayIsAuthoredNotPixelTracking": true,
+  "pilots": [
+    {
+      "frame": 69,
+      "time": 2.875,
+      "baselineStagePixelExact": true,
+      "outsideRightHandRegionExact": true,
+      "oldWrist": -29.922531735533926,
+      "aimedWrist": -23.65061713149771,
+      "authoredRayErrorPixels": -4.7598364063182313e-07,
+      "rayBase": [
+        608.6273179487468,
+        403.1489747290093
+      ],
+      "rayTip": [
+        629.3359586463827,
+        400.5761212515092
+      ],
+      "target": [
+        803.0,
+        379.0
+      ],
+      "pose": "point",
+      "poseTransitionAccepted": false
+    },
+    {
+      "frame": 90,
+      "time": 3.75,
+      "baselineStagePixelExact": true,
+      "outsideRightHandRegionExact": true,
+      "oldWrist": -30.0,
+      "aimedWrist": -23.939070019405335,
+      "authoredRayErrorPixels": 2.677157284512007e-05,
+      "rayBase": [
+        609.0033379094618,
+        403.58276462594546
+      ],
+      "rayTip": [
+        629.7056483827215,
+        400.95941750873925
+      ],
+      "target": [
+        803.0,
+        379.0
+      ],
+      "pose": "point",
+      "poseTransitionAccepted": false
+    }
+  ],
+  "deliveryPilotsAndRayOverlayVisuallyInspected": [
+    69,
+    90
+  ],
+  "testsPassed": 3,
+  "newTests": 3,
+  "bothRegisteredArmMeshesPositiveAt480Hz": true,
+  "pointMeshMinimumArea2": 66.95168720106643,
+  "maximumWristStepAt480Hz": 0.19111617228046462,
+  "sourceHashes": {
+    "work/point-aim-review/pilot.py": "d98f0db8548627fd2c20a6c93979b7c1ebf62c2929ffa1398c15b56024199ff6",
+    "work/point-aim-review/calibrate.py": "4d6d4bef91a91af97494077cf00e7867b0d24d42fc4c6ff36f4a7efe0eaa9db8",
+    "work/engine/evan-engine/opening_point_review.py": "c67cdbd4dfa1166a466d2d6f5534ee98ec075885ec4f4bfe3b3a85ae5209f831",
+    "work/engine/evan-engine/test_opening_point_review.py": "861383184e9b553789aa6f1b77bfa7219902897cbe29c3da6358835dcef3c1b3",
+    "work/engine/evan-engine/payoff_cartoon_review.py": "b2b612d369da7b4a957657ba12714182a1d65568b1570a20f1d1ae96452b3c7b",
+    "work/engine/evan-engine/painted_character.py": "d8793d9b74b9dd72646589ec47de559d289485d5e9dc7f9d7c7c9946279ad0fa",
+    "work/engine/evan-character/cartoon-v1/point-hand-fit-v1/manifest.json": "05ad590608ec491af1949664aab6be2298e2253c23fff63547d373bbb1b0059a",
+    "outputs/evan-speech-alignment/Aligned-Speech-Plan.json": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e"
+  },
+  "poseReplacement": "Two drawings switch during inherited wrist swing; no finger dissolve or digit articulation.",
+  "poseTransitionAccepted": false,
+  "expectedClipSourceFrameRange": [
+    36,
+    132
+  ],
+  "expectedFrames": 96,
+  "expectedUpdatedFrames": 87,
+  "expectedPointDrawingFrames": 56,
+  "expectedOffCueByteExactFrames": 9,
+  "expectedNormalSeconds": 4,
+  "expectedSlowSeconds": 16,
+  "expectedSourcePcmSamples": [
+    24000,
+    88000
+  ],
+  "expectedSourcePcm16Count": 64000,
+  "pendingJobs": true,
+  "worker": 95854,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "newArtwork": false,
+  "phonemeTimingChanged": false,
+  "flagsCleared": 0,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "nextConcreteWork": "Poll95854 without restarting. Require Verification.json/96+384decode and64000exactPCM, then run work/opening-point-motion/review.py. Inspect all23native transition frames52..62/107..118, remaining selected native pairs,18overview and6normal/3slow decoded1280x720samples. Critically judge the discrete replacements at57/113; no fluid-transition acceptance from geometry or aim tests. Keep definition/payoff palms,20closing,18timingflags and current full film unchanged."
+}
