@@ -5,6 +5,7 @@ window.ROVOR_QUOTA_BOARD=(()=>{
 'use strict';
 const expandedSlots=new Set();
 const expandedProviders=new Set();
+let overviewFilter='all'; // Retain user choice while telemetry refreshes.
 // Keep UI inspection state independent of whichever legacy module redraws the popup.
 function listenForQuotaInteraction(){
  if(typeof document.addEventListener!=='function')return;
@@ -463,6 +464,8 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,
 }
 // Nine-provider glance cards are a visualization of one explicitly labeled
 // validated quota source per slot. They never sum Mac and cloud counters.
+const ACTION_GATES=new Set(['missing_secret','unpinned_model','eligibility_unverified','eligibility_expired','canary_unverified','invalid_limits','missing_account','paid_route_denied','unpinned_upstream','failure_circuit_requires_review']);
+const needsSetupReview=p=>ACTION_GATES.has(p?.dispatch_gate?.reason);
 function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
  const local=live&&slot.enabled!==false?quota.find(q=>q.provider===slot.group.provider&&
    q.account_slot===slot.account_slot&&Number.isSafeInteger(q.used)&&
@@ -480,11 +483,13 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
  const evidence=local?'MAC QUOTA CACHE':verified?'CLOUD LIMIT':'QUOTA UNKNOWN';
  const name=pretty(slot.group.name||slot.group.provider);
  const traffic=activity?usageRing(activity.share,'Mac 24-hour recorded request share for '+name,'activity'):'';
- return '<a class="rvq-overview-tile" href="#rvq-reports" data-rvq-open-slot="'+esc(slot.group.provider+':'+slot.account_slot)+'" aria-label="View '+esc(name)+' connection '+fmt(slot.account_slot)+' full report · '+evidence+'">'+
+ const attention=needsSetupReview(cloud);
+ return '<a class="rvq-overview-tile" href="#rvq-reports" data-rvq-attention="'+String(attention)+'"'+(overviewFilter==='attention'&&!attention?' hidden':'')+' data-rvq-open-slot="'+esc(slot.group.provider+':'+slot.account_slot)+'" aria-label="View '+esc(name)+' connection '+fmt(slot.account_slot)+' full report · '+evidence+(attention?' · setup or review required':'')+'">'+
    '<span class="rvq-overview-name">'+esc(name)+'</span>'+
    // Prioritize the real 24h usage ring in each of the nine connection tiles.
    // Unknown account quota remains a separate visible ring; never present traffic as quota.
    '<div class="rvq-overview-rings">'+(activity?'<span class="rvq-overview-ring-group">'+traffic+'<span class="rvq-ring-label">MAC TRAFFIC</span></span>':'')+'<span class="rvq-overview-ring-group">'+usageRing(pct,evidence+' for '+name)+'<span class="rvq-ring-label">QUOTA USED</span></span></div>'+
+   (attention?'<span class="rvq-overview-alert">SETUP / REVIEW</span>':'')+
    '<span class="rvq-overview-source">'+evidence+'</span>'+
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span>'+
    '<span class="rvq-overview-intervals"><span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
