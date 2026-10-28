@@ -551,7 +551,7 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
    // Unknown account quota remains a separate visible ring; never present traffic as quota.
    '<div class="rvq-overview-rings">'+(activity?'<span class="rvq-overview-ring-group">'+traffic+'<span class="rvq-ring-label">MAC TRAFFIC</span></span>':'')+'<span class="rvq-overview-ring-group">'+usageRing(pct,evidence+' for '+name)+'<span class="rvq-ring-label">QUOTA USED</span></span></div>'+
    (attention?'<span class="rvq-overview-alert">'+esc(alertLabel)+'</span>':'')+
-   '<span class="rvq-overview-source">'+evidence+(localLimits.length>1&&!verified?' · '+fmt(localLimits.length)+' separate limits':'')+'</span>'+
+   '<span class="rvq-overview-source">'+evidence+(localLimits.length>1&&!verified?' · '+fmt(localLimits.length)+' separate limits':'')+'</span>'+ (local&&typeof local.model_id==='string'?'<span class="rvq-overview-model" title="'+esc(local.model_id)+'">MODEL · '+esc(local.model_id)+'</span>':'')+
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span>'+
    '<span class="rvq-overview-intervals"><span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
    '<span class="rvq-overview-minute">'+(minute?fmt(minute.requests)+' / 1m':'1m unverified')+'</span></span><span class="rvq-overview-drill">VIEW DETAILS</span></a>';
@@ -762,6 +762,7 @@ const css=`
 #rovor-workload-popup .rvq-overview .rvq-ring-traffic .rvq-ring-core small{font-size:6px}
 #rovor-workload-popup .rvq-overview .rvq-ring-unknown .rvq-ring-core strong{font-size:18px}
 #rovor-workload-popup .rvq-overview-source{color:#91c3dd;font:700 10px/1.3 system-ui;letter-spacing:.03em;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-overview-model{color:#afdcf2;font:9px/1.4 system-ui;max-width:100%;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 @media(max-width:1150px){#rovor-workload-popup .rvq-overview{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){
  #rovor-workload-popup .rvq-overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:11px}
@@ -808,7 +809,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
    Math.abs(Date.now()-cloud.observed_at)<=15000&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
  const cloudProviders=cloudFresh?new Map(cloud.providers.filter(p=>p&&typeof p.provider==='string').map(p=>[p.provider,p])):new Map();
  const cloudAttempts=cloudFresh&&Array.isArray(cloud.attempts)&&cloud.attempts.length<=500?cloud.attempts:[];
- const review=reviewSample(cloudAttempts,cloudFresh);
+ const review=reviewSample(cloudAttempts,cloudFresh&&Array.isArray(cloud?.attempts)&&cloud.attempts.length<=500);
  // When the Mac is off, cloud provider credentials and past gateway inventory
  // remain distinguishable: this is NOT a live Mac connection.
  const connections=Array.isArray(data?.connections)?data.connections:
@@ -843,7 +844,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
- '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length):'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
+ '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
  summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
  (slots.length?(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
