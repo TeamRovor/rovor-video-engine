@@ -73,7 +73,7 @@ function usageRing(percent,label,kind='quota'){
    '<div class="rvq-ring-core"><strong>—</strong><small>UNKNOWN</small></div></div>';
  }
  const pct=percent.toFixed(1);
- return '<div class="rvq-ring" role="progressbar" aria-label="'+esc(label)+
+ return '<div class="rvq-ring'+(kind==='activity'?' rvq-ring-traffic':'')+'" role="progressbar" aria-label="'+esc(label)+
   '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+
   '" aria-valuetext="'+pct+(kind==='activity'?' percent of recorded Mac requests':' percent of verified allowance used')+'" style="--rvq-angle:'+pct+'%">'+
   '<div class="rvq-ring-core"><strong>'+pct+'%</strong><small>'+(kind==='activity'?'TRAFFIC':'USED')+'</small></div></div>';
@@ -484,7 +484,7 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
    '<span class="rvq-overview-name">'+esc(name)+'</span>'+
    // Prioritize the real 24h usage ring in each of the nine connection tiles.
    // Unknown account quota remains a separate visible ring; never present traffic as quota.
-   '<div class="rvq-overview-rings">'+(activity?traffic+usageRing(pct,evidence+' for '+name):usageRing(pct,evidence+' for '+name))+'</div>'+
+   '<div class="rvq-overview-rings">'+(activity?'<span class="rvq-overview-ring-group">'+traffic+'<span class="rvq-ring-label">MAC TRAFFIC</span></span>':'')+'<span class="rvq-overview-ring-group">'+usageRing(pct,evidence+' for '+name)+'<span class="rvq-ring-label">QUOTA USED</span></span></div>'+
    '<span class="rvq-overview-source">'+evidence+'</span>'+
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span>'+
    '<span class="rvq-overview-intervals"><span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
@@ -627,7 +627,13 @@ const css=`
 /* Visible nine-slot quota dashboard above verbose evidence panels. */
 #rovor-workload-popup .rvq-overview{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 15px}
 #rovor-workload-popup .rvq-overview-tile{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:start;gap:8px;padding:12px 8px 11px;text-decoration:none;cursor:pointer;touch-action:manipulation;border:1px solid rgba(83,159,211,.4);border-radius:11px;background:linear-gradient(145deg,#0c304e,#051b32);text-align:center}
-#rovor-workload-popup .rvq-overview-rings{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
+#rovor-workload-popup .rvq-overview-rings{display:flex;justify-content:center;align-items:flex-start;gap:7px;flex-wrap:wrap}
+#rovor-workload-popup .rvq-overview-ring-group{display:flex;flex-direction:column;align-items:center;gap:5px}
+#rovor-workload-popup .rvq-ring-label{color:#a9cde7;font:700 9px/1.25 system-ui;letter-spacing:.04em}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic{width:48px;height:48px;opacity:.84}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic:before{inset:7px}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic .rvq-ring-core strong{font-size:11px}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic .rvq-ring-core small{font-size:6px}
 #rovor-workload-popup .rvq-overview-tile:hover,#rovor-workload-popup .rvq-overview-tile:focus-visible{border-color:#b9eaff;outline:2px solid #87c9fa;outline-offset:1px;background:#103b60}
 #rovor-workload-popup .rvq-overview-drill{color:#a9dfff;font:700 10px/1.35 system-ui;letter-spacing:.05em;margin-top:auto}
 #rovor-workload-popup .rvq-source-notes{margin-top:12px;color:#9bc4dd;font:11px/1.55 system-ui}
