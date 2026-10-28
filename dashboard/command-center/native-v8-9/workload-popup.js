@@ -16,7 +16,7 @@
   const MODEL_IDS=['openrouter/cohere/north-mini-code:free','openrouter/nvidia/nemotron-3-ultra-550b-a55b:free','openrouter/nvidia/nemotron-3.5-super-vl:free'];
   const MODELS=['North Mini Code','Nemotron 3 Ultra','Nemotron 3.5 Super VL'];
   const ROUTES=[['Code','Fast'],['Code','Reason'],['Fast','Reason','Vision']];
-  const observedTime=()=>new Date(OBSERVATION.at).toLocaleString('en-US',{timeZone:'America/Chicago',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' CDT';
+  const observedTime=()=>new Date(OBSERVATION.at).toLocaleString('en-US',{timeZone:'America/Chicago',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
   const outcomeBars=()=>`<section class="wl-card wl-outcomes"><h3>LAST MAC REPORT / 31 JOB CLAIMS</h3>
     <p class="wl-empty">${observedTime()} · historical owner-shared report, not current activity. Claims are attempts; review-ready drafts still need approval.</p>
     ${OBSERVATION.outcomes.map(([label,n])=>`<div class="wl-outcome"><span>${label}</span><span class="wl-meter"><i style="--wl-share:${(100*n/OBSERVATION.claims).toFixed(1)}%"></i></span><strong>${n} / 31</strong></div>`).join('')}
@@ -135,17 +135,17 @@
     const paint=()=>{
       const models=compactTab==='models';
       root.innerHTML=`<div class="wl-compact-tabs" role="group" aria-label="Workload preview type">
-        <button type="button" data-wl-compact-tab="models" aria-pressed="${models}">AI MODELS <small>03</small></button>
+        <button type="button" data-wl-compact-tab="models" aria-pressed="${models}">AI MODELS <small>03 OLD</small></button>
         <button type="button" data-wl-compact-tab="employees" aria-pressed="${!models}">EMPLOYEES <small>08</small></button>
       </div>
-      <div class="wl-compact-meta" aria-label="OmniRoute live telemetry unavailable"><span class="wl-compact-dot"></span> LAST REPORT · ${observedTime()} <span>USAGE UNKNOWN</span></div>
+      <div class="wl-compact-meta" aria-label="OmniRoute live telemetry unavailable"><span class="wl-compact-dot"></span> LAST REPORT · HISTORICAL · ${observedTime()} <span>LIVE USAGE UNKNOWN</span></div>
       <div class="wl-compact-items">${(models?MODELS:EMPLOYEES.map(e=>e[1])).map((label,i)=>`
         <button type="button" class="wl-compact-row" data-wl-compact-row="${i}" aria-label="${label}, usage unknown, open workload details">
           <span class="wl-compact-name">${htmlEscape(label)}</span>
-          <span class="wl-compact-status">${models?'No receipts':'No live link'}</span>
+          <span class="wl-compact-status">${models?'Archived model':'No live link'}</span>
           <span class="wl-compact-value">—</span>
         </button>`).join('')}</div>
-      <div class="wl-compact-foot">3 ROUTED / 9 CONNECTIONS <button type="button" data-wl-outcomes>31 CLAIMS ↗</button></div>`;
+      <div class="wl-compact-foot">3 ROUTED / 9 CONNECTIONS · OCT 24 ARCHIVE <button type="button" data-wl-outcomes>31 PAST CLAIMS ↗</button></div>`;
     };
     root.addEventListener('click',event=>{
       const target=event.target.closest('button');
