@@ -285,3 +285,15 @@ test('HUD reporter CLI executes rather than silently returning success', () => {
   assert.match(attempt.stderr, /HUD reporting requires a configured HTTPS origin/);
   assert.doesNotMatch(attempt.stdout, /HUD report delivered/);
 });
+
+
+test('Gemini project monitoring is owner-reader-only and never sends inference when not configured',async()=>{
+ const env=environment();
+ for(const token of [null,WRITER]){
+  assert.equal((await handle(request('/api/hud/gemini/project-quota',{token}),env,NOW)).status,401);
+ }
+ const result=await handle(request('/api/hud/gemini/project-quota'),env,NOW);
+ assert.equal(result.status,200);
+ assert.deepEqual(await result.json(),{source:'google_cloud_monitoring',status:'not_configured',models:[]});
+ assert.equal((await handle(request('/api/hud/gemini/project-quota',{method:'POST',body:{}}),env,NOW)).status,405);
+});
