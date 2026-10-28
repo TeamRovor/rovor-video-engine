@@ -285,3 +285,25 @@ test('small-screen rings have responsive widths',()=>{
  assert.match(source,/max-width:380px/);
  assert.match(source,/grid-template-columns:80px minmax\(0,1fr\)/);
 });
+
+test('Mistral cloud minute headers render accurate rings without falsifying account quota',()=>{
+ const daily={period:'24h',request_count:0,usage_coverage:'complete_aggregate',
+  connections:[{provider:'mistral',name:'mistral',connection_count:1,enabled_count:1}],
+  models:[],quota:{records:[]}};
+ const cloud={execution_source:'cloud_provider',observed_at:Date.now(),attempts:[],providers:[{
+  provider:'mistral',admission:'disabled_pending_verification',
+  minute_rate_limits:[{model:'codestral-2508',unit:'tokens',status:'verified',
+   observed_at:Date.now()-1000,used:30,limit:625000,remaining:624970,
+   source:'authenticated_mistral_inference_minute_headers',scope:'model_on_provider_account'}]
+ }]};
+ const html=board().render(daily,true,cloud);
+ assert.match(html,/codestral-2508 · tokens per minute: 30 \/ 625,000 used/);
+ assert.match(html,/Verified Mistral model minute tokens used/);
+ assert.match(html,/reset not reported · never billing proof/);
+ assert.match(html,/Cloud quota and reset: unknown/);
+ assert.equal((html.match(/aria-label="Provider quota unknown"/g)||[]).length,2);
+ cloud.providers[0].minute_rate_limits[0].observed_at=Date.now()-120000;
+ const expired=board().render(daily,true,cloud);
+ assert.match(expired,/Mistral authenticated minute limits: unverified or expired/);
+ assert.doesNotMatch(expired,/Verified Mistral model minute tokens used/);
+});
