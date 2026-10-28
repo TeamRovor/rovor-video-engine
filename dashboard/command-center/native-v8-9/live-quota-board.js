@@ -255,7 +255,7 @@ function reviewPulse(review){
  const count=review.pending.length;
  const latest=review.pending.slice(0,3).map(a=>
   '<li><strong>'+esc(String(a.title||a.task_id||'Untitled').slice(0,90))+'</strong><span>'+
-  esc(String(a.employee||'Unassigned').slice(0,32))+' · '+esc(prettyTime(a.started_at))+'</span></li>').join('');
+  esc(String(a.employee||'Unassigned').slice(0,32))+' · '+esc(prettyTime(new Date(a.started_at).toISOString()))+'</span></li>').join('');
  return '<p class="rvq-review-status">'+fmt(count)+' returned cloud receipt'+(count===1?'':'s')+
   ' awaiting PASS / FAIL'+(count?' · latest three below':'')+
   '. This sample is not the complete private owner queue.</p>'+
