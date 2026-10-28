@@ -661,10 +661,6 @@ const css=`
 #rovor-workload-popup .rvq-overview-rings{display:flex;justify-content:center;align-items:flex-start;gap:7px;flex-wrap:wrap}
 #rovor-workload-popup .rvq-overview-ring-group{display:flex;flex-direction:column;align-items:center;gap:5px}
 #rovor-workload-popup .rvq-ring-label{color:#a9cde7;font:700 9px/1.25 system-ui;letter-spacing:.04em}
-#rovor-workload-popup .rvq-overview .rvq-ring-traffic{width:48px;height:48px;opacity:.84}
-#rovor-workload-popup .rvq-overview .rvq-ring-traffic:before{inset:7px}
-#rovor-workload-popup .rvq-overview .rvq-ring-traffic .rvq-ring-core strong{font-size:11px}
-#rovor-workload-popup .rvq-overview .rvq-ring-traffic .rvq-ring-core small{font-size:6px}
 #rovor-workload-popup .rvq-overview-tile:hover,#rovor-workload-popup .rvq-overview-tile:focus-visible{border-color:#b9eaff;outline:2px solid #87c9fa;outline-offset:1px;background:#103b60}
 #rovor-workload-popup .rvq-overview-drill{color:#a9dfff;font:700 10px/1.35 system-ui;letter-spacing:.05em;margin-top:auto}
 #rovor-workload-popup .rvq-source-notes{margin-top:12px;color:#9bc4dd;font:11px/1.55 system-ui}
@@ -713,6 +709,10 @@ const css=`
 #rovor-workload-popup .rvq-overview .rvq-ring:before{inset:9px}
 #rovor-workload-popup .rvq-overview .rvq-ring-core strong{font-size:12px}
 #rovor-workload-popup .rvq-overview .rvq-ring-core small{font-size:9px}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic{width:48px;height:48px;opacity:.84}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic:before{inset:7px}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic .rvq-ring-core strong{font-size:11px}
+#rovor-workload-popup .rvq-overview .rvq-ring-traffic .rvq-ring-core small{font-size:6px}
 #rovor-workload-popup .rvq-overview .rvq-ring-unknown .rvq-ring-core strong{font-size:18px}
 #rovor-workload-popup .rvq-overview-source{color:#91c3dd;font:700 10px/1.3 system-ui;letter-spacing:.03em;overflow-wrap:anywhere}
 @media(max-width:1150px){#rovor-workload-popup .rvq-overview{grid-template-columns:repeat(3,minmax(0,1fr))}}
