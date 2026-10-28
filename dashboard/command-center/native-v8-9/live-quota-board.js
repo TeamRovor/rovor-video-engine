@@ -586,6 +586,11 @@ function localEmployeeSection(workforce,live){
 const css=`
 #rovor-workload-popup .rvq-review-entry{display:grid;gap:7px;margin:0 0 14px;padding:12px 14px;border:1px solid rgba(99,183,227,.45);border-radius:9px;background:rgba(6,36,65,.75);color:#b0d7ea;font:12px/1.45 system-ui}
 #rovor-workload-popup .rvq-review-entry strong{color:#e1f7ff;font-size:12px}
+#rovor-workload-popup .rvq-review-sample{list-style:none;display:grid;gap:7px;padding:0;margin:4px 0}
+#rovor-workload-popup .rvq-review-sample li{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;padding:9px 10px;border:1px solid rgba(106,181,231,.26);background:rgba(19,68,102,.3)}
+#rovor-workload-popup .rvq-review-sample strong{font-size:11px;color:#e5f8ff}
+#rovor-workload-popup .rvq-review-sample span{font-size:10px;color:#a9d4eb}
+#rovor-workload-popup .rvq-review-status{color:#d5edfa}
 #rovor-workload-popup .rvq-review-entry p{margin:0}
 #rovor-workload-popup .rvq-review-entry a{color:#77d5ff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 
@@ -789,6 +794,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
    Math.abs(Date.now()-cloud.observed_at)<=15000&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
  const cloudProviders=cloudFresh?new Map(cloud.providers.filter(p=>p&&typeof p.provider==='string').map(p=>[p.provider,p])):new Map();
  const cloudAttempts=cloudFresh&&Array.isArray(cloud.attempts)&&cloud.attempts.length<=500?cloud.attempts:[];
+ const review=reviewSample(cloudAttempts,cloudFresh);
  // When the Mac is off, cloud provider credentials and past gateway inventory
  // remain distinguishable: this is NOT a live Mac connection.
  const connections=Array.isArray(data?.connections)?data.connections:
@@ -823,10 +829,10 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
- '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
+ '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length):'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
  summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
  (slots.length?(attentionCount?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
- '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+
+ '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
  '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
  '<div id="rvq-team">'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+'</div>'+
