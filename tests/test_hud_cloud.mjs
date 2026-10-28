@@ -5,6 +5,7 @@ import {spawnSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import worker, {handle, latest, sanitize} from '../integrations/hud-cloud/worker.mjs';
 import {publishOnce, validateTarget, isAllowedLocalReadPath} from '../tools/hud_telemetry_publisher.mjs';
+import {HUD_PROVIDERS, reduceCallLogs} from '../tools/hud_provider_usage.mjs';
 
 const NOW = Date.parse('2026-10-24T20:00:00Z');
 const WRITER = 'w'.repeat(48), READER = 'r'.repeat(48);
@@ -151,13 +152,17 @@ test('read-only MCP returns evidence and staleness without dispatch tools', asyn
 test('publisher uses only pinned HTTPS ingest, no cookies or redirects, exact evidence', async () => {
   const sent = [];
   await publishOnce({origin: 'https://hud.example', token: WRITER, collect: async p => sample(p), workers: async () => sample().workforce,
-    send: async (url, options) => { sent.push({url, options}); return new Response('{}'); }});
+    send: async (url, options) => { sent.push({url, options}); return Response.json({accepted: true}); }});
   assert.equal(sent.length, 4);
   for (const {url, options} of sent) {
     assert.equal(url, 'https://hud.example/api/hud/ingest'); assert.equal(options.redirect, 'error');
     assert.equal(options.headers.Authorization, 'Bearer ' + WRITER); assert.equal(JSON.parse(options.body).snapshot_at, sample().snapshot_at);
   }
   for (const value of ['http://hud.example', 'https://hud.example/#secret', 'https://a:b@hud.example', 'https://hud.example/path', 'https://hud.example/?token=secret']) assert.throws(() => validateTarget(value));
+});
+test('publisher rejects duplicate or malformed successful acknowledgments', async () => {
+  for (const body of [{accepted: false}, {}]) await assert.rejects(publishOnce({origin: 'https://hud.example', token: WRITER,
+    collect: async p => sample(p), workers: async () => sample().workforce, send: async () => Response.json(body)}), /cloud_report_unconfirmed/);
 });
 test('publisher stops after rejection, does not retry or call models within one cycle', async () => {
   let sends = 0;
@@ -192,10 +197,25 @@ test('persistent reporter admits cached provider-limit reads, never inference pa
   assert.equal(isAllowedLocalReadPath('/api/providers'), true);
   assert.equal(isAllowedLocalReadPath('/api/usage/provider-limits'), true);
   assert.equal(isAllowedLocalReadPath('/api/usage/analytics?range=all'), true);
+  assert.equal(isAllowedLocalReadPath('/api/usage/call-logs?limit=100'), true);
   for (const path of ['/v1/chat/completions', '/api/usage/provider-limits/refresh',
     '/api/providers/write', '/api/usage/provider-limits?refresh=true']) {
     assert.equal(isAllowedLocalReadPath(path), false, path);
   }
+});
+
+test('durable request usage survives authenticated Worker persistence and readback', async () => {
+  const env = environment(), d = sample();
+  d.request_usage = reduceCallLogs(HUD_PROVIDERS.map(provider => ({provider, isActive: true})), [
+    {id: 'readback-1', timestamp: new Date(NOW - 1000).toISOString(), provider: 'gemini', model: 'gemini-2.5-flash', status: 200, tokensIn: 11, tokensOut: 7}
+  ], {now: NOW});
+  assert.doesNotThrow(() => sanitize(d, NOW));
+  assert.equal((await ingest(env, d)).status, 200);
+  const status = await (await handle(request('/api/hud/status?period=24h'), env, NOW)).json();
+  const gemini = status.snapshot.request_usage.providers.find(p => p.provider === 'gemini');
+  assert.equal(gemini.attempts_pacific_day, 1);
+  assert.equal(gemini.input_tokens_recorded_pacific_day, 11);
+  assert.equal(gemini.models[0].model_id, 'gemini-2.5-flash');
 });
 
 test('private HUD retains authenticated cached quota limits and recomputes percent', async () => {

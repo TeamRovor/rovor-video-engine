@@ -10,6 +10,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {spawn,spawnSync,execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {reduceProviderQuota} from './hud_verified_quota.mjs';
+import {createCallLogCollector} from './hud_provider_usage.mjs';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const ID=/^[a-zA-Z0-9][a-zA-Z0-9._:/+@-]{0,199}$/;
@@ -86,11 +87,12 @@ export function normalizeOwned(providers,analytics,options={}){
   // Provider-authoritative cached limits are keyed by LIVE connection ID only.
   // No limit or reset time is fabricated from historical requests or model names.
   all.quota=reduceProviderQuota(providers,options.quotaDocument,{now:options.now??Date.now()});
+  all.request_usage=options.requestUsage??null;
   return all;
 }
 
 export function createCollector(read,{clock=Date.now}={}){
-  const cache=new Map(),pending=new Map();let inventory=null,inventoryAt=0,quotaDocument=null,quotaAt=0;
+  const cache=new Map(),pending=new Map(),readCallLogs=createCallLogCollector(read,{clock});let inventory=null,inventoryAt=0,quotaDocument=null,quotaAt=0;
   return async period=>{
     if(!WINDOWS[period])throw Error('period_invalid');const now=clock();
     if(cache.has(period)&&now-cache.get(period).fetched<5000)return cache.get(period).value;
@@ -100,10 +102,11 @@ export function createCollector(read,{clock=Date.now}={}){
       const end=new Date(Math.floor(now/5000)*5000).toISOString(),start=new Date(Date.parse(end)-WINDOWS[period]).toISOString();
       // Explicit moving boundaries avoid OmniRoute's 60-second analytics cache.
       const usage=await read('/api/usage/analytics?range=all&startDate='+encodeURIComponent(start)+'&endDate='+encodeURIComponent(end));
+      const requestUsage=await readCallLogs(inventory.connections);
       // Cached quota read is optional: lack of provider evidence must not break
       // historical usage or force outbound inference/refresh requests.
       if(!quotaAt||now-quotaAt>=60000){quotaAt=now;try{quotaDocument=await read('/api/usage/provider-limits');}catch{quotaDocument=null;}}
-      const value=normalizeOwned(inventory,usage,{period,now:clock(),start,end,quotaDocument});cache.set(period,{fetched:clock(),value});return value;
+      const value=normalizeOwned(inventory,usage,{period,now:clock(),start,end,quotaDocument,requestUsage});cache.set(period,{fetched:clock(),value});return value;
     })();pending.set(period,task);try{return await task;}finally{pending.delete(period);}
   };
 }
@@ -170,7 +173,7 @@ async function installedReader(){
     const p=spawnSync('/usr/bin/security',['find-generic-password','-s','rovordigital.omniroute.endpoint','-w'],{encoding:'utf8',timeout:5000});if(p.status===0)endpointKey=p.stdout.trim();
   }
   return async resource=>{
-    if(resource!=='/api/providers'&&resource!=='/api/usage/provider-limits'&&!resource.startsWith('/api/usage/analytics?'))throw Error('read_path_denied');
+    if(resource!=='/api/providers'&&resource!=='/api/usage/provider-limits'&&!resource.startsWith('/api/usage/analytics?')&&!resource.startsWith('/api/usage/call-logs?'))throw Error('read_path_denied');
     const headers={'Accept':'application/json',[CLI_TOKEN_HEADER]:token};if(endpointKey)headers.Authorization='Bearer '+endpointKey;
     const r=await fetch('http://127.0.0.1:20128'+resource,{headers,redirect:'error',signal:AbortSignal.timeout(8000)});
     if(!r.ok)throw Error('gateway_read_failed');
