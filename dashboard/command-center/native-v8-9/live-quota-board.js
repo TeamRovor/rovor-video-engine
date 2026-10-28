@@ -315,6 +315,23 @@ const MISTRAL_OWNER_LIMITS=[
  ['mistral-small-2603',20000,1.00],
  ['mistral-large-4',20000,0.83]
 ];
+// Groq screenshot supplied by the owner on Oct 27, 2026: organization
+// BASE limits, not a current-project override or live remaining balance.
+// Do not treat this reference as billing or fresh authenticated quota telemetry.
+const GROQ_OWNER_BASE_LIMITS=Object.freeze({
+ model:'openai/gpt-oss-20b',rpm:30,rpd:1000,tpm:8000,tpd:200000
+});
+function groqLimitReferences(provider){
+ if(provider!=='groq')return '';
+ const q=GROQ_OWNER_BASE_LIMITS;
+ return '<section class="rvq-mistral-reference" aria-label="Owner-supplied Groq organization base rate limits">'+
+  '<strong>GROQ · ORGANIZATION BASE LIMITS (OWNER SNAPSHOT)</strong>'+
+  '<p>Observed October 27, 2026 · Model '+esc(q.model)+
+  '. Per-project overrides may differ. These are capacity ceilings, not live consumed/remaining or an authenticated quota observation.</p>'+
+  '<table><thead><tr><th>Requests/min</th><th>Requests/day</th><th>Tokens/min</th><th>Tokens/day</th></tr></thead><tbody>'+
+  '<tr><td>'+fmt(q.rpm)+'</td><td>'+fmt(q.rpd)+'</td><td>'+fmt(q.tpm)+'</td><td>'+fmt(q.tpd)+'</td></tr></tbody></table>'+
+  '<p>The live request/token figures above include only observed OmniRoute traffic; other account usage is not measured. No verified remaining-quota percentage or reset is asserted.</p></section>';
+}
 function mistralLimitReferences(provider,activity){
  if(provider!=='mistral')return '';
  const recorded=activity?.models||[];
@@ -343,7 +360,7 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute)
  const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
  return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
- '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
+ '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
 }
 
 // Nine-provider glance cards are a visualization of one explicitly labeled
@@ -417,6 +434,11 @@ function localEmployeeSection(workforce,live){
   '<ul class="rvq-staff-list">'+rows+'</ul></section>';
 }
 const css=`
+#rovor-workload-popup .rvq-review-entry{display:grid;gap:7px;margin:0 0 14px;padding:12px 14px;border:1px solid rgba(99,183,227,.45);border-radius:9px;background:rgba(6,36,65,.75);color:#b0d7ea;font:12px/1.45 system-ui}
+#rovor-workload-popup .rvq-review-entry strong{color:#e1f7ff;font-size:12px}
+#rovor-workload-popup .rvq-review-entry p{margin:0}
+#rovor-workload-popup .rvq-review-entry a{color:#77d5ff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+
 #rovor-workload-popup .rvq-board{margin:8px 0 20px!important;padding:20px!important;background:linear-gradient(160deg,rgba(4,24,47,.96),rgba(2,12,28,.96))!important;border:1px solid rgba(79,169,221,.36)!important;border-radius:15px!important;color:#e6f6ff}
 #rovor-workload-popup .rvq-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:17px}
 #rovor-workload-popup .rvq-eyebrow{color:#7bcaff;font:600 10px system-ui;letter-spacing:.18em}
@@ -618,6 +640,9 @@ function render(data,live,cloud=null,hourly=null,minute=null){
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Each connection shows independently labeled Mac request activity and quota/reset evidence. Traffic share is not remaining quota or proof of an employee executing.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':'REPORT DISCONNECTED')+'</span></div>'+
  (slots.length?'<div class="rvq-overview" aria-label="Nine-provider quota overview">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
+ '<div class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+
+ '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
+ '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
  '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts,providerActivity(activity,s.group.provider),providerActivity(hourActivity,s.group.provider),providerActivity(minuteActivity,s.group.provider))).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+
  '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Mac traffic percentages are shares of recorded provider requests, NOT quota usage. Local quota rings are cached gateway limits; separate cloud quota rings require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
 }

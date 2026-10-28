@@ -464,3 +464,22 @@ test('Mistral per-model minute evidence appears only while fresh; missing migrat
  current=await s.ops.status(s.env);
  assert.deepEqual(current.providers.find(p=>p.provider==='mistral').minute_rate_limits,[]);
 });
+
+
+test('owner review UI exposes an actionable quick queue, loads output before enabling PASS or FAIL',async()=>{
+ const s=setup();await completed(s);
+ const page=await (await s.ops.fetch(request('/'),s.env)).text();
+ assert.match(page,/rovor-review-quick/);
+ assert.match(page,/OWNER PASS \/ FAIL REVIEWS/);
+ assert.match(page,/pending\.slice\(0,3\)/);
+ assert.match(page,/VIEW OUTPUT TO ENABLE PASS \/ FAIL/);
+ assert.match(page,/controls\.hidden=true/);
+ assert.match(page,/controls\.hidden=false/);
+ assert.match(page,/\/api\/ghost\/jobs\//);
+ assert.match(page,/\/api\/ghost\/review/);
+ // The same-origin Sec-Fetch-Site check is server-side; exercise it below.
+ assert.equal((await s.ops.fetch(request('/api/ghost/review',{
+  body:{job_id:j.id,verdict:'passed'},browser:false
+ }),s.env)).status,403);
+ assert.equal(s.db.prepare("SELECT human_review FROM ghost_cloud_attempts").get().human_review,'not_recorded');
+});
