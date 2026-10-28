@@ -53,7 +53,7 @@ export function hasNineProviderMeterAsset(js) {
     'rvq-overview-tile',
     'rvq-observed-model',
     'QUOTA UNKNOWN',
-    'function render(data,live,cloud=null)'
+    'function render(data,live,cloud=null'
   ].every(marker => js.includes(marker));
 }
 
