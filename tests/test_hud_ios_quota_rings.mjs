@@ -101,6 +101,62 @@ test('no fabricated zero requests when 24-hour completeness is absent',()=>{
  assert.match(html,/Mac requests unverified/);
  assert.doesNotMatch(html,/percent of recorded Mac requests/);
 });
+
+test('all nine enabled providers show real gateway traffic and observed routed models',()=>{
+ const rows=providers.map(provider=>({provider,name:provider,connection_count:1,enabled_count:1}));
+ const models=[
+   {provider:'openrouter',name:'cohere/north-mini-code:free',requests:41,tokens:140957},
+   {provider:'openrouter',name:'nvidia/nemotron-3.5-super-vl:free',requests:7,tokens:20812},
+   {provider:'mistral',name:'devstral-latest',requests:1,tokens:0},
+   {provider:'groq',name:'openai/gpt-oss-120b',requests:1,tokens:108},
+   {provider:'cloudflare-ai',name:'qwen2.5-coder-32b-instruct',requests:1,tokens:36}
+ ];
+ const data={source:'local_omniroute_read_only_bridge',period:'24h',
+   snapshot_at:new Date().toISOString(),usage_coverage:'complete_aggregate',
+   request_count:51,connections:rows,
+   connection_slots:rows.map(({provider})=>({provider,account_slot:1,enabled:true})),
+   models,quota:{records:[]}};
+ const html=board().render(data,true);
+ assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
+ assert.equal((html.match(/class="rvq-overview-tile"/g)||[]).length,9);
+ assert.equal((html.match(/class="rvq-observed-model"/g)||[]).length,5);
+ assert.match(html,/cohere\/north-mini-code:free/);
+ assert.match(html,/nvidia\/nemotron-3\.5-super-vl:free/);
+ assert.match(html,/41 requests/);
+ assert.match(html,/140,957 reported tokens/);
+ assert.match(html,/85\.4% of this gateway provider's requests/);
+ assert.match(html,/No recorded model requests through Cohere/);
+ assert.match(html,/No recorded model requests through NVIDIA NIM/);
+ assert.equal((html.match(/aria-label="Provider quota unknown"/g)||[]).length,18);
+ // OpenRouter-routed upstream Cohere/NVIDIA models are not direct Cohere/NVIDIA key usage.
+ assert.match(html,/upstream names do not establish direct account usage/);
+});
+
+test('incomplete model analytics show neither made-up per-model activity nor false zero',()=>{
+ const data={source:'local_omniroute_read_only_bridge',period:'24h',
+   request_count:20,usage_coverage:'partial_top_50_or_unattributed',
+   connections:[{provider:'groq',name:'groq',connection_count:1,enabled_count:1}],
+   models:[{provider:'groq',name:'gpt-oss-120b',requests:3,tokens:10}],
+   quota:{records:[]}};
+ const html=board().render(data,true);
+ assert.match(html,/MODEL REQUESTS · gateway aggregate unverified/);
+ assert.equal((html.match(/class="rvq-observed-model"/g)||[]).length,0);
+ assert.doesNotMatch(html,/3 requests/);
+});
+
+test('recorded model names are escaped and percent is never fabricated as quota',()=>{
+ const data={source:'local_omniroute_read_only_bridge',period:'24h',
+   request_count:2,usage_coverage:'complete_aggregate',
+   connections:[{provider:'openrouter',name:'openrouter',connection_count:1,enabled_count:1}],
+   models:[{provider:'openrouter',name:'<img src=x onerror=alert(1)>',requests:2,tokens:20}],
+   quota:{records:[]}};
+ const html=board().render(data,true);
+ assert.doesNotMatch(html,/<img src=x/);
+ assert.match(html,/&lt;img src=x onerror=alert\(1\)&gt;/);
+ assert.match(html,/percent of OpenRouter recorded requests/);
+ assert.match(html,/QUOTA UNKNOWN/);
+});
+
 test('small-screen rings have responsive widths',()=>{
  assert.match(source,/max-width:380px/);
  assert.match(source,/grid-template-columns:80px minmax\(0,1fr\)/);

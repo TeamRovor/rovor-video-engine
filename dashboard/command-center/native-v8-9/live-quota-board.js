@@ -24,7 +24,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const fmt=n=>typeof n==='number'&&Number.isFinite(n)?n.toLocaleString():'—';
 const pretty=s=>{
  const key=String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
- return ({google:'Google AI Studio',gemini:'Gemini',groq:'Groq',nvidia:'NVIDIA NIM',openrouter:'OpenRouter',mistral:'Mistral',cloudflare:'Cloudflare Workers AI',cloudflareworkersai:'Cloudflare Workers AI',sambanova:'SambaNova',cohere:'Cohere',huggingface:'Hugging Face'})[key]||String(s||'Provider').replace(/[-_]/g,' ');
+ return ({google:'Google AI Studio',gemini:'Gemini',groq:'Groq',nvidia:'NVIDIA NIM',openrouter:'OpenRouter',mistral:'Mistral',cloudflare:'Cloudflare Workers AI',cloudflareworkersai:'Cloudflare Workers AI',cloudflareai:'Cloudflare Workers AI',sambanova:'SambaNova',cohere:'Cohere',huggingface:'Hugging Face'})[key]||String(s||'Provider').replace(/[-_]/g,' ');
 };
 const prettyTime=s=>{
  const t=Date.parse(s||'');if(!Number.isFinite(t))return 'Not reported';
@@ -228,9 +228,13 @@ function macActivity(data,live){
       !Number.isSafeInteger(model.tokens)||model.tokens<0)return null;
    total+=model.requests;
    if(!Number.isSafeInteger(total))return null;
-   const old=groups.get(model.provider)||{requests:0,tokens:0};
+   const old=groups.get(model.provider)||{requests:0,tokens:0,models:[]};
    old.requests+=model.requests;old.tokens+=model.tokens;
    if(!Number.isSafeInteger(old.requests)||!Number.isSafeInteger(old.tokens))return null;
+   // Preserve the gateway's actual routed model name. Model names can have
+   // upstream-provider prefixes even when the billed gateway is OpenRouter.
+   old.models.push({name:String(model.name||model.id||'Model unreported').slice(0,160),
+     requests:model.requests,tokens:model.tokens});
    groups.set(model.provider,old);
  }
  // Partial, inconsistent or mismatched aggregates must never produce fake
@@ -240,16 +244,32 @@ function macActivity(data,live){
 }
 function providerActivity(activity,provider){
  if(!activity)return null;
- const found=activity.groups.get(provider)||{requests:0,tokens:0};
+ const found=activity.groups.get(provider)||{requests:0,tokens:0,models:[]};
  return {...found,share:activity.total?100*found.requests/activity.total:0};
 }
 function activityLabel(activity,live){
  if(!live||!activity)return '<div class="rvq-activity rvq-unreported">MAC 24H REQUESTS · not currently verified</div>';
  return '<div class="rvq-activity">MAC 24H PROVIDER TOTAL · <strong>'+fmt(activity.requests)+
-   ' requests</strong> · '+fmt(activity.tokens)+' reported tokens'+
+   ' request'+(activity.requests===1?'':'s')+'</strong> · '+fmt(activity.tokens)+' reported tokens'+
    '<span>Per-provider aggregate; not an account-slot counter or remaining quota</span></div>';
 }
 
+// Recorded model traffic is independently measured. These percentages show
+// only relative request activity *inside this gateway provider*, never upstream
+// free-tier quota or individual OmniRoute account/key usage.
+function modelActivity(activity,provider){
+ if(!activity)return '<div class="rvq-model-activity rvq-activity-unverified">MODEL REQUESTS · gateway aggregate unverified</div>';
+ if(!activity.models.length)return '<div class="rvq-model-activity"><strong>RECORDED MODELS / 24H</strong><p>No recorded model requests through '+esc(pretty(provider))+' in this complete 24-hour aggregate.</p></div>';
+ const list=activity.models.slice().sort((a,b)=>b.requests-a.requests||a.name.localeCompare(b.name)).map(m=>{
+   const pct=activity.requests?100*m.requests/activity.requests:0;
+   const formatted=pct.toFixed(1);
+   return '<li class="rvq-observed-model"><div class="rvq-observed-model-top"><span>'+esc(m.name)+'</span><strong>'+fmt(m.requests)+' request'+(m.requests===1?'':'s')+'</strong></div>'+
+     '<div class="rvq-track" role="progressbar" aria-label="Recorded model request share within '+esc(pretty(provider))+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+formatted+'" aria-valuetext="'+formatted+' percent of '+esc(pretty(provider))+' recorded requests"><i style="width:'+formatted+'%"></i></div>'+
+     '<div class="rvq-observed-model-meta">'+fmt(m.tokens)+' reported tokens · '+formatted+'% of this gateway provider\'s requests</div></li>';
+ }).join('');
+ return '<div class="rvq-model-activity"><strong>RECORDED MODELS / 24H</strong><p>Observed gateway model traffic; upstream names do not establish direct account usage or remaining quota.</p>'+
+   '<ul class="rvq-observed-models">'+list+'</ul></div>';
+}
 function card(group,quota,live,index,slot,cloud,attempts,activity){
  const entries=live&&slot.enabled!==false?quota.filter(q=>q.provider===group.provider&&q.account_slot===slot.account_slot&&
    (!q.reset_at||Date.parse(q.reset_at)>Date.now())):[];
@@ -260,7 +280,7 @@ function card(group,quota,live,index,slot,cloud,attempts,activity){
  const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
  return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
- '<div class="rvq-provider-content">'+activityLabel(activity,live)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
+ '<div class="rvq-provider-content">'+activityLabel(activity,live)+modelActivity(activity,group.provider)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
 }
 
 // Nine-provider glance cards are a visualization of one explicitly labeled
@@ -288,7 +308,7 @@ function overviewSlot(slot,quota,live,cloud,index,activity){
    // Unknown account quota remains a separate visible ring; never present traffic as quota.
    '<div class="rvq-overview-rings">'+(activity?traffic+usageRing(pct,evidence+' for '+name):usageRing(pct,evidence+' for '+name))+'</div>'+
    '<span class="rvq-overview-source">'+evidence+'</span>'+
-   '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac requests / 24h':'Mac requests unverified')+'</span></div>';
+   '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span></div>';
 }
 function dispatchInfo(workforce,live){
  const d=live?workforce?.dispatch:null;
@@ -393,7 +413,7 @@ const css=`
 #rovor-workload-popup .rvq-job-title{margin:5px 0;color:#e3f6ff;font-weight:600;overflow-wrap:anywhere}
 #rovor-workload-popup .rvq-job-meta{color:#9abed3;font-size:10px;overflow-wrap:anywhere}
 
-/* Compact iOS-style activity rings: model quota only, never request share. */
+/* Compact iOS-style rings: gateway request share and verified quota are distinct. */
 #rovor-workload-popup .rvq-ring-layout,#rovor-workload-popup .rvq-cloud-ring-layout{display:grid;grid-template-columns:96px minmax(0,1fr);gap:13px;align-items:center}
 #rovor-workload-popup .rvq-ring{--rvq-angle:0%;position:relative;display:grid;place-items:center;width:96px;height:96px;border-radius:50%;flex:none;background:conic-gradient(from -90deg,#69d8ff 0 var(--rvq-angle),#183c59 var(--rvq-angle) 100%);box-shadow:0 0 0 1px rgba(116,207,250,.3),0 0 15px rgba(46,143,211,.15)}
 #rovor-workload-popup .rvq-ring:before{content:"";position:absolute;inset:11px;border-radius:50%;background:#071e35;box-shadow:inset 0 0 0 1px rgba(111,182,223,.2)}
@@ -420,6 +440,15 @@ const css=`
 #rovor-workload-popup .rvq-activity strong{color:#e6faff}
 #rovor-workload-popup .rvq-activity span{display:block;color:#8ba9bc;font:10px/1.4 system-ui;letter-spacing:0}
 #rovor-workload-popup .rvq-activity.rvq-unreported{color:#8ba9bc}
+#rovor-workload-popup .rvq-model-activity{margin:11px 0 3px;padding:12px 0;border-bottom:1px solid rgba(110,181,217,.16);font:11px/1.5 system-ui;color:#9bc6dc}
+#rovor-workload-popup .rvq-model-activity>strong{font:700 10px system-ui;letter-spacing:.1em;color:#a7e5ff}
+#rovor-workload-popup .rvq-model-activity>p{margin:6px 0 9px;color:#9bbbd0}
+#rovor-workload-popup .rvq-observed-models{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:12px}
+#rovor-workload-popup .rvq-observed-model{min-width:0}
+#rovor-workload-popup .rvq-observed-model-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px;color:#d8f2ff;font:600 11px/1.5 system-ui;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-observed-model-top>strong{white-space:nowrap;color:#a9d7ef}
+#rovor-workload-popup .rvq-observed-model .rvq-track{height:7px;margin:5px 0}
+#rovor-workload-popup .rvq-observed-model-meta{color:#8fb6cd;font:10px/1.4 system-ui}
 #rovor-workload-popup .rvq-overview-name{color:#d8f2ff;font:700 10px/1.35 system-ui;min-height:28px;max-width:100%;overflow-wrap:anywhere}
 #rovor-workload-popup .rvq-overview .rvq-ring{width:47px;height:47px}
 #rovor-workload-popup .rvq-overview .rvq-ring:before{inset:8px}
