@@ -91,7 +91,8 @@ test('each of nine connection slots renders separately even when providers repea
   assert(!html.includes('apiKey'));
   const offline=window.ROVOR_QUOTA_BOARD.render({connections,connection_slots:slots},false);
   assert.equal((offline.match(/class="rvq-provider"/g)||[]).length,9);
-  assert.match(offline,/REPORT DISCONNECTED/);
+  // Missing fresh Mac telemetry is not evidence that any individual provider went offline.
+  assert.match(offline,/MAC REPORT STALE/);
   assert(!offline.includes('20.0%'));
   const legacy=window.ROVOR_QUOTA_BOARD.render({connections,quota},true);
   assert.match(legacy,/ENABLEMENT UNKNOWN/);
