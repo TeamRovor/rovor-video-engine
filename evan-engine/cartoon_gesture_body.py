@@ -74,7 +74,7 @@ class CartoonNeckBody(CartoonFVBody):
         from speech_planner import planned_weights
         from cartoon_head import SYMBOLS
         w=planned_weights(t,plan,plan['fallbackCues']);delta=sum(float(v)*(self.head.geometry[s][8]-393) for s,v in zip(SYMBOLS,w))
-        head,neck=split_head_neck(self.head.at(t,plan),delta)
+        head,neck=split_head_neck(self.head.at(t,plan),delta,trim_left_stub=getattr(self,'trim_left_neck_stub',False))
         self._neck_layer=self.draw_neck(neck,controls.get('head',0),delta)
         head=head.resize((round(512*SCALE),round(512*SCALE)),Image.Resampling.LANCZOS);layer=Image.new('RGBA',(1464,1536));layer.alpha_composite(head,(int(TRANSLATE[0])+220,int(TRANSLATE[1])))
         return layer.rotate(controls.get('head',0),Image.Resampling.BICUBIC,center=(PIVOT[0]+220,PIVOT[1]))

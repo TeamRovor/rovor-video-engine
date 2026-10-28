@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current bounded fix: original neck fringe ownership
+CARTOON-EVAN-COLLAR-OWNERSHIP.md / evan-engine/reviews/collar-ownership-v1.json; outputs/evan-cartoon-collar-ownership/Review.html. Frame374held fullstage exactly calibrated; individualhead/neck/torso3xnative sheets identify a dangling ORIGINAL neck edge in headplane x208..213belowjaw. Split ownership formerly starts214. Torso collar is separate, not source of that tail.
+
+Opt-in trim_left_stub extends onlyHEADalpha cut6pxleft, retaining neckmask/RGB/sourceplates. Bodyflag trim_left_neck_stub defaultsfalse. Pilots353/374/396fullbaseline exact; after changes23/38/32stagepixels, allneck/torso/armlayers and nativeoraljaw/audit exact. Inspected3native120x140joinpairs at3xnearest plus1280x720heldcandidate. Lower tail reduced; uppercollar/jaw contour remains.10neck/payofftests passed(1newpreservationtest withopaquefringe fixture,3jawoffsets). No correctedmotion/fullfilm acceptance yet. Frozen work/collar-ownership-review/{trace,candidate}.py and Source-Manifest.json. NO pending jobs.
+
+NEXT: render2s15–17s correction component with actualseparatedface/trimflag/payoff_controls. Require48/192decode, allnativejoinpairs, exactPCM240000:27200032000samples, oraljaw andnecktorsolayer preservation/sourcehashes. Later fullspeech evaluation must cover532frames(allpose trim), notonly60payoff; preserve20closing and18timingflags. No extraacting/art/timing variant. Fullfilm stays payoff-continuous; automation active/polished NOTready.
+
 ## Current complete review: small-detail attitude integrated
 CARTOON-EVAN-PAYOFF-CONTINUOUS.md / evan-engine/reviews/payoff-continuous-v1.json; outputs/evan-cartoon-payoff-continuous/Review.html. Workers68712(component) and55490(fullintegration)COMPLETED. NO pending jobs. Current branch development/evan-painted-rig only; polished milestone NOT ready.
 
@@ -14,7 +21,7 @@ Component14–17.25s:78frames/60updated345..404+18offcuePNGcopies, normal3.25s/s
 
 Fullfilm reuses60component frames; other492PNGs byte-exact to definition-continuous including20closing and earlierdefinitionbrows. Normal23s/slow92s decode552/2208. All552hashes, source/film digests and byte-exactfullWAV verified; AAC368000samples16k lossy. All18markers matchcurrent acousticplan,0cleared. Inspected22overview inclcueboundaries/final551, normal345/353/374/404/540 andslow1496/1616at1280x720. Rigidtorso/fixedfingers/sunglasses/limitedface and unaccepted independentlistening/realtimeacting still prevent polishedclaims. Frozen work/payoff-continuous-review/build.py and Source-Manifest.json.
 
-NEXT: trace existing small left-collar nib atframe374 through individual head/neck/torso source planes, alpha and compositing atbaseline/heldtilt. Determine duplicatedink vs intendedcollaredge BEFORE editing. Preserve nativeoral targets/sourceplates; no extraacting/camera/artwork/retiming variant absent defect. Automation stays active.
+The planned source-ownership trace identified the fringe and opt-in pilot correction above.
 
 ## Previous complete candidate: explanatory brows integrated
 CARTOON-EVAN-DEFINITION-CONTINUOUS.md / evan-engine/reviews/definition-continuous-v1.json; outputs/evan-cartoon-definition-continuous/Review.html. Worker5341COMPLETED/no pending jobs. Reused114reviewed frame235..348 PNGs from component, other438byte-exact to filtered-continuous including20closing. No rerender, new source art, retiming or default change.

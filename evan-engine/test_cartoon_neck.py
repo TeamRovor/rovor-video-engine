@@ -3,10 +3,26 @@ import unittest
 import numpy as np
 from PIL import Image
 from cartoon_body import ROOT
-from cartoon_neck import neck_vertices,TRIANGLES,collar_torso
+from cartoon_neck import neck_vertices,TRIANGLES,collar_torso,split_head_neck
 from painted_character import rotation
 
 class NeckTests(unittest.TestCase):
+    def test_opt_in_stub_trim_preserves_neck_rgb_face_and_other_alpha(self):
+        image=Image.open(ROOT/'head-rig-v2/head-X.png').convert('RGBA')
+        image.putpixel((211,410),(20,15,10,255))
+        original=np.array(image);yy,xx=np.mgrid[:512,:512]
+        removed=0
+        for jaw in (0,11,22):
+            old,neck=map(np.array,split_head_neck(image,jaw))
+            new,new_neck=map(np.array,split_head_neck(image,jaw,True))
+            np.testing.assert_array_equal(new_neck,neck)
+            np.testing.assert_array_equal(new[:,:,:3],old[:,:,:3])
+            outside=(xx<208)|(xx>=214)|(yy<400+jaw)
+            np.testing.assert_array_equal(new[outside],old[outside])
+            self.assertTrue(np.all(new[:,:,3]<=old[:,:,3]))
+            removed+=int((old[:,:,3].astype(int)-new[:,:,3]).sum())
+        self.assertGreater(removed,0)
+        np.testing.assert_array_equal(np.array(image),original)
     def test_collar_base_is_fixed_while_upper_end_follows_head(self):
         for jaw in (0,11,22):
             _,rest=neck_vertices(0,jaw)

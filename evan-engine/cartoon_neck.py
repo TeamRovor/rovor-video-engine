@@ -14,11 +14,13 @@ def jaw_cut(xx,delta=0):
     follow=np.clip((326-xx)/65,0,1)
     return y+delta*follow
 
-def split_head_neck(image,delta=0):
+def split_head_neck(image,delta=0,trim_left_stub=False):
     raw=np.asarray(image).copy();yy,xx=np.mgrid[:512,:512];cut=jaw_cut(xx,delta)
     region=(xx>=214)&(xx<=343)&(yy>=335)
     neck_weight=np.clip((yy-cut+6)/2,0,1)*region
-    head_weight=np.ones((512,512));head_weight[region]=np.clip((cut[region]+5-yy[region])/3,0,1)
+    # The extended neck owns the six-pixel original neck fringe below the jaw.
+    head_region=region|((xx>=208)&(xx<214)&(yy>=335)) if trim_left_stub else region
+    head_weight=np.ones((512,512));head_weight[head_region]=np.clip((cut[head_region]+5-yy[head_region])/3,0,1)
     neck=raw.copy();head=raw.copy();neck[:,:,3]=(raw[:,:,3]*neck_weight).astype('uint8');head[:,:,3]=(raw[:,:,3]*head_weight).astype('uint8')
     return Image.fromarray(head),Image.fromarray(neck)
 
