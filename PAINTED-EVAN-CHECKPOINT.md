@@ -5,6 +5,15 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: v2 eye/glasses edge matte improved; hidden-temple/corner art next
+CARTOON-EVAN-EYE-MATTE-V2.md / evan-engine/reviews/eye-matte-v2.json. Separate eye-underlay-v2/build_cartoon_eye_matte.py retainsv1/rawSHA99a9325ded471a3af89ba33c8657dab641cdafddd6370a7fe20fc02058134bff. No newgeneration. Reusesv1matrix/offset; repair usesalpha>250support(253/254interior; ==255trialonly45pixels discarded), Poissonupperfacepatch13224pixels andtracedtemple-strap hairfill. Rawalphaunchanged. Originalneutralmouth/jawy≥310/outsidepatch exact; original8895coreRGB/materialalpha and1590fractionaledges guarded. Templeinversemapidentityx≥353; continuousscale1→.65with0→25pxlowering. No defaultimports.
+
+13preview+3derivativePNGs rebuildexactly;15selectedcurrent/frozenselectedsources verified. Executed localprototype/repositorybuilder/finalizer frozenSource. Native512light/dark0/12/18/25composites +originaltemplepixeltrace inspected. Broadpaleoldframeboundary/skinfringe reduced. Soft hiddenhairpatch +smalloutercornernotches remain: static/animationacceptanceFALSE. RestisNEWupperfacefoundation, NOTexactv1rest:4910RGBAchanged,max201atchangedinkcrease213/234. NativeSPEECHregistration/eyebrowpreservation untested; onlyneutralmouthpixelsguarded. No newmovie/fullfilm. NO pendingjobs.
+
+Latestfullcandidate remainstorso-continuous;18flags/listening/realtime/polished unresolved. v1source/derivatives/builder/currentfull/default/approved/main/V3/V4/updater/Moho preserved; no merge/deploy; automationACTIVE.
+
+NEXT: onecrisp hidden-temple/sideburnpatch +smallouterframecornercorrection on SAMEv2source/25px/.65geometry. Applyimagegenskill forTARGETEDhiddenhairart ifnewpixelsneeded; preserveeyes/mouth/jaw/originalsources. Inspectnative light/dark rest/loweredcomposites beforeheldnormal/slowdiagnostic. No morewholeheadgeneration/retiming/fullfilmreplacement.
+
 ## Current task: eye source/registered static glasses constructed; moving skin seam rejected
 CARTOON-EVAN-EYE-UNDERLAY.md / evan-engine/reviews/eye-underlay-v1.json. Imagegenskill+built-in generated ONEglasses-free browlessheadsource: eye-underlay-v1/source/glasses-free-v1.png1254x1254RGBA, rawSHA99a9325ded471a3af89ba33c8657dab641cdafddd6370a7fe20fc02058134bff. ExactPrompt.txt/inputroles+hashes Provenance.json besideit. Rawsource/alpha preserved; inspectedfullresolution. Relaxedcartooneyes/identity useful; generatedmouth/skin reinterpretation NOTinstalled. RawplateUNREGISTERED.
 
