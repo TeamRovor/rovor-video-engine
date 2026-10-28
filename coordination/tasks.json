@@ -5923,17 +5923,26 @@
       "id": "hud-quota-slot-label-regression-20261028",
       "title": "Repair obsolete quota coverage label assertion in HUD upgrade PR276",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar HUD upgrade 2026-10-28",
       "branch": "ux/nine-provider-glance-readability-20261028",
       "scopes": [
         "tests/test_hud_ios_quota_rings.mjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-28T08:05:00.851Z",
-      "next_update": "After focused Node regression checks and exact branch readback",
-      "next_action": "Update only obsolete provider label assertion to connection-slot wording, preserving unknown-ring and zero authenticated coverage checks.",
-      "acceptance": "Both focused provider overview and quota-ring suites pass; no production deployment or provider/runtime changes."
+      "updated_at": "2026-10-28T08:05:37.698Z",
+      "next_update": "Complete; existing PR276 release gates remain",
+      "next_action": "Review hosted CI for c829cbe91454593f982390c04e22dc42e46a268a and obtain authenticated source-host access before publishing existing private HUD.",
+      "acceptance": "Both focused provider overview and quota-ring suites pass; no production deployment or provider/runtime changes.",
+      "evidence": [
+        {
+          "commit": "c829cbe91454593f982390c04e22dc42e46a268a",
+          "platform": "macOS / Node local isolated source snapshot",
+          "check": "node --test tests/test_hud_provider_overview_layout.cjs tests/test_hud_ios_quota_rings.mjs",
+          "result": "37 passed; 0 failures. Reproduced previous obsolete label assertion locally and confirmed same failure in GitHub run40646447718. No browser or live deployment verification.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/276"
+        }
+      ]
     }
   ]
 }
