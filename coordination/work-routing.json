@@ -1122,6 +1122,12 @@
       "lane": "delivery",
       "requires": [],
       "objective": "deliver-promised-work"
+    },
+    "hud-quota-slot-label-regression-20261028": {
+      "lane": "efficiency",
+      "requires": [
+        "hosted-ci"
+      ]
     }
   }
 }
