@@ -9,12 +9,12 @@ from cartoon_body import ROOT
 from cartoon_index import IndexRig,smooth
 
 class CurlDigit(IndexRig):
- def __init__(self,name,root=ROOT):
-  folder=root/'digit-curl-v1';meta=json.loads((folder/'manifest.json').read_text());self.joints=np.array(meta['digits'][name]['joints'],np.float32);tip=np.array(meta['digits'][name]['tip']);self.axis=tip-self.joints[0];self.axis/=np.linalg.norm(self.axis);self.normal=np.array([-self.axis[1],self.axis[0]]);self.registration=np.eye(3,dtype=np.float32)
+ def __init__(self,name,root=ROOT,folder_name='digit-curl-v1'):
+  folder=root/folder_name;meta=json.loads((folder/'manifest.json').read_text());self.joints=np.array(meta['digits'][name]['joints'],np.float32);tip=np.array(meta['digits'][name]['tip']);self.axis=tip-self.joints[0];self.axis/=np.linalg.norm(self.axis);self.normal=np.array([-self.axis[1],self.axis[0]]);self.registration=np.eye(3,dtype=np.float32)
   self.image=Image.open(folder/(name+'.png')).convert('RGBA');self.source=np.array(self.image,dtype=np.float32);self.source[:,:,:3]*=self.source[:,:,3:4]/255
   ys,xs=np.where(self.source[:,:,3]>0);points=np.c_[xs,ys]-self.joints[0];ss=points@self.axis;qq=points@self.normal
   self.vertices=np.array([self.joints[0]+self.axis*s+self.normal*q for s in np.linspace(ss.min()-3,ss.max()+3,33)for q in np.linspace(qq.min()-3,qq.max()+3,9)],np.float32)
-  s=(self.vertices-self.joints[0])@self.axis;d=(self.joints-self.joints[0])@self.axis;m=smooth(s/70);a=smooth((s-d[1]+35)/70);b=smooth((s-d[2]+30)/60);self.weights=np.c_[1-m,m*(1-a),m*a*(1-b),m*a*b]
+  s=(self.vertices-self.joints[0])@self.axis;d=(self.joints-self.joints[0])@self.axis;m=smooth((s-meta.get('rootFreeze',{}).get(name,0))/70);a=smooth((s-d[1]+35)/70);b=smooth((s-d[2]+30)/60);self.weights=np.c_[1-m,m*(1-a),m*a*(1-b),m*a*b]
   self.triangles=[]
   for y in range(32):
    for x in range(8):
@@ -29,8 +29,8 @@ class CurlDigit(IndexRig):
   return posed
 
 class CartoonDigitCurl:
- def __init__(self,root=ROOT):
-  self.palm=Image.open(root/'digit-curl-v1/palm-index.png').convert('RGBA');self.digits={name:CurlDigit(name,root)for name in ['middle','ring','little','thumb']}
+ def __init__(self,root=ROOT,folder_name='digit-curl-v1'):
+  self.palm=Image.open(root/folder_name/'palm-index.png').convert('RGBA');self.digits={name:CurlDigit(name,root,folder_name)for name in ['middle','ring','little','thumb']}
  def render(self,controls):
   if set(controls)!=set(self.digits):raise ValueError('Expected controls for all four moving digits')
   for name,rig in self.digits.items():rig.posed_vertices(controls[name])
@@ -40,3 +40,8 @@ class CartoonDigitCurl:
    return image
   for name,rig in self.digits.items():image.alpha_composite(rig.render(controls[name],canvas=image.size,pad=0,source_view=True))
   return image
+
+def partial_curl_controls(amount):
+ """Reviewed v2 partial flex with knuckle spread to keep distal contours apart."""
+ if not np.isfinite(amount)or not 0<=amount<=.2:raise ValueError('Expected partial curl amount between0and0.2')
+ return {name:(np.array(angles)*amount).tolist()for name,angles in {'middle':[-8,-30,-18],'ring':[10,-30,-18],'little':[30,-30,-18],'thumb':[12,16,8]}.items()}

@@ -5,6 +5,17 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: v2 ownership/bounded flex reviewed; faint contour threads next
+CARTOON-EVAN-DIGIT-CURL-V2.md / evan-engine/reviews/digit-curl-v2.json. Separate digit-curl-v2: masks expand12sourcepx, nearest joint-polyline ownership, protected index, thumb first60axispxfixed. Rawsource/alpha/v1 unchanged; CartoonDigitCurl defaultfolder remainsv1; scene defaults unchanged. Nine tests pass (6newv2): exactrest/source, actualgeometry/fixedroots, invalidinputs, selectedcontour/index guards. Legacyfullangle construction minarea2=1.52364442; legacy11bound retained onv1, positivegeometry required forv2.
+
+Bounded partial_curl_controls amount0..0.2adds MCP spread middle−8/ring10/little30/thumb12. All48rendered amplitudes have0selected distalpair/index/remnant pixels; alpha>127/indexpolygon beyond80axis/movingcutoff90 only. Fullstroke11974index-overlap pixels stillrejected. No generalcollision/anatomyclaim. Preceding no-spread v2 had358pair pixels at.2 and remainslocal.
+
+Final outputs/evan-cartoon-digit-curl-v2-spread/Review.html: mutedheld-frame69 2s/slow8s decode48/192; all96native/stagehashes/22frozen sources/films verified. Exactnative/stageendpoints/restregisteredskin; outsidehand exact. No narrationdrivenperformance. Workers51044/28137/61584COMPLETED; NO pending jobs.
+
+Inspected12native680x722+6decoded1280x720normal/slow; broadspikes/thumbgap reduced, deliveryflexsubtle. Fine light/dark threads remain between little/ring atnative scale despite selectedguards passing. Sceneintegration remainsUNACCEPTED. Current fullfilm collar-continuous/20closing/18acousticflags unchanged; polishedNOTready.
+
+NEXT: trace fullalpha foreigncontourthreads in separatedplanes. Inspect source connectedcomponents below transversecut neary900/fingertipseeds toassign COMPLETEfingeredges; retainrawRGB/alpha/exactrest. Checkrootunderlap; broadenfaintalpha/seamguards before another boundedmotion. No pose swaps/strongercurl/fullfilmrerender. No Moho/merge/deploy; automationactive.
+
 ## Current task: four continuous digits prototyped; ownership/occlusion correction next
 CARTOON-EVAN-DIGIT-CURL.md / evan-engine/reviews/digit-curl-v1.json. New opt-in cartoon_digit_curl reuses IndexRig matrices/triangle renderer:4independent thumb/middle/ring/little planes,3joints each, fixed proximal roots/palm-index. One original clean-open source; no drawing switches/dissolve/newart/default change. Separate digit-curl-v1ownership assets and manual landmarks; raw source unchanged. Initial overlay/4planes inspected1402x1122, two polygons corrected. Rest visibleRGBA/allalpha exact.
 
