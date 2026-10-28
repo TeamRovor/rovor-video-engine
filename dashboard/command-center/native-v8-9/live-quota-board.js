@@ -825,6 +825,7 @@ function captureState(root){
  other.forEach((node,i)=>{if(node.scrollTop)state.scrolls.push({key:'$other',index:i,top:node.scrollTop})});
  const active=document.activeElement;
  if(active&&board.contains(active)){
+  if(active.matches?.('button[data-rvq-filter]'))state.focusedFilter=active.getAttribute('data-rvq-filter');
   const card=active.closest('[data-rvq-slot]');
   if(card&&active.tagName==='SUMMARY'){
    const details=[...card.querySelectorAll('details')];
@@ -847,6 +848,10 @@ function restoreState(root,state){
   const els=item.key==='$other'?[...board.querySelectorAll('.rvq-staff-list,.rvq-emp-grid')]:
     [...(getCard(item.key)?.querySelectorAll('.rvq-job-list')||[])];
   if(els[item.index])els[item.index].scrollTop=item.top;
+ }
+ if(state.focusedFilter){
+  const button=[...board.querySelectorAll('button[data-rvq-filter]')].find(b=>b.getAttribute('data-rvq-filter')===state.focusedFilter);
+  button?.focus({preventScroll:true});
  }
  if(state.focused){
   const d=getCard(state.focused.key)?.querySelectorAll('details')[state.focused.index];
