@@ -4693,10 +4693,10 @@
       "title": "Add durable private HUD telemetry ingestion and outbound collector without temporary tunnel links",
       "priority": 1,
       "status": "active",
-      "owner": "Codex / Amar persistent HUD telemetry 2026-10-24",
-      "updated_at": "2026-10-25T03:32:47.920Z",
-      "next_update": "After real owner issue submission/deployed review readback, or private cloud hosting activation",
-      "branch": "feature/hud-owner-reviews-20261024",
+      "owner": "Codex / Amar persistent HUD telemetry release continuation 2026-10-28",
+      "updated_at": "2026-10-28T08:22:18.218Z",
+      "next_update": "After packaging regression verification and release CI",
+      "branch": "ux/nine-provider-glance-readability-20261028",
       "scopes": [
         "integrations/hud-cloud",
         "tools/hud_telemetry_publisher.mjs",
@@ -4712,7 +4712,7 @@
         "coordination/cloud-shifts/walter-pr186.json"
       ],
       "depends_on": [],
-      "next_action": "Runtime milestone: existing owner-private Site is PUBLISHED version1 at https://rovor-private-hud.mm98z652cq.chatgpt.site . Deployment appgdep_6add77b7ed988191987bb9a6f36827cf SUCCEEDED from pushed Site source342b6fd4e846fb49ce476c98f530aaf5b629c760, environment revision1 (13 masked secret entries including nine providers). D1 DB is provisioned with hud_latest and hud_history; hud_latest readback EMPTY. Native MCP connection was provisioned; suggestion returned already_installed, but tool is not exposed in this turn, so authenticated invocation not verified. Native Site MCP plugin ID plugin_asdk_app_sites_8cefc4c5934c81919e84645a2575ef38. Source push worked from Amar Terminal via one-use memory-only credential pipe; this executor still lacks general outbound DNS. Initial artifact rejected d1 object; source and dist corrected to d1 string DB, validator strengthened; correct package accepted. Canonical build-sites helper and pending PR193 composer still need equivalent string-binding compatibility before future rebuilds. Current deployed Worker is HUD receiver only: ghost execution tables/adapters/feed/canaries/schedule are NOT mounted. Preserve disabled GHOST_FLEET_CONFIG and verify exact live cost/model/quota before any inference; don't claim nine live or current telemetry. Continue real runtime integration, no duplicate Sites or obsolete source-host blocker loops.",
+      "next_action": "Repair self-contained Site bundle dependency on Gemini monitor, reproduce import failure and run bundle tests; release existing HUD PR276. No provider or auth changes.",
       "acceptance": "No temporary tunnels or pairing links in the outbound reporting transport; separate writer/reader credentials, bounded sanitized telemetry, durable ordered snapshots, explicit freshness and retained history, authenticated read-only MCP status, focused tests. Distinguish source verified from deployed and host installed.",
       "evidence": [
         {
