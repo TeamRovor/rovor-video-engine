@@ -5,6 +5,17 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: half-open registration reviewed; three-drawing transition rejected
+CARTOON-EVAN-HALF-OPEN-HAND.md / evan-engine/reviews/half-open-hand-v2.json. Separate half-open-hand-fit-v2 uses existing builder: wrist551/510→810/762, scale.192/15deg, associatedRGBA prefilter. Raw source/alpha unchanged; original proximal≤−36 exact; animationReady=false. Four registration tests pass (two new half-open cases): hashes/bounds/proximal/current48Hz speech meshes and isolated exact3derivative+manifest rebuild. No production builder/default/control change.
+
+Inspected5shared-wrist native320x320 comparisons(open/half/point)0/69/248/374/504 and3delivery1280x720pilots69/248/374. Current fullstage baseline/outsidehand exact; joins appear connected. Bent fingers readable, dense nail loops; thumb/index axis/palm creases differ. Still one wrist transform for all digits.
+
+Local motion1.5–5.5s inserts8half-open frames55–58/111–114; other88PNGs exact priorpointstudy. Priorstage/nativeoraljaw/audit/outsidehand exact, actualmesh positive. Normal4s/slow16s decode96/384, originalPCM24000:8800064000samples exact; AAC/H264 lossy. All96hashes/28frozen sources/film digests verified. Workers85125/87946 COMPLETED; NO pending jobs.
+
+REJECT three-drawing transition: abrupt silhouettes at55/59/111/115 persist with thumb/crease/index jumps. Inspected ALL23native transition pairs52..62/107..118,12overview and8normal+8slow decoded1280x720samples. Extra replacement drawing is not continuous digit articulation. Current fullfilm collar-continuous retained; no listening/realtime/polished acceptance.
+
+NEXT: stop replacement-drawing/timing variants. Prototype explicit palm/thumb/middle/ring/little ownership and anatomical joint landmarks on existing clean open hand; preserve index/wrist anchors. Build ONE continuously deforming curl cycle, check actual meshes/occlusion and inspect native/delivery motion before any scene integration. Reject broken anatomy; no alpha dissolve or claims from tests. Keep definition/payoff palms/20closing/18acousticflags. No new source generation, Moho/merge/deploy this turn. Automationactive/polishedNOTready.
+
 ## Current task: opening pointing transition rejected; half-open source candidate
 CARTOON-EVAN-OPENING-POINT.md / evan-engine/reviews/opening-point-v1.json. Worker95854 COMPLETED; NO pending jobs. Original1.5–5.5s component:96frames/87updated/56point/9offcue byte-exact copies; normal4s/slow16s decode96/384. ExactPCM24000:8800064000samples; AAC lossy. All96frame hashes/87journal rows/source snapshots verified. Nativeoraljaw/audit/otherlayers andoutsidehandstage exact. Launch/final Source-Manifest.json frozen.
 

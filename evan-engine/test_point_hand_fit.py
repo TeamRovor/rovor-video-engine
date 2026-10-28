@@ -10,9 +10,12 @@ from payoff_cartoon_review import payoff_controls
 from build_relaxed_cartoon_hand import build
 
 class PointFitTests(unittest.TestCase):
+ folder_name='point-hand-fit-v1'
+ source_name='hand-source/right-point-v1.png'
+ source_wrist=(457.,531.)
  @classmethod
  def setUpClass(cls):
-  cv2.setNumThreads(1);cls.folder=ROOT/'point-hand-fit-v1';cls.meta=json.loads((cls.folder/'manifest.json').read_text());cls.plan=json.loads((ROOT.parents[3]/'outputs/evan-speech-alignment/Aligned-Speech-Plan.json').read_text())
+  cv2.setNumThreads(1);cls.folder=ROOT/cls.folder_name;cls.meta=json.loads((cls.folder/'manifest.json').read_text());cls.plan=json.loads((ROOT.parents[3]/'outputs/evan-speech-alignment/Aligned-Speech-Plan.json').read_text())
  def test_source_proximal_preservation_and_current_mesh(self):
   for name,digest in self.meta['sourceSha256'].items():self.assertEqual(hashlib.sha256((ROOT/name).read_bytes()).hexdigest(),digest)
   old=np.array(Image.open(ROOT/'body-rig/arm-right.png').convert('RGBA'));new=np.array(Image.open(self.folder/'right-skin.png').convert('RGBA'));yy,xx=np.mgrid[:1536,:1024];axis=np.array(self.meta['axis']);s=(xx-810)*axis[0]+(yy-762)*axis[1];np.testing.assert_array_equal(old[s<=-36],new[s<=-36]);self.assertEqual(int(new[[0,-1],:,3].max()),0);self.assertEqual(int(new[:,[0,-1],3].max()),0)
@@ -22,11 +25,16 @@ class PointFitTests(unittest.TestCase):
  def test_isolated_rebuild_matches_working_derivatives(self):
   with tempfile.TemporaryDirectory()as directory:
    root=Path(directory)
-   for name in ['body-rig/arm-right.png','source/design-sheet-v1.png','hand-source/right-point-v1.png']:
+   for name in set(['body-rig/arm-right.png','source/design-sheet-v1.png','hand-source/right-point-v1.png',self.source_name]):
     p=root/name;p.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/name,p)
-   (root/'point-hand-fit-v1').mkdir()
-   meta=build(root,folder_name='point-hand-fit-v1',source_name='../hand-source/right-point-v1.png',source_wrist=(457.,531.),source_scale=.192,source_antialias=True)
+   (root/self.folder_name).mkdir()
+   meta=build(root,folder_name=self.folder_name,source_name='../'+self.source_name,source_wrist=self.source_wrist,source_scale=.192,source_antialias=True)
    self.assertEqual(meta,self.meta)
-   for name in ['right-skin.png','registered-hand.png','blend-mask.png']:np.testing.assert_array_equal(np.array(Image.open(root/'point-hand-fit-v1'/name)),np.array(Image.open(self.folder/name)))
+   for name in ['right-skin.png','registered-hand.png','blend-mask.png']:np.testing.assert_array_equal(np.array(Image.open(root/self.folder_name/name)),np.array(Image.open(self.folder/name)))
+
+class HalfOpenFitTests(PointFitTests):
+ folder_name='half-open-hand-fit-v2'
+ source_name='hand-source/right-half-open-v2.png'
+ source_wrist=(551.,510.)
 
 if __name__=='__main__':unittest.main()
