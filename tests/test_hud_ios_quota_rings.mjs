@@ -216,6 +216,39 @@ test('one-hour model names are escaped and never mistaken for direct upstream AP
  assert.match(html,/not an account-slot counter or remaining quota/);
 });
 
+test('Mistral owner limits appear as dated capacity references, not as measured quotas',()=>{
+ const rows=[{provider:'mistral',name:'mistral',connection_count:1,enabled_count:1},
+  {provider:'openrouter',name:'openrouter',connection_count:1,enabled_count:1}];
+ const data={period:'24h',usage_coverage:'complete_aggregate',request_count:1,
+  connections:rows,connection_slots:rows.map(r=>({provider:r.provider,account_slot:1,enabled:true})),
+  models:[{name:'devstral-latest',provider:'mistral',requests:1,tokens:0}],quota:{records:[]}};
+ const html=board().render(data,true);
+ assert.equal((html.match(/class="rvq-mistral-reference"/g)||[]).length,1);
+ assert.match(html,/MISTRAL ORGANIZATION LIMITS · OWNER SNAPSHOT/);
+ assert.match(html,/Observed October 27, 2026 · Global/);
+ assert.match(html,/codestral-2508<\/td><td>625,000<\/td><td>2.08/);
+ assert.match(html,/mistral-medium-latest<\/td><td>20,000<\/td><td>1.00/);
+ assert.match(html,/devstral-latest/);
+ assert.match(html,/Recorded model without a supplied matching limit/);
+ assert.match(html,/Organization-wide used\/remaining still requires verified API telemetry/);
+ assert.equal((html.match(/aria-label="Provider quota unknown"/g)||[]).length,4);
+ assert.doesNotMatch(html,/625,000[^<]*remaining/i);
+ assert.equal((html.match(/class="rvq-overview-tile"/g)||[]).length,2);
+});
+test('Mistral model reference never leaks into another provider or invents a percent',()=>{
+ const data={period:'24h',usage_coverage:'complete_aggregate',request_count:1,
+  connections:[{provider:'openrouter',name:'openrouter',connection_count:1,enabled_count:1}],
+  models:[{name:'mistral-medium-latest',provider:'openrouter',requests:1,tokens:12}],
+  quota:{records:[]}};
+ const html=board().render(data,true);
+ assert.doesNotMatch(html,/MISTRAL ORGANIZATION LIMITS/);
+ assert.doesNotMatch(html,/625,000/);
+ assert.match(html,/QUOTA UNKNOWN/);
+ const noReport=board().render({...data,request_count:2},true);
+ assert.match(noReport,/Mac requests unverified/);
+ assert.doesNotMatch(noReport,/MISTRAL ORGANIZATION LIMITS/);
+});
+
 test('small-screen rings have responsive widths',()=>{
  assert.match(source,/max-width:380px/);
  assert.match(source,/grid-template-columns:80px minmax\(0,1fr\)/);
