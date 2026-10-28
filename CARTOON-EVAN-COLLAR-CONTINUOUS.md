@@ -1,0 +1,9 @@
+# Full-speech validation of the optional neck ownership correction
+
+The15–17s component passed48complete stage calibrations and native oral/jaw/neck/torso/arm preservation checks. All48native join pairs,12overview poses and six decoded delivery samples were inspected. The lower dangling original neck edge is reduced; the upper collar/jaw contour remains. See CARTOON-EVAN-COLLAR-MOTION.md.
+
+Worker12979is now evaluating all532speech frames in outputs/evan-cartoon-collar-continuous using the existing separated face and payoff controls with trim_left_neck_stub enabled. Each default frame must recalibrate pixel-exact to payoff-continuous before replacing only the head layer. Native oral/jaw arrays and audit, neck/torso/arm layers and all stage pixels outside the head region must remain exact. Frames with zero pixel difference copy the preceding PNG byte-exact. All20closing PNGs copy byte-exact. No new source artwork or pose cue is introduced.
+
+Expected full films are23snormal/92smuted slow,552/2208decoded frames. Original full narration/postroll WAV, all18current acoustic markers and timing evidence links are retained. These exports are pending and are not ready for review. Launch-Source-Manifest.json/Source/ freeze executed sources. Do not restart the worker.
+
+Next: require Verification.json/532journal rows/552+2208decode, then run work/collar-continuous-review/review.py. It verifies source/frame/film hashes, byte-exact20closing frames and fullWAV, then prepares native samples every1/3s plus cue boundaries/largest pixel changes/minimum oral area, stage overview and six normal/two slow delivery frames. Inspect those at original resolution before accepting this opt-in full candidate. Current complete film remains payoff-continuous. Defaults, approved releases, V3/V4, native Moho projects and updater remain unchanged. No Moho interaction, merge or deployment. Polished performance and independent listening remain unaccepted.

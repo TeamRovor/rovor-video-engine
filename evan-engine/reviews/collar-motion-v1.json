@@ -1,5 +1,5 @@
 {
-  "status": "opt-in-collar-correction-motion-render-in-progress",
+  "status": "opt-in-collar-motion-component-rendered-and-visually-reviewed",
   "sourceFrameRange": [
     360,
     408
@@ -24,11 +24,10 @@
     "stage changes confined to head region",
     "source frame hash matches preceding full-film manifest"
   ],
-  "pendingJobs": true,
-  "worker": 9788,
+  "pendingJobs": false,
   "launchSourceManifestSha256": "6a1acb179f4236d4a31cd0f77f5e877411ae31bb8c99759e569e6e185692fba6",
-  "normalSlowExportsVerified": false,
-  "allNativeJoinPairsVisuallyInspected": false,
+  "normalSlowExportsVerified": true,
+  "allNativeJoinPairsVisuallyInspected": true,
   "newArtwork": false,
   "sourceArtworkModified": false,
   "defaultChanged": false,
@@ -41,5 +40,48 @@
   "independentListeningAccepted": false,
   "realTimeActingAccepted": false,
   "polishedMilestoneReady": false,
-  "nextConcreteWork": "Poll9788 without restarting. Require Verification.json and48/192fully decoded frames, run work/collar-motion-review/review.py, inspect48native before/after pairs,12overview poses and4normal/2slow1280x720samples. Verify exact32000sample PCM, source/frame/film hashes and nativeoraljaw/necktorsolayer preservation. Before full integration evaluate all532speech poses with trim enabled; preserve20closing frames and18flags."
+  "nextConcreteWork": "Full532speech-pose correction validation is running asworker12979. Do not restart; require final Verification.json/552+2208decode and then run work/collar-continuous-review/review.py. Preserve all20closing frames and18timing flags.",
+  "frames": 48,
+  "baselineStageCalibrationsExact": 48,
+  "neckTorsoArmsExact": true,
+  "nativeOralJawAuditExact": true,
+  "outsideHeadStageExact": true,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 48,
+      "sha256": "eb0fca806a592873338d0771b1baed90aead1917128efb4f35ad3fdb66cacd87"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 192,
+      "sha256": "5e1ebf0ac6108fb5a2e0981c0aa8b90fdaef2f231bffa1b27b559de3cc394073"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 32000,
+    "decodedPcm16Samples": 32000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourcePcmSamples": [
+    240000,
+    272000
+  ],
+  "sourcePcmExact": true,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "workerCompleted": 9788,
+  "nativePairsVisuallyInspected": 48,
+  "overviewPosesVisuallyInspected": 12,
+  "decodedNormalSamplesVisuallyInspected": [
+    0,
+    14,
+    24,
+    44
+  ],
+  "decodedSlowSamplesVisuallyInspected": [
+    56,
+    176
+  ],
+  "sourceAndFrameHashesVerified": true,
+  "visualAssessment": "Dangling lower neck tail reduced through the held/settling tilt, with no observed broad neck gap or oral change across48native pairs. Upper collar/jaw contour remains. This small correction does not meet the full expressive-cartoon milestone."
 }
