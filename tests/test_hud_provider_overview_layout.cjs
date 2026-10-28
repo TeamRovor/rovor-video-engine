@@ -131,6 +131,9 @@ test('different model allowances are never conflated into one provider-wide ring
  assert.doesNotMatch(tile,/role="progressbar"/);
  assert.match(html,/model-a/);
  assert.match(html,/model-b/);
+ const one=render({...data,quota:{records:[a]}},true);
+ assert.match(one,/MAC MODEL LIMIT/);
+ assert.match(one,/MODEL · model-a/);
  assert.match(html,/25\.0%/);
  assert.match(html,/20\.0%/);
 });
@@ -147,13 +150,15 @@ test('fresh private review receipts give a truthful sample, not a claimed queue 
   ]};
  const html=render(null,false,cloud);
  const review=html.slice(html.indexOf('id="rvq-review"'),html.indexOf('id="rvq-team"'));
- assert.match(html,/REVIEW · 1/);
+ assert.match(html,/REVIEW · 1\\+/);
  assert.match(review,/1 returned cloud receipt awaiting PASS \/ FAIL/);
  assert.match(review,/Audit draft/);
  assert.doesNotMatch(review,/Duplicated draft|Canary draft|Approved draft/);
  assert.match(review,/not the complete private owner queue/);
  const stale=render(null,false,{...cloud,observed_at:now-600000});
  assert.match(stale,/No fresh private cloud review sample/);
+ const incomplete=render(null,false,{...cloud,attempts:undefined});
+ assert.match(incomplete,/No fresh private cloud review sample/);
  assert.doesNotMatch(stale,/REVIEW · 1/);
 });
 
