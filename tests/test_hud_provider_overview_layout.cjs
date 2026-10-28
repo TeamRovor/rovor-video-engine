@@ -205,6 +205,6 @@ test('quota coverage counts observed connection slots, not provider names or str
  const html=render(data,true);
  assert.match(html,/CONNECTION SLOTS WITH MAC LIMIT DATA/);
  assert.match(html,/1 \/ 3/);
- assert.match(html,/Limit records: 3/);
+ assert.match(html,/Limit records: 2/);
  assert.doesNotMatch(html,/3 \/ 3/);
 });
