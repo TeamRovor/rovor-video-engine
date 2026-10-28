@@ -424,7 +424,7 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,
  if(!rows.length)rows.push(unknownModel(null));
  const first=rows.slice(0,2).join('');
  const extra=rows.length>2?'<details class="rvq-more"'+(expandedSlots.has(group.provider+':'+slot.account_slot)?' open':'')+'><summary>Show '+(rows.length-2)+' more model'+(rows.length===3?'':'s')+'</summary>'+rows.slice(2).join('')+'</details>':'';
- const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
+ const state= !live?'TELEMETRY STALE':slot.enabled===false?'DISABLED':slot.enabled===true?'GATEWAY ENABLED · PROVIDER UNVERIFIED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
  return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
  '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+geminiProjectMonitoring(group.provider,geminiProject)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
@@ -586,12 +586,12 @@ const css=`
 #rovor-workload-popup .rvq-cloud-ring-layout .rvq-ring-core small{font-size:7px}
 @media(max-width:380px){#rovor-workload-popup .rvq-ring-layout{grid-template-columns:80px minmax(0,1fr);gap:9px}#rovor-workload-popup .rvq-ring-layout .rvq-ring{width:80px;height:80px}#rovor-workload-popup .rvq-ring-layout .rvq-ring:before{inset:9px}#rovor-workload-popup .rvq-ring-layout .rvq-ring-core strong{font-size:15px}#rovor-workload-popup .rvq-ring-layout .rvq-ring-core small{font-size:7px}}
 /* Visible nine-slot quota dashboard above verbose evidence panels. */
-#rovor-workload-popup .rvq-overview{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:7px;margin:0 0 15px}
-#rovor-workload-popup .rvq-overview-tile{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:start;gap:8px;padding:10px 4px 9px;border:1px solid rgba(83,159,211,.4);border-radius:11px;background:linear-gradient(145deg,#0c304e,#051b32);text-align:center}
+#rovor-workload-popup .rvq-overview{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 15px}
+#rovor-workload-popup .rvq-overview-tile{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:start;gap:8px;padding:12px 8px 11px;border:1px solid rgba(83,159,211,.4);border-radius:11px;background:linear-gradient(145deg,#0c304e,#051b32);text-align:center}
 #rovor-workload-popup .rvq-overview-rings{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
-#rovor-workload-popup .rvq-overview-requests{color:#d4efff;font:700 9px/1.25 system-ui;text-align:center}
-#rovor-workload-popup .rvq-overview-hourly{color:#9bdfff;font:700 9px/1.25 system-ui;text-align:center}
-#rovor-workload-popup .rvq-overview-minute{color:#b3edff;font:700 9px/1.25 system-ui;text-align:center}
+#rovor-workload-popup .rvq-overview-requests{color:#d4efff;font:700 11px/1.35 system-ui;text-align:center}
+#rovor-workload-popup .rvq-overview-hourly{color:#9bdfff;font:700 10px/1.35 system-ui;text-align:center}
+#rovor-workload-popup .rvq-overview-minute{color:#b3edff;font:700 10px/1.35 system-ui;text-align:center}
 #rovor-workload-popup .rvq-activity{margin:12px 0 0;color:#a2d9fa;font:700 10px/1.5 system-ui;letter-spacing:.03em}
 #rovor-workload-popup .rvq-activity strong{color:#e6faff}
 #rovor-workload-popup .rvq-activity span{display:block;color:#8ba9bc;font:10px/1.4 system-ui;letter-spacing:0}
@@ -622,19 +622,19 @@ const css=`
 #rovor-workload-popup .rvq-observed-model-top>strong{white-space:nowrap;color:#a9d7ef}
 #rovor-workload-popup .rvq-observed-model .rvq-track{height:7px;margin:5px 0}
 #rovor-workload-popup .rvq-observed-model-meta{color:#8fb6cd;font:10px/1.4 system-ui}
-#rovor-workload-popup .rvq-overview-name{color:#d8f2ff;font:700 10px/1.35 system-ui;min-height:28px;max-width:100%;overflow-wrap:anywhere}
-#rovor-workload-popup .rvq-overview .rvq-ring{width:47px;height:47px}
-#rovor-workload-popup .rvq-overview .rvq-ring:before{inset:8px}
-#rovor-workload-popup .rvq-overview .rvq-ring-core strong{font-size:11px}
-#rovor-workload-popup .rvq-overview .rvq-ring-core small{font-size:6px}
-#rovor-workload-popup .rvq-overview .rvq-ring-unknown .rvq-ring-core strong{font-size:16px}
-#rovor-workload-popup .rvq-overview-source{color:#91c3dd;font:700 8px/1.25 system-ui;letter-spacing:.06em;overflow-wrap:anywhere}
-@media(max-width:1150px){#rovor-workload-popup .rvq-overview{grid-template-columns:repeat(5,minmax(0,1fr))}}
+#rovor-workload-popup .rvq-overview-name{color:#d8f2ff;font:700 12px/1.35 system-ui;min-height:32px;max-width:100%;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-overview .rvq-ring{width:60px;height:60px}
+#rovor-workload-popup .rvq-overview .rvq-ring:before{inset:9px}
+#rovor-workload-popup .rvq-overview .rvq-ring-core strong{font-size:13px}
+#rovor-workload-popup .rvq-overview .rvq-ring-core small{font-size:9px}
+#rovor-workload-popup .rvq-overview .rvq-ring-unknown .rvq-ring-core strong{font-size:18px}
+#rovor-workload-popup .rvq-overview-source{color:#91c3dd;font:700 10px/1.3 system-ui;letter-spacing:.03em;overflow-wrap:anywhere}
+@media(max-width:1150px){#rovor-workload-popup .rvq-overview{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:650px){
- #rovor-workload-popup .rvq-overview{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:11px}
- #rovor-workload-popup .rvq-overview-tile{padding:7px 2px;gap:5px}
- #rovor-workload-popup .rvq-overview-name{min-height:0;font-size:9px}
- #rovor-workload-popup .rvq-overview-source{font-size:7px}
+ #rovor-workload-popup .rvq-overview{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:11px}
+ #rovor-workload-popup .rvq-overview-tile{padding:10px 6px;gap:6px}
+ #rovor-workload-popup .rvq-overview-name{min-height:0;font-size:12px}
+ #rovor-workload-popup .rvq-overview-source{font-size:10px}
  #rovor-workload-popup .rvq-head{margin-bottom:8px;gap:6px}
  #rovor-workload-popup .rvq-head .rvq-sub{display:none}
  #rovor-workload-popup .rvq-board>.rvq-sub{font-size:10px;margin-bottom:8px!important}
