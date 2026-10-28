@@ -36,6 +36,25 @@ function listenForQuotaInteraction(){
    detail.querySelector('summary')?.focus({preventScroll:true});
    provider.scrollIntoView?.({block:'start',behavior:'auto'});
  });
+ // Filtering never alters the order or availability of full provider reports.
+ document.addEventListener('click',event=>{
+   const button=event.target?.closest?.('button[data-rvq-filter]');
+   const board=button?.closest?.('.rvq-board');
+   if(!board)return;
+   overviewFilter=button.getAttribute('data-rvq-filter')==='attention'?'attention':'all';
+   const tiles=[...board.querySelectorAll('.rvq-overview-tile')];
+   let visible=0;
+   for(const tile of tiles){
+     tile.hidden=overviewFilter==='attention'&&tile.getAttribute('data-rvq-attention')!=='true';
+     if(!tile.hidden)visible++;
+   }
+   for(const b of board.querySelectorAll('button[data-rvq-filter]'))
+     b.setAttribute('aria-pressed',String(b.getAttribute('data-rvq-filter')===overviewFilter));
+   const note=board.querySelector('.rvq-filter-note');
+   if(note)note.textContent=overviewFilter==='attention'
+      ?'Showing '+visible+' connections with setup or human-review gates'
+      :'Showing all '+tiles.length+' configured connections';
+ });
  // Navigate only the current HUD drawer; avoid modifying the private Site URL.
  document.addEventListener('click',event=>{
    const link=event.target?.closest?.('.rvq-jump-nav a');
@@ -632,6 +651,13 @@ const css=`
 /* Visible nine-slot quota dashboard above verbose evidence panels. */
 #rovor-workload-popup .rvq-overview{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 15px}
 #rovor-workload-popup .rvq-overview-tile{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:start;gap:8px;padding:12px 8px 11px;text-decoration:none;cursor:pointer;touch-action:manipulation;border:1px solid rgba(83,159,211,.4);border-radius:11px;background:linear-gradient(145deg,#0c304e,#051b32);text-align:center}
+#rovor-workload-popup .rvq-overview-tile[hidden]{display:none!important}
+#rovor-workload-popup .rvq-overview-alert{border:1px solid #9ab9e8;padding:4px 7px;color:#e7f4ff;background:#1a3e60;font:700 9px system-ui;letter-spacing:.07em}
+#rovor-workload-popup .rvq-overview-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+#rovor-workload-popup .rvq-overview-controls button{min-height:44px;padding:8px 12px;background:#0a2948;color:#b9dbef;border:1px solid #3d779f;cursor:pointer;font:700 11px system-ui}
+#rovor-workload-popup .rvq-overview-controls button[aria-pressed="true"]{background:#185784;color:#f0faff;border-color:#a2dfff}
+#rovor-workload-popup .rvq-overview-controls button:focus-visible{outline:2px solid #d5f2ff;outline-offset:2px}
+#rovor-workload-popup .rvq-filter-note{font:11px/1.4 system-ui;color:#94c4e5}
 #rovor-workload-popup .rvq-overview-rings{display:flex;justify-content:center;align-items:flex-start;gap:7px;flex-wrap:wrap}
 #rovor-workload-popup .rvq-overview-ring-group{display:flex;flex-direction:column;align-items:center;gap:5px}
 #rovor-workload-popup .rvq-ring-label{color:#a9cde7;font:700 9px/1.25 system-ui;letter-spacing:.04em}
@@ -762,6 +788,8 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  const next=resets.length?new Date(Math.min(...resets)).toISOString():null;
  const enabled=live&&observedSlots?slots.filter(s=>s.enabled===true).length:null;
  const coverage=live?new Set(quota.map(q=>q.provider+':'+q.account_slot)).size:null;
+ const attentionCount=slots.filter(slot=>needsSetupReview(cloudProviders.get(slot.group.provider))).length;
+ if(!attentionCount)overviewFilter='all';
  const summary='<div class="rvq-stats"><div class="rvq-stat"><span class="rvq-stat-label">REPORTED CONNECTION SLOTS</span><strong class="rvq-stat-value">'+fmt(slots.length)+'</strong></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">PROVIDERS WITH MAC LIMIT DATA</span><strong class="rvq-stat-value">'+(coverage===null?'—':fmt(coverage)+' / '+fmt(slots.length))+'</strong><span class="rvq-stat-secondary">Limit records: '+(live?fmt(quota.length):'—')+'</span></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
@@ -769,7 +797,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
  summary+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
- (slots.length?'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
+ (slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button>'+(attentionCount?'<button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button>':'')+'<span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div><div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
  '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
