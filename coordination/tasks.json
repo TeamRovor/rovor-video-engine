@@ -5918,6 +5918,22 @@
         "kind": "plan",
         "prompt": "Propose a practical process that takes ROVOR AI worker draft receipts and turns accepted work into useful business deliverables. Specify owner PASS/FAIL evidence, duplication checks, attribution, native-app boundary, deliverable acceptance, rejection/rework as a new immutable job (never replay old attempts), and a weekly metric measuring shipped approved work rather than raw token usage. Do not auto-approve, publish, contact clients, or claim files were made. Under 750 words. Owner review before changes."
       }
+    },
+    {
+      "id": "hud-quota-slot-label-regression-20261028",
+      "title": "Repair obsolete quota coverage label assertion in HUD upgrade PR276",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar HUD upgrade 2026-10-28",
+      "branch": "ux/nine-provider-glance-readability-20261028",
+      "scopes": [
+        "tests/test_hud_ios_quota_rings.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-28T08:05:00.851Z",
+      "next_update": "After focused Node regression checks and exact branch readback",
+      "next_action": "Update only obsolete provider label assertion to connection-slot wording, preserving unknown-ring and zero authenticated coverage checks.",
+      "acceptance": "Both focused provider overview and quota-ring suites pass; no production deployment or provider/runtime changes."
     }
   ]
 }
