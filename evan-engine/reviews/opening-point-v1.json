@@ -1,5 +1,5 @@
 {
-  "status": "opt-in-opening-point-authored-aim-pilots-verified-motion-pending",
+  "status": "motion-reviewed-discrete-hand-transition-rejected",
   "event": {
     "anticipate": 1.65,
     "arrive": 2.84,
@@ -119,7 +119,7 @@
     88000
   ],
   "expectedSourcePcm16Count": 64000,
-  "pendingJobs": true,
+  "pendingJobs": false,
   "worker": 95854,
   "fullFilmUpdated": false,
   "defaultChanged": false,
@@ -132,5 +132,188 @@
   "independentListeningAccepted": false,
   "realTimeActingAccepted": false,
   "polishedMilestoneReady": false,
-  "nextConcreteWork": "Poll95854 without restarting. Require Verification.json/96+384decode and64000exactPCM, then run work/opening-point-motion/review.py. Inspect all23native transition frames52..62/107..118, remaining selected native pairs,18overview and6normal/3slow decoded1280x720samples. Critically judge the discrete replacements at57/113; no fluid-transition acceptance from geometry or aim tests. Keep definition/payoff palms,20closing,18timingflags and current full film unchanged."
+  "nextConcreteWork": "Manually locate wrist/axis; register separately with existing .192 wrist-fit builder and associated RGBA filtering. Compare open/half-open/point at one shared native wrist and delivery pose before attempting a new transition. No alpha dissolve or automatic acceptance from an added drawing.",
+  "workerCompleted": true,
+  "verification": {
+    "event": {
+      "anticipate": 1.6500000000000001,
+      "arrive": 2.84,
+      "hold": 3.99,
+      "settle": 5.28,
+      "poseOn": 2.35,
+      "poseOff": 4.7,
+      "scriptIndices": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    "sourceFrameRange": [
+      36,
+      132
+    ],
+    "sourceSeconds": [
+      1.5,
+      5.5
+    ],
+    "frames": 96,
+    "updatedFrames": 87,
+    "pointDrawingFrames": 56,
+    "offCueByteExactFrames": 9,
+    "discreteReplacementBoundaries": [
+      57,
+      113
+    ],
+    "minimumArmArea2": 67.15663736959304,
+    "otherLayersAndOralJawExact": true,
+    "outsideRightHandRegionExact": true,
+    "films": {
+      "Normal.mp4": {
+        "decodedFrames": 96,
+        "sha256": "25169dddfb94f6c4b70303d4bb40f20f48304cda7fabbd827e34cff4265f7ded"
+      },
+      "Quarter-Speed.mp4": {
+        "decodedFrames": 384,
+        "sha256": "57db56d3d9648b86951d1201eb58f8dc453df3d35fd2ce77da5678000cde90a0"
+      }
+    },
+    "audio": {
+      "sourcePcm16Samples": 64000,
+      "decodedPcm16Samples": 64000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": ""
+    },
+    "sourcePcmSamples": [
+      24000,
+      88000
+    ],
+    "sourcePcmExact": true,
+    "fullFilmUpdated": false,
+    "defaultChanged": false,
+    "newArtwork": false,
+    "phonemeTimingChanged": false,
+    "flagsCleared": 0,
+    "fingersIndividuallyArticulated": false,
+    "poseTransitionAccepted": false,
+    "independentListeningAccepted": false,
+    "realTimeActingAccepted": false,
+    "polishedMilestoneReady": false
+  },
+  "visualInspection": {
+    "nativeSamples": [
+      40,
+      46,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      64,
+      68,
+      69,
+      70,
+      76,
+      82,
+      88,
+      90,
+      94,
+      95,
+      96,
+      100,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      124,
+      126
+    ],
+    "allTransitionFrames": [
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118
+    ],
+    "overviewSourceFrames": [
+      36,
+      40,
+      52,
+      56,
+      57,
+      62,
+      68,
+      69,
+      80,
+      90,
+      95,
+      96,
+      107,
+      112,
+      113,
+      118,
+      126,
+      131
+    ],
+    "decodedNormalClipFrames": [
+      20,
+      21,
+      33,
+      54,
+      76,
+      77
+    ],
+    "decodedSlowClipFrames": [
+      84,
+      132,
+      308
+    ]
+  },
+  "nativePairsVisuallyInspected": 40,
+  "overviewPosesVisuallyInspected": 18,
+  "decodedSamplesVisuallyInspectedAt1280x720": 9,
+  "transitionRejected": true,
+  "transitionFinding": "Clear abrupt spread-palm/curled-point silhouette changes at source57 and113; line weight also changes. Continuous wrist controls do not bridge the finger drawings. Held pointing reads toward tab, wrist join connected in inspected samples.",
+  "separateNewSourceCandidate": "evan-character/cartoon-v1/hand-source/right-half-open-v2.png",
+  "candidateRegistered": false
 }
