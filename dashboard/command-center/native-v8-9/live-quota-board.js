@@ -24,7 +24,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const fmt=n=>typeof n==='number'&&Number.isFinite(n)?n.toLocaleString():'—';
 const pretty=s=>{
  const key=String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
- return ({google:'Google AI Studio',gemini:'Gemini',groq:'Groq',nvidia:'NVIDIA NIM',openrouter:'OpenRouter',mistral:'Mistral',cloudflare:'Cloudflare Workers AI',cloudflareworkersai:'Cloudflare Workers AI',sambanova:'SambaNova',cohere:'Cohere',huggingface:'Hugging Face'})[key]||String(s||'Provider').replace(/[-_]/g,' ');
+ return ({google:'Google AI Studio',gemini:'Gemini',groq:'Groq',nvidia:'NVIDIA NIM',openrouter:'OpenRouter',mistral:'Mistral',cloudflare:'Cloudflare Workers AI',cloudflareworkersai:'Cloudflare Workers AI',cloudflareai:'Cloudflare Workers AI',sambanova:'SambaNova',cohere:'Cohere',huggingface:'Hugging Face'})[key]||String(s||'Provider').replace(/[-_]/g,' ');
 };
 const prettyTime=s=>{
  const t=Date.parse(s||'');if(!Number.isFinite(t))return 'Not reported';
@@ -250,7 +250,7 @@ function providerActivity(activity,provider){
 function activityLabel(activity,live){
  if(!live||!activity)return '<div class="rvq-activity rvq-unreported">MAC 24H REQUESTS · not currently verified</div>';
  return '<div class="rvq-activity">MAC 24H PROVIDER TOTAL · <strong>'+fmt(activity.requests)+
-   ' requests</strong> · '+fmt(activity.tokens)+' reported tokens'+
+   ' request'+(activity.requests===1?'':'s')+'</strong> · '+fmt(activity.tokens)+' reported tokens'+
    '<span>Per-provider aggregate; not an account-slot counter or remaining quota</span></div>';
 }
 
@@ -263,7 +263,7 @@ function modelActivity(activity,provider){
  const list=activity.models.slice().sort((a,b)=>b.requests-a.requests||a.name.localeCompare(b.name)).map(m=>{
    const pct=activity.requests?100*m.requests/activity.requests:0;
    const formatted=pct.toFixed(1);
-   return '<li class="rvq-observed-model"><div class="rvq-observed-model-top"><span>'+esc(m.name)+'</span><strong>'+fmt(m.requests)+' requests</strong></div>'+
+   return '<li class="rvq-observed-model"><div class="rvq-observed-model-top"><span>'+esc(m.name)+'</span><strong>'+fmt(m.requests)+' request'+(m.requests===1?'':'s')+'</strong></div>'+
      '<div class="rvq-track" role="progressbar" aria-label="Recorded model request share within '+esc(pretty(provider))+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+formatted+'" aria-valuetext="'+formatted+' percent of '+esc(pretty(provider))+' recorded requests"><i style="width:'+formatted+'%"></i></div>'+
      '<div class="rvq-observed-model-meta">'+fmt(m.tokens)+' reported tokens · '+formatted+'% of this gateway provider\'s requests</div></li>';
  }).join('');
@@ -308,7 +308,7 @@ function overviewSlot(slot,quota,live,cloud,index,activity){
    // Unknown account quota remains a separate visible ring; never present traffic as quota.
    '<div class="rvq-overview-rings">'+(activity?traffic+usageRing(pct,evidence+' for '+name):usageRing(pct,evidence+' for '+name))+'</div>'+
    '<span class="rvq-overview-source">'+evidence+'</span>'+
-   '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac requests / 24h':'Mac requests unverified')+'</span></div>';
+   '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span></div>';
 }
 function dispatchInfo(workforce,live){
  const d=live?workforce?.dispatch:null;
