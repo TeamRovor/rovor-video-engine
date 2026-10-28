@@ -477,7 +477,7 @@ test('owner review UI exposes an actionable quick queue, loads output before ena
  assert.match(page,/controls\.hidden=false/);
  assert.match(page,/\/api\/ghost\/jobs\//);
  assert.match(page,/\/api\/ghost\/review/);
- assert.match(page,/Sec-Fetch-Site/);
+ // The same-origin Sec-Fetch-Site check is server-side; exercise it below.
  assert.equal((await s.ops.fetch(request('/api/ghost/review',{
   body:{job_id:j.id,verdict:'passed'},browser:false
  }),s.env)).status,403);
