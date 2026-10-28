@@ -623,9 +623,9 @@ const css=`
 #rovor-workload-popup .rvq-observed-model .rvq-track{height:7px;margin:5px 0}
 #rovor-workload-popup .rvq-observed-model-meta{color:#8fb6cd;font:10px/1.4 system-ui}
 #rovor-workload-popup .rvq-overview-name{color:#d8f2ff;font:700 12px/1.35 system-ui;min-height:32px;max-width:100%;overflow-wrap:anywhere}
-#rovor-workload-popup .rvq-overview .rvq-ring{width:60px;height:60px}
+#rovor-workload-popup .rvq-overview .rvq-ring{width:68px;height:68px}
 #rovor-workload-popup .rvq-overview .rvq-ring:before{inset:9px}
-#rovor-workload-popup .rvq-overview .rvq-ring-core strong{font-size:13px}
+#rovor-workload-popup .rvq-overview .rvq-ring-core strong{font-size:12px}
 #rovor-workload-popup .rvq-overview .rvq-ring-core small{font-size:9px}
 #rovor-workload-popup .rvq-overview .rvq-ring-unknown .rvq-ring-core strong{font-size:18px}
 #rovor-workload-popup .rvq-overview-source{color:#91c3dd;font:700 10px/1.3 system-ui;letter-spacing:.03em;overflow-wrap:anywhere}
