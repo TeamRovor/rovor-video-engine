@@ -29,7 +29,8 @@ jobs:
       - name: Verify Workload Distribution popup and compact meters
         run: |
           node --check dashboard/command-center/native-v8-9/workload-popup.js
-          node --test dashboard/command-center/tests/workload-popup.test.cjs
+          node --check dashboard/command-center/native-v8-9/live-quota-board.js
+          node --test dashboard/command-center/tests/workload-popup.test.cjs tests/test_hud_provider_overview_layout.cjs
 
   browser-responsive-workload:
     runs-on: ubuntu-latest
