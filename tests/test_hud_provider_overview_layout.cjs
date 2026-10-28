@@ -150,7 +150,7 @@ test('fresh private review receipts give a truthful sample, not a claimed queue 
   ]};
  const html=render(null,false,cloud);
  const review=html.slice(html.indexOf('id="rvq-review"'),html.indexOf('id="rvq-team"'));
- assert.match(html,/REVIEW · 1\\+/);
+ assert.match(html,/REVIEW · 1\+/);
  assert.match(review,/1 returned cloud receipt awaiting PASS \/ FAIL/);
  assert.match(review,/Audit draft/);
  assert.doesNotMatch(review,/Duplicated draft|Canary draft|Approved draft/);
