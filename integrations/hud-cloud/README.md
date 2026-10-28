@@ -218,3 +218,56 @@ Live read-only host evidence collected during implementation: heartbeat was
 recent but dispatch reported `failure_circuit_requires_review`; no employee's
 `online_verified` was true. That observation is time-specific and is not a
 cloud telemetry verification.
+
+
+## Gemini project quota monitoring — optional read-only credential
+
+The existing private Cloudflare telemetry HUD now supports
+`GET /api/hud/gemini/project-quota` with **the existing HUD reader
+authentication**. This is distinct from OmniRoute's provider-limit cache,
+so the nine-provider cache coverage metric remains unchanged.
+
+Google Cloud Monitoring exposes `generativelanguage.googleapis.com/quota/
+generate_content_free_tier_requests/{limit,usage}` and `generate_content_
+free_tier_input_token_count/{limit,usage}`. The collector makes four
+bounded **read-only Cloud Monitoring GETs**, at most once/minute per running
+Worker isolate, then emits only validated model, limit-name, quota limit,
+sampled usage, sample interval and evidence scope. Google says Monitoring
+quota data may be unavailable for about 150 seconds after sampling.
+**This is historical project-level DELTA usage paired with GAUGE capacity,
+not a live remaining allowance; no reset or percentage is inferred.**
+Missing metrics, stale data, IAM denial, unknown models and incomplete
+pagination all fail closed to unknown. No inference, quota refresh POST,
+paid route, STOP change or employee dispatch occurs.
+
+Activation requires **one separately approved, read-only Google Cloud
+monitoring identity**, scoped only to the existing user's project:
+
+- `GEMINI_MONITOR_PROJECT`: the project ID displayed in AI Studio (not
+  an API key). Existing owner project: `gen-lang-client-0511388545`.
+- `GEMINI_MONITOR_SERVICE_ACCOUNT_EMAIL`: dedicated service-account
+  principal, given only `roles/monitoring.viewer` on that project.
+- `GEMINI_MONITOR_SERVICE_ACCOUNT_KEY`: the service-account RSA private
+  key, saved strictly as a Cloudflare Worker secret; never commit, paste
+  into chat, embed in HTML, send to an AI provider or put in browser
+  settings. This is **not** the existing Gemini inference API key.
+
+The Worker creates a short-lived Google OAuth access token with the
+`monitoring.read` scope entirely server-side and does not expose it in
+the response. The account must actually be permitted to list the project's
+Monitoring time series. Google recommends avoiding long-lived keys where
+workload identity federation is feasible; this optional adapter does
+not claim to eliminate that key-management risk. If the account's
+administrative policy prohibits key creation, do not bypass the policy;
+leave this integration unconfigured until a separately reviewed
+workload-identity implementation exists.
+
+To activate it on the existing Cloudflare Worker, the owner must first
+configure all three values as private Worker secrets/environment settings
+(with no public leak), then redeploy through the existing protected
+GitHub workflow. An authorized reader can check the endpoint for
+`status: sampled_project_quota`; `not_configured`,
+`permission_denied`, `no_paired_current_samples` or
+`unavailable` **must not** count as a live quota feed.
+The existing owner-private ChatGPT Site is a separate deployment and
+must not be recreated, unprivated or assumed updated by this change.

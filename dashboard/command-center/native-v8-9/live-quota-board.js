@@ -351,6 +351,38 @@ const GEMINI_OWNER_OTHER_LIMITS=[
  ['Gemini Embedding 1',100,30000,1000],
  ['Gemini Embedding 2',100,30000,1000]
 ];
+// Google project-level observed DELTA sample + GAUGE capacity are separate
+// pieces of evidence. They do NOT certify instant remaining quota or a reset.
+function geminiProjectMonitoring(provider,doc){
+ if(provider!=='gemini')return '';
+ if(!doc||doc.source!=='google_cloud_monitoring')return '<p>Gemini project quota monitoring · not connected</p>';
+ const status=String(doc.status||'unavailable');
+ const base='<section class="rvq-mistral-reference" aria-label="Google-authenticated Gemini project quota samples">'+
+  '<strong>GEMINI PROJECT · AUTHENTICATED GOOGLE MONITORING</strong>';
+ const fresh=doc.status==='sampled_project_quota'&&Number.isSafeInteger(doc.observed_at)&&
+   doc.observed_at>=Date.now()-120000&&doc.observed_at<=Date.now()+10000&&
+   Array.isArray(doc.models)&&doc.models.length<=40;
+ if(!fresh)return base+'<p>'+esc(status.replaceAll('_',' '))+
+  ' · project monitoring is not an authenticated live remaining-quota reading yet.</p></section>';
+ const samples=doc.models.filter(q=>q?.source==='google_cloud_monitoring_free_tier_project_metrics'&&
+   q.scope==='google_project_sample'&&typeof q.model==='string'&&
+   /^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,149}$/.test(q.model)&&
+   typeof q.limit_name==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,149}$/.test(q.limit_name)&&
+   ['requests','input_tokens'].includes(q.unit)&&
+   Number.isSafeInteger(q.limit)&&q.limit>0&&
+   Number.isSafeInteger(q.sampled_usage)&&q.sampled_usage>=0&&q.sampled_usage<=q.limit&&
+   Number.isSafeInteger(q.sample_started_at)&&Number.isSafeInteger(q.sample_ended_at)&&
+   q.sample_started_at<q.sample_ended_at&&
+   q.sample_ended_at<=Date.now()+10000&&Date.now()-q.sample_ended_at<=300000
+ ).slice(0,12);
+ if(!samples.length)return base+'<p>Google response has no valid fresh model samples. Quota remains unknown.</p></section>';
+ const rows=samples.map(q=>
+   '<tr><td>'+esc(q.model)+'</td><td>'+esc(q.limit_name)+'</td><td>'+esc(q.unit)+'</td>'+
+   '<td>'+fmt(q.sampled_usage)+'</td><td>'+fmt(q.limit)+'</td></tr>').join('');
+ return base+'<p>Verified project-level free-tier observations from Google Cloud Monitoring, which may lag by 150 seconds or more. Sampled usage is a historical interval; it is NOT the current remaining balance. No inferred reset or unearned online status.</p>'+
+  '<table><thead><tr><th>Model</th><th>Limit name</th><th>Unit</th><th>Last sampled use</th><th>Reported limit</th></tr></thead><tbody>'+
+  rows+'</tbody></table></section>';
+}
 function geminiLimitReferences(provider){
  if(provider!=='gemini')return '';
  const trs=rows=>rows.map(([name,rpm,tpm,rpd])=>
@@ -385,7 +417,7 @@ function minuteLabel(minute,live){
  return '<div class="rvq-minute">LIVE LAST MINUTE · <strong>'+fmt(minute.requests)+' request'+(minute.requests===1?'':'s')+'</strong> · '+fmt(minute.tokens)+' reported tokens'+
   '<span>Rolling 60-second OmniRoute sample · not Mistral organization-wide usage or remaining quota</span></div>';
 }
-function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute){
+function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute,geminiProject=null){
  const entries=live&&slot.enabled!==false?quota.filter(q=>q.provider===group.provider&&q.account_slot===slot.account_slot&&
    (!q.reset_at||Date.parse(q.reset_at)>Date.now())):[];
  const rows=entries.map(meter);
@@ -395,7 +427,7 @@ function card(group,quota,live,index,slot,cloud,attempts,activity,hourly,minute)
  const state= !live?'DISCONNECTED':slot.enabled===false?'DISABLED':slot.enabled===true?'ENABLED · NOT TESTED':'ENABLEMENT UNKNOWN';
  const evidence=entries.length?'LIMITS REPORTED':'QUOTA UNKNOWN';
  return '<article class="rvq-provider" data-rvq-slot="'+esc(group.provider+':'+slot.account_slot)+'"><div class="rvq-provider-head"><div class="rvq-provider-icon">'+esc(pretty(group.name||group.provider).slice(0,1).toUpperCase())+'</div><div class="rvq-provider-ident"><span class="rvq-provider-index">CONNECTION '+String(index+1).padStart(2,'0')+' / '+esc(pretty(group.name||group.provider))+'</span><h4>'+esc(pretty(group.name||group.provider))+' · Slot '+fmt(slot.account_slot)+'</h4><p>'+state+'</p></div><div class="rvq-provider-status'+(entries.length?' rvq-reported':'')+'">'+evidence+'</div></div>'+
- '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
+ '<div class="rvq-provider-content">'+activityLabel(activity,live)+minuteLabel(minute,live)+hourLabel(hourly,live)+modelActivity(activity,group.provider,hourly,minute)+mistralLimitReferences(group.provider,activity)+groqLimitReferences(group.provider)+geminiLimitReferences(group.provider)+geminiProjectMonitoring(group.provider,geminiProject)+first+extra+cloudEvidence(cloud)+jobReceipts(group.provider,attempts)+'</div></article>';
 }
 
 // Nine-provider glance cards are a visualization of one explicitly labeled
@@ -637,7 +669,7 @@ function mount(){
  listenForQuotaInteraction();
  const s=document.createElement('style');s.id='rvq-style';s.textContent=css;document.head.append(s);
 }
-function render(data,live,cloud=null,hourly=null,minute=null){
+function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null){
  mount();
  const cloudFresh=cloud?.execution_source==='cloud_provider'&&Number.isFinite(cloud.observed_at)&&
    Math.abs(Date.now()-cloud.observed_at)<=15000&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
@@ -678,7 +710,7 @@ function render(data,live,cloud=null,hourly=null,minute=null){
  '<div class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
  '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
- '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts,providerActivity(activity,s.group.provider),providerActivity(hourActivity,s.group.provider),providerActivity(minuteActivity,s.group.provider))).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+
+ '<div class="rvq-grid">'+(slots.length?slots.map((s,i)=>card(s.group,quota,live,i,s,cloudProviders.get(s.group.provider),cloudAttempts,providerActivity(activity,s.group.provider),providerActivity(hourActivity,s.group.provider),providerActivity(minuteActivity,s.group.provider),geminiProject)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+
  '<p class="rvq-footnote">Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Mac traffic percentages are shares of recorded provider requests, NOT quota usage. Local quota rings are cached gateway limits; separate cloud quota rings require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></section>';
 }
 // Preserve owner inspection context even when live evidence must be refreshed.
@@ -805,10 +837,21 @@ function start(){
           Math.abs(Date.now()-d.observed_at)<=15000&&Array.isArray(d.providers)&&d.providers.length<=20)cloud=d;
      }
    }catch{}
+   let geminiProject=null;
+   // Site and Cloudflare readers are same-origin; the original private Site
+   // may not have this optional route and must show no project samples.
+   try{
+    const response=await fetch('/api/hud/gemini/project-quota',{
+     credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
+    if(response.ok){
+     const item=await response.json();
+     if(item?.source==='google_cloud_monitoring'&&typeof item.status==='string')geminiProject=item;
+    }
+   }catch{}
    lastCloud=cloud;last=fresh;lastHourly=hourly;lastMinute=minute;updated=Date.now();
    const target=slot();if(target){
      const state=captureState(target);
-     target.outerHTML=render(fresh||lastInventory,!!fresh,cloud,hourly,minute);
+     target.outerHTML=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject);
      restoreState(slot(),state);
    }
    } finally {

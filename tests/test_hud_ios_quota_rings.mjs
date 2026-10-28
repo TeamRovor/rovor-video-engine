@@ -365,3 +365,30 @@ test('Gemini reference leaves nine-provider quota coverage at 0 when cache has n
  assert.equal((html.match(/role="img" aria-label="Provider quota unknown"/g)||[]).length,18);
  assert.match(html,/GEMINI · FREE TIER PROJECT LIMITS/);
 });
+
+
+test('authenticated Gemini project monitoring displays fresh Google samples but never a fictitious remaining meter',()=>{
+ const data={source:'local_omniroute_read_only_bridge',period:'24h',
+  snapshot_at:new Date().toISOString(),usage_coverage:'complete_aggregate',
+  request_count:0,connections:[{provider:'gemini',name:'gemini',connection_count:1,enabled_count:1}],
+  connection_slots:[{provider:'gemini',account_slot:1,enabled:true}],
+  models:[],quota:{records:[]}};
+ const now=Date.now();
+ const doc={source:'google_cloud_monitoring',status:'sampled_project_quota',observed_at:now,
+  models:[{model:'gemini-3.1-flash-lite',limit_name:'GenerateRequestsPerMinute-FreeTier',
+   unit:'requests',limit:15,sampled_usage:3,
+   sample_started_at:now-70000,sample_ended_at:now-10000,limit_observed_at:now-10000,
+   reset_at:null,source:'google_cloud_monitoring_free_tier_project_metrics',scope:'google_project_sample'}]};
+ const html=board().render(data,true,null,null,null,doc);
+ assert.match(html,/AUTHENTICATED GOOGLE MONITORING/);
+ assert.match(html,/gemini-3.1-flash-lite/);
+ assert.match(html,/GenerateRequestsPerMinute-FreeTier/);
+ assert.match(html,/sampled use<\/th>/);
+ assert.match(html,/NOT the current remaining balance/);
+ assert.doesNotMatch(html,/aria-label="Reported quota used"/);
+ assert.match(html,/Provider quota unknown/);
+ doc.observed_at=now-3600000;
+ const old=board().render(data,true,null,null,null,doc);
+ assert.doesNotMatch(old,/GenerateRequestsPerMinute-FreeTier/);
+ assert.match(old,/not an authenticated live remaining-quota reading yet/);
+});

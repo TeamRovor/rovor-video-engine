@@ -7,6 +7,7 @@ on:
       - 'tests/test_hud_cloud.mjs'
       - 'tests/test_hud_github_deployment.mjs'
       - 'tests/test_hud_ios_quota_rings.mjs'
+      - 'tests/test_hud_gemini_project_quota.mjs'
       - '.github/workflows/deploy-private-hud-cloudflare.yml'
   push:
     branches: [main]
@@ -16,6 +17,7 @@ on:
       - 'tests/test_hud_cloud.mjs'
       - 'tests/test_hud_github_deployment.mjs'
       - 'tests/test_hud_ios_quota_rings.mjs'
+      - 'tests/test_hud_gemini_project_quota.mjs'
       - '.github/workflows/deploy-private-hud-cloudflare.yml'
   workflow_dispatch:
 
@@ -36,9 +38,10 @@ jobs:
       - name: Test private auth, nine-provider meters and GitHub release preflight
         run: |
           node --check integrations/hud-cloud/worker.mjs
+          node --check integrations/hud-cloud/gemini-cloud-monitoring.mjs
           node --check integrations/hud-cloud/prepare-github-deploy.mjs
           node --check integrations/hud-cloud/verify-github-deploy.mjs
-          node --test tests/test_hud_cloud.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs
+          node --test tests/test_hud_cloud.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_gemini_project_quota.mjs
 
       - name: Diagnose live unauthenticated response codes (no credentials)
         if: github.event_name == 'pull_request'
