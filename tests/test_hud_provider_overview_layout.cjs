@@ -77,3 +77,42 @@ test('workload preview buttons and rows stay finger-sized without losing the des
  assert.match(workload,/#workloadPanel \.wl-compact-name\{white-space:normal;[^\n]*font-size:12px/);
  assert.match(workload,/#rovor-workload-popup \.wl-period \.wl-button\{min-height:44px/);
 });
+
+test('traffic and allowance instruments use different visual hierarchy',()=>{
+ const now=new Date().toISOString();
+ const data={source:'local_omniroute_read_only_bridge',period:'24h',
+  snapshot_at:now,request_count:1,usage_coverage:'complete_aggregate',
+  connections:nine(),models:[{provider:'groq',name:'test',requests:1,tokens:12}],
+  quota:{records:[]}};
+ const html=render(data,true);
+ assert.match(html,/MAC TRAFFIC/);
+ assert.match(html,/QUOTA USED/);
+ assert.match(html,/class="rvq-ring rvq-ring-traffic"/);
+ assert.match(html,/Provider quota unknown/);
+ assert.match(boardSource,/\.rvq-overview \.rvq-ring-traffic\{width:48px;height:48px/);
+});
+
+test('attention filter covers fresh actionable gates without treating idle or stale as blocked',()=>{
+ const now=Date.now();
+ const cloud={execution_source:'cloud_provider',observed_at:now,providers:providers.map(provider=>({
+  provider,credentials_configured:true,dispatch_gate:{reason:provider==='groq'?'missing_secret':'no_matching_unattempted_job'}
+ }))};
+ const html=render(null,false,cloud);
+ assert.match(html,/SETUP \/ REVIEW 1/);
+ assert.match(html,/data-rvq-filter="attention"/);
+ assert.equal((html.match(/data-rvq-attention="true"/g)||[]).length,1);
+ assert.equal((html.match(/data-rvq-attention="false"/g)||[]).length,8);
+ assert.match(boardSource,/\.rvq-overview-controls button\{min-height:44px/);
+ const old=render(null,false,{...cloud,observed_at:now-3600000});
+ assert.doesNotMatch(old,/SETUP \/ REVIEW 1/);
+ assert.doesNotMatch(old,/data-rvq-attention="true"/);
+});
+
+test('compact workload calls historical records historical and uses Chicago daylight rules',()=>{
+ const js=fs.readFileSync(path.join(__dirname,'../dashboard/command-center/native-v8-9/workload-popup.js'),'utf8');
+ assert.match(js,/HISTORICAL MAC SNAPSHOT/);
+ assert.match(js,/31 PAST CLAIMS/);
+ assert.match(js,/timeZoneName:'short'/);
+ assert.doesNotMatch(js,/\+' CDT'/);
+ assert.doesNotMatch(js,/3 ROUTED \/ 9 CONNECTIONS/);
+});
