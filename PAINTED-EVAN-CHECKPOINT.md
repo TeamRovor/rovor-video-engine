@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: forehead repair checked across broader glasses acting
+CARTOON-EVAN-FOREHEAD-STAGE.md / evan-engine/reviews/forehead-stage-v1.json. Samev4foundation through original5–8s lowering/hold/blink/return;48new actualstageposes reproducecurrentv3fullbaseline first +24BYTE-EXACTshortcomponent frames. Native restspeech0/269 matchespriorv3beforev4; originaloral/jaw/audit/speech/below240/nonhead/neck/officialstage exact. No newart/retiming/productioncodechange.100stage/nativePNG hashes +55selectedcurrent/frozen sources verified;72/288complete normal/slowdecodes;48000exactPCM80000:128000, WAVbyte-exactprevious5–8scontext.
+
+Native0/269rest,130/138/188faces,138join +7normal/5slow decodedstills inspected. Foreheadband remainsreduced acrosssampledposes; no cueboundaryheadswap. Smallbrowflecks/lid/frame/templeedges, limitedgaze/expression andmodestbodyacting remainbelowconcept. SampledconstructionONLY: realtime/listening/exactboundaries/polishedFALSE. No pendingjobs. Completedv3full/default preserved;18flagsunresolved;automationACTIVE.
+
+NEXT: fiveactualfull-shot v4pilots0/69/269/374/531 includingdigitflex269;20closingframesBYTE-EXACT. Then separatefullv4foundation throughoutspeaking; originalfullPCM/18markers retained. No newart/gesturevariants.
+
 ## Current task: local forehead transition repaired; short narrated component reviewed
 CARTOON-EVAN-FOREHEAD-SEAM.md / evan-engine/reviews/forehead-seam-v1.json. Traced original brow-removal +eye-underlay boundary; reused SAMEregistered glasses-free source (saved v1affine/RGBoffset), no newgeneration/headswap. Opt-in eye-underlay-v4 changes4847local skinpixels,3pxfeather; outsideownership/alpha/below240/glasses exact. Fourderivatives rebuildexact. CartoonUpperFace keywordfolder defaultv3 preserved.12testsPASS includinglocal mask acrossglasses0/12/25+blink0/.5/1+brows.
 
