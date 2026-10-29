@@ -5,6 +5,15 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: separate eyelids constructed/reviewed; narrated blink component next
+CARTOON-EVAN-EYELIDS.md / evan-engine/reviews/eyelids-v1.json. New cartoon_eyelids.py + optionalblink0..1 inopt-inCartoonUpperFace(default0). Four upper/lower skinplanes +twoinkplanes overstationaryoriginaleyes; brows/glassesfollow. Originalnosecorridor/unowned/nativey≥310exact. Ten testsPASS(fiveold/fivenew): rest/source, closedcoverage/noownedwhites,17orderedamplitudes/ownership, glasses/speech, invalids +priorguards. Sixoldactualspeech upperfacefixtures remainBYTE-EXACT atblink0;15blinkstates rendered onsource0/138/269.
+
+OneTARGETEDimagegen skin-onlycrop2154×730(rawSHA inProvenance), inspectedcomplete+two1077×730nativehalves; exactprompt/inputhashes/rawpreserved. RawUNREGISTERED; separateauthoredcrop165×56→512skin-underpaint +ownership2713pixels/registration, bounded±24RGBfit; originalworkingalpha/outsideexact.3derivativefiles rebuildexactly. Earlierwhite-corner/proceduralnose-smear trials rejected. No wholeheadswap.
+
+outputs/evan-cartoon-eyelid-construction/Review.html: mutedheldsource138mouth/brows, glasses25px, oneblink.48/192normal/slowdecoded(2/8s);48stagehashes +selectedcurrent/frozen sources/filmsverified. Nativehalf/closed0/138/269, enlargedcrops +7normal/4slow1024×540decoded inspected. Blinkreads; lowerface/brows registered. Leftfillboundary/thinlidink stillvisible WITHOUTglasses atlargecrop; foreheadband/templeedges persist. NO narrationdriven/listening/realtime/polishedacceptance;18flags unresolved. NO pendingjobs. Full/default remainstorso-continuous, safeguardsunchanged; automationACTIVE.
+
+NEXT: ONE word-anchored blink duringexisting skeptical lowered-glasses HOLD, in separate5–8s narrationcomponent. Preserveactualnativeoral/jaw/audit +open/defaultparity; inspectcueboundaries/stagescale. No newheadvariants/fullfilmreplacement yet.
+
 ## Current task: upper face in actual full-stage component reviewed; eyelid articulation next
 CARTOON-EVAN-UPPER-FACE-STAGE.md / evan-engine/reviews/upper-face-stage-v1.json. outputs/evan-cartoon-upper-face-stage/Review.html: separate5–8s72poses combines SAMEv3foundation atALLframes, originalspeech/brows, currenttorso bend, independentarms/officialRovorstage. All72actualbaseline stages reproduce currenttorso-continuous PNGs byte-exact; onlyhead replaced underSAMEparents. Neck/torso/arms/otherlayers andbrand/browser exact; nativey≥310speechpixels/oral/jaw/audit exact. RestisNEWv3foundation, neveroldfacecue-swap. Min torsoarea2=1618.18258432.
 

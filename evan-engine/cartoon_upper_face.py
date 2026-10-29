@@ -24,6 +24,8 @@ class CartoonUpperFace:
         self.domain = np.any(self.underlay != clean, axis=2) | (self.glasses[:, :, 3] > 0) | repair | (self.forehead > 0)
         if self.domain[310:].any():
             raise ValueError('Upper-face ownership crossed speech boundary')
+        from cartoon_eyelids import CartoonEyelids
+        self.eyelids = CartoonEyelids(self.underlay, root)
         self.yy, self.xx = np.mgrid[:512, :512]
         weight = np.clip((353 - self.xx) / 27, 0, 1)
         self.weight = weight * weight * (3 - 2 * weight)
@@ -43,7 +45,7 @@ class CartoonUpperFace:
         result[:, 353:] = self.glasses[:, 353:]
         return result
 
-    def render(self, speech, expression, amount):
+    def render(self, speech, expression, amount, *, blink=0.):
         base = np.array(speech)
         if base.shape != (512, 512, 4) or base.dtype != np.uint8:
             raise ValueError('Expected native 512x512 RGBA speech face')
@@ -51,7 +53,9 @@ class CartoonUpperFace:
         if not np.isfinite(list(values.values())).all():
             raise ValueError('Expected finite brow controls')
         image = base.copy()
-        image[self.domain] = self.underlay[self.domain]
+        foundation = self.eyelids.pose(blink)
+        domain = self.domain | (self.eyelids.domain if blink else False)
+        image[domain] = foundation[domain]
         canvas = image.astype('float32')
         canvas[:, :, :3] *= canvas[:, :, 3:4] / 255
         for name, raw in self.brows.items():
@@ -65,7 +69,7 @@ class CartoonUpperFace:
         canvas[:, :, :3] *= 255 / np.maximum(canvas[:, :, 3:4], 1)
         result = Image.fromarray(np.clip(canvas, 0, 255).astype('uint8'))
         glasses = self.glasses_plane(amount)
-        domain = self.domain | (glasses[:, :, 3] > 0)
+        domain = domain | (glasses[:, :, 3] > 0)
         if domain[310:].any():
             raise ValueError('Moved glasses crossed speech boundary')
         result.alpha_composite(Image.fromarray(glasses))
