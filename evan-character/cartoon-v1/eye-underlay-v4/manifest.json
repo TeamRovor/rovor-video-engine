@@ -1,0 +1,92 @@
+{
+  "sourceSha256": "99a9325ded471a3af89ba33c8657dab641cdafddd6370a7fe20fc02058134bff",
+  "previousUnderlaySha256": "8717af9729ecd3a4f06d14b82dfcbf3c649ec5508e684382bcbfd8b8307ff02f",
+  "registration": [
+    [
+      1.0011793375015259,
+      -0.001126105198636651,
+      -0.053742554038763046
+    ],
+    [
+      0.0008707241504453123,
+      0.999403178691864,
+      -0.17229905724525452
+    ]
+  ],
+  "skinOffset": [
+    -3.0,
+    -6.0,
+    -2.0
+  ],
+  "polygon": [
+    [
+      165,
+      216
+    ],
+    [
+      170,
+      208
+    ],
+    [
+      191,
+      210
+    ],
+    [
+      214,
+      212
+    ],
+    [
+      242,
+      208
+    ],
+    [
+      263,
+      198
+    ],
+    [
+      288,
+      187
+    ],
+    [
+      309,
+      197
+    ],
+    [
+      319,
+      212
+    ],
+    [
+      327,
+      231
+    ],
+    [
+      315,
+      237
+    ],
+    [
+      250,
+      235
+    ],
+    [
+      231,
+      230
+    ],
+    [
+      214,
+      233
+    ],
+    [
+      172,
+      236
+    ]
+  ],
+  "featherPixels": 3,
+  "changedPixels": 4847,
+  "outsideMaskExact": true,
+  "alphaExact": true,
+  "below240Exact": true,
+  "glassesByteExact": true,
+  "newGeneratedArtwork": false,
+  "defaultChanged": false,
+  "animationAccepted": false
+}

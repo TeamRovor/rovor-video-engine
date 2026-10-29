@@ -11,8 +11,8 @@ from painted_character import rotation
 
 
 class CartoonUpperFace:
-    def __init__(self, root=ROOT):
-        folder = root / 'eye-underlay-v3'
+    def __init__(self, root=ROOT, *, folder_name='eye-underlay-v3'):
+        folder = root / folder_name
         self.underlay = np.array(Image.open(folder / 'underlay.png').convert('RGBA'))
         self.glasses = np.array(Image.open(folder / 'glasses.png').convert('RGBA'))
         expression = root / 'expression-rig'

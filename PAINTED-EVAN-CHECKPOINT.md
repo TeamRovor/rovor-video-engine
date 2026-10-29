@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: local forehead transition repaired; short narrated component reviewed
+CARTOON-EVAN-FOREHEAD-SEAM.md / evan-engine/reviews/forehead-seam-v1.json. Traced original brow-removal +eye-underlay boundary; reused SAMEregistered glasses-free source (saved v1affine/RGBoffset), no newgeneration/headswap. Opt-in eye-underlay-v4 changes4847local skinpixels,3pxfeather; outsideownership/alpha/below240/glasses exact. Fourderivatives rebuildexact. CartoonUpperFace keywordfolder defaultv3 preserved.12testsPASS includinglocal mask acrossglasses0/12/25+blink0/.5/1+brows.
+
+outputs/evan-cartoon-forehead-seam/Review.html: separate original6.25–7.25s,24/96normal/slow fullydecoded,16000exactPCM100000:116000. All24actual v3baselines exactcurrentfull beforev4; oral-jaw/audit/lowerface/neck/nonhead/officialstage exact. Nativecomparison/open+closedfaces +5normal/3slow decodedstills inspected. Broadrectangularband reduced; smallinnerbrowflecks/lid/frame/templeedges andlimitedgaze/expression remain. SampledconstructionONLY; realtime/listening/exactboundaries/polishedFALSE. No pendingjobs. v3full/default preserved;18flagsunresolved;automationACTIVE.
+
+NEXT: actualrest/openeye speechfixtures0/269 andbroaderglassesraise/return beforev4fullintegration. No newwholehead/art/gesturevariants. Preservev3full and20closingframes.
+
 ## Current task: full upper-face candidate completed; sampled construction reviewed
 CARTOON-EVAN-UPPER-FACE-CONTINUOUS.md / evan-engine/reviews/upper-face-continuous-v1.json. Separate outputs/evan-cartoon-upper-face-continuous/Review.html now has completed normal23s/slow92s movies and refreshed playback status. 552/2208 complete decodes; all552PNG hashes/current+frozen sources/film hashes verified. 455new speaking poses retain baseline/oral-jaw-audit/y310/nonhead/brand checks;72reviewedblinkposes+5pilots+20byte-exactclosing complete the cut. FullWAV byte-exact368000mono16kPCM;18markers/36context links retained,0flags cleared.
 
