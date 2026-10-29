@@ -88,3 +88,26 @@ def skeptical_glasses(t, plan):
     if event is None:
         return 0.
     return float(np.clip(flowing_track(t, [(event['anticipate'], 0.), (event['arrive'], 25.), (event['hold'], 25.), (event['settle'], 0.)]), 0, 25))
+
+
+def skeptical_blink(t, plan):
+    """One authored blink on 'browser' while the glasses are held down."""
+    from skeptical_cartoon_review import skeptical_event
+    from painted_timing import flowing_track
+    if not np.isfinite(t):
+        raise ValueError('Expected finite review time')
+    event = skeptical_event(plan)
+    if event is None:
+        return 0.
+    word = next(w for w in plan['words'] if w['scriptIndex'] == event['scriptIndices'][4])
+    a, b = word['start'], word['end']
+    if not np.isfinite([a, b]).all() or b <= a:
+        raise ValueError('Expected a finite positive browser interval')
+    mid = (a+b)/2
+    lead = min(.10, (mid-event['arrive'])*.8)
+    tail = min(.20, (event['hold']-mid)*.8)
+    if min(lead, tail) <= 0:
+        raise ValueError('Blink must fit inside the lowered-glasses hold')
+    # shortcut: one authored accent, not automatic emotion or eye-gaze inference.
+    keys = [(mid-lead, 0.), (mid-lead*.15, 1.), (mid+tail*.175, 1.), (mid+tail, 0.)]
+    return float(np.clip(flowing_track(t, keys), 0, 1))

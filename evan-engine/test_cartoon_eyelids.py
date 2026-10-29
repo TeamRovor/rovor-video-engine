@@ -51,6 +51,29 @@ class EyelidTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.lids.pose(amount)
 
+    def test_word_anchored_blink_shift_bounds_and_missing_phrase(self):
+        from cartoon_upper_face import skeptical_blink, skeptical_glasses
+        words = "that's not some random browser thing".split()
+        plan = {'words': [dict(word=w, start=5+i*.3, end=5.2+i*.3, scriptIndex=i) for i, w in enumerate(words)]}
+        shifted = {'words': [dict(w, start=w['start']+2, end=w['end']+2) for w in plan['words']]}
+        for t in np.linspace(4, 8, 401):
+            value = skeptical_blink(t, plan)
+            self.assertTrue(0 <= value <= 1)
+            self.assertAlmostEqual(value, skeptical_blink(t+2, shifted))
+            if value:
+                self.assertAlmostEqual(skeptical_glasses(t, plan), 25)
+        mid = (plan['words'][4]['start']+plan['words'][4]['end'])/2
+        self.assertEqual(skeptical_blink(mid, plan), 1)
+        self.assertEqual(skeptical_blink(mid-.11, plan), 0)
+        self.assertEqual(skeptical_blink(mid+.21, plan), 0)
+        self.assertEqual(skeptical_blink(5, {'words': []}), 0)
+        with self.assertRaises(ValueError):
+            skeptical_blink(np.nan, plan)
+        invalid = {'words': [dict(w) for w in plan['words']]}
+        invalid['words'][4]['end'] = invalid['words'][4]['start']
+        with self.assertRaises(ValueError):
+            skeptical_blink(mid, invalid)
+
 
 if __name__ == '__main__':
     unittest.main()

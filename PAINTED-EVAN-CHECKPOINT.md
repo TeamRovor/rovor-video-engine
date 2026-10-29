@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: word-anchored blink in narrated stage reviewed; full-shot pilots next
+CARTOON-EVAN-BLINK-STAGE.md / evan-engine/reviews/blink-stage-v1.json. Opt-in skeptical_blink onbrowser/index22(6.39–6.75s); keys6.47/6.555/6.605/6.77, insideglasses25pxhold.11testsPASS inclshift/missing/boundedcue/glasseshold/invalidinterval +priorgeometry/ownership. Authoredaccent; NOacousticaccuracyclaim/art/defaultchange.
+
+outputs/evan-cartoon-blink-stage/Review.html: separate5–8s,7new156..162 +65BYTE-EXACTupper-face-stagePNGs. Eachnewpose firstreproduces originaltorsofullbaseline ANDpreviousopeneyecomponent. Nativey≥310/oral/jaw/audit/nonheadlayers/officialbrand-browser exact.100stage/nativePNGs/filmsverified +selectedcurrent/frozen sources.72/288normal/slowdecoded; WAVbyteexactprevious48000mono16kPCM80000:128000; normalAACsamplecountretained(lossy).9normal/4slow1280×720decoded +3native512facepairs/closed780join inspected. Blinkreadsaboveglasses; no sampledjawslip/newneckgap/bodydrawingswitch. Skin/inkedges/foreheadband/templenotches/limitedgaze remain belowconcept. Listening/realtime/polishedNOTaccepted;18flags unresolved. NO pendingjobs. Full/default remainstorso-continuous; safeguardsunchanged; automationACTIVE.
+
+NEXT: full-shot pilots0/69/269/374/531 reproducecurrentfullstage first, includingexistingdigitflex269. Preserve20closingframesBYTE-EXACT. Sameupperfacefoundationthroughspeakingframes(no cue-boundaryheadswap); preserveallotheracting/nativeoral-jaw/fullPCM/18markers, then separatefullcandidate. No newart/gesturevariants.
+
 ## Current task: separate eyelids constructed/reviewed; narrated blink component next
 CARTOON-EVAN-EYELIDS.md / evan-engine/reviews/eyelids-v1.json. New cartoon_eyelids.py + optionalblink0..1 inopt-inCartoonUpperFace(default0). Four upper/lower skinplanes +twoinkplanes overstationaryoriginaleyes; brows/glassesfollow. Originalnosecorridor/unowned/nativey≥310exact. Ten testsPASS(fiveold/fivenew): rest/source, closedcoverage/noownedwhites,17orderedamplitudes/ownership, glasses/speech, invalids +priorguards. Sixoldactualspeech upperfacefixtures remainBYTE-EXACT atblink0;15blinkstates rendered onsource0/138/269.
 

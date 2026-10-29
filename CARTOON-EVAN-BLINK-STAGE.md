@@ -1,0 +1,13 @@
+# One narration-anchored blink in the branded stage
+
+The opt-in `skeptical_blink` helper places one authored blink on “browser” within the existing skeptical phrase, while the sunglasses are held25 pixels down. It uses scriptIndex22 (6.39–6.75s); current blink keys are6.47/6.555/6.605/6.77s, with a quick close and slower opening. Timing follows the word anchor and stays inside the held-glasses interval. This is an authored accent, not emotion inference or a claim that the acoustic boundaries are verified.
+
+Eleven tests pass, including shifted/missing phrase, bounded blink output, full lowered-glasses coverage throughout the blink, finite time and invalid word interval. Previous eye ownership, closed-footprint, speech, brow and glasses guards remain. No artwork or defaults change.
+
+Local review: outputs/evan-cartoon-blink-stage/Review.html. Separate original5–8s component: seven new source frames156..162 plus65 byte-exact previous upper-face stage copies. Each new pose first reproduces both the original torso full-film baseline and preceding open-eye upper-face component. Native speech pixels belowy310, oral geometry, jaw target, audit, all non-head layers and official brand/browser stage remain exact. The same body/head/torso parents carry the lid planes.
+
+Normal3s and muted quarter-speed12s fully decode72/288 frames. Context WAV is byte-exact to the previous component: original mono16kPCM samples80000:128000,48000 samples. AAC retains the decoded sample count but is lossy. All100 stage/native PNGs and movie hashes verify; selected current/frozen sources are retained beside the review.
+
+Inspected nine normal/four slow decoded1280×720 samples across onset, closure, reopening and return, three native512 face pairs and the closed780×780 join crop. The blink reads at stage scale without sampled mouth/jaw slip, neck opening or body drawing switch. It remains a brief construction accent; skin/ink edges, forehead band and temple notches persist, with limited gaze/expression variety compared with the concept sheet. Listening, real-time acting and polished animation remain unaccepted. All18 acoustic flags are unresolved. Current full/default film remains torso-continuous.
+
+Next: full-shot integration pilots0/69/269/374/531 against current full stage, including existing digit-flex at269. Keep20closing frames byte-exact. Use the same upper-face foundation consistently across speaking frames, without cue-boundary head swaps; preserve native speech, all other acting, full PCM and18 audit markers before a separate full candidate. No new artwork variants or gesture expansion.
