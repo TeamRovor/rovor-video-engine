@@ -1,0 +1,72 @@
+{
+  "event": {
+    "anticipate": 5.140000000000001,
+    "arrive": 5.73,
+    "hold": 7.06,
+    "settle": 7.369999999999999,
+    "scriptIndices": [
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ]
+  },
+  "wristDelay": 0.07,
+  "updatedFrames": 55,
+  "unchangedFramesByteExact": 497,
+  "faceRightArmAndBrandExact": true,
+  "minimumArmArea2": 199.40506631783373,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 552,
+      "sha256": "1f3785d07950d945c4aabba617d1cb7e84b1b88d28faf187e53d5dc42429968f"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 2208,
+      "sha256": "d7f2d9b779e6b11f52136abad0cf825c0c7c7fe1e51db0d602d235a15c0e4044"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 368000,
+    "decodedPcm16Samples": 368000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourceWavByteExact": true,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "defaultChanged": false,
+  "newArtwork": false,
+  "fingerArticulated": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "status": "export-verified-native-frame-review-complete",
+  "runtimeParent": "c1f33f29ef79936a4baad1306379a31d0eac9cf1",
+  "newFocusedTestsPassed": 2,
+  "combinedFocusedTestsPassed": 8,
+  "geometryProbeInterval": [
+    5.0,
+    7.5
+  ],
+  "geometryProbeStep": 0.0020833333333333333,
+  "nativeWristCuffFramesInspected": 55,
+  "fullStageTimesInspected": [
+    5.416666666666667,
+    5.75,
+    6.2,
+    7.0,
+    7.416666666666667
+  ],
+  "handHalfAlphaStageBoundsClearFrames": 55,
+  "faceRightSideAndBrandProtectedPixelChecks": 55,
+  "sourceManifestSha256": "dd5df61e32883800b1c4ae1784e007a4e0d3cf672813e079f1fab1231df68965",
+  "sourceArtworkModified": false,
+  "defaultImported": false,
+  "flagsCleared": 0,
+  "localOutput": "outputs/evan-cartoon-dismissive-acting",
+  "rejectedPilot": "Wrist -18deg folded existing mesh; wrist -6deg passes without weakening positive-cell guard",
+  "next": "Inspect hand mismatch and create one clean right open-palm construction plate matching the design and existing left hand; register before using it"
+}

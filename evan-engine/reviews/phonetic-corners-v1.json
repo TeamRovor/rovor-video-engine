@@ -1,0 +1,131 @@
+{
+  "recordingFrameComparisons": 1059,
+  "geometrySamples": 1307,
+  "geometryFailures": 0,
+  "minimumJawTriangleArea2": 28.090896606445312,
+  "metrics": {
+    "width": {
+      "priorMaximumStep": 14.6009521484375,
+      "candidateMaximumStep": 13.84722900390625,
+      "priorP95Step": 8.296308135986328,
+      "candidateP95Step": 6.23684844970703,
+      "maximumPositionChange": 36.08464050292969,
+      "largerStepByOverOnePixel": 162
+    },
+    "lowerY": {
+      "priorMaximumStep": 14.667755126953125,
+      "candidateMaximumStep": 14.667755126953125,
+      "priorP95Step": 6.19515380859375,
+      "candidateP95Step": 6.19515380859375,
+      "maximumPositionChange": 0.0,
+      "largerStepByOverOnePixel": 0
+    },
+    "chinY": {
+      "priorMaximumStep": 2.301361083984375,
+      "candidateMaximumStep": 2.301361083984375,
+      "priorP95Step": 1.171139526367187,
+      "candidateP95Step": 1.171139526367187,
+      "maximumPositionChange": 0.0,
+      "largerStepByOverOnePixel": 0
+    }
+  },
+  "bodyNormalFrames": 240,
+  "bodySlowFrames": 960,
+  "priorEmulationMatchesFrozen888": true,
+  "testsPassed": 20,
+  "artworkChanged": false,
+  "phonemeTimingChanged": false,
+  "independentListeningOrPlaybackAcceptance": false,
+  "polishedMilestoneReady": false,
+  "cornerKeyCountPerSide": 203,
+  "fullResolutionNativeMouthPairsReviewed": 240,
+  "fullResolutionStagedMouthFramesReviewed": 240,
+  "fullResolutionStageFramesReviewed": [
+    748,
+    840,
+    888,
+    935
+  ],
+  "nativePixelPsdFrames": [
+    717,
+    888
+  ],
+  "upper288ExactStagedFrames": 240,
+  "maximumProtectedNoseChange": 0,
+  "minimumStagedJawTriangleArea2": 33.9609375,
+  "minimumArmTriangleArea2": {
+    "left": 494.6158370879494,
+    "right": 135.35149457940372
+  },
+  "allStagedFallbackCountersZero": true,
+  "bodyPcm16Samples": 80000,
+  "bodyDecodedPcm16Samples": 80000,
+  "totalFullyDecodedMovies": 10,
+  "animationAccepted": false,
+  "allRecordingLowerYChinAndFVExact": true,
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "audioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "sourcePixelPsd": [
+    {
+      "file": "Body-Pixel-Layers-717.psd",
+      "layers": [
+        "neck",
+        "torso",
+        "hand-left",
+        "arm-left",
+        "arm-right",
+        "head"
+      ],
+      "meanPremultipliedError": 0.007105693315079327,
+      "nativeMohoBones": false
+    },
+    {
+      "file": "Native-Oral-Layers-717.psd",
+      "layers": [
+        "Neck backing",
+        "Drawn skin underlap",
+        "Painted cavity",
+        "Narration tongue",
+        "Rigid upper incisors",
+        "Front dental tongue tip",
+        "Drawn jaw skin",
+        "Independent lower lip",
+        "Independent upper-lip cap",
+        "Upper face and cheeks"
+      ],
+      "meanPremultipliedError": 0.003226441028071383,
+      "nativeMohoBones": false
+    },
+    {
+      "file": "Body-Pixel-Layers-888.psd",
+      "layers": [
+        "neck",
+        "torso",
+        "hand-left",
+        "arm-left",
+        "arm-right",
+        "head"
+      ],
+      "meanPremultipliedError": 0.0071647874840396015,
+      "nativeMohoBones": false
+    },
+    {
+      "file": "Native-Oral-Layers-888.psd",
+      "layers": [
+        "Neck backing",
+        "Drawn skin underlap",
+        "Painted cavity",
+        "Narration tongue",
+        "Rigid upper incisors",
+        "Front dental tongue tip",
+        "Drawn jaw skin",
+        "Independent lower lip",
+        "Independent upper-lip cap",
+        "Upper face and cheeks"
+      ],
+      "meanPremultipliedError": 0.003929792665967752,
+      "nativeMohoBones": false
+    }
+  ],
+  "runtimeScope": "Existing opt-in separated face only; ordinary defaults unchanged"
+}

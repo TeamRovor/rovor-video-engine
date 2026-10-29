@@ -1,0 +1,24 @@
+{
+  "tests": 6,
+  "planes": [
+    "Neck backing",
+    "Jaw and lower lip combined",
+    "Upper face with cheek wings"
+  ],
+  "meanPremultipliedReassemblyDifference": 0.020906018275840536,
+  "sourceEdgeResidualY": [
+    -1,
+    1,
+    3,
+    5
+  ],
+  "sampledLowAlphaFailures": [
+    57,
+    44,
+    41
+  ],
+  "reviewToolLoaded": true,
+  "defaultProfileChanged": false,
+  "animationReady": false,
+  "decision": "Experimental layer-order improvement; not ready: contact coverage, lip/cavity surfaces, chin drift and cast shadow need artist work"
+}

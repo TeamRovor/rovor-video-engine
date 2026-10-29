@@ -1,0 +1,350 @@
+{
+  "baseCommit": "6333617fc32f8464ee9bbff1622f7eddedb97306",
+  "componentIntegratedInDevelopmentReview": true,
+  "scope": "Horizontal P/B/M corner preparation for a contiguous AO only; authored80ms lead.",
+  "testsPassed": 27,
+  "geometry": {
+    "samples": 1307,
+    "failures": [],
+    "closedSamplesZeroInterior": 248,
+    "allLowerYChinFvUpperGuardExact": true,
+    "fullOralYAndSkinSamplesExact": [
+      15.355,
+      15.39,
+      15.41,
+      15.45,
+      18.385,
+      18.439999999999998,
+      18.459999999999997,
+      18.5,
+      20.175,
+      20.349999999999998,
+      20.369999999999997,
+      20.475
+    ],
+    "minimumOralArea2": 0.023623911663889885,
+    "minimumJawArea2": 45.5,
+    "phoneTimingChanged": false,
+    "animationAccepted": false
+  },
+  "integratedVerification": {
+    "geometrySamplesExact": 1307,
+    "exactIntegratedNativeRasterFrames": [
+      739,
+      741,
+      885,
+      887,
+      977,
+      980
+    ],
+    "allRecordedTargetsAndAreasExact": true,
+    "phonemeTimingChanged": false,
+    "animationAccepted": false
+  },
+  "temporalWidth": {
+    "samples": 1059,
+    "widthSamplesChanged": 34,
+    "priorP95WidthStep": 6.732852935791016,
+    "trialP95WidthStep": 6.502079772949219,
+    "stepsWorseByMoreThanOnePixel": 16,
+    "windows": [
+      {
+        "label": "small",
+        "sourceFrames": [
+          720,
+          768
+        ],
+        "priorMaximumWidthStep": 11.938430786132812,
+        "trialMaximumWidthStep": 11.938430786132812,
+        "worseSteps": [
+          {
+            "fromFrame": 736,
+            "toFrame": 737,
+            "prior": 0.97332763671875,
+            "trial": 2.3817138671875
+          },
+          {
+            "fromFrame": 737,
+            "toFrame": 738,
+            "prior": 0.0016326904296875,
+            "trial": 3.453399658203125
+          },
+          {
+            "fromFrame": 738,
+            "toFrame": 739,
+            "prior": 0.0,
+            "trial": 4.24249267578125
+          }
+        ]
+      },
+      {
+        "label": "more",
+        "sourceFrames": [
+          864,
+          912
+        ],
+        "priorMaximumWidthStep": 7.0526275634765625,
+        "trialMaximumWidthStep": 7.0526275634765625,
+        "worseSteps": [
+          {
+            "fromFrame": 882,
+            "toFrame": 883,
+            "prior": 1.4551239013671875,
+            "trial": 3.7486419677734375
+          },
+          {
+            "fromFrame": 883,
+            "toFrame": 884,
+            "prior": 0.0,
+            "trial": 3.9064178466796875
+          },
+          {
+            "fromFrame": 884,
+            "toFrame": 885,
+            "prior": 0.0,
+            "trial": 3.7374267578125
+          },
+          {
+            "fromFrame": 885,
+            "toFrame": 886,
+            "prior": 0.0,
+            "trial": 2.05596923828125
+          }
+        ]
+      },
+      {
+        "label": "up all",
+        "sourceFrames": [
+          960,
+          1008
+        ],
+        "priorMaximumWidthStep": 10.089889526367188,
+        "trialMaximumWidthStep": 8.148193359375,
+        "worseSteps": [
+          {
+            "fromFrame": 968,
+            "toFrame": 969,
+            "prior": 1.10687255859375,
+            "trial": 4.3878326416015625
+          },
+          {
+            "fromFrame": 969,
+            "toFrame": 970,
+            "prior": 0.0,
+            "trial": 4.165283203125
+          },
+          {
+            "fromFrame": 970,
+            "toFrame": 971,
+            "prior": 0.0,
+            "trial": 4.4560089111328125
+          },
+          {
+            "fromFrame": 971,
+            "toFrame": 972,
+            "prior": 0.0,
+            "trial": 4.5441436767578125
+          },
+          {
+            "fromFrame": 972,
+            "toFrame": 973,
+            "prior": 0.0,
+            "trial": 4.4297943115234375
+          },
+          {
+            "fromFrame": 973,
+            "toFrame": 974,
+            "prior": 0.0,
+            "trial": 4.1129302978515625
+          },
+          {
+            "fromFrame": 974,
+            "toFrame": 975,
+            "prior": 0.0,
+            "trial": 3.5934906005859375
+          },
+          {
+            "fromFrame": 975,
+            "toFrame": 976,
+            "prior": 0.0,
+            "trial": 2.8715667724609375
+          },
+          {
+            "fromFrame": 976,
+            "toFrame": 977,
+            "prior": 0.0,
+            "trial": 1.947113037109375
+          }
+        ]
+      }
+    ]
+  },
+  "onsetSteps": [
+    {
+      "fromFrame": 740,
+      "toFrame": 741,
+      "priorWidthStep": 7.22491455078125,
+      "preparedWidthStep": 0.2715301513671875,
+      "unchangedLowerLipYStep": 10.488525390625
+    },
+    {
+      "fromFrame": 886,
+      "toFrame": 887,
+      "priorWidthStep": 5.555633544921875,
+      "preparedWidthStep": 0.397705078125,
+      "unchangedLowerLipYStep": 5.1689453125
+    },
+    {
+      "fromFrame": 887,
+      "toFrame": 888,
+      "priorWidthStep": 6.2959136962890625,
+      "preparedWidthStep": 0.1580657958984375,
+      "unchangedLowerLipYStep": 12.113677978515625
+    },
+    {
+      "fromFrame": 978,
+      "toFrame": 979,
+      "priorWidthStep": 5.0276336669921875,
+      "preparedWidthStep": 0.4608001708984375,
+      "unchangedLowerLipYStep": 8.819183349609375
+    },
+    {
+      "fromFrame": 979,
+      "toFrame": 980,
+      "priorWidthStep": 9.181304931640625,
+      "preparedWidthStep": 0.3877105712890625,
+      "unchangedLowerLipYStep": 14.667755126953125
+    },
+    {
+      "fromFrame": 980,
+      "toFrame": 981,
+      "priorWidthStep": 10.089889526367188,
+      "preparedWidthStep": 0.2938385009765625,
+      "unchangedLowerLipYStep": 10.92620849609375
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Small",
+      "sourceFrames": [
+        720,
+        768
+      ],
+      "sourceSamples": [
+        240000,
+        256000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "17174e0973c780711b29ab2ea856c03e85b935c775ca781e501037e9336a2448"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "4822809121cbb937517d1590657d7ed1f7eff4676069ce71aa8efa3ee5200246"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": false
+    },
+    {
+      "label": "More",
+      "sourceFrames": [
+        864,
+        912
+      ],
+      "sourceSamples": [
+        288000,
+        304000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "4122ec0aff6f36f47d7c671e0a7aa82e7ca0405f0209e3b202739f26cb4826a3"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "fbd58ca69c4cb0093454dae7769171ccfebc14945b897db334b52d23350b2b7d"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": false
+    },
+    {
+      "label": "Up-All",
+      "sourceFrames": [
+        960,
+        1008
+      ],
+      "sourceSamples": [
+        320000,
+        336000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "199252f0c970688ac19513c5a7a808db2d9a1c82c2e20fcf1be4f05c0f071e88"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "f72a06939371a8184972e5d36e3f458abd330069cde901b9f6c3ded86e0f2981"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": false
+    }
+  ],
+  "nativePairsInspected": 144,
+  "fullFramesInspected": [
+    741,
+    887,
+    979,
+    983
+  ],
+  "upper288AndEarRegionExactSamples": 144,
+  "sourceArtworkChanged": false,
+  "sourceAlphaChanged": false,
+  "phonemeTimingChanged": false,
+  "scriptAndWaveformAlignmentAlreadyExisting": true,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "sourceAudioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "independentListeningVerified": false,
+  "realtimePlaybackAccepted": false,
+  "animationAccepted": false,
+  "polishedMilestoneReady": false,
+  "sourceHashes": {
+    "package.py": "76390d74a64695137466422fff2f2d361730c70f7f62f187bdda680546d1ecde",
+    "Integrated-guided_jaw_exposure.py": "f5500b02b6cb49ae54afa94c1626ec43b4b083467f797e86ac03607afa4ab310",
+    "audit.py": "b1a95bf2604eb8e3513c6bb47925b15a71c1ab8172e6088a9abd2e8127891243",
+    "render.py": "ace16cb40dbeb17e045895a379cc04cd94e6075b453aaf9593814c7cb39607da",
+    "Integrated-separated_oral_review.py": "ea454b71ae213b5813a6ec611785b5c95be526f6c6c5ef1f2870f03316044381",
+    "verify_integrated.py": "931c00d3cd11b0584bf671454b270b26c32fca47d520999270199633f290c996",
+    "Integrated-test_separated_oral.py": "4b6f3e3837416632fecc1fab39ef53325bb80055868d17ee0b829c68ba990608",
+    "anticipation.py": "24436f385c59edff87b3fa5354b6ac3e36b565b8e44a26618850d98f4cfc066f",
+    "frozen_separated.py": "705fd514a24837361f1d5574fe511a9e4b7fb6da46bffaaccdc21fd1d44f92a6"
+  }
+}

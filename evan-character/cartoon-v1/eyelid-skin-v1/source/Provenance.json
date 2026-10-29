@@ -1,0 +1,47 @@
+{
+  "tool": "image_gen.imagegen",
+  "mode": "edit",
+  "skill": "/Users/amarhavic/.codex/skills/.system/imagegen/SKILL.md",
+  "promptFile": "Prompt.txt",
+  "transparentBackground": false,
+  "inputs": [
+    {
+      "role": "tight eye edit target",
+      "path": "evan-character/cartoon-v1/eyelid-skin-v1/source/Edit-Target.png",
+      "sha256": "ea5c1be6132c03864fbb1a149718bf150c85a96e0e80904e33b504438ced602b",
+      "crop": [
+        160,
+        225,
+        325,
+        281
+      ],
+      "upscale": 6
+    },
+    {
+      "role": "context only",
+      "path": "evan-character/cartoon-v1/eye-underlay-v3/underlay.png",
+      "sha256": "8717af9729ecd3a4f06d14b82dfcbf3c649ec5508e684382bcbfd8b8307ff02f"
+    }
+  ],
+  "rawOutput": {
+    "path": "skin-only-v1.png",
+    "sha256": "dca1626fcd6a4367a4928fe7fc227f1f0e4b32f588ba586be27dd6e6703af6b1",
+    "size": [
+      2154,
+      730
+    ],
+    "rawBytesUnmodified": true,
+    "registered": false,
+    "inspection": "complete source plus two native1077x730 halves"
+  },
+  "workingDerivative": {
+    "path": "skin-underpaint.png",
+    "sha256": "e6f9502ecc8197826d6e4a6f87022fbe92db1eb2e2ec727afeff72fe9771f196",
+    "size": [
+      512,
+      512
+    ],
+    "registration": "authored crop bounds; per-eye bounded affine RGB correction; original alpha preserved",
+    "ownedPixels": 2713
+  }
+}

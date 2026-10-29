@@ -1,0 +1,63 @@
+{
+  "status": "forehead-local-transition-sampled-construction",
+  "sourceFrames": [
+    150,
+    174
+  ],
+  "changedNativeSkinPixels": 4847,
+  "construction": "existing generated plate registered with saved v1 transform/offset; authored local skin mask and 3px feather",
+  "rawSourceUnmodified": true,
+  "newGeneratedArtwork": false,
+  "sourcePlateIsRegisteredRig": false,
+  "workingDerivative": "eye-underlay-v4",
+  "defaultUnderlay": "eye-underlay-v3",
+  "derivativesRebuiltByteExact": 4,
+  "selectedCurrentAndFrozenSourcesVerified": 49,
+  "unitTestsPassed": 12,
+  "nativeUnderlayAlphaExact": true,
+  "nativeUnderlayBelow240Exact": true,
+  "glassesByteExact": true,
+  "all24BaselinesExactCurrentFull": true,
+  "oralJawAuditExact": true,
+  "nonHeadLayersAndNeckExact": true,
+  "officialStageExact": true,
+  "normalDecodedFrames": 24,
+  "slowDecodedFrames": 96,
+  "normalDecodedSourceFramesInspected": [
+    150,
+    156,
+    158,
+    162,
+    173
+  ],
+  "slowDecodedVideoFramesInspected": [
+    24,
+    32,
+    48
+  ],
+  "nativeFaceSamplesInspected": [
+    150,
+    158
+  ],
+  "beforeAfterNativeUnderlayInspected": true,
+  "exactContextPcmSamples": 16000,
+  "exactContextPcmRange": [
+    100000,
+    116000
+  ],
+  "findings": [
+    "The broad rectangular forehead color band is reduced in the native comparison and sampled narrated blink shot.",
+    "Small inner-brow flecks, lid and temple/frame edges remain visible; gaze and expression range still trail the concept sheet."
+  ],
+  "animationAccepted": false,
+  "realTimePlaybackReviewed": false,
+  "listeningReviewed": false,
+  "exactPhonemeBoundariesVerified": false,
+  "polishedMilestoneReady": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "defaultChanged": false,
+  "fullFilmUpdated": false,
+  "pendingJobs": [],
+  "next": "Check actual rest/open-eye speech fixtures0/269 and broader glasses raise/return before considering v4 full-shot integration. Keep the completed v3 full candidate and protected closing unchanged."
+}

@@ -1,0 +1,253 @@
+{
+  "source": "work/engine/evan-character/cartoon-v1/open-palm-filtered-v1/source-v1.png",
+  "sourceSha256": "c717b774eb0f1ad82a68287c0b6c756365b358a7ff5823aea08708f1ac6c6d0f",
+  "digits": {
+    "thumb": {
+      "polygon": [
+        [
+          900,
+          520
+        ],
+        [
+          1180,
+          390
+        ],
+        [
+          1180,
+          610
+        ],
+        [
+          980,
+          610
+        ],
+        [
+          900,
+          610
+        ]
+      ],
+      "joints": [
+        [
+          945,
+          570
+        ],
+        [
+          1010,
+          555
+        ],
+        [
+          1080,
+          510
+        ]
+      ],
+      "tip": [
+        1120,
+        475
+      ]
+    },
+    "little": {
+      "polygon": [
+        [
+          625,
+          820
+        ],
+        [
+          690,
+          815
+        ],
+        [
+          731,
+          860
+        ],
+        [
+          866,
+          1068
+        ],
+        [
+          820,
+          1090
+        ],
+        [
+          690,
+          1000
+        ],
+        [
+          610,
+          900
+        ]
+      ],
+      "joints": [
+        [
+          715,
+          875
+        ],
+        [
+          748,
+          931
+        ],
+        [
+          785,
+          978
+        ]
+      ],
+      "tip": [
+        810,
+        1018
+      ]
+    },
+    "ring": {
+      "polygon": [
+        [
+          730,
+          850
+        ],
+        [
+          825,
+          825
+        ],
+        [
+          900,
+          900
+        ],
+        [
+          1030,
+          1090
+        ],
+        [
+          970,
+          1122
+        ],
+        [
+          850,
+          1080
+        ],
+        [
+          780,
+          980
+        ]
+      ],
+      "joints": [
+        [
+          805,
+          865
+        ],
+        [
+          857,
+          938
+        ],
+        [
+          916,
+          1000
+        ]
+      ],
+      "tip": [
+        962,
+        1055
+      ]
+    },
+    "middle": {
+      "polygon": [
+        [
+          835,
+          820
+        ],
+        [
+          935,
+          780
+        ],
+        [
+          1020,
+          850
+        ],
+        [
+          1190,
+          1050
+        ],
+        [
+          1150,
+          1122
+        ],
+        [
+          1010,
+          1090
+        ],
+        [
+          920,
+          1000
+        ]
+      ],
+      "joints": [
+        [
+          895,
+          837
+        ],
+        [
+          964,
+          908
+        ],
+        [
+          1031,
+          971
+        ]
+      ],
+      "tip": [
+        1110,
+        1030
+      ]
+    }
+  },
+  "restReconstructionVisibleRgbaExact": true,
+  "sourceUnmodified": true,
+  "animationReady": false,
+  "indexProtectionPolygon": [
+    [
+      935,
+      760
+    ],
+    [
+      990,
+      740
+    ],
+    [
+      1290,
+      900
+    ],
+    [
+      1290,
+      990
+    ],
+    [
+      1220,
+      1000
+    ],
+    [
+      945,
+      815
+    ]
+  ],
+  "ownershipExpansionPixels": 12,
+  "overlapAssignment": "nearest joint polyline above900; nearest seeded core component below900",
+  "distalComponentCorrection": {
+    "transverseCutY": 900,
+    "coreAlphaThreshold": 250,
+    "largeComponentLabels": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "largeComponentPixelCounts": [
+      15914,
+      21997,
+      23130,
+      6638
+    ],
+    "reassignedVisiblePixels": 1138,
+    "sourceAlphaChanged": false
+  },
+  "rootFreeze": {
+    "thumb": 60,
+    "little": 60,
+    "ring": 60,
+    "middle": 60
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "wrists": {
+    "left": [
+      214,
+      762
+    ],
+    "right": [
+      810,
+      762
+    ]
+  },
+  "sourceSha256": "b0020f3504d49d8410dee3566380ae9e4ec7ab81abf748ffc29911f91033e5d2",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "sourceWrist": [
+    457.0,
+    531.0
+  ],
+  "targetWrist": [
+    810.0,
+    762.0
+  ],
+  "matrix": [
+    [
+      0.15454812347888947,
+      -0.04141104593873024,
+      761.3607788085938
+    ],
+    [
+      0.04141104593873024,
+      0.15454812347888947,
+      661.0100708007812
+    ]
+  ],
+  "registration": "manual wrist/axis placement, not whole-image similarity",
+  "pose": "right-screen point: index extended, three curled fingers and thumb",
+  "animationReady": false,
+  "limitations": [
+    "Fingers are a single alternate drawing, not individually articulated",
+    "Original torso/armpit and neck seams remain",
+    "Wrist contour/color transition remains visible at close range",
+    "Pointing hand outline is thinner and palm more compact than original open drawing"
+  ]
+}

@@ -1,0 +1,190 @@
+{
+  "baseCommit": "bebb09fe7ddd39e4e50ae896170a20dd0313e824",
+  "decision": "reject uniform one-frame causal jaw response for integration: brief AO becomes too subdued/delayed",
+  "productionChanged": false,
+  "geometry": {
+    "samples": 1307,
+    "failures": [],
+    "changedSamples": 29,
+    "actualClosedSamplesZeroInterior": 248,
+    "productionChanged": false,
+    "animationAccepted": false
+  },
+  "temporal": {
+    "samples": 1307,
+    "changedSamples": 29,
+    "closedSamples": 248,
+    "minimumOral": 0.023623911663889885,
+    "minimumJaw": 45.5,
+    "windows": [
+      {
+        "label": "Small",
+        "priorMaximumStep": 11.2889404296875,
+        "trialMaximumStep": 8.336212158203125,
+        "worseSteps": [
+          {
+            "fromFrame": 742,
+            "prior": 1.18963623046875,
+            "trial": 5.026580810546875
+          }
+        ],
+        "priorPeakY": 348.61053466796875,
+        "trialPeakY": 345.74517822265625
+      },
+      {
+        "label": "More",
+        "priorMaximumStep": 12.113677978515625,
+        "trialMaximumStep": 10.436614990234375,
+        "worseSteps": [
+          {
+            "fromFrame": 888,
+            "prior": 5.138092041015625,
+            "trial": 6.57110595703125
+          }
+        ],
+        "priorPeakY": 347.54071044921875,
+        "trialPeakY": 343.06622314453125
+      },
+      {
+        "label": "Up-All",
+        "priorMaximumStep": 14.667755126953125,
+        "trialMaximumStep": 10.79217529296875,
+        "worseSteps": [
+          {
+            "fromFrame": 981,
+            "prior": 3.195831298828125,
+            "trial": 7.452667236328125
+          },
+          {
+            "fromFrame": 982,
+            "prior": 1.283538818359375,
+            "trial": 3.547760009765625
+          },
+          {
+            "fromFrame": 988,
+            "prior": 3.639556884765625,
+            "trial": 5.35931396484375
+          }
+        ],
+        "priorPeakY": 364.2467041015625,
+        "trialPeakY": 363.6419677734375
+      }
+    ]
+  },
+  "comparisons": [
+    {
+      "label": "Small",
+      "sourceFrames": [
+        720,
+        768
+      ],
+      "sourceSamples": [
+        240000,
+        256000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "880671dc51d611b57106525f1c51feac739dc2bd19a1239fd4786015a8b20a94"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "b122729d50a381abd0767aac93adad5d8a8547cecafb8d004b1fa88e2ff5143b"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": false,
+      "widthExact": true
+    },
+    {
+      "label": "More",
+      "sourceFrames": [
+        864,
+        912
+      ],
+      "sourceSamples": [
+        288000,
+        304000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "8dfd96146896c251ec995fc931927db271e21db0fef43513b1538a6cd54b1d87"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "f6fe2c6bf17bc701cf59ac5d10cd298bbeff168de8cf712ecd61c80c51c8789c"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": false,
+      "widthExact": true
+    },
+    {
+      "label": "Up-All",
+      "sourceFrames": [
+        960,
+        1008
+      ],
+      "sourceSamples": [
+        320000,
+        336000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "bba14186f969248ead06f3df1ba40d051b5de2a582f288ad79818056dcd1e6f1"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "28ce93794ac6005eb8025abb70c224661cc32a7257c315ec9f007293a7df0643"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": false,
+      "widthExact": true
+    }
+  ],
+  "nativePairsInspected": 144,
+  "fullFramesInspected": [
+    888,
+    980
+  ],
+  "earRegionExactSamples": 144,
+  "upper288ExactSamples": 144,
+  "allRecordingWidthFvChinControlsExact": true,
+  "initialAuditIssue": "Absolute lowerY was an invalid seal proxy; corrected check uses actual prior inner gap. Original false-positive audit retained.",
+  "unitTestsRepeated": false,
+  "originalAudioOrTimingChanged": false,
+  "sourceArtworkChanged": false,
+  "independentListeningVerified": false,
+  "animationAccepted": false,
+  "polishedMilestoneReady": false,
+  "sourceHashes": {
+    "package.py": "020b217424d4ac6accaff5351cbba50e22934bcbef87463be828d68378c7b0c4",
+    "audit.py": "4b2417836a55c125de3f6575f98789da572056bd4f5cb17cba6fd14bc9fcc954",
+    "render.py": "75f13334198e110f1b497e714cdfa4b41e1f5a26d294bd05294529a528aba10f",
+    "prototype.py": "8dfb5b9f5cb3b9e54b5bf4e338c699cf696ecc6b0b7dd0eac324971412aa2f5d"
+  }
+}

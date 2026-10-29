@@ -1,0 +1,19 @@
+{
+  "source": "evan-character/cartoon-v1/oral-rig/upper-teeth.png",
+  "sourceSha256": "6a3de1c6bcc74fbf42e2cccc2926ef6ffbea32cf195733dfd3879303faab3fab",
+  "size": [
+    512,
+    512
+  ],
+  "visibleAlphaBox": [
+    204,
+    318,
+    273,
+    333
+  ],
+  "nonzeroAlphaPixels": 772,
+  "opaqueAlphaPixels": 447,
+  "hiddenRgbPixelsAtZeroAlpha": 80654,
+  "sourceModified": false,
+  "limits": "Hidden RGB is not visible paint. Composites use actual alpha; source pixels and alpha are never changed."
+}

@@ -1,0 +1,505 @@
+{
+  "baseCommit": "7cf9512500a3704b5e4558f4e021946c3bad85ed",
+  "testsPassed": 20,
+  "geometryOnly": true,
+  "denseTargetSamples": 739,
+  "recordingFrameTargetsMatchPriorVerification": 75,
+  "maximumAoGapVersusInputMinusOneErrorIncludingFv": 0.09181149400684063,
+  "maximumAoGapErrorWithoutFv": 5.486648876740219e-05,
+  "sourceAudioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "phoneAudioReview": [
+    {
+      "phoneIndex": 184,
+      "scriptIndex": 46,
+      "word": "but",
+      "phone": "B",
+      "assigned": [
+        16.03,
+        16.29
+      ],
+      "lowEnergyRun": [
+        16.07,
+        16.27
+      ],
+      "thresholdDbFS": -40,
+      "binSamples": 320,
+      "flag": "long-phone-low-energy-run",
+      "boundaryStatus": "unresolved",
+      "timingChanged": false
+    },
+    {
+      "phoneIndex": 195,
+      "scriptIndex": 50,
+      "word": "whole",
+      "phone": "HH",
+      "assigned": [
+        16.73,
+        17.01
+      ],
+      "lowEnergyRun": [
+        16.83,
+        17.01
+      ],
+      "thresholdDbFS": -40,
+      "binSamples": 320,
+      "flag": "long-phone-low-energy-run",
+      "boundaryStatus": "unresolved",
+      "timingChanged": false
+    },
+    {
+      "phoneIndex": 207,
+      "scriptIndex": 53,
+      "word": "way",
+      "phone": "W",
+      "assigned": [
+        17.94,
+        18.27
+      ],
+      "lowEnergyRun": [
+        18.12,
+        18.18
+      ],
+      "thresholdDbFS": -40,
+      "binSamples": 320,
+      "flag": "long-phone-low-energy-run",
+      "boundaryStatus": "unresolved",
+      "timingChanged": false
+    },
+    {
+      "phoneIndex": 228,
+      "scriptIndex": 60,
+      "word": "all",
+      "phone": "AO",
+      "assigned": [
+        20.38,
+        20.57
+      ],
+      "lowEnergyRun": [
+        20.38,
+        20.425
+      ],
+      "thresholdDbFS": -53.979400086720375,
+      "binSamples": 80,
+      "flag": "vowel-leading-low-energy-run",
+      "boundaryStatus": "unresolved",
+      "timingChanged": false
+    }
+  ],
+  "regions": [
+    {
+      "label": "Small",
+      "range": [
+        15.24,
+        15.66
+      ],
+      "sourceSamples": [
+        243840,
+        250560
+      ],
+      "geometryOnly": true,
+      "fftWindowSamples": 256,
+      "fftHopSamples": 32,
+      "rmsWindowSamples": 80,
+      "phoneLabels": [
+        {
+          "start": 15.19,
+          "end": 15.26,
+          "phone": "ER",
+          "value": "C",
+          "word": "super",
+          "scriptIndex": 43,
+          "timing": "acoustic-forced",
+          "acousticScore": -135,
+          "confidence": null
+        },
+        {
+          "start": 15.26,
+          "end": 15.34,
+          "phone": "S",
+          "value": "B",
+          "word": "small",
+          "scriptIndex": 44,
+          "timing": "acoustic-forced",
+          "acousticScore": -93,
+          "confidence": null
+        },
+        {
+          "start": 15.34,
+          "end": 15.42,
+          "phone": "M",
+          "value": "A",
+          "word": "small",
+          "scriptIndex": 44,
+          "timing": "acoustic-forced",
+          "acousticScore": -58,
+          "confidence": null
+        },
+        {
+          "start": 15.42,
+          "end": 15.48,
+          "phone": "AO",
+          "value": "E",
+          "word": "small",
+          "scriptIndex": 44,
+          "timing": "acoustic-forced",
+          "acousticScore": -43,
+          "confidence": null
+        },
+        {
+          "start": 15.48,
+          "end": 15.56,
+          "phone": "L",
+          "value": "H",
+          "word": "small",
+          "scriptIndex": 44,
+          "timing": "acoustic-forced",
+          "acousticScore": -231,
+          "confidence": null
+        },
+        {
+          "start": 15.56,
+          "end": 15.6,
+          "phone": "D",
+          "value": "B",
+          "word": "detail",
+          "scriptIndex": 45,
+          "timing": "acoustic-forced",
+          "acousticScore": -192,
+          "confidence": null
+        },
+        {
+          "start": 15.6,
+          "end": 15.72,
+          "phone": "IY",
+          "value": "B",
+          "word": "detail",
+          "scriptIndex": 45,
+          "timing": "acoustic-forced",
+          "acousticScore": -404,
+          "confidence": null
+        }
+      ],
+      "largestOpeningSteps": [
+        {
+          "fromFrame": 741,
+          "toFrame": 742,
+          "lowerYStep": 11.2889404296875,
+          "apertureStep": 9.575914379150978,
+          "innerGapStep": 9.575897216796875,
+          "upperYStep": 1.713043212890625,
+          "mouthCenterYStep": 6.501007080078125,
+          "contactBefore": 0.628304443983379,
+          "contactAfter": 0.16352264872974143
+        },
+        {
+          "fromFrame": 740,
+          "toFrame": 741,
+          "lowerYStep": 10.488525390625,
+          "apertureStep": 8.05589887171714,
+          "innerGapStep": 8.055877685546875,
+          "upperYStep": 2.432647705078125,
+          "mouthCenterYStep": 6.4605712890625,
+          "contactBefore": 0.9807085128884541,
+          "contactAfter": 0.628304443983379
+        },
+        {
+          "fromFrame": 749,
+          "toFrame": 750,
+          "lowerYStep": 1.65863037109375,
+          "apertureStep": 0.9504300788229969,
+          "innerGapStep": 0.950439453125,
+          "upperYStep": 0.70819091796875,
+          "mouthCenterYStep": 1.18341064453125,
+          "contactBefore": 0.0,
+          "contactAfter": 0.0
+        }
+      ]
+    },
+    {
+      "label": "More",
+      "range": [
+        18.25,
+        18.69
+      ],
+      "sourceSamples": [
+        292000,
+        299040
+      ],
+      "geometryOnly": true,
+      "fftWindowSamples": 256,
+      "fftHopSamples": 32,
+      "rmsWindowSamples": 80,
+      "phoneLabels": [
+        {
+          "start": 17.94,
+          "end": 18.27,
+          "phone": "W",
+          "value": "F",
+          "word": "way",
+          "scriptIndex": 53,
+          "timing": "acoustic-forced",
+          "acousticScore": -736,
+          "confidence": null
+        },
+        {
+          "start": 18.27,
+          "end": 18.37,
+          "phone": "EY",
+          "value": "C",
+          "word": "way",
+          "scriptIndex": 53,
+          "timing": "acoustic-forced",
+          "acousticScore": -77,
+          "confidence": null
+        },
+        {
+          "start": 18.37,
+          "end": 18.47,
+          "phone": "M",
+          "value": "A",
+          "word": "more",
+          "scriptIndex": 54,
+          "timing": "acoustic-forced",
+          "acousticScore": -124,
+          "confidence": null
+        },
+        {
+          "start": 18.47,
+          "end": 18.53,
+          "phone": "AO",
+          "value": "E",
+          "word": "more",
+          "scriptIndex": 54,
+          "timing": "acoustic-forced",
+          "acousticScore": -48,
+          "confidence": null
+        },
+        {
+          "start": 18.53,
+          "end": 18.57,
+          "phone": "R",
+          "value": "B",
+          "word": "more",
+          "scriptIndex": 54,
+          "timing": "acoustic-forced",
+          "acousticScore": -49,
+          "confidence": null
+        },
+        {
+          "start": 18.57,
+          "end": 18.67,
+          "phone": "F",
+          "value": "G",
+          "word": "finished",
+          "scriptIndex": 55,
+          "timing": "acoustic-forced",
+          "acousticScore": -236,
+          "confidence": null
+        },
+        {
+          "start": 18.67,
+          "end": 18.73,
+          "phone": "IH",
+          "value": "B",
+          "word": "finished",
+          "scriptIndex": 55,
+          "timing": "acoustic-forced",
+          "acousticScore": -156,
+          "confidence": null
+        }
+      ],
+      "largestOpeningSteps": [
+        {
+          "fromFrame": 887,
+          "toFrame": 888,
+          "lowerYStep": 12.113677978515625,
+          "apertureStep": 9.272961477614725,
+          "innerGapStep": 9.27301025390625,
+          "upperYStep": 2.840667724609375,
+          "mouthCenterYStep": 7.4771728515625,
+          "contactBefore": 0.8135376372194294,
+          "contactAfter": 0.3299954483385845
+        },
+        {
+          "fromFrame": 886,
+          "toFrame": 887,
+          "lowerYStep": 5.1689453125,
+          "apertureStep": 3.9557028247193644,
+          "innerGapStep": 3.8056640625,
+          "upperYStep": 1.36328125,
+          "mouthCenterYStep": 3.26611328125,
+          "contactBefore": 1.0,
+          "contactAfter": 0.8135376372194294
+        },
+        {
+          "fromFrame": 888,
+          "toFrame": 889,
+          "lowerYStep": 5.138092041015625,
+          "apertureStep": 4.747912732527061,
+          "innerGapStep": 4.78143310546875,
+          "upperYStep": 0.356658935546875,
+          "mouthCenterYStep": 2.74737548828125,
+          "contactBefore": 0.3299954483385845,
+          "contactAfter": 0.011800603516571419
+        }
+      ]
+    },
+    {
+      "label": "Up-All",
+      "range": [
+        20.08,
+        20.76
+      ],
+      "sourceSamples": [
+        321280,
+        332160
+      ],
+      "geometryOnly": true,
+      "fftWindowSamples": 256,
+      "fftHopSamples": 32,
+      "rmsWindowSamples": 80,
+      "phoneLabels": [
+        {
+          "start": 19.98,
+          "end": 20.09,
+          "phone": "Z",
+          "value": "B",
+          "word": "these",
+          "scriptIndex": 58,
+          "timing": "acoustic-forced",
+          "acousticScore": -266,
+          "confidence": null
+        },
+        {
+          "start": 20.09,
+          "end": 20.16,
+          "phone": "AH",
+          "value": "C",
+          "word": "up",
+          "scriptIndex": 59,
+          "timing": "acoustic-forced",
+          "acousticScore": -91,
+          "confidence": null
+        },
+        {
+          "start": 20.16,
+          "end": 20.38,
+          "phone": "P",
+          "value": "A",
+          "word": "up",
+          "scriptIndex": 59,
+          "timing": "acoustic-forced",
+          "acousticScore": -1178,
+          "confidence": null
+        },
+        {
+          "start": 20.38,
+          "end": 20.57,
+          "phone": "AO",
+          "value": "E",
+          "word": "all",
+          "scriptIndex": 60,
+          "timing": "acoustic-forced",
+          "acousticScore": -135,
+          "confidence": null
+        },
+        {
+          "start": 20.57,
+          "end": 20.61,
+          "phone": "L",
+          "value": "H",
+          "word": "all",
+          "scriptIndex": 60,
+          "timing": "acoustic-forced",
+          "acousticScore": -37,
+          "confidence": null
+        },
+        {
+          "start": 20.61,
+          "end": 20.66,
+          "phone": "DH",
+          "value": "H",
+          "word": "the",
+          "scriptIndex": 61,
+          "timing": "acoustic-forced",
+          "acousticScore": -189,
+          "confidence": null
+        },
+        {
+          "start": 20.66,
+          "end": 20.69,
+          "phone": "AH",
+          "value": "C",
+          "word": "the",
+          "scriptIndex": 61,
+          "timing": "acoustic-forced",
+          "acousticScore": -134,
+          "confidence": null
+        },
+        {
+          "start": 20.69,
+          "end": 20.79,
+          "phone": "T",
+          "value": "B",
+          "word": "time",
+          "scriptIndex": 62,
+          "timing": "acoustic-forced",
+          "acousticScore": -260,
+          "confidence": null
+        }
+      ],
+      "largestOpeningSteps": [
+        {
+          "fromFrame": 979,
+          "toFrame": 980,
+          "lowerYStep": 14.667755126953125,
+          "apertureStep": 12.591132429562427,
+          "innerGapStep": 12.59112548828125,
+          "upperYStep": 2.076629638671875,
+          "mouthCenterYStep": 8.3721923828125,
+          "contactBefore": 0.6516883292030917,
+          "contactAfter": 0.19378276774719483
+        },
+        {
+          "fromFrame": 980,
+          "toFrame": 981,
+          "lowerYStep": 10.92620849609375,
+          "apertureStep": 7.930533193937201,
+          "innerGapStep": 7.93048095703125,
+          "upperYStep": 2.9957275390625,
+          "mouthCenterYStep": 6.960968017578125,
+          "contactBefore": 0.19378276774719483,
+          "contactAfter": 0.0
+        },
+        {
+          "fromFrame": 978,
+          "toFrame": 979,
+          "lowerYStep": 8.819183349609375,
+          "apertureStep": 7.236989523840656,
+          "innerGapStep": 7.237030029296875,
+          "upperYStep": 1.5821533203125,
+          "mouthCenterYStep": 5.20068359375,
+          "contactBefore": 0.9840351853718904,
+          "contactAfter": 0.6516883292030917
+        }
+      ]
+    }
+  ],
+  "plotsInspected": [
+    "Small",
+    "More",
+    "Up-All"
+  ],
+  "thresholdHeuristicOnly": true,
+  "animationOrTimingChanged": false,
+  "canonicalPlanModified": false,
+  "originalWordReviewFlagsCleared": 0,
+  "listeningVerified": false,
+  "polishedMilestoneReady": false,
+  "sourceHashes": {
+    "trace.py": "6beb20931986982d67474548acdcbc602d66e356faad7e14d7f95d280830bf96",
+    "Integrated-speech_alignment_audit.py": "ee8c649058cc6cb9b79721b102442aa99b3f9ae22de69481a1ffd3cb468da030",
+    "Integrated-test_speech_alignment_audit.py": "ae77ce7a091846dad60e02181aaedf0174090b4ff90156d50af8930c0f62fa7a"
+  }
+}

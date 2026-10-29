@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "sourceSha256": "75c4e80a449d7b2c63141fd4f207e43e2bb118965d46dd9f7ac72ef1f1be4496",
+  "registration": {
+    "method": "center-shirt affine ECC with collar/waist initialization",
+    "score": 0.978850709892623,
+    "matrix": [
+      [
+        1.0503122806549072,
+        0.0011142641305923462,
+        -23.7219295501709
+      ],
+      [
+        0.007138705346733332,
+        1.0368088483810425,
+        -83.40864562988281
+      ]
+    ],
+    "navyColorOffset": [
+      3.8935775756835938,
+      1.9676437377929688,
+      -5.003227233886719
+    ]
+  },
+  "changedPixels": 26925,
+  "visibleChangedPixels": 17084,
+  "protectedCenterExact": true,
+  "animationReady": false,
+  "limitations": [
+    "Local underarm replacement only, not a completed shoulder rig",
+    "Neck and hand joins still require cleanup"
+  ]
+}

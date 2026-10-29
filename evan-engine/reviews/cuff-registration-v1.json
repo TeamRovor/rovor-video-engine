@@ -1,0 +1,75 @@
+{
+  "scope": "Registered cuff-constrained Hermite forearm plus continuous wrist skin; fixed thumb drawing",
+  "minimumHandArea2": 2.8405059644765887,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 48,
+      "sha256": "dd813e197d290b250118387bf93a30b0aa02d75e847a54ec672e0c8028cde4e5"
+    },
+    "Slow.mp4": {
+      "decodedFrames": 192,
+      "sha256": "89b3199be0a5616c8f79cfa9a36752409c033c50409ac38ebdb8cd97af31f680"
+    },
+    "Stage-Normal.mp4": {
+      "decodedFrames": 48,
+      "sha256": "1a5cd7808ca17e19c52dc42b83df721b45a1656566cf56c993733b3041b3f14b"
+    },
+    "Stage-Slow.mp4": {
+      "decodedFrames": 192,
+      "sha256": "c94bb1453c1d5f6ac571ae381f59f2ccec994291cbb4ab14da3c43275627ac5e"
+    }
+  },
+  "sourceGuides": [
+    {
+      "y": 850,
+      "center": 599,
+      "width": 236
+    },
+    {
+      "y": 1300,
+      "center": 675.5,
+      "width": 353
+    },
+    {
+      "y": 1400,
+      "center": 694.5,
+      "width": 321
+    }
+  ],
+  "handDomainY": [
+    0,
+    1350
+  ],
+  "rawSourceArtworkModified": false,
+  "sourceAlphaCleanup": false,
+  "runtimeComponentOwnership": true,
+  "registeredWorkingReviewComponent": true,
+  "attachmentProductionAccepted": false,
+  "animationAccepted": false,
+  "productionImported": false,
+  "module": "evan-engine/cuff_registered_forearm.py",
+  "registration": "evan-character/cartoon-v1/thumb-forearm-v2/Cuff-Registration.json",
+  "sourceSHA256": "f2063f694cd5a25e3dbbcb12edbdc2e9778c180e04a033dac46594873ee356b3",
+  "focusedTestsPassed": 15,
+  "newEnvelopeSamples": 1224,
+  "nativeHandFramesInspected": 48,
+  "nativeCuffFramesInspected": 48,
+  "freshFinalModuleFramesPixelExact": [
+    0,
+    14,
+    30,
+    47
+  ],
+  "heldCapClothingCheck": {
+    "sourceSamples": 14,
+    "wristAngles": [
+      -15,
+      0,
+      15
+    ],
+    "minClothingAlpha": 253
+  },
+  "anatomyProductionAccepted": false,
+  "next": "Closing-shot fullstage comparison with registered raised hand and existing postroll smile/brow trials",
+  "localOutput": "outputs/evan-cartoon-cuff-guide"
+}

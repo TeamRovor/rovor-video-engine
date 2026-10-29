@@ -1,0 +1,58 @@
+{
+  "frames": 552,
+  "reviewedBrowFramesIntegrated": 114,
+  "previousFramesByteExact": 438,
+  "closingFramesByteExact": 20,
+  "outsideHeadRegionExact": true,
+  "stageMouthRegionExact": true,
+  "sourceWavByteExact": true,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 552,
+      "sha256": "8f79093d55adb591d2d12d56dba088dd1e9e09c8ae47cdd7783366de58655f5e"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 2208,
+      "sha256": "a6c7b3a25c48307a05041cec426206c213486dd4cef3c3ce07a83c25f1583ba0"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 368000,
+    "decodedPcm16Samples": 368000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "fullFilmUpdated": true,
+  "defaultChanged": false,
+  "newArtwork": false,
+  "phonemeTimingChanged": false,
+  "flagsCleared": 0,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "status": "full-opt-in-integration-verified-and-sampled",
+  "pendingJobs": false,
+  "workerCompleted": 5341,
+  "sourceManifestVerified": true,
+  "allFrameHashesVerified": true,
+  "overviewPosesVisuallyInspected": 19,
+  "decodedNormalSamplesVisuallyInspected": [
+    234,
+    248,
+    268,
+    348,
+    540
+  ],
+  "decodedSlowSamplesVisuallyInspected": [
+    992,
+    1392
+  ],
+  "all18MarkersMatchCurrentPlan": true,
+  "visualAssessment": "Explanatory brow accent reads at full delivery size; no new seam or oral defect observed in sampled frames. The reference concept still shows substantially stronger torso, facial and hand posing. This integrated candidate remains restrained.",
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "nextConcreteWork": "Inspect existing head/body control ownership around the narration payoff super small detail14.72\u201316.03s. Measure current head/body motion against the existing reference explanation pose and choose one bounded opt-in anticipatory lean with settle only if the current transform chain can preserve oral contacts, official branding and arm joins. Start with native/delivery before-after pilots; do not generate a new whole-character plate or add another brow variant."
+}

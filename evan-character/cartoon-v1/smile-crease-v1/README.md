@@ -1,0 +1,7 @@
+# Experimental smile-corner drawing
+
+Built-in imagegen source; exact prompt in Prompt.txt. Reference: current isolated broad-grin render (outputs/evan-cartoon-grin-ownership/Grin-1.png), used for line style. Original generated file: 01a14714-1eef-7362-bf18-f2721939893a/exec-323ce996-9807-4bb7-85d7-e3cb6f3cc49c.png. Native1254×1254 source retained byte-for-byte; no alpha cleanup. Full-resolution source inspected. It resembles an eyebrow at source scale; at twelve native pixels it reads as a small upward smile-corner accent, not cheek volume.
+
+Registration.json distinguishes this isolated source from its opt-in rig plane. Half-alpha bounds/anchor are measurement guides only; all source alpha is sampled unchanged. Prompt proposed approximately9px; native pilot selected12px. Initial3px horizontal offset floated away from the mouth; zero offset attaches to the actual viewer-right inner lip endpoint. Rotation follows lip span; uniform scale now follows horizontal lip width relative to93px, preserving stroke proportions. The original fixed12px mapping crossed the protected upper-face boundary during narrow-rest transitions; see CARTOON-EVAN-GRIN-TRANSITION.md. Authored opacity strength is independent from source alpha. No speaking-scene caller. Matte retains19 positive-alpha components, including18 detached islands/22pixels; not approved production artwork.
+
+See CARTOON-EVAN-SMILE-CREASE.md and local outputs/evan-cartoon-smile-crease. This is one registered experimental component, not a finished expression, narration performance, or Moho rig.

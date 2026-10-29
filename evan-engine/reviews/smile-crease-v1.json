@@ -1,0 +1,273 @@
+{
+  "scope": "Experimental one-corner accent strength fade on a held grin; silent, no speech performance or staged acceptance",
+  "frames": [
+    {
+      "frame": 0,
+      "strength": 0.0,
+      "upper310Exact": true
+    },
+    {
+      "frame": 1,
+      "strength": 0.00446125592260995,
+      "upper310Exact": true
+    },
+    {
+      "frame": 2,
+      "strength": 0.017765412472811708,
+      "upper310Exact": true
+    },
+    {
+      "frame": 3,
+      "strength": 0.03967505666178561,
+      "upper310Exact": true
+    },
+    {
+      "frame": 4,
+      "strength": 0.0697992103699303,
+      "upper310Exact": true
+    },
+    {
+      "frame": 5,
+      "strength": 0.1076003073606695,
+      "upper310Exact": true
+    },
+    {
+      "frame": 6,
+      "strength": 0.15240378616267886,
+      "upper310Exact": true
+    },
+    {
+      "frame": 7,
+      "strength": 0.20341012763532235,
+      "upper310Exact": true
+    },
+    {
+      "frame": 8,
+      "strength": 0.2597091224066581,
+      "upper310Exact": true
+    },
+    {
+      "frame": 9,
+      "strength": 0.3202961135812436,
+      "upper310Exact": true
+    },
+    {
+      "frame": 10,
+      "strength": 0.38408992486623583,
+      "upper310Exact": true
+    },
+    {
+      "frame": 11,
+      "strength": 0.44995215418795087,
+      "upper310Exact": true
+    },
+    {
+      "frame": 12,
+      "strength": 0.5167074885038372,
+      "upper310Exact": true
+    },
+    {
+      "frame": 13,
+      "strength": 0.583164677291565,
+      "upper310Exact": true
+    },
+    {
+      "frame": 14,
+      "strength": 0.6481377904428168,
+      "upper310Exact": true
+    },
+    {
+      "frame": 15,
+      "strength": 0.7104673812141674,
+      "upper310Exact": true
+    },
+    {
+      "frame": 16,
+      "strength": 0.7690411765816862,
+      "upper310Exact": true
+    },
+    {
+      "frame": 17,
+      "strength": 0.8228139257794012,
+      "upper310Exact": true
+    },
+    {
+      "frame": 18,
+      "strength": 0.8708260528239787,
+      "upper310Exact": true
+    },
+    {
+      "frame": 19,
+      "strength": 0.9122207801708802,
+      "upper310Exact": true
+    },
+    {
+      "frame": 20,
+      "strength": 0.9462594179299406,
+      "upper310Exact": true
+    },
+    {
+      "frame": 21,
+      "strength": 0.9723345458039594,
+      "upper310Exact": true
+    },
+    {
+      "frame": 22,
+      "strength": 0.9899808525182933,
+      "upper310Exact": true
+    },
+    {
+      "frame": 23,
+      "strength": 0.9988834393115766,
+      "upper310Exact": true
+    },
+    {
+      "frame": 24,
+      "strength": 0.9988834393115766,
+      "upper310Exact": true
+    },
+    {
+      "frame": 25,
+      "strength": 0.9899808525182933,
+      "upper310Exact": true
+    },
+    {
+      "frame": 26,
+      "strength": 0.9723345458039594,
+      "upper310Exact": true
+    },
+    {
+      "frame": 27,
+      "strength": 0.9462594179299406,
+      "upper310Exact": true
+    },
+    {
+      "frame": 28,
+      "strength": 0.9122207801708802,
+      "upper310Exact": true
+    },
+    {
+      "frame": 29,
+      "strength": 0.8708260528239787,
+      "upper310Exact": true
+    },
+    {
+      "frame": 30,
+      "strength": 0.8228139257794013,
+      "upper310Exact": true
+    },
+    {
+      "frame": 31,
+      "strength": 0.7690411765816865,
+      "upper310Exact": true
+    },
+    {
+      "frame": 32,
+      "strength": 0.7104673812141676,
+      "upper310Exact": true
+    },
+    {
+      "frame": 33,
+      "strength": 0.648137790442817,
+      "upper310Exact": true
+    },
+    {
+      "frame": 34,
+      "strength": 0.5831646772915651,
+      "upper310Exact": true
+    },
+    {
+      "frame": 35,
+      "strength": 0.5167074885038374,
+      "upper310Exact": true
+    },
+    {
+      "frame": 36,
+      "strength": 0.44995215418795087,
+      "upper310Exact": true
+    },
+    {
+      "frame": 37,
+      "strength": 0.38408992486623583,
+      "upper310Exact": true
+    },
+    {
+      "frame": 38,
+      "strength": 0.3202961135812439,
+      "upper310Exact": true
+    },
+    {
+      "frame": 39,
+      "strength": 0.25970912240665844,
+      "upper310Exact": true
+    },
+    {
+      "frame": 40,
+      "strength": 0.20341012763532265,
+      "upper310Exact": true
+    },
+    {
+      "frame": 41,
+      "strength": 0.15240378616267905,
+      "upper310Exact": true
+    },
+    {
+      "frame": 42,
+      "strength": 0.1076003073606694,
+      "upper310Exact": true
+    },
+    {
+      "frame": 43,
+      "strength": 0.06979921036993042,
+      "upper310Exact": true
+    },
+    {
+      "frame": 44,
+      "strength": 0.03967505666178569,
+      "upper310Exact": true
+    },
+    {
+      "frame": 45,
+      "strength": 0.017765412472811753,
+      "upper310Exact": true
+    },
+    {
+      "frame": 46,
+      "strength": 0.004461255922609971,
+      "upper310Exact": true
+    },
+    {
+      "frame": 47,
+      "strength": 1.0344233825612026e-31,
+      "upper310Exact": true
+    }
+  ],
+  "sourceSha256": "06196560aab77ce388e5f56b5ffd587bea98d70a83139cf1da6ac024e76cbb51",
+  "alphaComponents": 19,
+  "detachedAlphaComponents": 18,
+  "detachedAlphaPixels": 22,
+  "sourcePixelsUnchanged": true,
+  "checks": {
+    "focusedTests": 25,
+    "normalDecodedFrames": 48,
+    "slowDecodedFrames": 192,
+    "nativePoseVisibleChangedPixels": [
+      0,
+      19,
+      19
+    ],
+    "offExact": true,
+    "parent10pxTranslationExact": true,
+    "all48Upper310Exact": true
+  },
+  "visualReview": {
+    "inspected": [
+      "native full source",
+      "native full baseline and full-strength head",
+      "all48 corner crops"
+    ],
+    "finding": "Small clean tapered corner accent; attached after offset correction. Does not supply cheek volume, eye acting, or safe contact/FV transition. Preserve as opt-in construction component; no speech integration.",
+    "sourceAlphaProductionAccepted": false,
+    "animationAccepted": false
+  }
+}

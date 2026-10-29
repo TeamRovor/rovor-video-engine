@@ -1,0 +1,17 @@
+{
+  "mode": "built-in image_gen",
+  "transparentBackground": true,
+  "source": "source/clean-skin-v1.png",
+  "generatedFile": "exec-a2846745-bb54-4653-bb2d-1f6a965b99cf.png",
+  "editTarget": "mouth-construction-v1/source/coordinated-face-v2.png",
+  "sourceSha256": {
+    "construction-skin-v1/source/clean-skin-v1.png": "a25f15417ddc0fb11bb262dc7b9cf6cfe9a843f9edc95cdb73f22ca264875e6e",
+    "mouth-construction-v1/source/coordinated-face-v2.png": "6a5a01be2c90ef012281b6dc2f95dcd6cdf0d59cea9ac3966729515e7e3f02aa",
+    "oral-rig/face-skin.png": "2cee2229260e1479781e512493a4bd88687e82862813aed7a27bc5faa97577a6"
+  },
+  "alpha": "generated source alpha retained; working skin retains original rig alpha exactly",
+  "paint": "derived minimum valid opacity against matched clean skin, not recovered artist alpha",
+  "runtime": "optional local skin-only source substitution; oral artwork/geometry/timing unchanged",
+  "animationReady": false,
+  "derivedPaintRuntimeStatus": "REJECTED: speckled combined paint, no independent anatomical layers"
+}

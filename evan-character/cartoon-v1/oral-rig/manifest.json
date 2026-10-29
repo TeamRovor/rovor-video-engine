@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "blank": {
+    "ecc": 0.9970577301105196,
+    "initial": [
+      [
+        0.884782612323761,
+        0.0,
+        29.43804359436035
+      ],
+      [
+        0.0,
+        0.884782612323761,
+        33.4195671081543
+      ]
+    ],
+    "correction": [
+      [
+        0.9993041157722473,
+        -0.0004615538928192109,
+        0.253820538520813
+      ],
+      [
+        -0.0003613547596614808,
+        0.9941574335098267,
+        1.3644042015075684
+      ]
+    ],
+    "sha256": "39b2ed63acfe19515c100fe06a5efd6054c8514b78b7924bce8e3708d1fb507a"
+  },
+  "cavity": {
+    "ecc": 0.9969482819831693,
+    "initial": [
+      [
+        0.9927007555961609,
+        0.0,
+        0.8686131238937378
+      ],
+      [
+        0.0,
+        0.9927007555961609,
+        2.3649635314941406
+      ]
+    ],
+    "correction": [
+      [
+        0.9926102161407471,
+        -4.35237780038733e-06,
+        0.9040164351463318
+      ],
+      [
+        0.0001342142786597833,
+        0.992188036441803,
+        2.4658799171447754
+      ]
+    ],
+    "sha256": "92a939304c7dff554412f6f3dd90418a7ab054bf6bbaa83d993c347be53c7093"
+  },
+  "skin_color_offset": [
+    1.0,
+    -8.0,
+    -7.0
+  ],
+  "layers": [
+    "face-skin",
+    "cavity-outline",
+    "upper-teeth",
+    "tongue",
+    "tongue-raised",
+    "closed-lips",
+    "fv-contact"
+  ],
+  "status": "experimental oral layers; visual acceptance required",
+  "animationReady": false,
+  "input_sha256": {
+    "head-rig-v2/head-X.png": "9c3c1cb2be27dfce5a77bd16c7c110c73d97d27f4e36adbfa525cb4427a605ae",
+    "head-rig-v2/head-H.png": "f6a3994a6d063ab6c0d7e2841d77f27917330e25433e4396c05490a82050e505",
+    "head-rig-v2/lower-face-weight.png": "5735acdbfe26f2178ca2e1b71f979ce200dac8031b28bc0f88abbca5b4dcd823",
+    "head-rig-v2/head-D.png": "650b974e36b17fbddef5ea46301ff975d3864aa2301e47538820b4dfecd09fd0",
+    "head-rig-v2/head-E.png": "e6d6eee781a6b536957d9e834e939c9464b5b1af52be2a6c8863d94abf5457ce",
+    "head-rig-v2/head-G.png": "558a6edfaa14f4bd5711e907553737074b6eb923392d70dcc73ea84b9745575a",
+    "head-rig-v2/head-F.png": "55579f0899a871227c9073cde37daaa7cb9a432e285ceec3bd86be17dfe1c9d9",
+    "head-rig-v2/head-B.png": "36820a7d1d6172c6691cacd703e0f0918a1ec7d564e957b0c2308d18a755dcad",
+    "head-rig-v2/head-C.png": "9670cd1b997f94007d77bb49178a0bc9c5e97079e39e823923856783d9448279",
+    "head-rig-v2/head-A.png": "4c80ba0a8a89adb14344f0769e78053acbbbabe64bfbeb49367112edc55d9be9",
+    "oral-source/empty-cavity.png": "92a939304c7dff554412f6f3dd90418a7ab054bf6bbaa83d993c347be53c7093",
+    "oral-source/blank-face.png": "39b2ed63acfe19515c100fe06a5efd6054c8514b78b7924bce8e3708d1fb507a"
+  }
+}

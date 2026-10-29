@@ -1,0 +1,107 @@
+{
+  "size": [
+    2167,
+    726
+  ],
+  "alphaMin": 0,
+  "alphaMax": 255,
+  "opaquePixels": 1798,
+  "nearOpaquePixels": 534223,
+  "halfAlphaLargestComponentBBox": [
+    113,
+    148,
+    1965,
+    488
+  ],
+  "halfAlphaEdges": [
+    [
+      152,
+      436,
+      523
+    ],
+    [
+      388,
+      411,
+      631
+    ],
+    [
+      624,
+      374,
+      634
+    ],
+    [
+      859,
+      335,
+      622
+    ],
+    [
+      1095,
+      294,
+      600
+    ],
+    [
+      1331,
+      253,
+      576
+    ],
+    [
+      1566,
+      211,
+      547
+    ],
+    [
+      1802,
+      170,
+      499
+    ],
+    [
+      2038,
+      151,
+      327
+    ]
+  ],
+  "sourcePixelsChanged": false,
+  "sourceSha256": "c79fadf995b29d72f7fe577e635d7749b50356372e289656844a8f0f3ce3bf08",
+  "sourceUpperEdge": [
+    [
+      152,
+      436
+    ],
+    [
+      388,
+      411
+    ],
+    [
+      624,
+      374
+    ],
+    [
+      859,
+      335
+    ],
+    [
+      1095,
+      294
+    ],
+    [
+      1331,
+      253
+    ],
+    [
+      1566,
+      211
+    ],
+    [
+      1802,
+      170
+    ],
+    [
+      2038,
+      151
+    ]
+  ],
+  "alphaThresholdUsedOnlyForMeasurement": true,
+  "registeredExperimentalComponent": true,
+  "speechProfile": false,
+  "anatomyAccepted": false
+}

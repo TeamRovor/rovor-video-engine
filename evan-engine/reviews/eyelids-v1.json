@@ -1,0 +1,70 @@
+{
+  "status": "layered-blink-construction-sampled-narrated-acting-pending",
+  "testsPassed": 10,
+  "oldUpperFaceFixturesByteExact": 6,
+  "staticSpeechFixtures": [
+    0,
+    138,
+    269
+  ],
+  "staticStatesRendered": [
+    0,
+    0.25,
+    0.5,
+    0.75,
+    1
+  ],
+  "staticStatesInspected": [
+    0.5,
+    1
+  ],
+  "rawSourceSha256": "dca1626fcd6a4367a4928fe7fc227f1f0e4b32f588ba586be27dd6e6703af6b1",
+  "registeredSkinPixels": 2713,
+  "workingDerivativesRebuildExact": 3,
+  "planes": "independent upper/lower skin covers and ink for each eye; stationary original eyeballs",
+  "normalDecodedIndices": [
+    10,
+    12,
+    13,
+    14,
+    16,
+    18,
+    20
+  ],
+  "slowDecodedIndices": [
+    48,
+    52,
+    64,
+    72
+  ],
+  "decodedSize": [
+    1024,
+    540
+  ],
+  "films": {
+    "Normal": {
+      "decodedFrames": 48,
+      "sha256": "dcb0ccdc6c8cca762d6484f3191f022a4b970b228ecb3fcbe608bdd6ddf92e98"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 192,
+      "sha256": "251094f6165ef092260654f6b9c840652e1b7d37f89485b3ca23dd459df03107"
+    }
+  },
+  "narrationDriven": false,
+  "mouthHeld": true,
+  "heldSourceFrame": 138,
+  "eyesGazeArticulated": false,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "animationAccepted": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "observations": [
+    "Lids progressively cover the original eyes rather than scaling the iris; opaque glasses remain in front and the original asymmetric brows remain above.",
+    "Closed eye footprints contain no retained white sclera in the tested owned domains. Original nose corridor and pixels below310 stay exact.",
+    "Earlier narrow geometry left white corner remnants; procedural inpaint pulled a dark nose smear into the left lid and was rejected. One targeted generated skin-only plate replaces that underpaint.",
+    "Without glasses, the left fill boundary and thin lid ink remain visible in enlarged crops. Forehead band/temple edges persist. Construction is not artist-approved or polished acting."
+  ],
+  "next": "Use one word-anchored blink during the existing lowered-glasses skeptical hold in a short5\u20138s narration component. Preserve native oral/jaw/audit and default/open parity, then inspect cue boundaries and stage scale before full-film integration. No new head variants."
+}

@@ -1,0 +1,54 @@
+{
+  "geometrySamples": 909,
+  "failures": [],
+  "baselineOralExactSymbols": 9,
+  "invalidStrengthsRejected": 3,
+  "fullPosePlanes": [
+    "Neck backing",
+    "Drawn skin underlap",
+    "Painted cavity",
+    "Narration tongue",
+    "Rigid upper incisors",
+    "Front dental tongue tip",
+    "Upper face and cheeks",
+    "Drawn jaw skin",
+    "Independent lower lip",
+    "Independent upper-lip cap",
+    "Upper lip carrier guard"
+  ],
+  "currentSpeechSafe": false,
+  "anatomyAccepted": false,
+  "selectedForIntegration": false,
+  "baseCommit": "8a92357f33b8e4129a9b0f63ebc18ae222f0b0d6",
+  "nativePilotStrengthsInspected": [
+    0,
+    0.25,
+    0.5,
+    0.75,
+    1
+  ],
+  "pilotProtectedUpper288Exact": true,
+  "pilotNoseMaximumChange": 0,
+  "concaveArchRejected": {
+    "firstFailedPilotStrength": 0.5,
+    "oralMinimumAtHalf": -0.0005645751953125,
+    "oralMinimumAtFull": -71.17919921875,
+    "guardRelaxed": false
+  },
+  "convexArchVisualRejection": [
+    "Existing rigid crown clips to a thin dash and ends before the expanded grin corner.",
+    "A skin-colored wedge and incomplete upper-lip corner appear at viewer-right.",
+    "Cheeks do not acquire the design-sheet grin attitude; widening the speech aperture is insufficient."
+  ],
+  "sourceArtworkChanged": false,
+  "runtimeChanged": false,
+  "polishedMilestoneReady": false,
+  "normalSlowCandidateFilmsRendered": false,
+  "reasonNoCandidateFilm": "Known defective native pilot rejected before adding timing or generating a narration film.",
+  "sourceHashes": {
+    "pilot.py": "16ff67761ead6ce7bc27d757a2256ed8c6089dd909880cdf1c9e94dec531aeb8",
+    "audit.py": "2af0fc4e6f2b44bd91631c2f76accb7b5d7b1734893697f412517588a5211a8b",
+    "Rejected-concave-upper-arch.py.txt": "ff564e76bd748a1c200ae66d564b800651abbd4d0577c4f37db1d26e33ab5e4c",
+    "prototype.py": "b8cf43980e631a9430d018dceb154932e3cbae1697e0b1f22db0208d8f36e84d"
+  }
+}

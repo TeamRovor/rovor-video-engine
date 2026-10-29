@@ -1,0 +1,87 @@
+{
+  "audio": {
+    "Before": {
+      "sourcePcm16Samples": 64000,
+      "decodedPcm16Samples": 64000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": ""
+    },
+    "After": {
+      "sourcePcm16Samples": 64000,
+      "decodedPcm16Samples": 64000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": ""
+    }
+  },
+  "sourceSampleRange": [
+    304000,
+    352758
+  ],
+  "originalPcmSamples": 48758,
+  "zeroPadSamples": 15242,
+  "sourcePcmPrefixExact": true,
+  "speakingCopiedFramesExact": 144,
+  "tailFrames": 48,
+  "films": {
+    "Before-Normal.mp4": {
+      "decodedFrames": 192,
+      "sha256": "36c86995ff6d45ef76e355443d24fda9e00bb3e552b516f17f8e694244f4861a"
+    },
+    "Before-Quarter-Speed.mp4": {
+      "decodedFrames": 768,
+      "sha256": "07b0912e82812a80c3a6d2152cd33ac763c298477f05e047e9f91e1e63403e80"
+    },
+    "After-Normal.mp4": {
+      "decodedFrames": 192,
+      "sha256": "c393dc951f04f69ac7646d2380b6e6b1fed650a3ac37e5978cda481e56bc9555"
+    },
+    "After-Quarter-Speed.mp4": {
+      "decodedFrames": 768,
+      "sha256": "48d71427aa7507e3380d27f7ac87e7c21c1e114616ce3b7cfbfd7124ab47c25a"
+    }
+  },
+  "smileStart": 22.127374999999997,
+  "sourceAudioEnd": 22.047375,
+  "nativeOutsideBrowMaskExact": 48,
+  "mouthExact": 48,
+  "noseEarExact": 48,
+  "outsideFaceExact": 48,
+  "brandExact": 48,
+  "minimumOral": 0.059276580810546875,
+  "minimumJaw": 45.5,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "runtimeSpeechProfileChanged": false,
+  "fullStageAccepted": false,
+  "polishedMilestoneReady": false,
+  "runtimeParent": "dfcca80cd80be8becd6f7277617f850a2f52c4e5",
+  "scope": "Adds held brows to previous post-recording smile candidate only; current speaking scene does not import helper",
+  "focusedControlTests": 2,
+  "sourceBrowPixelsUnchanged": true,
+  "calibrationFrame": 1080,
+  "allowedNativeBbox": [
+    163,
+    180,
+    332,
+    237
+  ],
+  "changedTailFrames": 41,
+  "firstChangedFrame": 1063,
+  "maximumChangedStagePixels": 921,
+  "stageChangeUnion": [
+    246,
+    107,
+    329,
+    129
+  ],
+  "visualReview": [
+    "native512 before/after peak1080",
+    "native512 hold1103",
+    "all48 native stage face pairs",
+    "full stage1080"
+  ],
+  "finding": "Slightly more attentive and friendly held expression, restrained at full-stage scale; dense hair/sunglasses and thin teeth limit acting. Not polished performance.",
+  "independentListeningOrRealtimeAcceptance": false,
+  "alignmentFlagsCleared": false
+}

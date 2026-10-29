@@ -1,0 +1,220 @@
+{
+  "status": "registered-half-open-source-and-three-drawing-motion-reviewed-not-accepted",
+  "sourceSha256": "3b774a89b90490e8a44a0b8fb918c848dc5a78f5676c9ea6820c07dddc173f37",
+  "rawSourceUnmodified": true,
+  "registration": {
+    "folder": "half-open-hand-fit-v2",
+    "sourceWrist": [
+      551,
+      510
+    ],
+    "targetWrist": [
+      810,
+      762
+    ],
+    "scale": 0.192,
+    "rotationDegrees": 15,
+    "associatedRgbaPrefilter": true,
+    "originalProximalExact": true,
+    "animationReady": false
+  },
+  "testsPassed": 4,
+  "newRegistrationTestCases": 2,
+  "actualSpeechMeshesPositiveAt48Hz": true,
+  "isolatedRebuildPixelExact": true,
+  "registeredPoses": [
+    {
+      "pose": "open",
+      "distalArea": 8815,
+      "distalBounds": [
+        794,
+        775,
+        921,
+        894
+      ],
+      "proximalOriginalExact": true
+    },
+    {
+      "pose": "half-open",
+      "distalArea": 6961,
+      "distalBounds": [
+        777,
+        775,
+        917,
+        894
+      ],
+      "proximalOriginalExact": true
+    },
+    {
+      "pose": "point",
+      "distalArea": 5891,
+      "distalBounds": [
+        792,
+        782,
+        913,
+        901
+      ],
+      "proximalOriginalExact": true
+    }
+  ],
+  "staticNativePosesVisuallyInspected": [
+    0,
+    69,
+    248,
+    374,
+    504
+  ],
+  "stagePilots": [
+    {
+      "frame": 69,
+      "time": 2.875,
+      "baselineStagePixelExact": true,
+      "outsideRightHandRegionExact": true,
+      "faceLeftArmAndBrandExact": true,
+      "poseSwitchImplemented": false,
+      "changedStagePixels": 5372
+    },
+    {
+      "frame": 248,
+      "time": 10.333333333333334,
+      "baselineStagePixelExact": true,
+      "outsideRightHandRegionExact": true,
+      "faceLeftArmAndBrandExact": true,
+      "poseSwitchImplemented": false,
+      "changedStagePixels": 5438
+    },
+    {
+      "frame": 374,
+      "time": 15.583333333333334,
+      "baselineStagePixelExact": true,
+      "outsideRightHandRegionExact": true,
+      "faceLeftArmAndBrandExact": true,
+      "poseSwitchImplemented": false,
+      "changedStagePixels": 5371
+    }
+  ],
+  "stagePilotsVisuallyInspectedAt1280x720": [
+    69,
+    248,
+    374
+  ],
+  "motion": {
+    "sourceFrameRange": [
+      36,
+      132
+    ],
+    "frames": 96,
+    "halfOpenSourceFrames": [
+      55,
+      56,
+      57,
+      58,
+      111,
+      112,
+      113,
+      114
+    ],
+    "other88FramesByteExactToPriorPointStudy": true,
+    "priorFullStageCalibrationExact": true,
+    "outsideRightHandExact": true,
+    "nativeOralJawAuditExact": true,
+    "minimumArmArea2": 67.15663736959304,
+    "films": {
+      "Normal.mp4": {
+        "decodedFrames": 96,
+        "sha256": "8a633a69c0166c924b6c3c487dfc9f0658f4a7cb253b9a2923b5ad4eb74e1c75"
+      },
+      "Quarter-Speed.mp4": {
+        "decodedFrames": 384,
+        "sha256": "7cfc77ebd62138b823ba24f42d2b7ea81bdd68600ff591d38527c220803987ac"
+      }
+    },
+    "exactPcmSamples": [
+      24000,
+      88000
+    ],
+    "exactPcmCount": 64000,
+    "aacIsLossy": true,
+    "discretePoseBoundaries": [
+      55,
+      59,
+      111,
+      115
+    ]
+  },
+  "visualInspection": {
+    "nativeTransitionSourceFrames": [
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118
+    ],
+    "overviewSourceFrames": [
+      52,
+      54,
+      55,
+      56,
+      58,
+      59,
+      110,
+      111,
+      112,
+      114,
+      115,
+      118
+    ],
+    "decodedNormalClipFrames": [
+      18,
+      19,
+      22,
+      23,
+      74,
+      75,
+      78,
+      79
+    ],
+    "decodedSlowClipFrames": [
+      72,
+      76,
+      88,
+      92,
+      296,
+      300,
+      312,
+      316
+    ]
+  },
+  "visualFinding": "Three bent fingers remain distinct and sampled wrist joins are connected. The extra drawing still replaces the spread silhouette abruptly at55/115 and changes to/from the curled point at59/111. Palm crease, thumb height and index axis jump between drawings; dense nail details read as small loops. Reject full-film integration. No real-time or listening acceptance.",
+  "fingersIndividuallyArticulated": false,
+  "transitionAccepted": false,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "newSourceArtworkThisTurn": false,
+  "phonemeTimingChanged": false,
+  "flagsCleared": 0,
+  "pendingJobs": false,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "polishedMilestoneReady": false,
+  "nextConcreteWork": "Stop adding replacement drawings or retiming their swaps. Prototype explicit palm/thumb/middle/ring/little ownership and joint landmarks on the existing clean open hand; preserve the index and wrist anchors. Build one continuously deforming curl cycle with positive mesh/occlusion checks, inspect native and delivery motion, and reject broken anatomy. Keep current full film and acoustic flags unchanged."
+}

@@ -1,0 +1,13 @@
+# Collar ownership: dangling original neck edge
+
+The frame374(15.583s) trace separates head, registered extended neck and torso planes, exactly calibrating the complete held stage to payoff-continuous. At3×nearest enlargement, the small vertical tail belongs to the head plane. The neck split starts atnative x214, leaving a thin original neck edge inx208–213below the jaw; it overlaps the separate extended neck. The torso collar itself is not the source. Individual baseline/held ownership sheets and the original native face crop were inspected. Evidence: outputs/evan-cartoon-collar-ownership/Review.html.
+
+The opt-in correction extends the existing HEAD alpha cut six pixels left. It leaves neck masking, all RGB and source artwork unchanged. split_head_neck retains its default behavior; a body can opt in with trim_left_neck_stub=True. This uses the registered neck already beneath that fringe. No new bitmap art, painted cleanup or replacement face is introduced.
+
+Three pilots353/374/396recalibrate the preceding full film pixel-exact before correction. Changed delivery pixels are23/38/32respectively. All neck/torso/arm planes are exact, native oral/jaw arrays and audit values exact, and changes stay inside the head delivery region. Native120×140join pairs were inspected at3×nearest plus the1280×720held candidate: the dangling lower tail is reduced, while a small upper collar/jaw contour remains. These are sample checks; no corrected-motion or polished-quality claim is made.
+
+Ten relevant neck/payoff tests pass, including one new preservation test over0/11/22jaw offsets. It exercises an opaque fringe pixel, checks alpha only decreases inside the narrow ownership region, and preserves source input, all RGB, neck plane and remote face pixels. Existing registered neck attachment/positive-mesh/payoff tests pass. Default whole-stage calibration is also exercised by all three actual-face pilots.
+
+Executed local work/collar-ownership-review/{trace,candidate}.py and relevant source snapshots are frozen in Source/ with Source-Manifest.json. No pending worker, source-plate edit, default change, new art, retiming, Moho interaction, merge or deployment. Main/V3/V4/updater/native projects remain preserved. Current full-film candidate remains payoff-continuous.
+
+Next: render15–17s through the actual separated face with the opt-in trim and existing payoff controls. Require48/192decoded frames, all native join pairs, exactPCM240000:272000(32000samples), source hashes and layer/oral preservation. The correction applies to all speech poses, so later full-film validation must cover all532speech frames rather than only60payoff frames; keep all20closing frames byte-exact. No extra acting variant or timing change is needed for this correction.

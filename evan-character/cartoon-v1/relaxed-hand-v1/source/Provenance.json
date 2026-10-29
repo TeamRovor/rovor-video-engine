@@ -1,0 +1,31 @@
+{
+  "mode": "built-in image_gen",
+  "transparentBackground": true,
+  "selected": "source/right-relaxed-v2.png",
+  "status": "optional registered alternate hand; full character milestone incomplete",
+  "iterations": [
+    {
+      "file": "source/right-relaxed-v1.png",
+      "generatedFile": "exec-ed9dd3df-76d7-40fd-ab09-f68bd9001276.png",
+      "decision": "rejected counting gesture: ring/little too tightly curled"
+    },
+    {
+      "file": "source/right-relaxed-v2.png",
+      "generatedFile": "exec-2a947d4e-fa7b-44c5-98b7-6a377d38b138.png",
+      "decision": "selected for registration/motion study, not artistic approval"
+    }
+  ],
+  "sha256": {
+    "relaxed-hand-v1/source/right-relaxed-v1.png": "0854a24bdb587ce33913c8b1c988fe484b1ad3ac78eb6d863c5e3872e89729d1",
+    "relaxed-hand-v1/source/right-relaxed-v2.png": "2ca1ef76e7a5d4d682fa74fe554d0c285af256348da445676f3c11a5330950da",
+    "source/design-sheet-v1.png": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7",
+    "hand-source/right-point-v1.png": "b0020f3504d49d8410dee3566380ae9e4ec7ab81abf748ffc29911f91033e5d2"
+  },
+  "exactPrompts": "Prompt-Set.md",
+  "alpha": "original generated alpha retained in source files; premultiplied resampling for working registration",
+  "limitations": [
+    "No independent finger controls or point/open transition",
+    "Registered continuous arm/hand image uses hierarchical shoulder/elbow/wrist transforms",
+    "Human artist review still needed for anatomy, ink and coordinated inbetweens"
+  ]
+}

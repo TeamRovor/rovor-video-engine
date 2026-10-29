@@ -1,0 +1,80 @@
+{
+  "status": "full-speech-collar-ownership-render-verified-and-sampled",
+  "speechFramesToEvaluate": 532,
+  "expectedFullFrames": 552,
+  "expectedNormalSeconds": 23,
+  "expectedQuarterSpeedSeconds": 92,
+  "closingFramesToPreserveByteExact": 20,
+  "componentReview": "collar-motion-v1.json",
+  "pendingJobs": false,
+  "launchSourceManifestSha256": "8f14da6154d32f08dfbdf6b949291e542e37d0057f66b5f5a6a1ae347f6f6d24",
+  "fullExportsVerified": true,
+  "defaultChanged": false,
+  "newArtwork": false,
+  "sourceArtworkModified": false,
+  "phonemeTimingChanged": false,
+  "flagsCleared": 0,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "nextConcreteWork": "Inspect existing hand-source/right-point-v1.png and its construction against the current filtered open palm and design-sheet-v1. The old .16 point derivative is documented undersized/thinner; do not install it. Evaluate a separate correctly proportioned registration at the current .192 scale and several existing arm poses before choosing a narration-linked hand-pose transition. Preserve originals/defaults; no finger dissolve or unsupported articulation claim.",
+  "sourceFrameRange": [
+    0,
+    552
+  ],
+  "sourceSeconds": [
+    0,
+    23
+  ],
+  "frames": 552,
+  "baselineStageCalibrationsExact": 532,
+  "changedSpeechFrames": 511,
+  "unchangedSpeechFramesByteExact": 21,
+  "closingFramesByteExact": 20,
+  "neckTorsoArmsExact": true,
+  "nativeOralJawAuditExact": true,
+  "outsideHeadStageExact": true,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 552,
+      "sha256": "54e81ff90b326f7788522d4263af3b3d68ab09b09dbd3b23608be24d1e0d017d"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 2208,
+      "sha256": "686ed3e7b2032ebba6df93873d8c80b9fd918e4e7229b4f6da272199deaa2f3c"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 368000,
+    "decodedPcm16Samples": 368000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourceWavByteExact": true,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "fullFilmUpdated": true,
+  "workerCompleted": 12979,
+  "fullFilmReadyForConstructionReview": true,
+  "allFrameHashesVerified": true,
+  "allSourceHashesVerified": true,
+  "all18MarkersMatchCurrentPlan": true,
+  "nativePairsVisuallyInspected": 108,
+  "overviewPosesVisuallyInspected": 36,
+  "decodedNormalSamplesVisuallyInspected": [
+    24,
+    69,
+    248,
+    374,
+    504,
+    540
+  ],
+  "decodedSlowSamplesVisuallyInspected": [
+    1496,
+    2016
+  ],
+  "visualAssessment": "Lower original neck tail reduced without an observed broad neck opening in108sampled pairs. Upper collar/jaw contour persists. Original expressive-cartoon direction still exceeds the rigid torso, fixed open palms and restrained face; no polished or independent listening/real-time acceptance."
+}

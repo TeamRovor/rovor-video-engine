@@ -1,0 +1,327 @@
+{
+  "runtimeSourceCommit": "19c7326206f6767a4ef6d78f11559ca1ea7a0f12",
+  "sourceFrames": [
+    696,
+    936
+  ],
+  "sourceSamples": [
+    232000,
+    312000
+  ],
+  "audio": {
+    "sourcePcm16Samples": 80000,
+    "decodedPcm16Samples": 80000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "films": {
+    "Normal": {
+      "decodedFrames": 240,
+      "sha256": "63565a57267b789fb4c027e9c217b960a2edaadb4d9860536c980990de54d817"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 960,
+      "sha256": "272405d1b8922a6d153e5e4e4a01935fb1593ab8ab267f72f5f219d098e2a5c7"
+    }
+  },
+  "upper288Exact": 240,
+  "noseMaximumChange": 0,
+  "minimumOral": 0.04448283836245537,
+  "minimumJaw": 27.790542602539062,
+  "minimumArms": {
+    "left": 494.6158370879494,
+    "right": 135.35149457940372
+  },
+  "fallbacks": [
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    }
+  ],
+  "phonemeTimingChanged": false,
+  "artworkChanged": false,
+  "independentListeningOrRealTimePlaybackAccepted": false,
+  "polishedMilestoneReady": false,
+  "pixelComparison": {
+    "samples": 240,
+    "framesChanged": 221,
+    "outsideMouthRegionExact": true,
+    "unionChangedBBox": [
+      260,
+      162,
+      305,
+      184
+    ],
+    "runtimeCommit": "19c7326206f6767a4ef6d78f11559ca1ea7a0f12",
+    "codeSha256": {
+      "separated_oral_review.py": "75dd01b962b78647246caf177e009e8a7fca722120e53ed7abc31c1956e075cb",
+      "lower_lip_plane.py": "956ff58a07c25fd7017c29421a226fdcad9a82e2c9e28a98948b34136e1c6d08",
+      "finished_cartoon_scene.py": "d1ff8cb7248332b287ebb611e7b4f26b895228c28c35c8b76215937b20c979bb",
+      "render_finished_thought.py": "ed2a0fcdb6ae24f6043b213ae052bbd613e610231c1267880a793f76fcc8a06c",
+      "narrated_export.py": "638f88dacb0275106607a72281712b98094cea35c730e5e275c11f5334075061"
+    }
+  },
+  "articulationChecks": {
+    "rows": [
+      {
+        "phone": "F",
+        "word": "favicon",
+        "time": 8.565,
+        "fv": 0.9904374639999992,
+        "oralCoordinatesExact": true,
+        "upper288Exact": true,
+        "priorCrownAlphaSum": 85078.96875,
+        "currentCrownAlphaSum": 22774.947265625,
+        "priorTongueAlphaSum": 0.0,
+        "currentTongueAlphaSum": 0.0,
+        "currentDentalTipAlphaSum": 0.0,
+        "audit": {
+          "roundingStrength": 0.0,
+          "minimumTriangleArea2": 51.864845275878906,
+          "minimumOralTriangleArea2": 2.8580408096313477,
+          "fv": 0.9904374639999992,
+          "width": 78.48849487304688,
+          "lowerY": 323.5160217285156,
+          "noseMaximumChange": 0,
+          "upper288Exact": true,
+          "planes": [
+            "Neck backing",
+            "Drawn skin underlap",
+            "Painted cavity",
+            "Narration tongue",
+            "Rigid upper incisors",
+            "Front dental tongue tip",
+            "Drawn jaw skin",
+            "Independent lower lip",
+            "Independent upper-lip cap",
+            "Upper face and cheeks"
+          ],
+          "bakedMouthInUpperCarrier": false,
+          "defaultChanged": false,
+          "anatomyAccepted": false
+        }
+      },
+      {
+        "phone": "V",
+        "word": "version",
+        "time": 11.445,
+        "fv": 0.9818947957538773,
+        "oralCoordinatesExact": true,
+        "upper288Exact": true,
+        "priorCrownAlphaSum": 86319.8046875,
+        "currentCrownAlphaSum": 24719.7578125,
+        "priorTongueAlphaSum": 0.0,
+        "currentTongueAlphaSum": 0.0,
+        "currentDentalTipAlphaSum": 0.0,
+        "audit": {
+          "roundingStrength": 0.0,
+          "minimumTriangleArea2": 51.830291748046875,
+          "minimumOralTriangleArea2": 3.0165457725524902,
+          "fv": 0.9818947957538773,
+          "width": 78.44393920898438,
+          "lowerY": 323.6995849609375,
+          "noseMaximumChange": 0,
+          "upper288Exact": true,
+          "planes": [
+            "Neck backing",
+            "Drawn skin underlap",
+            "Painted cavity",
+            "Narration tongue",
+            "Rigid upper incisors",
+            "Front dental tongue tip",
+            "Drawn jaw skin",
+            "Independent lower lip",
+            "Independent upper-lip cap",
+            "Upper face and cheeks"
+          ],
+          "bakedMouthInUpperCarrier": false,
+          "defaultChanged": false,
+          "anatomyAccepted": false
+        }
+      },
+      {
+        "phone": "L",
+        "word": "detail",
+        "time": 15.955000000000002,
+        "fv": 0.0,
+        "oralCoordinatesExact": true,
+        "upper288Exact": true,
+        "priorCrownAlphaSum": 74765.890625,
+        "currentCrownAlphaSum": 40483.48046875,
+        "priorTongueAlphaSum": 85022.4140625,
+        "currentTongueAlphaSum": 83944.3203125,
+        "currentDentalTipAlphaSum": 0.0,
+        "audit": {
+          "roundingStrength": 0.0,
+          "minimumTriangleArea2": 48.14454650878906,
+          "minimumOralTriangleArea2": 4.791073799133301,
+          "fv": 0.0,
+          "width": 77.12651062011719,
+          "lowerY": 337.427001953125,
+          "noseMaximumChange": 0,
+          "upper288Exact": true,
+          "planes": [
+            "Neck backing",
+            "Drawn skin underlap",
+            "Painted cavity",
+            "Narration tongue",
+            "Rigid upper incisors",
+            "Front dental tongue tip",
+            "Drawn jaw skin",
+            "Independent lower lip",
+            "Independent upper-lip cap",
+            "Upper face and cheeks"
+          ],
+          "bakedMouthInUpperCarrier": false,
+          "defaultChanged": false,
+          "anatomyAccepted": false
+        }
+      },
+      {
+        "phone": "TH",
+        "word": "thing",
+        "time": 6.79,
+        "fv": 0.0,
+        "oralCoordinatesExact": true,
+        "upper288Exact": true,
+        "priorCrownAlphaSum": 76687.9375,
+        "currentCrownAlphaSum": 44102.7421875,
+        "priorTongueAlphaSum": 103108.8125,
+        "currentTongueAlphaSum": 101213.1328125,
+        "currentDentalTipAlphaSum": 11123.5693359375,
+        "audit": {
+          "roundingStrength": 0.0,
+          "minimumTriangleArea2": 51.0345458984375,
+          "minimumOralTriangleArea2": 5.404280662536621,
+          "fv": 0.0,
+          "width": 86.14117431640625,
+          "lowerY": 337.30633544921875,
+          "noseMaximumChange": 0,
+          "upper288Exact": true,
+          "planes": [
+            "Neck backing",
+            "Drawn skin underlap",
+            "Painted cavity",
+            "Narration tongue",
+            "Rigid upper incisors",
+            "Front dental tongue tip",
+            "Drawn jaw skin",
+            "Independent lower lip",
+            "Independent upper-lip cap",
+            "Upper face and cheeks"
+          ],
+          "bakedMouthInUpperCarrier": false,
+          "defaultChanged": false,
+          "anatomyAccepted": false
+        }
+      },
+      {
+        "phone": "DH",
+        "word": "that",
+        "time": 1.83,
+        "fv": 0.0,
+        "oralCoordinatesExact": true,
+        "upper288Exact": true,
+        "priorCrownAlphaSum": 75983.703125,
+        "currentCrownAlphaSum": 43087.2578125,
+        "priorTongueAlphaSum": 116696.859375,
+        "currentTongueAlphaSum": 114503.7890625,
+        "currentDentalTipAlphaSum": 9485.216796875,
+        "audit": {
+          "roundingStrength": 0.0,
+          "minimumTriangleArea2": 51.51428985595703,
+          "minimumOralTriangleArea2": 6.162517547607422,
+          "fv": 0.0,
+          "width": 85.96772766113281,
+          "lowerY": 338.8667297363281,
+          "noseMaximumChange": 0,
+          "upper288Exact": true,
+          "planes": [
+            "Neck backing",
+            "Drawn skin underlap",
+            "Painted cavity",
+            "Narration tongue",
+            "Rigid upper incisors",
+            "Front dental tongue tip",
+            "Drawn jaw skin",
+            "Independent lower lip",
+            "Independent upper-lip cap",
+            "Upper face and cheeks"
+          ],
+          "bakedMouthInUpperCarrier": false,
+          "defaultChanged": false,
+          "anatomyAccepted": false
+        }
+      }
+    ],
+    "phoneTimingChanged": false,
+    "independentListeningVerified": false
+  },
+  "layerExports": [
+    {
+      "file": "Body-Pixel-Layers-885.psd",
+      "layers": [
+        "neck",
+        "torso",
+        "hand-left",
+        "arm-left",
+        "arm-right",
+        "head"
+      ],
+      "meanPremultipliedError": 0.007137823804812219,
+      "nativeMohoBones": false
+    },
+    {
+      "file": "Native-Oral-Layers-885.psd",
+      "layers": [
+        "Neck backing",
+        "Drawn skin underlap",
+        "Painted cavity",
+        "Narration tongue",
+        "Rigid upper incisors",
+        "Front dental tongue tip",
+        "Drawn jaw skin",
+        "Independent lower lip",
+        "Independent upper-lip cap",
+        "Upper face and cheeks"
+      ],
+      "meanPremultipliedError": 0.0030280730303596025,
+      "nativeMohoBones": false
+    }
+  ],
+  "nativeStagedMouthFramesInspected": 240,
+  "fullFramesInspected": [
+    868,
+    885,
+    935
+  ],
+  "newMotionIntegrated": false,
+  "sourceScriptSha256": {
+    "package.py": "1540812b7bf5b830978f5ea9634faad6774d0c4ace719026b3d3437a7141d7b3",
+    "export.py": "35a468e3842e06b8f99058af386af99bc20cd59123167958174e99a3e8afb1c7",
+    "Runtime-Separated-Oral.py": "75dd01b962b78647246caf177e009e8a7fca722120e53ed7abc31c1956e075cb",
+    "compare.py": "9fa283da011b76e78b29ac06caea3a0ff21fd96fb67edbe0190272fa23d5367e",
+    "articulation.py": "69e62fa46531156bad818a8bf75921759253d357dd23a8717e710147e6ddfacf"
+  }
+}

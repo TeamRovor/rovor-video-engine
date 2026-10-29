@@ -1,0 +1,49 @@
+{
+  "baseCommit": "c38f7762037cee1a4f14f38e042234f6bdc6f02b",
+  "registeredExperimentalPlane": true,
+  "finishedSceneChanged": false,
+  "sourceArtworkAlphaPreserved": true,
+  "testsPassed": 3,
+  "actualClosedLumenCrownPixels": 0,
+  "materialOutsideLumenPixels": 0,
+  "pilotSymbols": [
+    "B with forced grin",
+    "A with original closed geometry",
+    "G/FV with original geometry"
+  ],
+  "nativePilotsInspected": 3,
+  "componentMotionDecodedFrames": {
+    "normal": 48,
+    "quarterSpeed": 192
+  },
+  "componentMotionAudio": false,
+  "componentMotionFramesInspected": [
+    0,
+    16,
+    32,
+    47
+  ],
+  "sourceMatteLimits": {
+    "nonzero": 551938,
+    "partial": 550140,
+    "opaque": 1798,
+    "nearOpaque": 534223,
+    "positiveAlphaIslands": 378,
+    "islandPixels": 1260
+  },
+  "sourceRegistrationSha256": "ba35d8f4558b6b28df494890e7a96c6015ec7df39e890635d5d7f0cd58591689",
+  "sourceHashes": {
+    "pilot.py": "154e3fb6c62b26d1e1744607067eae9c0ad28be0f3bfe6f989145bfef3d575a8",
+    "render.py": "c9289cf1d20ad11cdf150a780e9bcbfeda42853429bf7c2815fdb4cc3f074a96",
+    "grin_tooth_plane.py": "e869abf1205dbf8e3235805188593952b4a387e26a725f9a5cc9c378e5ba70f2",
+    "test_grin_tooth_plane.py": "847920ea0039fdd4d17a56d9660635812a262e50d245baaf8ff54c2ff71585b5",
+    "prototype.py": "b8cf43980e631a9430d018dceb154932e3cbae1697e0b1f22db0208d8f36e84d"
+  },
+  "remainingVisualDefects": [
+    "Viewer-right skin wedge/incomplete lip corner remains.",
+    "No expressive cheek lift or grin transition into actual speech demonstrated.",
+    "Near-opaque/faint-island source matte is not an approved clean asset."
+  ],
+  "polishedMilestoneReady": false,
+  "independentListeningOrRealtimeAcceptance": false
+}

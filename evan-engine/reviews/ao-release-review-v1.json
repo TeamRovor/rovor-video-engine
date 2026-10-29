@@ -1,0 +1,185 @@
+{
+  "sourceFrameRange": [
+    480,
+    510
+  ],
+  "sourceSeconds": [
+    20,
+    21.25
+  ],
+  "normalSeconds": 1.25,
+  "quarterSpeedSeconds": 5,
+  "sourcePcmSamples": [
+    320000,
+    340000
+  ],
+  "sourcePcmExact": true,
+  "sourcePcmSha256": "ba26a8569f4d8afdf77f40e6fd53367369ddd86a08f1db87e94db6efd7b90b6e",
+  "audio": {
+    "sourcePcm16Samples": 20000,
+    "decodedPcm16Samples": 20000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 30,
+      "sha256": "f08eb6d9331cce0d8e2a6222f007bddd86a373e3769a015aa93f46dfacfcc380"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 120,
+      "sha256": "c72a2ee4a1e3c02f21a545cdc40949dcc0ab6246225cc7181aa82e0bccbb6a94"
+    }
+  },
+  "projectedScale": 0.4756640625,
+  "projectionNote": "Head scale0.82 times stage vertical891/1536; approximate vertical gap, small rotations excluded. Not an encoded pixel measurement.",
+  "samples": [
+    {
+      "requestedTime": 20.375,
+      "capturedTime": 20.375,
+      "nativeInnerGap": 0.295623779296875,
+      "projectedVerticalGapEstimate": 0.14061760783195495,
+      "identityBilabial": 0.9840351853718904,
+      "jawBilabial": 0.9840351853718904
+    },
+    {
+      "requestedTime": 20.38,
+      "capturedTime": 20.379166666666666,
+      "nativeInnerGap": 0.977691650390625,
+      "projectedVerticalGapEstimate": 0.46505278229713437,
+      "identityBilabial": 0.947598933599657,
+      "jawBilabial": 0.947598933599657
+    },
+    {
+      "requestedTime": 20.4,
+      "capturedTime": 20.4,
+      "nativeInnerGap": 3.8402099609375,
+      "projectedVerticalGapEstimate": 1.8266498708724974,
+      "identityBilabial": 0.5575785161583717,
+      "jawBilabial": 0.8215157277140064
+    },
+    {
+      "requestedTime": 20.416666666666668,
+      "capturedTime": 20.416666666666668,
+      "nativeInnerGap": 9.50439453125,
+      "projectedVerticalGapEstimate": 4.520898914337158,
+      "identityBilabial": 0.19378276774719483,
+      "jawBilabial": 0.5920553971351536
+    },
+    {
+      "requestedTime": 20.425,
+      "capturedTime": 20.425,
+      "nativeInnerGap": 13.69378662109375,
+      "projectedVerticalGapEstimate": 6.513642175197601,
+      "identityBilabial": 0.06372325898949184,
+      "jawBilabial": 0.4335539283022545
+    },
+    {
+      "requestedTime": 20.458333333333332,
+      "capturedTime": 20.458333333333332,
+      "nativeInnerGap": 27.249603271484375,
+      "projectedVerticalGapEstimate": 12.961656993627548,
+      "identityBilabial": 0.0,
+      "jawBilabial": 0.03244127513949552
+    }
+  ],
+  "thresholdReviewTime": 20.425,
+  "thresholdTimeIsNotPhoneticBoundary": true,
+  "normalFrameInterval": 0.041666666666666664,
+  "rowsAreAuthoredGeometry": true,
+  "timingChanged": false,
+  "animationChanged": false,
+  "flagsCleared": 0,
+  "listeningAccepted": false,
+  "exactPhoneBoundaryAccepted": false,
+  "polishedMilestoneReady": false,
+  "disposition": "retain-current-release-no-change-warranted-by-this-evidence",
+  "reason": "The low-energy endpoint is bracketed by adjacent24fps output frames; source thresholds do not establish phonetic onset. Existing smooth release remains pending performance/listening acceptance.",
+  "decodedNormalIndices": [
+    0,
+    9,
+    10,
+    11,
+    29
+  ],
+  "decodedSlowIndices": [
+    40,
+    44
+  ],
+  "definitionBrowGap": [
+    {
+      "time": 10.31,
+      "controls": {
+        "leftRaise": 0.0,
+        "rightRaise": 0.0,
+        "leftTilt": 0.0,
+        "rightTilt": 0.0
+      }
+    },
+    {
+      "time": 10.93,
+      "controls": {
+        "leftRaise": 0.0,
+        "rightRaise": 0.0,
+        "leftTilt": 0.0,
+        "rightTilt": 0.0
+      }
+    },
+    {
+      "time": 11.17,
+      "controls": {
+        "leftRaise": 0.0,
+        "rightRaise": 0.0,
+        "leftTilt": 0.0,
+        "rightTilt": 0.0
+      }
+    },
+    {
+      "time": 11.41,
+      "controls": {
+        "leftRaise": 0.0,
+        "rightRaise": 0.0,
+        "leftTilt": 0.0,
+        "rightTilt": 0.0
+      }
+    },
+    {
+      "time": 12,
+      "controls": {
+        "leftRaise": 0.0,
+        "rightRaise": 0.0,
+        "leftTilt": 0.0,
+        "rightTilt": 0.0
+      }
+    },
+    {
+      "time": 13,
+      "controls": {
+        "leftRaise": 0.0,
+        "rightRaise": 0.0,
+        "leftTilt": 0.0,
+        "rightTilt": 0.0
+      }
+    },
+    {
+      "time": 14.01,
+      "controls": {
+        "leftRaise": 0.0,
+        "rightRaise": 0.0,
+        "leftTilt": 0.0,
+        "rightTilt": 0.0
+      }
+    }
+  ],
+  "pendingJobs": false,
+  "sourceManifestSha256": "00d67273b49873a45e133176c9a8d3f298ac6174fe09f292a62ce278c4585058",
+  "decodedLandmarksVisuallyInspected": 7,
+  "source30FrameHashesVerified": true,
+  "exactBoundaryFlagCleared": false,
+  "nextConcreteWork": "Address neutral brows during the existing definition palm cue using registered brow planes and definition_event, retaining first tiny cue and all phonetic/oral controls. Baseline expression controls are zero at seven definition samples; validate forehead-only pixel changes before rendering a normal/slow acting shot. No speech retiming or new grin.",
+  "deliverySizeDecodedNormalFramesInspected": [
+    10,
+    11
+  ]
+}

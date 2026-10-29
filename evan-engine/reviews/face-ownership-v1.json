@@ -1,0 +1,145 @@
+{
+  "baseCommit": "af9f12799384e7e5e124eb9486bc1a1e48824e69",
+  "componentFixIntegrated": true,
+  "workingFacePlanes": 11,
+  "sourceArtworkChanged": false,
+  "sourceAlphaChanged": false,
+  "closedLipAnticipationIntegrated": false,
+  "phonemeTimingChanged": false,
+  "testsPassed": 25,
+  "geometryAudit": {
+    "geometryOnly": true,
+    "analyticGuardInputs": "opaque finite carrier; actual source pixels checked in unit tests and rendered comparisons",
+    "samples": 1307,
+    "allLipControlsExact": true,
+    "skinXExactlySource": true,
+    "allProtectedCarrierPixelsRestored": true,
+    "finiteBoundedGuard": true,
+    "closedSamplesZeroInterior": 248,
+    "minimumOralArea2": 0.04441152140498161,
+    "minimumJawArea2": 45.5,
+    "animationAccepted": false
+  },
+  "earPixels": {
+    "samples": 96,
+    "earRegionExact": true,
+    "sourceRegion": [
+      335,
+      230,
+      430,
+      350
+    ]
+  },
+  "nativePairsInspected": 96,
+  "fullFramesInspected": [
+    980,
+    983,
+    985
+  ],
+  "comparisons": [
+    {
+      "label": "More",
+      "sourceFrames": [
+        864,
+        912
+      ],
+      "sourceSamples": [
+        288000,
+        304000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "35c50d75897a2ba7fcd8e35db81cd277554008439b90ba39936ff7eab9995a6a"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "a23865709a10d4fc01d2092c55729ed4f9ae5a80b8f33f90cf24fae2a84cb515"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": true
+    },
+    {
+      "label": "Up-All",
+      "sourceFrames": [
+        960,
+        1008
+      ],
+      "sourceSamples": [
+        320000,
+        336000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "724ef6abb399ab6b23942bfd9417a8b9520feae1f48ff46fc3296c5321dcb61f"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "8901eda9472346175c729331012ed4efcca4058485cadcdd2088dd1d7f4f9c0e"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": true
+    }
+  ],
+  "layers": [
+    {
+      "file": "Body-Pixel-Layers-983.psd",
+      "layers": [
+        "neck",
+        "torso",
+        "hand-left",
+        "arm-left",
+        "arm-right",
+        "head"
+      ],
+      "meanPremultipliedError": 0.007052992807081274,
+      "nativeMohoBones": false
+    },
+    {
+      "file": "Native-Oral-Layers-983.psd",
+      "layers": [
+        "Neck backing",
+        "Drawn skin underlap",
+        "Painted cavity",
+        "Narration tongue",
+        "Rigid upper incisors",
+        "Front dental tongue tip",
+        "Upper face and cheeks",
+        "Drawn jaw skin",
+        "Independent lower lip",
+        "Independent upper-lip cap",
+        "Upper lip carrier guard"
+      ],
+      "meanPremultipliedError": 0.004346024756338079,
+      "nativeMohoBones": false
+    }
+  ],
+  "sourceHashes": {
+    "guided_jaw_exposure.py": "f5500b02b6cb49ae54afa94c1626ec43b4b083467f797e86ac03607afa4ab310",
+    "separated_oral_review.py": "b739bc9766d78b0ff6262c04aaa86500e5ede91966ee7f4948d2cb8c7f99a2cd",
+    "test_contour_jaw.py": "8b0952228d81eccbc17b1f9ed7ca29e63cf8c89f1a0d4a6094d949d1899f58c6",
+    "test_separated_oral.py": "c3451f6a668882f7ad794754e584bb4147063bbe133d6c4b5090f8bc83ab9852"
+  },
+  "independentListeningVerified": false,
+  "animationAccepted": false,
+  "polishedMilestoneReady": false
+}

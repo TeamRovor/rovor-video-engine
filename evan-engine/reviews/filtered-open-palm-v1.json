@@ -1,0 +1,68 @@
+{
+  "sourceFrames": [
+    360,
+    408
+  ],
+  "sourceSeconds": [
+    15,
+    17
+  ],
+  "frames": 48,
+  "minimumArmArea2": 135.35149457940372,
+  "outsideRightHandRegionExactFrames": 48,
+  "halfAlphaArmStageBoundsClearFrames": 48,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 48,
+      "sha256": "2b13b71a79026fc88551a10437e209d1608fc86efe0f20131baf1f972ce30e3f"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 192,
+      "sha256": "4760a0a2ecb7138c09c2570f57026ace6b48be0c702b7d311ca88ef5dfd135e3"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 32000,
+    "decodedPcm16Samples": 32000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourcePcmSamples": [
+    240000,
+    272000
+  ],
+  "sourcePcmExact": true,
+  "sourceRawUnmodified": true,
+  "sourceAlphaCleaned": false,
+  "derivativeAlphaResampled": true,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "polishedMilestoneReady": false,
+  "status": "filtered-registration-component-shot-verified",
+  "sourceSha256": "c717b774eb0f1ad82a68287c0b6c756365b358a7ff5823aea08708f1ac6c6d0f",
+  "registeredSkinSha256": "eee0f4bca7935860a789229daee96ed77e7af38ceb2a1b10ea28559038014df2",
+  "registrationManifestSha256": "51e16990a7de5c70758fb7feca9ca9bd01d8b0d3eb0f52e26ee09e934e998d79",
+  "sourceManifestSha256": "c5cd5f74cbd8e9154e0862144659f064552f083028111559d513ae632a765598",
+  "testsPassed": 12,
+  "defaultBuilderPixelAndManifestExact": true,
+  "newArtworkGenerated": false,
+  "nativeFramesVisuallyInspected": 48,
+  "decodedNormalFramesInspected": [
+    0,
+    14,
+    47
+  ],
+  "decodedSlowFramesInspected": [
+    56,
+    188
+  ],
+  "normalAndSlowFullyDecoded": true,
+  "visualConclusion": "Substantial reduction in contour/crease stippling in both native strong-wrist A/B comparisons and all48shot frames; slightly softer edges, legible in decoded delivery-size samples. No new open wrist seam observed. Fixed fingers, cuff folds and restrained face/body acting remain.",
+  "flagsCleared": 0,
+  "phonemeTimingChanged": false,
+  "pendingJobs": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "mohoProbed": false
+}

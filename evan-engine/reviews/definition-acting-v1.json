@@ -1,0 +1,68 @@
+{
+  "event": {
+    "anticipate": 9.79,
+    "arrive": 10.309999999999999,
+    "hold": 14.01,
+    "settle": 14.54,
+    "scriptIndices": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42
+    ]
+  },
+  "updatedFrames": 114,
+  "unchangedFramesByteExact": 438,
+  "faceAndBrandExactFrames": 114,
+  "minimumArmArea2": 195.01484516282602,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 552,
+      "sha256": "26ad7ea7451a2430b05db561a0db64d23386558994c2183ec12cf543d69039a6"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 2208,
+      "sha256": "b18bd9438838d34f0d120949d319f40b1b1120f0186dc0ab7a18ad8bcd96130b"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 368000,
+    "decodedPcm16Samples": 368000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourceWavByteExact": true,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "defaultChanged": false,
+  "newArtwork": false,
+  "fingerArticulated": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "status": "export-verified-frame-review-complete",
+  "runtimeParent": "34f78c26ce90f6504fa423c3072d1069db0a0749",
+  "newFocusedTestsPassed": 3,
+  "geometryProbeInterval": [
+    9.5,
+    14.8
+  ],
+  "geometryProbeStep": 0.0020833333333333333,
+  "nativeWristCuffFramesInspected": 114,
+  "fullStagePilotTime": 11.5,
+  "sourceManifestSha256": "df01125fac6947e22abd0c6e5a369ca4d7b77f23c21be897ca80efab5422bbe1",
+  "independentListeningAccepted": false,
+  "sourceArtworkModified": false,
+  "defaultImported": false,
+  "flagsCleared": 0,
+  "localOutput": "outputs/evan-cartoon-definition-acting",
+  "next": "One word-anchored skeptical upper-face cue for the browser misconception using existing brows; keep mouth/jaw/contact timing fixed"
+}

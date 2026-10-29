@@ -1,0 +1,23 @@
+{
+  "controls": {
+    "previousMaximumAbsOuterStep": 20.048858642578125,
+    "newMaximumAbsOuterStep": 9.575927734375,
+    "previousMaximumOuterHeight": 32.95294189453125,
+    "newMaximumOuterHeight": 22.5614013671875,
+    "timingChanged": false,
+    "limits": "Control height differences are not optical flow or proof of sync. Reduced outer excursion contributes to smaller steps; no independent listening/playback approval."
+  },
+  "sourceFrames": [
+    714,
+    774
+  ],
+  "paintedSamples": 60,
+  "minimumRenderedArea2": 0.11140760034322739,
+  "upper290RowsExact": true,
+  "outsideOralROIExact": true,
+  "maxAlphaDifference": 1,
+  "readyForPromotion": false,
+  "testsPassed": 4,
+  "visualFinding": "At741 the corrected matte removes the tooth extrusion. Release has smaller outer excursion and thinner rim; one open source still gives mechanical oval/neutral contact.",
+  "timingVerified": false
+}

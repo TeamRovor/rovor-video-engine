@@ -1,0 +1,41 @@
+{
+  "sourceSha256": "8d2133367427974d603f5292cfdddcc80bff4a742a19feeeabbe07387cd0dc98",
+  "sourceSize": [
+    1199,
+    1312
+  ],
+  "sourceWristGuide": [
+    [
+      583.0,
+      1050.0
+    ],
+    [
+      873.0,
+      1050.0
+    ]
+  ],
+  "sourceAnchor": [
+    728.0,
+    1050.0
+  ],
+  "targetWrist": [
+    810.0,
+    762.0
+  ],
+  "targetOutwardAxis": [
+    0.40675706717165505,
+    0.9135363639756843
+  ],
+  "targetWidth": 47.0,
+  "targetWidthEvidence": "Runtime RelaxedWristArm alpha>=127.5 at quarter-pixel cross-section36px proximal to wrist; measurement only",
+  "targetGeometryEvidence": "FinishedCartoonSceneBody actual right wrist810,762 overrides original body manifest822,784; preserve existing geometry",
+  "sourceAlphaModified": false,
+  "sourceMatteAccepted": false,
+  "attachmentAccepted": false,
+  "animationAccepted": false,
+  "outputCanvas": [
+    1464,
+    1536
+  ],
+  "outputPadX": 220
+}

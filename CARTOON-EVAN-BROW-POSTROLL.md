@@ -1,0 +1,15 @@
+# Held brow accent on the closing smile
+
+An opt-in post-recording control now raises the existing independent brow drawings with the small closing smile. The left brow rises3px/tilts−1.5°; the right rises4px/tilts1° with35ms delay. Each eases over240ms after an80ms recording-end guard. It is an authored held expression, not inferred emotion or a speaking smile profile. postroll_brow_review.py is used only by the local review renderer; the current finished scene does not import it.
+
+Two focused tests verify exact-off recording/guard boundaries, distinct side onset, held endpoints, finite input validation and dense temporal continuity. The pilot compares against the previous smile-only candidate at frame1080, with fresh full-stage calibration matching the cached baseline. Source brow PNGs, alpha and all other artwork are unchanged; no generated asset or whole-head expression plate is used.
+
+Native changes are confined to the actual existing repair/forehead mask (bbox163,180–332,237). Mouth/jaw, nose and ear pixels must remain exact; the stage must retain all pixels outside the face area and the entire official-brand region. This intentionally replaces the previous whole-upper310 equality requirement with the explicit allowed brow mask; the protected regions are still checked directly.
+
+The raised brows give the held smile a slightly more attentive, friendly read. The change is restrained at full-stage scale, with dense hair/sunglasses limiting the available expression. It does not repair thin teeth, cheek volume, fixed asymmetric hands or limited finger/leg acting. Native before/after heads and paired stage crops are reviewed; no independent listening or real-time performance acceptance is claimed. This is not the polished milestone.
+
+All48 native stage face pairs and native512 peak/hold heads were inspected. Forty-one tail frames change only stage bbox246,107–329,129(max921pixels); all48 retain exact native pixels outside the brow mask, mouth/jaw, nose/ear, outside-face and brand regions. Normal192frames and muted slow768frames per variant fully decode. See reviews/brow-postroll-v1.json.
+
+Local outputs/evan-cartoon-brow-staged contains before(smile only)/after(smile+brows)19–23s films and audit. Normal films preserve the entire48758-sample closing PCM slice plus15242zero samples; each AAC track has64000decoded samples. Quarter-speed films are muted. Speaking context remains the same current cache, with provenance retained; this study freshly renders the48tail frames and calibrates one frame rather than re-rendering the entire speech.
+
+Next: stop adding small brow/mouth amplitude variations. Develop one distinct useful closing hand pose on the existing wrist, starting with isolated source artwork and explicit wrist registration. Use imagegen skill for new raster art, inspect native anatomy/alpha, and distinguish source concepts from working parts. Preserve current source arms, approved paths and speaking profile until the new pose is reviewed. Keep the unsafe P/B/M/FV grin out of speech.

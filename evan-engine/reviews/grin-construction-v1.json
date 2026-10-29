@@ -1,0 +1,107 @@
+{
+  "baseCommit": "e34efaa1cb5546f30f538e0d6c87cd9dc751c70c",
+  "tool": "Built-in image_gen; imagegen skill",
+  "skill": "/Users/amarhavic/.codex/skills/.system/imagegen/SKILL.md",
+  "selectedExpressionReference": "source/grin-v1.png",
+  "workingRigSelection": null,
+  "sourcePlateOnly": true,
+  "registeredWorkingRig": false,
+  "animationReady": false,
+  "polishedMilestoneReady": false,
+  "versions": [
+    {
+      "source": "/Users/amarhavic/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an-2/outputs/evan-cartoon-duration-jaw-release/Native-Oral-Layers-981.png",
+      "target": "source/grin-v1.png",
+      "sha256": "8bf2044bfbf70b918f39d397bffd9fb3cfd1ed3d4aa8a0a2e526a3c4af926acc",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "transparentPixels": 1072010,
+      "partiallyTransparentPixels": 499206,
+      "upperFaceAffineECC": 0.9915885395115324,
+      "normalized512Matrix": [
+        [
+          1.0060497522354126,
+          -0.0002871071919798851,
+          -1.3817611932754517
+        ],
+        [
+          -0.0010187814477831125,
+          0.9973612427711487,
+          0.782214343547821
+        ]
+      ],
+      "opaqueUpperFaceComparedPixels": 53740,
+      "opaqueUpperFaceMeanAbsoluteRGB": 5.634319563329612,
+      "opaqueUpperFaceMaximumRGB": 214.0,
+      "registeredWorkingRig": false,
+      "sourcePlateOnly": true,
+      "positiveAlphaIslandCount": 362,
+      "positiveAlphaIslandPixels": 837,
+      "fullyOpaquePixels": 1300,
+      "nearOpaquePixelsAlphaAtLeast250": 481099,
+      "promptSha256": "9cf5bda74fb4d028b11690b41dfd4ee1baf404c7dd98cd6c82ba0145167a1f30"
+    },
+    {
+      "source": "/Users/amarhavic/Documents/Codex/2026-10-16/referenced-chatgpt-conversation-this-is-an-2/outputs/evan-cartoon-duration-jaw-release/Native-Oral-Layers-981.png",
+      "target": "source/grin-v2.png",
+      "sha256": "19bb306209af37c772b29d91ea6e7451f12f8824f148bbdcdfb1915955d258bc",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "transparentPixels": 984543,
+      "partiallyTransparentPixels": 586451,
+      "upperFaceAffineECC": 0.9844631928231636,
+      "normalized512Matrix": [
+        [
+          1.0971283912658691,
+          0.002942110178992152,
+          -24.999034881591797
+        ],
+        [
+          0.0013328597415238619,
+          1.078014850616455,
+          -13.766194343566895
+        ]
+      ],
+      "opaqueUpperFaceComparedPixels": 53730,
+      "opaqueUpperFaceMeanAbsoluteRGB": 9.811005645511509,
+      "opaqueUpperFaceMaximumRGB": 227.0,
+      "registeredWorkingRig": false,
+      "sourcePlateOnly": true,
+      "positiveAlphaIslandCount": 274,
+      "positiveAlphaIslandPixels": 648,
+      "fullyOpaquePixels": 1522,
+      "nearOpaquePixelsAlphaAtLeast250": 568004,
+      "promptSha256": "00a9283133ce51da088e7f370353fce63d30dc5818be7caeb9b9ebc27a1b99e2"
+    }
+  ],
+  "inputHashes": {
+    "design-sheet-v1.png": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7",
+    "Native-Oral-Layers-981.png": "24f8a5cbcb04a85214d7ce2e0de49b8f6d4d9b6c4bdcb3e5eb848d3426720c80"
+  },
+  "originalsPreserved": true,
+  "sourceAlphaThresholded": false,
+  "runtimeChanged": false,
+  "imagesInspectedAtFullResolution": [
+    1,
+    2
+  ],
+  "iterationDecision": "V2 alpha-only request changed head scale and failed to produce clean opaque matte. Retain V1 as expression construction reference only; reject both as direct rig components.",
+  "diagnosticIdentitySelfCheck": {
+    "upperFaceAffineECC": 0.9999998654964211,
+    "meanAbsoluteRGB": 0.0
+  },
+  "limits": [
+    "V1 upper-face meanRGB5.6343/max214 despite ECC.99159; current upper face cannot be swapped.",
+    "V1 has362 positive-alpha islands totaling837pixels; only1300 fully opaque pixels.",
+    "V2 has274 islands totaling648pixels; scale drift roughly+9.7%X/+7.8%Y versus current after512 normalization.",
+    "Separate cheek/jaw/lip/tooth/tongue construction and contact tests are still required."
+  ]
+}

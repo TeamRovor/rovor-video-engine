@@ -1,0 +1,68 @@
+{
+  "sourceSha256": "e6b7005d764580ef17fcc6056f10792e2db015308cd562039650b667a5dbd575",
+  "sourceBoxes": [
+    [
+      97,
+      218,
+      580,
+      309
+    ],
+    [
+      786,
+      243,
+      537,
+      268
+    ],
+    [
+      1475,
+      340,
+      453,
+      166
+    ]
+  ],
+  "diagnosticTargets": [
+    [
+      60,
+      100,
+      520,
+      275
+    ],
+    [
+      66,
+      107,
+      508,
+      258
+    ],
+    [
+      124,
+      254,
+      390,
+      112
+    ]
+  ],
+  "workingEnvelope": [
+    203,
+    320,
+    57,
+    29
+  ],
+  "sourceFileAlphaUnmodified": true,
+  "resampling": "Associated color; rim alpha resampled. Cavity column correspondence to rim envelope; tongue alpha clipped by shared envelope. Source files untouched.",
+  "psdMeanPremultipliedDifference": 0.13164553972630708,
+  "sourceLayers": [
+    "Cavity",
+    "Tongue",
+    "Rim"
+  ],
+  "unbackedInteriorPixels": 0,
+  "tongueOutsideEnvelopePixels": 0,
+  "runtimeInstalled": false,
+  "animationReady": false,
+  "matchedInnerContour": false,
+  "jawSeparated": false,
+  "limits": [
+    "Manual box placement is a static source test, not mesh correspondence",
+    "No seal/release counterparts or phone timing changed",
+    "No performance approval from PSD reconstruction"
+  ]
+}

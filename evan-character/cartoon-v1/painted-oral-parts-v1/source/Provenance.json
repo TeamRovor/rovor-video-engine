@@ -1,0 +1,25 @@
+{
+  "mode": "built-in image_gen",
+  "transparent_background": true,
+  "sourceAlphaFilesUnmodified": true,
+  "reference": "mouth-construction-v1/source/coordinated-face-v2.png",
+  "referenceSha256": "6a5a01be2c90ef012281b6dc2f95dcd6cdf0d59cea9ac3966729515e7e3f02aa",
+  "variants": [
+    {
+      "file": "rounded-parts-v1.png",
+      "sha256": "993f1bd3ff692bc8d512295cb13f813c350756363d595484b46a40c18dcbe452",
+      "generatedOriginal": "exec-c08a1a31-32bb-45bf-b581-979cd1ea041a.png",
+      "decision": "Superseded: overly pink lower rim; initial bounding-box assembly had contour gaps."
+    },
+    {
+      "file": "rounded-parts-v2.png",
+      "sha256": "e6b7005d764580ef17fcc6056f10792e2db015308cd562039650b667a5dbd575",
+      "generatedOriginal": "exec-35b85141-c811-463a-b5e5-4b8735b1158e.png",
+      "decision": "Retained as separated source components only; still heavier lower rim than full-face source."
+    }
+  ],
+  "runtimeInstalled": false,
+  "animationReady": false,
+  "nativeMoho": false,
+  "invariantLimit": "V2 changed cavity/tongue raster dimensions slightly despite requested invariants; no pixel-exact preservation claim. Original alpha retained in saved source sheets. Derived alpha is resampled, cavity registered by columns and tongue clipped by shared silhouette."
+}

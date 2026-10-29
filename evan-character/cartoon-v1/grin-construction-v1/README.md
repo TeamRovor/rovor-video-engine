@@ -1,0 +1,9 @@
+# Expressive grin construction reference
+
+Imagegen skill used for two non-destructive transparent source drawings. Full-resolution inspection favors grin-v1 as an expressive drawing: asymmetrical lifted corners, broad upper tooth arc and readable cheek/jaw attitude are closer to the cartoon design sheet than the small speech aperture. It is NOT a registered component or approved animation.
+
+V2 asked only for clean alpha. It changed head size and retained mostly near-opaque interior plus faint disconnected islands. Neither output meets clean-matte/invariant requirements. Keep both raw outputs and exact prompts; do not threshold or color-key them into a release. V1 is retained as a construction reference only, not a replacement head or flattened expression sprite.
+
+Review.json records input/output hashes, alpha diagnostics and upper-face affine comparison. The comparison composites transparency onto white in memory to avoid treating hidden RGB as visible paint. Initial raw-RGB ECC failed because the original transparent RGB was white and generated transparent RGB black; that approach was discarded. Identity self-check returns ECC.9999998655 and visible RGB error0. Measurements use512-normalized copies in memory; no registered resampled artwork is saved or connected to the runtime. Alpha250 is an evidence threshold only, never a cleanup operation. Full island lists and audit reproducer are in local outputs/evan-cartoon-grin-construction.
+
+Next: construct a clean local cheek/jaw/upper-lip/lower-lip/tooth/tongue set around this grin on the CURRENT face anchors; preserve current hair/glasses/nose/neck pixels. Prove interpolation into speech contacts with geometry and normal/slow motion before adding an outro hold. A whole-head crossfade would move upper-face details and is not an acceptable substitute. Human artist cleanup may be needed if generated component mattes keep failing.

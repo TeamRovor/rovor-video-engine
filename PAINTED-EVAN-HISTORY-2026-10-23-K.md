@@ -1,0 +1,27 @@
+# Evan cartoon: current checkpoint
+
+## Direction and safeguards
+
+Entertaining expressive2D CARTOON. Follow CARTOON-EVAN-DIRECTION.md and evan-character/cartoon-v1/source/design-sheet-v1.png. Photo is loose identity only; realistic painted direction superseded. Preserve dark tousled hair, sunglasses, navy shirt/black tie, official Rovor branding. No photo crops, geometric mouth stickers or flattened character swaps.
+
+Repo work/engine; development/evan-painted-rig (legacy name), draftPR#4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits/pushes authorized. NEVER merge/deploy without explicit approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62, V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/symlinks/updater/native projects. Do NOT launch/restart/probe Moho unattended after its crash.
+
+Automation develop-evan-painted-animation ACTIVE. Full polished milestone NOT ready. Notify meaningful review milestone/failure/completion/required action only; disable when actually ready. Routine decisions need no question.
+
+## Latest: phonetic corner trajectories integrated in existing review face
+
+Read CARTOON-EVAN-PHONETIC-CORNERS.md. MaterialCapture/SeparatedOralReview now derives203 corner keys per side from existing native poses at vowel/diphthong phase centers, W, P/B/M/F/V contact endpoints and sustained silence. Reuses monotone cubic flowing_track, applies affine change to32 oralX coordinates only. Native oralY, skin/chin targets and phone/material weights retained. Other consonant corners coarticulate through neighboring vowel/contact keys rather than returning to a fixed wide neutral every phone. Contact endpoints inherit original envelope a+.015/b-.010, clamped for brief phones. These are animation choices, not verified acoustic boundaries. No word exceptions/global filter/new runtime profile.
+
+Cache signature covers phones/gestures/energy/silences, detects in-place edits; temporary timing state clears on exceptions. Pure pose controls/ordinary renderer defaults unchanged.20 focused tests pass: native reference equivalence, held full seal, X-only isolation, diphthong/W coverage, cache/state safety, existing source/face/body/dental invariants.1307 recording/phone-midpoint geometry checks0failures, minjaw28.09090. All1307 lowerY/chinY/FV rows exactly equal prior.37 phones present; CH/OY absent.
+
+Widthp95 step8.29631→6.23685px; max14.60095→13.84723. BUT162 individual steps grow>1px as motion redistributes into formerly still spans; anticipatory positions can differ36px. Not a guarantee of better acting/sync. LowerY max14.66776 UNCHANGED; thin closed/FV line, short-vowel jaw pop, limited face/finger acting remain. Functional development candidate, NOT accepted studio performance.
+
+outputs/evan-cartoon-corner-phase contains four native voiced A/B comparisons (opening incl remaining maxwidth, super, way/more/finished, up/all), muted slow versions, AND current complete five-second articulated Rovor scene. All10 movies fully decode: comparisons normal48/72/72/48, slow192/288/288/192; coherent scene240normal/960slow. Exact source/AAC samples comparisons16000/24000/24000/16000, scene80000(source232000:312000, frames696..935). All240 native mouth pairs and240 staged mouth crops inspected, plus full748/840/888/935 and native717. Prior emulator exact frozen888 pixels. Scene upper288exact240/nose0,minjaw33.96094,arms494.61584/135.35149,allfallback0. Two6-plane body/two10-plane native oral PSDs717/888 reopen <.008/255; beforeglobalbodyroll/nativeheadcoords, NOT Moho bones. No pending jobs. See Motion-Verification/Review-Evidence for exact final commit and sources.
+
+NEXT: vertical contact release/short rounded-vowel opening against original recording (more/AO, up/all). Also examine whether weak voiced W/other speech is mistaken for rest by silence/energy gates before changing excursion or timing. Preserve complete seals, independent chin, selected cartoon art. Do not declare correctness from coverage/charts. No independent listening/continuous-playback acceptance; original18+3 flags remain unverified despite earlier waveform/spectrogram review. Human artist/animator or matched mouth/corner redraws may still be needed; native512 raster/limited expressions remain constraints.8GiB CPU renders proofs but cannot supply missing art/performance judgment.
+
+## Retained work and rejected trial
+
+Matching jaw-skin correction55c58b8 remains: same registered construction-skin-v1/working-face-skin.png as upper face, authored AA mask/SOURCE UVs/jaw_cut, right329 excludes ear. Existing registered generated underpainting combined with original skin, NOT recovered artist-original anatomy. Original chin/shadow retained; sources unchanged/no alpha cleanup. Actual ten oral planes and independently articulated shoulders/elbows/wrists/hands plus official Rovor stage retained.
+
+Previouscheckpoint HISTORY-2026-10-23-J. CARTOON-EVAN-ROUNDED-CONTACT-STUDY.md preserves REJECTED contact-context candidate (36tests/1307geometry passed yet marginal motion). Archived patch is NOT enabled; do not reintroduce removed bilabial/contact suppression as a presumed fix. Current corner trajectory is different: original contacts retained, explicit semantic corner keys. Earlier histories retain all anatomy/art/audio studies. SourceplanSHAaf01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e unchanged. No Moho/merge/deploy; polished milestone incomplete.

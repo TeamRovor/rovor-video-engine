@@ -1,0 +1,75 @@
+{
+  "status": "v2-associated-alpha-static-matte-reviewed-temple-art-still-unaccepted",
+  "restRgbaExact": false,
+  "restChangedPixels": 4910,
+  "restMaximumChannelError": 201,
+  "restOutsidePatchChangedPixels": 0,
+  "neutralOriginalMouthJawExact": true,
+  "repairPixels": 13224,
+  "corePixels": 8895,
+  "edgePixels": 1590,
+  "staticPoses": [
+    {
+      "amount": 0,
+      "lensYScale": 1.0
+    },
+    {
+      "amount": 12,
+      "lensYScale": 0.8320000000000001
+    },
+    {
+      "amount": 18,
+      "lensYScale": 0.748
+    },
+    {
+      "amount": 25,
+      "lensYScale": 0.65
+    }
+  ],
+  "rawSourceSha256": "99a9325ded471a3af89ba33c8657dab641cdafddd6370a7fe20fc02058134bff",
+  "rawSourceAlphaUnmodified": true,
+  "defaultChanged": false,
+  "fullFilmUpdated": false,
+  "animationReady": false,
+  "previousVersionPreserved": true,
+  "newSourceGeneration": false,
+  "neutralCoreMaterialRgbExact": true,
+  "templeInverseMapIdentityFromX": 353,
+  "minimumVerticalScale": 0.65,
+  "rebuildAllPreviewAndDerivativePngsExact": true,
+  "previewPngCount": 13,
+  "derivativePngCount": 3,
+  "registrationSource": "eye-underlay-v1 matrix/skinOffset and original raw1254RGBA",
+  "repairMethod": "Poisson upper-face repair on alpha>250 support, plus traced temple-strap hair inpaint; original target below310 and outside patch retained",
+  "edgeMethod": "Nearest-original-core RGB with alpha from target/underlay contrast; original fractional silhouette alpha retained where skin is transparent",
+  "staticInspection": {
+    "nativeSize": [
+      512,
+      512
+    ],
+    "lightAndDarkAmounts": [
+      0,
+      12,
+      18,
+      25
+    ],
+    "templePixelTraceCrop": [
+      312,
+      220,
+      370,
+      290
+    ]
+  },
+  "visualAssessment": "Broad pale upper-frame step and baked skin fringe reduced on both backgrounds.25px/0.65probe exposes both eyes and clears the neutral mouth. Temple tracing separates diagonal strap from sideburn; soft hidden-hair fill and small outer-corner notches remain. Rest changes4910RGBApixels, maximum201at changed underlay ink near213/234. No exact-rest, speech registration or animation acceptance.",
+  "staticConstructionImproved": true,
+  "staticReviewAccepted": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "flagsCleared": 0,
+  "pendingJobs": false,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "nextConcreteWork": "Refine one crisp hidden-temple/sideburn patch and small outer-frame notches on this same v2 construction. Retain existing eye source and25px/0.65geometry. Use imagegen skill for targeted hidden-hair art if new pixels are needed, preserving eyes/mouth/jaw and originals. Inspect native light/dark rest/lowered composites before a held normal/slow diagnostic. No more whole-head generation, speech retiming or full-film changes."
+}
