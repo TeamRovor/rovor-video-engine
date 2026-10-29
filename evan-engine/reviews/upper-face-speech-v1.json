@@ -1,0 +1,103 @@
+{
+  "status": "native-speech-component-samples-reviewed-stage-integration-pending",
+  "testsPassed": 5,
+  "speechFixtures": [
+    0,
+    138,
+    269
+  ],
+  "browChecks": [
+    {
+      "frame": 0,
+      "amount": 0,
+      "originalOpaqueBrowPixelsChecked": 643,
+      "maximumRgbaDifference": 0
+    },
+    {
+      "frame": 0,
+      "amount": 25,
+      "originalOpaqueBrowPixelsChecked": 643,
+      "maximumRgbaDifference": 0
+    },
+    {
+      "frame": 138,
+      "amount": 0,
+      "originalOpaqueBrowPixelsChecked": 397,
+      "maximumRgbaDifference": 1
+    },
+    {
+      "frame": 138,
+      "amount": 25,
+      "originalOpaqueBrowPixelsChecked": 397,
+      "maximumRgbaDifference": 1
+    },
+    {
+      "frame": 269,
+      "amount": 0,
+      "originalOpaqueBrowPixelsChecked": 401,
+      "maximumRgbaDifference": 0
+    },
+    {
+      "frame": 269,
+      "amount": 25,
+      "originalOpaqueBrowPixelsChecked": 401,
+      "maximumRgbaDifference": 0
+    }
+  ],
+  "normalDecodedIndices": [
+    3,
+    10,
+    18,
+    32,
+    48,
+    53,
+    58,
+    68
+  ],
+  "slowDecodedIndices": [
+    72,
+    128,
+    232
+  ],
+  "decodedSize": [
+    1024,
+    540
+  ],
+  "sourceFrames": [
+    120,
+    192
+  ],
+  "films": {
+    "Normal": {
+      "decodedFrames": 72,
+      "sha256": "16b29d5049fe6b65b42cba8c9a6913758f7116c2698669bc70b5ed8ca2f47649"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 288,
+      "sha256": "aa0f492a43ebe2ebe3de5da7eb1c872bbb1041476b45b4413046605390391818"
+    }
+  },
+  "exactPcmSampleRange": [
+    80000,
+    128000
+  ],
+  "exactPcmCount": 48000,
+  "nativeOralJawAuditExactAll72": true,
+  "lowerSpeechPixelsExactAll72": true,
+  "eyesArticulated": false,
+  "stageIntegrated": false,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "animationAccepted": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "listeningAccepted": false,
+  "realtimeActingAccepted": false,
+  "observations": [
+    "Original asymmetric brow poses survive in native speech fixtures; opaque selected brow interiors differ by at most one RGBA unit from the previous composition.",
+    "Lowered glasses expose the same static eye drawing throughout the existing skeptical phrase. Mouth/teeth/jaw stay registered in sampled speech frames.",
+    "Forehead skin color band, small jagged temple/frame edges and static eye affect remain; the concept sheet has stronger eye/expression variety.",
+    "This is a native face comparison, without body staging or official brand panel; current full stage remains torso-continuous."
+  ],
+  "next": "One separate 5\u20138s full-stage component using the existing torso bend, arm and speech/brow controls with this upper-face foundation at all 72 frames; verify baseline, oral/jaw/audit and official stage, inspect native seams and normal/slow samples before full-film integration."
+}
