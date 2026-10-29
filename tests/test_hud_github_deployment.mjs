@@ -93,23 +93,27 @@ test('readback requires actual auth and live assets, not mere deploy success', a
   const verified=await verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK});
   assert.equal(verified.private_auth_verified,true);
   assert.equal(verified.quota_board_verified,true);
-  assert.equal(verified.all_nine_live_verified,false);
+  assert.equal(verified.all_nine_usage_readback_verified,false);
   assert.equal(verified.quota_asset_matches_checkout,null);
   const current = await verifyGithubHud({origin:'https://hud.example',readerToken:token,
     send:fetchOK,expectedQuotaAsset:actualNineMeterAsset});
   assert.equal(current.quota_asset_matches_checkout,true);
   const usageProviders = ['gemini','groq','openrouter','mistral','cloudflare','cohere','nvidia','sambanova','huggingface']
     .map(provider => ({provider,attempts_pacific_day:0,models:[]}));
-  usageProviders[0].attempts_pacific_day=1;
-  usageProviders[0].models=[{model_id:'gemini-2.5-flash'}];
+  usageProviders[1].attempts_pacific_day=1;
+  usageProviders[1].models=[{model_id:'connection-test',attempts_pacific_day:1}];
+  usageProviders[2].attempts_pacific_day=1;
+  usageProviders[2].models=[{model_id:'cohere/north-mini-code:free',attempts_pacific_day:1,successes_pacific_day:1}];
   statusDocument={source:'cloud_hud_telemetry',connection:'fresh',snapshot:{
     connections:Array.from({length:9},(_,i)=>({provider:String(i)})),
     request_usage:{source:'omniroute_durable_call_logs',freshness:'fresh',providers:usageProviders}}};
   const live = await verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK});
-  assert.equal(live.all_nine_live_verified,true);
-  assert.equal(live.active_usage_providers,1);
-  assert.equal(live.tracked_models,1);
-  assert.equal(live.tracked_pacific_day_requests,1);
+  assert.equal(live.all_nine_usage_readback_verified,true);
+  assert.equal(live.active_usage_providers,2);
+  assert.equal(live.tracked_models,2);
+  assert.equal(live.tracked_pacific_day_requests,2);
+  assert.equal(live.inference_activity_providers,1);
+  assert.equal(live.free_tagged_successful_inference_providers,1);
   statusDocument.snapshot.request_usage.providers.pop();
   await assert.rejects(() => verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK}),
     /private_D1_usage_readback_incomplete/);
