@@ -1,0 +1,58 @@
+{
+  "status": "held-construction-samples-reviewed-not-scene-accepted",
+  "sourceFullResolutionInspected": true,
+  "staticNativeSamples": [
+    "Light-18.png",
+    "Dark-12.png",
+    "Light-25.png",
+    "Dark-25.png"
+  ],
+  "comparison": "Temple-Comparison.png (2x native crop)",
+  "normalDecodedIndices": [
+    7,
+    8,
+    14,
+    20,
+    28,
+    35,
+    41
+  ],
+  "slowDecodedIndices": [
+    32,
+    80,
+    140,
+    164
+  ],
+  "decodedSampleSize": [
+    1024,
+    540
+  ],
+  "films": {
+    "Normal": {
+      "decodedFrames": 48,
+      "sha256": "009ee581631e7218fa298ae866ea5ba60ac40c5d6f7aaa83e708789deb996f65"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 192,
+      "sha256": "2d329751920a760a8c0a98afed0c120d9fbeb6c7062330f4b03f8b6cea44781b"
+    }
+  },
+  "rebuildPngsExact": 16,
+  "observations": [
+    "Hidden temple is sharper and the old soft strap footprint is reduced. Original fixed ear anchor is retained.",
+    "Small jagged frame/temple edges and a forehead skin color band remain visible at native scale.",
+    "Eyes are revealed by continuous lowering, but this neutral held diagnostic does not establish speech or brow registration."
+  ],
+  "rejectedTrials": [
+    "ECC translation +21.27/-10.46 px exceeded 3px bound; selected authored crop bounds instead.",
+    "Narrow Poisson clone retained old strap edge; final expanded mask composites crisp source artwork."
+  ],
+  "animationAccepted": false,
+  "narrationDriven": false,
+  "eyeArticulated": false,
+  "neutralMouthHeld": true,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "acousticFlagsUnresolved": 18,
+  "next": "Check the v3 upper face with actual separated speech and existing animated brow planes at source frames 0/138/269; preserve oral/jaw/audit and inspect forehead/temple ownership before narration-driven glasses motion."
+}
