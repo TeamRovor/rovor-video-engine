@@ -113,8 +113,16 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     ? usageProviders.reduce((sum, provider) => sum + provider.attempts_pacific_day, 0) : 0;
   const activeProviders = usageVerified
     ? usageProviders.filter(provider => provider.attempts_pacific_day > 0).length : 0;
-  const liveUsageVerified = usageVerified && trackedRequests > 0 && usageModels > 0;
-  if (telemetry.connection === 'fresh' && !liveUsageVerified)
+  const modelRows = usageVerified
+    ? usageProviders.flatMap(provider => provider.models.map(model => ({provider: provider.provider, ...model}))) : [];
+  const inferenceRows = modelRows.filter(model => typeof model.model_id === 'string' &&
+    !/^connection[-_ ]test$/i.test(model.model_id) && Number.isSafeInteger(model.attempts_pacific_day) &&
+    model.attempts_pacific_day > 0);
+  const inferenceProviders = new Set(inferenceRows.map(model => model.provider)).size;
+  const freeTaggedProviders = new Set(inferenceRows.filter(model => model.model_id.endsWith(':free') &&
+    Number.isSafeInteger(model.successes_pacific_day) && model.successes_pacific_day > 0)
+    .map(model => model.provider)).size;
+  if (telemetry.connection === 'fresh' && !usageVerified)
     throw Error('private_D1_usage_readback_incomplete');
   return {private_auth_verified: true, original_hud_verified: true,
     quota_board_verified: true, database_api_verified: true,
@@ -125,7 +133,9 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     tracked_providers_observed: Array.isArray(usageProviders) ? usageProviders.length : 0,
     active_usage_providers: activeProviders, tracked_models: usageModels,
     tracked_pacific_day_requests: trackedRequests,
-    all_nine_live_verified: telemetry.connection === 'fresh' && connections.length === 9 && liveUsageVerified};
+    inference_activity_providers: inferenceProviders,
+    free_tagged_successful_inference_providers: freeTaggedProviders,
+    all_nine_usage_readback_verified: telemetry.connection === 'fresh' && connections.length === 9 && usageVerified};
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
