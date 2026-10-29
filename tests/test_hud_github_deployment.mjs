@@ -93,7 +93,7 @@ test('readback requires actual auth and live assets, not mere deploy success', a
   const verified=await verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK});
   assert.equal(verified.private_auth_verified,true);
   assert.equal(verified.quota_board_verified,true);
-  assert.equal(verified.all_nine_live_verified,false);
+  assert.equal(verified.all_nine_usage_readback_verified,false);
   assert.equal(verified.quota_asset_matches_checkout,null);
   const current = await verifyGithubHud({origin:'https://hud.example',readerToken:token,
     send:fetchOK,expectedQuotaAsset:actualNineMeterAsset});
