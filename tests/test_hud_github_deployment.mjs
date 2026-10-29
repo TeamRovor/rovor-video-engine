@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {
   validateDeploymentSecrets, prepareConfig, assertGithubReleaseContext
 } from '../integrations/hud-cloud/prepare-github-deploy.mjs';
-import {verifyGithubHud, verifyAnonymousTelemetry, verifiedOrigin, hasNineProviderMeterAsset} from '../integrations/hud-cloud/verify-github-deploy.mjs';
+import {verifyGithubHud, verifyAnonymousTelemetry, verifyAdvancingReports, verifiedOrigin, hasNineProviderMeterAsset} from '../integrations/hud-cloud/verify-github-deploy.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 
 const dir = new URL('../integrations/hud-cloud/', import.meta.url);
@@ -78,6 +78,7 @@ test('private Worker serves tracked nine-meter script, but only to authenticated
 test('readback requires actual auth and live assets, not mere deploy success', async () => {
   const token='r'.repeat(40);
   let statusDocument={source:'cloud_hud_telemetry',connection:'never_received',snapshot:null};
+  let statusReadCount=0;
   const fetchOK=async (url, opts) => {
     const path=new URL(url).pathname;
     const auth=opts.headers.Authorization === 'Bearer ' + token;
@@ -87,33 +88,44 @@ test('readback requires actual auth and live assets, not mere deploy success', a
     if (path === '/') return new Response('<html><body>ROVOR_START_OMNIROUTE<script src="/hud-quota.js"></script></body></html>');
     if (path === '/hud-quota.js')
       return new Response(actualNineMeterAsset, {headers:{'Content-Type':'text/javascript'}});
-    if (path === '/api/hud/status') return Response.json(statusDocument);
+    if (path === '/api/hud/status') {
+      if (statusDocument.connection !== 'fresh') return Response.json(statusDocument);
+      statusReadCount++;
+      const current = structuredClone(statusDocument);
+      if (statusReadCount > 1) {
+        current.received_at = new Date(Date.parse(statusDocument.received_at) + 10000).toISOString();
+        current.snapshot.snapshot_at = new Date(Date.parse(statusDocument.snapshot.snapshot_at) + 10000).toISOString();
+      }
+      return Response.json(current);
+    }
     return new Response('{}', {status:404});
   };
-  const verified=await verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK});
-  assert.equal(verified.private_auth_verified,true);
-  assert.equal(verified.quota_board_verified,true);
-  assert.equal(verified.all_nine_usage_readback_verified,false);
-  assert.equal(verified.quota_asset_matches_checkout,null);
-  const current = await verifyGithubHud({origin:'https://hud.example',readerToken:token,
-    send:fetchOK,expectedQuotaAsset:actualNineMeterAsset});
-  assert.equal(current.quota_asset_matches_checkout,true);
+  await assert.rejects(() => verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK}),
+    /private_D1_telemetry_not_fresh/);
   const usageProviders = ['gemini','groq','openrouter','mistral','cloudflare','cohere','nvidia','sambanova','huggingface']
     .map(provider => ({provider,attempts_pacific_day:0,models:[]}));
   usageProviders[1].attempts_pacific_day=1;
   usageProviders[1].models=[{model_id:'connection-test',attempts_pacific_day:1}];
   usageProviders[2].attempts_pacific_day=1;
   usageProviders[2].models=[{model_id:'cohere/north-mini-code:free',attempts_pacific_day:1,successes_pacific_day:1}];
-  statusDocument={source:'cloud_hud_telemetry',connection:'fresh',snapshot:{
-    connections:Array.from({length:9},(_,i)=>({provider:String(i)})),
+  statusDocument={source:'cloud_hud_telemetry',connection:'fresh',received_at:'2026-10-29T01:03:31.000Z',snapshot:{
+    snapshot_at:'2026-10-29T01:03:30.000Z',connections:Array.from({length:9},(_,i)=>({provider:String(i)})),
     request_usage:{source:'omniroute_durable_call_logs',freshness:'fresh',providers:usageProviders}}};
-  const live = await verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK});
+  statusReadCount=0;
+  const current = await verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK,
+    expectedQuotaAsset:actualNineMeterAsset,pause:async()=>{}});
+  assert.equal(current.quota_asset_matches_checkout,true);
+  const live = current;
   assert.equal(live.all_nine_usage_readback_verified,true);
   assert.equal(live.active_usage_providers,2);
   assert.equal(live.tracked_models,2);
   assert.equal(live.tracked_pacific_day_requests,2);
   assert.equal(live.inference_activity_providers,1);
   assert.equal(live.free_tagged_successful_inference_providers,1);
+  assert.equal(live.successive_reports_verified,true);
+  assert.deepEqual(live.report_timestamps,{
+    first_received_at:'2026-10-29T01:03:31.000Z',second_received_at:'2026-10-29T01:03:41.000Z',
+    first_snapshot_at:'2026-10-29T01:03:30.000Z',second_snapshot_at:'2026-10-29T01:03:40.000Z'});
   statusDocument.snapshot.request_usage.providers.pop();
   await assert.rejects(() => verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK}),
     /private_D1_usage_readback_incomplete/);
@@ -130,6 +142,16 @@ test('readback requires actual auth and live assets, not mere deploy success', a
         return new Response('PUBLIC', {status:200});
       return fetchOK(url,opts);
     }}), /anonymous_quota_asset/);
+});
+
+test('private D1 readback rejects repeated report timestamps', async () => {
+  const first={received_at:'2026-10-29T01:03:31.000Z',snapshot:{
+    snapshot_at:'2026-10-29T01:03:30.000Z',
+    request_usage:{source:'omniroute_durable_call_logs',freshness:'fresh',
+      providers:Array.from({length:9},(_,i)=>({provider:String(i)}))}}};
+  await assert.rejects(() => verifyAdvancingReports(async()=>({
+    ...first,connection:'fresh'}),first,{attempts:2,pause:async()=>{},intervalMs:0}),
+    /private_D1_reports_not_advancing/);
 });
 
 test('release readback checks the current shipped quota asset without coupling to copywriting', async () => {
