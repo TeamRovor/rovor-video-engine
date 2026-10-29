@@ -1,0 +1,7 @@
+# Upper-face full-shot integration pilots
+
+Six pilots0/69/158/269/374/531 reproduce the actual current full stage before installing the same upper-face foundation. The shared local renderer reuses the existing independent arm, torso and speech/brow controls, including the reviewed v3 partial digit flex at269. It then replaces only the head under the same parents. Native speech pixels belowy310, oral geometry, jaw targets, audit, non-head layers and official stage remain exact. Blink158 matches the reviewed narrated component.
+
+Six1280×720 candidate stages and the preserved first closing frame were inspected. Opening, gesture, definition, payoff and final speaking poses remain coherent in those stills. Fifty stage/native/protected-closing PNGs are hashed; all20closing PNGs are byte-exact current copies. The531/532 camera cut needs full-context motion review. No new artwork, timing changes, default update, merge or deployment.
+
+A separate full exporter is prepared in work/upper-face-full-review/export.py. It applies the same upper-face foundation to all532 speaking frames, reusing the reviewed72-frame component and five other pilots;455other speaking frames receive actual baseline/preservation checks. It preserves20closing frames, complete368000-sample narration and all18 audit markers. It must finish decoding and pass subsequent normal/slow visual review before any full-candidate acceptance. Static pilot checks do not establish performance quality; forehead/temple/lid defects, limited gaze and18acoustic flags remain unresolved.
