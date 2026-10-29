@@ -120,7 +120,9 @@ export function reduceCallLogs(connections, events, {now = Date.now(), freshness
     return {provider, configured: configured.has(provider), ...providerOutput,
       last_rate_limit_at: total.last_rate_limit_at ? new Date(total.last_rate_limit_at).toISOString() : null,
       retry_after_at: total.retry_after_at && total.retry_after_at > now ? new Date(total.retry_after_at).toISOString() : null,
-      employee_attribution: 'unknown', models: [...total.models.values()].map(m => ({model_id: m.model_id, ...serialiseCounters(m)}))};
+      employee_attribution: 'unknown', models: [...total.models.values()].map(m => ({model_id: m.model_id, ...serialiseCounters(m),
+        last_rate_limit_at: m.last_rate_limit_at ? new Date(m.last_rate_limit_at).toISOString() : null,
+        retry_after_at: m.retry_after_at && m.retry_after_at > now ? new Date(m.retry_after_at).toISOString() : null}))};
   });
   return {source, freshness, coverage, observed_at: new Date(observedAt).toISOString(),
     rolling_window_start: new Date(minuteStart).toISOString(), pacific_day_start: new Date(start).toISOString(),

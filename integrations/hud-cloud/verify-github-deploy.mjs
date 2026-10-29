@@ -98,15 +98,34 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
   if (telemetry.source !== 'cloud_hud_telemetry' ||
       !['fresh','stale','never_received'].includes(telemetry.connection))
     throw Error('private_D1_contract_invalid');
+  const snapshot = telemetry.snapshot;
+  const connections = Array.isArray(snapshot?.connections) ? snapshot.connections : [];
+  const requestUsage = snapshot?.request_usage;
+  const usageProviders = requestUsage?.providers;
+  const usageModels = Array.isArray(usageProviders)
+    ? usageProviders.reduce((sum, provider) => sum + (Array.isArray(provider?.models) ? provider.models.length : 0), 0) : 0;
+  const usageVerified = requestUsage?.source === 'omniroute_durable_call_logs' &&
+    requestUsage.freshness === 'fresh' && Array.isArray(usageProviders) &&
+    usageProviders.length === 9 && new Set(usageProviders.map(provider => provider?.provider)).size === 9 &&
+    usageProviders.every(provider => Number.isSafeInteger(provider?.attempts_pacific_day) &&
+      provider.attempts_pacific_day >= 0 && Array.isArray(provider.models));
+  const trackedRequests = usageVerified
+    ? usageProviders.reduce((sum, provider) => sum + provider.attempts_pacific_day, 0) : 0;
+  const activeProviders = usageVerified
+    ? usageProviders.filter(provider => provider.attempts_pacific_day > 0).length : 0;
+  const liveUsageVerified = usageVerified && trackedRequests > 0 && usageModels > 0;
+  if (telemetry.connection === 'fresh' && !liveUsageVerified)
+    throw Error('private_D1_usage_readback_incomplete');
   return {private_auth_verified: true, original_hud_verified: true,
     quota_board_verified: true, database_api_verified: true,
     quota_asset_matches_checkout: expectedQuotaAsset === null ? null : true,
     telemetry_connection: telemetry.connection,
-    providers_observed: Array.isArray(telemetry.snapshot?.connections)
-      ? telemetry.snapshot.connections.length : 0,
-    all_nine_live_verified: telemetry.connection === 'fresh' &&
-      Array.isArray(telemetry.snapshot?.connections) &&
-      telemetry.snapshot.connections.length === 9};
+    providers_observed: connections.length,
+    request_usage_freshness: requestUsage?.freshness || 'unknown',
+    tracked_providers_observed: Array.isArray(usageProviders) ? usageProviders.length : 0,
+    active_usage_providers: activeProviders, tracked_models: usageModels,
+    tracked_pacific_day_requests: trackedRequests,
+    all_nine_live_verified: telemetry.connection === 'fresh' && connections.length === 9 && liveUsageVerified};
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
