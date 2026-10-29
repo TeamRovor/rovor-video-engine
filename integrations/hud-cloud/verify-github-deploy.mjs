@@ -18,6 +18,31 @@ export function verifiedOrigin(raw) {
 }
 
 
+export async function verifyAdvancingReports(readStatus, first, {attempts = 9, pause = delay, intervalMs = 3000} = {}) {
+  if (!Number.isSafeInteger(attempts) || attempts < 1 || attempts > 20)
+    throw Error('invalid_report_verification_attempts');
+  const firstReceived = Date.parse(first?.received_at);
+  const firstSnapshot = Date.parse(first?.snapshot?.snapshot_at);
+  if (!Number.isFinite(firstReceived) || !Number.isFinite(firstSnapshot))
+    throw Error('private_D1_report_timestamps_missing');
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    await pause(intervalMs);
+    try {
+      const next = await readStatus();
+      const received = Date.parse(next?.received_at), snapshot = Date.parse(next?.snapshot?.snapshot_at);
+      const usage = next?.snapshot?.request_usage, providers = usage?.providers;
+      const completeUsage = usage?.source === 'omniroute_durable_call_logs' && usage.freshness === 'fresh' &&
+        Array.isArray(providers) && providers.length === 9 &&
+        new Set(providers.map(provider => provider?.provider)).size === 9;
+      if (next?.connection === 'fresh' && completeUsage &&
+          received > firstReceived && snapshot > firstSnapshot)
+        return {first_received_at: first.received_at, second_received_at: next.received_at,
+          first_snapshot_at: first.snapshot.snapshot_at, second_snapshot_at: next.snapshot.snapshot_at};
+    } catch {}
+  }
+  throw Error('private_D1_reports_not_advancing');
+}
+
 export async function verifyAnonymousTelemetry(read, {attempts = 9, pause = delay, intervalMs = 3000} = {}) {
   if (!Number.isSafeInteger(attempts) || attempts < 1 || attempts > 20)
     throw Error('invalid_anonymous_verification_attempts');
@@ -58,7 +83,7 @@ export function hasNineProviderMeterAsset(js) {
   ].every(marker => js.includes(marker));
 }
 
-export async function verifyGithubHud({origin, readerToken, send = fetch, expectedQuotaAsset = null}) {
+export async function verifyGithubHud({origin, readerToken, send = fetch, expectedQuotaAsset = null, pause = delay}) {
   origin = verifiedOrigin(origin);
   if (typeof readerToken !== 'string' || readerToken.length < 32)
     throw Error('readback_credentials_missing');
@@ -98,6 +123,8 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
   if (telemetry.source !== 'cloud_hud_telemetry' ||
       !['fresh','stale','never_received'].includes(telemetry.connection))
     throw Error('private_D1_contract_invalid');
+  if (telemetry.connection !== 'fresh')
+    throw Error('private_D1_telemetry_not_fresh');
   const snapshot = telemetry.snapshot;
   const connections = Array.isArray(snapshot?.connections) ? snapshot.connections : [];
   const requestUsage = snapshot?.request_usage;
@@ -122,8 +149,13 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
   const freeTaggedProviders = new Set(inferenceRows.filter(model => model.model_id.endsWith(':free') &&
     Number.isSafeInteger(model.successes_pacific_day) && model.successes_pacific_day > 0)
     .map(model => model.provider)).size;
-  if (telemetry.connection === 'fresh' && !usageVerified)
+  if (!usageVerified || connections.length !== 9)
     throw Error('private_D1_usage_readback_incomplete');
+  const reportTimestamps = await verifyAdvancingReports(async () => {
+    const response = await read('/api/hud/status?period=24h', true);
+    if (response.status !== 200) throw Error('private_D1_status_unavailable');
+    return response.json();
+  }, telemetry, {pause});
   return {private_auth_verified: true, original_hud_verified: true,
     quota_board_verified: true, database_api_verified: true,
     quota_asset_matches_checkout: expectedQuotaAsset === null ? null : true,
@@ -135,7 +167,8 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     tracked_pacific_day_requests: trackedRequests,
     inference_activity_providers: inferenceProviders,
     free_tagged_successful_inference_providers: freeTaggedProviders,
-    all_nine_usage_readback_verified: telemetry.connection === 'fresh' && connections.length === 9 && usageVerified};
+    successive_reports_verified: true, report_timestamps: reportTimestamps,
+    all_nine_usage_readback_verified: connections.length === 9 && usageVerified};
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
