@@ -90,6 +90,8 @@ test('durable Retry-After values become timestamps and unknown tokens remain par
   const usage=reduceCallLogs(connections,[{id:'429-delay',timestamp:new Date(NOW-1000).toISOString(),provider:'groq',model:'llama',status:429,retry_after:120}],{now:NOW});
   const groq=usage.providers.find(p=>p.provider==='groq');
   assert.equal(groq.retry_after_at,new Date(NOW+119000).toISOString());
+  assert.equal(groq.models[0].last_rate_limit_at,new Date(NOW-1000).toISOString());
+  assert.equal(groq.models[0].retry_after_at,new Date(NOW+119000).toISOString());
   assert.equal(groq.input_tokens_recorded_rolling_minute,null);
   assert.equal(groq.input_tokens_coverage_rolling_minute,'partial');
 });

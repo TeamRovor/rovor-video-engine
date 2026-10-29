@@ -77,6 +77,7 @@ test('private Worker serves tracked nine-meter script, but only to authenticated
 
 test('readback requires actual auth and live assets, not mere deploy success', async () => {
   const token='r'.repeat(40);
+  let statusDocument={source:'cloud_hud_telemetry',connection:'never_received',snapshot:null};
   const fetchOK=async (url, opts) => {
     const path=new URL(url).pathname;
     const auth=opts.headers.Authorization === 'Bearer ' + token;
@@ -86,8 +87,7 @@ test('readback requires actual auth and live assets, not mere deploy success', a
     if (path === '/') return new Response('<html><body>ROVOR_START_OMNIROUTE<script src="/hud-quota.js"></script></body></html>');
     if (path === '/hud-quota.js')
       return new Response(actualNineMeterAsset, {headers:{'Content-Type':'text/javascript'}});
-    if (path === '/api/hud/status') return Response.json({
-      source:'cloud_hud_telemetry',connection:'never_received',snapshot:null});
+    if (path === '/api/hud/status') return Response.json(statusDocument);
     return new Response('{}', {status:404});
   };
   const verified=await verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK});
@@ -98,6 +98,22 @@ test('readback requires actual auth and live assets, not mere deploy success', a
   const current = await verifyGithubHud({origin:'https://hud.example',readerToken:token,
     send:fetchOK,expectedQuotaAsset:actualNineMeterAsset});
   assert.equal(current.quota_asset_matches_checkout,true);
+  const usageProviders = ['gemini','groq','openrouter','mistral','cloudflare','cohere','nvidia','sambanova','huggingface']
+    .map(provider => ({provider,attempts_pacific_day:0,models:[]}));
+  usageProviders[0].attempts_pacific_day=1;
+  usageProviders[0].models=[{model_id:'gemini-2.5-flash'}];
+  statusDocument={source:'cloud_hud_telemetry',connection:'fresh',snapshot:{
+    connections:Array.from({length:9},(_,i)=>({provider:String(i)})),
+    request_usage:{source:'omniroute_durable_call_logs',freshness:'fresh',providers:usageProviders}}};
+  const live = await verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK});
+  assert.equal(live.all_nine_live_verified,true);
+  assert.equal(live.active_usage_providers,1);
+  assert.equal(live.tracked_models,1);
+  assert.equal(live.tracked_pacific_day_requests,1);
+  statusDocument.snapshot.request_usage.providers.pop();
+  await assert.rejects(() => verifyGithubHud({origin:'https://hud.example',readerToken:token,send:fetchOK}),
+    /private_D1_usage_readback_incomplete/);
+  statusDocument={source:'cloud_hud_telemetry',connection:'never_received',snapshot:null};
   await assert.rejects(() => verifyGithubHud({origin:'https://hud.example',readerToken:token,
     expectedQuotaAsset:actualNineMeterAsset,send:async(url,opts)=>{
       if(opts.headers.Authorization && new URL(url).pathname==='/hud-quota.js')
