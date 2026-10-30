@@ -1128,6 +1128,13 @@
       "requires": [
         "hosted-ci"
       ]
+    },
+    "repo-map-moho-path-fix-20261029": {
+      "lane": "coordination",
+      "requires": [
+        "github-read",
+        "github-write"
+      ]
     }
   }
 }

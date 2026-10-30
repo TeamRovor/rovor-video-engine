@@ -5951,6 +5951,25 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/276"
         }
       ]
+    },
+    {
+      "id": "repo-map-moho-path-fix-20261029",
+      "title": "Correct the Moho source links in the repository map",
+      "priority": 2,
+      "status": "active",
+      "owner": "Codex / Amar support session 2026-10-29",
+      "branch": "docs/project-organization-map-20261023",
+      "scopes": [
+        "docs/PROJECT-ORGANIZATION.md"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-10-29T05:59:41Z",
+      "next_update": "After the PR branch is updated and relative-link checks are complete.",
+      "next_action": "Update the existing PR #105 branch with valid Moho MCP, rig specification, and queue evidence links. Verify each relative target on that branch and record the resulting commit. Keep the PR open for owner review; do not claim native Moho validation.",
+      "acceptance": "PR #105 replaces the nonexistent tools/moho_* reference with valid relative links to evan-engine/evan_mcp.py, MOHO-RIG-SPEC-V3.md, and rovor-production/moho-queue/. No unrelated content changes. Queue/routing and link checks pass; no native runtime claim.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/105"
+      ]
     }
   ]
 }
