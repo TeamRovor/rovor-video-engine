@@ -409,3 +409,91 @@ test('multi-key cloud quota requires exact slot attribution',()=>{
  assert.equal((scoped.match(/aria-label="CLOUD ACCOUNT LIMIT for Groq"/g)||[]).length,1);
  assert.equal((scoped.match(/Verified cloud ledger quota used/g)||[]).length,1);
 });
+
+
+test('identical telemetry polls do not tear down the quota board every ten seconds',async()=>{
+ let clock=Date.parse('2026-10-28T12:00:00.000Z'),connectionCount=1,paints=0;
+ const intervals=[];
+ class Clock extends Date {
+  constructor(...args){super(...(args.length?args:[clock]));}
+  static now(){return clock;}
+ }
+ const element={
+  hidden:false,
+  classList:{contains:name=>name==='rvq-board'},
+  querySelectorAll:()=>[],contains:()=>false,
+  set outerHTML(markup){assert.match(markup,/rvq-board/);paints++;}
+ };
+ const document={
+  hidden:false,activeElement:null,getElementById:()=>({}),
+  querySelectorAll:selector=>selector==='#rovor-workload-popup .wl-card'?[element]:[]
+ };
+ const window={ROVOR_LIVE_OMNIROUTE_SNAPSHOT:()=>({
+  source:'local_omniroute_read_only_bridge',period:'24h',
+  snapshot_at:new Clock().toISOString(),usage_coverage:'complete_aggregate',
+  connections:[{provider:'groq',name:'Groq',connection_count:connectionCount,enabled_count:connectionCount}],
+  models:[],quota:{records:[]}
+ })};
+ const fetch=async url=>{
+  if(url==='/api/ghost/status')return {ok:true,json:async()=>({
+   execution_source:'cloud_provider',observed_at:clock,providers:[]
+  })};
+  if(url==='/api/hud/gemini/project-quota')return {ok:false};
+  throw Error('optional hourly/minute report unavailable');
+ };
+ const MutationObserver=class{observe(){}};
+ vm.runInNewContext(source,{window,document,fetch,MutationObserver,
+  setInterval:(fn,ms)=>{intervals.push({fn,ms});},
+  Date:Clock,Math,Number,String,Array,Map,Set,WeakMap,AbortSignal});
+ window.ROVOR_QUOTA_BOARD.start();
+ const settle=()=>new Promise(resolve=>setImmediate(resolve));
+ await settle();
+ assert.equal(paints,1,'initial board must render');
+ assert.equal(intervals[0].ms,10000);
+ clock+=10000;
+ intervals[0].fn();
+ await settle();
+ assert.equal(paints,1,'same visible data must retain existing DOM and interactions');
+ connectionCount=2;
+ clock+=10000;
+ intervals[0].fn();
+ await settle();
+ assert.equal(paints,2,'changed provider inventory must still update');
+});
+
+test('quota inspection keeps keyboard focus on provider tiles and section navigation',()=>{
+ const focused=[];
+ // The active element can be either an overview tile or a section shortcut.
+ let active;
+ const tile={
+  matches:()=>false,
+  closest:selector=>selector==='a[data-rvq-open-slot]'?tile:null,
+  getAttribute:key=>key==='data-rvq-open-slot'?'groq:1':null,
+  focus:options=>focused.push({value:'tile',options})
+ };
+ const nav={
+  matches:()=>false,
+  closest:selector=>selector==='.rvq-jump-nav a'?nav:null,
+  getAttribute:key=>key==='href'?'#rvq-team':null,
+  focus:options=>focused.push({value:'nav',options})
+ };
+ const boardNode={
+  classList:{contains:name=>name==='rvq-board'},
+  contains:element=>element===tile||element===nav,
+  querySelectorAll:selector=>selector==='a[data-rvq-open-slot]'?[tile]:
+   selector==='.rvq-jump-nav a'?[nav]:[]
+ };
+ const document={getElementById:()=>({}),get activeElement(){return active;}};
+ const window={};
+ vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map,Set,WeakMap});
+ active=tile;
+ const tileState=window.ROVOR_QUOTA_BOARD.captureState(boardNode);
+ assert.equal(tileState.focusedTile,'groq:1');
+ window.ROVOR_QUOTA_BOARD.restoreState(boardNode,tileState);
+ active=nav;
+ const navState=window.ROVOR_QUOTA_BOARD.captureState(boardNode);
+ assert.equal(navState.focusedNav,'#rvq-team');
+ window.ROVOR_QUOTA_BOARD.restoreState(boardNode,navState);
+ assert.deepEqual(focused.map(x=>x.value),['tile','nav']);
+ assert.ok(focused.every(x=>x.options.preventScroll===true));
+});

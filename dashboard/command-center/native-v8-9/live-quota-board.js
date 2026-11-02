@@ -904,6 +904,10 @@ function captureState(root){
  const active=document.activeElement;
  if(active&&board.contains(active)){
   if(active.matches?.('button[data-rvq-filter]'))state.focusedFilter=active.getAttribute('data-rvq-filter');
+  const tile=active.closest?.('a[data-rvq-open-slot]');
+  if(tile)state.focusedTile=tile.getAttribute('data-rvq-open-slot');
+  const nav=active.closest?.('.rvq-jump-nav a');
+  if(nav)state.focusedNav=nav.getAttribute('href');
   const card=active.closest('[data-rvq-slot]');
   if(card&&active.tagName==='SUMMARY'){
    const details=[...card.querySelectorAll('details')];
@@ -935,6 +939,31 @@ function restoreState(root,state){
   const d=getCard(state.focused.key)?.querySelectorAll('details')[state.focused.index];
   d?.querySelector('summary')?.focus({preventScroll:true});
  }
+ if(state.focusedTile){
+  const tile=[...board.querySelectorAll('a[data-rvq-open-slot]')].find(
+   a=>a.getAttribute('data-rvq-open-slot')===state.focusedTile);
+  tile?.focus({preventScroll:true});
+ }
+ if(state.focusedNav){
+  const link=[...board.querySelectorAll('.rvq-jump-nav a')].find(
+   a=>a.getAttribute('href')===state.focusedNav);
+  link?.focus({preventScroll:true});
+ }
+}
+// Avoid tearing down an actively inspected dashboard when repeated API polls
+// produce the exact same visible markup. Expanded details and keyboard focus
+// then remain on their original DOM nodes rather than flickering every 10s.
+const paintedBoards=new WeakMap();
+function paintIfChanged(target,html,selectCurrent){
+ if(target.classList?.contains('rvq-board')&&paintedBoards.get(target)===html)return false;
+ const state=captureState(target);
+ target.outerHTML=html;
+ const current=selectCurrent();
+ if(current?.classList?.contains('rvq-board')){
+  paintedBoards.set(current,html);
+  restoreState(current,state);
+ }
+ return true;
 }
 let started=false;
 function start(){
@@ -951,9 +980,7 @@ function start(){
    const original=slot();if(!original)return;
    if(Date.now()-updated<5000){
      if(!original.classList.contains('rvq-board')){
-       const state=captureState(original);
-       original.outerHTML=render(last||lastInventory,!!last,lastCloud,lastHourly,lastMinute);
-       restoreState(slot(),state);
+       paintIfChanged(original,render(last||lastInventory,!!last,lastCloud,lastHourly,lastMinute),slot);
      }
      return;
    }
@@ -1026,9 +1053,7 @@ function start(){
    }catch{}
    lastCloud=cloud;last=fresh;lastHourly=hourly;lastMinute=minute;updated=Date.now();
    const target=slot();if(target){
-     const state=captureState(target);
-     target.outerHTML=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject);
-     restoreState(slot(),state);
+     paintIfChanged(target,render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject),slot);
    }
    } finally {
      busy=false;

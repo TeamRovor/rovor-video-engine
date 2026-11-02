@@ -1,4 +1,4 @@
-/* The workload popup must keep refreshing after its first replacement. */
+/* The workload popup must poll after replacement, but redraw only on actual UI change. */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
@@ -61,7 +61,7 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
  intervals[0]();
  await flush();await flush();
  assert.equal(reads,6,'rendered panel must refresh 24h, 1h and 1m');
- assert.equal(writes,2,'rendered panel must be replaced with fresh evidence');
+ assert.equal(writes,1,'same visible evidence must not tear down the active panel');
  // Once a validated 24h report is already in the main HUD, reuse it instead
  // of requesting exactly the same source from the server a second time.
  clock+=11000;
@@ -75,7 +75,7 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
  intervals[0]();await flush();await flush();
  assert.equal(reads,8,'verified shared 24h snapshot avoids duplicate 24h polling; minute and hourly still fetched');
  assert.equal(dayReads,2);assert.equal(hourReads,3);assert.equal(minuteReads,3);
- assert.equal(writes,3,'shared telemetry still refreshes the rendered popup');
+ assert.equal(writes,2,'materially changed shared telemetry still refreshes the rendered popup');
  document.hidden=true;clock+=11000;
  intervals[0]();await flush();
  assert.equal(reads,8,'hidden HUD must not poll');
