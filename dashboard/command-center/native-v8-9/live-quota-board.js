@@ -831,11 +831,12 @@ function reportAgeLabel(timestamp){
 // repaint) reuse these only inside the same 15s freshness gate; expired or
 // failed sources are never reused.
 let lastExtras=null;
-function render(data,live,cloud,hourly,minute,geminiProject){
- if(cloud===undefined&&hourly===undefined&&minute===undefined&&geminiProject===undefined){
+function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null){
+ // Omitted sources (the popup's own repaint) reuse the last settled ones.
+ if(arguments.length<3){
    const reuse=lastExtras&&Date.now()-lastExtras.at<=15000?lastExtras:null;
    cloud=reuse?.cloud??null;hourly=reuse?.hourly??null;minute=reuse?.minute??null;geminiProject=reuse?.geminiProject??null;
- }else{cloud=cloud??null;hourly=hourly??null;minute=minute??null;geminiProject=geminiProject??null;}
+ }
  mount();
  const cloudFresh=cloud?.execution_source==='cloud_provider'&&Number.isFinite(cloud.observed_at)&&
    Math.abs(Date.now()-cloud.observed_at)<=15000&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
