@@ -808,6 +808,28 @@ const css=`
 #rovor-workload-popup .rvq-footnote{font:11px/1.6 system-ui;color:#98bfd3;margin:16px 1px 0}
 @media(max-width:800px){#rovor-workload-popup .rvq-grid{grid-template-columns:1fr}#rovor-workload-popup .rvq-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#rovor-workload-popup .rvq-stat:last-child{grid-column:1/-1}}
 @media(max-width:500px){#rovor-workload-popup .rvq-board{padding:13px!important}#rovor-workload-popup .rvq-provider-head{padding:13px 11px;gap:8px}#rovor-workload-popup .rvq-provider-status{max-width:105px;white-space:normal}#rovor-workload-popup .rvq-provider-content{padding:0 12px 4px}#rovor-workload-popup .rvq-head{gap:10px}#rovor-workload-popup .rvq-stat{padding:10px}#rovor-workload-popup .rvq-stat-value{font-size:17px}#rovor-workload-popup .rvq-model-info{gap:7px}}
+/* Compact layout: status and controls share one row, explanatory copy collapses, providers come first. */
+#rovor-workload-popup .rvq-board{padding:12px!important;margin:4px 0 12px!important}
+#rovor-workload-popup .rvq-head{margin-bottom:8px;gap:8px;align-items:center}
+#rovor-workload-popup .rvq-head .rvq-eyebrow,#rovor-workload-popup .rvq-head .rvq-sub{display:none}
+#rovor-workload-popup .rvq-heading{font-size:15px;margin:0}
+#rovor-workload-popup .rvq-status{padding:4px 8px;font-size:9px}
+#rovor-workload-popup .rvq-jump-nav{flex-wrap:nowrap;overflow-x:auto;gap:5px;margin:0 0 8px;scrollbar-width:none}
+#rovor-workload-popup .rvq-jump-nav a{min-height:30px;padding:4px 10px;font-size:10px;white-space:nowrap}
+#rovor-workload-popup .rvq-stats{gap:6px;margin:0 0 8px}
+#rovor-workload-popup .rvq-stat{display:flex;flex-direction:column;justify-content:space-between;padding:6px 9px;border-radius:8px}
+#rovor-workload-popup .rvq-stat-label{font-size:8px;letter-spacing:.08em;margin-bottom:2px}
+#rovor-workload-popup .rvq-stat-value{font-size:15px;line-height:1.2}
+#rovor-workload-popup .rvq-stat-value.rvq-small{font-size:12px;min-height:0}
+#rovor-workload-popup .rvq-stat-secondary{font-size:9px}
+#rovor-workload-popup .rvq-last-report{margin:0 0 4px;font-size:10px}
+#rovor-workload-popup .rvq-board>.rvq-sub{font-size:10px;margin:0 0 8px!important;max-width:none}
+#rovor-workload-popup .rvq-overview{gap:6px;margin-bottom:8px}
+#rovor-workload-popup .rvq-overview-tile{padding:8px 6px 7px;gap:5px}
+#rovor-workload-popup .rvq-grid{gap:8px}
+#rovor-workload-popup .rvq-details-heading{margin:10px 0 6px;font-size:10px}
+@media(max-width:800px){#rovor-workload-popup .rvq-stats{grid-template-columns:repeat(3,minmax(0,1fr))}#rovor-workload-popup .rvq-stat:last-child{grid-column:auto}}
+@media(max-width:500px){#rovor-workload-popup .rvq-stat-value{font-size:13px}#rovor-workload-popup .rvq-stat-label{font-size:7px}#rovor-workload-popup .rvq-board{padding:8px!important}}
 `;
 function mount(){
  if(document.getElementById('rvq-style'))return;
