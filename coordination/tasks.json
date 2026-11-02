@@ -5660,19 +5660,28 @@
       "id": "amar-hud-human-telemetry-review-20261025",
       "title": "Amar: review human GitHub activity proof and separate OmniRoute live telemetry",
       "priority": 2,
-      "status": "active",
+      "status": "done",
       "owner": "Copilot / session-806daf2e",
       "branch": "amar-work",
       "scopes": [
         "subsystem:amar-hud-human-telemetry-review"
       ],
       "depends_on": [],
-      "updated_at": "2026-11-02T05:11:19Z",
-      "next_update": "After posting verified HUD deployment SHA and activity-evidence separation update to issue #208",
-      "next_action": "Publish issue #208 checkpoint with exact latest deployment SHA, human contribution URLs, and explicit unknown/private-only provider reset and receipt boundaries.",
+      "updated_at": "2026-11-02T05:11:52Z",
+      "next_update": "Completed in GitHub-only scope; refresh after next owner-private runtime snapshot",
+      "next_action": "Issue #208 updated with exact latest public HUD deployment SHA, recent human contribution links, and explicit private-runtime unknowns for provider reset/usage and worker receipts.",
       "acceptance": "Document exact published HUD deployment SHA, human contribution URLs, independently verified or unknown provider reset/usage evidence and real worker receipt status; do not conflate GitHub checks, branch commits and 24/7 model execution.",
       "links": [
         "https://github.com/TeamRovor/rovor-video-engine/issues/208"
+      ],
+      "evidence": [
+        {
+          "commit": "working-branch",
+          "platform": "GitHub API / hosted workflow metadata (no private runtime access)",
+          "check": "Validated latest deploy-command-center-pages run head SHA and recent HUD PR activity; posted issue checkpoint with source-vs-runtime boundary",
+          "result": "PASS; documented exact public deployment SHA ef5cd7b05cb27201b1cf27a5476b2571ce0d009a, linked recent HUD PRs, and marked provider reset/usage + worker receipts unknown without fresh private snapshot",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/issues/208#issuecomment-6569598845"
+        }
       ]
     },
     {
