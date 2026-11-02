@@ -827,7 +827,15 @@ function reportAgeLabel(timestamp){
  const days=Math.floor(hours/24);
  return 'Mac last report · '+days+'d '+hours%24+'h ago';
 }
-function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null){
+// Last settled sync sources. Callers that repaint without them (the 5s popup
+// repaint) reuse these only inside the same 15s freshness gate; expired or
+// failed sources are never reused.
+let lastExtras=null;
+function render(data,live,cloud,hourly,minute,geminiProject){
+ if(cloud===undefined&&hourly===undefined&&minute===undefined&&geminiProject===undefined){
+   const reuse=lastExtras&&Date.now()-lastExtras.at<=15000?lastExtras:null;
+   cloud=reuse?.cloud??null;hourly=reuse?.hourly??null;minute=reuse?.minute??null;geminiProject=reuse?.geminiProject??null;
+ }else{cloud=cloud??null;hourly=hourly??null;minute=minute??null;geminiProject=geminiProject??null;}
  mount();
  const cloudFresh=cloud?.execution_source==='cloud_provider'&&Number.isFinite(cloud.observed_at)&&
    Math.abs(Date.now()-cloud.observed_at)<=15000&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
@@ -961,70 +969,41 @@ function start(){
    // Serialize the complete two-source refresh, not just the local gateway fetch.
    // A slow cloud ledger read must not overlap another scheduled refresh.
    try {
-   let fresh=null;
    // The main 24h HUD view has already fetched and validated this report.
    // Reuse it rather than make a second network request every ten seconds.
-   const shared=window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT?.();
-   if(shared?.source==='local_omniroute_read_only_bridge'&&shared.period==='24h'&&
-      Array.isArray(shared.connections)){
-     const age=Date.now()-Date.parse(shared.snapshot_at);
-     if(Number.isFinite(age)&&age>=-5000&&age<=15000)fresh=shared;
-   }
-   if(!fresh)try{
-     const response=await fetch('/api/hud/omniroute?period=24h',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
-     if(response.ok){
-       const data=await response.json(),age=Date.now()-Date.parse(data.snapshot_at);
-       if(data.source==='local_omniroute_read_only_bridge'&&Array.isArray(data.connections)&&Number.isFinite(age)&&age>=-5000&&age<=15000)fresh=data;
-     }
-   }catch{}
-   // Independently fetch the 1h report. A stale or incomplete 1h report
-   // must not generate a zero-activity claim, even with fresh 24h inventory.
-   let hourly=null;
-   if(fresh)try{
-     const response=await fetch('/api/hud/omniroute?period=1h',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
-     if(response.ok){
-       const data=await response.json(),age=Date.now()-Date.parse(data.snapshot_at);
-       if(data.source==='local_omniroute_read_only_bridge'&&data.period==='1h'&&
-          Number.isFinite(age)&&age>=-5000&&age<=15000)hourly=data;
-     }
-   }catch{}
-   // Read an actual rolling 60-second gateway aggregate. No model call is
-   // initiated and zero is only shown when all model rows are accounted for.
-   let minute=null;
-   if(fresh)try{
-     const response=await fetch('/api/hud/omniroute?period=1m',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
-     if(response.ok){
-       const data=await response.json(),age=Date.now()-Date.parse(data.snapshot_at);
-       if(data.source==='local_omniroute_read_only_bridge'&&data.period==='1m'&&
-          Number.isFinite(age)&&age>=-5000&&age<=15000)minute=data;
-     }
-   }catch{}
+   const accept=(data,period)=>{
+     const age=Date.now()-Date.parse(data?.snapshot_at);
+     return data?.source==='local_omniroute_read_only_bridge'&&data.period===period&&
+       Array.isArray(data.connections)&&Number.isFinite(age)&&age>=-5000&&age<=15000?data:null;
+   };
+   // Each read fails closed to null on error, timeout, or failed validation.
+   const read=async(url,validate,shared)=>{
+     const reused=validate(shared);if(reused)return reused;
+     try{
+       const response=await fetch(url,{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
+       return response.ok?validate(await response.json()):null;
+     }catch{return null;}
+   };
+   const live=window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT;
+   const fresh=accept(live?.('24h'),'24h')||await read('/api/hud/omniroute?period=24h',d=>accept(d,'24h'));
+   // Independent sources run in parallel so one slow read cannot delay the rest.
+   // A stale or incomplete 1h/1m report must not generate a zero-activity claim.
+   const [hourly,minute,cloud,geminiProject]=await Promise.all([
+     fresh?read('/api/hud/omniroute?period=1h',d=>accept(d,'1h'),live?.('1h')):null,
+     fresh?read('/api/hud/omniroute?period=1m',d=>accept(d,'1m')):null,
+     read('/api/ghost/status',d=>{
+       // Private same-origin cloud ledger is a separate read-only source.
+       return d?.execution_source==='cloud_provider'&&Number.isFinite(d.observed_at)&&
+         Math.abs(Date.now()-d.observed_at)<=15000&&Array.isArray(d.providers)&&d.providers.length<=20?d:null;
+     }),
+     // Optional route: the original private Site may not have it.
+     read('/api/hud/gemini/project-quota',d=>d?.source==='google_cloud_monitoring'&&typeof d.status==='string'?d:null)
+   ]);
    // Preserve only the last known provider/slot inventory through outages.
    // Never retain or display stale quota percentages as live.
    if(fresh)lastInventory={connections:fresh.connections,connection_slots:fresh.connection_slots,snapshot_at:fresh.snapshot_at};
-   // Private same-origin cloud ledger is a separate read-only source.
-   // Do not cache it through disconnects as a fresh state.
-   let cloud=null;
-   try{
-     const response=await fetch('/api/ghost/status',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
-     if(response.ok){
-       const d=await response.json();
-       if(d?.execution_source==='cloud_provider'&&Number.isFinite(d.observed_at)&&
-          Math.abs(Date.now()-d.observed_at)<=15000&&Array.isArray(d.providers)&&d.providers.length<=20)cloud=d;
-     }
-   }catch{}
-   let geminiProject=null;
-   // Site and Cloudflare readers are same-origin; the original private Site
-   // may not have this optional route and must show no project samples.
-   try{
-    const response=await fetch('/api/hud/gemini/project-quota',{
-     credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
-    if(response.ok){
-     const item=await response.json();
-     if(item?.source==='google_cloud_monitoring'&&typeof item.status==='string')geminiProject=item;
-    }
-   }catch{}
    lastCloud=cloud;last=fresh;lastHourly=hourly;lastMinute=minute;updated=Date.now();
+   lastExtras={cloud,hourly,minute,geminiProject,at:updated};
    const target=slot();if(target){
      const state=captureState(target);
      target.outerHTML=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject);
@@ -1036,10 +1015,16 @@ function start(){
  }
  // Only the original placeholder triggers a new observer sync. Otherwise
  // rendering into the observed subtree could create an infinite event loop.
+ let observePending=false;
  const observer=new MutationObserver(()=>{
-   if([...document.querySelectorAll('#rovor-workload-popup .wl-card')].some(
-       n=>!n.hidden&&isOriginal(n)))void sync();
-
+   // Coalesce bursts of mutations into one scan per microtask.
+   if(observePending)return;
+   observePending=true;
+   Promise.resolve().then(()=>{
+     observePending=false;
+     if([...document.querySelectorAll('#rovor-workload-popup .wl-card')].some(
+         n=>!n.hidden&&isOriginal(n)))void sync();
+   });
  });
  observer.observe(document.body,{childList:true,subtree:true});
  // Refresh the EXISTING popup even after its original heading was replaced.

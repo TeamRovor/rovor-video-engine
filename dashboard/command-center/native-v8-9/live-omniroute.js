@@ -77,8 +77,9 @@ window.ROVOR_START_OMNIROUTE=()=>{
   };
   // Stable bridge-only read API, not the legacy ROVOR_WORKLOAD global.
   // No credentials or requests exposed. Never provide stale or non-24h quotas.
-  window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT=()=>{
-    if(period!=='24h'||!fresh()||!Array.isArray(snapshot?.connections))return null;
+  // The optional argument lets other HUD modules reuse the active period (24h default).
+  window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT=(wanted='24h')=>{
+    if(period!==wanted||!fresh()||!Array.isArray(snapshot?.connections))return null;
     const age=Date.now()-Date.parse(snapshot.snapshot_at);
     return age>=-5000&&age<=15000?snapshot:null;
   };
