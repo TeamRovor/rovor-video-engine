@@ -340,6 +340,19 @@
 #rvc .rvc-repo-row[hidden]{display:none!important}
 @media(max-width:760px){#rvc .rvc-repo-row{gap:5px;padding-bottom:6px}#rvc .rvc-repo-row label{font-size:11px}#rvc .rvc-repo-note{font-size:10px}}
 `}));
+    const teamInput=el('input',{type:'checkbox',id:'rvc-team-review'});
+    teamInput.setAttribute('aria-label','Allow task-aware review using up to two free-eligible model routes');
+    const teamRow=el('div',{className:'rvc-team-row'},
+      el('label',{htmlFor:'rvc-team-review'},teamInput,'  Two-model review when useful'),
+      el('small',{textContent:'Opt in to a second model call for comparison or complex work. Separate model receipts; no paid routing.'}));
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-team-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px 11px;padding:4px 0;color:#a9c9e3}
+#rvc .rvc-team-row label{display:flex;align-items:center;gap:8px;font:600 12px/1.4 system-ui;cursor:pointer}
+#rvc .rvc-team-row input{appearance:auto;-webkit-appearance:checkbox;width:18px;height:18px;accent-color:#4aa7e5;flex-shrink:0}
+#rvc .rvc-team-row small{font:10px/1.4 system-ui;color:#82abc9;flex:1;min-width:170px}
+#rvc .rvc-team-row[hidden]{display:none!important}
+@media(max-width:760px){#rvc .rvc-team-row small{flex-basis:100%;font-size:10px}}
+`}));
     const routingNote=el('div',{className:'rvc-routing-note',textContent:'Choose a model, or use Smart routing to select from Mac-advertised routes.'});
     routingNote.setAttribute('role','status');
     document.head.append(el('style',{textContent:`
@@ -356,7 +369,7 @@
       el('div',{className:'rvc-main'},
         el('header',{},mobileMenu,el('strong',{textContent:'ASK ROVOR'}),sourceSelect,modelSlot,clear,close),
         connectionBar,providerDetails,log,
-        el('footer',{},repoRow,routingNote,el('div',{className:'rvc-context-note',textContent:'A routing plan does not start work. Send submits at most two eligible routes; completion requires receipts.'}),form)));
+        el('footer',{},teamRow,repoRow,routingNote,el('div',{className:'rvc-context-note',textContent:'A routing plan does not start work. Send submits at most two eligible routes; completion requires receipts.'}),form)));
     panel.setAttribute('aria-label','ROVOR chat');
     const sideBackdrop=el('button',{type:'button',className:'rvc-side-backdrop'});
     sideBackdrop.setAttribute('aria-label','Close conversation history');
@@ -467,7 +480,7 @@
     };
     const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':m.outcome==='failed'?'rvc-err':'rvc-bot',m.content,m));};
     let pendingJob=null,cancelConfirmed=false,multiPending=[];
-    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;refreshButton.disabled=b;repoSelect.disabled=b||sourceSelect.value!=='omniroute';
+    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;refreshButton.disabled=b;repoSelect.disabled=b||sourceSelect.value!=='omniroute';teamInput.disabled=b||sourceSelect.value!=='omniroute';
       // Don't re-open the software keyboard after a delayed response on iOS.
       if(!b&&panel.dataset.open==='true'&&!window.matchMedia('(pointer:coarse)').matches)input.focus({preventScroll:true});
     };
@@ -590,7 +603,7 @@
     }
     function currentPlan(message=input.value.trim()){
       if(sourceSelect.value!=='omniroute')return {routes:select.value?[select.value]:[],reason:'Cloudflare AI · manually selected hosted route'};
-      return planRoutes(message,Array.from(select.options).map(o=>o.value),select.value);
+      return planRoutes(message,Array.from(select.options).map(o=>o.value),select.value,{allowTeam:teamInput.checked});
     }
     function updatePlan(){
       const plan=currentPlan();
@@ -604,9 +617,11 @@
       return plan;
     }
     input.addEventListener('input',()=>{if(!busy)updatePlan();});
+    teamInput.addEventListener('change',()=>{if(!busy)updatePlan();});
     refreshButton.onclick=()=>{if(!busy){load();refreshProviderInventory();}};
     sourceSelect.onchange=()=>{if(!busy){
       repoRow.hidden=sourceSelect.value!=='omniroute';repoSelect.disabled=repoRow.hidden;
+      teamRow.hidden=sourceSelect.value!=='omniroute';teamInput.disabled=teamRow.hidden;
       const active=sessions.find(s=>s.id===currentId);
       if(active){active.source=sourceSelect.value;active.model=null;save();}
       load();updatePlan();
@@ -793,6 +808,7 @@
     }
 
     repoRow.hidden=sourceSelect.value!=='omniroute';repoSelect.disabled=repoRow.hidden;
+    teamRow.hidden=sourceSelect.value!=='omniroute';teamInput.disabled=teamRow.hidden;
     form.onsubmit=e=>{e.preventDefault();const text=input.value.trim();if(!text||busy||!ready)return;input.value='';ask(text);};
     // Touch keyboards use Return for a newline. Sending always needs an
     // explicit tap; desktop keyboards retain Enter to send / Shift+Enter newline.
