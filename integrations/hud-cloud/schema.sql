@@ -10,3 +10,22 @@ CREATE TABLE IF NOT EXISTS hud_history (
   received_at INTEGER NOT NULL,
   body TEXT NOT NULL
 );
+
+-- Private outbound OmniRoute chat. Prompts/results are temporary, not public task receipts.
+CREATE TABLE IF NOT EXISTS hud_chat_bridge (
+  id INTEGER PRIMARY KEY CHECK(id = 1),
+  updated_at INTEGER NOT NULL,
+  models TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS hud_chat_jobs (
+  id TEXT PRIMARY KEY,
+  state TEXT NOT NULL CHECK(state IN ('queued','running','complete','failed')),
+  model TEXT NOT NULL,
+  request_body TEXT,
+  created_at INTEGER NOT NULL,
+  started_at INTEGER,
+  finished_at INTEGER,
+  output TEXT,
+  error TEXT
+);
+CREATE INDEX IF NOT EXISTS hud_chat_jobs_queue ON hud_chat_jobs(state, created_at);
