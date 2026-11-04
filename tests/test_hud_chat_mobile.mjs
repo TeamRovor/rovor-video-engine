@@ -60,5 +60,11 @@ test('Ask ROVOR shows nine-provider inventory with explicit freshness and never 
   assert.match(src,/PROVIDER INVENTORY UNAVAILABLE/);
   assert.match(src,/model access unverified/);
   assert.match(src,/rvc-provider-inspect/);
-  assert.match(src,/OMNIROUTE BRIDGE REPORTED · free-eligible routes listed, not canary-verified/);
+  assert.match(src,/Mac bridge reported · /);
+  assert.match(src,/allowed routes · confirm a reply to verify use/);
+  assert.match(src,/Free-tagged model routes/);
+  assert.match(src,/Owner-allowlisted model routes/);
+  assert.match(src,/refreshButton.onclick/);
+  assert.match(src,/rvc-connection-bar/);
+  assert.match(src,/Refresh model availability and provider status/);
 });
