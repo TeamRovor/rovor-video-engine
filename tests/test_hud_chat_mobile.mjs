@@ -40,3 +40,14 @@ test('Ask ROVOR is a private chat, not a silently running employee scheduler',()
   assert(src.includes('No confirmed model reply'));
   assert.doesNotMatch(src,/fetch\(['"]https?:\/\//);
 });
+
+
+test('failed response is retained locally but never sent to a subsequent model as context',()=>{
+  assert.match(src,/outcome:'failed'/);
+  assert.match(src,/outcome:'complete'/);
+  assert.match(src,/history\.filter\(m=>m\.role==='user'\|\|\(m\.role==='assistant'&&m\.outcome==='complete'\)\)/);
+  assert.match(src,/rvc-receipt/);
+  assert.match(src,/Copy response/);
+  assert.match(src,/cancelConfirmed/);
+  assert.match(src,/api\/hud\/chat\/cancel\//);
+});
