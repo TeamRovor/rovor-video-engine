@@ -1,0 +1,70 @@
+{
+  "status": "tiny-little-acoustic-and-actual-lip-trace-reviewed",
+  "traceRange": [
+    2.28,
+    2.82
+  ],
+  "geometrySamples": 259,
+  "sampleRate480": true,
+  "fftWindowSamples": 400,
+  "fftHopSamples": 80,
+  "spectrumCentersCorrect": true,
+  "hypotheses": [
+    2.36,
+    2.65
+  ],
+  "largestAdjacentSpectralChangeTime": 2.31746875,
+  "largestAdjacentSpectralCosineDistance": 0.4566590426736036,
+  "actualInnerLipGapAtAcousticBoundary": 12.310699462890625,
+  "actualRasterGeometryMatchSamples": [
+    56,
+    63,
+    64,
+    67
+  ],
+  "nativeFacesInspected": [
+    63,
+    64
+  ],
+  "normalDecodedSourceFramesInspected": [
+    56,
+    63,
+    64,
+    67
+  ],
+  "slowDecodedVideoFramesInspected": [
+    60,
+    64
+  ],
+  "nativeResolutionTraceHalvesInspected": true,
+  "stageFramesByteExact": 30,
+  "normalDecodedFrames": 30,
+  "slowDecodedFrames": 120,
+  "contextPcmSamples": 20000,
+  "contextPcmRange": [
+    32000,
+    52000
+  ],
+  "contextPcmByteExact": true,
+  "pngHashesVerified": 43,
+  "selectedCurrentFrozenSourcesVerified": 76,
+  "findings": [
+    "Both proposed word boundaries lie in continuous voiced energy; neither is isolated by silence.",
+    "The largest adjacent spectral change is near2.317s, before both boundary hypotheses. Spectral-change peaks therefore do not identify this word boundary.",
+    "The actual lip gap varies continuously through2.65s and is about12.31native pixels there; four geometry captures match the actual raster pipeline to1e-9.",
+    "The inspected stage samples remain coherent, but the drawing and acting still trail the expressive cartoon concept."
+  ],
+  "disposition": "retain-acoustic-no-retiming",
+  "timingChanged": false,
+  "controlsChanged": false,
+  "artworkChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "listeningVerified": false,
+  "exactBoundariesVerified": false,
+  "realTimePlaybackReviewed": false,
+  "animationAccepted": false,
+  "polishedMilestoneReady": false,
+  "pendingJobs": [],
+  "next": "Review Region02 that\u2019s\u2192not around5.64s versus the older5.17s anchor using original PCM/spectral evidence and current oral/tongue controls. No automatic threshold retiming or new art variants."
+}

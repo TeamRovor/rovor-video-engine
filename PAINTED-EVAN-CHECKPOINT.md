@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: tiny→little phoneme-scale acoustic/lip trace reviewed
+CARTOON-EVAN-TINY-LITTLE-TRACE.md / evan-engine/reviews/tiny-little-trace-v1.json; new reference-only reviews/trace_tiny_little.py. Original2.28–2.82sPCM +centered25msFFT/5mshop +259actualcontrol samples480Hz. Fouroralmeshes56/63/64/67 matchactualrasterto1e-9; originalspeechbelow310/v3→v4below240 guarded. Both2.36/2.65wordhypotheses insidevoicedenergy; strongestadjacentspectralchange2.31746875s predatesboth. Gapcontinuousat2.65,12.3107nativepx. NOretiming/controls/artchange;18flagsunresolved.
+
+outputs/evan-cartoon-tiny-little-trace/Review.html:30BYTE-EXACTfullstageframes48..77;30/120normal/slowdecodes;20000exactPCM32000:52000.43PNGhashes/current+frozen selectedsources verified. Nativeplot halves/faces63,64 +4normal/2slow samplesinspected. Sameconstruction/actinglimitations persist. Listening/exactboundaries/realtime/polishedFALSE. No pendingjobs;fullv4/defaults/protectedversions preserved;automationACTIVE.
+
+NEXT: Region02that’s→not boundary5.64 versusolder5.17 usingoriginalPCM/spectral evidenceandactualoral/tonguecontrols. No automaticthresholdretiming ornewartvariants. Publishing: SSH/HTTPSpushcredentials unavailable here; connectedRovorGitHub API +leaseddevelopmentref +HTTPSfetch/exact-tree synchronization worked forlastcheckpoint.
+
 ## Current task: full v4 construction cut recovered/completed and sampled
 CARTOON-EVAN-FOREHEAD-CONTINUOUS.md / evan-engine/reviews/forehead-continuous-v1.json. outputs/evan-cartoon-forehead-continuous/Review.html has complete23snormal/92sslow films. Old84793worker absent/sessionlost after464frames.65current+frozen inputs exact;464PNGbytes preserved; fiveactualposes24/96/216/300/432 rerenderedpixel-exact.383recovered speakingframes lack persistedindividual oldguardrecords; DO NOT claim a fresh455poseaudit.67newguarded speakingposes +72reviewedcomponent +5pilots +20protectedclosing complete552. Recoveryjournal retained.
 
