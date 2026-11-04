@@ -68,3 +68,15 @@ test('Ask ROVOR shows nine-provider inventory with explicit freshness and never 
   assert.match(src,/rvc-connection-bar/);
   assert.match(src,/Refresh model availability and provider status/);
 });
+
+
+test('Ask ROVOR GitHub source is explicit, read-only, and touch-safe on phone, iPad and desktop',()=>{
+  assert.match(src,/rvc-repo-file/);
+  assert.match(src,/GitHub source/);
+  assert.match(src,/repoSelect\.value/);
+  assert.match(src,/if\(attachedSource\)payload\.repo_file=attachedSource/);
+  assert.match(src,/no repository write access/i);
+  assert.match(src,/rvc-repo-file\{[^}]*font-size:16px!important/);
+  assert.match(src,/repoRow\.hidden=sourceSelect\.value!=='omniroute'/);
+  assert.match(src,/repoSelect\.disabled=b\|\|sourceSelect\.value!=='omniroute'/);
+});
