@@ -132,3 +132,37 @@ test('Mac cannot claim completed model inference unless it received real streami
   assert.equal(calls,1);
   assert.equal(readEvents('data: {"choices":[{"delta":{"content":"hi"}}]}\n\ndata: [DONE]'),'hi');
 });
+
+
+test('queued chat cancellation is atomic, clears prompt and guarantees Mac cannot claim it',async()=>{
+  const env=environment();
+  await call(env,'/api/hud/chat/bridge','POST','writer',{models:[MODEL]});
+  const submitted=await call(env,'/api/hud/chat/submit','POST','reader',body);
+  const {job_id}=await submitted.json();
+  assert.equal((await call(env,'/api/hud/chat/cancel/'+job_id,'POST','none',{})).status,401);
+  assert.equal((await call(env,'/api/hud/chat/cancel/'+job_id,'POST','writer',{})).status,401);
+  assert.equal((await call(env,'/api/hud/chat/cancel/'+job_id,'POST','reader',{},NOW,{origin:false})).status,403);
+  const cancelled=await call(env,'/api/hud/chat/cancel/'+job_id,'POST','reader',{});
+  assert.equal(cancelled.status,200);
+  assert.deepEqual(await cancelled.json(),{status:200,cancelled:true,before_claim:true});
+  const row=env.DB.sqlite.prepare('SELECT state,error,request_body FROM hud_chat_jobs WHERE id=?').get(job_id);
+  assert.deepEqual(row,{state:'failed',error:'user_cancelled',request_body:null});
+  const after=await (await call(env,'/api/hud/chat/status/'+job_id)).json();
+  assert.equal(after.state,'failed');assert.equal(after.error,'user_cancelled');
+  assert.equal((await (await call(env,'/api/hud/chat/claim','POST','writer',{})).json()).job,null);
+  assert.equal((await call(env,'/api/hud/chat/cancel/'+job_id,'POST','reader',{})).status,409);
+});
+
+test('cancellation after Mac claim refuses to pretend it stopped inference',async()=>{
+  const env=environment();
+  await call(env,'/api/hud/chat/bridge','POST','writer',{models:[MODEL]});
+  const {job_id}=await (await call(env,'/api/hud/chat/submit','POST','reader',body)).json();
+  const {job}=await (await call(env,'/api/hud/chat/claim','POST','writer',{})).json();
+  assert.equal(job.id,job_id);
+  const late=await call(env,'/api/hud/chat/cancel/'+job_id,'POST','reader',{});
+  assert.equal(late.status,409);
+  assert.deepEqual(await late.json(),{status:409,error:'request_already_running',cancelled:false});
+  assert.equal((await call(env,'/api/hud/chat/result/'+job_id,'POST','writer',{state:'complete',output:'It ran'})).status,200);
+  const saved=await (await call(env,'/api/hud/chat/status/'+job_id)).json();
+  assert.equal(saved.state,'complete');assert.equal(saved.output,'It ran');
+});
