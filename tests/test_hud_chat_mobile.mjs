@@ -108,7 +108,12 @@ test('natural language can request two distinct provider routes with separate re
   assert.equal(plan.routes.length,2);
   assert.equal(plan.routes.join(','),'gemini/flash:free,groq/fast:free' /* provider list is fixed-order */);
   assert.match(src,/async function askBoth\(/);
-  assert.match(src,/Promise\.all\(routes\.map\(runOne\)\)/);
+  assert.doesNotMatch(src,/Promise\.all\(routes\.map\(runOne\)\)/,
+    'single Mac executor cannot reliably finish two simultaneous D1 leases');
+  assert.match(src,/for\(const route of routes\)/);
+  assert.match(src,/await runOne\(route,results\[0\]\|\|null\)/);
+  assert.match(src,/second model reviews the first/i);
+  assert.match(src,/Independent critical review/);
   assert.match(src,/for\(const result of results\)/);
   assert.match(src,/REPLIES CONFIRMED/);
 });
@@ -129,4 +134,17 @@ test('a model only appears callable when it is present in the Mac chat catalog',
   assert.match(plan('Ask Groq',[]).error,/No currently advertised routes/);
   assert.match(src,/actual upstream identity not separately attested/);
   assert.doesNotMatch(src,/auto[\s-]*switch to paid/i);
+});
+
+test('two-model orchestration requires an explicit opt-in and remains mobile safe',()=>{
+  assert.match(src,/rvc-team-review/);
+  assert.match(src,/Two-model review when useful/);
+  assert.match(src,/teamInput\.checked/);
+  assert.match(src,/teamInput\.disabled=b\|\|sourceSelect\.value!=='omniroute'/);
+  assert.match(src,/teamRow\.hidden=sourceSelect\.value!=='omniroute'/);
+  assert.match(src,/rvc-team-row/);
+  assert.match(src,/width:18px;height:18px/);
+  assert.match(src,/No model calls confirmed|no model calls confirmed/);
+  assert.match(src,/No confirmed reply/);
+  assert.match(src,/stop\.onclick=async/);
 });
