@@ -868,6 +868,7 @@ const css=`
 #rovor-workload-popup .rvq-level-warn .rvq-glance-bar i{background:#ffc86b}
 #rovor-workload-popup .rvq-level-high .rvq-glance-bar i{background:#ff7b7b}
 #rovor-workload-popup .rvq-glance-pct{grid-area:p;text-align:right;font:700 12px system-ui;font-variant-numeric:tabular-nums;color:#f0fbff}
+@media(min-width:900px){#rovor-workload-popup .rvq-glance-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 #rovor-workload-popup .rvq-glance-meta{grid-area:m;font:10px system-ui;color:#9ccbe7}
 #rovor-workload-popup .rvq-glance-unknown{margin-top:6px;font:11px system-ui;color:#9ccbe7}
 #rovor-workload-popup .rvq-glance-unknown summary{cursor:pointer}
