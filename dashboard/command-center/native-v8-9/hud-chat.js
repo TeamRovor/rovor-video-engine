@@ -59,6 +59,12 @@
       if(value.startsWith('rovor-'))points+=2; // Explicitly approved combos, not proof of actual upstream.
       if(value.endsWith(':free'))points+=1;
       if(provider==='groq'&&category==='speed')points+=2;
+      const evidence=localEvidence(id);
+      if(evidence){
+        // Modest reliability tiebreaker only after >=3 real completion receipts.
+        // No synthetic accuracy, tokens, price or quota scores.
+        points+=Math.round(3*(evidence.ok-evidence.failed)/(evidence.ok+evidence.failed));
+      }
       return points;
     };
     const sorted=[...routes].sort((a,b)=>score(b)-score(a)||a.localeCompare(b));
@@ -91,6 +97,54 @@
         :'Task-aware route hint · '+category+' · unbenchmarked; no quota guarantee'};
   }
   window.ROVOR_ROUTE_PLANNER={plan:planRoutes};
+  // Keep only completion/failure receipts on this device, never prompt text
+  // or provider secrets. These observations measure chat reliability, not
+  // intelligence, quality, provider quota or isolated inference latency.
+  const STATS_KEY='rovor_chat_route_receipts_v1',STATS_MAX_AGE=7*86400000;
+  const routeStats=Object.create(null);
+  try{
+    const saved=JSON.parse(localStorage.getItem(STATS_KEY)||'{}');
+    if(saved&&typeof saved==='object'&&!Array.isArray(saved)){
+      for(const [id,v] of Object.entries(saved).slice(0,60)){
+        if(typeof id!=='string'||!v||Date.now()-v.last>STATS_MAX_AGE)continue;
+        if(Number.isSafeInteger(v.ok)&&Number.isSafeInteger(v.failed)&&
+          v.ok>=0&&v.failed>=0&&v.ok+v.failed<=1000)routeStats[id]=v;
+      }
+    }
+  }catch{}
+  function localEvidence(id){
+    const v=Object.hasOwn(routeStats,id)?routeStats[id]:null;
+    return v&&Date.now()-v.last<STATS_MAX_AGE&&v.ok+v.failed>=3?v:null;
+  }
+  function recordReceipt(id,outcome,elapsedMs){
+    if(typeof id!=='string'||id===AUTO_ROUTE||
+      !['complete','failed'].includes(outcome))return;
+    const now=Date.now(),was=localEvidence(id)||routeStats[id];
+    const old=was&&now-was.last<STATS_MAX_AGE?was:{ok:0,failed:0,elapsed:0};
+    const item={ok:old.ok+(outcome==='complete'?1:0),
+      failed:old.failed+(outcome==='failed'?1:0),
+      elapsed:old.elapsed+(outcome==='complete'&&Number.isFinite(elapsedMs)?Math.max(0,elapsedMs):0),
+      last:now};
+    if(item.ok+item.failed>1000)return;
+    routeStats[id]=item;
+    try{
+      const recent=Object.entries(routeStats).sort((a,b)=>b[1].last-a[1].last).slice(0,60);
+      localStorage.setItem(STATS_KEY,JSON.stringify(Object.fromEntries(recent)));
+    }catch{}
+  }
+  function modelEvidenceHint(id){
+    if(id===AUTO_ROUTE)return 'Task-aware name heuristics only · always check model eligibility';
+    const name=id.toLowerCase(),hints=[];
+    if(/coder|code|codestral|devstral|qwen2\.5-coder/.test(name))hints.push('coding');
+    if(/reason|deepseek-r1|nemotron|gpt-oss-120b/.test(name))hints.push('reasoning');
+    if(/flash|fast|lite|small|mini/.test(name))hints.push('quick-response');
+    if(/vision|multimodal|[-/]vl\b/.test(name))hints.push('visual-model name; this chat sends text only');
+    const evidence=localEvidence(id);
+    const observed=evidence?'This device: '+evidence.ok+'/'+(evidence.ok+evidence.failed)+' confirmed replies over 7 days; end-to-end time includes queue'
+      :'Not enough recent confirmed local receipts';
+    return 'Name-only task clues: '+(hints.join(', ')||'none verified')+
+      ' · Weaknesses unknown until tested; free quota/reset and actual fallback unverified. '+observed+'.';
+  }
   const css=`
 #rvc-fab{position:fixed;right:18px;bottom:18px;z-index:2147483000;background:#06233d;color:#bde5ff;border:1px solid #2f7fb8;border-radius:999px;padding:11px 18px;font:600 13px system-ui;letter-spacing:.08em;cursor:pointer;box-shadow:0 4px 18px #0008}
 #rvc-fab:hover,#rvc-fab:focus-visible{background:#0b3a63;outline:2px solid #7cc8ff}
@@ -405,6 +459,7 @@
         button.setAttribute('aria-current',String(isSelected));
         const help=el('small',{textContent:isSelected?'Selected route':'Select this available route'});
         button.append(help);
+        button.append(el('small',{textContent:modelEvidenceHint(option.value)}));
         button.onclick=()=>{
           select.value=option.value;
           select.dispatchEvent(new Event('change',{bubbles:true}));
