@@ -314,6 +314,8 @@ button.metric-row.interactive-bar:hover,button.metric-row.interactive-bar:focus-
 }
 .motion-off .earth-horizon::before{animation-play-state:paused!important;}
 @media(prefers-reduced-motion:reduce){.earth-horizon::before{animation:none!important;}}
+/* Phone layout: compact reactor so live panels (tasks, quota, employees) are visible without scrolling. */
+@media(max-width:780px){.hud .core{height:240px!important;min-height:0!important;max-height:240px!important}.hud .reactor{width:min(60%,215px)!important;top:50%!important}.tagline,.core .reactor-status{display:none}.brand-core{width:30%}.earth-horizon{height:30%}.rail .panel:first-child{min-height:240px}.deck{gap:7px}}
 
 
 /* Earth drag/keyboard controls update the phase of its actual slow CSS texture animation. */
