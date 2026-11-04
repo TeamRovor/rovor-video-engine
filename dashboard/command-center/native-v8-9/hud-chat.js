@@ -758,7 +758,7 @@
       let reply='';pendingJob=null;cancelConfirmed=false;setBusy(true);stop.textContent='Stop waiting';controller=new AbortController();
       const signal=controller.signal;
       try{
-        const payload={model:target,context:false,messages:history.filter(m=>m.role==='user'||(m.role==='assistant'&&m.outcome==='complete')).slice(-5).map(m=>({role:m.role,content:m.content}))};
+        const payload={model:target,context:false,messages:history.filter(m=>m.role==='user'||(m.role==='assistant'&&m.outcome==='complete')).slice(-5).map(m=>({role:m.role,content:m.content.slice(0,5500)}))};
         if(attachedSource)payload.repo_file=attachedSource;
         if(platform==='omniroute'){
           const posted=await fetch('/api/hud/chat/submit',{method:'POST',credentials:'same-origin',signal,
