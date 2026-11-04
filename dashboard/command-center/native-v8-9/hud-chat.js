@@ -130,12 +130,54 @@
 #rvc .rvc-copy{align-self:flex-start;display:inline-flex;justify-content:center;align-items:center;min-height:36px;margin-top:7px;background:#08233e;color:#bfe6ff;border:1px solid #2d648e;border-radius:8px;padding:6px 10px;font-size:12px}
 @media(max-width:760px){#rvc .rvc-copy{min-height:44px}}
 `}));
+
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-model-slot{display:flex;align-items:center;gap:7px;flex:1;min-width:0;max-width:465px}
+#rvc .rvc-model-slot select{width:100%;min-width:0;max-width:none!important}
+#rvc .rvc-model-browse{flex:0 0 44px;min-width:44px;min-height:44px;background:#103f69;border:1px solid #3c7eac;border-radius:11px;font-size:24px;line-height:1;color:#d5eeff}
+#rvc .rvc-model-sheet[hidden]{display:none!important}
+#rvc .rvc-model-sheet{position:absolute;z-index:12;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:#010915dc;backdrop-filter:blur(7px)}
+#rvc .rvc-model-sheet-card{width:min(580px,100%);max-height:min(670px,90%);display:flex;flex-direction:column;min-height:0;padding:20px;background:linear-gradient(155deg,#092442,#031222);border:1px solid #3c749e;border-radius:17px;box-shadow:0 20px 70px #000b}
+#rvc .rvc-model-sheet-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+#rvc .rvc-model-sheet-header strong{font-size:17px;color:#edf8ff;letter-spacing:-.02em}
+#rvc .rvc-model-sheet-close{min-height:44px;padding:9px 15px;border-radius:10px}
+#rvc .rvc-model-search{width:100%;min-height:48px;font:16px/1.5 system-ui!important;background:#05182c;color:#ecf7ff;padding:12px 14px;border:1px solid #3a739f;border-radius:11px;outline-offset:2px}
+#rvc .rvc-model-sheet-info{margin:9px 0 14px;color:#8fb2cd;font-size:11px;line-height:1.5}
+#rvc .rvc-model-rows{overflow-y:auto;overscroll-behavior:contain;min-height:0;display:flex;flex-direction:column;gap:18px}
+#rvc .rvc-model-group{display:flex;flex-direction:column;gap:7px}
+#rvc .rvc-model-group h3{font-size:10px;letter-spacing:.16em;color:#8bbbdc;margin:0 0 2px;text-transform:uppercase}
+#rvc .rvc-model-option{display:block;width:100%;text-align:left;padding:12px 14px;min-height:55px;background:#071d35;border:1px solid #294e72;border-radius:10px;color:#e2f2ff;overflow-wrap:anywhere;font-size:12px}
+#rvc .rvc-model-option[aria-current=true]{background:#123d62;border-color:#62adcf}
+#rvc .rvc-model-option small{display:block;color:#88aeca;font-size:10px;margin-top:3px}
+#rvc .rvc-model-empty{font-size:13px;color:#9fbed6;padding:16px 6px}
+@media(max-width:760px){
+  #rvc header .rvc-model-slot{grid-area:model;width:100%;max-width:none;min-width:0}
+  #rvc header .rvc-model-slot select{width:100%}
+  #rvc .rvc-model-sheet{padding:0;align-items:flex-end}
+  #rvc .rvc-model-sheet-card{width:100%;max-height:min(75dvh,650px);border-radius:20px 20px 0 0;padding:18px 15px max(15px,env(safe-area-inset-bottom))}
+  #rvc .rvc-model-rows{padding-bottom:10px}
+}
+`}));
     const fab=el('button',{id:'rvc-fab',type:'button',textContent:'ASK ROVOR',title:'Chat with your models and check on your employees'});
     fab.setAttribute('aria-expanded','false');fab.setAttribute('aria-controls','rvc');
     const sourceSelect=el('select',{id:'rvc-source',className:'rvc-source'});
     sourceSelect.setAttribute('aria-label','Inference source');
     for(const [value,label] of [['omniroute','OmniRoute · Mac'],['cloudflare','Cloudflare AI']]) sourceSelect.append(el('option',{value,textContent:label}));
     const select=el('select',{id:'rvc-model',className:'rvc-model'});select.setAttribute('aria-label','Model');
+    const modelBrowse=el('button',{type:'button',className:'rvc-model-browse',textContent:'⌕',title:'Search available models',disabled:true});
+    modelBrowse.setAttribute('aria-label','Search available models');
+    modelBrowse.setAttribute('aria-expanded','false');
+    const modelSlot=el('div',{className:'rvc-model-slot'},select,modelBrowse);
+    const modelSheet=el('div',{className:'rvc-model-sheet',hidden:true});
+    const modelSheetTitle=el('strong',{textContent:'Choose a model'});
+    const modelSheetClose=el('button',{type:'button',className:'rvc-model-sheet-close',textContent:'Close'});
+    modelSheetClose.setAttribute('aria-label','Close model browser');
+    const modelSheetHeader=el('div',{className:'rvc-model-sheet-header'},modelSheetTitle,modelSheetClose);
+    const modelSearch=el('input',{type:'search',className:'rvc-model-search',placeholder:'Search a model or provider',maxLength:100});
+    modelSearch.setAttribute('aria-label','Search models and providers');
+    const modelSheetInfo=el('p',{className:'rvc-model-sheet-info',textContent:'Only routes reported by the selected backend are shown. Listed does not mean independently tested.'});
+    const modelRows=el('div',{className:'rvc-model-rows'});
+    modelSheet.append(el('div',{className:'rvc-model-sheet-card'},modelSheetHeader,modelSearch,modelSheetInfo,modelRows));
     const stateLabel=el('div',{className:'rvc-state',textContent:'Checking available models…'});
     // Separate Mac telemetry from model availability. Historical provider
     // connections are not proof of running inference or fresh quotas.
@@ -169,16 +211,65 @@
         el('small',{},'MULTI-MODEL INTELLIGENCE')),newChat,el('div',{className:'rvc-label'},'CONVERSATIONS'),sessionsList,
         el('small',{},'Conversation history is stored on this device. Model text is not proof of employee execution.')),
       el('div',{className:'rvc-main'},
-        el('header',{},mobileMenu,el('strong',{textContent:'ASK ROVOR'}),sourceSelect,select,clear,close),
+        el('header',{},mobileMenu,el('strong',{textContent:'ASK ROVOR'}),sourceSelect,modelSlot,clear,close),
         stateLabel,providerDetails,log,
         el('footer',{},el('div',{className:'rvc-context-note',textContent:'An accepted chat request is not a completed task. Only a confirmed model response counts.'}),form)));
     panel.setAttribute('aria-label','ROVOR chat');
     const sideBackdrop=el('button',{type:'button',className:'rvc-side-backdrop'});
     sideBackdrop.setAttribute('aria-label','Close conversation history');
-    panel.append(sideBackdrop);
+    panel.append(sideBackdrop,modelSheet);
     sideBackdrop.onclick=()=>{panel.dataset.sideOpen='false';};
     document.body.append(fab,panel);
 
+    // A deliberately separate route browser keeps the chat composer uncluttered.
+    // Selection is explicit and never starts inference or changes providers.
+    function closeModelSheet(){
+      modelSheet.hidden=true;
+      modelBrowse.setAttribute('aria-expanded','false');
+      modelSearch.blur();
+    }
+    function renderModelSheet(){
+      modelRows.textContent='';
+      const query=modelSearch.value.trim().toLowerCase();
+      const options=Array.from(select.options).filter(o=>o.value&&
+        (o.value.toLowerCase().includes(query)||(o.parentElement?.label||'').toLowerCase().includes(query)));
+      if(!options.length){
+        modelRows.append(el('p',{className:'rvc-model-empty',textContent:'No matching available routes. Try another name or refresh the connection.'}));
+        return;
+      }
+      const groups=new Map();
+      for(const option of options){
+        const group=option.parentElement?.tagName==='OPTGROUP'?option.parentElement.label:'Other models';
+        if(!groups.has(group)){
+          const container=el('div',{className:'rvc-model-group'});
+          container.append(el('h3',{textContent:group}));
+          groups.set(group,container);modelRows.append(container);
+        }
+        const isSelected=option.value===select.value;
+        const button=el('button',{type:'button',className:'rvc-model-option',textContent:option.value});
+        button.setAttribute('aria-current',String(isSelected));
+        const help=el('small',{textContent:isSelected?'Selected route':'Select this available route'});
+        button.append(help);
+        button.onclick=()=>{
+          select.value=option.value;
+          select.dispatchEvent(new Event('change',{bubbles:true}));
+          closeModelSheet();
+        };
+        groups.get(group).append(button);
+      }
+    }
+    modelBrowse.onclick=()=>{
+      if(busy||!ready)return;
+      modelSearch.value='';
+      renderModelSheet();
+      modelSheet.hidden=false;
+      modelBrowse.setAttribute('aria-expanded','true');
+      modelSearch.focus({preventScroll:true});
+    };
+    modelSearch.oninput=renderModelSheet;
+    modelSheetClose.onclick=closeModelSheet;
+    modelSheet.onclick=e=>{if(e.target===modelSheet)closeModelSheet();};
+    modelSearch.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();closeModelSheet();}};
     const add=(cls,text,meta=null)=>{
       const n=el('div',{className:'rvc-msg '+cls});
       const inner=el('div',{className:'rvc-message-body'});renderText(inner,text);n.append(inner);
@@ -217,7 +308,7 @@
     };
     const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':m.outcome==='failed'?'rvc-err':'rvc-bot',m.content,m));};
     let pendingJob=null,cancelConfirmed=false;
-    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;
+    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;
       // Don't re-open the software keyboard after a delayed response on iOS.
       if(!b&&panel.dataset.open==='true'&&!window.matchMedia('(pointer:coarse)').matches)input.focus({preventScroll:true});
     };
@@ -242,7 +333,7 @@
     let priorOverflow=null;
     const toggle=open=>{
       panel.dataset.open=String(open);
-      if(!open)panel.dataset.sideOpen='false';
+      if(!open){panel.dataset.sideOpen='false';closeModelSheet();}
       fab.setAttribute('aria-expanded',String(open));
       if(open){
         priorOverflow=document.body.style.overflow;
@@ -287,7 +378,7 @@
     let loadEpoch=0;
     async function load(){
       const epoch=++loadEpoch, requestedSource=sourceSelect.value;
-      ready=false;send.disabled=true;stateLabel.textContent='Checking '+requestedSource+' model availability…';
+      ready=false;send.disabled=true;modelBrowse.disabled=true;closeModelSheet();stateLabel.textContent='Checking '+requestedSource+' model availability…';
       try{
         const omni=requestedSource==='omniroute';
         const r=await fetch(omni?'/api/hud/chat/models':'/api/chat/models',{credentials:'same-origin',cache:'no-store'});
@@ -312,10 +403,10 @@
         else if(saved&&models.includes(saved))select.value=saved;
         stateLabel.textContent=omni?'OMNIROUTE BRIDGE REPORTED · free-eligible routes listed, not canary-verified':
           'CLOUDFLARE AI · separate cloud models · usage depends on your provider allowance';
-        ready=true;send.disabled=false;
+        ready=true;send.disabled=false;modelBrowse.disabled=false;
       }catch{
         if(epoch!==loadEpoch)return;
-        select.textContent='';select.append(el('option',{value:'',textContent:'No models available'}));
+        modelBrowse.disabled=true;select.textContent='';select.append(el('option',{value:'',textContent:'No models available'}));
         stateLabel.textContent=sourceSelect.value==='omniroute'?
           'OMNIROUTE OFFLINE · connect the outbound Mac bridge; no inference is available here yet':
           'CLOUDFLARE UNAVAILABLE · this source has no configured accessible models';
@@ -451,7 +542,12 @@
     drawSessions();
     mobileMenu.onclick=()=>{panel.dataset.sideOpen=String(panel.dataset.sideOpen!=='true');};
     close.onclick=()=>toggle(false);fab.onclick=()=>toggle(panel.dataset.open!=='true');
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&panel.dataset.open==='true')toggle(false);});
+    document.addEventListener('keydown',e=>{
+      if(e.key!=='Escape'||panel.dataset.open!=='true')return;
+      if(!modelSheet.hidden){closeModelSheet();return;}
+      if(panel.dataset.sideOpen==='true'){panel.dataset.sideOpen='false';return;}
+      toggle(false);
+    });
     redraw();
   }
   window.ROVOR_HUD_CHAT={start:()=>{if(!document.getElementById('rvc'))build();}};
