@@ -2,6 +2,9 @@
 // Outbound-only bridge between the private Cloudflare HUD and installed OmniRoute.
 // Never accepts inbound Mac traffic, stores provider secrets in the browser,
 // creates background work on its own, or replays a failed inference.
+import fs from 'node:fs';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createChat, CHAT_LIMITS} from './hud_chat.mjs';
@@ -14,6 +17,30 @@ async function fromKeychain(service) {
   if (process.platform !== 'darwin') return null;
   try { return (await exec('/usr/bin/security', ['find-generic-password','-s',service,'-w'],
     {timeout:5000})).stdout.trim(); } catch { return null; }
+}
+// Reuse the CLI session authentication needed by the installed local
+// OmniRoute gateway. Reads only the installed package; never prints a token.
+export async function localCliAuth() {
+  const candidates=[process.env.OMNIROUTE_CLI,
+    path.join(process.env.HOME||'', '.local/bin/omniroute'),
+    ...String(process.env.PATH||'').split(path.delimiter).map(dir=>path.join(dir,'omniroute'))].filter(Boolean);
+  let root=null;
+  for(const candidate of candidates) {
+    try {
+      let dir=path.dirname(fs.realpathSync(candidate));
+      for(let i=0;i<5;i++,dir=path.dirname(dir)){
+        if(fs.existsSync(path.join(dir,'bin/cli/utils/cliToken.mjs'))){root=dir;break;}
+      }
+      if(root)break;
+    }catch{}
+  }
+  if(!root)return null;
+  try {
+    const {getCliToken,CLI_TOKEN_HEADER}=await import(pathToFileURL(path.join(root,'bin/cli/utils/cliToken.mjs')).href);
+    const token=await getCliToken();
+    if(typeof token!=='string'||!token||typeof CLI_TOKEN_HEADER!=='string')return null;
+    return {header:CLI_TOKEN_HEADER,token};
+  }catch{return null;}
 }
 const explicit = /^([A-Za-z0-9][A-Za-z0-9._:/+@-]{0,199})$/;
 export function eligibleModels(models, approved = []) {
@@ -112,9 +139,10 @@ async function main() {
   const origin=validateTarget(process.env.ROVOR_HUD_ORIGIN);
   const writerKey=process.env.ROVOR_HUD_WRITER_TOKEN||await fromKeychain('rovordigital.hud.writer');
   const apiKey=process.env.OMNIROUTE_API_KEY||await fromKeychain('rovordigital.omniroute.endpoint');
-  if (!apiKey) throw Error('omniroute_endpoint_key_missing');
+  const cliAuth=await localCliAuth();
+  if (!apiKey && !cliAuth) throw Error('omniroute_gateway_auth_missing');
   const approved=String(process.env.ROVOR_HUD_CHAT_FREE_MODELS||'').split(',').map(s=>s.trim()).filter(Boolean);
-  const chat=createChat({apiKey});
+  const chat=createChat({apiKey,cliAuth});
   const stop=new AbortController();
   for (const sig of ['SIGINT','SIGTERM']) process.once(sig,()=>stop.abort());
   console.log('ROVOR outbound chat bridge starting; only verified free route IDs are offered.');
