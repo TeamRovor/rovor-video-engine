@@ -603,6 +603,8 @@ function workerBanner(workforce,live){
  const queued=Number.isSafeInteger(d.queued)?d.queued:null;
  const HELP={
   failure_circuit_requires_review:['WORKERS PAUSED · SAFETY STOP','Several jobs in a row failed, so dispatch stopped itself. Review the failed jobs, then clear the stop to resume.','bad'],
+  paced_wait:['WORKERS WAITING · PACING','Spacing jobs out to protect free-tier limits. The next one starts on its own.','wait'],
+  no_queued_work:['WORKERS IDLE · NO QUEUED WORK','Nothing is waiting. New jobs appear when the task list changes.','wait'],
   account_minimum_interval:['WORKERS WAITING · PACING','Waiting out the rate-limit gap between jobs. This clears on its own.','wait'],
   account_retry_after:['WORKERS WAITING · PROVIDER COOLDOWN','The provider asked for a pause. This clears on its own.','wait'],
   account_inflight_claim:['WORKERS BUSY','A job is still running. The next one starts when it finishes.','ok'],

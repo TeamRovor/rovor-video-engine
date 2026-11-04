@@ -63,3 +63,12 @@ test('worker banner explains a safety stop in plain language and only from a ver
  assert.doesNotMatch(window.ROVOR_QUOTA_BOARD.render(snap(d),false,null,null,null,null),/WORKERS PAUSED/);
  assert.doesNotMatch(window.ROVOR_QUOTA_BOARD.render(snap({...d,status:'stale'}),true,null,null,null,null),/WORKERS PAUSED/);
 });
+
+test('worker banner covers pacing and idle states',()=>{
+ const {window}=load();
+ const snap=reason=>({source:'local_omniroute_read_only_bridge',period:'24h',snapshot_at:new Date().toISOString(),
+  connections:[{provider:'groq',name:'Groq',connection_count:1,enabled_count:1}],quota:{records:[]},
+  workforce:{dispatch:{status:'recent_scheduler_report',reason,needs_review:0,queued:0}}});
+ assert.match(window.ROVOR_QUOTA_BOARD.render(snap('paced_wait'),true,null,null,null,null),/WORKERS WAITING · PACING/);
+ assert.match(window.ROVOR_QUOTA_BOARD.render(snap('no_queued_work'),true,null,null,null,null),/WORKERS IDLE/);
+});
