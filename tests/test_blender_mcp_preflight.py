@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import io
+from contextlib import redirect_stdout
 import shutil
 import tempfile
 import tomllib
@@ -68,6 +70,34 @@ class BlenderMCPConfigTests(unittest.TestCase):
         (self.root / ".codex/config.toml").unlink()
         with self.assertRaises(FileNotFoundError):
             p.validate(self.root)
+
+    def test_malformed_json_shapes_return_structured_failure_without_socket(self):
+        file = self.root / "integrations/blender-mcp/mcp.json.example"
+        for value in (None, True, 1, "text", [],
+                      {"mcpServers": None}, {"mcpServers": True},
+                      {"mcpServers": 1}, {"mcpServers": "text"},
+                      {"mcpServers": []}):
+            with self.subTest(value=value):
+                file.write_text(json.dumps(value))
+                output = io.StringIO()
+                with mock.patch.object(p.socket, "create_connection") as connect:
+                    with redirect_stdout(output):
+                        self.assertEqual(p.main(["--root", str(self.root), "--socket-check"]), 1)
+                connect.assert_not_called()
+                self.assertFalse(json.loads(output.getvalue())["validated"])
+                self.assertIn("object server sections", json.loads(output.getvalue())["error"])
+
+    def test_malformed_toml_server_sections_return_structured_failure(self):
+        file = self.root / ".codex/config.toml"
+        for value in ('1', 'true', '"text"', '[]'):
+            with self.subTest(value=value):
+                file.write_text("mcp_servers = " + value + "\n")
+                output = io.StringIO()
+                with mock.patch.object(p.socket, "create_connection") as connect:
+                    with redirect_stdout(output):
+                        self.assertEqual(p.main(["--root", str(self.root), "--socket-check"]), 1)
+                connect.assert_not_called()
+                self.assertFalse(json.loads(output.getvalue())["validated"])
 
     def test_local_tcp_probe_no_blender_handshake_claim(self):
         class Dummy:

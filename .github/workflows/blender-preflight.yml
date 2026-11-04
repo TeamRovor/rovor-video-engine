@@ -1,0 +1,22 @@
+name: Blender configuration preflight
+on:
+  push:
+    paths: ['tools/blender_mcp_preflight.py', 'tests/test_blender_mcp_preflight.py', '.codex/config.toml', 'integrations/blender-mcp/mcp.json.example', '.github/workflows/blender-preflight.yml']
+  pull_request:
+    paths: ['tools/blender_mcp_preflight.py', 'tests/test_blender_mcp_preflight.py', '.codex/config.toml', 'integrations/blender-mcp/mcp.json.example', '.github/workflows/blender-preflight.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s tests -p test_blender_mcp_preflight.py -v
