@@ -46,9 +46,16 @@ const SYSTEM = 'You are a conversational inference model inside Ask ROVOR. You h
   + 'You may answer questions and draft plans or content now. Model text is not evidence of employee or runtime activity. '
   + 'If telemetry is absent or stale, explicitly say so; never invent a model invocation, result, tool action or timestamp.';
 
-export function createChat({apiKey, base = 'http://127.0.0.1:20128', fetchImpl = fetch, status = async () => null, clock = Date.now}) {
+export function createChat({apiKey, cliAuth = null, base = 'http://127.0.0.1:20128', fetchImpl = fetch, status = async () => null, clock = Date.now}) {
   let models = [], modelsAt = 0, busy = false, stamps = [];
-  const headers = () => ({Accept: 'application/json', ...(apiKey ? {Authorization: 'Bearer ' + apiKey} : {})});
+  // OmniRoute may require both its endpoint bearer key and its installed CLI
+  // session header. Neither is ever sent beyond the fixed local gateway.
+  const cliHeader = cliAuth && typeof cliAuth.header === 'string' &&
+    /^[a-zA-Z0-9-]{1,80}$/.test(cliAuth.header) &&
+    typeof cliAuth.token === 'string' && cliAuth.token.length <= 2048 &&
+    cliAuth.token.length > 0 && !/[\r\n]/.test(cliAuth.token)
+    ? {[cliAuth.header]: cliAuth.token} : {};
+  const headers = () => ({Accept: 'application/json', ...(apiKey ? {Authorization: 'Bearer ' + apiKey} : {}), ...cliHeader});
   async function listModels() {
     if (models.length && clock() - modelsAt < 60000) return models;
     const r = await fetchImpl(base + '/v1/models', {headers: headers(), redirect: 'error', signal: AbortSignal.timeout(8000)});
