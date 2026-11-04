@@ -86,12 +86,17 @@ jobs:
           enablement: true
 
       - name: Add recorded cloud work to the Pages artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           ROVOR_PAGES_DIR="$RUNNER_TEMP/rovor-command-center-pages"
           mkdir -p "$ROVOR_PAGES_DIR"
           cp -R dashboard/command-center/. "$ROVOR_PAGES_DIR/"
           node integrations/hud-cloud/build-cloud-activity.mjs "$ROVOR_PAGES_DIR"
           node dashboard/command-center/tools/inject-team-contributions.mjs "$ROVOR_PAGES_DIR"
+          C=$(gh api "repos/${{ github.repository }}/commits?per_page=5" || echo '[]')
+          I=$(gh api "repos/${{ github.repository }}/issues?state=open&per_page=8" || echo '[]')
+          printf '{"commits":%s,"issues":%s}' "$C" "$I" > "$ROVOR_PAGES_DIR/native-v8-9/github-snapshot.json"
 
       - name: Upload static Command Center
         uses: actions/upload-pages-artifact@v3
