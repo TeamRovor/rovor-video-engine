@@ -96,6 +96,11 @@ async function main(){
     assert(info.textarea>=16&&info.select>=16,name+': Safari focus zoom risk');
     await waitFor(()=>evaluate('return document.querySelector(".rvc-provider-inspect summary").textContent.includes("9 CONFIGURED")'),name+' provider inventory');
     if(name==='iPhone'){
+      // Prompts are suggestions, not permission to submit a model job.
+      await evaluate('document.querySelector(".rvc-chips button").click();return true');
+      assert(await evaluate('return document.querySelector("#rvc textarea").value.length>4'),
+        'suggestion did not fill the composer');
+      assert.equal(submits,0,'suggestion must not call OmniRoute without Send');
       await evaluate('document.querySelector(".rvc-mobile-menu").click();return true');
       assert.equal(await evaluate('return document.querySelector("#rvc").dataset.sideOpen'),'true');
       await evaluate('document.querySelector(".rvc-side-backdrop").click();return true');
