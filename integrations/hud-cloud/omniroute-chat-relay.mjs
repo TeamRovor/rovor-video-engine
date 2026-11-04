@@ -27,6 +27,13 @@ export function cleanReply(value) {
     throw Error('invalid_chat_result');
   return {state:'complete', output:value.output, error:null};
 }
+// Expire requests even when the Mac is offline. Clearing the prompt body on
+// timeout and deleting completed/failed receipts bounds retention.
+export async function expire(db, now) {
+  await write(db, "UPDATE hud_chat_jobs SET state='failed',error='relay_timeout',request_body=NULL,finished_at=? WHERE (state='queued' AND created_at < ?) OR (state='running' AND started_at < ?)",
+    now, now-RELAY.queuedMs, now-RELAY.runningMs);
+  await write(db, 'DELETE FROM hud_chat_jobs WHERE finished_at IS NOT NULL AND finished_at < ?', now-RELAY.retainMs);
+}
 export async function catalog(db, now) {
   const found = await query(db, 'SELECT updated_at, models FROM hud_chat_bridge WHERE id = 1');
   if (!found || found.updated_at > now + 5000 || now - found.updated_at > RELAY.heartbeatMs)
@@ -44,6 +51,7 @@ export async function publishCatalog(db, value, now) {
   return {accepted:true, count:models.length};
 }
 export async function enqueue(db, value, now, newId = () => crypto.randomUUID()) {
+  await expire(db, now);
   const available = await catalog(db, now);
   if (!available.online || !available.models.length) return {status:503, error:'omniroute_offline'};
   let request;
@@ -60,9 +68,7 @@ export async function enqueue(db, value, now, newId = () => crypto.randomUUID())
   return {status:202, job_id:id, state:'queued', requested_model:request.model};
 }
 export async function claim(db, now) {
-  await write(db, "UPDATE hud_chat_jobs SET state='failed',error='relay_timeout',request_body=NULL,finished_at=? WHERE (state='queued' AND created_at < ?) OR (state='running' AND started_at < ?)",
-    now, now-RELAY.queuedMs, now-RELAY.runningMs);
-  await write(db, 'DELETE FROM hud_chat_jobs WHERE finished_at IS NOT NULL AND finished_at < ?', now-RELAY.retainMs);
+  await expire(db, now);
   const found = await query(db, "UPDATE hud_chat_jobs SET state='running',started_at=? WHERE id=(SELECT id FROM hud_chat_jobs WHERE state='queued' AND created_at >= ? ORDER BY created_at LIMIT 1) AND state='queued' RETURNING id,model,request_body",
     now, now-RELAY.queuedMs);
   if (!found) return {job:null};
@@ -79,6 +85,7 @@ export async function finish(db, id, value, now) {
 }
 export async function status(db,id,now) {
   if (!UUID.test(id)) return {status:400,error:'invalid_job_id'};
+  await expire(db, now);
   const found=await query(db,'SELECT state,model,output,error,created_at,started_at FROM hud_chat_jobs WHERE id=?',id);
   if (!found) return {status:404,error:'job_not_found'};
   const expired=(found.state==='queued'&&now-found.created_at>RELAY.queuedMs)||
