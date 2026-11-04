@@ -57,8 +57,8 @@ test('writer and reader credentials are strictly separated',async()=>{
 });
 
 test('iPhone/iPad form controls prevent Safari auto-zoom without disabling accessibility zoom',()=>{
-  const script=readFileSync(new URL('../dashboard/command-center/native-v8-9/hud-chat.js',import.meta.url),'utf8');
-  const html=readFileSync(new URL('../dashboard/command-center/native-v8-9/index.html',import.meta.url),'utf8');
+  const script=readFileSync(new globalThis.URL('../dashboard/command-center/native-v8-9/hud-chat.js',import.meta.url),'utf8');
+  const html=readFileSync(new globalThis.URL('../dashboard/command-center/native-v8-9/index.html',import.meta.url),'utf8');
   assert.match(script, /#rvc select, #rvc textarea, #rvc input/);
   assert.match(script, /font-size:16px!important/);
   assert.match(script, /window\.visualViewport\?\.addEventListener\('resize',syncVisualViewport\)/);
