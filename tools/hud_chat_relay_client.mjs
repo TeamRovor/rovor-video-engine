@@ -69,7 +69,7 @@ export function readEvents(text) {
 }
 async function collectStream(stream) {
   const reader=stream.getReader(),decoder=new TextDecoder();
-  let raw='',output='';
+  let raw='',output='',complete=false;
   try {
     for (;;) {
       const {done,value}=await reader.read();
@@ -78,11 +78,15 @@ async function collectStream(stream) {
       let pos;
       while ((pos=raw.indexOf('\n'))>=0) {
         const line=raw.slice(0,pos).trim();raw=raw.slice(pos+1);
-        output+=readEvents(line);
+        if (line==='data: [DONE]') complete=true;
+        if (!complete) output+=readEvents(line);
         if (output.length>16000) throw Error('response_too_large');
       }
     }
-    output+=readEvents(raw);
+    if (raw.trim()==='data: [DONE]') complete=true;
+    else if (!complete) output+=readEvents(raw);
+    // A dropped connection with partial tokens must not become a success receipt.
+    if (!complete) throw Error('incomplete_stream');
     return output;
   } finally {reader.releaseLock();}
 }
@@ -120,7 +124,10 @@ export async function runRelay({origin,writerKey,chat,stop,send=fetch,interval=2
       await post('/api/hud/chat/bridge',{models:available});
       const {job}=await post('/api/hud/chat/claim',{});
       if (job) {
-        const result=await executeClaim(chat,job,stop,available);
+        // Match D1's bounded running lease. A hung provider call is aborted,
+        // not retried or represented as completed background work.
+        const callSignal=stop ? AbortSignal.any([stop,AbortSignal.timeout(100000)]) : AbortSignal.timeout(100000);
+        const result=await executeClaim(chat,job,callSignal,available);
         // Result submission may be repeated; it never repeats the inference call.
         for (let n=0;n<2;n++) {
           try {await post('/api/hud/chat/result/'+encodeURIComponent(job.id),result);break;}
