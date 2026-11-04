@@ -17,9 +17,12 @@ const req=(path,method='GET',headers={},body)=>new Request(URL+path,{method,head
 test('only approved free routes are advertised, not arbitrary catalog entries',()=>{
   const listed=['rovor-fast-free-v1','groq/openai/gpt-oss-120b',
     'openrouter/meta-llama/llama-3.3:free','openrouter/auto','provider/premium'];
-  assert.deepEqual(eligibleModels(listed),['rovor-fast-free-v1','openrouter/meta-llama/llama-3.3:free']);
+  assert.deepEqual(eligibleModels(listed),['openrouter/meta-llama/llama-3.3:free']);
+  // A combo named "free" is still unsafe until its underlying routes are verified.
   assert.deepEqual(eligibleModels(listed,['groq/openai/gpt-oss-120b']),[
-    'rovor-fast-free-v1','groq/openai/gpt-oss-120b','openrouter/meta-llama/llama-3.3:free']);
+    'groq/openai/gpt-oss-120b','openrouter/meta-llama/llama-3.3:free']);
+  assert.deepEqual(eligibleModels(listed,['rovor-fast-free-v1']),[
+    'rovor-fast-free-v1','openrouter/meta-llama/llama-3.3:free']);
   assert(!eligibleModels(listed,['provider/not-in-catalog']).includes('provider/not-in-catalog'));
 });
 test('catalog enforces exact names, limits and fresh heartbeat',async()=>{
