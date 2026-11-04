@@ -348,6 +348,8 @@
         const provider=meta.platform==='omniroute'?'OMNIROUTE REQUEST':'CLOUDFLARE AI';
         const route=typeof meta.model==='string'?meta.model.slice(0,80):'Unknown route';
         receipt.textContent=state+' · '+provider+' · '+route;
+        if(meta.outcome==='complete'&&meta.repo_file&&meta.platform==='omniroute')
+          receipt.textContent+=' · READ-ONLY GIT SNAPSHOT '+String(meta.repo_file).slice(0,100);
         if(meta.receipt&&/^[a-f0-9-]{36}$/i.test(meta.receipt))receipt.title='Private job receipt '+meta.receipt+' (this is a local copy of its last known result)';
         n.append(receipt);
         if(meta.outcome==='complete'){
@@ -403,7 +405,7 @@
     window.visualViewport?.addEventListener('resize',syncVisualViewport);
     window.visualViewport?.addEventListener('scroll',syncVisualViewport);
     window.addEventListener('orientationchange',syncVisualViewport);
-    let priorOverflow=null;
+    let priorOverflow=null,autoRefresh=null;
     const toggle=open=>{
       panel.dataset.open=String(open);
       if(!open){panel.dataset.sideOpen='false';closeModelSheet();}
@@ -411,7 +413,15 @@
       if(open){
         priorOverflow=document.body.style.overflow;
         document.body.style.overflow='hidden';
+        // Recover automatically if the Mac bridge appears after the HUD opens.
+        // Avoid interrupting typing, in-flight jobs or the model browser.
+        clearInterval(autoRefresh);
+        autoRefresh=setInterval(()=>{
+          if(panel.dataset.open!=='true'||busy||!modelSheet.hidden||input.value.trim())return;
+          load();refreshProviderInventory();
+        },30000);
       }else{
+        clearInterval(autoRefresh);autoRefresh=null;
         document.body.style.overflow=priorOverflow??'';
         priorOverflow=null;
         input.blur();
@@ -558,7 +568,7 @@
           if(!completed)throw Error('incomplete_stream');
         }
         renderText(bubble,reply);
-        history.push({role:'assistant',content:reply,platform,model:target,receipt:pendingJob?.id||null,outcome:'complete',recordedAt:Date.now()});save();
+        history.push({role:'assistant',content:reply,platform,model:target,repo_file:platform==='omniroute'?(attachedSource||null):null,receipt:pendingJob?.id||null,outcome:'complete',recordedAt:Date.now()});save();
         redraw();
         stateLabel.textContent=platform==='omniroute'?
           'RESPONSE CONFIRMED · requested route '+target+' · actual upstream identity not separately attested':
