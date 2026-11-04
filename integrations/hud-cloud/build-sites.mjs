@@ -19,16 +19,16 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   if (!html.includes('window.ROVOR_START_OMNIROUTE') || !html.includes('</body>')) throw Error('Original HUD live adapter missing');
   const plain = code => code.replace(/^export (?=(?:(?:async )?function|(?:const|let|class))\b)/gm, '');
   const monitorImport = "import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';";
-  const relayImport = "import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus} from './omniroute-chat-relay.mjs';";
+  const relayImport = "import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, expire as expireChat} from './omniroute-chat-relay.mjs';";
   const chatParserImport = "import {parseChatRequest} from '../../tools/hud_chat.mjs';";
   if (core.split(relayImport).length !== 2) throw Error('Unexpected private chat relay import');
   const parserSource = fs.readFileSync(path.join(root, 'tools/hud_chat.mjs'), 'utf8');
   const relaySource = fs.readFileSync(path.join(here, 'omniroute-chat-relay.mjs'), 'utf8');
   if (relaySource.split(chatParserImport).length !== 2) throw Error('Unexpected chat request parser import');
-  const relay = 'const {catalog:relayCatalog,publishCatalog,enqueue:enqueueChat,claim:claimChat,finish:finishChat,status:chatStatus} = (() => {\n' +
+  const relay = 'const {catalog:relayCatalog,publishCatalog,enqueue:enqueueChat,claim:claimChat,finish:finishChat,status:chatStatus,expire:expireChat} = (() => {\n' +
     'const {parseChatRequest} = (() => {\n' + plain(parserSource) + '\nreturn {parseChatRequest};})();\n' +
     plain(relaySource.replace(chatParserImport, '')) +
-    '\nreturn {catalog,publishCatalog,enqueue,claim,finish,status};})();\n';
+    '\nreturn {catalog,publishCatalog,enqueue,claim,finish,status,expire};})();\n';
   if (core.split(monitorImport).length !== 2) throw Error('Unexpected Gemini monitoring import');
   const monitor = fs.readFileSync(path.join(here, 'gemini-cloud-monitoring.mjs'), 'utf8');
   const dependency = 'const {readGoogleGeminiQuota} = (() => {\n' + plain(monitor) + '\nreturn {readGoogleGeminiQuota};})();\n';
