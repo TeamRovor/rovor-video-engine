@@ -7,9 +7,15 @@ import {fileURLToPath} from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
 export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
-  const coreEnd = 'export default {fetch(request, env) { return handle(request, env); }};';
+  // Allow the Cloudflare worker to have a scheduled D1 cleanup handler without
+  // leaking that worker-specific export into the legacy self-contained Site.
+  // Exactly one default export is required; duplicated or unexpected shapes fail.
+  const exportPositions = [...core.matchAll(/\nexport default \{/g)];
+  const coreEnd = exportPositions.length === 1 ? core.slice(exportPositions[0].index) : '';
+  if (!coreEnd.includes('fetch(request, env) { return handle(request, env); }') ||
+      !coreEnd.trimEnd().endsWith('};')) throw Error('Unexpected source module shape');
   const adapterImport = "import {handle} from './worker.mjs';";
-  if (core.split(coreEnd).length !== 2 || adapter.split(adapterImport).length !== 2) throw Error('Unexpected source module shape');
+  if (adapter.split(adapterImport).length !== 2) throw Error('Unexpected source module shape');
   if (!html.includes('window.ROVOR_START_OMNIROUTE') || !html.includes('</body>')) throw Error('Original HUD live adapter missing');
   const plain = code => code.replace(/^export (?=(?:(?:async )?function|(?:const|let|class))\b)/gm, '');
   const monitorImport = "import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';";
