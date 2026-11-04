@@ -124,6 +124,12 @@
 @media(prefers-reduced-motion:reduce){#rvc .rvc-sidebar{transition:none!important}}
 `;
     document.head.append(el('style',{textContent:polishedMobileCSS}));
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-receipt{font:600 10px/1.5 system-ui;letter-spacing:.07em;color:#86b7d8;margin:8px 0 2px;overflow-wrap:anywhere}
+#rvc .rvc-err .rvc-receipt{color:#f6b8b8}
+#rvc .rvc-copy{align-self:flex-start;display:inline-flex;justify-content:center;align-items:center;min-height:36px;margin-top:7px;background:#08233e;color:#bfe6ff;border:1px solid #2d648e;border-radius:8px;padding:6px 10px;font-size:12px}
+@media(max-width:760px){#rvc .rvc-copy{min-height:44px}}
+`}));
     const fab=el('button',{id:'rvc-fab',type:'button',textContent:'ASK ROVOR',title:'Chat with your models and check on your employees'});
     fab.setAttribute('aria-expanded','false');fab.setAttribute('aria-controls','rvc');
     const sourceSelect=el('select',{id:'rvc-source',className:'rvc-source'});
@@ -158,7 +164,29 @@
     sideBackdrop.onclick=()=>{panel.dataset.sideOpen='false';};
     document.body.append(fab,panel);
 
-    const add=(cls,text)=>{const n=el('div',{className:'rvc-msg '+cls});const inner=el('div',{className:'rvc-message-body'});renderText(inner,text);n.append(inner);log.append(n);log.scrollTop=log.scrollHeight;return inner;};
+    const add=(cls,text,meta=null)=>{
+      const n=el('div',{className:'rvc-msg '+cls});
+      const inner=el('div',{className:'rvc-message-body'});renderText(inner,text);n.append(inner);
+      if(meta&&meta.role==='assistant'&&meta.outcome){
+        const receipt=el('div',{className:'rvc-receipt'});
+        const state=meta.outcome==='complete'?'REPLY RECEIVED':meta.outcome==='failed'?'NOT COMPLETED':'UNVERIFIED';
+        const provider=meta.platform==='omniroute'?'OMNIROUTE REQUEST':'CLOUDFLARE AI';
+        const route=typeof meta.model==='string'?meta.model.slice(0,80):'Unknown route';
+        receipt.textContent=state+' · '+provider+' · '+route;
+        if(meta.receipt&&/^[a-f0-9-]{36}$/i.test(meta.receipt))receipt.title='Private job receipt '+meta.receipt+' (this is a local copy of its last known result)';
+        n.append(receipt);
+        if(meta.outcome==='complete'){
+          const copy=el('button',{className:'rvc-copy',type:'button',textContent:'Copy response'});
+          copy.setAttribute('aria-label','Copy this model response');
+          copy.onclick=async()=>{
+            try{await navigator.clipboard.writeText(meta.content);copy.textContent='Copied';}
+            catch{copy.textContent='Copy unavailable';}
+          };
+          n.append(copy);
+        }
+      }
+      log.append(n);log.scrollTop=log.scrollHeight;return inner;
+    };
     const drawSessions=()=>{
       sessionsList.textContent='';
       sessions.forEach(s=>{const b=el('button',{type:'button',textContent:s.title, title:s.title});
@@ -172,7 +200,7 @@
       const n=el('div',{className:'rvc-welcome'},el('h2',{},'Intelligence, your way.'),
         el('p',{},'Choose a model and receive a real answer. Chat alone does not start employee jobs.'),chips);log.append(n);
     };
-    const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':'rvc-bot',m.content));};
+    const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':m.outcome==='failed'?'rvc-err':'rvc-bot',m.content,m));};
     let pendingJob=null,cancelConfirmed=false;
     const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;
       // Don't re-open the software keyboard after a delayed response on iOS.
@@ -250,7 +278,7 @@
       let reply='';pendingJob=null;cancelConfirmed=false;setBusy(true);stop.textContent='Stop waiting';controller=new AbortController();
       const signal=controller.signal;
       try{
-        const payload={model:target,context:false,messages:history.slice(-5)};
+        const payload={model:target,context:false,messages:history.filter(m=>m.role==='user'||(m.role==='assistant'&&m.outcome==='complete')).slice(-5).map(m=>({role:m.role,content:m.content}))};
         if(platform==='omniroute'){
           const posted=await fetch('/api/hud/chat/submit',{method:'POST',credentials:'same-origin',signal,
             headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -295,7 +323,8 @@
           if(!completed)throw Error('incomplete_stream');
         }
         renderText(bubble,reply);
-        history.push({role:'assistant',content:reply});save();
+        history.push({role:'assistant',content:reply,platform,model:target,receipt:pendingJob?.id||null,outcome:'complete',recordedAt:Date.now()});save();
+        redraw();
         stateLabel.textContent=platform==='omniroute'?
           'RESPONSE CONFIRMED · requested route '+target+' · actual upstream identity not separately attested':
           'CLOUDFLARE AI RESPONSE RECEIVED · not an OmniRoute or employee action';
@@ -312,7 +341,10 @@
         const message=cancelConfirmed?messages.user_cancelled:(messages[e.message]|| (e.name==='AbortError'?messages.stopped_waiting:('No confirmed model reply: '+(e.message||'unknown'))));
         renderText(bubble,message);bubble.parentElement.className='rvc-msg rvc-err';
         stateLabel.textContent='NO COMPLETION CONFIRMED · '+message;
-        if(reply){history.push({role:'assistant',content:reply});save();}
+        // Keep failures in local conversation history, but never send their
+        // text to the next model as if it were an assistant answer.
+        history.push({role:'assistant',content:message,platform,model:target,receipt:pendingJob?.id||null,outcome:'failed',recordedAt:Date.now()});save();
+        redraw();
       }finally{pendingJob=null;controller=null;setBusy(false);}
     }
 
