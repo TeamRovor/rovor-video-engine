@@ -7,7 +7,7 @@ This upgrade is **real chat inference**, not a background employee scheduler. It
 - **Received / queued:** a prompt has been stored privately in D1. No inference proven.
 - **Claimed:** the Mac bridge accepted that one request. Completion not proven.
 - **Complete:** the Mac bridge supplied a nonempty model response. The requested OmniRoute model ID is recorded, but a fallback's ultimate upstream identity is not independently attested.
-- **Failed / offline / expired / stopped waiting:** not a verified completion. Stopping waiting on the phone is not a remote cancel, and no automatic inference retry occurs.
+- **Failed / offline / expired / stopped waiting:** not a verified completion. **Cancel queued request** atomically prevents a prompt from being claimed if it is still queued. If it is already claimed/running, the HUD refuses to claim cancellation and the user may only stop waiting locally. No inference retries occur.
 - **Cloudflare AI:** separate hosted model path, manually selected. It must never be represented as a call to OmniRoute.
 
 This does **not** implement file edits, employee task dispatch, PASS/FAIL approval, model quotas, model tool calls or background delivery promises.
@@ -46,15 +46,21 @@ Sign in to the **Cloudflare** HUD, open Ask ROVOR and confirm a nonempty OmniRou
 
 ## Free-only admission
 
-The Mac enumerates the installed OmniRoute catalog but offers only explicitly marked OpenRouter `:free` routes, named ROVOR free combos, and exact model IDs separately verified free and provided via optional `ROVOR_HUD_CHAT_FREE_MODELS` (comma-separated IDs). This explicit configuration is **not** automatically filled from an API key; the owner must verify each provider's free allowance, billing behavior and fallback rules before allowing direct model IDs that do not identify a zero-cost model. A free-named combo also requires verification of its underlying routes before using it. No round robin is introduced.
+The Mac enumerates the installed OmniRoute catalog but offers only explicit `:free` model routes and exact model IDs or combo IDs separately verified free and provided via optional `ROVOR_HUD_CHAT_FREE_MODELS` (comma-separated IDs). This explicit configuration is **not** automatically filled from an API key; the owner must verify each provider's free allowance, billing behavior and fallback rules before allowing direct model IDs that do not identify a zero-cost model. A free-named combo also requires verification of its underlying routes before using it. No round robin is introduced.
 
 Enabling every one of the nine providers depends on current account access and a verified compatible model; a configured key is not proof of a usable, zero-cost model. The UI must say offline/unknown rather than invent activity.
 
 ## Privacy and retention
 
-Browser conversations are stored in that device's local browser storage; they are not synced between devices. Queued prompt history and completed model replies are temporarily stored in the **private Cloudflare D1** database and cleaned after their retention window by the relay poller. D1 backups may retain copies longer. Do not submit private client content to a free-tier model without explicit client authorization.
+Browser conversations are stored in that device's local browser storage; they are not synced between devices. Queued prompts and completed model replies are temporarily stored in the **private Cloudflare D1** database and cleaned by the Worker expiry mechanism (including a five-minute cleanup schedule). D1 backups may retain copies longer. Do not submit private client content to a free-tier model without explicit client authorization.
 
 Reader and writer bearer credentials are distinct; only the reader can submit and poll, and only the existing Mac writer credential can announce/claim/finish. Neither key is stored in client JavaScript or committed to GitHub. The Mac does not expose OmniRoute on an inbound public port.
+
+## Honest status and mobile verification
+
+The Mac publishes a heartbeat while slow models execute, and the relay caps one inference at 100 seconds. A claimed request is not a completed request. Completed/failure receipts are retained locally in the conversation, but failed replies are excluded from future model context. The phone's Cancel control only cancels **queued** jobs; a request already claimed by the Mac may still complete. The requested route does not independently prove the fallback model that ultimately answered.
+
+The iOS interface uses 16px form inputs to prevent Safari focus zoom, adapts to the visual viewport as the on-screen keyboard appears, and provides a dismissible conversation drawer. The same private HUD is accessible from iPhone, iPad, Mac and Windows browsers. Automated code checks are not a substitute for testing actual iOS Safari hardware and keyboard/orientation behavior.
 
 ## Later: Provider Manager
 
