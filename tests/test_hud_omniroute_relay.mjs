@@ -146,7 +146,9 @@ test('queued chat cancellation is atomic, clears prompt and guarantees Mac canno
   assert.equal(cancelled.status,200);
   assert.deepEqual(await cancelled.json(),{status:200,cancelled:true,before_claim:true});
   const row=env.DB.sqlite.prepare('SELECT state,error,request_body FROM hud_chat_jobs WHERE id=?').get(job_id);
-  assert.deepEqual(row,{state:'failed',error:'user_cancelled',request_body:null});
+  assert.equal(row.state,'failed');
+  assert.equal(row.error,'user_cancelled');
+  assert.equal(row.request_body,null);
   const after=await (await call(env,'/api/hud/chat/status/'+job_id)).json();
   assert.equal(after.state,'failed');assert.equal(after.error,'user_cancelled');
   assert.equal((await (await call(env,'/api/hud/chat/claim','POST','writer',{})).json()).job,null);
