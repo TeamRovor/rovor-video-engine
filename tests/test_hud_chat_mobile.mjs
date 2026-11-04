@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
 
 const src=readFileSync(new URL('../dashboard/command-center/native-v8-9/hud-chat.js',import.meta.url),'utf8');
 
@@ -79,4 +80,51 @@ test('Ask ROVOR GitHub source is explicit, read-only, and touch-safe on phone, i
   assert.match(src,/rvc-repo-file\{[^}]*font-size:16px!important/);
   assert.match(src,/repoRow\.hidden=sourceSelect\.value!=='omniroute'/);
   assert.match(src,/repoSelect\.disabled=b\|\|sourceSelect\.value!=='omniroute'/);
+});
+
+function taskPlanner(){
+  const window={};
+  const document={readyState:'loading',addEventListener(){}};
+  const localStorage={getItem(){return null;}};
+  vm.runInNewContext(src,{window,document,localStorage,
+    crypto:{randomUUID:()=> '123e4567-e89b-42d3-a456-426614174000'}},
+    {timeout:1200});
+  assert.equal(typeof window.ROVOR_ROUTE_PLANNER?.plan,'function');
+  return window.ROVOR_ROUTE_PLANNER.plan;
+}
+test('Ask ROVOR Smart routes one routine code prompt using only Mac-advertised eligible IDs',()=>{
+  const plan=taskPlanner()('Fix this Python coding bug',[
+    'groq/small:free','openrouter/qwen-coder:free','rovor-fast-free-v1'
+  ]);
+  assert.equal(plan.routes.length,1);
+  assert.equal(plan.routes[0],'openrouter/qwen-coder:free');
+  assert.match(plan.reason,/heuristic/);
+  assert.match(src,/const AUTO_ROUTE='__rovor_smart_route__'/);
+  assert.match(src,/routePreview|routingNote/);
+});
+test('natural language can request two distinct provider routes with separate receipts',()=>{
+  const plan=taskPlanner()('Ask Groq and Gemini to independently review this design',[
+    'groq/fast:free','gemini/flash:free','rovor-fast-free-v1']);
+  assert.equal(plan.routes.length,2);
+  assert.equal(plan.routes.join(','),'gemini/flash:free,groq/fast:free' /* provider list is fixed-order */);
+  assert.match(src,/async function askBoth\(/);
+  assert.match(src,/Promise\.all\(routes\.map\(runOne\)\)/);
+  assert.match(src,/for\(const result of results\)/);
+  assert.match(src,/REPLIES CONFIRMED/);
+});
+test('named provider absent, all-nine fanout, or stale manual ID fails before submitting a job',()=>{
+  const plan=taskPlanner();
+  const routes=['groq/fast:free','openrouter/other:free'];
+  assert.match(plan('Ask NVIDIA to fix the code',routes).error,/nvidia.*no advertised/i);
+  assert.match(plan('Ask all nine providers',routes).error,/At most two/);
+  assert.match(plan('quick answer',routes,'mistral/paid').error,/no longer available/);
+  assert.equal(plan('quick answer',routes,'groq/fast:free').routes.join(','),'groq/fast:free');
+  assert.equal(plan('Compare two approaches',routes).routes.length,2);
+});
+test('a model only appears callable when it is present in the Mac chat catalog',()=>{
+  const plan=taskPlanner();
+  assert.equal(plan('Ask Groq',[]).routes.length,0);
+  assert.match(plan('Ask Groq',[]).error,/No currently advertised routes/);
+  assert.match(src,/actual upstream identity not separately attested/);
+  assert.doesNotMatch(src,/auto[\s-]*switch to paid/i);
 });
