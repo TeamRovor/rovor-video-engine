@@ -15,6 +15,76 @@
     const match=PROVIDERS.find(([key])=>key===provider);
     return match?match[1]+' · Mac-advertised chat routes':'Other eligible routes (provider unverified)';
   }
+  const AUTO_ROUTE='__rovor_smart_route__';
+  // Lightweight selection heuristics, NOT measured rankings or quota claims.
+  // Choices are confined to the Mac's currently advertised free-eligible routes.
+  function planRoutes(prompt, allowed, selection=AUTO_ROUTE) {
+    const routes=[...new Set((Array.isArray(allowed)?allowed:[]).filter(
+      id=>typeof id==='string'&&id!==AUTO_ROUTE&&id.length<201))].slice(0,100);
+    if(!routes.length)return {routes:[],reason:'No eligible OmniRoute routes reported',error:'No currently advertised routes. Check the Mac bridge.'};
+    const text=String(prompt||'').toLowerCase();
+    if(selection&&selection!==AUTO_ROUTE){
+      if(!routes.includes(selection))return {routes:[],reason:'Manual route unavailable',error:'Selected model is no longer available.'};
+      return {routes:[selection],reason:'Manual route · explicitly selected',mode:'manual'};
+    }
+    const providerPattern=[
+      ['gemini',/\b(?:gemini|google ai)\b/i],['mistral',/\bmistral\b/i],
+      ['nvidia',/\b(?:nvidia|nemotron)\b/i],['cohere',/\bcohere\b/i],
+      ['sambanova',/\bsambanova\b|\bsamba nova\b/i],
+      ['cloudflare-ai',/\bcloudflare\b/i],['groq',/\bgroq\b/i],
+      ['openrouter',/\bopenrouter\b|\bopen router\b/i],
+      ['huggingface',/\bhugging\s*face\b|\bhuggingface\b/i]
+    ];
+    const named=providerPattern.filter(([,re])=>re.test(text)).map(([p])=>p);
+    if(named.length>2||/\b(?:all (?:nine|9|providers|models)|every (?:provider|model))\b/i.test(text))
+      return {routes:[],reason:'Request exceeds per-message safeguard',error:'At most two distinct model routes per request. Please split this into smaller requests.'};
+    const providerOf=id=>{
+      const prefix=id.split('/')[0].toLowerCase();
+      if(['gemini','google'].includes(prefix))return 'gemini';
+      if(['cloudflare','cloudflare-ai'].includes(prefix))return 'cloudflare-ai';
+      if(['hf','huggingface'].includes(prefix))return 'huggingface';
+      return prefix;
+    };
+    const category= /\b(?:code|coding|test|bug|fix|github|repo|repository|debug|script|refactor|typescript|python|javascript)\b/i.test(text)?'code'
+      :/\b(?:analy[sz]e|reason|research|strategy|architecture|complex|plan|compare|review)\b/i.test(text)?'reason'
+      :/\b(?:fast|quick|simple|short|summari[sz]e)\b/i.test(text)?'speed'
+      :/\b(?:design|creative|caption|campaign|copy|art|story|brand)\b/i.test(text)?'creative':'general';
+    const score=id=>{
+      const value=id.toLowerCase(),provider=providerOf(id);
+      let points=0;
+      if(category==='code')points+=/code|coder|devstral|qwen|deepseek/i.test(value)?7:0;
+      if(category==='reason')points+=/reason|nemotron|gemini|mistral|deepseek|120b/i.test(value)?6:0;
+      if(category==='speed')points+=/fast|flash|lite|small|mini|groq/i.test(value)?5:0;
+      if(category==='creative')points+=/gemini|mistral|creative|flash/i.test(value)?4:0;
+      if(value.startsWith('rovor-'))points+=2; // Explicitly approved combos, not proof of actual upstream.
+      if(value.endsWith(':free'))points+=1;
+      if(provider==='groq'&&category==='speed')points+=2;
+      return points;
+    };
+    const sorted=[...routes].sort((a,b)=>score(b)-score(a)||a.localeCompare(b));
+    const explicit=[];
+    for(const provider of named){
+      const route=sorted.find(id=>providerOf(id)===provider&&!explicit.includes(id));
+      if(!route)return {routes:[],reason:'Explicit provider unavailable',
+        error:provider+' was requested but has no advertised free-eligible route. Nothing was sent; select a different provider or check OmniRoute.'};
+      explicit.push(route);
+    }
+    const comparison= /\b(?:compare|contrast|second opinion|double.check|cross.check|debate|two models|multiple models|different perspectives|independent review)\b/i.test(text);
+    const desired=named.length?named.length:(comparison?2:1);
+    const chosen=[...explicit];
+    while(chosen.length<desired){
+      const distinct=sorted.find(id=>!chosen.includes(id)&&!chosen.some(existing=>providerOf(existing)===providerOf(id)));
+      const candidate=distinct||sorted.find(id=>!chosen.includes(id));
+      if(!candidate)break;
+      chosen.push(candidate);
+    }
+    if(!chosen.length)return {routes:[],reason:'No eligible route',error:'No eligible models were available for this request.'};
+    return {routes:chosen,mode:'smart',category,
+      reason:named.length?'Explicitly named provider'+(named.length===2?'s':'')+' · heuristic model choice'
+        :comparison?'Comparison requested · two distinct eligible routes where possible'
+        :'Task-aware heuristic · '+category+' · not a measured strength or quota guarantee'};
+  }
+  window.ROVOR_ROUTE_PLANNER={plan:planRoutes};
   const css=`
 #rvc-fab{position:fixed;right:18px;bottom:18px;z-index:2147483000;background:#06233d;color:#bde5ff;border:1px solid #2f7fb8;border-radius:999px;padding:11px 18px;font:600 13px system-ui;letter-spacing:.08em;cursor:pointer;box-shadow:0 4px 18px #0008}
 #rvc-fab:hover,#rvc-fab:focus-visible{background:#0b3a63;outline:2px solid #7cc8ff}
