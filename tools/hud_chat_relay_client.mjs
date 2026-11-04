@@ -8,6 +8,7 @@ import {pathToFileURL} from 'node:url';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createChat, CHAT_LIMITS} from './hud_chat.mjs';
+import {readRepoContext} from './hud_repo_context.mjs';
 import {readRepoContext} from './hud_chat_repo_context.mjs';
 import {validateTarget} from './hud_telemetry_publisher.mjs';
 import {isEntrypoint} from './hud_omniroute_bridge.mjs';
@@ -91,12 +92,28 @@ async function collectStream(stream) {
     return output;
   } finally {reader.releaseLock();}
 }
-export async function executeClaim(chat, job, signal, allowed = null) {
+export async function executeClaim(chat, job, signal, allowed = null, repoReader = readRepoContext) {
   if (!job || typeof job.id!=='string' || typeof job.request!=='object' ||
       job.model!==job.request.model || (Array.isArray(allowed) && !allowed.includes(job.model)))
     return {state:'failed',error:'model_not_available'};
+  // The browser supplies only a fixed allowlisted file ID. Real source bytes
+  // are loaded from the Mac's pinned GitHub checkout after a valid job claim.
+  // Source access is read-only: this never commits or opens a PR.
+  let repoContext=null;
+  if (job.request.repo_file) {
+    try {
+      if (typeof repoReader!=='function') throw Error('repo_reader_unavailable');
+      const snapshot=await repoReader(job.request.repo_file);
+      if (typeof snapshot?.text!=='string' || snapshot.text.length>4800 ||
+          !/^[a-f0-9]{40}$/i.test(snapshot.commit))
+        throw Error('repo_snapshot_invalid');
+      repoContext=snapshot.text;
+    } catch {
+      return {state:'failed',error:'repo_context_unavailable'};
+    }
+  }
   let result;
-  try { result=await chat.respond(JSON.stringify(job.request),signal); }
+  try { result=await chat.respond(JSON.stringify(job.request),signal,{repoContext}); }
   catch { return {state:'failed',error:'chat_upstream_unavailable'}; }
   if (result.status!==200 || !result.stream) {
     return {state:'failed',error:result.json?.error==='chat_rate_limited' ? 'chat_rate_limited'
