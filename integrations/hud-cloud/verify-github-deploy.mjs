@@ -168,11 +168,20 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
   if ((!usageVerified || connections.length !== 9) && requireLiveTelemetry)
     throw Error('private_D1_usage_readback_incomplete');
   const liveEligible = telemetry.connection === 'fresh' && usageVerified && connections.length === 9;
-  const reportTimestamps = liveEligible ? await verifyAdvancingReports(async () => {
-    const response = await read('/api/hud/status?period=24h', true);
-    if (response.status !== 200) throw Error('private_D1_status_unavailable');
-    return response.json();
-  }, telemetry, {pause}) : null;
+  let reportTimestamps = null;
+  if (liveEligible) {
+    try {
+      reportTimestamps = await verifyAdvancingReports(async () => {
+        const response = await read('/api/hud/status?period=24h', true);
+        if (response.status !== 200) throw Error('private_D1_status_unavailable');
+        return response.json();
+      }, telemetry, {pause});
+    } catch (error) {
+      // Do not turn a real successful website release into a false failure
+      // when the independently hosted Mac reporter stops sending data.
+      if (requireLiveTelemetry) throw error;
+    }
+  }
   return {private_auth_verified: true, original_hud_verified: true,
     quota_board_verified: true, database_api_verified: true,
     quota_asset_matches_checkout: expectedQuotaAsset === null ? null : true,
