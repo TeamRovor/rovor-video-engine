@@ -119,7 +119,8 @@ export async function runCanary({provider,cfg,env,approval,fetcher=(...args)=>gl
        tokens_input=count(data?.usage?.prompt_tokens);
        tokens_output=count(data?.usage?.completion_tokens);
        if(actual_model!==cfg.model){status='failed';error_code='model_mismatch';}
-       else if(choice?.finish_reason!=='stop'||choice?.message?.content!==marker){
+       else if(choice?.finish_reason!=='stop'||typeof choice?.message?.content!=='string'||
+        choice.message.content.trim()!==marker){
          status='failed';error_code='canary_mismatch';
        }else{
          status='needs_review';error_code=null;
