@@ -51,6 +51,29 @@
 
   function build(){
     document.head.append(el('style',{textContent:css+"\n#rvc .rvc-mobile-menu{display:none}\n@media(max-width:760px){\n#rvc .rvc-mobile-menu{display:block;background:#10375d;color:#e3f5ff;border:1px solid #2e70a0;border-radius:8px;padding:5px 9px;flex-shrink:0}\n#rvc .rvc-sidebar{display:flex!important;position:absolute;z-index:5;left:0;top:0;bottom:0;width:min(84vw,300px);transform:translateX(-110%);transition:transform .18s ease;box-shadow:10px 0 30px #000b}\n#rvc[data-side-open=true] .rvc-sidebar{transform:translateX(0)}\n#rvc header strong{display:none}\n#rvc header .rvc-close{padding:6px 7px}\n#rvc header .rvc-source{max-width:120px}\n}\n"+"\n#rvc{inset:2.2vh 2vw!important;right:2vw!important;bottom:2.2vh!important;width:auto!important;height:auto!important;max-height:none!important;max-width:none!important;background:linear-gradient(150deg,#020817,#071a32 70%,#030c1d)!important;border:1px solid #316c9d!important;border-radius:18px!important;box-shadow:0 24px 90px #000e,0 0 50px #1b76c033!important;overflow:hidden!important;grid-template-columns:250px minmax(0,1fr)!important;padding:0!important}\n#rvc[data-open=true]{display:grid!important}\n#rvc *,#rvc *:before{box-sizing:border-box}\n#rvc .rvc-sidebar{min-width:0;background:linear-gradient(180deg,#071d36,#030c1b);padding:20px 12px;border-right:1px solid #275174;display:flex;flex-direction:column;gap:14px;overflow:hidden}\n#rvc .rvc-brand{color:#c5ecff;font-weight:800;font-size:14px;letter-spacing:.22em;padding:7px}\n#rvc .rvc-brand small{display:block;font-size:9px;font-weight:500;letter-spacing:.12em;color:#83accb;margin-top:4px}\n#rvc .rvc-sidebar .rvc-new{padding:11px;background:#103b62;border:1px solid #3877a9;color:#e3f6ff;text-align:left;border-radius:11px}\n#rvc .rvc-sidebar small{color:#7fa6c5;line-height:1.5;font-size:11px}\n#rvc .rvc-sessions{overflow:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}\n#rvc .rvc-sessions button{border-radius:10px;text-align:left;padding:11px;background:transparent;color:#91b7d2;border:1px solid transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n#rvc .rvc-sessions button[aria-current=true]{background:#10375c;color:#effaff;border-color:#3679ae}\n#rvc .rvc-main{display:flex;flex-direction:column;min-height:0;min-width:0}\n#rvc header{min-height:67px;background:#07192e;padding:11px 20px;gap:11px}\n#rvc header strong{font-size:13px;color:#e6f7ff;letter-spacing:.15em}\n#rvc select{padding:9px;background:#0b2947;color:#e7f6ff;border:1px solid #316c9c;border-radius:10px;font-size:12px}\n#rvc .rvc-source{max-width:160px}\n#rvc .rvc-model{max-width:370px}\n#rvc .rvc-state{padding:8px 19px;font-size:11px;color:#83add1;background:#071b30;border-bottom:1px solid #1b4467}\n#rvc #rvc-log{padding:30px max(20px,calc((100% - 750px)/2));gap:22px}\n#rvc .rvc-msg{max-width:800px;width:100%;font-size:14px;line-height:1.65;background:transparent!important;border:0!important;padding:0!important}\n#rvc .rvc-msg:before{display:block;font-size:10px;letter-spacing:.14em;font-weight:750;color:#83bdef;margin-bottom:8px}\n#rvc .rvc-user:before{content:'YOU'}\n#rvc .rvc-bot:before{content:'ROVOR · MODEL RESPONSE'}\n#rvc .rvc-user{align-self:stretch}\n#rvc .rvc-user .rvc-message-body{padding:14px 18px;background:#0d2e4d;border:1px solid #2d577a;border-radius:12px}\n#rvc .rvc-bot .rvc-message-body{padding:0 5px;color:#dfebf8}\n#rvc .rvc-err{background:transparent!important;align-self:stretch;color:#ffb8bd}\n#rvc .rvc-err:before{content:'REQUEST NOT CONFIRMED';display:block;color:#e8a6a8;font-size:10px;letter-spacing:.14em;margin-bottom:8px}\n#rvc footer{padding:12px max(16px,calc((100% - 750px)/2)) 18px;background:linear-gradient(0deg,#020b19,#07172a)}\n#rvc form{border:1px solid #3272a2;background:#09233e;border-radius:12px;padding:9px;align-items:flex-end}\n#rvc textarea{height:62px;max-height:160px;min-width:0;background:transparent;border:0;outline:none!important;color:#edf9ff}\n#rvc form button[type=submit]{background:#2581c4;border-color:#62aeec;color:white;padding:10px 16px;font-weight:700}\n#rvc .rvc-context-note{color:#85a6c1;font-size:10px;text-align:center}\n#rvc .rvc-chips button{padding:10px 13px;background:#0d2c49;border:1px solid #27557b;border-radius:11px}\n#rvc .rvc-welcome{max-width:600px;text-align:center;margin:auto}\n#rvc .rvc-welcome h2{font-size:clamp(25px,3vw,37px);font-weight:650;letter-spacing:-.045em;margin:0 0 10px;color:#effaff}\n#rvc .rvc-welcome p{color:#92b6d4}\n#rvc-fab{background:linear-gradient(135deg,#164c7a,#05172c);border-color:#6cc1fc;color:#eaf8ff;box-shadow:0 0 28px #188bd54c}\n@media(max-width:760px){#rvc{inset:0!important;width:100%!important;height:100dvh!important;border:0!important;border-radius:0!important;grid-template-columns:minmax(0,1fr)!important}#rvc .rvc-sidebar{display:none!important}#rvc header{padding:calc(env(safe-area-inset-top) + 10px) 11px 10px;gap:6px;min-height:62px}#rvc header strong{font-size:11px}#rvc select{font-size:11px;padding:6px}#rvc .rvc-source{width:100px;max-width:100px}#rvc .rvc-model{min-width:0}#rvc .rvc-state{padding:8px 12px}#rvc #rvc-log{padding:18px 14px}#rvc footer{padding:10px 12px calc(env(safe-area-inset-bottom) + 12px)}#rvc .rvc-msg{max-width:100%}}\n"}));
+    // Safari zooms the page when focusing form controls whose font-size is
+    // below 16px. Keep native pinch-zoom available; do not change viewport meta.
+    const iosTypeAndKeyboardCSS = `
+#rvc select, #rvc textarea, #rvc input, #rvc .rvc-source, #rvc .rvc-model {
+  font-size:16px!important;
+  -webkit-text-size-adjust:100%;
+}
+#rvc textarea { line-height:1.5!important; -webkit-appearance:none; appearance:none; border-radius:8px; }
+#rvc .rvc-main { min-height:0; overflow:hidden; }
+#rvc #rvc-log { min-height:0; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+#rvc footer { flex-shrink:0; }
+@media(max-width:760px) {
+  #rvc[data-open=true] { top:var(--rvc-vv-top,0px)!important;
+    height:var(--rvc-vv-height,100dvh)!important; bottom:auto!important; }
+  #rvc header { min-height:55px; }
+  #rvc .rvc-main { height:100%; }
+  #rvc form { flex-shrink:0; }
+  #rvc textarea { font-size:16px!important; min-height:40px; }
+  #rvc select { font-size:16px!important; }
+  #rvc footer { padding-bottom:calc(env(safe-area-inset-bottom,0px) + 9px); }
+}
+`;
+    document.head.append(el('style',{textContent:iosTypeAndKeyboardCSS}));
     const fab=el('button',{id:'rvc-fab',type:'button',textContent:'ASK ROVOR',title:'Chat with your models and check on your employees'});
     fab.setAttribute('aria-expanded','false');fab.setAttribute('aria-controls','rvc');
     const sourceSelect=el('select',{id:'rvc-source',className:'rvc-source'});
@@ -97,7 +120,28 @@
     };
     const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':'rvc-bot',m.content));};
     const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;if(!b)input.focus();};
-    const toggle=open=>{panel.dataset.open=String(open);if(!open)panel.dataset.sideOpen='false';fab.setAttribute('aria-expanded',String(open));if(open){load();input.focus();}};
+    const syncVisualViewport=()=>{
+      // On iOS the keyboard resizes the visual rather than the layout viewport.
+      // Constrain the fullscreen dialog above the keyboard without browser zoom.
+      if(!window.visualViewport)return;
+      const vv=window.visualViewport;
+      const mobile=window.matchMedia('(max-width:760px)').matches;
+      if(mobile&&panel.dataset.open==='true'){
+        panel.style.setProperty('--rvc-vv-top',Math.max(0,vv.offsetTop)+'px');
+        panel.style.setProperty('--rvc-vv-height',Math.max(260,vv.height)+'px');
+        requestAnimationFrame(()=>{log.scrollTop=log.scrollHeight;});
+      }else{
+        panel.style.removeProperty('--rvc-vv-top');
+        panel.style.removeProperty('--rvc-vv-height');
+      }
+    };
+    window.visualViewport?.addEventListener('resize',syncVisualViewport);
+    window.visualViewport?.addEventListener('scroll',syncVisualViewport);
+    window.addEventListener('orientationchange',syncVisualViewport);
+    const toggle=open=>{panel.dataset.open=String(open);if(!open)panel.dataset.sideOpen='false';fab.setAttribute('aria-expanded',String(open));
+      syncVisualViewport();
+      if(open){load();input.focus();}
+    };
 
     async function load(){
       ready=false;send.disabled=true;stateLabel.textContent='Checking '+sourceSelect.value+' model availability…';
