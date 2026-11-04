@@ -20,7 +20,7 @@ export function cleanCatalog(value) {
 }
 export function cleanReply(value) {
   if (value?.state === 'failed' && ['chat_upstream_failed','chat_upstream_unavailable',
-      'chat_rate_limited','model_not_available','response_too_large'].includes(value.error))
+      'chat_rate_limited','model_not_available','response_too_large','repo_context_unavailable'].includes(value.error))
     return {state:'failed', output:null, error:value.error};
   if (value?.state !== 'complete' || typeof value.output !== 'string' ||
       !value.output.trim() || value.output.length > RELAY.maxReplyChars)
