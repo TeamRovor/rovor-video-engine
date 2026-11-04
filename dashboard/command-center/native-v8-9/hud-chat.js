@@ -179,6 +179,19 @@
     const modelRows=el('div',{className:'rvc-model-rows'});
     modelSheet.append(el('div',{className:'rvc-model-sheet-card'},modelSheetHeader,modelSearch,modelSheetInfo,modelRows));
     const stateLabel=el('div',{className:'rvc-state',textContent:'Checking available models…'});
+    stateLabel.setAttribute('role','status');
+    stateLabel.setAttribute('aria-live','polite');
+    const refreshButton=el('button',{type:'button',className:'rvc-refresh',textContent:'↻ Check',title:'Refresh model availability and provider telemetry'});
+    refreshButton.setAttribute('aria-label','Refresh model availability and provider status');
+    const connectionBar=el('div',{className:'rvc-connection-bar'},stateLabel,refreshButton);
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-connection-bar{display:flex;align-items:center;gap:8px;background:#071b30;border-bottom:1px solid #1b4467;min-width:0}
+#rvc .rvc-connection-bar .rvc-state{flex:1;min-width:0;border:0;overflow-wrap:anywhere}
+#rvc .rvc-connection-bar .rvc-refresh{flex-shrink:0;margin-right:12px;background:#0b3151;border:1px solid #3a7fad;border-radius:9px;color:#c1e5ff;font-size:12px;min-height:38px;padding:6px 11px}
+#rvc .rvc-connection-bar .rvc-refresh:focus-visible{outline:2px solid #90d6ff}
+@media(max-width:760px){#rvc .rvc-connection-bar .rvc-refresh{margin-right:10px;font-size:12px;min-width:72px}}
+`}));
+
     // Separate Mac telemetry from model availability. Historical provider
     // connections are not proof of running inference or fresh quotas.
     const providerDetails=el('details',{className:'rvc-provider-inspect'});
@@ -212,7 +225,7 @@
         el('small',{},'Conversation history is stored on this device. Model text is not proof of employee execution.')),
       el('div',{className:'rvc-main'},
         el('header',{},mobileMenu,el('strong',{textContent:'ASK ROVOR'}),sourceSelect,modelSlot,clear,close),
-        stateLabel,providerDetails,log,
+        connectionBar,providerDetails,log,
         el('footer',{},el('div',{className:'rvc-context-note',textContent:'An accepted chat request is not a completed task. Only a confirmed model response counts.'}),form)));
     panel.setAttribute('aria-label','ROVOR chat');
     const sideBackdrop=el('button',{type:'button',className:'rvc-side-backdrop'});
@@ -312,7 +325,7 @@
     };
     const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':m.outcome==='failed'?'rvc-err':'rvc-bot',m.content,m));};
     let pendingJob=null,cancelConfirmed=false;
-    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;
+    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;refreshButton.disabled=b;
       // Don't re-open the software keyboard after a delayed response on iOS.
       if(!b&&panel.dataset.open==='true'&&!window.matchMedia('(pointer:coarse)').matches)input.focus({preventScroll:true});
     };
@@ -395,8 +408,8 @@
         const groups=new Map();
         for(const id of models){
           if(typeof id!=='string')continue;
-          const group=omni?(id.startsWith('rovor-')?'ROVOR combos':
-            (id.split('/')[0]||'Other').toUpperCase()):'CLOUDFLARE AI';
+          const group=omni?(id.startsWith('rovor-')?'OmniRoute combos · explicitly approved':
+            (id.endsWith(':free')?'Free-tagged model routes':'Owner-allowlisted model routes')):'Cloudflare AI hosted routes';
           if(!groups.has(group)){const optgroup=el('optgroup',{label:group});groups.set(group,optgroup);select.append(optgroup);}
           groups.get(group).append(el('option',{value:id,textContent:id}));
         }
@@ -405,17 +418,18 @@
         const saved=localStorage.getItem(KEY+'_model_'+requestedSource);
         if(preferred&&models.includes(preferred))select.value=preferred;
         else if(saved&&models.includes(saved))select.value=saved;
-        stateLabel.textContent=omni?'OMNIROUTE BRIDGE REPORTED · free-eligible routes listed, not canary-verified':
-          'CLOUDFLARE AI · separate cloud models · usage depends on your provider allowance';
+        stateLabel.textContent=omni?('Mac bridge reported · '+select.options.length+' allowed routes · confirm a reply to verify use'):
+          ('Cloudflare AI · '+select.options.length+' hosted models listed · allowance unverified');
         ready=true;send.disabled=false;modelBrowse.disabled=false;
       }catch{
         if(epoch!==loadEpoch)return;
         modelBrowse.disabled=true;select.textContent='';select.append(el('option',{value:'',textContent:'No models available'}));
         stateLabel.textContent=sourceSelect.value==='omniroute'?
-          'OMNIROUTE OFFLINE · connect the outbound Mac bridge; no inference is available here yet':
-          'CLOUDFLARE UNAVAILABLE · this source has no configured accessible models';
+          'Mac bridge not responding · check the Mac relay, or switch to Cloudflare AI.':
+          'Cloudflare AI unavailable · no hosted model routes confirmed.';
       }
     }
+    refreshButton.onclick=()=>{if(!busy){load();refreshProviderInventory();}};
     sourceSelect.onchange=()=>{if(!busy){
       const active=sessions.find(s=>s.id===currentId);
       if(active){active.source=sourceSelect.value;active.model=null;save();}
