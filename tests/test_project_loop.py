@@ -111,5 +111,24 @@ class CoordinationTests(unittest.TestCase):
             self.assertEqual(loop.load_state(repo), {})
 
 
+    def test_health_summary_counts_and_recommendations(self):
+        data = {'version': 1, 'tasks': [
+            task('ready-a', priority=1),
+            task('ready-b', priority=2, scopes=['other']),
+            active('active-a', scopes=['active-zone']),
+            active('blocked-a', status='blocked', blocker='Needs external input', scopes=['blocked-zone']),
+            active('done-a', status='done', scopes=['done-zone'], evidence=[dict(
+                commit='abc123', platform='Linux', check='unittest',
+                result='PASS', reference='https://example.invalid/evidence')]),
+        ]}
+        summary = loop.health_summary(data)
+        self.assertEqual(summary['total'], 5)
+        self.assertEqual(summary['counts'], {
+            'active': 1, 'blocked': 1, 'done': 1, 'ready': 2})
+        self.assertEqual([item['id'] for item in summary['ready']],
+                         ['ready-a', 'ready-b'])
+        self.assertEqual([item['id'] for item in summary['blocked']], ['blocked-a'])
+
+
 if __name__ == '__main__':
     unittest.main()
