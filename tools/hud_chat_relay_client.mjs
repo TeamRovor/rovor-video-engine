@@ -180,7 +180,7 @@ async function main() {
   const cliAuth=await localCliAuth();
   if (!apiKey && !cliAuth) throw Error('omniroute_gateway_auth_missing');
   const approved=String(process.env.ROVOR_HUD_CHAT_FREE_MODELS||'').split(',').map(s=>s.trim()).filter(Boolean);
-  const chat=createChat({apiKey,cliAuth});
+  const chat=createChat({apiKey,cliAuth,refreshCliAuth:localCliAuth});
   const stop=new AbortController();
   for (const sig of ['SIGINT','SIGTERM']) process.once(sig,()=>stop.abort());
   console.log('ROVOR outbound chat bridge starting; only verified free route IDs are offered.');
