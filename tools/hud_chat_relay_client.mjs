@@ -8,6 +8,7 @@ import {pathToFileURL} from 'node:url';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createChat, CHAT_LIMITS} from './hud_chat.mjs';
+import {readRepoContext} from './hud_chat_repo_context.mjs';
 import {validateTarget} from './hud_telemetry_publisher.mjs';
 import {isEntrypoint} from './hud_omniroute_bridge.mjs';
 
@@ -163,7 +164,7 @@ async function main() {
   const cliAuth=await localCliAuth();
   if (!apiKey && !cliAuth) throw Error('omniroute_gateway_auth_missing');
   const approved=String(process.env.ROVOR_HUD_CHAT_FREE_MODELS||'').split(',').map(s=>s.trim()).filter(Boolean);
-  const chat=createChat({apiKey,cliAuth});
+  const chat=createChat({apiKey,cliAuth,repositoryContext:readRepoContext});
   const stop=new AbortController();
   for (const sig of ['SIGINT','SIGTERM']) process.once(sig,()=>stop.abort());
   console.log('ROVOR outbound chat bridge starting; only verified free route IDs are offered.');
