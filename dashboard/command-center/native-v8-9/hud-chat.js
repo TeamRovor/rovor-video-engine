@@ -398,7 +398,7 @@
     teamInput.setAttribute('aria-label','Allow task-aware review using up to two free-eligible model routes');
     const teamRow=el('div',{className:'rvc-team-row'},
       el('label',{htmlFor:'rvc-team-review'},teamInput,'  Two-model review when useful'),
-      el('small',{textContent:'Opt in to a second model call for comparison or complex work. Separate model receipts; no paid routing.'}));
+      el('small',{textContent:'Two model calls may share your prompt and selected GitHub source with different free-model providers. Separate receipts; no paid routing.'}));
     document.head.append(el('style',{textContent:`
 #rvc .rvc-team-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px 11px;padding:4px 0;color:#a9c9e3}
 #rvc .rvc-team-row label{display:flex;align-items:center;gap:8px;font:600 12px/1.4 system-ui;cursor:pointer}
