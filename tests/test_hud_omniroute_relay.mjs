@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 import {RELAY, cleanCatalog, cleanReply} from '../integrations/hud-cloud/omniroute-chat-relay.mjs';
-import {eligibleModels,executeClaim,readEvents} from '../tools/hud_chat_relay_client.mjs';
+import {eligibleModels,executeClaim,readEvents,runRelay} from '../tools/hud_chat_relay_client.mjs';
 
 const NOW=Date.parse('2026-11-04T05:00:00.000Z');
 const READER='r'.repeat(48),WRITER='w'.repeat(48);
@@ -167,4 +167,38 @@ test('cancellation after Mac claim refuses to pretend it stopped inference',asyn
   assert.equal((await call(env,'/api/hud/chat/result/'+job_id,'POST','writer',{state:'complete',output:'It ran'})).status,200);
   const saved=await (await call(env,'/api/hud/chat/status/'+job_id)).json();
   assert.equal(saved.state,'complete');assert.equal(saved.output,'It ran');
+});
+
+
+test('a slow model reply keeps the private Mac bridge online without repeating inference',async()=>{
+  let heartbeats=0,claims=0,inference=0,finished=0;
+  const stop=new AbortController();
+  const chat={
+    models:async()=>[MODEL],
+    respond:async()=>{
+      inference++;
+      await new Promise(resolve=>setTimeout(resolve,65));
+      const payload='data: {"choices":[{"delta":{"content":"real reply"}}]}\n\ndata: [DONE]\n\n';
+      return {status:200,stream:new ReadableStream({start(c){
+        c.enqueue(new TextEncoder().encode(payload));c.close();
+      }}),done(){}};
+    }
+  };
+  const send=async(url)=>{
+    const route=new URL(url).pathname;
+    if(route==='/api/hud/chat/bridge'){heartbeats++;return Response.json({accepted:true});}
+    if(route==='/api/hud/chat/claim'){
+      claims++;
+      return Response.json({job:claims===1?{id,model:MODEL,request:body}:null});
+    }
+    if(route==='/api/hud/chat/result/'+id){
+      finished++;stop.abort();return Response.json({accepted:true});
+    }
+    throw Error('unexpected_test_route');
+  };
+  await runRelay({origin:'https://private-hud.example',writerKey:'w'.repeat(48),
+    chat,stop:stop.signal,send,interval:1,heartbeatIntervalMs:12});
+  assert(heartbeats>=2,'heartbeat should refresh while the Mac is waiting for a reply');
+  assert.equal(inference,1,'a heartbeat must never repeat the model prompt');
+  assert.equal(finished,1);
 });
