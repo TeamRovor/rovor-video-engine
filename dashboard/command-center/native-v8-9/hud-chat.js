@@ -33,7 +33,7 @@
   let sessions=[];
   try{sessions=JSON.parse(localStorage.getItem(SESSIONS_KEY)||'[]').filter(s=>s&&typeof s.id==='string'&&Array.isArray(s.history)).slice(0,16);}catch{}
   if(sessions.length){currentId=sessions[0].id;history=sessions[0].history;}else{
-    currentId=crypto.randomUUID();sessions=[{id:currentId,title:'New conversation',history:[]}];
+    currentId=crypto.randomUUID();sessions=[{id:currentId,title:'New conversation',source:'omniroute',model:null,history:[]}];
   }
   // Prior single-chat history remains on this device but new sessions have isolated histories.
   const save=()=>{try{
@@ -191,7 +191,7 @@
       sessionsList.textContent='';
       sessions.forEach(s=>{const b=el('button',{type:'button',textContent:s.title, title:s.title});
         b.setAttribute('aria-current',String(s.id===currentId));
-        b.onclick=()=>{if(busy)return;save();currentId=s.id;history=s.history.slice();panel.dataset.sideOpen='false';redraw();drawSessions();};
+        b.onclick=()=>{if(busy)return;save();currentId=s.id;history=s.history.slice();panel.dataset.sideOpen='false';sourceSelect.value=s.source==='cloudflare'?'cloudflare':'omniroute';load();redraw();drawSessions();};
         sessionsList.append(b);});
     };
     const welcome=()=>{
@@ -243,33 +243,58 @@
       if(open){load();if(!window.matchMedia('(max-width:760px)').matches)input.focus({preventScroll:true});}
     };
 
+    let loadEpoch=0;
     async function load(){
-      ready=false;send.disabled=true;stateLabel.textContent='Checking '+sourceSelect.value+' model availability…';
+      const epoch=++loadEpoch, requestedSource=sourceSelect.value;
+      ready=false;send.disabled=true;stateLabel.textContent='Checking '+requestedSource+' model availability…';
       try{
-        const omni=sourceSelect.value==='omniroute';
+        const omni=requestedSource==='omniroute';
         const r=await fetch(omni?'/api/hud/chat/models':'/api/chat/models',{credentials:'same-origin',cache:'no-store'});
         if(!r.ok)throw Error('catalog_unavailable');
         const info=await r.json(),models=info.models;
+        if(epoch!==loadEpoch)return; // Ignore a slow catalog from the previous provider tab.
         if((omni&&info.online!==true)||!Array.isArray(models)||!models.length)throw Error('catalog_unavailable');
-        select.textContent='';models.forEach(m=>select.append(el('option',{value:m,textContent:m})));
-        const saved=localStorage.getItem(KEY+'_model_'+sourceSelect.value);
-        if(saved&&models.includes(saved))select.value=saved;
+        select.textContent='';
+        // Native grouped selection remains fully keyboard and touch accessible.
+        const groups=new Map();
+        for(const id of models){
+          if(typeof id!=='string')continue;
+          const group=omni?(id.startsWith('rovor-')?'ROVOR combos':
+            (id.split('/')[0]||'Other').toUpperCase()):'CLOUDFLARE AI';
+          if(!groups.has(group)){const optgroup=el('optgroup',{label:group});groups.set(group,optgroup);select.append(optgroup);}
+          groups.get(group).append(el('option',{value:id,textContent:id}));
+        }
+        if(!select.options.length)throw Error('catalog_unavailable');
+        const preferred=sessions.find(s=>s.id===currentId)?.model;
+        const saved=localStorage.getItem(KEY+'_model_'+requestedSource);
+        if(preferred&&models.includes(preferred))select.value=preferred;
+        else if(saved&&models.includes(saved))select.value=saved;
         stateLabel.textContent=omni?'OMNIROUTE BRIDGE ONLINE · verified free routes · Mac must remain connected':
           'CLOUDFLARE AI · separate cloud models · usage depends on your provider allowance';
         ready=true;send.disabled=false;
       }catch{
+        if(epoch!==loadEpoch)return;
         select.textContent='';select.append(el('option',{value:'',textContent:'No models available'}));
         stateLabel.textContent=sourceSelect.value==='omniroute'?
           'OMNIROUTE OFFLINE · connect the outbound Mac bridge; no inference is available here yet':
           'CLOUDFLARE UNAVAILABLE · this source has no configured accessible models';
       }
     }
-    sourceSelect.onchange=()=>{if(!busy)load();};
-    select.onchange=()=>{try{localStorage.setItem(KEY+'_model_'+sourceSelect.value,select.value);}catch{}};
+    sourceSelect.onchange=()=>{if(!busy){
+      const active=sessions.find(s=>s.id===currentId);
+      if(active){active.source=sourceSelect.value;active.model=null;save();}
+      load();
+    }};
+    select.onchange=()=>{
+      const active=sessions.find(s=>s.id===currentId);
+      if(active){active.source=sourceSelect.value;active.model=select.value;save();}
+      try{localStorage.setItem(KEY+'_model_'+sourceSelect.value,select.value);}catch{}
+    };
 
     async function ask(text){
       if(!ready||busy)return;
       const target=select.value,platform=sourceSelect.value;
+      const thread=sessions.find(s=>s.id===currentId);if(thread){thread.source=platform;thread.model=target;}
       history.push({role:'user',content:text});add('rvc-user',text);
       const active=sessions.find(s=>s.id===currentId);
       if(active?.title==='New conversation')active.title=text.replace(/\s+/g,' ').slice(0,55);
@@ -380,7 +405,7 @@
     };
     clear.onclick=()=>{if(busy)return;history=[];save();redraw();};
     newChat.onclick=()=>{if(busy)return;save();panel.dataset.sideOpen='false';currentId=crypto.randomUUID();history=[];
-      sessions.unshift({id:currentId,title:'New conversation',history:[]});sessions=sessions.slice(0,16);
+      sessions.unshift({id:currentId,title:'New conversation',source:sourceSelect.value,model:select.value||null,history:[]});sessions=sessions.slice(0,16);
       save();drawSessions();redraw();if(!window.matchMedia('(pointer:coarse)').matches)input.focus({preventScroll:true});};
     drawSessions();
     mobileMenu.onclick=()=>{panel.dataset.sideOpen=String(panel.dataset.sideOpen!=='true');};
