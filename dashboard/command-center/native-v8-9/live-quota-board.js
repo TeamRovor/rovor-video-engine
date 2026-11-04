@@ -3,6 +3,8 @@
  */
 window.ROVOR_QUOTA_BOARD=(()=>{
 'use strict';
+// OmniRoute re-syncs provider limits about every 70 minutes; allow ~2.5 cycles so one slow sync does not blank the board.
+const QUOTA_MAX_AGE_MS=175*60000;
 const expandedSlots=new Set();
 const expandedProviders=new Set();
 let overviewFilter='all'; // Retain user choice while telemetry refreshes.
@@ -876,7 +878,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  // Do not derive it from the rolling 24h percentage or cached history.
  const hourActivity=macActivity(hourly,live,'1h');
  const minuteActivity=macActivity(minute,live,'1m');
- const quota=live&&Array.isArray(data?.quota?.records)?data.quota.records.filter(q=>{const t=Date.parse(q?.fetched_at||'');const age=Date.now()-t;return Number.isFinite(age)&&age>=-5000&&age<=900000&&(!q.reset_at||Date.parse(q.reset_at)>Date.now());}):[];
+ const quota=live&&Array.isArray(data?.quota?.records)?data.quota.records.filter(q=>{const t=Date.parse(q?.fetched_at||'');const age=Date.now()-t;return Number.isFinite(age)&&age>=-5000&&age<=QUOTA_MAX_AGE_MS&&(!q.reset_at||Date.parse(q.reset_at)>Date.now());}):[];
  // Sanitized slot status is optional to preserve compatibility with older Mac reporters.
  // Never infer which specific account is enabled from a provider-level enabled count.
  const observedSlots=Array.isArray(data?.connection_slots)?data.connection_slots:null;

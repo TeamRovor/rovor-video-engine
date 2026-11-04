@@ -197,7 +197,7 @@ test('stale local quota cache cannot masquerade as fresh gateway usage',()=>{
   snapshot_at:new Date(now).toISOString(),
   quota:{records:[{provider:'openrouter',account_slot:1,model_id:'free_daily',used:15,total:50,used_percent:30,
     unit:'requests',reset_at:new Date(now+3600000).toISOString(),
-    fetched_at:new Date(now-3600000).toISOString()}]}};
+    fetched_at:new Date(now-4*3600000).toISOString()}]}};
  const stale=window.ROVOR_QUOTA_BOARD.render(snapshot,true);
  assert.match(stale,/QUOTA UNKNOWN/);
  assert.doesNotMatch(stale,/30\.0%/);

@@ -39,3 +39,15 @@ test('popup repaint without sources reuses fresh sync results, then fails closed
   assert.equal(expired,explicit,'expired sources must never be reused');
  }finally{Date.now=realNow;}
 });
+
+test('quota records stay live across one 70-minute OmniRoute sync cycle but expire after 175 minutes',()=>{
+ const {window}=load();
+ const records=minutes=>({source:'local_omniroute_read_only_bridge',period:'24h',snapshot_at:new Date().toISOString(),
+  connections:[{provider:'groq',name:'Groq',connection_count:1,enabled_count:1}],
+  quota:{records:[{provider:'groq',account_slot:1,model_id:'groq/m',used:25,total:100,used_percent:25,unit:'requests',
+   reset_at:null,fetched_at:new Date(Date.now()-minutes*60000).toISOString()}]}});
+ const limits=html=>html.match(/Limit records: (\d+)/)[1];
+ assert.equal(limits(window.ROVOR_QUOTA_BOARD.render(records(60),true,null,null,null,null)),'1');
+ assert.equal(limits(window.ROVOR_QUOTA_BOARD.render(records(170),true,null,null,null,null)),'1');
+ assert.equal(limits(window.ROVOR_QUOTA_BOARD.render(records(200),true,null,null,null,null)),'0');
+});
