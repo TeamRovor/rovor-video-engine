@@ -106,6 +106,8 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
   if (expectedChatAsset !== null) {
     const anonymousChat = await read('/hud-chat.js', false);
     if (anonymousChat.status !== 401) throw Error('anonymous_chat_asset_was_not_denied');
+    const anonymousModels = await read('/api/hud/chat/models', false);
+    if (anonymousModels.status !== 401) throw Error('anonymous_chat_model_catalog_was_not_denied');
   }
   const anonymousRoot = await read('/', false);
   if (anonymousRoot.status !== 303 ||
@@ -132,6 +134,19 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     const shippedChat = await chatScript.text();
     if (shippedChat !== expectedChatAsset)
       throw Error('deployed_chat_asset_differs_from_checkout_run_deployment');
+    // This checks that the new backend is deployed, authenticated and can
+    // read the private D1 chat schema. Mac offline is a valid honest state.
+    const modelsResponse = await read('/api/hud/chat/models', true);
+    if (modelsResponse.status !== 200) throw Error('private_chat_model_endpoint_unavailable');
+    let modelsDocument;
+    try { modelsDocument = await modelsResponse.json(); }
+    catch { throw Error('private_chat_model_endpoint_invalid'); }
+    if (modelsDocument?.source !== 'omniroute_outbound_bridge' ||
+        typeof modelsDocument.online !== 'boolean' || !Array.isArray(modelsDocument.models) ||
+        modelsDocument.models.length > 100 ||
+        modelsDocument.models.some(model=>typeof model!=='string' || model.length>200) ||
+        (!modelsDocument.online && modelsDocument.models.length!==0))
+      throw Error('private_chat_model_endpoint_invalid');
   }
   const status = await read('/api/hud/status?period=24h', true);
   if (status.status !== 200) throw Error('private_D1_status_unavailable');
@@ -186,6 +201,7 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     quota_board_verified: true, database_api_verified: true,
     quota_asset_matches_checkout: expectedQuotaAsset === null ? null : true,
     chat_asset_matches_checkout: expectedChatAsset === null ? null : true,
+    chat_model_endpoint_verified: expectedChatAsset === null ? null : true,
     telemetry_connection: telemetry.connection,
     providers_observed: connections.length,
     request_usage_freshness: liveEligible ? 'fresh' : 'unknown_not_verified',
