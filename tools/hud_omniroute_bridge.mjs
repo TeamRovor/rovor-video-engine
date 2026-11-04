@@ -14,6 +14,7 @@ import {promisify} from 'node:util';
 import {reduceProviderQuota} from './hud_verified_quota.mjs';
 import {createCallLogCollector} from './hud_provider_usage.mjs';
 import {createChat,CHAT_LIMITS} from './hud_chat.mjs';
+import {createNotifier,macNotify} from './hud_alerts.mjs';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const ID=/^[a-zA-Z0-9][a-zA-Z0-9._:/+@-]{0,199}$/;
@@ -247,6 +248,11 @@ async function main(){
   const chat=createChat({apiKey:endpointKeyFromKeychain(),status:()=>collect('24h')});
   const bridge=createBridge({collect,chat,chatAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/hud-chat.js'),'utf8'),port:20129,...(persistent?{pairCode:persistentPairCode(),reusablePairing:true}:{}),hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8'),quotaAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8')});
   const port=await bridge.listen();
+  if(persistent&&process.platform==='darwin'){
+    const alerts=createNotifier({notify:macNotify(spawn)});
+    const check=()=>collect('24h').then(alerts).catch(()=>{});
+    setTimeout(check,60000).unref();setInterval(check,300000).unref();
+  }
   console.log(`OmniRoute connected: ${first.connection_count} configured connections; ${first.models.length} recorded models; ${first.request_count} recorded requests in 24h. ${first.quota.records.length} fresh provider-reported quota rows (unknown limits remain unknown).`);
   let tunnel;
   if(remote){
