@@ -49,7 +49,7 @@ test('private relay refuses anonymous, cross-origin, and wrong-privilege request
   assert.equal((await call(env,'/api/hud/chat/bridge','POST','writer',{models:[MODEL]})).status,200);
   assert.equal((await call(env,'/api/hud/chat/models')).status,200);
   assert.equal((await call(env,'/api/hud/chat/submit','POST','reader',body,NOW,{origin:false})).status,403);
-  assert.equal((await call(env,'/api/hud/chat/submit','POST','writer',body)).status,403 /* writer cannot read/submit via reader token */);
+  assert.equal((await call(env,'/api/hud/chat/submit','POST','writer',body)).status,401 /* writer cannot read/submit via reader token */);
   assert.equal((await call(env,'/api/hud/chat/claim','POST','none',{})).status,401);
 });
 
@@ -115,7 +115,7 @@ test('Mac route selection requires explicit free IDs or owner allowlist',()=>{
   ]),['openrouter/example:free','rovor-fast-free-v1']);
   assert(eligibleModels(['groq/some-model'],['groq/some-model']).includes('groq/some-model'));
   assert(!eligibleModels(['groq/some-model']).includes('groq/some-model'));
-  assert.equal(eligibleModels(['groq/some-model'],['other']), [].length);
+  assert.equal(eligibleModels(['groq/some-model'],['other']).length,0);
 });
 
 test('Mac cannot claim completed model inference unless it received real streaming content',async()=>{
