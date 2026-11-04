@@ -644,18 +644,29 @@
       history.push({role:'user',content:text});add('rvc-user',text);
       if(thread?.title==='New conversation')thread.title=text.replace(/\s+/g,' ').slice(0,55);
       save();drawSessions();
-      const bubble=add('rvc-bot','Submitting two independent requests · no model calls confirmed');
+      const bubble=add('rvc-bot','Preparing two sequential model calls · no model calls confirmed');
       multiPending=[];pendingJob=null;cancelConfirmed=false;controller=new AbortController();setBusy(true);
       const signal=controller.signal;
       const messages=history.filter(m=>m.role==='user'||(m.role==='assistant'&&m.outcome==='complete'))
-        .slice(-5).map(m=>({role:m.role,content:m.content}));
+        .slice(-5).map(m=>({role:m.role,content:m.content.slice(0,5500)}));
       const outcomes=new Map();
       const show=()=>{
         const status=routes.map(id=>id+': '+(outcomes.get(id)||'Preparing request')).join('\n');
         renderText(bubble,status);
       };
-      async function runOne(model){
-        const payload={model,context:false,messages};
+      async function runOne(model,firstResult=null){
+        // The second model reviews the first *confirmed* response, rather
+        // than blindly repeating the same prompt. Never accept a failed or
+        // partial receipt as input to a verification step.
+        const reviewMessage=firstResult?.state==='complete'
+          ?('Independent critical review. Original task: '+text.slice(0,1500)+
+            '\nFirst model draft ('+firstResult.model+'): '+firstResult.reply.slice(0,3000)+
+            '\nIdentify weaknesses, factual uncertainty, and a concrete improved answer. Do not claim GitHub edits or tool execution.')
+          :null;
+        const safeMessages=reviewMessage
+          ?[{role:'user',content:reviewMessage}]
+          :messages.map(item=>({...item,content:item.content.slice(0,5500)}));
+        const payload={model,context:false,messages:safeMessages};
         if(attachedSource)payload.repo_file=attachedSource;
         let jobId=null;
         try{
@@ -666,7 +677,7 @@
           jobId=ack.job_id;
           const pending={id:jobId,model,phase:'queued'};
           multiPending.push(pending);
-          outcomes.set(model,'Queued; Mac claim not yet confirmed');show();
+          outcomes.set(model,firstResult?.state==='complete'?'Review queued; Mac claim not yet confirmed':'Queued; Mac claim not yet confirmed');show();
           stop.textContent='Cancel queued requests / stop waiting';
           for(let i=0;i<105;i++){
             if(signal.aborted)throw Error('stopped_waiting');
@@ -697,7 +708,18 @@
         }
       }
       try{
-        const results=await Promise.all(routes.map(runOne));
+        // The Mac bridge is a single bounded executor. Parallel submissions
+        // can leave the second request queued until its D1 lease expires.
+        // Serialize at most two calls; the second runs only if the first is
+        // resolved, and both retain independent provider receipts.
+        const results=[];
+        for(const route of routes){
+          if(signal.aborted){
+            results.push({state:'failed',model:route,reason:'stopped_before_submit',receipt:null});
+            continue;
+          }
+          results.push(await runOne(route,results[0]||null));
+        }
         const successes=results.filter(item=>item.state==='complete').length;
         // Each model's reply remains independently attributed; no generated
         // "consensus" is fabricated if only one model completed.
