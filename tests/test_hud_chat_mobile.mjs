@@ -82,10 +82,10 @@ test('Ask ROVOR GitHub source is explicit, read-only, and touch-safe on phone, i
   assert.match(src,/repoSelect\.disabled=b\|\|sourceSelect\.value!=='omniroute'/);
 });
 
-function taskPlanner(){
+function taskPlanner(seed=null){
   const window={};
   const document={readyState:'loading',addEventListener(){}};
-  const localStorage={getItem(){return null;}};
+  const localStorage={getItem(key){return key==='rovor_chat_route_receipts_v1'&&seed?JSON.stringify(seed):null;}};
   vm.runInNewContext(src,{window,document,localStorage,
     crypto:{randomUUID:()=> '123e4567-e89b-42d3-a456-426614174000'}},
     {timeout:1200});
@@ -147,4 +147,31 @@ test('two-model orchestration requires an explicit opt-in and remains mobile saf
   assert.match(src,/No model calls confirmed|no model calls confirmed/);
   assert.match(src,/No confirmed reply/);
   assert.match(src,/stop\.onclick=async/);
+});
+
+
+test('route strengths and weaknesses are labeled as hints, not invented rankings or quotas',()=>{
+  assert.match(src,/modelEvidenceHint/);
+  assert.match(src,/Name-only task clues/);
+  assert.match(src,/Weaknesses unknown until tested/);
+  assert.match(src,/Not enough recent confirmed local receipts/);
+  assert.match(src,/free quota\/reset and actual fallback unverified/);
+  assert.match(src,/recordReceipt\(model,'complete'/);
+  assert.match(src,/recordReceipt\(target,'complete'/);
+  assert.match(src,/end-to-end time includes queue/);
+});
+
+test('task routing uses real, recent per-model receipt reliability only with sufficient evidence',()=>{
+  const catalog=['groq/fast:free','mistral/fast:free'],question='Give a quick answer';
+  assert.equal(taskPlanner()(question,catalog).routes[0],'groq/fast:free');
+  const now=Date.now();
+  const evidence={
+    'groq/fast:free':{ok:0,failed:5,elapsed:0,last:now},
+    'mistral/fast:free':{ok:5,failed:0,elapsed:9000,last:now},
+  };
+  assert.equal(taskPlanner(evidence)(question,catalog).routes[0],'mistral/fast:free');
+  evidence['groq/fast:free'].last=now-8*86400000;
+  evidence['mistral/fast:free'].last=now-8*86400000;
+  assert.equal(taskPlanner(evidence)(question,catalog).routes[0],'groq/fast:free',
+    'stale performance observations must not influence choices');
 });
