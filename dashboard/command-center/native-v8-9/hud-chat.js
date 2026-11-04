@@ -694,6 +694,7 @@
               show();continue;
             }
             if(item.state==='complete'&&typeof item.output==='string'&&item.output.trim()){
+              if(item.requested_model!==model)throw Error('receipt_route_mismatch');
               pending.phase='complete';outcomes.set(model,'Reply confirmed');show();
               return {state:'complete',model,reply:item.output,receipt:jobId};
             }
@@ -777,6 +778,7 @@
             if(result.state==='queued'){pendingJob.phase='queued';stop.textContent='Cancel queued request';if(i%4===0)renderText(bubble,'Queued · waiting for Mac bridge to claim');continue;}
             if(result.state==='running'){pendingJob.phase='running';stop.textContent='Stop waiting';if(i%4===0)renderText(bubble,'Claimed by Mac · waiting for actual model response');continue;}
             if(result.state==='complete'&&typeof result.output==='string'){
+              if(result.requested_model!==target)throw Error('receipt_route_mismatch');
               reply=result.output;break;
             }
             if(result.state==='failed')throw Error(result.error||'relay_failed');
@@ -817,6 +819,7 @@
           user_cancelled:'Request cancelled before the Mac claimed it. No inference started for this request.',
           chat_busy:'The private queue is full. No new model call was confirmed.',
           model_not_available:'Route unavailable or not verified eligible for free use.',
+          receipt_route_mismatch:'Receipt route differs from the requested route. Reply cannot be verified.',
           chat_rate_limited:'The request limit has been reached.',
         };
         const message=cancelConfirmed?messages.user_cancelled:(messages[e.message]|| (e.name==='AbortError'?messages.stopped_waiting:('No confirmed model reply: '+(e.message||'unknown'))));
