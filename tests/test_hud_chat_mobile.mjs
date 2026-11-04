@@ -98,13 +98,13 @@ test('Ask ROVOR Smart routes one routine code prompt using only Mac-advertised e
   ]);
   assert.equal(plan.routes.length,1);
   assert.equal(plan.routes[0],'openrouter/qwen-coder:free');
-  assert.match(plan.reason,/heuristic/);
+  assert.match(plan.reason,/Task-aware route hint/);
   assert.match(src,/const AUTO_ROUTE='__rovor_smart_route__'/);
   assert.match(src,/routePreview|routingNote/);
 });
 test('natural language can request two distinct provider routes with separate receipts',()=>{
   const plan=taskPlanner()('Ask Groq and Gemini to independently review this design',[
-    'groq/fast:free','gemini/flash:free','rovor-fast-free-v1']);
+    'groq/fast:free','gemini/flash:free','rovor-fast-free-v1'],'__rovor_smart_route__',{allowTeam:true});
   assert.equal(plan.routes.length,2);
   assert.equal(plan.routes.join(','),'gemini/flash:free,groq/fast:free' /* provider list is fixed-order */);
   assert.match(src,/async function askBoth\(/);
@@ -119,7 +119,9 @@ test('named provider absent, all-nine fanout, or stale manual ID fails before su
   assert.match(plan('Ask all nine providers',routes).error,/At most two/);
   assert.match(plan('quick answer',routes,'mistral/paid').error,/no longer available/);
   assert.equal(plan('quick answer',routes,'groq/fast:free').routes.join(','),'groq/fast:free');
-  assert.equal(plan('Compare two approaches',routes).routes.length,2);
+  assert.match(plan('Ask Groq and OpenRouter',routes).error,/Enable two-model review/);
+  assert.equal(plan('Compare two approaches',routes).routes.length,1);
+  assert.equal(plan('Compare two approaches',routes,'__rovor_smart_route__',{allowTeam:true}).routes.length,2);
 });
 test('a model only appears callable when it is present in the Mac chat catalog',()=>{
   const plan=taskPlanner();
