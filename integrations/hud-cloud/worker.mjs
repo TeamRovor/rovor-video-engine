@@ -1,5 +1,5 @@
 import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';
-import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus} from './omniroute-chat-relay.mjs';
+import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, expire as expireChat} from './omniroute-chat-relay.mjs';
 // Private telemetry only: no inference, job dispatch, or Mac control.
 const PERIODS = new Set(['1m', '1h', '24h', '7d']);
 // Private read-only short cache: never store access tokens, raw Google responses or credentials.
@@ -281,7 +281,7 @@ export async function latest(db, period, now = Date.now()) {
 
 const CHAT_MODELS = ['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/qwen/qwen2.5-coder-32b-instruct',
   '@cf/mistralai/mistral-small-3.1-24b-instruct', '@cf/google/gemma-3-12b-it', '@cf/meta/llama-3.1-8b-instruct'];
-const CHAT_SYSTEM = 'You are ROVOR, the assistant inside the Rovor Digital HUD. Be concise and plain-spoken. Never claim to have done work you cannot verify.';
+const CHAT_SYSTEM = 'You are ROVOR, the assistant inside the Rovor Digital HUD. You can answer questions only. You cannot launch employees, commit code, schedule jobs, or perform background tasks. Never claim an action is running or completed without a real tool receipt. Never promise to deliver work in an hour or later. Be concise, precise, and explicitly acknowledge limitations.';
 
 async function chat(request, env, now) {
   if (request.headers.get('Origin') !== new URL(request.url).origin) return response(403, {error: 'origin_denied'});
@@ -454,4 +454,9 @@ export async function handle(request, env, now = Date.now()) {
   } catch { return response(503, {error: 'telemetry_store_unavailable'}); }
 }
 
-export default {fetch(request, env) { return handle(request, env); }};
+export default {
+  fetch(request, env) { return handle(request, env); },
+  // Only cleans expired private chat prompts/results. Does not schedule models,
+  // employees, worker shifts or paid API requests.
+  async scheduled(_event, env) { if (env.DB) await expireChat(env.DB, Date.now()); }
+};
