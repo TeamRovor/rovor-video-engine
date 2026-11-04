@@ -51,3 +51,15 @@ test('quota records stay live across one 70-minute OmniRoute sync cycle but expi
  assert.equal(limits(window.ROVOR_QUOTA_BOARD.render(records(170),true,null,null,null,null)),'1');
  assert.equal(limits(window.ROVOR_QUOTA_BOARD.render(records(200),true,null,null,null,null)),'0');
 });
+
+test('worker banner explains a safety stop in plain language and only from a verified report',()=>{
+ const {window}=load();
+ const snap=dispatch=>({source:'local_omniroute_read_only_bridge',period:'24h',snapshot_at:new Date().toISOString(),
+  connections:[{provider:'groq',name:'Groq',connection_count:1,enabled_count:1}],quota:{records:[]},workforce:{dispatch}});
+ const d={status:'recent_scheduler_report',reason:'failure_circuit_requires_review',needs_review:405,queued:1};
+ const html=window.ROVOR_QUOTA_BOARD.render(snap(d),true,null,null,null,null);
+ assert.match(html,/WORKERS PAUSED · SAFETY STOP/);
+ assert.match(html,/405 need review/);
+ assert.doesNotMatch(window.ROVOR_QUOTA_BOARD.render(snap(d),false,null,null,null,null),/WORKERS PAUSED/);
+ assert.doesNotMatch(window.ROVOR_QUOTA_BOARD.render(snap({...d,status:'stale'}),true,null,null,null,null),/WORKERS PAUSED/);
+});

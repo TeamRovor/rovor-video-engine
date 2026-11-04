@@ -596,6 +596,23 @@ function quotaGlance(slots,quota,live,cloudProviders){
   (known.length?'<ul class="rvq-glance-list">'+known.map(row).join('')+'</ul>':'<p class="rvq-sub">No provider has a fresh verified limit right now.</p>')+
   (unknown.length?'<details class="rvq-glance-unknown"><summary>'+fmt(unknown.length)+' without limit data</summary><ul>'+unknown.map(why).join('')+'</ul></details>':'')+'</div>';
 }
+function workerBanner(workforce,live){
+ const d=live?workforce?.dispatch:null;
+ if(d?.status!=='recent_scheduler_report')return '';
+ const review=Number.isSafeInteger(d.needs_review)?d.needs_review:null;
+ const queued=Number.isSafeInteger(d.queued)?d.queued:null;
+ const HELP={
+  failure_circuit_requires_review:['WORKERS PAUSED · SAFETY STOP','Several jobs in a row failed, so dispatch stopped itself. Review the failed jobs, then clear the stop to resume.','bad'],
+  account_minimum_interval:['WORKERS WAITING · PACING','Waiting out the rate-limit gap between jobs. This clears on its own.','wait'],
+  account_retry_after:['WORKERS WAITING · PROVIDER COOLDOWN','The provider asked for a pause. This clears on its own.','wait'],
+  account_inflight_claim:['WORKERS BUSY','A job is still running. The next one starts when it finishes.','ok'],
+  claim_conditions_met_unverified:['WORKERS READY','Gates are open. Model activity is not verified until a receipt appears.','ok']
+ };
+ const h=HELP[d.reason];
+ if(!h)return '';
+ const facts=[review!==null?fmt(review)+' need review':'',queued!==null?fmt(queued)+' queued':''].filter(Boolean).join(' · ');
+ return '<div class="rvq-banner rvq-banner-'+h[2]+'" role="status"><strong>'+h[0]+'</strong><span>'+h[1]+'</span>'+(facts?'<small>'+esc(facts)+'</small>':'')+'</div>';
+}
 function dispatchInfo(workforce,live){
  const d=live?workforce?.dispatch:null;
  if(d?.status!=='recent_scheduler_report')
@@ -860,6 +877,11 @@ const css=`
 #rovor-workload-popup .rvq-details-heading{margin:10px 0 6px;font-size:10px}
 @media(max-width:800px){#rovor-workload-popup .rvq-stats{grid-template-columns:repeat(3,minmax(0,1fr))}#rovor-workload-popup .rvq-stat:last-child{grid-column:auto}}
 @media(max-width:500px){#rovor-workload-popup .rvq-stat-value{font-size:13px}#rovor-workload-popup .rvq-stat-label{font-size:7px}#rovor-workload-popup .rvq-board{padding:8px!important}}
+#rovor-workload-popup .rvq-banner{display:grid;gap:2px;margin:0 0 8px;padding:8px 11px;border-radius:8px;border:1px solid #2f6b94;background:#0f2f4a;color:#eaf8ff;font:12px system-ui}
+#rovor-workload-popup .rvq-banner strong{font:800 12px system-ui;letter-spacing:.04em}
+#rovor-workload-popup .rvq-banner small{color:#9ccbe7}
+#rovor-workload-popup .rvq-banner-bad{border-color:#ff7b7b;background:#3a1620}
+#rovor-workload-popup .rvq-banner-wait{border-color:#ffc86b;background:#3a2f12}
 #rovor-workload-popup .rvq-glance{margin:0 0 10px}
 #rovor-workload-popup .rvq-glance-list{list-style:none;margin:0;padding:0;display:grid;gap:5px}
 #rovor-workload-popup .rvq-glance-row{display:grid;grid-template-columns:minmax(80px,.9fr) minmax(70px,2fr) 44px;grid-template-areas:"n b p" "m m m";gap:2px 8px;align-items:center;padding:6px 9px;border:1px solid rgba(93,164,206,.25);border-radius:8px;background:rgba(10,46,75,.55)}
@@ -950,7 +972,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
  summary+macFreshness+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
- (slots.length?quotaGlance(slots,quota,live,cloudProviders)+(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
+ workerBanner(data?.workforce,live)+ (slots.length?quotaGlance(slots,quota,live,cloudProviders)+(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
  '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
