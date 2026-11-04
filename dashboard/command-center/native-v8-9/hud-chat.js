@@ -183,7 +183,7 @@
       if(mobile&&panel.dataset.open==='true'){
         panel.style.setProperty('--rvc-vv-top',Math.max(0,vv.offsetTop)+'px');
         panel.style.setProperty('--rvc-vv-height',Math.max(260,vv.height)+'px');
-        requestAnimationFrame(()=>{log.scrollTop=log.scrollHeight;});
+        // Preserve the message scroll position while the keyboard animates.
       }else{
         panel.style.removeProperty('--rvc-vv-top');
         panel.style.removeProperty('--rvc-vv-height');
