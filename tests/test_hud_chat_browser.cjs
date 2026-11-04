@@ -13,6 +13,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const model='openrouter/example:free',otherModel='mistral/owner-approved-test-route',jobId='051bf69b-cc2d-4453-825e-8d10f16556b4';
 const views=[[390,844,'iPhone'],[820,1180,'iPad portrait'],[1180,820,'iPad landscape'],[1440,900,'Windows/Mac desktop']];
 let server,chrome,ws,tmp,serial=0,submits=0,polls=0,submittedPayload=null,chromeLog='',chromeExit=null;
+const submittedJobs=new Map();
 const callbacks=new Map();
 const cmd=(method,params={})=>new Promise((resolve,reject)=>{
   const id=++serial;callbacks.set(id,{resolve,reject});
@@ -40,11 +41,17 @@ async function main(){
     if(route==='/api/hud/chat/submit'){submits++;
       let raw='';for await(const part of req)raw+=part.toString();
       submittedPayload=JSON.parse(raw);
-      return respond(res,{job_id:jobId},202);}
-    if(route==='/api/hud/chat/status/'+jobId){polls++;
-      return respond(res,polls===1?{state:'queued'}:polls===2?{state:'running'}:
-        {state:'complete',requested_model:model,output:'Confirmed mocked backend response.'});}
-    if(route==='/api/hud/chat/cancel/'+jobId)return respond(res,{cancelled:false,error:'request_already_running'},409);
+      const id='051bf69b-cc2d-4453-825e-'+(0x8d10f16556b3+submits).toString(16).padStart(12,'0');
+      submittedJobs.set(id,{model:submittedPayload.model,polls:0});
+      return respond(res,{job_id:id},202);}
+    if(route.startsWith('/api/hud/chat/status/')){
+      const id=route.slice('/api/hud/chat/status/'.length),job=submittedJobs.get(id);
+      if(!job)return respond(res,{error:'not_found'},404);
+      polls++;job.polls++;
+      return respond(res,job.polls===1?{state:'queued',requested_model:job.model}:
+        job.polls===2?{state:'running',requested_model:job.model}:
+        {state:'complete',requested_model:job.model,output:'Confirmed mocked backend response. '+job.model});}
+    if(route.startsWith('/api/hud/chat/cancel/'))return respond(res,{cancelled:false,error:'request_already_running'},409);
     if(route==='/api/chat'){res.writeHead(200,{'Content-Type':'text/event-stream'});
       return res.end('data: {"choices":[{"delta":{"content":"Cloud reply"}}]}\n\ndata: [DONE]\n\n');}
     if(route.startsWith('/api/'))return respond(res,{error:'not_found'},404);
@@ -141,6 +148,22 @@ async function main(){
   assert(await evaluate('return !!document.querySelector(".rvc-copy")'),'copy response action missing');
   await evaluate('document.querySelector("#rvc button[aria-label=\\"Close chat\\"]").click();document.querySelector("#rvc-fab").click();return true');
   assert(await evaluate('return document.querySelector("#rvc-log").textContent.includes("REPLY RECEIVED")'),'receipt disappeared from history');
+  // Explicit Send and opted-in two-model review produce two independent
+  // D1 job IDs. This is mocked Chrome QA, not proof of actual Mac parallelism.
+  await evaluate(`const picker=document.querySelector("#rvc-model");picker.value="__rovor_smart_route__";
+    picker.dispatchEvent(new Event("change",{bubbles:true}));
+    const team=document.querySelector("#rvc-team-review");team.checked=true;
+    team.dispatchEvent(new Event("change",{bubbles:true}));
+    const box=document.querySelector("#rvc textarea");box.value="Compare two approaches to fixing this code";
+    box.dispatchEvent(new Event("input",{bubbles:true}));
+    document.querySelector("#rvc form").requestSubmit();return true`);
+  await waitFor(()=>evaluate('return Array.from(document.querySelectorAll(".rvc-receipt")).filter(e=>e.textContent.includes("REPLY RECEIVED")).length>=3'),
+    'two independent model receipts',200);
+  assert.equal(submits,3,'one first request plus two team requests required');
+  assert.equal(submittedJobs.size,3,'each mock model request must have a separate job id');
+  assert(await evaluate('return document.querySelector("#rvc-log").textContent.includes("mistral/owner-approved-test-route")'),
+    'second model reply missing from transcript');
+  console.log('PASS opt-in two-model task routing: two distinct requested IDs and separate completion receipts.');
   console.log('PASS Ask ROVOR responsive Chromium: iPhone, iPad portrait/landscape, Mac/Windows desktop.');
   console.log('PASS model discovery, nine historical provider slots, keyboard-safe font sizing, receipts and history.');
   console.log('All model responses were mocked; real iOS Safari and private Mac inference remain unverified.');
