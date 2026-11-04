@@ -99,3 +99,44 @@ test('local OmniRoute gateway receives source as untrusted reference, never clai
   assert.equal(submitted.stream,true);
   reply.done();
 });
+
+
+test('rotated local CLI authorization recovers catalog only; no inference retry is performed',async()=>{
+  const pathSeen=[],tokenBefore='old-local-credential',tokenAfter='new-local-credential';
+  let refreshCalls=0,catalogCalls=0,chatCalls=0;
+  const transport=async(url,opts)=>{
+    pathSeen.push(url);
+    if(url.endsWith('/v1/models')){
+      catalogCalls++;
+      const token=opts.headers['X-OmniRoute-CLI-Token'];
+      if(token!==tokenAfter)return Response.json({error:'unauthorized'},{status:401});
+      return Response.json({data:[{id:model,owned_by:'openrouter'}]});
+    }
+    if(url.endsWith('/v1/chat/completions')){
+      chatCalls++;
+      return new Response('data: {"choices":[{"delta":{"content":"ok"}}]}\n\ndata: [DONE]\n\n');
+    }
+    throw Error('unexpected endpoint');
+  };
+  const chat=createChat({cliAuth:{header:'X-OmniRoute-CLI-Token',token:tokenBefore},
+    refreshCliAuth:async()=>{refreshCalls++;return {header:'X-OmniRoute-CLI-Token',token:tokenAfter};},
+    fetchImpl:transport,clock:()=>12345});
+  assert.deepEqual(await chat.models(),[model]);
+  assert.equal(refreshCalls,1);
+  assert.equal(catalogCalls,2);
+  const reply=await chat.respond(JSON.stringify(request),new AbortController().signal);
+  assert.equal(reply.status,200);
+  assert.equal(chatCalls,1);
+  reply.done();
+  assert.equal(pathSeen.filter(x=>x.endsWith('/v1/chat/completions')).length,1);
+});
+
+test('no response can be claimed if local gateway authentication refresh fails',async()=>{
+  let attempts=0,refresh=0;
+  const chat=createChat({cliAuth:{header:'X-OmniRoute-CLI-Token',token:'old'},
+    refreshCliAuth:async()=>{refresh++;return {header:'bad\r\nheader',token:'bad'};},
+    fetchImpl:async()=>{attempts++;return Response.json({error:'unauthorized'},{status:401});}});
+  await assert.rejects(()=>chat.models(),/models_unavailable/);
+  assert.equal(attempts,1);
+  assert.equal(refresh,1);
+});
