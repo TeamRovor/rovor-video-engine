@@ -104,3 +104,15 @@ test('bridge without chat keeps POST closed', async () => {
     assert.equal((await fetch(base + '/api/chat', {method: 'POST', headers: {Cookie: cookie, Origin: base, 'Content-Type': 'application/json'}, body: body()})).status, 405);
   } finally { b.server.close(); }
 });
+
+test('reusable pairing lets a restarted browser pair again; default stays one-use', async () => {
+  for (const [reusable, second] of [[true, 200], [false, 401]]) {
+    const b = createBridge({collect: async () => ({}), hud: '<body></body>', adapter: '', pairCode: 'p', reusablePairing: reusable});
+    const base = 'http://127.0.0.1:' + await b.listen();
+    try {
+      const pair = () => fetch(base + '/pair', {method: 'POST', headers: {Origin: base}, body: '{"code":"p"}'});
+      assert.equal((await pair()).status, 200);
+      assert.equal((await pair()).status, second);
+    } finally { b.server.close(); }
+  }
+});

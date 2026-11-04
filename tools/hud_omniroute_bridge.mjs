@@ -7,6 +7,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import os from 'node:os';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {spawn,spawnSync,execFile} from 'node:child_process';
 import {promisify} from 'node:util';
@@ -113,7 +114,7 @@ export function createCollector(read,{clock=Date.now}={}){
   };
 }
 
-export function createBridge({collect,hud,adapter,quotaAddon='',chat=null,chatAddon='',pairCode=crypto.randomBytes(32).toString('hex'),port=0,clock=Date.now,viewerOrigin='https://teamrovor.github.io'}){
+export function createBridge({collect,hud,adapter,quotaAddon='',chat=null,chatAddon='',pairCode=crypto.randomBytes(32).toString('hex'),port=0,reusablePairing=false,clock=Date.now,viewerOrigin='https://teamrovor.github.io'}){
   const sessions=new Map(),allowedHosts=new Set();let pairingOpen=true;
   const reply=(res,status,body,type='application/json',extra={})=>{res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"frame-ancestors 'none'; base-uri 'none'",...extra});res.end(body);};
   const externalTokens=new Map();
@@ -139,8 +140,8 @@ export function createBridge({collect,hud,adapter,quotaAddon='',chat=null,chatAd
       let body='';try{for await(const chunk of req){body+=chunk;if(body.length>256){reply(res,413,'{}');return;}}}catch{return;}
       let supplied;try{supplied=JSON.parse(body).code;}catch{return denied(res);}
       if(!pairingOpen||!same(supplied,pairCode))return denied(res);
-      if(externalPair){pairingOpen=false;const token=crypto.randomBytes(32).toString('hex');externalTokens.set(token,clock()+86400000);return reply(res,200,JSON.stringify({token,scope:'read_hud_snapshot',expires_at:new Date(clock()+86400000).toISOString()}));}
-      pairingOpen=false;const session=crypto.randomBytes(32).toString('hex');sessions.set(session,clock()+7*86400000);
+      if(externalPair){if(!reusablePairing)pairingOpen=false;const token=crypto.randomBytes(32).toString('hex');externalTokens.set(token,clock()+86400000);return reply(res,200,JSON.stringify({token,scope:'read_hud_snapshot',expires_at:new Date(clock()+86400000).toISOString()}));}
+      if(!reusablePairing)pairingOpen=false;const session=crypto.randomBytes(32).toString('hex');sessions.set(session,clock()+7*86400000);
       const secure=host.endsWith('.trycloudflare.com')?'; Secure':'';
       return reply(res,200,'{"paired":true}','application/json',{'Set-Cookie':`rovor_hud=${session}; HttpOnly; SameSite=Strict; Path=/; Max-Age=604800${secure}`});
     }
@@ -179,6 +180,16 @@ export function createBridge({collect,hud,adapter,quotaAddon='',chat=null,chatAd
   });
   server.requestTimeout=10000;server.headersTimeout=10000;
   return {server,pairCode,allowedHosts,async listen(){await new Promise((r,j)=>{server.once('error',j);server.listen(port,'127.0.0.1',r)});const address=server.address();allowedHosts.add('127.0.0.1:'+address.port);allowedHosts.add('localhost:'+address.port);return address.port;}};
+}
+
+function persistentPairCode(){
+  const sec='/usr/bin/security',svc='rovordigital.hud.bridge.pair';
+  const get=spawnSync(sec,['find-generic-password','-s',svc,'-w'],{encoding:'utf8',timeout:5000});
+  if(get.status===0&&/^[0-9a-f]{64}$/.test(get.stdout.trim()))return get.stdout.trim();
+  const code=crypto.randomBytes(32).toString('hex');
+  const add=spawnSync(sec,['add-generic-password','-U','-a',os.userInfo().username,'-s',svc,'-w',code],{encoding:'utf8',timeout:5000});
+  if(add.status!==0)throw new Error('keychain_unavailable');
+  return code;
 }
 
 function endpointKeyFromKeychain(){
@@ -228,12 +239,13 @@ export function createWorkerReader(run=promisify(execFile),clock=Date.now){
 }
 
 async function main(){
-  const remote=process.argv.includes('--remote');
+  const remote=process.argv.includes('--remote'),persistent=process.argv.includes('--persistent');
+  if(remote&&persistent){console.error('--persistent is local-only and cannot be combined with --remote.');process.exit(2);}
   const reader=await installedReader(),readModels=createCollector(reader),readWorkers=createWorkerReader();
   const collect=async period=>({...await readModels(period),workforce:await readWorkers()});
   const first=await collect('24h');
   const chat=createChat({apiKey:endpointKeyFromKeychain(),status:()=>collect('24h')});
-  const bridge=createBridge({collect,chat,chatAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/hud-chat.js'),'utf8'),port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8'),quotaAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8')});
+  const bridge=createBridge({collect,chat,chatAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/hud-chat.js'),'utf8'),port:20129,...(persistent?{pairCode:persistentPairCode(),reusablePairing:true}:{}),hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8'),quotaAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8')});
   const port=await bridge.listen();
   console.log(`OmniRoute connected: ${first.connection_count} configured connections; ${first.models.length} recorded models; ${first.request_count} recorded requests in 24h. ${first.quota.records.length} fresh provider-reported quota rows (unknown limits remain unknown).`);
   let tunnel;
@@ -242,7 +254,7 @@ async function main(){
     tunnel.on('error',()=>{console.log('cloudflared unavailable. Local link only; no software installed.');console.log(`http://127.0.0.1:${port}/#pair=${bridge.pairCode}`)});
     let printed=false,buffer='';tunnel.stderr.on('data',chunk=>{buffer=(buffer+chunk.toString()).slice(-8192);const url=buffer.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);if(url&&!printed){printed=true;bridge.allowedHosts.add(new URL(url[0]).host);console.log('PRIVATE PHONE PAIRING LINK (one use): '+url[0]+'/#pair='+bridge.pairCode);}});
     tunnel.on('exit',()=>{console.log('Remote tunnel stopped. Remote live sync is unavailable.');});
-  }else console.log(`PRIVATE LOCAL PAIRING LINK (one use): http://127.0.0.1:${port}/#pair=${bridge.pairCode}`);
+  }else if(persistent)console.log('HUD bridge running (local only). Open http://127.0.0.1:'+port+'/ and pair once; the pairing code is kept in your Keychain.');else console.log(`PRIVATE LOCAL PAIRING LINK (one use): http://127.0.0.1:${port}/#pair=${bridge.pairCode}`);
   for(const sig of ['SIGINT','SIGTERM'])process.on(sig,()=>{tunnel?.kill();bridge.server.close(()=>process.exit(0));});
 }
 export function isEntrypoint(argvPath=process.argv[1],moduleUrl=import.meta.url){
