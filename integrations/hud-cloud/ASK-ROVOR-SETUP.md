@@ -50,6 +50,19 @@ The Mac enumerates the installed OmniRoute catalog but offers only explicit `:fr
 
 Enabling every one of the nine providers depends on current account access and a verified compatible model; a configured key is not proof of a usable, zero-cost model. The UI must say offline/unknown rather than invent activity.
 
+## Task-aware routing and two-model review
+
+Ask ROVOR's **Smart route** selects from the Mac's *currently advertised and explicitly free-eligible* model IDs. Its initial route-name and provider cues (coding, reasoning, speed, creative work) are **heuristic preferences, not proof that one model is objectively better**. The available route catalog, free-only policy and explicit provider constraints take precedence; there is no round-robin rotation or bypass of a disabled provider.
+
+The **Two-model review when useful** option is off unless the owner deliberately enables it in the composer. When selected alongside Smart route, a comparison, provider-pair request or sufficiently complex task can choose **at most two distinct available routes**. The plan is visible **before Send**. A manually selected model remains a single-model call.
+
+- Each model gets its own bounded, authenticated request and durable receipt.
+- For the current **single-executor Mac relay**, calls are serialized so the second does not silently expire while waiting behind the first. If the first completes, the second model receives a limited copy of the first answer and performs an independent critical review. If the first fails, the second may independently attempt the original task. No paid fallbacks or repeated inference retries are enabled.
+- Completion means a real response was returned. Responses are shown separately, with the requested route and receipt, **not** as an invented unanimous answer or verified ultimate fallback-model identity.
+- Cancelling before claim is possible. Once a model has claimed work, stopping the browser wait cannot guarantee termination. No model has GitHub write access or autonomous job scheduling through this interface.
+
+**Later capability scoring:** collect real receipt latency, observed route success/failure, human PASS/FAIL quality reviews by task family, verified task/tool compatibility and fresh provider limits, then rank routes using documented evidence. Without these measurements, do not display made-up percentages, quota bars, benchmarks or capability scores. The safe initial preference rules are not a substitute for such measurement.
+
 ## GitHub source access — current scope
 
 The Ask ROVOR composer now includes **GitHub source**, an optional, explicit selector of a curated set of eight files used for HUD, routing, deployment, and diagnostics. The Mac relay reads only the **local Git checkout's `origin/main` commit object**, using `git rev-parse` and `git show`. It sends a bounded source excerpt and the exact commit SHA to the selected OmniRoute model for analysis.
