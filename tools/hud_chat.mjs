@@ -41,8 +41,10 @@ export function buildStatusContext(snapshot) {
   return lines.join('\n').slice(0, CHAT_LIMITS.contextChars);
 }
 
-const SYSTEM = 'You are the ROVOR HUD assistant. Be concise. Use the live status block only when it is relevant, '
-  + 'say when something is unknown, and never claim an action was executed, a draft approved, or a test passed.';
+const SYSTEM = 'You are a conversational inference model inside Ask ROVOR. You have no tools, task dispatch authority, file access, timers, or background execution. '
+  + 'Never claim a job was started, approved, completed or scheduled, and never promise a future delivery. '
+  + 'You may answer questions and draft plans or content now. Model text is not evidence of employee or runtime activity. '
+  + 'If telemetry is absent or stale, explicitly say so; never invent a model invocation, result, tool action or timestamp.';
 
 export function createChat({apiKey, base = 'http://127.0.0.1:20128', fetchImpl = fetch, status = async () => null, clock = Date.now}) {
   let models = [], modelsAt = 0, busy = false, stamps = [];
