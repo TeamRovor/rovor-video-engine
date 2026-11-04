@@ -137,6 +137,21 @@
     for(const [value,label] of [['omniroute','OmniRoute · Mac'],['cloudflare','Cloudflare AI']]) sourceSelect.append(el('option',{value,textContent:label}));
     const select=el('select',{id:'rvc-model',className:'rvc-model'});select.setAttribute('aria-label','Model');
     const stateLabel=el('div',{className:'rvc-state',textContent:'Checking available models…'});
+    // Separate Mac telemetry from model availability. Historical provider
+    // connections are not proof of running inference or fresh quotas.
+    const providerDetails=el('details',{className:'rvc-provider-inspect'});
+    const providerSummary=el('summary',{textContent:'OMNIROUTE PROVIDERS · CHECKING TELEMETRY'});
+    const providerList=el('div',{className:'rvc-provider-list'});
+    providerDetails.append(providerSummary,providerList);
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-provider-inspect{flex-shrink:0;border-bottom:1px solid #1d4264;background:#05152a;color:#a4c8e6}
+#rvc .rvc-provider-inspect>summary{cursor:pointer;padding:9px 18px;font-size:11px;letter-spacing:.07em;list-style:revert;touch-action:manipulation}
+#rvc .rvc-provider-inspect>summary:focus-visible{outline:2px solid #85cbff;outline-offset:-2px}
+#rvc .rvc-provider-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:7px;max-height:160px;overflow:auto;padding:0 12px 12px}
+#rvc .rvc-provider-item{padding:8px 10px;background:#091f39;border:1px solid #234869;border-radius:9px;font-size:12px}
+#rvc .rvc-provider-item small{display:block;color:#8daec8;font-size:10px;margin-top:3px}
+@media(max-width:760px){#rvc .rvc-provider-list{grid-template-columns:repeat(2,minmax(0,1fr));max-height:128px}#rvc .rvc-provider-inspect>summary{padding:8px 12px;font-size:10px}}
+`}));
     const sessionsList=el('div',{className:'rvc-sessions'});
     const newChat=el('button',{type:'button',className:'rvc-new',textContent:'＋  New conversation'});
     const clear=el('button',{type:'button',textContent:'Clear',title:'Clear this conversation'});
@@ -155,7 +170,7 @@
         el('small',{},'Conversation history is stored on this device. Model text is not proof of employee execution.')),
       el('div',{className:'rvc-main'},
         el('header',{},mobileMenu,el('strong',{textContent:'ASK ROVOR'}),sourceSelect,select,clear,close),
-        stateLabel,log,
+        stateLabel,providerDetails,log,
         el('footer',{},el('div',{className:'rvc-context-note',textContent:'An accepted chat request is not a completed task. Only a confirmed model response counts.'}),form)));
     panel.setAttribute('aria-label','ROVOR chat');
     const sideBackdrop=el('button',{type:'button',className:'rvc-side-backdrop'});
@@ -240,9 +255,35 @@
       syncVisualViewport();
       // Avoid opening the iOS keyboard the moment the app launches.
       // Desktop typing remains one-step with autofocus.
-      if(open){load();if(!window.matchMedia('(max-width:760px)').matches)input.focus({preventScroll:true});}
+      if(open){load();refreshProviderInventory();if(!window.matchMedia('(max-width:760px)').matches)input.focus({preventScroll:true});}
     };
 
+    async function refreshProviderInventory(){
+      if(panel.dataset.open!=='true')return;
+      try{
+        const reply=await fetch('/api/hud/omniroute?period=24h',{credentials:'same-origin',cache:'no-store'});
+        if(!reply.ok)throw Error('telemetry_unavailable');
+        const data=await reply.json();
+        if(panel.dataset.open!=='true')return;
+        const rows=Array.isArray(data?.connections)?data.connections.filter(p=>typeof p?.provider==='string').slice(0,20):[];
+        const time=Date.parse(data?.snapshot_at);
+        const fresh=data?.transport?.connection==='fresh'&&Number.isFinite(time)&&Date.now()-time<=15000;
+        const date=Number.isFinite(time)?new Date(time).toLocaleString(): 'unknown date';
+        providerSummary.textContent=rows.length+' CONFIGURED CONNECTIONS · '+(fresh?'RECENT TELEMETRY':'STALE / NOT LIVE')+' · '+date;
+        providerList.textContent='';
+        if(!rows.length){providerList.append(el('div',{className:'rvc-provider-item',textContent:'No provider evidence. This does not mean there are zero connections.'}));return;}
+        for(const item of rows){
+          const count=Number.isSafeInteger(item.enabled_count)?item.enabled_count:0;
+          const label=String(item.name||item.provider).slice(0,48);
+          const chip=el('div',{className:'rvc-provider-item',textContent:label});
+          chip.append(el('small',{textContent:count+' configured enabled · '+(fresh?'model access unverified':'last report stale')}));
+          providerList.append(chip);
+        }
+      }catch{
+        providerSummary.textContent='PROVIDER INVENTORY UNAVAILABLE · NO LIVE VERIFICATION';
+        providerList.textContent='';
+      }
+    }
     let loadEpoch=0;
     async function load(){
       const epoch=++loadEpoch, requestedSource=sourceSelect.value;
@@ -269,7 +310,7 @@
         const saved=localStorage.getItem(KEY+'_model_'+requestedSource);
         if(preferred&&models.includes(preferred))select.value=preferred;
         else if(saved&&models.includes(saved))select.value=saved;
-        stateLabel.textContent=omni?'OMNIROUTE BRIDGE ONLINE · verified free routes · Mac must remain connected':
+        stateLabel.textContent=omni?'OMNIROUTE BRIDGE REPORTED · free-eligible routes listed, not canary-verified':
           'CLOUDFLARE AI · separate cloud models · usage depends on your provider allowance';
         ready=true;send.disabled=false;
       }catch{
