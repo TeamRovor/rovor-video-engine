@@ -302,7 +302,11 @@
     };
     const welcome=()=>{
       const chips=el('div',{className:'rvc-chips'});
-      PROMPTS.forEach(q=>chips.append(el('button',{type:'button',textContent:q,onclick:()=>{input.value=q;form.requestSubmit();}})));
+      PROMPTS.forEach(q=>chips.append(el('button',{type:'button',textContent:q,onclick:()=>{
+        // A suggestion is a draft, never an implicit model execution.
+        input.value=q;input.dispatchEvent(new Event('input',{bubbles:true}));
+        if(!window.matchMedia('(pointer:coarse)').matches)input.focus({preventScroll:true});
+      }})));
       const n=el('div',{className:'rvc-welcome'},el('h2',{},'Intelligence, your way.'),
         el('p',{},'Choose a model and receive a real answer. Chat alone does not start employee jobs.'),chips);log.append(n);
     };
@@ -506,7 +510,15 @@
     }
 
     form.onsubmit=e=>{e.preventDefault();const text=input.value.trim();if(!text||busy||!ready)return;input.value='';ask(text);};
-    input.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();form.requestSubmit();}};
+    // Touch keyboards use Return for a newline. Sending always needs an
+    // explicit tap; desktop keyboards retain Enter to send / Shift+Enter newline.
+    const touchCompose=window.matchMedia('(pointer:coarse)').matches;
+    input.placeholder=touchCompose?'Message an available model…':'Message… Enter to send · Shift+Enter for newline';
+    input.onkeydown=e=>{
+      if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!window.matchMedia('(pointer:coarse)').matches){
+        e.preventDefault();form.requestSubmit();
+      }
+    };
     stop.onclick=async()=>{
       if(!controller)return;
       if(pendingJob?.phase==='queued'){
