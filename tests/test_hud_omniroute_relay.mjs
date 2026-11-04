@@ -112,8 +112,10 @@ test('Mac route selection requires explicit free IDs or owner allowlist',()=>{
   assert.deepEqual(eligibleModels([
     'openrouter/example:free','rovor-fast-free-v1','openrouter/example:free',
     'groq/some-model','openrouter/auto','invalid?model'
-  ]),['openrouter/example:free','rovor-fast-free-v1']);
+  ]),['openrouter/example:free']);
   assert(eligibleModels(['groq/some-model'],['groq/some-model']).includes('groq/some-model'));
+  assert(eligibleModels(['rovor-fast-free-v1'],['rovor-fast-free-v1']).includes('rovor-fast-free-v1'));
+  assert.equal(eligibleModels(['rovor-fast-free-v1']).length,0, 'combo names alone do not prove free-only routing');
   assert(!eligibleModels(['groq/some-model']).includes('groq/some-model'));
   assert.equal(eligibleModels(['groq/some-model'],['other']).length,0);
 });
