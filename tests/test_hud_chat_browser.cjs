@@ -12,7 +12,7 @@ const js=fs.readFileSync(path.resolve(__dirname,'../dashboard/command-center/nat
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const model='openrouter/example:free',jobId='051bf69b-cc2d-4453-825e-8d10f16556b4';
 const views=[[390,844,'iPhone'],[820,1180,'iPad portrait'],[1180,820,'iPad landscape'],[1440,900,'Windows/Mac desktop']];
-let server,chrome,ws,tmp,serial=0,submits=0,polls=0;
+let server,chrome,ws,tmp,serial=0,submits=0,polls=0,chromeLog='',chromeExit=null;
 const callbacks=new Map();
 const cmd=(method,params={})=>new Promise((resolve,reject)=>{
   const id=++serial;callbacks.set(id,{resolve,reject});
@@ -23,8 +23,8 @@ async function evaluate(script){
   if(result.exceptionDetails)throw Error('Browser JS exception: '+JSON.stringify(result.exceptionDetails));
   return result.result.value;
 }
-async function waitFor(fn,label){
-  for(let i=0;i<80;i++){try{const v=await fn();if(v)return v;}catch{}await delay(100);}
+async function waitFor(fn,label,attempts=100){
+  for(let i=0;i<attempts;i++){try{const v=await fn();if(v)return v;}catch{}await delay(100);}
   throw Error('Browser timed out: '+label);
 }
 const respond=(res,data,status=200)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
@@ -54,11 +54,20 @@ async function main(){
   assert(chromeBin,'Chrome/Chromium unavailable on browser QA runner');
   tmp=fs.mkdtempSync(path.join(os.tmpdir(),'rovor-ask-browser-'));
   chrome=spawn(chromeBin,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
-    '--remote-debugging-port=0','--user-data-dir='+tmp,'about:blank'],{stdio:'ignore'});
-  const port=await waitFor(()=>{
-    const f=path.join(tmp,'DevToolsActivePort');
-    return fs.existsSync(f)?fs.readFileSync(f,'utf8').split('\n')[0]:null;
-  },'Chrome debug port');
+    '--remote-debugging-port=0','--user-data-dir='+tmp,'about:blank'],{stdio:['ignore','ignore','pipe']});
+  chrome.stderr?.on('data',chunk=>{chromeLog=(chromeLog+chunk.toString()).slice(-5000);});
+  chrome.on('error',err=>{chromeLog+=' Chrome process error: '+err.message;});
+  chrome.on('exit',(code,signal)=>{chromeExit={code,signal};});
+  let port;
+  try {
+    port=await waitFor(()=>{
+      const f=path.join(tmp,'DevToolsActivePort');
+      if(chromeExit)throw Error('Chrome exited '+JSON.stringify(chromeExit));
+      return fs.existsSync(f)?fs.readFileSync(f,'utf8').split('\n')[0]:null;
+    },'Chrome debug port',400);
+  }catch(error){
+    throw Error(error.message+'; browser='+chromeBin+'; exit='+JSON.stringify(chromeExit)+'; stderr='+chromeLog);
+  }
   const targets=await waitFor(async()=>{
     const r=await fetch('http://127.0.0.1:'+port+'/json/list');
     return r.ok?await r.json():null;
