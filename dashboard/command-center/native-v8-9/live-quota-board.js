@@ -1120,7 +1120,7 @@ function start(){
  }
  // Deliberate user action: copy a non-secret Mac diagnostic command.
  // This cannot start remote work or imply a service is running.
- document.addEventListener('click',async event=>{
+ if(typeof document.addEventListener==='function')document.addEventListener('click',async event=>{
    const button=event.target?.closest?.('#rovor-workload-popup [data-rvq-copy-cmd="status"]');
    if(!button)return;
    try{
