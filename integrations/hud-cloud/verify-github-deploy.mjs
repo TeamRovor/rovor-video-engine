@@ -83,7 +83,8 @@ export function hasNineProviderMeterAsset(js) {
   ].every(marker => js.includes(marker));
 }
 
-export async function verifyGithubHud({origin, readerToken, send = fetch, expectedQuotaAsset = null, pause = delay}) {
+export async function verifyGithubHud({origin, readerToken, send = fetch, expectedQuotaAsset = null,
+  expectedChatAsset = null, requireLiveTelemetry = true, pause = delay}) {
   origin = verifiedOrigin(origin);
   if (typeof readerToken !== 'string' || readerToken.length < 32)
     throw Error('readback_credentials_missing');
@@ -100,6 +101,12 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
 
   const anonymousScript = await read('/hud-quota.js', false);
   if (anonymousScript.status !== 401) throw Error('anonymous_quota_asset_was_not_denied');
+  // Ask ROVOR is another protected asset. Its exact deployed bytes must match
+  // the reviewed checkout; a successful upload of an old HUD must not pass.
+  if (expectedChatAsset !== null) {
+    const anonymousChat = await read('/hud-chat.js', false);
+    if (anonymousChat.status !== 401) throw Error('anonymous_chat_asset_was_not_denied');
+  }
   const anonymousRoot = await read('/', false);
   if (anonymousRoot.status !== 303 ||
       !new URL(anonymousRoot.headers.get('Location') || '/', origin).href.startsWith(origin + '/login'))
@@ -117,13 +124,22 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     throw Error('nine_provider_meter_asset_missing');
   if (expectedQuotaAsset !== null && js !== expectedQuotaAsset)
     throw Error('deployed_quota_asset_differs_from_checkout_run_deployment');
+  if (expectedChatAsset !== null) {
+    if (typeof expectedChatAsset !== 'string' || !expectedChatAsset.includes('window.ROVOR_HUD_CHAT'))
+      throw Error('expected_chat_asset_invalid');
+    const chatScript = await read('/hud-chat.js', true);
+    if (chatScript.status !== 200) throw Error('authenticated_chat_asset_unavailable');
+    const shippedChat = await chatScript.text();
+    if (shippedChat !== expectedChatAsset)
+      throw Error('deployed_chat_asset_differs_from_checkout_run_deployment');
+  }
   const status = await read('/api/hud/status?period=24h', true);
   if (status.status !== 200) throw Error('private_D1_status_unavailable');
   const telemetry = await status.json();
   if (telemetry.source !== 'cloud_hud_telemetry' ||
       !['fresh','stale','never_received'].includes(telemetry.connection))
     throw Error('private_D1_contract_invalid');
-  if (telemetry.connection !== 'fresh')
+  if (telemetry.connection !== 'fresh' && requireLiveTelemetry)
     throw Error('private_D1_telemetry_not_fresh');
   const snapshot = telemetry.snapshot;
   const connections = Array.isArray(snapshot?.connections) ? snapshot.connections : [];
@@ -149,33 +165,44 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
   const freeTaggedProviders = new Set(inferenceRows.filter(model => model.model_id.endsWith(':free') &&
     Number.isSafeInteger(model.successes_pacific_day) && model.successes_pacific_day > 0)
     .map(model => model.provider)).size;
-  if (!usageVerified || connections.length !== 9)
+  if ((!usageVerified || connections.length !== 9) && requireLiveTelemetry)
     throw Error('private_D1_usage_readback_incomplete');
-  const reportTimestamps = await verifyAdvancingReports(async () => {
+  const liveEligible = telemetry.connection === 'fresh' && usageVerified && connections.length === 9;
+  const reportTimestamps = liveEligible ? await verifyAdvancingReports(async () => {
     const response = await read('/api/hud/status?period=24h', true);
     if (response.status !== 200) throw Error('private_D1_status_unavailable');
     return response.json();
-  }, telemetry, {pause});
+  }, telemetry, {pause}) : null;
   return {private_auth_verified: true, original_hud_verified: true,
     quota_board_verified: true, database_api_verified: true,
     quota_asset_matches_checkout: expectedQuotaAsset === null ? null : true,
+    chat_asset_matches_checkout: expectedChatAsset === null ? null : true,
     telemetry_connection: telemetry.connection,
     providers_observed: connections.length,
-    request_usage_freshness: requestUsage?.freshness || 'unknown',
-    tracked_providers_observed: Array.isArray(usageProviders) ? usageProviders.length : 0,
-    active_usage_providers: activeProviders, tracked_models: usageModels,
-    tracked_pacific_day_requests: trackedRequests,
-    inference_activity_providers: inferenceProviders,
-    free_tagged_successful_inference_providers: freeTaggedProviders,
-    successive_reports_verified: true, report_timestamps: reportTimestamps,
-    all_nine_usage_readback_verified: connections.length === 9 && usageVerified};
+    request_usage_freshness: liveEligible ? 'fresh' : 'unknown_not_verified',
+    tracked_providers_observed: liveEligible ? usageProviders.length : null,
+    active_usage_providers: liveEligible ? activeProviders : null,
+    tracked_models: liveEligible ? usageModels : null,
+    tracked_pacific_day_requests: liveEligible ? trackedRequests : null,
+    inference_activity_providers: liveEligible ? inferenceProviders : null,
+    free_tagged_successful_inference_providers: liveEligible ? freeTaggedProviders : null,
+    successive_reports_verified: reportTimestamps !== null,
+    report_timestamps: reportTimestamps,
+    all_nine_usage_readback_verified: reportTimestamps !== null,
+    deployment_verified: true, mac_telemetry_verified: reportTimestamps !== null};
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   verifyGithubHud({origin: process.env.ROVOR_HUD_DEPLOY_ORIGIN,
     readerToken: process.env.ROVOR_HUD_READER_TOKEN,
-    expectedQuotaAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/live-quota-board.js', import.meta.url), 'utf8')})
-    .then(result => console.log(JSON.stringify(result)))
+    expectedQuotaAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/live-quota-board.js', import.meta.url), 'utf8'),
+    expectedChatAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/hud-chat.js', import.meta.url), 'utf8'),
+    requireLiveTelemetry: false})
+    .then(result => {
+      console.log(JSON.stringify(result));
+      if (!result.mac_telemetry_verified)
+        console.warn('::warning::HUD code/privacy/readback verified, but Mac usage telemetry is not fresh or complete. No 24/7 model activity verified; check the Mac reporter separately.');
+    })
     .catch(error => {console.error('Private HUD release readback failed: ' + error.message);
       process.exitCode = 1;});
 }
