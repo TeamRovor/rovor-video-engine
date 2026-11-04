@@ -173,6 +173,7 @@
         el('p',{},'Choose a model and receive a real answer. Chat alone does not start employee jobs.'),chips);log.append(n);
     };
     const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':'rvc-bot',m.content));};
+    let pendingJob=null,cancelConfirmed=false;
     const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;if(!b)input.focus();};
     const syncVisualViewport=()=>{
       // On iOS the keyboard resizes the visual rather than the layout viewport.
@@ -243,7 +244,7 @@
       if(active?.title==='New conversation')active.title=text.replace(/\s+/g,' ').slice(0,55);
       save();drawSessions();
       const bubble=add('rvc-bot','Preparing request · no model call confirmed');
-      let reply='';setBusy(true);controller=new AbortController();
+      let reply='';pendingJob=null;cancelConfirmed=false;setBusy(true);stop.textContent='Stop waiting';controller=new AbortController();
       const signal=controller.signal;
       try{
         const payload={model:target,context:false,messages:history.slice(-5)};
@@ -252,6 +253,8 @@
             headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
           const ack=await posted.json().catch(()=>({}));
           if(posted.status!==202||!ack.job_id)throw Error(ack.error||'request_not_accepted');
+          pendingJob={id:ack.job_id,phase:'queued'};
+          stop.textContent='Cancel queued request';
           renderText(bubble,'HUD received request · queued, not yet executed');
           for(let i=0;i<100;i++){
             await new Promise(done=>setTimeout(done,1300));
@@ -259,8 +262,8 @@
             const r=await fetch('/api/hud/chat/status/'+encodeURIComponent(ack.job_id),{credentials:'same-origin',cache:'no-store',signal});
             if(!r.ok)throw Error('receipt_unavailable');
             const result=await r.json();
-            if(result.state==='queued'){if(i%4===0)renderText(bubble,'Queued · waiting for Mac bridge to claim');continue;}
-            if(result.state==='running'){if(i%4===0)renderText(bubble,'Claimed by Mac · waiting for actual model response');continue;}
+            if(result.state==='queued'){pendingJob.phase='queued';stop.textContent='Cancel queued request';if(i%4===0)renderText(bubble,'Queued · waiting for Mac bridge to claim');continue;}
+            if(result.state==='running'){pendingJob.phase='running';stop.textContent='Stop waiting';if(i%4===0)renderText(bubble,'Claimed by Mac · waiting for actual model response');continue;}
             if(result.state==='complete'&&typeof result.output==='string'){
               reply=result.output;break;
             }
@@ -296,20 +299,48 @@
           omniroute_offline:'The Mac bridge is offline. No model call was confirmed.',
           relay_timeout:'No receipt from Mac. A completed model call was not verified.',
           stopped_waiting:'You stopped waiting. If the Mac already claimed the request, it might still finish.',
+          user_cancelled:'Request cancelled before the Mac claimed it. No inference started for this request.',
           chat_busy:'The private queue is full. No new model call was confirmed.',
           model_not_available:'Route unavailable or not verified eligible for free use.',
           chat_rate_limited:'The request limit has been reached.',
         };
-        const message=messages[e.message]||('No confirmed model reply: '+(e.message||'unknown'));
+        const message=cancelConfirmed?messages.user_cancelled:(messages[e.message]|| (e.name==='AbortError'?messages.stopped_waiting:('No confirmed model reply: '+(e.message||'unknown'))));
         renderText(bubble,message);bubble.parentElement.className='rvc-msg rvc-err';
         stateLabel.textContent='NO COMPLETION CONFIRMED · '+message;
         if(reply){history.push({role:'assistant',content:reply});save();}
-      }finally{controller=null;setBusy(false);}
+      }finally{pendingJob=null;controller=null;setBusy(false);}
     }
 
     form.onsubmit=e=>{e.preventDefault();const text=input.value.trim();if(!text||busy||!ready)return;input.value='';ask(text);};
     input.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();form.requestSubmit();}};
-    stop.onclick=()=>controller?.abort();
+    stop.onclick=async()=>{
+      if(!controller)return;
+      if(pendingJob?.phase==='queued'){
+        stop.disabled=true;
+        try{
+          const r=await fetch('/api/hud/chat/cancel/'+encodeURIComponent(pendingJob.id),{
+            method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+            body:'{}',cache:'no-store'
+          });
+          const result=await r.json().catch(()=>({}));
+          if(r.status===200&&result.cancelled===true){
+            cancelConfirmed=true;
+            controller.abort();
+            return;
+          }
+          if(r.status===409){
+            pendingJob.phase='running';
+            stop.textContent='Stop waiting';
+            stateLabel.textContent='CANCELLATION TOO LATE · checking the actual result';
+            return;
+          }
+          stateLabel.textContent='CANCELLATION NOT VERIFIED · still checking request status';
+        }catch{stateLabel.textContent='CANCELLATION FAILED · still checking request status';}
+        finally{stop.disabled=false;}
+        return;
+      }
+      controller.abort(); // Already running: only stops this device waiting.
+    };
     clear.onclick=()=>{if(busy)return;history=[];save();redraw();};
     newChat.onclick=()=>{if(busy)return;save();panel.dataset.sideOpen='false';currentId=crypto.randomUUID();history=[];
       sessions.unshift({id:currentId,title:'New conversation',history:[]});sessions=sessions.slice(0,16);
