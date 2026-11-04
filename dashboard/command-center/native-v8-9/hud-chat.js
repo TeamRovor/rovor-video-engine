@@ -466,7 +466,7 @@
         el('p',{},'Choose a model and receive a real answer. Chat alone does not start employee jobs.'),chips);log.append(n);
     };
     const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':m.outcome==='failed'?'rvc-err':'rvc-bot',m.content,m));};
-    let pendingJob=null,cancelConfirmed=false;
+    let pendingJob=null,cancelConfirmed=false,multiPending=[];
     const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;refreshButton.disabled=b;repoSelect.disabled=b||sourceSelect.value!=='omniroute';
       // Don't re-open the software keyboard after a delayed response on iOS.
       if(!b&&panel.dataset.open==='true'&&!window.matchMedia('(pointer:coarse)').matches)input.focus({preventScroll:true});
@@ -618,9 +618,100 @@
       updatePlan();
     };
 
+    // Two independent, explicitly submitted model requests. Each has its own
+    // private receipt; the Mac may execute them sequentially (not parallel).
+    // Never claim both responded unless both receipts actually completed.
+    async function askBoth(text,plan){
+      const routes=plan.routes.slice(0,2);
+      const attachedSource=repoSelect.value;
+      const thread=sessions.find(s=>s.id===currentId);
+      if(thread){thread.source='omniroute';thread.model=AUTO_ROUTE;}
+      history.push({role:'user',content:text});add('rvc-user',text);
+      if(thread?.title==='New conversation')thread.title=text.replace(/\s+/g,' ').slice(0,55);
+      save();drawSessions();
+      const bubble=add('rvc-bot','Submitting two independent requests · no model calls confirmed');
+      multiPending=[];pendingJob=null;cancelConfirmed=false;controller=new AbortController();setBusy(true);
+      const signal=controller.signal;
+      const messages=history.filter(m=>m.role==='user'||(m.role==='assistant'&&m.outcome==='complete'))
+        .slice(-5).map(m=>({role:m.role,content:m.content}));
+      const outcomes=new Map();
+      const show=()=>{
+        const status=routes.map(id=>id+': '+(outcomes.get(id)||'Preparing request')).join('\n');
+        renderText(bubble,status);
+      };
+      async function runOne(model){
+        const payload={model,context:false,messages};
+        if(attachedSource)payload.repo_file=attachedSource;
+        let jobId=null;
+        try{
+          const posted=await fetch('/api/hud/chat/submit',{method:'POST',credentials:'same-origin',
+            signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+          const ack=await posted.json().catch(()=>({}));
+          if(posted.status!==202||!ack.job_id)throw Error(ack.error||'request_not_accepted');
+          jobId=ack.job_id;
+          const pending={id:jobId,model,phase:'queued'};
+          multiPending.push(pending);
+          outcomes.set(model,'Queued; Mac claim not yet confirmed');show();
+          stop.textContent='Cancel queued requests / stop waiting';
+          for(let i=0;i<105;i++){
+            if(signal.aborted)throw Error('stopped_waiting');
+            await new Promise(resolve=>setTimeout(resolve,1250));
+            if(signal.aborted)throw Error('stopped_waiting');
+            const check=await fetch('/api/hud/chat/status/'+encodeURIComponent(jobId),
+              {credentials:'same-origin',signal,cache:'no-store'});
+            if(!check.ok)throw Error('receipt_unavailable');
+            const item=await check.json();
+            if(item.state==='queued'){pending.phase='queued';continue;}
+            if(item.state==='running'){
+              pending.phase='running';
+              outcomes.set(model,'Claimed by Mac; awaiting reply');
+              show();continue;
+            }
+            if(item.state==='complete'&&typeof item.output==='string'&&item.output.trim()){
+              pending.phase='complete';outcomes.set(model,'Reply confirmed');show();
+              return {state:'complete',model,reply:item.output,receipt:jobId};
+            }
+            if(item.state==='failed')throw Error(item.error||'relay_failed');
+            throw Error('invalid_receipt');
+          }
+          throw Error('no_completion_receipt');
+        }catch(error){
+          const message=error.name==='AbortError'?'stopped_waiting':String(error.message||'unverified');
+          outcomes.set(model,'Not confirmed: '+message);show();
+          return {state:'failed',model,reason:message,receipt:jobId};
+        }
+      }
+      try{
+        const results=await Promise.all(routes.map(runOne));
+        const successes=results.filter(item=>item.state==='complete').length;
+        // Each model's reply remains independently attributed; no generated
+        // "consensus" is fabricated if only one model completed.
+        for(const result of results){
+          const item=result.state==='complete'
+            ?{role:'assistant',content:result.reply,platform:'omniroute',model:result.model,
+               repo_file:attachedSource||null,receipt:result.receipt,outcome:'complete',recordedAt:Date.now()}
+            :{role:'assistant',content:'No confirmed reply: '+result.reason,platform:'omniroute',
+               model:result.model,receipt:result.receipt,outcome:'failed',recordedAt:Date.now()};
+          history.push(item);
+        }
+        if(successes===2)
+          stateLabel.textContent='TWO REPLIES CONFIRMED · requested routes independently recorded; upstream fallback unverified';
+        else
+          stateLabel.textContent=successes+' / 2 REPLIES CONFIRMED · failed routes are not counted as completed';
+        save();redraw();
+      }finally{
+        multiPending=[];pendingJob=null;controller=null;setBusy(false);updatePlan();
+      }
+    }
     async function ask(text){
       if(!ready||busy)return;
-      const target=select.value,platform=sourceSelect.value,attachedSource=platform==='omniroute'?repoSelect.value:'';
+      const platform=sourceSelect.value,plan=currentPlan(text);
+      if(plan.error||!plan.routes.length){
+        stateLabel.textContent='NO REQUEST SENT · '+(plan.error||'No eligible route');
+        return;
+      }
+      if(platform==='omniroute'&&plan.routes.length>1)return askBoth(text,plan);
+      const target=plan.routes[0],attachedSource=platform==='omniroute'?repoSelect.value:'';
       const thread=sessions.find(s=>s.id===currentId);if(thread){thread.source=platform;thread.model=target;}
       history.push({role:'user',content:text});add('rvc-user',text);
       const active=sessions.find(s=>s.id===currentId);
@@ -698,7 +789,7 @@
         // text to the next model as if it were an assistant answer.
         history.push({role:'assistant',content:message,platform,model:target,receipt:pendingJob?.id||null,outcome:'failed',recordedAt:Date.now()});save();
         redraw();
-      }finally{pendingJob=null;controller=null;setBusy(false);}
+      }finally{pendingJob=null;controller=null;setBusy(false);updatePlan();}
     }
 
     repoRow.hidden=sourceSelect.value!=='omniroute';repoSelect.disabled=repoRow.hidden;
@@ -714,6 +805,26 @@
     };
     stop.onclick=async()=>{
       if(!controller)return;
+      if(multiPending.length){
+        stop.disabled=true;
+        let cancelled=0,unverified=0;
+        const queued=multiPending.filter(job=>job.phase==='queued');
+        for(const job of queued){
+          try{
+            const response=await fetch('/api/hud/chat/cancel/'+encodeURIComponent(job.id),{
+              method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'
+            });
+            const result=await response.json().catch(()=>({}));
+            if(response.status===200&&result.cancelled===true){job.phase='cancelled';cancelled++;}
+            else unverified++;
+          }catch{unverified++;}
+        }
+        stateLabel.textContent='STOP WAITING · '+cancelled+' queued cancellation(s) confirmed; '+unverified+
+          ' could not be cancelled; running inference may continue';
+        controller.abort(); // Stops polling only; Mac inference already claimed may finish.
+        stop.disabled=false;
+        return;
+      }
       if(pendingJob?.phase==='queued'){
         stop.disabled=true;
         try{
