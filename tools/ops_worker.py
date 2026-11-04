@@ -166,6 +166,12 @@ def run(repo, out, revision='working-copy', now=None):
     if out == repo or repo in out.parents:
         raise ValueError('Keep worker state outside the source checkout')
     sources = {name: repo / name for name in INPUTS}
+    for name, path in sources.items():
+        for parent in path.parents:
+            if parent == repo:
+                break
+            if parent.is_symlink():
+                raise ValueError('Symlinked input directory: ' + name)
     sources.update(CODE)
     raw = {name: read_bounded(path, MAX_INPUT) for name, path in sources.items()}
     plan = json.loads(raw[INPUTS[2]])

@@ -57,6 +57,27 @@ class OperationsWorkerTests(unittest.TestCase):
         self.run_worker()
         self.assertEqual(before, {p: p.read_bytes() for p in self.repo.rglob('*') if p.is_file()})
 
+    def test_symlinked_input_directories_rejected_before_state(self):
+        for name in ('coordination', 'business'):
+            with self.subTest(directory=name):
+                path = self.repo / name
+                external = self.root / ('redirected-' + name)
+                path.rename(external)
+                try:
+                    path.symlink_to(external, target_is_directory=True)
+                except (OSError, NotImplementedError):
+                    external.rename(path)
+                    self.skipTest('Directory symlinks unavailable on this host')
+                before = {p: p.read_bytes() for p in external.rglob('*') if p.is_file()}
+                try:
+                    with self.assertRaisesRegex(ValueError, 'Symlinked input directory'):
+                        self.run_worker()
+                    self.assertFalse(self.out.exists())
+                    self.assertEqual(before, {p: p.read_bytes() for p in external.rglob('*') if p.is_file()})
+                finally:
+                    path.unlink()
+                    external.rename(path)
+
     def test_input_change_invalidates_cache(self):
         a = self.run_worker()
         self.data['tasks'][0]['next_action'] = 'New bounded action'
