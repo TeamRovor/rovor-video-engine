@@ -59,10 +59,13 @@ async function collectStream(stream) {
     return output;
   } finally {reader.releaseLock();}
 }
-export async function executeClaim(chat, job, signal) {
+export async function executeClaim(chat, job, signal, allowed = null) {
   if (!job || typeof job.id!=='string' || typeof job.request!=='object' ||
-      job.model!==job.request.model) return {state:'failed',error:'model_not_available'};
-  const result=await chat.respond(JSON.stringify(job.request),signal);
+      job.model!==job.request.model || (Array.isArray(allowed) && !allowed.includes(job.model)))
+    return {state:'failed',error:'model_not_available'};
+  let result;
+  try { result=await chat.respond(JSON.stringify(job.request),signal); }
+  catch { return {state:'failed',error:'chat_upstream_unavailable'}; }
   if (result.status!==200 || !result.stream) {
     return {state:'failed',error:result.json?.error==='chat_rate_limited' ? 'chat_rate_limited'
       : result.json?.error==='model_not_available' ? 'model_not_available' : 'chat_upstream_failed'};
@@ -90,7 +93,7 @@ export async function runRelay({origin,writerKey,chat,stop,send=fetch,interval=2
       await post('/api/hud/chat/bridge',{models:available});
       const {job}=await post('/api/hud/chat/claim',{});
       if (job) {
-        const result=await executeClaim(chat,job,stop);
+        const result=await executeClaim(chat,job,stop,available);
         // Result submission may be repeated; it never repeats the inference call.
         for (let n=0;n<2;n++) {
           try {await post('/api/hud/chat/result/'+encodeURIComponent(job.id),result);break;}
