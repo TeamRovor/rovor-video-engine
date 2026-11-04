@@ -3,6 +3,18 @@
   if(window.ROVOR_HUD_CHAT)return;
   const KEY='rovor_hud_chat_v1',SESSIONS_KEY='rovor_chat_sessions_v2',MAX_KEPT=30;
   const PROMPTS=['Develop three visual campaign concepts','Review this code and suggest improvements','Create a high-end creative brief','Break down my project into clear steps'];
+  const PROVIDERS=[['gemini','Google Gemini'],['mistral','Mistral'],['nvidia','NVIDIA'],['cohere','Cohere'],['sambanova','SambaNova'],['cloudflare-ai','Cloudflare Workers AI'],['groq','Groq'],['openrouter','OpenRouter'],['huggingface','Hugging Face']];
+  // Group only by explicit route prefixes. A :free name or configured key
+  // alone does not prove a live free entitlement or successful inference.
+  function routeGroup(id){
+    if(id.startsWith('rovor-'))return 'Owner-approved OmniRoute combos';
+    const prefix=id.split('/')[0].toLowerCase();
+    const aliases={google:'gemini',gemini:'gemini',cloudflare:'cloudflare-ai',
+      'cloudflare-ai':'cloudflare-ai',hf:'huggingface',huggingface:'huggingface'};
+    const provider=aliases[prefix]||prefix;
+    const match=PROVIDERS.find(([key])=>key===provider);
+    return match?match[1]+' · Mac-advertised chat routes':'Other eligible routes (provider unverified)';
+  }
   const css=`
 #rvc-fab{position:fixed;right:18px;bottom:18px;z-index:2147483000;background:#06233d;color:#bde5ff;border:1px solid #2f7fb8;border-radius:999px;padding:11px 18px;font:600 13px system-ui;letter-spacing:.08em;cursor:pointer;box-shadow:0 4px 18px #0008}
 #rvc-fab:hover,#rvc-fab:focus-visible{background:#0b3a63;outline:2px solid #7cc8ff}
@@ -175,8 +187,13 @@
     const modelSheetHeader=el('div',{className:'rvc-model-sheet-header'},modelSheetTitle,modelSheetClose);
     const modelSearch=el('input',{type:'search',className:'rvc-model-search',placeholder:'Search a model or provider',maxLength:100});
     modelSearch.setAttribute('aria-label','Search models and providers');
-    const modelSheetInfo=el('p',{className:'rvc-model-sheet-info',textContent:'Only routes reported by the selected backend are shown. Listed does not mean independently tested.'});
+    const modelSheetInfo=el('p',{className:'rvc-model-sheet-info',textContent:'Only Mac-advertised free-eligible routes are selectable. Listing a route does not prove remaining quota or a completed reply.'});
     const modelRows=el('div',{className:'rvc-model-rows'});
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-model-notready{border:1px dashed #294966;background:#06162a;padding:9px 12px;border-radius:9px;color:#91b1cc;font-size:11px;line-height:1.5}
+@media(max-width:760px){#rvc .rvc-model-notready{font-size:12px;padding:12px}}
+`}));
+
     modelSheet.append(el('div',{className:'rvc-model-sheet-card'},modelSheetHeader,modelSearch,modelSheetInfo,modelRows));
     const stateLabel=el('div',{className:'rvc-state',textContent:'Checking available models…'});
     stateLabel.setAttribute('role','status');
@@ -276,8 +293,7 @@
       const options=Array.from(select.options).filter(o=>o.value&&
         (o.value.toLowerCase().includes(query)||(o.parentElement?.label||'').toLowerCase().includes(query)));
       if(!options.length){
-        modelRows.append(el('p',{className:'rvc-model-empty',textContent:'No matching available routes. Try another name or refresh the connection.'}));
-        return;
+        modelRows.append(el('p',{className:'rvc-model-empty',textContent:'No matching free-eligible chat routes. Search another provider or refresh the Mac bridge.'}));
       }
       const groups=new Map();
       for(const option of options){
@@ -298,6 +314,17 @@
           closeModelSheet();
         };
         groups.get(group).append(button);
+      }
+      // All nine provider families are visible; missing routes cannot be clicked.
+      if(sourceSelect.value==='omniroute'&&!query){
+        const existing=new Set(groups.keys());
+        for(const [,label] of PROVIDERS){
+          if(existing.has(label+' · Mac-advertised chat routes'))continue;
+          const section=el('div',{className:'rvc-model-group'});
+          section.append(el('h3',{textContent:label}),
+            el('div',{className:'rvc-model-notready',textContent:'No free-eligible route advertised. Provider access, allowance or admission needs verification.'}));
+          modelRows.append(section);
+        }
       }
     }
     modelBrowse.onclick=()=>{
@@ -437,8 +464,7 @@
         const groups=new Map();
         for(const id of models){
           if(typeof id!=='string')continue;
-          const group=omni?(id.startsWith('rovor-')?'OmniRoute combos · explicitly approved':
-            (id.endsWith(':free')?'Free-tagged model routes':'Owner-allowlisted model routes')):'Cloudflare AI hosted routes';
+          const group=omni?routeGroup(id):'Cloudflare AI hosted routes';
           if(!groups.has(group)){const optgroup=el('optgroup',{label:group});groups.set(group,optgroup);select.append(optgroup);}
           groups.get(group).append(el('option',{value:id,textContent:id}));
         }
@@ -449,6 +475,9 @@
         else if(saved&&models.includes(saved))select.value=saved;
         stateLabel.textContent=omni?('Mac bridge reported · '+select.options.length+' allowed routes · confirm a reply to verify use'):
           ('Cloudflare AI · '+select.options.length+' hosted models listed · allowance unverified');
+        modelSheetInfo.textContent=omni
+          ?'Mac-advertised chat routes only. Free-tagged model routes and Owner-allowlisted model routes still need live inference and free-quota checks.'
+          :'Cloudflare-hosted inference is separate from OmniRoute. Its allowance is not guaranteed.';
         ready=true;send.disabled=false;modelBrowse.disabled=false;
       }catch{
         if(epoch!==loadEpoch)return;
