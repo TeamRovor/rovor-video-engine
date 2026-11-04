@@ -217,3 +217,71 @@ test('GitHub deployment requires main and explicit opt-in for unattended release
   assert.match(workflow, /verify-github-deploy\.mjs/);
   assert.doesNotMatch(workflow, /ChatGPT Site.*deploy/);
 });
+
+
+test('deployment readback validates the exact Ask ROVOR release even while Mac telemetry is stale', async () => {
+  const token='r'.repeat(40), currentChat = readFileSync(new URL('../dashboard/command-center/native-v8-9/hud-chat.js',import.meta.url),'utf8');
+  const report={source:'cloud_hud_telemetry',connection:'stale',received_at:'2026-10-28T00:38:25.840Z',
+    snapshot:{snapshot_at:'2026-10-28T00:38:25.577Z',
+      connections:Array.from({length:9},(_,i)=>({provider:String(i),connection_count:1}))}};
+  function createSend({publicChat=false,oldChat=false}={}){
+    return async(url,opts)=>{
+      const resource=new URL(url).pathname;
+      const authenticated=opts.headers.Authorization==='Bearer '+token;
+      if(!authenticated){
+        if(resource==='/')return new Response(null,{status:303,headers:{Location:'https://hud.example/login'}});
+        if(publicChat&&resource==='/hud-chat.js')return new Response('EXPOSED',{status:200});
+        return Response.json({error:'unauthorized'},{status:401});
+      }
+      if(resource==='/')return new Response('<html><body>ROVOR_START_OMNIROUTE<script src="/hud-quota.js"></script></body></html>');
+      if(resource==='/hud-quota.js')return new Response(actualNineMeterAsset);
+      if(resource==='/hud-chat.js')return new Response(oldChat?'old-release':currentChat);
+      if(resource==='/api/hud/status')return Response.json(report);
+      return Response.json({error:'not_found'},{status:404});
+    };
+  }
+  const input={origin:'https://hud.example',readerToken:token,expectedQuotaAsset:actualNineMeterAsset,
+    expectedChatAsset:currentChat,requireLiveTelemetry:false,pause:async()=>{}};
+  const result=await verifyGithubHud({...input,send:createSend()});
+  assert.equal(result.deployment_verified,true);
+  assert.equal(result.private_auth_verified,true);
+  assert.equal(result.chat_asset_matches_checkout,true);
+  assert.equal(result.mac_telemetry_verified,false);
+  assert.equal(result.successive_reports_verified,false);
+  assert.equal(result.telemetry_connection,'stale');
+  assert.equal(result.active_usage_providers,null); // Unknown, not a fabricated zero
+  assert.equal(result.tracked_pacific_day_requests,null);
+  await assert.rejects(()=>verifyGithubHud({...input,send:createSend({oldChat:true})}),
+    /deployed_chat_asset_differs_from_checkout/);
+  await assert.rejects(()=>verifyGithubHud({...input,send:createSend({publicChat:true})}),
+    /anonymous_chat_asset_was_not_denied/);
+  await assert.rejects(()=>verifyGithubHud({...input,requireLiveTelemetry:true,send:createSend()}),
+    /private_D1_telemetry_not_fresh/);
+});
+
+test('asset deployment reports degraded rather than false live when two fresh Mac reports do not advance',async()=>{
+  const token='r'.repeat(40), currentChat=readFileSync(new URL('../dashboard/command-center/native-v8-9/hud-chat.js',import.meta.url),'utf8');
+  const providers=Array.from({length:9},(_,i)=>({provider:String(i),attempts_pacific_day:0,models:[]}));
+  const status={source:'cloud_hud_telemetry',connection:'fresh',received_at:'2026-11-04T06:00:00.000Z',
+    snapshot:{snapshot_at:'2026-11-04T06:00:00.000Z',connections:Array.from({length:9},(_,i)=>({provider:String(i)})),
+      request_usage:{source:'omniroute_durable_call_logs',freshness:'fresh',providers}}};
+  const send=async(url,opts)=>{
+    const path=new URL(url).pathname;
+    if(!opts.headers.Authorization){
+      if(path==='/')return new Response(null,{status:303,headers:{Location:'https://hud.example/login'}});
+      return new Response('',{status:401});
+    }
+    if(path==='/')return new Response('<body>ROVOR_START_OMNIROUTE<script src="/hud-quota.js"></script></body>');
+    if(path==='/hud-quota.js')return new Response(actualNineMeterAsset);
+    if(path==='/hud-chat.js')return new Response(currentChat);
+    if(path==='/api/hud/status')return Response.json(status);
+    return new Response('',{status:404});
+  };
+  const props={origin:'https://hud.example',readerToken:token,expectedQuotaAsset:actualNineMeterAsset,
+    expectedChatAsset:currentChat,send,pause:async()=>{}};
+  const degraded=await verifyGithubHud({...props,requireLiveTelemetry:false});
+  assert.equal(degraded.deployment_verified,true);
+  assert.equal(degraded.mac_telemetry_verified,false);
+  assert.equal(degraded.all_nine_usage_readback_verified,false);
+  await assert.rejects(()=>verifyGithubHud(props),/private_D1_reports_not_advancing/);
+});
