@@ -62,13 +62,31 @@ async function localReader() {
   };
 }
 
+const MAX_BODY = 32768;
+const activity = m => [m.attempts_rolling_minute, m.attempts_rolling_hour, m.attempts_pacific_day].map(n => n || 0);
+// Per-model call-log rows can outgrow the ingest limit (e.g. after "Test all models").
+// Keep the most recently active rows and mark coverage partial rather than stop reporting.
+export function fitSnapshot(snapshot, max = MAX_BODY) {
+  const size = value => Buffer.byteLength(JSON.stringify(value));
+  const usage = snapshot.request_usage;
+  if (size(snapshot) <= max || !Array.isArray(usage?.providers)) return snapshot;
+  const ranked = usage.providers.map(p => ({...p, models: [...p.models].sort((a, b) => {
+    const x = activity(a), y = activity(b);
+    return y[0] - x[0] || y[1] - x[1] || y[2] - x[2] || String(a.model_id).localeCompare(String(b.model_id));
+  })}));
+  const build = keep => ({...snapshot, request_usage: {...usage, coverage: 'partial', providers: ranked.map(p => ({...p, models: p.models.slice(0, keep)}))}});
+  let keep = Math.max(...ranked.map(p => p.models.length));
+  while (keep > 0 && size(build(keep)) > max) keep = Math.floor(keep * 0.8);
+  return build(keep);
+}
+
 export async function publishOnce({origin, token, serviceToken, collect, workers, send = fetch}) {
   origin = validateTarget(origin);
   if (typeof token !== 'string' || token.length < 32 || token.length > 200 || /[\r\n]/.test(token)) throw Error('writer_token_missing');
   if (serviceToken !== undefined && (typeof serviceToken !== 'string' || !serviceToken || serviceToken.length > 4096 || /[\r\n]/.test(serviceToken))) throw Error('service_token_invalid');
   const workforce = await workers();
   for (const period of ['24h', '1h', '7d', '1m']) {
-    const snapshot = {...await collect(period), workforce};
+    const snapshot = fitSnapshot({...await collect(period), workforce});
     const body = JSON.stringify(snapshot);
     if (Buffer.byteLength(body) > 32768) throw Error('snapshot_too_large');
     const result = await send(origin + '/api/hud/ingest', {method: 'POST', headers: {

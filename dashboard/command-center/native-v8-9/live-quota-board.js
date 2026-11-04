@@ -3,6 +3,8 @@
  */
 window.ROVOR_QUOTA_BOARD=(()=>{
 'use strict';
+// OmniRoute re-syncs provider limits about every 70 minutes; allow ~2.5 cycles so one slow sync does not blank the board.
+const QUOTA_MAX_AGE_MS=175*60000;
 const expandedSlots=new Set();
 const expandedProviders=new Set();
 let overviewFilter='all'; // Retain user choice while telemetry refreshes.
@@ -534,7 +536,7 @@ function setupReviewLabel(p){
  return '';
 }
 const needsSetupReview=p=>Boolean(setupReviewLabel(p));
-function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
+function slotQuotaState(slot,quota,live,cloud){
  const localLimits=live&&slot.enabled!==false?quota.filter(q=>q.provider===slot.group.provider&&
    q.account_slot===slot.account_slot&&Number.isSafeInteger(q.used)&&
    Number.isSafeInteger(q.total)&&q.total>0&&q.used>=0&&q.used<=q.total&&
@@ -551,6 +553,14 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
    (reset===null||reset===undefined||(Number.isSafeInteger(reset)&&reset>Date.now()));
  const pct=local?100*local.used/local.total:verified?100*used/limit:null;
  const evidence=local?'MAC MODEL LIMIT':verified?'CLOUD ACCOUNT LIMIT':localLimits.length>1?'MULTIPLE MODEL LIMITS':'QUOTA UNKNOWN';
+ const left=local?local.total-local.used:verified?limit-used:null;
+ const unit=local?local.unit:verified?'units':null;
+ const resetAt=local?local.reset_at:verified&&Number.isSafeInteger(reset)?new Date(reset).toISOString():null;
+ const checkedAt=local?local.fetched_at:verified?new Date(observed).toISOString():null;
+ return {localLimits,local,verified,pct,evidence,left,unit,resetAt,checkedAt};
+}
+function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
+  const {localLimits,local,verified,pct,evidence}=slotQuotaState(slot,quota,live,cloud);
  const name=pretty(slot.group.name||slot.group.provider);
  const traffic=activity?usageRing(activity.share,'Mac 24-hour recorded request share for '+name,'activity'):'';
  const alertLabel=setupReviewLabel(cloud);
@@ -565,6 +575,45 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span>'+
    '<span class="rvq-overview-intervals"><span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
    '<span class="rvq-overview-minute">'+(minute?fmt(minute.requests)+' / 1m':'1m unverified')+'</span></span><span class="rvq-overview-drill">VIEW DETAILS</span></a>';
+}
+function quotaGlance(slots,quota,live,cloudProviders){
+ const known=[],unknown=[];
+ for(const slot of slots){
+   const st=slotQuotaState(slot,quota,live,cloudProviders.get(slot.group.provider));
+   const name=pretty(slot.group.name||slot.group.provider)+(slot.group.connection_count>1?' #'+slot.account_slot:'');
+   (st.pct===null?unknown:known).push({name,st});
+ }
+ known.sort((x,y)=>y.st.pct-x.st.pct);
+ const row=({name,st})=>{
+   const pct=Math.round(st.pct*10)/10,level=pct>=90?'high':pct>=70?'warn':'ok';
+   return '<li class="rvq-glance-row rvq-level-'+level+'"><span class="rvq-glance-name">'+esc(name)+'</span>'+
+    '<span class="rvq-glance-bar" role="img" aria-label="'+esc(name)+': '+pct+'% of quota used"><i style="width:'+pct+'%"></i></span>'+
+    '<span class="rvq-glance-pct">'+pct+'%</span>'+
+    '<span class="rvq-glance-meta">'+fmt(st.left)+' '+esc(st.unit)+' left · '+(st.resetAt?'resets '+esc(resetText(st.resetAt)):'reset not reported')+' · '+(st.local?'Mac':'cloud')+(st.checkedAt?' · checked '+esc(prettyTime(st.checkedAt)):'')+'</span></li>';
+ };
+ const why=({name,st})=>'<li><span>'+esc(name)+'</span> <small>'+(st.localLimits.length>1?fmt(st.localLimits.length)+' separate model limits':live?'no verified limit':'waiting for fresh data')+'</small></li>';
+ return '<div id="rvq-glance" class="rvq-glance"><h4 class="rvq-details-heading">QUOTA AT A GLANCE · MOST USED FIRST</h4>'+
+  (known.length?'<ul class="rvq-glance-list">'+known.map(row).join('')+'</ul>':'<p class="rvq-sub">No provider has a fresh verified limit right now.</p>')+
+  (unknown.length?'<details class="rvq-glance-unknown"><summary>'+fmt(unknown.length)+' without limit data</summary><ul>'+unknown.map(why).join('')+'</ul></details>':'')+'</div>';
+}
+function workerBanner(workforce,live){
+ const d=live?workforce?.dispatch:null;
+ if(d?.status!=='recent_scheduler_report')return '';
+ const review=Number.isSafeInteger(d.needs_review)?d.needs_review:null;
+ const queued=Number.isSafeInteger(d.queued)?d.queued:null;
+ const HELP={
+  failure_circuit_requires_review:['WORKERS PAUSED · SAFETY STOP','Several jobs in a row failed, so dispatch stopped itself. Review the failed jobs, then clear the stop to resume.','bad'],
+  paced_wait:['WORKERS WAITING · PACING','Spacing jobs out to protect free-tier limits. The next one starts on its own.','wait'],
+  no_queued_work:['WORKERS IDLE · NO QUEUED WORK','Nothing is waiting. New jobs appear when the task list changes.','wait'],
+  account_minimum_interval:['WORKERS WAITING · PACING','Waiting out the rate-limit gap between jobs. This clears on its own.','wait'],
+  account_retry_after:['WORKERS WAITING · PROVIDER COOLDOWN','The provider asked for a pause. This clears on its own.','wait'],
+  account_inflight_claim:['WORKERS BUSY','A job is still running. The next one starts when it finishes.','ok'],
+  claim_conditions_met_unverified:['WORKERS READY','Gates are open. Model activity is not verified until a receipt appears.','ok']
+ };
+ const h=HELP[d.reason];
+ if(!h)return '';
+ const facts=[review!==null?fmt(review)+' need review':'',queued!==null?fmt(queued)+' queued':''].filter(Boolean).join(' · ');
+ return '<div class="rvq-banner rvq-banner-'+h[2]+'" role="status"><strong>'+h[0]+'</strong><span>'+h[1]+'</span>'+(facts?'<small>'+esc(facts)+'</small>':'')+'</div>';
 }
 function dispatchInfo(workforce,live){
  const d=live?workforce?.dispatch:null;
@@ -808,6 +857,47 @@ const css=`
 #rovor-workload-popup .rvq-footnote{font:11px/1.6 system-ui;color:#98bfd3;margin:16px 1px 0}
 @media(max-width:800px){#rovor-workload-popup .rvq-grid{grid-template-columns:1fr}#rovor-workload-popup .rvq-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#rovor-workload-popup .rvq-stat:last-child{grid-column:1/-1}}
 @media(max-width:500px){#rovor-workload-popup .rvq-board{padding:13px!important}#rovor-workload-popup .rvq-provider-head{padding:13px 11px;gap:8px}#rovor-workload-popup .rvq-provider-status{max-width:105px;white-space:normal}#rovor-workload-popup .rvq-provider-content{padding:0 12px 4px}#rovor-workload-popup .rvq-head{gap:10px}#rovor-workload-popup .rvq-stat{padding:10px}#rovor-workload-popup .rvq-stat-value{font-size:17px}#rovor-workload-popup .rvq-model-info{gap:7px}}
+/* Compact layout: status and controls share one row, explanatory copy collapses, providers come first. */
+#rovor-workload-popup .rvq-board{padding:12px!important;margin:4px 0 12px!important}
+#rovor-workload-popup .rvq-head{margin-bottom:8px;gap:8px;align-items:center}
+#rovor-workload-popup .rvq-head .rvq-eyebrow,#rovor-workload-popup .rvq-head .rvq-sub{display:none}
+#rovor-workload-popup .rvq-heading{font-size:15px;margin:0}
+#rovor-workload-popup .rvq-status{padding:4px 8px;font-size:9px}
+#rovor-workload-popup .rvq-jump-nav{flex-wrap:nowrap;overflow-x:auto;gap:5px;margin:0 0 8px;scrollbar-width:none}
+#rovor-workload-popup .rvq-jump-nav a{min-height:30px;padding:4px 10px;font-size:10px;white-space:nowrap}
+#rovor-workload-popup .rvq-stats{gap:6px;margin:0 0 8px}
+#rovor-workload-popup .rvq-stat{display:flex;flex-direction:column;justify-content:space-between;padding:6px 9px;border-radius:8px}
+#rovor-workload-popup .rvq-stat-label{font-size:8px;letter-spacing:.08em;margin-bottom:2px}
+#rovor-workload-popup .rvq-stat-value{font-size:15px;line-height:1.2}
+#rovor-workload-popup .rvq-stat-value.rvq-small{font-size:12px;min-height:0}
+#rovor-workload-popup .rvq-stat-secondary{font-size:9px}
+#rovor-workload-popup .rvq-last-report{margin:0 0 4px;font-size:10px}
+#rovor-workload-popup .rvq-board>.rvq-sub{font-size:10px;margin:0 0 8px!important;max-width:none}
+#rovor-workload-popup .rvq-overview{gap:6px;margin-bottom:8px}
+#rovor-workload-popup .rvq-overview-tile{padding:8px 6px 7px;gap:5px}
+#rovor-workload-popup .rvq-grid{gap:8px}
+#rovor-workload-popup .rvq-details-heading{margin:10px 0 6px;font-size:10px}
+@media(max-width:800px){#rovor-workload-popup .rvq-stats{grid-template-columns:repeat(3,minmax(0,1fr))}#rovor-workload-popup .rvq-stat:last-child{grid-column:auto}}
+@media(max-width:500px){#rovor-workload-popup .rvq-stat-value{font-size:13px}#rovor-workload-popup .rvq-stat-label{font-size:7px}#rovor-workload-popup .rvq-board{padding:8px!important}}
+#rovor-workload-popup .rvq-banner{display:grid;gap:2px;margin:0 0 8px;padding:8px 11px;border-radius:8px;border:1px solid #2f6b94;background:#0f2f4a;color:#eaf8ff;font:12px system-ui}
+#rovor-workload-popup .rvq-banner strong{font:800 12px system-ui;letter-spacing:.04em}
+#rovor-workload-popup .rvq-banner small{color:#9ccbe7}
+#rovor-workload-popup .rvq-banner-bad{border-color:#ff7b7b;background:#3a1620}
+#rovor-workload-popup .rvq-banner-wait{border-color:#ffc86b;background:#3a2f12}
+#rovor-workload-popup .rvq-glance{margin:0 0 10px}
+#rovor-workload-popup .rvq-glance-list{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+#rovor-workload-popup .rvq-glance-row{display:grid;grid-template-columns:minmax(80px,.9fr) minmax(70px,2fr) 44px;grid-template-areas:"n b p" "m m m";gap:2px 8px;align-items:center;padding:6px 9px;border:1px solid rgba(93,164,206,.25);border-radius:8px;background:rgba(10,46,75,.55)}
+#rovor-workload-popup .rvq-glance-name{grid-area:n;font:700 12px system-ui;color:#eaf8ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rovor-workload-popup .rvq-glance-bar{grid-area:b;height:8px;border-radius:4px;background:#183c59;overflow:hidden}
+#rovor-workload-popup .rvq-glance-bar i{display:block;height:100%;background:#69d8ff}
+#rovor-workload-popup .rvq-level-warn .rvq-glance-bar i{background:#ffc86b}
+#rovor-workload-popup .rvq-level-high .rvq-glance-bar i{background:#ff7b7b}
+#rovor-workload-popup .rvq-glance-pct{grid-area:p;text-align:right;font:700 12px system-ui;font-variant-numeric:tabular-nums;color:#f0fbff}
+@media(min-width:900px){#rovor-workload-popup .rvq-glance-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+#rovor-workload-popup .rvq-glance-meta{grid-area:m;font:10px system-ui;color:#9ccbe7}
+#rovor-workload-popup .rvq-glance-unknown{margin-top:6px;font:11px system-ui;color:#9ccbe7}
+#rovor-workload-popup .rvq-glance-unknown summary{cursor:pointer}
+#rovor-workload-popup .rvq-glance-unknown ul{margin:4px 0 0;padding-left:16px}
 `;
 function mount(){
  if(document.getElementById('rvq-style'))return;
@@ -827,7 +917,16 @@ function reportAgeLabel(timestamp){
  const days=Math.floor(hours/24);
  return 'Mac last report · '+days+'d '+hours%24+'h ago';
 }
+// Last settled sync sources. Callers that repaint without them (the 5s popup
+// repaint) reuse these only inside the same 15s freshness gate; expired or
+// failed sources are never reused.
+let lastExtras=null;
 function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null){
+ // Omitted sources (the popup's own repaint) reuse the last settled ones.
+ if(arguments.length<3){
+   const reuse=lastExtras&&Date.now()-lastExtras.at<=15000?lastExtras:null;
+   cloud=reuse?.cloud??null;hourly=reuse?.hourly??null;minute=reuse?.minute??null;geminiProject=reuse?.geminiProject??null;
+ }
  mount();
  const cloudFresh=cloud?.execution_source==='cloud_provider'&&Number.isFinite(cloud.observed_at)&&
    Math.abs(Date.now()-cloud.observed_at)<=15000&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
@@ -845,7 +944,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  // Do not derive it from the rolling 24h percentage or cached history.
  const hourActivity=macActivity(hourly,live,'1h');
  const minuteActivity=macActivity(minute,live,'1m');
- const quota=live&&Array.isArray(data?.quota?.records)?data.quota.records.filter(q=>{const t=Date.parse(q?.fetched_at||'');const age=Date.now()-t;return Number.isFinite(age)&&age>=-5000&&age<=900000&&(!q.reset_at||Date.parse(q.reset_at)>Date.now());}):[];
+ const quota=live&&Array.isArray(data?.quota?.records)?data.quota.records.filter(q=>{const t=Date.parse(q?.fetched_at||'');const age=Date.now()-t;return Number.isFinite(age)&&age>=-5000&&age<=QUOTA_MAX_AGE_MS&&(!q.reset_at||Date.parse(q.reset_at)>Date.now());}):[];
  // Sanitized slot status is optional to preserve compatibility with older Mac reporters.
  // Never infer which specific account is enabled from a provider-level enabled count.
  const observedSlots=Array.isArray(data?.connection_slots)?data.connection_slots:null;
@@ -875,7 +974,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
  summary+macFreshness+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
- (slots.length?(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
+ workerBanner(data?.workforce,live)+ (slots.length?quotaGlance(slots,quota,live,cloudProviders)+(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
  '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
@@ -961,70 +1060,41 @@ function start(){
    // Serialize the complete two-source refresh, not just the local gateway fetch.
    // A slow cloud ledger read must not overlap another scheduled refresh.
    try {
-   let fresh=null;
    // The main 24h HUD view has already fetched and validated this report.
    // Reuse it rather than make a second network request every ten seconds.
-   const shared=window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT?.();
-   if(shared?.source==='local_omniroute_read_only_bridge'&&shared.period==='24h'&&
-      Array.isArray(shared.connections)){
-     const age=Date.now()-Date.parse(shared.snapshot_at);
-     if(Number.isFinite(age)&&age>=-5000&&age<=15000)fresh=shared;
-   }
-   if(!fresh)try{
-     const response=await fetch('/api/hud/omniroute?period=24h',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
-     if(response.ok){
-       const data=await response.json(),age=Date.now()-Date.parse(data.snapshot_at);
-       if(data.source==='local_omniroute_read_only_bridge'&&Array.isArray(data.connections)&&Number.isFinite(age)&&age>=-5000&&age<=15000)fresh=data;
-     }
-   }catch{}
-   // Independently fetch the 1h report. A stale or incomplete 1h report
-   // must not generate a zero-activity claim, even with fresh 24h inventory.
-   let hourly=null;
-   if(fresh)try{
-     const response=await fetch('/api/hud/omniroute?period=1h',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
-     if(response.ok){
-       const data=await response.json(),age=Date.now()-Date.parse(data.snapshot_at);
-       if(data.source==='local_omniroute_read_only_bridge'&&data.period==='1h'&&
-          Number.isFinite(age)&&age>=-5000&&age<=15000)hourly=data;
-     }
-   }catch{}
-   // Read an actual rolling 60-second gateway aggregate. No model call is
-   // initiated and zero is only shown when all model rows are accounted for.
-   let minute=null;
-   if(fresh)try{
-     const response=await fetch('/api/hud/omniroute?period=1m',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
-     if(response.ok){
-       const data=await response.json(),age=Date.now()-Date.parse(data.snapshot_at);
-       if(data.source==='local_omniroute_read_only_bridge'&&data.period==='1m'&&
-          Number.isFinite(age)&&age>=-5000&&age<=15000)minute=data;
-     }
-   }catch{}
+   const accept=(data,period)=>{
+     const age=Date.now()-Date.parse(data?.snapshot_at);
+     return data?.source==='local_omniroute_read_only_bridge'&&data.period===period&&
+       Array.isArray(data.connections)&&Number.isFinite(age)&&age>=-5000&&age<=15000?data:null;
+   };
+   // Each read fails closed to null on error, timeout, or failed validation.
+   const read=async(url,validate,shared)=>{
+     const reused=validate(shared);if(reused)return reused;
+     try{
+       const response=await fetch(url,{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
+       return response.ok?validate(await response.json()):null;
+     }catch{return null;}
+   };
+   const live=window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT;
+   const fresh=accept(live?.('24h'),'24h')||await read('/api/hud/omniroute?period=24h',d=>accept(d,'24h'));
+   // Independent sources run in parallel so one slow read cannot delay the rest.
+   // A stale or incomplete 1h/1m report must not generate a zero-activity claim.
+   const [hourly,minute,cloud,geminiProject]=await Promise.all([
+     fresh?read('/api/hud/omniroute?period=1h',d=>accept(d,'1h'),live?.('1h')):null,
+     fresh?read('/api/hud/omniroute?period=1m',d=>accept(d,'1m')):null,
+     read('/api/ghost/status',d=>{
+       // Private same-origin cloud ledger is a separate read-only source.
+       return d?.execution_source==='cloud_provider'&&Number.isFinite(d.observed_at)&&
+         Math.abs(Date.now()-d.observed_at)<=15000&&Array.isArray(d.providers)&&d.providers.length<=20?d:null;
+     }),
+     // Optional route: the original private Site may not have it.
+     read('/api/hud/gemini/project-quota',d=>d?.source==='google_cloud_monitoring'&&typeof d.status==='string'?d:null)
+   ]);
    // Preserve only the last known provider/slot inventory through outages.
    // Never retain or display stale quota percentages as live.
    if(fresh)lastInventory={connections:fresh.connections,connection_slots:fresh.connection_slots,snapshot_at:fresh.snapshot_at};
-   // Private same-origin cloud ledger is a separate read-only source.
-   // Do not cache it through disconnects as a fresh state.
-   let cloud=null;
-   try{
-     const response=await fetch('/api/ghost/status',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
-     if(response.ok){
-       const d=await response.json();
-       if(d?.execution_source==='cloud_provider'&&Number.isFinite(d.observed_at)&&
-          Math.abs(Date.now()-d.observed_at)<=15000&&Array.isArray(d.providers)&&d.providers.length<=20)cloud=d;
-     }
-   }catch{}
-   let geminiProject=null;
-   // Site and Cloudflare readers are same-origin; the original private Site
-   // may not have this optional route and must show no project samples.
-   try{
-    const response=await fetch('/api/hud/gemini/project-quota',{
-     credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
-    if(response.ok){
-     const item=await response.json();
-     if(item?.source==='google_cloud_monitoring'&&typeof item.status==='string')geminiProject=item;
-    }
-   }catch{}
    lastCloud=cloud;last=fresh;lastHourly=hourly;lastMinute=minute;updated=Date.now();
+   lastExtras={cloud,hourly,minute,geminiProject,at:updated};
    const target=slot();if(target){
      const state=captureState(target);
      target.outerHTML=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject);
@@ -1036,10 +1106,16 @@ function start(){
  }
  // Only the original placeholder triggers a new observer sync. Otherwise
  // rendering into the observed subtree could create an infinite event loop.
+ let observePending=false;
  const observer=new MutationObserver(()=>{
-   if([...document.querySelectorAll('#rovor-workload-popup .wl-card')].some(
-       n=>!n.hidden&&isOriginal(n)))void sync();
-
+   // Coalesce bursts of mutations into one scan per microtask.
+   if(observePending)return;
+   observePending=true;
+   Promise.resolve().then(()=>{
+     observePending=false;
+     if([...document.querySelectorAll('#rovor-workload-popup .wl-card')].some(
+         n=>!n.hidden&&isOriginal(n)))void sync();
+   });
  });
  observer.observe(document.body,{childList:true,subtree:true});
  // Refresh the EXISTING popup even after its original heading was replaced.

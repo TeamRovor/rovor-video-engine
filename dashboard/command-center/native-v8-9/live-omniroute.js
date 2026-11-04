@@ -17,7 +17,7 @@ window.ROVOR_START_OMNIROUTE=()=>{
   const workerCards=()=>workers().map(e=>{const j=e.latest_job;return `<section class="wl-card" style="${selectedEmployee===e.id?'border-color:#bceaff':''}"><h3>${esc(e.name)} · ${esc(readable(fresh()?e.status:'unknown'))}</h3><p class="wl-empty">${j?.current?'Recorded current work':'Latest recorded work'}: ${esc(j?.task||'No attributed worker record')}</p><p class="wl-empty">Assigned route: ${esc(j?.assigned_route||'Unknown')}<br>Configured model: ${esc(j?.configured_model||'Unknown')}<br>Actual upstream model: ${esc(j?.actual_model||'Not identified by receipt')}<br>Updated: ${j?.updated_at?esc(new Date(j.updated_at*1000).toLocaleString()):'Unknown'}<br>Queued: ${number(e.queued_jobs)} · Recorded running: ${number(e.running_jobs)}</p></section>`}).join('');
   const number=n=>n===null||n===undefined?'—':Number(n).toLocaleString();
   const meter=m=>fresh()&&m.requests!==null?`<span class="wl-meter" role="meter" aria-label="Share of recorded requests, not remaining quota" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${m.request_share_percent}"><i style="--wl-share:${m.request_share_percent}%"></i></span>`:'<small>Usage unavailable</small>';
-  const linkState=()=>`<div class="wl-notice" role="status"><strong>${esc(stateLabel())}</strong><br>Read-only OmniRoute connection · polls every 5 seconds while open. Connections refresh every minute. Request-share bars show recorded request distribution; the model-limit cards show only verified provider quota reports.</div>`;
+  const linkState=()=>`<div class="wl-notice" role="status"><strong>${esc(stateLabel())}</strong> · read-only · updates every 5s<details><summary>About these numbers</summary>Connections refresh every minute. Request-share bars show recorded request distribution in ${esc(period)}; they are not remaining quota. The model-limit cards show only verified provider quota reports.</details></div>`;
   function paintPreview(){
     if(!previewHost?.isConnected)return;
     const scroll=previewHost.querySelector('.wl-compact-items')?.scrollTop||0;
@@ -77,8 +77,9 @@ window.ROVOR_START_OMNIROUTE=()=>{
   };
   // Stable bridge-only read API, not the legacy ROVOR_WORKLOAD global.
   // No credentials or requests exposed. Never provide stale or non-24h quotas.
-  window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT=()=>{
-    if(period!=='24h'||!fresh()||!Array.isArray(snapshot?.connections))return null;
+  // The optional argument lets other HUD modules reuse the active period (24h default).
+  window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT=(wanted='24h')=>{
+    if(period!==wanted||!fresh()||!Array.isArray(snapshot?.connections))return null;
     const age=Date.now()-Date.parse(snapshot.snapshot_at);
     return age>=-5000&&age<=15000?snapshot:null;
   };

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import worker, {handle, latest, sanitize} from '../integrations/hud-cloud/worker.mjs';
-import {publishOnce, validateTarget, isAllowedLocalReadPath} from '../tools/hud_telemetry_publisher.mjs';
+import {publishOnce, fitSnapshot, validateTarget, isAllowedLocalReadPath} from '../tools/hud_telemetry_publisher.mjs';
 import {HUD_PROVIDERS, reduceCallLogs} from '../tools/hud_provider_usage.mjs';
 
 const NOW = Date.parse('2026-10-24T20:00:00Z');
@@ -159,6 +159,16 @@ test('publisher uses only pinned HTTPS ingest, no cookies or redirects, exact ev
     assert.equal(options.headers.Authorization, 'Bearer ' + WRITER); assert.equal(JSON.parse(options.body).snapshot_at, sample().snapshot_at);
   }
   for (const value of ['http://hud.example', 'https://hud.example/#secret', 'https://a:b@hud.example', 'https://hud.example/path', 'https://hud.example/?token=secret']) assert.throws(() => validateTarget(value));
+});
+test('publisher trims oversized per-model usage instead of going dark', async () => {
+  const model = (i, hot) => ({model_id: 'model-' + i, attempts_rolling_minute: 0, attempts_rolling_hour: hot ? 5 : 0, attempts_pacific_day: hot ? 9 : 1});
+  const big = {...sample(), request_usage: {source: 'omniroute_durable_call_logs', coverage: 'complete', providers: [
+    {provider: 'groq', models: Array.from({length: 400}, (_, i) => model(i, i === 399))}]}};
+  const fit = fitSnapshot(big);
+  assert.ok(Buffer.byteLength(JSON.stringify(fit)) <= 32768);
+  assert.equal(fit.request_usage.coverage, 'partial');
+  assert.equal(fit.request_usage.providers[0].models[0].model_id, 'model-399');
+  const small = sample(); assert.equal(fitSnapshot(small), small);
 });
 test('publisher rejects duplicate or malformed successful acknowledgments', async () => {
   for (const body of [{accepted: false}, {}]) await assert.rejects(publishOnce({origin: 'https://hud.example', token: WRITER,

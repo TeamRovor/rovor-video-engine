@@ -13,7 +13,7 @@ function safeTime(x){
   return Number.isFinite(t)&&t>0&&t<Date.UTC(2100,0,1)?t:null;
 }
 function safeUnit(x){return ['requests','tokens','credits','units','percent'].includes(x)?x:'provider units';}
-export function reduceProviderQuota(providers,document,{now=Date.now(),maxAgeMs=90*60000}={}){
+export function reduceProviderQuota(providers,document,{now=Date.now(),maxAgeMs=175*60000}={}){
   const connections=Array.isArray(providers?.connections)?providers.connections:[];
   const cache=document?.caches;
   const result={source:'omniroute_provider_limits_cache',freshness:'unavailable',
