@@ -67,6 +67,18 @@ export async function enqueue(db, value, now, newId = () => crypto.randomUUID())
     id, request.model, JSON.stringify(request), now);
   return {status:202, job_id:id, state:'queued', requested_model:request.model};
 }
+// Only queued requests can be cancelled. This is an atomic state transition
+// against Mac claims; already-running inference is never described as cancelled.
+export async function cancel(db, id, now) {
+  if (!UUID.test(id)) return {status:400, error:'invalid_job_id'};
+  await expire(db, now);
+  const saved=await write(db, "UPDATE hud_chat_jobs SET state='failed',error='user_cancelled',request_body=NULL,finished_at=? WHERE id=? AND state='queued'",
+    now, id);
+  if (saved?.meta?.changes===1) return {status:200, cancelled:true, before_claim:true};
+  const row=await query(db,'SELECT state FROM hud_chat_jobs WHERE id=?',id);
+  if (!row) return {status:404,error:'job_not_found'};
+  return {status:409,error:'request_already_'+row.state,cancelled:false};
+}
 export async function claim(db, now) {
   await expire(db, now);
   const found = await query(db, "UPDATE hud_chat_jobs SET state='running',started_at=? WHERE id=(SELECT id FROM hud_chat_jobs WHERE state='queued' AND created_at >= ? ORDER BY created_at LIMIT 1) AND state='queued' RETURNING id,model,request_body",
