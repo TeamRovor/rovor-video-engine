@@ -108,7 +108,7 @@ export async function executeClaim(chat, job, signal, allowed = null) {
     return {state:'failed',error:e.message==='response_too_large'?'response_too_large':'chat_upstream_failed'};
   } finally {result.done();}
 }
-export async function runRelay({origin,writerKey,chat,stop,send=fetch,interval=2500,approved=[]}) {
+export async function runRelay({origin,writerKey,chat,stop,send=fetch,interval=2500,approved=[],heartbeatIntervalMs=12000}) {
   origin=validateTarget(origin);
   if (typeof writerKey!=='string'||writerKey.length<32||writerKey.length>200) throw Error('writer_key_missing');
   const post=async (resource,body) => {
@@ -124,15 +124,29 @@ export async function runRelay({origin,writerKey,chat,stop,send=fetch,interval=2
       await post('/api/hud/chat/bridge',{models:available});
       const {job}=await post('/api/hud/chat/claim',{});
       if (job) {
-        // Match D1's bounded running lease. A hung provider call is aborted,
-        // not retried or represented as completed background work.
-        const callSignal=stop ? AbortSignal.any([stop,AbortSignal.timeout(100000)]) : AbortSignal.timeout(100000);
-        const result=await executeClaim(chat,job,callSignal,available);
-        // Result submission may be repeated; it never repeats the inference call.
-        for (let n=0;n<2;n++) {
-          try {await post('/api/hud/chat/result/'+encodeURIComponent(job.id),result);break;}
-          catch {if (n===0) await sleep(1000);}
-        }
+        // Keep the actual Mac bridge heartbeat alive while a slow free model
+        // is answering. Without this the HUD incorrectly reports OFFLINE after
+        // 45 seconds, even though the Mac is still executing the claimed job.
+        let pulseBusy=false;
+        const pulse=setInterval(async()=>{
+          if(stop?.aborted || pulseBusy)return;
+          pulseBusy=true;
+          try{await post('/api/hud/chat/bridge',{models:available});}
+          catch{/* A transient telemetry failure is not evidence that inference stopped. */}
+          finally{pulseBusy=false;}
+        },heartbeatIntervalMs);
+        pulse.unref?.();
+        try {
+          // Match D1's bounded running lease. A hung provider call is aborted,
+          // not retried or represented as completed background work.
+          const callSignal=stop ? AbortSignal.any([stop,AbortSignal.timeout(100000)]) : AbortSignal.timeout(100000);
+          const result=await executeClaim(chat,job,callSignal,available);
+          // Result submission may be repeated; it never repeats the inference call.
+          for(let n=0;n<2;n++){
+            try{await post('/api/hud/chat/result/'+encodeURIComponent(job.id),result);break;}
+            catch{if(n===0)await sleep(1000);}
+          }
+        } finally {clearInterval(pulse);}
       }
     } catch {
       // Never output prompt, provider endpoint, credentials or private results.
