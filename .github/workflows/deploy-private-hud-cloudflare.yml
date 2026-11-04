@@ -6,8 +6,18 @@ on:
       - 'dashboard/command-center/native-v8-9/**'
       - 'tests/test_hud_cloud.mjs'
       - 'tests/test_hud_github_deployment.mjs'
+      - 'tests/test_hud_cloud_chat.mjs'
+      - 'tests/test_hud_omniroute_relay.mjs'
+      - 'tests/test_hud_chat_mobile.mjs'
+      - 'tests/test_hud_repo_context.mjs'
+      - 'tools/hud_repo_context.mjs'
+      - 'tests/test_hud_chat_browser.cjs'
+      - 'tools/hud_chat_relay_client.mjs'
       - 'tests/test_hud_ios_quota_rings.mjs'
       - 'tests/test_hud_gemini_project_quota.mjs'
+      - 'tests/test_hud_omniroute_chat_relay.mjs'
+      - 'tools/hud_chat.mjs'
+      - 'tools/manage_hud_telemetry_agent.sh'
       - '.github/workflows/deploy-private-hud-cloudflare.yml'
   push:
     branches: [main]
@@ -16,8 +26,18 @@ on:
       - 'dashboard/command-center/native-v8-9/**'
       - 'tests/test_hud_cloud.mjs'
       - 'tests/test_hud_github_deployment.mjs'
+      - 'tests/test_hud_cloud_chat.mjs'
+      - 'tests/test_hud_omniroute_relay.mjs'
+      - 'tests/test_hud_chat_mobile.mjs'
+      - 'tests/test_hud_repo_context.mjs'
+      - 'tools/hud_repo_context.mjs'
+      - 'tests/test_hud_chat_browser.cjs'
+      - 'tools/hud_chat_relay_client.mjs'
       - 'tests/test_hud_ios_quota_rings.mjs'
       - 'tests/test_hud_gemini_project_quota.mjs'
+      - 'tests/test_hud_omniroute_chat_relay.mjs'
+      - 'tools/hud_chat.mjs'
+      - 'tools/manage_hud_telemetry_agent.sh'
       - '.github/workflows/deploy-private-hud-cloudflare.yml'
   workflow_dispatch:
 
@@ -38,10 +58,20 @@ jobs:
       - name: Test private auth, nine-provider meters and GitHub release preflight
         run: |
           node --check integrations/hud-cloud/worker.mjs
+          node --check integrations/hud-cloud/omniroute-chat-relay.mjs
+          node --check tools/hud_chat_relay_client.mjs
+          node --check tools/hud_repo_context.mjs
+          node --check tools/hud_chat.mjs
+          node --check dashboard/command-center/native-v8-9/hud-chat.js
           node --check integrations/hud-cloud/gemini-cloud-monitoring.mjs
           node --check integrations/hud-cloud/prepare-github-deploy.mjs
           node --check integrations/hud-cloud/verify-github-deploy.mjs
-          node --test tests/test_hud_cloud.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_gemini_project_quota.mjs
+          bash -n tools/manage_hud_telemetry_agent.sh
+          bash -n tools/install_hud_chat_relay.sh
+          node --test tests/test_hud_cloud.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_gemini_project_quota.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_omniroute_relay.mjs tests/test_hud_chat_mobile.mjs tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_repo_context.mjs
+
+      - name: Verify interactive Ask ROVOR on phone, tablet and desktop Chromium viewports
+        run: node tests/test_hud_chat_browser.cjs
 
       - name: Diagnose live unauthenticated response codes (no credentials)
         if: github.event_name == 'pull_request'

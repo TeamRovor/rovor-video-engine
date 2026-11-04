@@ -409,3 +409,19 @@ test('multi-key cloud quota requires exact slot attribution',()=>{
  assert.equal((scoped.match(/aria-label="CLOUD ACCOUNT LIMIT for Groq"/g)||[]).length,1);
  assert.equal((scoped.match(/Verified cloud ledger quota used/g)||[]).length,1);
 });
+
+
+test('stale Mac reporting gives one useful recovery path without inventing a live quota',()=>{
+ const oldData={snapshot_at:'2026-10-28T00:38:25.577Z',
+   connections:providers.map(provider=>({provider,name:provider,connection_count:1,enabled_count:1})),
+   quota:{records:[]}};
+ const stale=board().render(oldData,false,cloud());
+ assert.match(stale,/Tracking needs attention · Restore Mac reporting/);
+ assert.match(stale,/bash tools\/manage_hud_telemetry_agent\.sh status/);
+ assert.match(stale,/data-rvq-copy-cmd="status"/);
+ assert.match(stale,/cached inventory only; do not infer current traffic or quota/);
+ const freshData={...oldData,snapshot_at:new Date().toISOString()};
+ const live=board().render(freshData,true,cloud());
+ assert.doesNotMatch(live,/Tracking needs attention · Restore Mac reporting/);
+ assert.match(live,/Mac telemetry accepted/);
+});

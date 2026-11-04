@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.rovor.ask-rovor-relay</string>
+  <key>ProgramArguments</key><array>
+    <string>REPLACE_WITH_ABSOLUTE_NODE_PATH</string>
+    <string>REPLACE_WITH_PERSISTENT_REPO_PATH/tools/hud_chat_relay_client.mjs</string>
+  </array>
+  <key>EnvironmentVariables</key><dict>
+    <key>PATH</key><string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>ROVOR_HUD_ORIGIN</key><string>REPLACE_WITH_PRIVATE_CLOUDFLARE_HUD_HTTPS_ORIGIN</string>
+    <key>ROVOR_HUD_CHAT_FREE_MODELS</key><string></string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+</dict></plist>

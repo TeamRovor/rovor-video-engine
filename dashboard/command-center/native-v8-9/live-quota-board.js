@@ -665,6 +665,13 @@ const css=`
 #rovor-workload-popup .rvq-review-sample span{font-size:10px;color:#a9d4eb}
 #rovor-workload-popup .rvq-review-status{color:#d5edfa}
 #rovor-workload-popup .rvq-last-report{margin:0 0 11px;color:#c1e8ff;font:700 11px/1.45 system-ui;letter-spacing:.02em;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-recovery{margin:0 0 10px;padding:9px 12px;background:#091c31;border:1px solid #47789a;border-radius:10px;color:#b5d7ec;font:12px/1.5 system-ui}
+#rovor-workload-popup .rvq-recovery summary{cursor:pointer;color:#d4ebfa;font-weight:750;touch-action:manipulation}
+#rovor-workload-popup .rvq-recovery summary:focus-visible,#rovor-workload-popup .rvq-copy-recovery:focus-visible{outline:2px solid #9bddff;outline-offset:3px}
+#rovor-workload-popup .rvq-recovery p{margin:8px 0;line-height:1.5}
+#rovor-workload-popup .rvq-recovery code{display:block;overflow-wrap:anywhere;color:#b4eaff;background:#051022;border-radius:6px;padding:8px;margin:6px 0}
+#rovor-workload-popup .rvq-copy-recovery{min-height:40px;padding:7px 12px;margin:6px 0 2px;border:1px solid #4f91ba;border-radius:8px;background:#123a59;color:#e0f4ff;cursor:pointer}
+#rovor-workload-popup .rvq-recovery a{color:#a3dfff;text-decoration:underline}
 #rovor-workload-popup .rvq-review-entry p{margin:0}
 #rovor-workload-popup .rvq-review-entry a{color:#77d5ff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 
@@ -971,9 +978,16 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
  const macAge=reportAgeLabel(data?.snapshot_at);
  const macFreshness='<p class="rvq-last-report" role="status">'+esc(macAge)+(live?' · Mac telemetry accepted':' · cached inventory only; do not infer current traffic or quota')+'</p>';
+ // Stale telemetry should have a user action rather than a false live badge.
+ const macRecovery=live?'':('<details class="rvq-recovery"><summary>Tracking needs attention · Restore Mac reporting</summary>'+
+  '<p>This is historical telemetry. On your Mac, open the current ROVOR checkout and run:</p>'+
+  '<code>bash tools/manage_hud_telemetry_agent.sh status</code>'+
+  '<button type="button" class="rvq-copy-recovery" data-rvq-copy-cmd="status">Copy diagnostic command</button>'+
+  '<p>A site deployment cannot restart an offline Mac. Inspect the LaunchAgent and follow the '+
+  '<a href="https://github.com/TeamRovor/rovor-video-engine/blob/main/integrations/hud-cloud/ASK-ROVOR-SETUP.md" target="_blank" rel="noopener noreferrer">recovery instructions</a>.</p></details>');
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
- summary+macFreshness+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
+ summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
  workerBanner(data?.workforce,live)+ (slots.length?quotaGlance(slots,quota,live,cloudProviders)+(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
@@ -1104,6 +1118,17 @@ function start(){
      busy=false;
    }
  }
+ // Deliberate user action: copy a non-secret Mac diagnostic command.
+ // This cannot start remote work or imply a service is running.
+ if(typeof document.addEventListener==='function')document.addEventListener('click',async event=>{
+   const button=event.target?.closest?.('#rovor-workload-popup [data-rvq-copy-cmd="status"]');
+   if(!button)return;
+   try{
+     if(!navigator.clipboard?.writeText)throw Error('clipboard_unavailable');
+     await navigator.clipboard.writeText('bash tools/manage_hud_telemetry_agent.sh status');
+     button.textContent='Command copied';
+   }catch{button.textContent='Select the command above to copy';}
+ });
  // Only the original placeholder triggers a new observer sync. Otherwise
  // rendering into the observed subtree could create an infinite event loop.
  let observePending=false;

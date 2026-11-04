@@ -116,3 +116,24 @@ test('reusable pairing lets a restarted browser pair again; default stays one-us
     } finally { b.server.close(); }
   }
 });
+
+
+test('OmniRoute chat sends installed local CLI token without confusing it with provider keys',async()=>{
+  const calls=[];
+  const chat=createChat({apiKey:'endpoint-secret',
+    cliAuth:{header:'X-OmniRoute-CLI-Token',token:'local-cli-session'},
+    fetchImpl:fakeFetch(calls)});
+  await chat.models();
+  const result=await chat.respond(body(),new AbortController().signal);
+  result.done();
+  for(const {options} of calls){
+    assert.equal(options.headers.Authorization,'Bearer endpoint-secret');
+    assert.equal(options.headers['X-OmniRoute-CLI-Token'],'local-cli-session');
+  }
+  const deniedCalls=[];
+  const denied=createChat({apiKey:'endpoint-secret',
+    cliAuth:{header:'Injected\r\nHeader',token:'bad'},
+    fetchImpl:fakeFetch(deniedCalls)});
+  await denied.models();
+  assert.equal(deniedCalls[0].options.headers['Injected\r\nHeader'],undefined);
+});

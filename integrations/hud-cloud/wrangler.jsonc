@@ -7,10 +7,19 @@
     "binding": "ASSETS",
     "run_worker_first": true
   },
-  "ai": {"binding": "AI"},
-  "d1_databases": [{
-    "binding": "DB",
-    "database_name": "rovor-hud-telemetry",
-    "database_id": "REPLACE_WITH_PROVISIONED_D1_ID"
-  }]
+  "ai": {
+    "binding": "AI"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rovor-hud-telemetry",
+      "database_id": "REPLACE_WITH_PROVISIONED_D1_ID"
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "*/5 * * * *"
+    ]
+  }
 }

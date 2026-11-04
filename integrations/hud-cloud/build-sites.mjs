@@ -7,16 +7,32 @@ import {fileURLToPath} from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
 export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
-  const coreEnd = 'export default {fetch(request, env) { return handle(request, env); }};';
+  // Allow the Cloudflare worker to have a scheduled D1 cleanup handler without
+  // leaking that worker-specific export into the legacy self-contained Site.
+  // Exactly one default export is required; duplicated or unexpected shapes fail.
+  const exportPositions = [...core.matchAll(/\nexport default \{/g)];
+  const coreEnd = exportPositions.length === 1 ? core.slice(exportPositions[0].index) : '';
+  if (!coreEnd.includes('fetch(request, env) { return handle(request, env); }') ||
+      !coreEnd.trimEnd().endsWith('};')) throw Error('Unexpected source module shape');
   const adapterImport = "import {handle} from './worker.mjs';";
-  if (core.split(coreEnd).length !== 2 || adapter.split(adapterImport).length !== 2) throw Error('Unexpected source module shape');
+  if (adapter.split(adapterImport).length !== 2) throw Error('Unexpected source module shape');
   if (!html.includes('window.ROVOR_START_OMNIROUTE') || !html.includes('</body>')) throw Error('Original HUD live adapter missing');
-  const plain = code => code.replace(/^export (?=(?:async )?function )/gm, '');
+  const plain = code => code.replace(/^export (?=(?:(?:async )?function|(?:const|let|class))\b)/gm, '');
   const monitorImport = "import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';";
+  const relayImport = "import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';";
+  const chatParserImport = "import {parseChatRequest} from '../../tools/hud_chat.mjs';";
+  if (core.split(relayImport).length !== 2) throw Error('Unexpected private chat relay import');
+  const parserSource = fs.readFileSync(path.join(root, 'tools/hud_chat.mjs'), 'utf8');
+  const relaySource = fs.readFileSync(path.join(here, 'omniroute-chat-relay.mjs'), 'utf8');
+  if (relaySource.split(chatParserImport).length !== 2) throw Error('Unexpected chat request parser import');
+  const relay = 'const {catalog:relayCatalog,publishCatalog,enqueue:enqueueChat,claim:claimChat,finish:finishChat,status:chatStatus,cancel:cancelChat,expire:expireChat} = (() => {\n' +
+    'const {parseChatRequest} = (() => {\n' + plain(parserSource) + '\nreturn {parseChatRequest};})();\n' +
+    plain(relaySource.replace(chatParserImport, '')) +
+    '\nreturn {catalog,publishCatalog,enqueue,claim,finish,status,cancel,expire};})();\n';
   if (core.split(monitorImport).length !== 2) throw Error('Unexpected Gemini monitoring import');
   const monitor = fs.readFileSync(path.join(here, 'gemini-cloud-monitoring.mjs'), 'utf8');
   const dependency = 'const {readGoogleGeminiQuota} = (() => {\n' + plain(monitor) + '\nreturn {readGoogleGeminiQuota};})();\n';
-  return dependency + plain(core.replace(monitorImport, '').replace(coreEnd, '')) + '\n' + plain(adapter.replace(adapterImport, '')) +
+  return dependency + relay + plain(core.replace(monitorImport, '').replace(relayImport, '').replace(coreEnd, '')) + '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
 }
 
@@ -34,7 +50,7 @@ export function buildSite(destination) {
     capabilities: [...new Set([...(manifest.capabilities || []), 'mcp'])]};
   // A first schema-only migration; never replace a previously applied migration.
   const migrationDir = path.join(directory, 'drizzle');
-  const migration = fs.readFileSync(path.join(here, 'schema.sql'), 'utf8').replace(/;\s*(?=CREATE)/g, ';\n--> statement-breakpoint\n');
+  const migration = fs.readFileSync(path.join(here, 'sites-schema.sql'), 'utf8').replace(/;\s*(?=CREATE)/g, ';\n--> statement-breakpoint\n');
   const migrationPath = path.join(migrationDir, '0000_hud_telemetry.sql');
   if (fs.existsSync(migrationPath) && fs.readFileSync(migrationPath, 'utf8') !== migration) throw Error('Existing migration differs; append a migration instead');
   const journal = {version: '7', dialect: 'sqlite', entries: [{idx: 0, version: '6', when: 1792838400000,
