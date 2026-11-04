@@ -174,7 +174,10 @@
     };
     const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':'rvc-bot',m.content));};
     let pendingJob=null,cancelConfirmed=false;
-    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;if(!b)input.focus();};
+    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;
+      // Don't re-open the software keyboard after a delayed response on iOS.
+      if(!b&&panel.dataset.open==='true'&&!window.matchMedia('(pointer:coarse)').matches)input.focus({preventScroll:true});
+    };
     const syncVisualViewport=()=>{
       // On iOS the keyboard resizes the visual rather than the layout viewport.
       // Constrain the fullscreen dialog above the keyboard without browser zoom.
@@ -275,12 +278,13 @@
           const r=await fetch('/api/chat',{method:'POST',credentials:'same-origin',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
           if(!r.ok){const err=await r.json().catch(()=>({}));throw Error(err.error||'cloud_chat_unavailable');}
           if(!r.body)throw Error('empty_stream');
-          const reader=r.body.getReader(),dec=new TextDecoder();let buf='';
+          const reader=r.body.getReader(),dec=new TextDecoder();let buf='',completed=false;
           for(;;){
             const {done,value}=await reader.read();if(done)break;
             buf+=dec.decode(value,{stream:true});
             let i;while((i=buf.indexOf('\n'))>=0){
               const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+              if(line==='data: [DONE]'){completed=true;continue;}
               if(!line.startsWith('data:'))continue;
               try{const piece=JSON.parse(line.slice(5).trim()).choices?.[0]?.delta?.content;
                 if(typeof piece==='string'){reply+=piece;renderText(bubble,reply);log.scrollTop=log.scrollHeight;}}
@@ -288,6 +292,7 @@
             }
           }
           if(!reply)throw Error('empty_response');
+          if(!completed)throw Error('incomplete_stream');
         }
         renderText(bubble,reply);
         history.push({role:'assistant',content:reply});save();
@@ -344,7 +349,7 @@
     clear.onclick=()=>{if(busy)return;history=[];save();redraw();};
     newChat.onclick=()=>{if(busy)return;save();panel.dataset.sideOpen='false';currentId=crypto.randomUUID();history=[];
       sessions.unshift({id:currentId,title:'New conversation',history:[]});sessions=sessions.slice(0,16);
-      save();drawSessions();redraw();input.focus();};
+      save();drawSessions();redraw();if(!window.matchMedia('(pointer:coarse)').matches)input.focus({preventScroll:true});};
     drawSessions();
     mobileMenu.onclick=()=>{panel.dataset.sideOpen=String(panel.dataset.sideOpen!=='true');};
     close.onclick=()=>toggle(false);fab.onclick=()=>toggle(panel.dataset.open!=='true');
