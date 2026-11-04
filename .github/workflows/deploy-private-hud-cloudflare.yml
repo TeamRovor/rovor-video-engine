@@ -9,6 +9,7 @@ on:
       - 'tests/test_hud_cloud_chat.mjs'
       - 'tests/test_hud_omniroute_relay.mjs'
       - 'tests/test_hud_chat_mobile.mjs'
+      - 'tests/test_hud_chat_browser.cjs'
       - 'tools/hud_chat_relay_client.mjs'
       - 'tests/test_hud_ios_quota_rings.mjs'
       - 'tests/test_hud_gemini_project_quota.mjs'
@@ -26,6 +27,7 @@ on:
       - 'tests/test_hud_cloud_chat.mjs'
       - 'tests/test_hud_omniroute_relay.mjs'
       - 'tests/test_hud_chat_mobile.mjs'
+      - 'tests/test_hud_chat_browser.cjs'
       - 'tools/hud_chat_relay_client.mjs'
       - 'tests/test_hud_ios_quota_rings.mjs'
       - 'tests/test_hud_gemini_project_quota.mjs'
@@ -61,6 +63,9 @@ jobs:
           bash -n tools/manage_hud_telemetry_agent.sh
           bash -n tools/install_hud_chat_relay.sh
           node --test tests/test_hud_cloud.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_gemini_project_quota.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_omniroute_relay.mjs tests/test_hud_chat_mobile.mjs tests/test_hud_omniroute_chat_relay.mjs
+
+      - name: Verify interactive Ask ROVOR on phone, tablet and desktop Chromium viewports
+        run: node tests/test_hud_chat_browser.cjs
 
       - name: Diagnose live unauthenticated response codes (no credentials)
         if: github.event_name == 'pull_request'
