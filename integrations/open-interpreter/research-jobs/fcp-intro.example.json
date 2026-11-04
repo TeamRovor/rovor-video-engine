@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "job_id": "jane-finalcut-basics-001",
+  "topic": "final-cut-pro",
+  "questions": [
+    "Which documented Apple mechanisms safely import FCPXML, and what cannot be changed live through those mechanisms?",
+    "How should ROVOR assemble 1080p60 YouTube videos and 9:16 reels from original Evan animation and narration?",
+    "What host checks and FCPXML MCP security restrictions are required before Jane can inspect a synthetic timeline?"
+  ],
+  "source_files": []
+}
