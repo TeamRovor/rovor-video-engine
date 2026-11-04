@@ -69,3 +69,18 @@ test('iPhone/iPad form controls prevent Safari auto-zoom without disabling acces
   assert.doesNotMatch(html, /user-scalable\s*=\s*no|maximum-scale\s*=\s*1/i);
   assert.doesNotMatch(script, /user-scalable\s*=\s*no|maximum-scale\s*=\s*1/i);
 });
+
+
+test('truncated model stream cannot manufacture a completed inference receipt',async()=>{
+  let released=false;
+  const incomplete=new ReadableStream({start(c){
+    c.enqueue(new TextEncoder().encode('data: {"choices":[{"delta":{"content":"partial"}}]}\n\n'));
+    c.close();
+  }});
+  const chat={respond:async()=>({status:200,stream:incomplete,done(){released=true;}})};
+  const job={id:'test',model:'openrouter/example:free',request:{
+    model:'openrouter/example:free',messages:[{role:'user',content:'test'}]}};
+  const result=await executeClaim(chat,job,new AbortController().signal);
+  assert.deepEqual(result,{state:'failed',error:'chat_upstream_failed'});
+  assert.equal(released,true,'release local busy gate even after partial disconnect');
+});
