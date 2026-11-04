@@ -556,7 +556,8 @@ function slotQuotaState(slot,quota,live,cloud){
  const left=local?local.total-local.used:verified?limit-used:null;
  const unit=local?local.unit:verified?'units':null;
  const resetAt=local?local.reset_at:verified&&Number.isSafeInteger(reset)?new Date(reset).toISOString():null;
- return {localLimits,local,verified,pct,evidence,left,unit,resetAt};
+ const checkedAt=local?local.fetched_at:verified?new Date(observed).toISOString():null;
+ return {localLimits,local,verified,pct,evidence,left,unit,resetAt,checkedAt};
 }
 function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
   const {localLimits,local,verified,pct,evidence}=slotQuotaState(slot,quota,live,cloud);
@@ -588,7 +589,7 @@ function quotaGlance(slots,quota,live,cloudProviders){
    return '<li class="rvq-glance-row rvq-level-'+level+'"><span class="rvq-glance-name">'+esc(name)+'</span>'+
     '<span class="rvq-glance-bar" role="img" aria-label="'+esc(name)+': '+pct+'% of quota used"><i style="width:'+pct+'%"></i></span>'+
     '<span class="rvq-glance-pct">'+pct+'%</span>'+
-    '<span class="rvq-glance-meta">'+fmt(st.left)+' '+esc(st.unit)+' left · '+(st.resetAt?'resets '+esc(resetText(st.resetAt)):'reset not reported')+'</span></li>';
+    '<span class="rvq-glance-meta">'+fmt(st.left)+' '+esc(st.unit)+' left · '+(st.resetAt?'resets '+esc(resetText(st.resetAt)):'reset not reported')+' · '+(st.local?'Mac':'cloud')+(st.checkedAt?' · checked '+esc(prettyTime(st.checkedAt)):'')+'</span></li>';
  };
  const why=({name,st})=>'<li><span>'+esc(name)+'</span> <small>'+(st.localLimits.length>1?fmt(st.localLimits.length)+' separate model limits':live?'no verified limit':'waiting for fresh data')+'</small></li>';
  return '<div id="rvq-glance" class="rvq-glance"><h4 class="rvq-details-heading">QUOTA AT A GLANCE · MOST USED FIRST</h4>'+
