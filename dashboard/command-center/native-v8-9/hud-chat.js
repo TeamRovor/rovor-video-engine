@@ -74,6 +74,56 @@
 }
 `;
     document.head.append(el('style',{textContent:iosTypeAndKeyboardCSS}));
+
+    // Mobile controls occupy two deliberate rows, not a cramped desktop header.
+    // All editable fields remain >=16px to prevent Safari's focus auto-zoom.
+    const polishedMobileCSS = `
+#rvc button,#rvc select{touch-action:manipulation}
+#rvc .rvc-side-backdrop{display:none}
+#rvc textarea{font-size:16px!important}
+#rvc .rvc-mobile-menu,#rvc header button,#rvc .rvc-sessions button{min-width:42px;min-height:42px}
+@media(min-width:761px) and (max-width:1100px){
+  #rvc{grid-template-columns:210px minmax(0,1fr)!important;inset:1vh 1vw!important}
+  #rvc header{gap:8px;padding:10px 12px}
+  #rvc .rvc-model{flex:1;min-width:0;max-width:none}
+}
+@media(max-width:760px){
+  #rvc{width:100vw!important;right:0!important;left:0!important;max-height:var(--rvc-vv-height,100dvh)!important}
+  #rvc .rvc-main{min-width:0;min-height:0}
+  #rvc header{
+    display:grid!important;
+    grid-template-columns:44px minmax(0,1fr) 44px 44px;
+    grid-template-areas:"menu source clear close" "model model model model";
+    align-items:center;gap:7px!important;
+    padding:calc(env(safe-area-inset-top) + 7px) 12px 9px!important;
+    min-height:0!important;
+  }
+  #rvc header strong{display:none!important}
+  #rvc .rvc-mobile-menu{grid-area:menu;display:flex!important;align-items:center;justify-content:center;font-size:19px;padding:0!important}
+  #rvc .rvc-source{grid-area:source;max-width:none!important;width:100%!important;min-width:0!important}
+  #rvc .rvc-model{grid-area:model;width:100%!important;max-width:none!important;min-width:0!important}
+  #rvc header button:not(.rvc-mobile-menu):not(.rvc-close){grid-area:clear}
+  #rvc header .rvc-close{grid-area:close;min-width:42px!important}
+  #rvc select{font-size:16px!important;padding:8px!important;min-height:42px}
+  #rvc .rvc-sidebar{
+    display:flex!important;position:absolute!important;
+    width:min(315px,86vw);height:100%;z-index:6;
+    top:0;left:0;bottom:0;padding-top:calc(env(safe-area-inset-top) + 14px);
+    transform:translateX(-110%);transition:transform .18s ease;
+    box-shadow:12px 0 32px #000a;
+  }
+  #rvc[data-side-open=true] .rvc-sidebar{transform:translateX(0)}
+  #rvc .rvc-side-backdrop{display:none}
+  #rvc[data-side-open=true] .rvc-side-backdrop{display:block;position:absolute;z-index:5;inset:0;width:100%;height:100%;border:0!important;border-radius:0!important;background:#0009}
+  #rvc .rvc-state{padding:7px 12px!important;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+  #rvc #rvc-log{flex:1;min-height:0;padding:15px 14px!important}
+  #rvc footer{padding:8px 12px max(10px,env(safe-area-inset-bottom))!important;flex-shrink:0}
+  #rvc footer form{gap:7px;padding:6px 7px}
+  #rvc footer textarea{font-size:16px!important;min-height:46px;height:48px;max-height:120px}
+}
+@media(prefers-reduced-motion:reduce){#rvc .rvc-sidebar{transition:none!important}}
+`;
+    document.head.append(el('style',{textContent:polishedMobileCSS}));
     const fab=el('button',{id:'rvc-fab',type:'button',textContent:'ASK ROVOR',title:'Chat with your models and check on your employees'});
     fab.setAttribute('aria-expanded','false');fab.setAttribute('aria-controls','rvc');
     const sourceSelect=el('select',{id:'rvc-source',className:'rvc-source'});
@@ -102,6 +152,10 @@
         stateLabel,log,
         el('footer',{},el('div',{className:'rvc-context-note',textContent:'An accepted chat request is not a completed task. Only a confirmed model response counts.'}),form)));
     panel.setAttribute('aria-label','ROVOR chat');
+    const sideBackdrop=el('button',{type:'button',className:'rvc-side-backdrop'});
+    sideBackdrop.setAttribute('aria-label','Close conversation history');
+    panel.append(sideBackdrop);
+    sideBackdrop.onclick=()=>{panel.dataset.sideOpen='false';};
     document.body.append(fab,panel);
 
     const add=(cls,text)=>{const n=el('div',{className:'rvc-msg '+cls});const inner=el('div',{className:'rvc-message-body'});renderText(inner,text);n.append(inner);log.append(n);log.scrollTop=log.scrollHeight;return inner;};
@@ -138,9 +192,23 @@
     window.visualViewport?.addEventListener('resize',syncVisualViewport);
     window.visualViewport?.addEventListener('scroll',syncVisualViewport);
     window.addEventListener('orientationchange',syncVisualViewport);
-    const toggle=open=>{panel.dataset.open=String(open);if(!open)panel.dataset.sideOpen='false';fab.setAttribute('aria-expanded',String(open));
+    let priorOverflow=null;
+    const toggle=open=>{
+      panel.dataset.open=String(open);
+      if(!open)panel.dataset.sideOpen='false';
+      fab.setAttribute('aria-expanded',String(open));
+      if(open){
+        priorOverflow=document.body.style.overflow;
+        document.body.style.overflow='hidden';
+      }else{
+        document.body.style.overflow=priorOverflow??'';
+        priorOverflow=null;
+        input.blur();
+      }
       syncVisualViewport();
-      if(open){load();input.focus();}
+      // Avoid opening the iOS keyboard the moment the app launches.
+      // Desktop typing remains one-step with autofocus.
+      if(open){load();if(!window.matchMedia('(max-width:760px)').matches)input.focus({preventScroll:true});}
     };
 
     async function load(){
