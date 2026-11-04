@@ -10,7 +10,7 @@ const http=require('node:http');
 const {spawn,spawnSync}=require('node:child_process');
 const js=fs.readFileSync(path.resolve(__dirname,'../dashboard/command-center/native-v8-9/hud-chat.js'),'utf8');
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-const model='openrouter/example:free',jobId='051bf69b-cc2d-4453-825e-8d10f16556b4';
+const model='openrouter/example:free',otherModel='mistral/owner-approved-test-route',jobId='051bf69b-cc2d-4453-825e-8d10f16556b4';
 const views=[[390,844,'iPhone'],[820,1180,'iPad portrait'],[1180,820,'iPad landscape'],[1440,900,'Windows/Mac desktop']];
 let server,chrome,ws,tmp,serial=0,submits=0,polls=0,chromeLog='',chromeExit=null;
 const callbacks=new Map();
@@ -32,7 +32,7 @@ async function main(){
   server=http.createServer(async(req,res)=>{
     const route=new URL(req.url,'http://127.0.0.1').pathname;
     if(route==='/hud-chat.js'){res.writeHead(200,{'Content-Type':'text/javascript'});return res.end(js);}
-    if(route==='/api/hud/chat/models')return respond(res,{online:true,models:[model]});
+    if(route==='/api/hud/chat/models')return respond(res,{online:true,models:[model,otherModel]});
     if(route==='/api/chat/models')return respond(res,{models:['@cf/meta/llama-3.1-8b-instruct']});
     if(route==='/api/hud/omniroute')return respond(res,{snapshot_at:new Date().toISOString(),
       transport:{connection:'fresh'},connections:['gemini','groq','nvidia','mistral','cohere','sambanova',
@@ -100,6 +100,15 @@ async function main(){
       assert.equal(await evaluate('return document.querySelector("#rvc").dataset.sideOpen'),'true');
       await evaluate('document.querySelector(".rvc-side-backdrop").click();return true');
       assert.equal(await evaluate('return document.querySelector("#rvc").dataset.sideOpen'),'false');
+      await evaluate('document.querySelector(".rvc-model-browse").click();return true');
+      assert.equal(await evaluate('return document.querySelector(".rvc-model-sheet").hidden'),false);
+      await evaluate('document.querySelector(".rvc-model-search").value="mistral";document.querySelector(".rvc-model-search").dispatchEvent(new Event("input",{bubbles:true}));return true');
+      const result=await evaluate('return Array.from(document.querySelectorAll(".rvc-model-option")).map(x=>x.textContent)');
+      assert.equal(result.length,1,'provider search should filter to one available route');
+      await evaluate('document.querySelector(".rvc-model-option").click();return true');
+      assert.equal(await evaluate('return document.querySelector("#rvc-model").value'),otherModel);
+      assert.equal(await evaluate('return document.querySelector(".rvc-model-sheet").hidden'),true);
+      await evaluate('const select=document.querySelector("#rvc-model");select.value="openrouter/example:free";select.dispatchEvent(new Event("change",{bubbles:true}));return true');
     }
     await evaluate('document.querySelector("#rvc button[aria-label=\\"Close chat\\"]").click();return true');
     assert.equal(await evaluate('return document.querySelector("#rvc").dataset.open'),'false');
