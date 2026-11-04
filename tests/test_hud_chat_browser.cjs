@@ -12,7 +12,7 @@ const js=fs.readFileSync(path.resolve(__dirname,'../dashboard/command-center/nat
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const model='openrouter/example:free',otherModel='mistral/owner-approved-test-route',jobId='051bf69b-cc2d-4453-825e-8d10f16556b4';
 const views=[[390,844,'iPhone'],[820,1180,'iPad portrait'],[1180,820,'iPad landscape'],[1440,900,'Windows/Mac desktop']];
-let server,chrome,ws,tmp,serial=0,submits=0,polls=0,chromeLog='',chromeExit=null;
+let server,chrome,ws,tmp,serial=0,submits=0,polls=0,submittedPayload=null,chromeLog='',chromeExit=null;
 const callbacks=new Map();
 const cmd=(method,params={})=>new Promise((resolve,reject)=>{
   const id=++serial;callbacks.set(id,{resolve,reject});
@@ -37,7 +37,10 @@ async function main(){
     if(route==='/api/hud/omniroute')return respond(res,{snapshot_at:new Date().toISOString(),
       transport:{connection:'fresh'},connections:['gemini','groq','nvidia','mistral','cohere','sambanova',
         'cloudflare-ai','openrouter','huggingface'].map(provider=>({provider,name:provider,enabled_count:1,connection_count:1}))});
-    if(route==='/api/hud/chat/submit'){submits++;return respond(res,{job_id:jobId},202);}
+    if(route==='/api/hud/chat/submit'){submits++;
+      let raw='';for await(const part of req)raw+=part.toString();
+      submittedPayload=JSON.parse(raw);
+      return respond(res,{job_id:jobId},202);}
     if(route==='/api/hud/chat/status/'+jobId){polls++;
       return respond(res,polls===1?{state:'queued'}:polls===2?{state:'running'}:
         {state:'complete',requested_model:model,output:'Confirmed mocked backend response.'});}
@@ -107,6 +110,11 @@ async function main(){
       assert.equal(await evaluate('return document.querySelector("#rvc").dataset.sideOpen'),'false');
       await evaluate('document.querySelector(".rvc-model-browse").click();return true');
       assert.equal(await evaluate('return document.querySelector(".rvc-model-sheet").hidden'),false);
+      const groups=await evaluate('return Array.from(document.querySelectorAll(".rvc-model-group h3")).map(x=>x.textContent)');
+      for(const name of ['Google Gemini','Mistral','NVIDIA','Cohere','SambaNova','Cloudflare Workers AI','Groq','OpenRouter','Hugging Face'])
+        assert(groups.some(s=>s.startsWith(name)),name+': missing provider family in model browser');
+      assert.equal(await evaluate('return document.querySelectorAll(".rvc-model-notready").length'),7,
+        'seven unadvertised providers must not appear as callable routes');
       await evaluate('document.querySelector(".rvc-model-search").value="mistral";document.querySelector(".rvc-model-search").dispatchEvent(new Event("input",{bubbles:true}));return true');
       const result=await evaluate('return Array.from(document.querySelectorAll(".rvc-model-option")).map(x=>x.textContent)');
       assert.equal(result.length,1,'provider search should filter to one available route');
@@ -123,9 +131,11 @@ async function main(){
   await waitFor(()=>evaluate('return !!document.querySelector("#rvc-fab")'),'conversation launcher');
   await evaluate('document.querySelector("#rvc-fab").click();return true');
   await waitFor(()=>evaluate('return !!document.querySelector("#rvc-model option[value=\\"openrouter/example:free\\"]")'),'conversation catalog');
-  await evaluate('document.querySelector("#rvc textarea").value="Say hello";document.querySelector("#rvc form").requestSubmit();return true');
+  await evaluate('document.querySelector("#rvc-repo-file").value="integrations/hud-cloud/worker.mjs";document.querySelector("#rvc textarea").value="Say hello";document.querySelector("#rvc form").requestSubmit();return true');
   await waitFor(()=>evaluate('return !!document.querySelector(".rvc-receipt")&&document.querySelector(".rvc-receipt").textContent.includes("REPLY RECEIVED")'),'confirmed receipt');
   assert.equal(submits,1,'one chat submission expected');
+  assert.equal(submittedPayload?.repo_file,'integrations/hud-cloud/worker.mjs',
+    'only the explicitly selected, allowlisted GitHub source may be attached');
   assert(polls>=3,'queued/running/complete must be polled');
   assert(await evaluate('return document.querySelector("#rvc-log").textContent.includes("Confirmed mocked backend response.")'));
   assert(await evaluate('return !!document.querySelector(".rvc-copy")'),'copy response action missing');
