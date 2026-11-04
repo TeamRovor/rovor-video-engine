@@ -19,11 +19,11 @@ const explicit = /^([A-Za-z0-9][A-Za-z0-9._:/+@-]{0,199})$/;
 export function eligibleModels(models, approved = []) {
   if (!Array.isArray(models)) return [];
   const allow = new Set(approved.filter(x => explicit.test(x)));
-  // Explicit OpenRouter :free routes and owner-named free combos are eligible.
-  // Models with unrestricted IDs require owner-verifiable zero-cost allowlisting.
+  // Explicit provider :free routes are eligible by identity; all other models,
+  // including combo aliases, require an owner-verified zero-cost allowlist.
   // An account or API key alone is never a free entitlement.
   return [...new Set(models.filter(id => explicit.test(id) &&
-    (id.endsWith(':free') || /^rovor-[a-z0-9-]+-free-v[0-9]+$/.test(id) || allow.has(id))))].slice(0,100);
+    (id.endsWith(':free') || allow.has(id))))].slice(0,100);
 }
 export function readEvents(text) {
   const parts = text.split(/\r?\n/);
