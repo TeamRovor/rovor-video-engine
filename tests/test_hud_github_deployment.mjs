@@ -224,18 +224,20 @@ test('deployment readback validates the exact Ask ROVOR release even while Mac t
   const report={source:'cloud_hud_telemetry',connection:'stale',received_at:'2026-10-28T00:38:25.840Z',
     snapshot:{snapshot_at:'2026-10-28T00:38:25.577Z',
       connections:Array.from({length:9},(_,i)=>({provider:String(i),connection_count:1}))}};
-  function createSend({publicChat=false,oldChat=false}={}){
+  function createSend({publicChat=false,oldChat=false,oldBackend=false,publicCatalog=false}={}){
     return async(url,opts)=>{
       const resource=new URL(url).pathname;
       const authenticated=opts.headers.Authorization==='Bearer '+token;
       if(!authenticated){
         if(resource==='/')return new Response(null,{status:303,headers:{Location:'https://hud.example/login'}});
         if(publicChat&&resource==='/hud-chat.js')return new Response('EXPOSED',{status:200});
+        if(publicCatalog&&resource==='/api/hud/chat/models')return Response.json({models:['EXPOSED']});
         return Response.json({error:'unauthorized'},{status:401});
       }
       if(resource==='/')return new Response('<html><body>ROVOR_START_OMNIROUTE<script src="/hud-quota.js"></script></body></html>');
       if(resource==='/hud-quota.js')return new Response(actualNineMeterAsset);
       if(resource==='/hud-chat.js')return new Response(oldChat?'old-release':currentChat);
+      if(resource==='/api/hud/chat/models')return oldBackend?Response.json({error:'not_found'},{status:404}):Response.json({source:'omniroute_outbound_bridge',online:false,models:[]});
       if(resource==='/api/hud/status')return Response.json(report);
       return Response.json({error:'not_found'},{status:404});
     };
@@ -246,6 +248,7 @@ test('deployment readback validates the exact Ask ROVOR release even while Mac t
   assert.equal(result.deployment_verified,true);
   assert.equal(result.private_auth_verified,true);
   assert.equal(result.chat_asset_matches_checkout,true);
+  assert.equal(result.chat_model_endpoint_verified,true);
   assert.equal(result.mac_telemetry_verified,false);
   assert.equal(result.successive_reports_verified,false);
   assert.equal(result.telemetry_connection,'stale');
@@ -255,6 +258,10 @@ test('deployment readback validates the exact Ask ROVOR release even while Mac t
     /deployed_chat_asset_differs_from_checkout/);
   await assert.rejects(()=>verifyGithubHud({...input,send:createSend({publicChat:true})}),
     /anonymous_chat_asset_was_not_denied/);
+  await assert.rejects(()=>verifyGithubHud({...input,send:createSend({publicCatalog:true})}),
+    /anonymous_chat_model_catalog_was_not_denied/);
+  await assert.rejects(()=>verifyGithubHud({...input,send:createSend({oldBackend:true})}),
+    /private_chat_model_endpoint_unavailable/);
   await assert.rejects(()=>verifyGithubHud({...input,requireLiveTelemetry:true,send:createSend()}),
     /private_D1_telemetry_not_fresh/);
 });
@@ -274,6 +281,7 @@ test('asset deployment reports degraded rather than false live when two fresh Ma
     if(path==='/')return new Response('<body>ROVOR_START_OMNIROUTE<script src="/hud-quota.js"></script></body>');
     if(path==='/hud-quota.js')return new Response(actualNineMeterAsset);
     if(path==='/hud-chat.js')return new Response(currentChat);
+    if(path==='/api/hud/chat/models')return Response.json({source:'omniroute_outbound_bridge',online:false,models:[]});
     if(path==='/api/hud/status')return Response.json(status);
     return new Response('',{status:404});
   };
