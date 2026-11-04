@@ -108,7 +108,7 @@
       for(const [id,v] of Object.entries(saved).slice(0,60)){
         if(typeof id!=='string'||!v||Date.now()-v.last>STATS_MAX_AGE)continue;
         if(Number.isSafeInteger(v.ok)&&Number.isSafeInteger(v.failed)&&
-          v.ok>=0&&v.failed>=0&&v.ok+v.failed<=1000)routeStats[id]=v;
+          v.ok>=0&&v.failed>=0&&v.ok+v.failed<=1000&&Number.isFinite(v.elapsed)&&v.elapsed>=0&&Number.isFinite(v.last))routeStats[id]=v;
       }
     }
   }catch{}
@@ -724,6 +724,7 @@
         const payload={model,context:false,messages:safeMessages};
         if(attachedSource)payload.repo_file=attachedSource;
         let jobId=null;
+        const attemptStarted=Date.now();
         try{
           const posted=await fetch('/api/hud/chat/submit',{method:'POST',credentials:'same-origin',
             signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -750,10 +751,14 @@
             }
             if(item.state==='complete'&&typeof item.output==='string'&&item.output.trim()){
               if(item.requested_model!==model)throw Error('receipt_route_mismatch');
-              pending.phase='complete';outcomes.set(model,'Reply confirmed');show();
+              pending.phase='complete';recordReceipt(model,'complete',Date.now()-attemptStarted);
+              outcomes.set(model,'Reply confirmed');show();
               return {state:'complete',model,reply:item.output,receipt:jobId};
             }
-            if(item.state==='failed')throw Error(item.error||'relay_failed');
+            if(item.state==='failed'){
+              if(pending.phase==='running')recordReceipt(model,'failed',Date.now()-attemptStarted);
+              throw Error(item.error||'relay_failed');
+            }
             throw Error('invalid_receipt');
           }
           throw Error('no_completion_receipt');
@@ -811,6 +816,7 @@
       if(active?.title==='New conversation')active.title=text.replace(/\s+/g,' ').slice(0,55);
       save();drawSessions();
       const bubble=add('rvc-bot','Preparing request · no model call confirmed');
+      const singleStarted=Date.now();
       let reply='';pendingJob=null;cancelConfirmed=false;setBusy(true);stop.textContent='Stop waiting';controller=new AbortController();
       const signal=controller.signal;
       try{
@@ -834,9 +840,13 @@
             if(result.state==='running'){pendingJob.phase='running';stop.textContent='Stop waiting';if(i%4===0)renderText(bubble,'Claimed by Mac · waiting for actual model response');continue;}
             if(result.state==='complete'&&typeof result.output==='string'){
               if(result.requested_model!==target)throw Error('receipt_route_mismatch');
+              recordReceipt(target,'complete',Date.now()-singleStarted);
               reply=result.output;break;
             }
-            if(result.state==='failed')throw Error(result.error||'relay_failed');
+            if(result.state==='failed'){
+              if(pendingJob?.phase==='running')recordReceipt(target,'failed',Date.now()-singleStarted);
+              throw Error(result.error||'relay_failed');
+            }
             throw Error('invalid_receipt');
           }
           if(!reply)throw Error('no_completion_receipt');
