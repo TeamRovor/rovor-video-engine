@@ -1,4 +1,5 @@
 import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';
+import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus} from './omniroute-chat-relay.mjs';
 // Private telemetry only: no inference, job dispatch, or Mac control.
 const PERIODS = new Set(['1m', '1h', '24h', '7d']);
 // Private read-only short cache: never store access tokens, raw Google responses or credentials.
@@ -336,14 +337,19 @@ export async function handle(request, env, now = Date.now()) {
       'Set-Cookie': 'rovor_hud_reader=' + encodeURIComponent(token) + '; Path=/; Max-Age=604800; Secure; HttpOnly; SameSite=Strict'}});
   }
   const ingest = url.pathname === '/api/hud/ingest';
+  // A separate writer-only channel allows the Mac to report its available
+  // routes and execute explicitly submitted chat requests via outbound polling.
+  const chatWriter = request.method === 'POST' &&
+    (url.pathname === '/api/hud/chat/bridge' || url.pathname === '/api/hud/chat/claim' ||
+      /^\/api\/hud\/chat\/result\/[a-f0-9-]{36}$/i.test(url.pathname));
   let authRequest = request;
-  if (!ingest && (request.method === 'GET' || (request.method === 'POST' && url.pathname === '/api/chat')) && !request.headers.has('Authorization')) {
+  if (!ingest && !chatWriter && (request.method === 'GET' || (request.method === 'POST' && ['/api/chat','/api/hud/chat/submit'].includes(url.pathname))) && !request.headers.has('Authorization')) {
     try {
       const cookie = String(request.headers.get('Cookie') || '').split(';').map(c => c.trim()).find(c => c.startsWith('rovor_hud_reader='));
       if (cookie) authRequest = {headers: new Headers({Authorization: 'Bearer ' + decodeURIComponent(cookie.slice(17))})};
     } catch {}
   }
-  if (!await authorized(authRequest, ingest ? env.HUD_WRITER_TOKEN : env.HUD_READER_TOKEN)) {
+  if (!await authorized(authRequest, ingest || chatWriter ? env.HUD_WRITER_TOKEN : env.HUD_READER_TOKEN)) {
     if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return Response.redirect(url.origin + '/login', 303);
     return response(401, {error: 'unauthorized'});
   }
@@ -372,6 +378,32 @@ export async function handle(request, env, now = Date.now()) {
     // owns this same URL separately, so neither hosting path breaks.
     if (request.method === 'GET' && url.pathname === '/hud-quota.js' && env.ASSETS) {
       return env.ASSETS.fetch(new Request(new URL('/live-quota-board.js', url.origin), request));
+    }
+    // The browser never receives gateway credentials. Writer requests require
+    // a distinct token. All inference happens in the private Mac-side client.
+    if (request.method === 'GET' && url.pathname === '/api/hud/chat/models')
+      return response(200, {source:'omniroute_outbound_bridge', ...await relayCatalog(env.DB, now)});
+    if (request.method === 'POST' && url.pathname === '/api/hud/chat/bridge') {
+      let data; try { data = await boundedJSON(request); } catch { return response(400, {error:'invalid_chat_catalog'}); }
+      try { return response(200, await publishCatalog(env.DB, data, now)); }
+      catch { return response(400, {error:'invalid_chat_catalog'}); }
+    }
+    if (request.method === 'POST' && url.pathname === '/api/hud/chat/claim')
+      return response(200, await claimChat(env.DB, now));
+    if (request.method === 'POST' && url.pathname.startsWith('/api/hud/chat/result/')) {
+      let data; try { data = await boundedJSON(request); } catch { return response(400, {error:'invalid_chat_result'}); }
+      const result = await finishChat(env.DB, url.pathname.slice('/api/hud/chat/result/'.length), data, now);
+      return response(result.status, result);
+    }
+    if (request.method === 'POST' && url.pathname === '/api/hud/chat/submit') {
+      if (request.headers.get('Origin') !== url.origin) return response(403, {error:'origin_denied'});
+      let data; try { data = await boundedJSON(request); } catch { return response(400, {error:'invalid_chat'}); }
+      const result = await enqueueChat(env.DB, data, now);
+      return response(result.status, result.status === 202 ? result : {error:result.error});
+    }
+    if (request.method === 'GET' && url.pathname.startsWith('/api/hud/chat/status/')) {
+      const result = await chatStatus(env.DB, url.pathname.slice('/api/hud/chat/status/'.length), now);
+      return response(result.status, result.status === 200 ? result : {error:result.error});
     }
     if (request.method === 'GET' && url.pathname === '/api/chat/models') return response(200, {models: env.AI ? CHAT_MODELS : []});
     if (request.method === 'POST' && url.pathname === '/api/chat') return chat(request, env, now);
