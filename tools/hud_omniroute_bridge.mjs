@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-/** Private read-only view of installed OmniRoute, serving the existing HUD.
- * No inference, database writes, arbitrary forwarding, or worker control.
+/** Private view of installed OmniRoute, serving the existing HUD. Data endpoints are read-only.
+ * The only write-like path is the paired, same-origin /api/chat (bounded chat to local OmniRoute).
+ * No database writes, arbitrary forwarding, or worker control.
  */
 import http from 'node:http';
 import fs from 'node:fs';
@@ -11,6 +12,7 @@ import {spawn,spawnSync,execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {reduceProviderQuota} from './hud_verified_quota.mjs';
 import {createCallLogCollector} from './hud_provider_usage.mjs';
+import {createChat,CHAT_LIMITS} from './hud_chat.mjs';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const ID=/^[a-zA-Z0-9][a-zA-Z0-9._:/+@-]{0,199}$/;
@@ -111,7 +113,7 @@ export function createCollector(read,{clock=Date.now}={}){
   };
 }
 
-export function createBridge({collect,hud,adapter,quotaAddon='',pairCode=crypto.randomBytes(32).toString('hex'),port=0,clock=Date.now,viewerOrigin='https://teamrovor.github.io'}){
+export function createBridge({collect,hud,adapter,quotaAddon='',chat=null,chatAddon='',pairCode=crypto.randomBytes(32).toString('hex'),port=0,clock=Date.now,viewerOrigin='https://teamrovor.github.io'}){
   const sessions=new Map(),allowedHosts=new Set();let pairingOpen=true;
   const reply=(res,status,body,type='application/json',extra={})=>{res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Content-Security-Policy':"frame-ancestors 'none'; base-uri 'none'",...extra});res.end(body);};
   const externalTokens=new Map();
@@ -142,15 +144,33 @@ export function createBridge({collect,hud,adapter,quotaAddon='',pairCode=crypto.
       const secure=host.endsWith('.trycloudflare.com')?'; Secure':'';
       return reply(res,200,'{"paired":true}','application/json',{'Set-Cookie':`rovor_hud=${session}; HttpOnly; SameSite=Strict; Path=/; Max-Age=604800${secure}`});
     }
+    if(chat&&url.pathname==='/api/chat'&&req.method==='POST'){
+      // Paired browser cookie only: never the external bearer, and never cross-origin.
+      if(!authenticated)return denied(res);
+      if(req.headers.origin!=='http://'+host&&req.headers.origin!=='https://'+host)return reply(res,403,'{}');
+      if(!String(req.headers['content-type']||'').startsWith('application/json'))return reply(res,415,'{}');
+      if(Number(req.headers['content-length']||0)>CHAT_LIMITS.bodyBytes)return reply(res,413,'{}');
+      let body='';try{for await(const chunk of req){body+=chunk;if(body.length>CHAT_LIMITS.bodyBytes){reply(res,413,'{}');return;}}}catch{return;}
+      const abort=new AbortController();res.on('close',()=>abort.abort());
+      const result=await chat.respond(body,abort.signal);
+      if(!result.stream)return reply(res,result.status,JSON.stringify(result.json));
+      res.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"frame-ancestors 'none'; base-uri 'none'"});
+      try{for await(const chunk of result.stream){if(!res.write(chunk))await new Promise(r=>res.once('drain',r));}}catch{}finally{result.done();res.end();}
+      return;
+    }
     if(req.method!=='GET')return reply(res,405,'{}',undefined,{'Allow':'GET'});
     if(url.pathname==='/'&&!authenticated){
       const login=`<!doctype html><meta name="viewport" content="width=device-width"><title>Pair ROVOR HUD</title><body style="background:#020916;color:#bde5ff;font:16px system-ui;padding:32px"><h1>ROVOR · Connect HUD</h1><p id="status">Pairing this device…</p><script>(async()=>{let code=new URLSearchParams(location.hash.slice(1)).get('pair');history.replaceState(null,'','/');if(!code){document.getElementById('status').textContent='Open the private pairing link printed on your Mac.';return}try{const r=await fetch('/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});document.getElementById('status').textContent=r.ok?'Connected. Opening HUD…':'Pairing failed or link already used.';if(r.ok)location.reload()}catch{document.getElementById('status').textContent='Connection failed.'}})();</script>`;
       return reply(res,200,login,'text/html');
     }
     if(!authenticated&&!(bearerOK&&url.pathname==='/api/hud/omniroute'))return denied(res);
-    if(url.pathname==='/')return reply(res,200,hud.replace('</body>',(quotaAddon?'<script src="/hud-quota.js"></script>':'')+'<script>window.ROVOR_QUOTA_BOARD?.start?.();window.ROVOR_START_OMNIROUTE?.();</script></body>'),'text/html');
+    if(url.pathname==='/')return reply(res,200,hud.replace('</body>',(quotaAddon?'<script src="/hud-quota.js"></script>':'')+(chat&&chatAddon?'<script src="/hud-chat.js"></script>':'')+'<script>window.ROVOR_QUOTA_BOARD?.start?.();window.ROVOR_START_OMNIROUTE?.();</script></body>'),'text/html');
     if(url.pathname==='/hud-live.js')return reply(res,200,adapter,'text/javascript');
     if(url.pathname==='/hud-quota.js'&&quotaAddon)return reply(res,200,quotaAddon,'text/javascript');
+    if(chat&&chatAddon&&url.pathname==='/hud-chat.js'&&authenticated)return reply(res,200,chatAddon,'text/javascript');
+    if(chat&&url.pathname==='/api/chat/models'&&authenticated){
+      try{return reply(res,200,JSON.stringify({models:await chat.models()}));}catch{return reply(res,503,'{"error":"models_unavailable"}');}
+    }
     if(url.pathname==='/api/hud/omniroute'){
       const period=url.searchParams.get('period')||'24h';if(!WINDOWS[period])return reply(res,400,'{"error":"period_invalid"}');
       try{return reply(res,200,JSON.stringify(await collect(period)));}catch{return reply(res,503,'{"error":"omniroute_unavailable_or_unauthorized"}');}
@@ -159,6 +179,14 @@ export function createBridge({collect,hud,adapter,quotaAddon='',pairCode=crypto.
   });
   server.requestTimeout=10000;server.headersTimeout=10000;
   return {server,pairCode,allowedHosts,async listen(){await new Promise((r,j)=>{server.once('error',j);server.listen(port,'127.0.0.1',r)});const address=server.address();allowedHosts.add('127.0.0.1:'+address.port);allowedHosts.add('localhost:'+address.port);return address.port;}};
+}
+
+function endpointKeyFromKeychain(){
+  let key=process.env.OMNIROUTE_API_KEY;
+  if(!key&&process.platform==='darwin'){
+    const p=spawnSync('/usr/bin/security',['find-generic-password','-s','rovordigital.omniroute.endpoint','-w'],{encoding:'utf8',timeout:5000});if(p.status===0)key=p.stdout.trim();
+  }
+  return key;
 }
 
 async function installedReader(){
@@ -204,7 +232,8 @@ async function main(){
   const reader=await installedReader(),readModels=createCollector(reader),readWorkers=createWorkerReader();
   const collect=async period=>({...await readModels(period),workforce:await readWorkers()});
   const first=await collect('24h');
-  const bridge=createBridge({collect,port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8'),quotaAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8')});
+  const chat=createChat({apiKey:endpointKeyFromKeychain(),status:()=>collect('24h')});
+  const bridge=createBridge({collect,chat,chatAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/hud-chat.js'),'utf8'),port:20129,hud:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/index.html'),'utf8'),adapter:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-omniroute.js'),'utf8'),quotaAddon:fs.readFileSync(path.join(ROOT,'dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8')});
   const port=await bridge.listen();
   console.log(`OmniRoute connected: ${first.connection_count} configured connections; ${first.models.length} recorded models; ${first.request_count} recorded requests in 24h. ${first.quota.records.length} fresh provider-reported quota rows (unknown limits remain unknown).`);
   let tunnel;
