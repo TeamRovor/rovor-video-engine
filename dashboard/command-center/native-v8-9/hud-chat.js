@@ -334,6 +334,14 @@
 #rvc .rvc-repo-row[hidden]{display:none!important}
 @media(max-width:760px){#rvc .rvc-repo-row{gap:5px;padding-bottom:6px}#rvc .rvc-repo-row label{font-size:11px}#rvc .rvc-repo-note{font-size:10px}}
 `}));
+    const routingNote=el('div',{className:'rvc-routing-note',textContent:'Choose a model, or use Smart routing to select from Mac-advertised routes.'});
+    routingNote.setAttribute('role','status');
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-routing-note{background:#061b30;border:1px solid #204968;border-radius:9px;padding:8px 11px;color:#a9cde7;font:500 11px/1.5 system-ui;overflow-wrap:anywhere}
+#rvc .rvc-routing-note[data-error=true]{border-color:#885c61;color:#ffc4c4}
+#rvc .rvc-routing-note:not([data-error=true])::before{content:'✦ ';color:#7ed2ff}
+@media(max-width:760px){#rvc .rvc-routing-note{font-size:11px;max-height:70px;overflow:auto}}
+`}));
     const form=el('form',{},input,send,stop);
     const panel=el('section',{id:'rvc'},
       el('aside',{className:'rvc-sidebar'},el('div',{className:'rvc-brand'},'R O V O R',
@@ -342,7 +350,7 @@
       el('div',{className:'rvc-main'},
         el('header',{},mobileMenu,el('strong',{textContent:'ASK ROVOR'}),sourceSelect,modelSlot,clear,close),
         connectionBar,providerDetails,log,
-        el('footer',{},repoRow,el('div',{className:'rvc-context-note',textContent:'An accepted chat request is not a completed task. Only a confirmed model response counts.'}),form)));
+        el('footer',{},repoRow,routingNote,el('div',{className:'rvc-context-note',textContent:'A routing plan does not start work. Send submits at most two eligible routes; completion requires receipts.'}),form)));
     panel.setAttribute('aria-label','ROVOR chat');
     const sideBackdrop=el('button',{type:'button',className:'rvc-side-backdrop'});
     sideBackdrop.setAttribute('aria-label','Close conversation history');
@@ -540,6 +548,11 @@
         if(epoch!==loadEpoch)return; // Ignore a slow catalog from the previous provider tab.
         if((omni&&info.online!==true)||!Array.isArray(models)||!models.length)throw Error('catalog_unavailable');
         select.textContent='';
+        if(omni){
+          const smart=el('optgroup',{label:'ROVOR task routing'});
+          smart.append(el('option',{value:AUTO_ROUTE,textContent:'✦ Smart routing · by task'}));
+          select.append(smart);
+        }
         // Native grouped selection remains fully keyboard and touch accessible.
         const groups=new Map();
         for(const id of models){
@@ -551,33 +564,52 @@
         if(!select.options.length)throw Error('catalog_unavailable');
         const preferred=sessions.find(s=>s.id===currentId)?.model;
         const saved=localStorage.getItem(KEY+'_model_'+requestedSource);
-        if(preferred&&models.includes(preferred))select.value=preferred;
-        else if(saved&&models.includes(saved))select.value=saved;
+        if(preferred&&(models.includes(preferred)||(omni&&preferred===AUTO_ROUTE)))select.value=preferred;
+        else if(saved&&(models.includes(saved)||(omni&&saved===AUTO_ROUTE)))select.value=saved;
+        else if(omni)select.value=AUTO_ROUTE;
         stateLabel.textContent=omni?('Mac bridge reported · '+select.options.length+' allowed routes · confirm a reply to verify use'):
           ('Cloudflare AI · '+select.options.length+' hosted models listed · allowance unverified');
         modelSheetInfo.textContent=omni
           ?'Mac-advertised chat routes only. Free-tagged model routes and Owner-allowlisted model routes still need live inference and free-quota checks.'
           :'Cloudflare-hosted inference is separate from OmniRoute. Its allowance is not guaranteed.';
-        ready=true;send.disabled=false;modelBrowse.disabled=false;
+        ready=true;send.disabled=false;modelBrowse.disabled=false;updatePlan();
       }catch{
         if(epoch!==loadEpoch)return;
         modelBrowse.disabled=true;select.textContent='';select.append(el('option',{value:'',textContent:'No models available'}));
+        updatePlan();
         stateLabel.textContent=sourceSelect.value==='omniroute'?
           'Mac bridge not responding · check the Mac relay, or switch to Cloudflare AI.':
           'Cloudflare AI unavailable · no hosted model routes confirmed.';
       }
     }
+    function currentPlan(message=input.value.trim()){
+      if(sourceSelect.value!=='omniroute')return {routes:select.value?[select.value]:[],reason:'Cloudflare AI · manually selected hosted route'};
+      return planRoutes(message,Array.from(select.options).map(o=>o.value),select.value);
+    }
+    function updatePlan(){
+      const plan=currentPlan();
+      routingNote.dataset.error=String(!!plan.error);
+      routingNote.textContent=plan.error
+        ?plan.error
+        :plan.routes.length
+          ?(plan.routes.length===2?'Two-model review: ':'Selected route: ')+plan.routes.join(' + ')+' · '+plan.reason
+          :'No available route. Check the Mac connection.';
+      if(!busy)send.disabled=!ready||!!plan.error||!plan.routes.length;
+      return plan;
+    }
+    input.addEventListener('input',()=>{if(!busy)updatePlan();});
     refreshButton.onclick=()=>{if(!busy){load();refreshProviderInventory();}};
     sourceSelect.onchange=()=>{if(!busy){
       repoRow.hidden=sourceSelect.value!=='omniroute';repoSelect.disabled=repoRow.hidden;
       const active=sessions.find(s=>s.id===currentId);
       if(active){active.source=sourceSelect.value;active.model=null;save();}
-      load();
+      load();updatePlan();
     }};
     select.onchange=()=>{
       const active=sessions.find(s=>s.id===currentId);
       if(active){active.source=sourceSelect.value;active.model=select.value;save();}
       try{localStorage.setItem(KEY+'_model_'+sourceSelect.value,select.value);}catch{}
+      updatePlan();
     };
 
     async function ask(text){
