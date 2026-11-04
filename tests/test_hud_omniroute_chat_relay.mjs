@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {eligibleModels,readEvents,executeClaim} from '../tools/hud_chat_relay_client.mjs';
@@ -53,4 +54,15 @@ test('writer and reader credentials are strictly separated',async()=>{
   assert.equal((await handle(req('/api/hud/chat/submit','POST',{...authReader,Origin:URL},{model:'premium',messages:[{role:'user',content:'test'}]}),env(db))).status,503);
   const report=await handle(req('/api/hud/chat/bridge','POST',{...authWriter,Origin:URL},{models:['a:free']}),env(db));
   assert.equal(report.status,200);
+});
+
+test('iPhone/iPad form controls prevent Safari auto-zoom without disabling accessibility zoom',()=>{
+  const script=readFileSync(new URL('../dashboard/command-center/native-v8-9/hud-chat.js',import.meta.url),'utf8');
+  const html=readFileSync(new URL('../dashboard/command-center/native-v8-9/index.html',import.meta.url),'utf8');
+  assert.match(script, /#rvc select, #rvc textarea, #rvc input/);
+  assert.match(script, /font-size:16px!important/);
+  assert.match(script, /window\.visualViewport\?\.addEventListener\('resize',syncVisualViewport\)/);
+  assert.match(script, /--rvc-vv-height/);
+  assert.doesNotMatch(html, /user-scalable\s*=\s*no|maximum-scale\s*=\s*1/i);
+  assert.doesNotMatch(script, /user-scalable\s*=\s*no|maximum-scale\s*=\s*1/i);
 });
