@@ -50,6 +50,21 @@ The Mac enumerates the installed OmniRoute catalog but offers only explicit `:fr
 
 Enabling every one of the nine providers depends on current account access and a verified compatible model; a configured key is not proof of a usable, zero-cost model. The UI must say offline/unknown rather than invent activity.
 
+## GitHub source access — current scope
+
+The Ask ROVOR composer now includes **GitHub source**, an optional, explicit selector of a curated set of eight files used for HUD, routing, deployment, and diagnostics. The Mac relay reads only the **local Git checkout's `origin/main` commit object**, using `git rev-parse` and `git show`. It sends a bounded source excerpt and the exact commit SHA to the selected OmniRoute model for analysis.
+
+- A selected source excerpt **is transmitted to the selected model provider**. Do not select code containing credentials or customer data. The fixed allowlist excludes private receipts, local secrets and arbitrary paths.
+- No GitHub access token is supplied to any model. The model does **not** get direct GitHub API tools, push/merge permissions, a shell or an unattended job scheduler in this chat upgrade.
+- A local Git snapshot is not proof of the latest GitHub `main`. If you need updated context, fetch/review the repository safely on the Mac first (`git fetch origin main`); the model receives a commit identity, not a claim of a live repository read.
+- If the source ref is missing or fails to read, the request fails as `repo_context_unavailable` **before** inference. It does not silently answer while pretending to have inspected GitHub.
+
+For **actual GitHub code-editing employees**, the next independent capability is an owner-approved tool runner with narrowly scoped installation credentials that can read specific repository files, prepare changes only on feature branches, run tests, create PRs, and publish immutable receipts. It must not expose tokens in prompts, self-merge, push to `main`, or bypass owner PASS/FAIL. This is **not** implemented by granting the chatbot broader language-model instructions.
+
+## Continuous OmniRoute chat reliability
+
+The Mac relay republishes its model list and private heartbeat while processing a slow response. If the local OmniRoute gateway returns an explicit `401` or `403` **to its read-only model catalog request**, the relay can refresh the CLI session credential from the installed OmniRoute package and retry that catalog GET once. It never automatically retries an inference POST, a GitHub write, or a side-effectful operation. The Mac, network and gateway must still be running and free-only routes must remain verified.
+
 ## Recover 24/7 OmniRoute telemetry when the HUD shows an old report
 
 The HUD can stay hosted online while its Mac reporter is offline. **A cloud-accessible HUD does not mean the Mac is sending live model usage.** The reporter is separate from the Ask ROVOR prompt bridge.
