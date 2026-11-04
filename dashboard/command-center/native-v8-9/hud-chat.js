@@ -18,7 +18,7 @@
   const AUTO_ROUTE='__rovor_smart_route__';
   // Lightweight selection heuristics, NOT measured rankings or quota claims.
   // Choices are confined to the Mac's currently advertised free-eligible routes.
-  function planRoutes(prompt, allowed, selection=AUTO_ROUTE) {
+  function planRoutes(prompt, allowed, selection=AUTO_ROUTE, {allowTeam=false} = {}) {
     const routes=[...new Set((Array.isArray(allowed)?allowed:[]).filter(
       id=>typeof id==='string'&&id!==AUTO_ROUTE&&id.length<201))].slice(0,100);
     if(!routes.length)return {routes:[],reason:'No eligible OmniRoute routes reported',error:'No currently advertised routes. Check the Mac bridge.'};
@@ -63,14 +63,20 @@
     };
     const sorted=[...routes].sort((a,b)=>score(b)-score(a)||a.localeCompare(b));
     const explicit=[];
-    for(const provider of named){
+    for(const provider of named.slice(0,allowTeam?2:1)){
       const route=sorted.find(id=>providerOf(id)===provider&&!explicit.includes(id));
       if(!route)return {routes:[],reason:'Explicit provider unavailable',
         error:provider+' was requested but has no advertised free-eligible route. Nothing was sent; select a different provider or check OmniRoute.'};
       explicit.push(route);
     }
     const comparison= /\b(?:compare|contrast|second opinion|double.check|cross.check|debate|two models|multiple models|different perspectives|independent review)\b/i.test(text);
-    const desired=named.length?named.length:(comparison?2:1);
+    const substantial= /\b(?:audit|investigate|diagnose|architecture|root cause|security review|test plan|analyze thoroughly|complex implementation|refactor)\b/i.test(text)
+      || (text.length>=220&&['code','reason'].includes(category));
+    // Task-aware extra inference is strictly opt-in. Two permitted requests
+    // are executed sequentially, not as uncontrolled fan-out or round robin.
+    if(named.length>1&&!allowTeam)return {routes:[],reason:'Team confirmation required',
+      error:'You named multiple providers. Enable two-model review to send to both; nothing was sent.'};
+    const desired=allowTeam&&(comparison||substantial||named.length>1)?2:1;
     const chosen=[...explicit];
     while(chosen.length<desired){
       const distinct=sorted.find(id=>!chosen.includes(id)&&!chosen.some(existing=>providerOf(existing)===providerOf(id)));
@@ -80,9 +86,9 @@
     }
     if(!chosen.length)return {routes:[],reason:'No eligible route',error:'No eligible models were available for this request.'};
     return {routes:chosen,mode:'smart',category,
-      reason:named.length?'Explicitly named provider'+(named.length===2?'s':'')+' · heuristic model choice'
-        :comparison?'Comparison requested · two distinct eligible routes where possible'
-        :'Task-aware heuristic · '+category+' · not a measured strength or quota guarantee'};
+      reason:named.length?'Named provider preference · heuristic route choice'
+        :chosen.length===2?'Optional two-model review · independent requests with separate receipts'
+        :'Task-aware route hint · '+category+' · unbenchmarked; no quota guarantee'};
   }
   window.ROVOR_ROUTE_PLANNER={plan:planRoutes};
   const css=`
