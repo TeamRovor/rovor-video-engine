@@ -51,3 +51,14 @@ test('failed response is retained locally but never sent to a subsequent model a
   assert.match(src,/cancelConfirmed/);
   assert.match(src,/api\/hud\/chat\/cancel\//);
 });
+
+
+test('Ask ROVOR shows nine-provider inventory with explicit freshness and never treats enabled as verified',()=>{
+  assert.match(src,/refreshProviderInventory/);
+  assert.match(src,/\/api\/hud\/omniroute\?period=24h/);
+  assert.match(src,/STALE \/ NOT LIVE/);
+  assert.match(src,/PROVIDER INVENTORY UNAVAILABLE/);
+  assert.match(src,/model access unverified/);
+  assert.match(src,/rvc-provider-inspect/);
+  assert.match(src,/OMNIROUTE BRIDGE REPORTED · free-eligible routes listed, not canary-verified/);
+});
