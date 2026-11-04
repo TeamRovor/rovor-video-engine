@@ -218,6 +218,35 @@
     const input=el('textarea',{placeholder:'Message… (Enter to send, Shift+Enter for a new line)'});input.setAttribute('aria-label','Message');
     const send=el('button',{type:'submit',textContent:'Send'});
     const stop=el('button',{type:'button',textContent:'Stop waiting',hidden:true});
+    // Owners may explicitly attach one curated source excerpt from their
+    // local origin/main Git mirror. Source is read only and never grants PR,
+    // push, repository-token or employee dispatch permissions to the model.
+    const repoSelect=el('select',{id:'rvc-repo-file',className:'rvc-repo-file'});
+    repoSelect.setAttribute('aria-label','Attach a GitHub repository source file to this prompt');
+    const repoOptions=[
+      ['','No repository file attached'],
+      ['coordination/TASK-INTAKE.md','Tasks & routing · documentation'],
+      ['integrations/hud-cloud/ASK-ROVOR-SETUP.md','Ask ROVOR · setup'],
+      ['integrations/hud-cloud/worker.mjs','HUD cloud backend'],
+      ['integrations/hud-cloud/verify-github-deploy.mjs','GitHub deployment verification'],
+      ['dashboard/command-center/native-v8-9/hud-chat.js','Ask ROVOR interface'],
+      ['dashboard/command-center/native-v8-9/live-quota-board.js','Usage & quota dashboard'],
+      ['tools/hud_chat.mjs','OmniRoute chat gateway'],
+      ['.github/workflows/deploy-private-hud-cloudflare.yml','HUD deployment workflow']
+    ];
+    repoOptions.forEach(([value,label])=>repoSelect.append(el('option',{value,textContent:label})));
+    const repoNote=el('small',{className:'rvc-repo-note',
+      textContent:'Optional GitHub source · local origin/main snapshot. A selected excerpt is sent to your model; no repository write access.'});
+    const repoRow=el('div',{className:'rvc-repo-row'},
+      el('label',{textContent:'GitHub source',htmlFor:'rvc-repo-file'}),repoSelect,repoNote);
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-repo-row{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:3px 1px 9px;color:#a4c5df;font:12px/1.35 system-ui}
+#rvc .rvc-repo-row label{font-weight:700;color:#b5dcf7}
+#rvc .rvc-repo-file{flex:1;min-width:170px;max-width:370px;background:#061b30;color:#dfedfa;border:1px solid #2e5f85;border-radius:9px;padding:7px 10px;font-size:16px!important}
+#rvc .rvc-repo-note{font-size:10px;color:#84a9c5;flex-basis:100%;line-height:1.4}
+#rvc .rvc-repo-row[hidden]{display:none!important}
+@media(max-width:760px){#rvc .rvc-repo-row{gap:5px;padding-bottom:6px}#rvc .rvc-repo-row label{font-size:11px}#rvc .rvc-repo-note{font-size:10px}}
+`}));
     const form=el('form',{},input,send,stop);
     const panel=el('section',{id:'rvc'},
       el('aside',{className:'rvc-sidebar'},el('div',{className:'rvc-brand'},'R O V O R',
@@ -226,7 +255,7 @@
       el('div',{className:'rvc-main'},
         el('header',{},mobileMenu,el('strong',{textContent:'ASK ROVOR'}),sourceSelect,modelSlot,clear,close),
         connectionBar,providerDetails,log,
-        el('footer',{},el('div',{className:'rvc-context-note',textContent:'An accepted chat request is not a completed task. Only a confirmed model response counts.'}),form)));
+        el('footer',{},repoRow,el('div',{className:'rvc-context-note',textContent:'An accepted chat request is not a completed task. Only a confirmed model response counts.'}),form)));
     panel.setAttribute('aria-label','ROVOR chat');
     const sideBackdrop=el('button',{type:'button',className:'rvc-side-backdrop'});
     sideBackdrop.setAttribute('aria-label','Close conversation history');
@@ -325,7 +354,7 @@
     };
     const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':m.outcome==='failed'?'rvc-err':'rvc-bot',m.content,m));};
     let pendingJob=null,cancelConfirmed=false;
-    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;refreshButton.disabled=b;
+    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;refreshButton.disabled=b;repoSelect.disabled=b||sourceSelect.value!=='omniroute';
       // Don't re-open the software keyboard after a delayed response on iOS.
       if(!b&&panel.dataset.open==='true'&&!window.matchMedia('(pointer:coarse)').matches)input.focus({preventScroll:true});
     };
@@ -431,6 +460,7 @@
     }
     refreshButton.onclick=()=>{if(!busy){load();refreshProviderInventory();}};
     sourceSelect.onchange=()=>{if(!busy){
+      repoRow.hidden=sourceSelect.value!=='omniroute';repoSelect.disabled=repoRow.hidden;
       const active=sessions.find(s=>s.id===currentId);
       if(active){active.source=sourceSelect.value;active.model=null;save();}
       load();
@@ -443,7 +473,7 @@
 
     async function ask(text){
       if(!ready||busy)return;
-      const target=select.value,platform=sourceSelect.value;
+      const target=select.value,platform=sourceSelect.value,attachedSource=platform==='omniroute'?repoSelect.value:'';
       const thread=sessions.find(s=>s.id===currentId);if(thread){thread.source=platform;thread.model=target;}
       history.push({role:'user',content:text});add('rvc-user',text);
       const active=sessions.find(s=>s.id===currentId);
@@ -454,6 +484,7 @@
       const signal=controller.signal;
       try{
         const payload={model:target,context:false,messages:history.filter(m=>m.role==='user'||(m.role==='assistant'&&m.outcome==='complete')).slice(-5).map(m=>({role:m.role,content:m.content}))};
+        if(attachedSource)payload.repo_file=attachedSource;
         if(platform==='omniroute'){
           const posted=await fetch('/api/hud/chat/submit',{method:'POST',credentials:'same-origin',signal,
             headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -523,6 +554,7 @@
       }finally{pendingJob=null;controller=null;setBusy(false);}
     }
 
+    repoRow.hidden=sourceSelect.value!=='omniroute';repoSelect.disabled=repoRow.hidden;
     form.onsubmit=e=>{e.preventDefault();const text=input.value.trim();if(!text||busy||!ready)return;input.value='';ask(text);};
     // Touch keyboards use Return for a newline. Sending always needs an
     // explicit tap; desktop keyboards retain Enter to send / Shift+Enter newline.
