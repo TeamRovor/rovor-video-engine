@@ -2110,7 +2110,7 @@ window.ROVOR_START_OMNIROUTE=()=>{
  }
  document.addEventListener('click',e=>{
   const t=e.target.closest?.('[data-gl],[data-gl-open],[data-gl-chat]');if(!t)return;
-  if(t.hasAttribute('data-gl-chat')){const f=$('rvc-fab');if(f)f.click();else alert('Chat is only available when the HUD is opened through your bridge.');return}
+  if(t.hasAttribute('data-gl-chat')){const f=$('rvc-fab');if(f)f.click();else alert('Chat lives on your private HUD (rovor-hud-telemetry.rovordigital.workers.dev) or through your bridge. This public page has no chat for safety.');return}
   const n=window.ROVOR_NATIVE;if(!n)return;
   n.open(t.dataset.glOpen||'tasks',$('glance'));
  });

@@ -20,7 +20,7 @@ const LOGIN = `<!doctype html><meta name="viewport" content="width=device-width"
 <p>Sign in to view private usage and employee reports on this device.</p>
 <form id="login"><label>HUD viewing key <input id="key" type="password" autocomplete="current-password" required></label> <button>Sign in</button></form>
 <p id="status" role="status"></p><script>document.getElementById('login').onsubmit=async e=>{e.preventDefault();const key=document.getElementById('key');try{const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:key.value})});key.value='';if(r.ok)location.replace('/');else document.getElementById('status').textContent='Sign-in failed.'}catch{document.getElementById('status').textContent='Connection unavailable.'}}</script>`;
-const CLOUD_START = `<script src="/hud-quota.js"></script><script>document.getElementById('connectOmniRoute')?.remove();window.ROVOR_OMNIROUTE_REQUEST=(resource,opts)=>fetch(resource,{...opts,credentials:'same-origin'});window.ROVOR_START_OMNIROUTE?.();window.ROVOR_QUOTA_BOARD?.start?.();</script>`;
+const CLOUD_START = `<script src="/hud-quota.js"></script><script src="/hud-chat.js"></script><script>document.getElementById('connectOmniRoute')?.remove();window.ROVOR_OMNIROUTE_REQUEST=(resource,opts)=>fetch(resource,{...opts,credentials:'same-origin'});window.ROVOR_START_OMNIROUTE?.();window.ROVOR_QUOTA_BOARD?.start?.();</script>`;
 const response = (status, body) => Response.json(body, {status, headers: {
   'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
@@ -278,6 +278,50 @@ export async function latest(db, period, now = Date.now()) {
     snapshot: expireQuota(JSON.parse(row.body), now)};
 }
 
+const CHAT_MODELS = ['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/qwen/qwen2.5-coder-32b-instruct',
+  '@cf/mistralai/mistral-small-3.1-24b-instruct', '@cf/google/gemma-3-12b-it', '@cf/meta/llama-3.1-8b-instruct'];
+const CHAT_SYSTEM = 'You are ROVOR, the assistant inside the Rovor Digital HUD. Be concise and plain-spoken. Never claim to have done work you cannot verify.';
+
+async function chat(request, env, now) {
+  if (request.headers.get('Origin') !== new URL(request.url).origin) return response(403, {error: 'origin_denied'});
+  if (!env.AI) return response(503, {error: 'chat_not_configured'});
+  let body; try { body = await boundedJSON(request); } catch { return response(400, {error: 'invalid_chat'}); }
+  if (!CHAT_MODELS.includes(body.model) || !Array.isArray(body.messages)) return response(400, {error: 'model_not_available'});
+  const messages = body.messages.slice(-20)
+    .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
+    .map(m => ({role: m.role, content: m.content.slice(0, 6000)}));
+  if (!messages.length) return response(400, {error: 'invalid_chat'});
+  let system = CHAT_SYSTEM;
+  if (body.context === true) {
+    try {
+      const live = await latest(env.DB, '24h', now);
+      system += ' Latest recorded HUD telemetry (may be stale; say so if connection is not fresh): ' + JSON.stringify(live).slice(0, 6000);
+    } catch {}
+  }
+  let upstream;
+  try { upstream = await env.AI.run(body.model, {messages: [{role: 'system', content: system}, ...messages], stream: true, max_tokens: 1024}); }
+  catch { return response(502, {error: 'chat_upstream_failed'}); }
+  // Workers AI streams {"response": "..."}; the HUD client reads OpenAI-style deltas.
+  const dec = new TextDecoder(), enc = new TextEncoder(); let buf = '';
+  const out = upstream.pipeThrough(new TransformStream({
+    transform(chunk, ctl) {
+      buf += dec.decode(chunk, {stream: true});
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+        if (!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if (data === '[DONE]') { ctl.enqueue(enc.encode('data: [DONE]\n\n')); continue; }
+        try {
+          const j = JSON.parse(data), piece = j.response ?? j.choices?.[0]?.delta?.content;
+          if (typeof piece === 'string' && piece) ctl.enqueue(enc.encode('data: ' + JSON.stringify({choices: [{delta: {content: piece}}]}) + '\n\n'));
+        } catch {}
+      }
+    }
+  }));
+  return new Response(out, {headers: {'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}});
+}
+
 export async function handle(request, env, now = Date.now()) {
   const url = new URL(request.url);
   if (url.pathname === '/login') {
@@ -293,7 +337,7 @@ export async function handle(request, env, now = Date.now()) {
   }
   const ingest = url.pathname === '/api/hud/ingest';
   let authRequest = request;
-  if (!ingest && request.method === 'GET' && !request.headers.has('Authorization')) {
+  if (!ingest && (request.method === 'GET' || (request.method === 'POST' && url.pathname === '/api/chat')) && !request.headers.has('Authorization')) {
     try {
       const cookie = String(request.headers.get('Cookie') || '').split(';').map(c => c.trim()).find(c => c.startsWith('rovor_hud_reader='));
       if (cookie) authRequest = {headers: new Headers({Authorization: 'Bearer ' + decodeURIComponent(cookie.slice(17))})};
@@ -329,6 +373,8 @@ export async function handle(request, env, now = Date.now()) {
     if (request.method === 'GET' && url.pathname === '/hud-quota.js' && env.ASSETS) {
       return env.ASSETS.fetch(new Request(new URL('/live-quota-board.js', url.origin), request));
     }
+    if (request.method === 'GET' && url.pathname === '/api/chat/models') return response(200, {models: env.AI ? CHAT_MODELS : []});
+    if (request.method === 'POST' && url.pathname === '/api/chat') return chat(request, env, now);
     if (url.pathname === '/api/hud/gemini/project-quota') {
       if (request.method !== 'GET') return response(405, {error: 'method_not_allowed'});
       // Reader auth has already been validated; NEVER expose secrets or proxy arbitrary URLs.
