@@ -50,6 +50,30 @@ The Mac enumerates the installed OmniRoute catalog but offers only explicit `:fr
 
 Enabling every one of the nine providers depends on current account access and a verified compatible model; a configured key is not proof of a usable, zero-cost model. The UI must say offline/unknown rather than invent activity.
 
+## Recover 24/7 OmniRoute telemetry when the HUD shows an old report
+
+The HUD can stay hosted online while its Mac reporter is offline. **A cloud-accessible HUD does not mean the Mac is sending live model usage.** The reporter is separate from the Ask ROVOR prompt bridge.
+
+On the Mac, from the merged checkout:
+
+```bash
+bash tools/manage_hud_telemetry_agent.sh status
+```
+
+If not installed and the existing HUD writer key is in macOS Keychain, install the **separate read-only** reporting LaunchAgent:
+
+```bash
+bash tools/manage_hud_telemetry_agent.sh install
+```
+
+If it is already installed but not reporting, inspect `~/Library/Logs/rovor-hud-reporting-error.log` without sharing any secrets, then explicitly restart it:
+
+```bash
+bash tools/manage_hud_telemetry_agent.sh restart
+```
+
+The manager **refuses to overwrite an existing plist**, never starts inference, and does not change employee queues or STOP. Verify the private HUD advances its Mac last-report timestamp on two consecutive cycles. If it remains stale, check Mac network, OmniRoute local gateway authentication and the configured Cloudflare origin. GitHub's web deployment workflow cannot fix an offline Mac's LaunchAgent.
+
 ## Privacy and retention
 
 Browser conversations are stored in that device's local browser storage; they are not synced between devices. Queued prompts and completed model replies are temporarily stored in the **private Cloudflare D1** database and cleaned by the Worker expiry mechanism (including a five-minute cleanup schedule). D1 backups may retain copies longer. Do not submit private client content to a free-tier model without explicit client authorization.
