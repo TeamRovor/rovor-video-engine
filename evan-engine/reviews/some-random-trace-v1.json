@@ -1,0 +1,178 @@
+{
+  "status": "some-random-acoustic-bilabial-trace-reviewed",
+  "traceRange": [
+    5.6,
+    6.28
+  ],
+  "geometrySamples": 327,
+  "samplingHz": 480,
+  "fftWindowSamples": 400,
+  "fftHopSamples": 80,
+  "hypotheses": [
+    5.69,
+    6.08
+  ],
+  "measuredControlSamples": [
+    {
+      "requestedTime": 5.69,
+      "time": 5.689583333333333,
+      "minimumTriangleArea2": 45.5,
+      "minimumOralTriangleArea2": 6.829913139343262,
+      "width": 85.67970275878906,
+      "lowerY": 337.8990478515625,
+      "chinY": 397.8686828613281,
+      "fv": 0.0,
+      "upperGuardMinimumY": 319.98626708984375,
+      "targetFinite": true,
+      "inputAperture": 18.319106747432052,
+      "innerGap": 17.319091796875,
+      "upperY": 320.5799560546875,
+      "identitySeal": 0.0,
+      "jawSeal": 0.0
+    },
+    {
+      "requestedTime": 5.95,
+      "time": 5.95,
+      "minimumTriangleArea2": 45.5,
+      "minimumOralTriangleArea2": 0.3871963620185852,
+      "width": 71.51837158203125,
+      "lowerY": 325.9621276855469,
+      "chinY": 393.2558288574219,
+      "fv": 0.0,
+      "upperGuardMinimumY": 324.6725769042969,
+      "targetFinite": true,
+      "inputAperture": 2.2485072269122353,
+      "innerGap": 1.248504638671875,
+      "upperY": 324.713623046875,
+      "identitySeal": 0.9132415225012054,
+      "jawSeal": 0.9132415225012054
+    },
+    {
+      "requestedTime": 6,
+      "time": 6.0,
+      "minimumTriangleArea2": 45.5,
+      "minimumOralTriangleArea2": 0.04453178122639656,
+      "width": 69.0,
+      "lowerY": 325.1199951171875,
+      "chinY": 393.01849365234375,
+      "fv": 0.0,
+      "upperGuardMinimumY": 324.9700012207031,
+      "targetFinite": true,
+      "inputAperture": 1.0,
+      "innerGap": 0.149993896484375,
+      "upperY": 324.9700012207031,
+      "identitySeal": 1.0,
+      "jawSeal": 1.0
+    },
+    {
+      "requestedTime": 6.04,
+      "time": 6.039583333333334,
+      "minimumTriangleArea2": 45.5,
+      "minimumOralTriangleArea2": 0.04453178122639656,
+      "width": 69.0,
+      "lowerY": 325.1199951171875,
+      "chinY": 393.00714111328125,
+      "fv": 0.0,
+      "upperGuardMinimumY": 324.9700012207031,
+      "targetFinite": true,
+      "inputAperture": 1.0,
+      "innerGap": 0.149993896484375,
+      "upperY": 324.9700012207031,
+      "identitySeal": 1.0,
+      "jawSeal": 1.0
+    },
+    {
+      "requestedTime": 6.08,
+      "time": 6.079166666666667,
+      "minimumTriangleArea2": 45.5,
+      "minimumOralTriangleArea2": 0.05183418467640877,
+      "width": 69.30235290527344,
+      "lowerY": 325.0664978027344,
+      "chinY": 393.251220703125,
+      "fv": 0.0,
+      "upperGuardMinimumY": 324.8016357421875,
+      "targetFinite": true,
+      "inputAperture": 1.1720899385971941,
+      "innerGap": 0.172088623046875,
+      "upperY": 324.8944091796875,
+      "identitySeal": 0.9565069789499138,
+      "jawSeal": 0.9565069789499138
+    },
+    {
+      "requestedTime": 6.125,
+      "time": 6.125,
+      "minimumTriangleArea2": 45.5,
+      "minimumOralTriangleArea2": 2.294828414916992,
+      "width": 76.83071899414062,
+      "lowerY": 328.63311767578125,
+      "chinY": 395.2946472167969,
+      "fv": 0.0,
+      "upperGuardMinimumY": 320.3954162597656,
+      "targetFinite": true,
+      "inputAperture": 7.50673058267827,
+      "innerGap": 6.506744384765625,
+      "upperY": 322.1263732910156,
+      "identitySeal": 0.06372325898953468,
+      "jawSeal": 0.06372325898953467
+    }
+  ],
+  "actualRasterOralAndWeightInputMatchesTo1eMinus9": [
+    137,
+    145,
+    146,
+    147
+  ],
+  "nativeFacesInspected": [
+    145,
+    147
+  ],
+  "normalDecodedSourceFramesInspected": [
+    137,
+    145,
+    146,
+    147
+  ],
+  "slowDecodedVideoFramesInspected": [
+    52,
+    56
+  ],
+  "nativeResolutionTraceHalvesInspected": true,
+  "stageFramesByteExact": 30,
+  "normalDecodedFrames": 30,
+  "slowDecodedFrames": 120,
+  "contextPcmSamples": 20000,
+  "contextPcmRange": [
+    88000,
+    108000
+  ],
+  "contextPcmByteExact": true,
+  "pngHashesVerified": 43,
+  "selectedCurrentFrozenSourcesVerified": 88,
+  "findings": [
+    "Periodic audio continues while the modeled M lip gap reaches its0.15pixel construction floor around6.0\u20136.04s. Audio amplitude therefore does not require an open jaw.",
+    "Identity and jaw bilabial weights both reach1.0, then release continuously near the6.08s estimate; near6.125s weight is0.0637 and gap6.51pixels.",
+    "The older5.69s line crosses an earlier periodic segment; the6.08s line sits near a later spectral transition. Mixed windows and absent independent listening prevent an exact word-edge claim.",
+    "Four captured oral meshes and actual incoming control arrays match the raster pipeline to1e-9. This confirms diagnostic fidelity, not speech or animation quality."
+  ],
+  "disposition": "retain-acoustic-no-retiming",
+  "timingChanged": false,
+  "controlsChanged": false,
+  "artworkChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "focusedFlaggedWordIndices": [
+    8,
+    9,
+    18,
+    19,
+    20,
+    21
+  ],
+  "listeningVerified": false,
+  "exactBoundariesVerified": false,
+  "realTimePlaybackReviewed": false,
+  "animationAccepted": false,
+  "polishedMilestoneReady": false,
+  "pendingJobs": [],
+  "next": "Improve one asymmetric skeptical brow accent on existing registered planes over the browser phrase. Keep speech geometry, audio/phoneme timing, arms/torso, branding and defaults unchanged; render separate normal/slow comparison. Retain all18timing flags and avoid new artwork variants."
+}

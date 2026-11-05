@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: some→random/M→R acoustic/bilabial trace reviewed
+CARTOON-EVAN-SOME-RANDOM-TRACE.md / evan-engine/reviews/some-random-trace-v1.json. Reused localtrace; original5.60–6.28sPCM,25msFFT/5mshop,327actualcontrol samples480Hz. Fouroralmeshes+incomingidentity/jawarrays137/145/146/147 matchactualrasterto1e-9. Modeledgapfloor0.15px withperiodicPCM around6–6.04s/contact1; near6.08contact~.9565, at6.125~.0637/gap6.51px. Supportsretaining existingseal/release, NOTenergy-driven jawopening.5.69/6.08wordedge exactness/listeningunverified; NOretiming/controls/artchange. Sixflaggedwords have finertraces; all18flags remainopen.
+
+outputs/evan-cartoon-some-random-trace/Review.html:30BYTE-EXACTfullframes132..161;30/120normal/slowdecodes;20000exactPCM88000:108000.43PNGhashes/selectedcurrent+frozen sources verified. Nativeplothalves/faces145/147 +4normal/2slow samplesinspected. Sameacting/expressionlimits; realtime/listening/exactphonetics/polishedFALSE. No pendingjobs. Fulls/defaults/protectedversions preserved;automationACTIVE.
+
+NEXT: one stronger asymmetric skeptical brow accent on EXISTINGregisteredplanes overbrowserphrase. Keeporal/jaw/audio/phonemetiming/arms/torso/brand/defaultsexact; separate normal/slowcomparison. Keep18timingflags. No newartvariants. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync; localpushauthunavailable.
+
 ## Current task: that’s→not acoustic/oral/tongue trace reviewed
 CARTOON-EVAN-THATS-NOT-TRACE.md / evan-engine/reviews/thats-not-trace-v1.json. Reused existingtrace locally; original5.03–5.90sPCM,25msFFT/5mshop,418actualcontrol samples480Hz. Oralmeshes/tongue-lift/dental-partition match4actualraster samples124/129/135/136to1e-9; actualtonguematerialguardsPASS. Older5.17anchor in near-blankprephrase stretch(-79.71dBFS/20ms); current5.64 nearbroad-noise→periodictransition(-40.28dBFS). Contextdoesnotsupportolderanchor; exactedge/listeningremainunverified. Currentgap~5.09px at5.64. Dentalpartitionisauthoredcontrol, NOTmeasuredtongueshape. NOretiming/controls/artchange;18flagsunresolved.
 
