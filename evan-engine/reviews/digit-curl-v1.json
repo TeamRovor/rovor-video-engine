@@ -1,0 +1,104 @@
+{
+  "status": "independent-continuous-digit-construction-reviewed-rejected-for-scene",
+  "source": "open-palm-filtered-v1/source-v1.png",
+  "sourceSha256": "c717b774eb0f1ad82a68287c0b6c756365b358a7ff5823aea08708f1ac6c6d0f",
+  "sourceUnmodified": true,
+  "ownershipLayers": [
+    "palm-index",
+    "middle",
+    "ring",
+    "little",
+    "thumb"
+  ],
+  "zeroControlsVisibleRgbaAndAlphaExact": true,
+  "independentlySkinnedDigits": 4,
+  "jointsPerMovingDigit": 3,
+  "reused": "cartoon_index.IndexRig hierarchical matrices and triangle renderer",
+  "geometryTestsPassed": 3,
+  "geometrySweepSamples": 481,
+  "minimumDigitTriangleArea2": 11.97898486161014,
+  "fixedProximalVertices": true,
+  "invalidInputsRejected": true,
+  "meshFoldRejected": true,
+  "films": {
+    "Normal": {
+      "decodedFrames": 48,
+      "sha256": "e54a6aac42d3fda76c680619696e46cc8feac45bc5b52becc838b9ee564a9826"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 192,
+      "sha256": "04fcd76986db318bb21bcf04ca932afea3ab5e888f5d3e24c5e4752efba0fef0"
+    }
+  },
+  "normalSeconds": 2,
+  "slowSeconds": 8,
+  "narrationDriven": false,
+  "audioIncluded": false,
+  "heldSceneSourceFrame": 69,
+  "restRegisteredSkinExact": true,
+  "outsideRightHandStageExact": true,
+  "visualInspection": {
+    "nativeSamples": [
+      0,
+      4,
+      8,
+      12,
+      16,
+      20,
+      23,
+      24,
+      28,
+      35,
+      40,
+      47
+    ],
+    "decodedNormalFrames": [
+      0,
+      12,
+      24,
+      47
+    ],
+    "decodedSlowFrames": [
+      48,
+      96
+    ]
+  },
+  "occlusionProbe": [
+    {
+      "curl": 0,
+      "movingDigitPairOverlapPixels": 0,
+      "movingDigitOverFixedIndexPixels": 0
+    },
+    {
+      "curl": 0.25,
+      "movingDigitPairOverlapPixels": 1855,
+      "movingDigitOverFixedIndexPixels": 83
+    },
+    {
+      "curl": 0.5,
+      "movingDigitPairOverlapPixels": 4740,
+      "movingDigitOverFixedIndexPixels": 3519
+    },
+    {
+      "curl": 0.75,
+      "movingDigitPairOverlapPixels": 8632,
+      "movingDigitOverFixedIndexPixels": 8655
+    },
+    {
+      "curl": 1,
+      "movingDigitPairOverlapPixels": 12439,
+      "movingDigitOverFixedIndexPixels": 11953
+    }
+  ],
+  "visualFinding": "Continuous independent motion replaces drawing switches, but full stroke curls fingers sideways across the index and other fingers. Thin detached ink slivers and a small thumb contour seam are visible at native scale. Geometry remains positive while anatomy/ownership fail. Reject scene integration; retain as construction experiment only.",
+  "animationAccepted": false,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "flagsCleared": 0,
+  "pendingJobs": false,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "polishedMilestoneReady": false,
+  "nextConcreteWork": "Repair ownership polygons so no distal finger contour stays in palm-index; inspect each separated plane and recreate exact rest. Add a contour-remnant guard and index-occlusion guard. Then build a bounded partial curl with no digit/index crossing before considering depth/foreshortening for a point; do not rerender the full film or add replacement drawing swaps."
+}

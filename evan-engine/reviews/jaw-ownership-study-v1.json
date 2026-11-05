@@ -1,0 +1,187 @@
+{
+  "baseCommit": "0063e458963b5c82eac35beef5724bb89db2f399",
+  "runtimeUnchanged": true,
+  "decision": "REJECTED: fixed skin X exposes a doubled cheek/jaw contour; front-jaw stack exposes upper-lip fragment",
+  "candidateTestsPassed": 24,
+  "independentJaw": {
+    "samples": 1307,
+    "lipControlRowsExact": true,
+    "minimumOldJawArea2": 27.78942108154297,
+    "minimumNewJawArea2": 45.5,
+    "minimumOralArea2": 0.04441152140498161,
+    "newArtwork": false,
+    "phonemeTimingChanged": false
+  },
+  "preparedGeometry": {
+    "samples": 1307,
+    "failures": [],
+    "closedSamplesZeroInterior": 248,
+    "allLowerYChinFvUpperGuardExact": true,
+    "fullOralYAndSkinSamplesExact": [
+      15.355,
+      15.39,
+      15.41,
+      15.45,
+      18.385,
+      18.439999999999998,
+      18.459999999999997,
+      18.5,
+      20.175,
+      20.349999999999998,
+      20.369999999999997,
+      20.475
+    ],
+    "minimumOralArea2": 0.023623911663889885,
+    "minimumJawArea2": 27.78942108154297,
+    "phoneTimingChanged": false,
+    "animationAccepted": false
+  },
+  "preparedComparisons": [
+    {
+      "label": "More",
+      "sourceFrames": [
+        864,
+        912
+      ],
+      "sourceSamples": [
+        288000,
+        304000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "f29ce1d55b930ae40618bfc8571f8a0df54a625512621f374fb863ada22ebed5"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "e7f2789beeb3c16deca536af2f1003269cb2d4c9ca9117a2baefafff330c6af6"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": false
+    },
+    {
+      "label": "Up-All",
+      "sourceFrames": [
+        960,
+        1008
+      ],
+      "sourceSamples": [
+        320000,
+        336000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "84fdbf4a9ae41e272b6632f7c1871385b1c3282bf2c2b07db2251c59b3d812de"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "645da08f1be02552369418326029a23a0c79f2a4e2a0ef220d232e15fa6a145f"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": false
+    }
+  ],
+  "jawComparisons": [
+    {
+      "label": "More",
+      "sourceFrames": [
+        864,
+        912
+      ],
+      "sourceSamples": [
+        288000,
+        304000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "3085866bea4f17da86a28e765af9f35524fd976c3f52947be05ecbb5ebfdce15"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "6cd0b9b03051251e38a2d0ebd788f5f0c7d1bd653eda599d570677a0ef51c8cd"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": true
+    },
+    {
+      "label": "Up-All",
+      "sourceFrames": [
+        960,
+        1008
+      ],
+      "sourceSamples": [
+        320000,
+        336000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "4ee9fe5febba0855420b2932905b0df746c3d0ba10a65a1cfd2e7bae7ef29e7b"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "4b7eb35003caf2431837bbc192bfe9ac5893dd18f1de6f85794ab7fb4036b97d"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": true
+    }
+  ],
+  "preparedNativePairsInspected": 96,
+  "criticalFullFramesInspected": [
+    977,
+    983
+  ],
+  "frontJawAblationFrame": 983,
+  "sourceHashes": {
+    "baseline_guided_jaw.py": "f72bcfaf622847f55ba8e4c640c2bbac6ef5adde005af5d87bc733b2bb8760bf",
+    "before_jaw_separated.py": "0b12780b65f14cf545f4ac341b3c4a03a803ee2b378d3a4e25948be8d9113b4e",
+    "jaw_isolation.py": "a90ca0774ff38d74eb0598c93e13bd736664a0e2f636a6047340533a7e905557",
+    "render_independent_jaw.py": "ca4101f000ee717c0d90bc892302d50ce8c8d0354cae23f8a7f40ca5fda9b715",
+    "Rejected-Guided-Jaw.py": "25c04dccce621b4cd922f473d0cdaae39416b87a3c8c058776d3cc535c0e0022",
+    "jaw_keyframes.py": "b19be6584a83189e7f86e4b615a36aff58874464783ef46d7a22f2443f050100",
+    "Rejected-Regression-Tests.py": "9369aea0f86d60aabd49cfdd5a88e9bf01d74855e493096161020ceec446c3df",
+    "jaw_front.py": "fda0263ccce9ca0ece12313b06713a342538991d29e4dd23db1ee9f5fc3135bb",
+    "package_independent_jaw.py": "c4b7c8143e372d0bdab28050f5e01d930eb1aef4ea80a02eaea6060a5e73ac63"
+  },
+  "independentListeningVerified": false,
+  "animationAccepted": false,
+  "polishedMilestoneReady": false
+}

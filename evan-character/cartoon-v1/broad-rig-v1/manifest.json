@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "source": "broad-source-v1/broad-mouth-v1.png",
+  "sourceSha256": "85e71f85065c5e86b3f41a2b667732851d348c33111c41a6b5ee61df073b5da9",
+  "sourceBounds": [
+    180,
+    509,
+    1085,
+    907
+  ],
+  "matrix": [
+    [
+      0.0950276255607605,
+      0.0,
+      177.89503479003906
+    ],
+    [
+      0.0,
+      0.11306532472372055,
+      258.4497375488281
+    ]
+  ],
+  "sourceGeometry": "C",
+  "targetBounds": [
+    195,
+    316,
+    281,
+    361
+  ],
+  "registration": "authored affine fit to existing C control space; not anatomical calibration",
+  "alphaSnapThreshold": 250,
+  "underlapSourcePixels": 12,
+  "supersample": 4,
+  "components": [
+    "cavity",
+    "rim"
+  ],
+  "mask": "interior-mask",
+  "animationReady": false,
+  "generationMode": "built-in imagegen",
+  "editReference": "broad-source-v1/cavity-reference.png",
+  "editReferenceSha256": "3d75dea6904687ac4dd55138c36cb25156e224869076f2ddbf67414031a26e65",
+  "referencePreparation": "Original oral-rig/cavity-outline.png; hidden RGB zeroed only where alpha equals zero. Visible pixels/alpha unchanged.",
+  "originalReferenceSha256": "6a5ea0edf1fb291e3fc1eee8db2960e195e3c076bffd136ed754ae830d7679ac",
+  "promptSha256": {
+    "generation.txt": "776d6acb10d782985300eae822a5bade867f328de8b72aee9a68489495975060"
+  },
+  "generationChain": [
+    {
+      "prompt": "generation.txt",
+      "editTarget": "broad-source-v1/cavity-reference.png",
+      "editTargetSha256": "3d75dea6904687ac4dd55138c36cb25156e224869076f2ddbf67414031a26e65",
+      "output": "broad-source-v1/broad-mouth-v1.png",
+      "outputSha256": "85e71f85065c5e86b3f41a2b667732851d348c33111c41a6b5ee61df073b5da9"
+    }
+  ],
+  "limitations": [
+    "Optional source-art study, not a complete rig",
+    "Generated cavity retains gradients despite prompt; red floor shape is removed",
+    "Affine C fit is not anatomical registration",
+    "Old teeth and FV/contact drawings remain unchanged"
+  ]
+}

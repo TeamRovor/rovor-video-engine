@@ -1,0 +1,14 @@
+{
+  "actualPosedLayers": true,
+  "layers": [
+    "Neck backing",
+    "Painted mouth cavity backing",
+    "Source-matched jaw and lower lip",
+    "Upper face with cheek wings"
+  ],
+  "sourceFrame": 851,
+  "meanPremultipliedError": 0.0232465968412511,
+  "anatomyAccepted": false,
+  "animationReady": false,
+  "nativeMohoBones": false
+}

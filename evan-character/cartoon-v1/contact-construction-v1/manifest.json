@@ -1,0 +1,28 @@
+{
+  "sourceSha256": {
+    "jaw-overlap-v1/Neck.png": "1962e7ec1dc00d7f1b78b82df7ccdb9ffb8238e2e8fe3d46c36735e27944bae8",
+    "painted-oral-parts-v1/Cavity.png": "05b00b41e296869d9e2bea784a159f1126235df992443a369de023da33a9f93c",
+    "fv-rig-v3/upper-teeth.png": "426adcf11c02b57419bdc28866914d076c0458e252addb43572f3924013e4a70",
+    "fv-redraw-v1/Contact-Jaw-Candidate.png": "3c999db581e5ca512b56ecc09e9130d04c4958dffd5c1ac55352e89a8ba94e61",
+    "labiodental-guide-v1/Upper-Lip-Candidate-v2.png": "2fc8bf4f5212e8187399da032e98c4585a14f6e7b60d33cbf91039a29d540e75",
+    "construction-skin-v1/working-face-skin.png": "7671a548bf0a2387d7aa03d6297021d88cc3d0633aa1f3db8333cc9b83e19faf"
+  },
+  "planesBackToFront": [
+    "Neck backing",
+    "Painted cavity",
+    "Fixed upper incisors",
+    "Drawn jaw and lower lip",
+    "Drawn upper-lip cap",
+    "Upper face and cheek wings"
+  ],
+  "controls": "Authored release0..1; lower lip325..332/chin393..394; upperlip and crown fixed",
+  "model": "labiodental_construction.LabiodentalConstruction",
+  "jawAndLowerLipCombined": true,
+  "guideCoordinatesMeasured": false,
+  "reviewToolLoaded": true,
+  "defaultProfileLoaded": false,
+  "speechProfile": false,
+  "nativeMohoBones": false,
+  "anatomyAccepted": false,
+  "animationReady": false
+}

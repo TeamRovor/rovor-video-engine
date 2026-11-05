@@ -1,0 +1,97 @@
+{
+  "status": "word-anchored-blink-stage-component-sampled-not-polished",
+  "testsPassed": 11,
+  "word": "browser",
+  "scriptIndex": 22,
+  "wordInterval": [
+    6.39,
+    6.75
+  ],
+  "blinkKeys": [
+    [
+      6.47,
+      0
+    ],
+    [
+      6.555,
+      1
+    ],
+    [
+      6.605,
+      1
+    ],
+    [
+      6.77,
+      0
+    ]
+  ],
+  "updatedSourceFrames": [
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162
+  ],
+  "offCueByteExactFrames": 65,
+  "frames": 72,
+  "nativeSpeechOralJawAuditExact": true,
+  "nonHeadLayersExact": true,
+  "officialBrandAndBrowserExact": true,
+  "films": {
+    "Normal": {
+      "decodedFrames": 72,
+      "sha256": "f09d0edafd9d840e1c43bcf4d1aa41a3c1385a049b01cd751d1baab1681f8db9"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 288,
+      "sha256": "e07643c90fa97e3750a029d5c71f8d9730d4b3aefa64eb2305fd355707acf7ad"
+    }
+  },
+  "exactPcmSampleRange": [
+    80000,
+    128000
+  ],
+  "exactPcmCount": 48000,
+  "contextWavByteExactPrevious": true,
+  "verifiedStageNativePngs": 100,
+  "normalDecodedSourceFrames": [
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163
+  ],
+  "slowDecodedSourceFrames": [
+    156,
+    158,
+    160,
+    162
+  ],
+  "nativeFacePairsInspected": [
+    156,
+    158,
+    162
+  ],
+  "nativeJoinInspected": [
+    158
+  ],
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "flagsUnresolved": 18,
+  "flagsCleared": 0,
+  "listeningAccepted": false,
+  "realtimeActingAccepted": false,
+  "animationAccepted": false,
+  "observations": [
+    "One brief blink reads above the held lowered glasses during the existing skeptical phrase; the iris remains stationary behind the covers.",
+    "No sampled mouth/jaw displacement, new neck gap or body drawing switch. Open and return frames match the preceding component.",
+    "Skin/ink edges, forehead band and temple notches remain; gaze and broader eye expression are still limited. Direction-sheet acting is richer than this construction."
+  ],
+  "next": "Validate full-shot integration pilots at source0/69/269/374/531 against current full torso candidate, including existing digit-flex at269. Preserve20closing frames byte-exact. Apply this same upper-face foundation consistently to speaking frames; no cue-boundary head swap. Only then build a separate full candidate, retaining full PCM and all18 audit markers."
+}

@@ -1,0 +1,37 @@
+# Evan cartoon: current checkpoint
+
+## Direction and safeguards
+
+Entertaining expressive 2D CARTOON Evan; photograph is loose identity only. Follow CARTOON-EVAN-DIRECTION.md and evan-character/cartoon-v1/source/design-sheet-v1.png. Dark tousled hair, sunglasses, navy shirt/black tie, official Rovor. Realistic painted direction superseded. Concept plates are references, not working rig components. No flattened head swaps or studio-quality claims from tests.
+
+Repo work/engine; branch development/evan-painted-rig (legacy name), draftPR#4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Commit/push development only. NEVER merge/deploy without explicit approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62, V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/symlinks/updater/native projects. Do NOT launch/restart/probe Moho unattended after crash. Automation develop-evan-painted-animation ACTIVE; polished milestone NOT ready. Notify meaningful milestone/failure/completion/required action only.
+
+## Latest construction and next work
+
+CARTOON-EVAN-ARC-WRIST.md / reviews/arc-wrist-v1.json; outputs/evan-cartoon-arc-wrist. ElbowArcReview now exposes hand_parent and independent axial wrist skin. Envelope shoulder−5..0/elbow−135..0/wrist−15..15. Parent matches actual distal material; source wrist810,762, actual axis61,137 normalized. Parent is UNPADDED; hand-plane renderer adds220px. New wrist anchor differs88.33655px from old hinge FK at−5/−135; do NOT reuse old FK matrix.
+
+Nine focused tests pass (four arc/five hand-plane). 1224 angle samples retain positive triangles(minarea2=140.47442335903804), parent coordinate error<=.000007684px, proper rigid matrices, fixed moved wrist pivot, exact proximal material/neutral padded pixels and unchanged source. Actual open-hand wrist motion0/+15/−15/0 at held elbow−135: native before/after normal96/slow384 and official stage normal96/slow384 all fullydecode. All96native wrist crops and whole-arm/fullstage extrema inspected. No narration synchronization, speaking-scene import or polished acceptance. Contour noise, pointed cuff notch/compressed shading, fixed fingers and held face/body remain below bar.
+
+Six thumbs-up held attachment pilots(correct parent,wrist−15/0/+15,center0/−6.75) all REJECTED: exposed diagonal stub cut/protruding edge/contour mismatch, even wrist0. Runtime old-hand ownership mask acts on a working arm copy; raw sources/alpha and registration remain unchanged. Thumbs-up v1/v2 matte limitations retained; no new artwork this turn. Frozen scripts/JSON local. No pending jobs.
+
+NEXT: fit two transverse source/target wrist-stub guides and an explicit hidden component ownership overlap. Start held raised wrist0, then±15. Reject visible cuts, avoid broad dissolves. Keep finger silhouette rigid during fit. Do not expose thumbs-up during low-arm lift(reads thumbs-down). Review seam/cuff silhouette before speaking-scene integration. Stop scope expansion and disable automation only when the agreed polished milestone is actually ready.
+
+Prior elbow study: CARTOON-EVAN-ELBOW-ARC.md; outputs/evan-cartoon-cuff-forearm. 220px finite-radius centerline avoids painted cuff LBS fold; previous96-frame lift minarea2=140.47443 versus56oldfoldframes. Native96/slow384 and branded96/384 all decode,96cuff crops inspected. Rejected rigid-plane splits(cuts−20/0/+20) expose fading/doubled cloth;160px arc still reverses one triangle(min−17.5953). Do not weaken structural guard. Defaults untouched.
+
+## Retained face, acting and source constraints
+
+Current speaking reference remains outputs/evan-cartoon-lumen-staged(19–22s), face ownership6286d15. Use SeparatedOralReview, eleven independent oral/face planes. Keep sourceX jaw mapping, UNCUT cap guard, original carrier above310 and original ear. Native6body/11oral PSDs are editable pixel planes, not native Moho bones. 7cf9512 retains80ms P/B/M→AO width preparation;54635b7 causal jaw mean min20.83ms/10%AO(short6ms,all19ms), seal never weakened/FV exact. Do NOT stack frozen Candidate/AnticipationCapture over MaterialCapture.
+
+CARTOON-EVAN-GRIN-STAGED.md / outputs/evan-cartoon-grin-staged:19–23s comparison192normal/768slow perfilm; original48758PCM samples+15242zeros exact WAV, AAC64000samples(lossy).147speaking-context frames preserved;fresh1055matchescache, others copied with hashes. Smile starts22.127375(actualaudioend22.047375+.08),240msrise,.35hold. Tail native upper310/exteriorface/brand exact;minoral=.05927658/minjaw45.5. Thin tooth sliver/limited cheeks remain below bar. No current speaking-scene import or listening/fullstage acceptance.
+
+CARTOON-EVAN-BROW-POSTROLL.md / outputs/evan-cartoon-brow-staged: opt-in left3px/−1.5°,right4px/1°,35msdelay,240msrise afteraudio+.08. Two tests pass;48tail native mask bbox163,180–332,237 only; mouth/jaw/nose/ear/exteriorface/brand exact. Four192/768filmsdecode. Slight attentive accent, still restrained. No default import.
+
+Grin source/crease registration: CARTOON-EVAN-GRIN-TRANSITION.md.10923c9 scales crease with lipwidth12px at93reference; fixed-width predecessor crossed310 and is rejected. Crown378islands1260pixels,crease18islands22pixels remain unmodified. Direct .35grin during P/B/M opens analytic lumen0→397.3735,F/V89.3994→541.7919 despite positive triangles; NOT accepted during speech. Larger jaw-skin cheek pulls distort jaw/neck shadow; do not repeat face-amplitude studies. 8a92357 closing acting has separate shoulder/elbow/wrist delays and small left/head/body accents, fixed hand drawings only.
+
+CARTOON-EVAN-THUMBS-UP.md: v1 registered experimental single rigid pose; v2 matte edit rejected(red fringe/silhouette drift). Neither production matte accepted; no alpha cleanup/normalization. v1 sourceguide583–873atY1050/anchor728,1050 maps47px at actualwrist810,762(stale body manifest822,784 preserved). Padded1464×1536 output,3×ROI sampling. Registration/parent tests five pass. Old raised LBS lift[−5,−135,−15] had30/48foldframes;24/47 include painted cuff cells. No finger rig or accepted attachment. Source plates are not working components merely because registration tests pass.
+
+## Acoustic evidence and unresolved limits
+
+CARTOON-EVAN-EXACT-CONTEXT-AUDIO.md(f8ded65): context clips copy exact originalPCM bytes/channels;16tests pass. Six clips/waveform/spectrogram regions cover original18word flags; visual review is recorded in reviews/evan-reference-timing-v1.json and outputs/evan-speech-exact-review-audio/Timing-Review.html. No independent listening/exact-boundary approval or flag clearing. Four phone concerns remain but/B184,whole/HH195,way/W207,all/AO228(lowenergy20.38–20.425). Thresholds are not verified boundaries; do not retime from them. CH/OY absent; catalog coverage is not performance evidence.
+
+PlanSHAaf01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e unchanged. Thin FV/dental, limited cheeks/eyes/fingers/legs, asymmetric fixed hands and alpha fringes/specks remain. Full previous checkpoint PAINTED-EVAN-HISTORY-2026-10-26-H.md retains detailed history. Milestone not ready.

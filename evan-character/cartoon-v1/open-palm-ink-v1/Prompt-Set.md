@@ -1,0 +1,7 @@
+# Heavier ink source sibling
+
+Built-in image_gen edit; imagegen skill applied. Transparent background requested. Input: ../open-palm-clean-v1/source-v2.png. Raw generated source copied without alpha cleanup or normalization. Output is a source plate; registered working derivatives are separate files. This iteration does not add finger articulation.
+
+## Exact prompt
+
+Use case: precise-object-edit. Asset type: transparent source artwork for a layered 2D cartoon hand rig, NOT a complete character. Edit target: the supplied open-palm hand source. Make exactly one targeted style change: redraw the EXISTING near-black outer contour and existing palm creases with smooth, solid, consistent heavier cartoon ink, approximately 14 to 16 source pixels wide on the long edges (roughly twice the current weight), with natural tapered endpoints on creases. Keep the exact canvas dimensions 1402x1122, the same forearm cut, same wrist location, same hand silhouette, orientation, thumb and FOUR separated fingers, same finger spacing, skin colors and two-tone shading. Do not add finger joint bands, knuckle loops, new wrinkles, fingernails, texture, grain, dots, extra digits or any labels. Preserve all anatomy/pose/registration. Clean smooth antialiased line edges, true transparent background, no colored backdrop or checkerboard painted into the image. This is a heavier-ink sibling of the source plate, so only the existing ink should change; keep the existing art otherwise unchanged.

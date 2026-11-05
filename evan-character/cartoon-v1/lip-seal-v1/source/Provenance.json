@@ -1,0 +1,21 @@
+{
+  "mode": "built-in imagegen",
+  "selected": "source/seal-source-v3.png",
+  "disposition": "unapproved-artwork-study",
+  "referenceSha256": {
+    "evan-character/cartoon-v1/source/design-sheet-v1.png": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7",
+    "../../outputs/evan-cartoon-chin-follow-through/Tabs-Closure.png": "de2f5479a86f56dd8a3bece7e705d3919165860bad731947ee9ae0dc679510a5"
+  },
+  "sourceSha256": {
+    "source/seal-source-v1.png": "de72be3f5e9c679476e0099ee4f53bc70394aa63e3aa3978eb797bde1603d69c",
+    "source/seal-source-v2.png": "22e37f9db6c811eddb418249f308e30d322a510707d03ad49e091f4ea96703d4",
+    "source/seal-source-v3.png": "22016f16947359df8f8920c3bc971019ef586ed6f19ad96bf0491651c8d4f1e1"
+  },
+  "registeredSha256": {
+    "seam.png": "8bc7e0dd44c2a3ad776594700af3d9c1593841ae6690e3bb12ae256fe9284642",
+    "lower-shadow.png": "058d0bccdf3da9cf41d4873c736f96f6bacdd86db7010640c28849dc0e7360c1",
+    "manifest.json": "543169636452aa992a94a504480bc33bf5e1f0e4a5928728fc9cb8eecfe01f11"
+  },
+  "promptSet": "source/Prompt-Set.json",
+  "animationReady": false
+}

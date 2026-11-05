@@ -1,0 +1,4 @@
+Use case: precise-object-edit
+Asset type: isolated oral cavity source for a layered cel-cartoon character rig.
+Edit target: the attached transparent mouth component; preserve its existing broad three-quarter smile silhouette, gently arcing upper edge, rounded lower edge and slight corner asymmetry.
+Redraw it cleanly at large scale with a thin dark ink contour and ONE simple deep burgundy cavity fill. REMOVE the lighter red floor shape entirely. No tongue, teeth, lip flesh, skin, gradients, highlights, floor stripe, concentric outline or surrounding face. The teeth and tongue are supplied as independent rig layers. Make the drawing elegant and simple, suitable for the entertaining 2D cartoon Evan character, not realistic anatomy. Preserve the broad width-to-height proportions, not a rounded O. One large mouth centered with transparent padding. True transparent background outside the ink outline. No text or other objects.

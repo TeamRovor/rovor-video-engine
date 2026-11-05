@@ -1,0 +1,103 @@
+{
+  "baseCommit": "7c1b82f797eaf5f8678cb3fadefeae98281dfb28",
+  "decision": "NOT PROMOTED: safe geometry, but no consistent acting improvement",
+  "productionChanged": false,
+  "checkedSamples": 1307,
+  "failedSamples": 0,
+  "changedSamples": 39,
+  "exactContactSamples": 180,
+  "widthChinFvExact": true,
+  "minimumOralTriangleArea2": 0.04441152140498161,
+  "minimumJawTriangleArea2": 27.78942108154297,
+  "lowerMotion": {
+    "currentMaximumStep": 14.667755126953125,
+    "trialMaximumStep": 12.113677978515625,
+    "currentP95Step": 6.100123596191404,
+    "trialP95Step": 6.177761840820312,
+    "stepsWorsenedOverOnePixel": 4
+  },
+  "shortMorePeakUnchangedAtFrame888": true,
+  "nativePairsInspected": 96,
+  "fullFramesInspected": [
+    889,
+    980
+  ],
+  "analyticalKeyCheck": {
+    "count": 288,
+    "maximumError": 3.552713678800501e-15
+  },
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "sourceHashes": {
+    "prototype3.py": "152ba32ca7bbba6654c139c77223f417d4dd46a27fbb76aeb84915fa4ada22e7",
+    "prototype4.py": "b354456da18dd4762734f832c7e104c56ceb45d36d94e7710400ae9d67ff3203",
+    "render4.py": "1300b968ce115868fc9ff3842b28145173836bff02d04709c1785558ded8915f",
+    "package4.py": "7c48b4066141ce9e54d0e0bf831179fddff36fb2696bf26faac61059944fb01e"
+  },
+  "comparisons": [
+    {
+      "label": "More",
+      "sourceFrames": [
+        864,
+        912
+      ],
+      "sourceSamples": [
+        288000,
+        304000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "529ab9d83e5d62515ca0f653303da947f4b6ba94c2520e82b597f388f5d8c903"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "ebfb9ad32f8f64376571ef2532e80d300004f485714cfc351da8479ecbcf816c"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": true
+    },
+    {
+      "label": "Up-All",
+      "sourceFrames": [
+        960,
+        1008
+      ],
+      "sourceSamples": [
+        320000,
+        336000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "596916267e656fcc07ee618bed43c491b99a9bb5dc25379b2772cd3189ba34ba"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "d4ced6a11d2aa783971eda09ded7c5a61ece42133dec8e3e2d6e0929e2ed1ab7"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": true
+    }
+  ],
+  "independentListeningVerified": false,
+  "animationAccepted": false,
+  "polishedMilestoneReady": false
+}

@@ -1,0 +1,8 @@
+# Optional dependencies; install into a dedicated virtual environment.
+Pillow>=11.3,<13
+numpy>=2,<3
+opencv-python-headless>=4.12,<6
+psd-tools>=1.25,<2
+cmudict>=1.1,<2
+matplotlib>=3.9,<4
+pocketsphinx>=5.1,<6

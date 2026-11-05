@@ -1,0 +1,83 @@
+{
+  "sourceFrameRange": [
+    228,
+    356
+  ],
+  "timeRange": [
+    9.5,
+    14.833333333333334
+  ],
+  "frames": 128,
+  "cachedRightHandRegionCalibrationExactFrames": 128,
+  "outsideRightHandRegionExactFrames": 128,
+  "faceLeftArmAndBrandExact": true,
+  "minimumArmArea2": 187.65364689503133,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 128,
+      "sha256": "29c6b1ece900086f0e6c86f280401e2d626f015d86b62d4da5055e9d6e052351"
+    },
+    "Quarter-Speed.mp4": {
+      "decodedFrames": 512,
+      "sha256": "751aa1500314732a4565f76c10a86eb3f802dbee9f151c3f87e8c637c0a44018"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 85333,
+    "decodedPcm16Samples": 85333,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "exactSourcePcmRange": [
+    152000,
+    237333
+  ],
+  "exactContextWavPcm": true,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "sourceSha256": "aa1cb4988ec08d47865d9cd1787806440ef076898c916331751c84fb398a73e4",
+  "registeredSkinSha256": "fc387e3331450625dd0d9bc3435c4f3868a1817b7e01568c08e95d65f0140e37",
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "sourceAlphaModified": false,
+  "fingerArticulated": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "status": "registered-component-normal-slow-review-verified",
+  "runtimeParent": "85efa3b04c911ddb688810b2ff821667d534cf20",
+  "newFocusedTestsPassed": 5,
+  "existingRegressionTestsPassed": 4,
+  "defaultBuilderIsolatedPixelAndMetadataExact": true,
+  "geometryProbeInterval": [
+    0,
+    22.125
+  ],
+  "geometryProbeStep": 0.020833333333333332,
+  "nativeFramesCovered": 128,
+  "uniqueNativeFramesInspected": 40,
+  "duplicateNativeFramesHashExact": 88,
+  "fullStageTimesInspected": [
+    9.5,
+    11.5,
+    14.666666666666666
+  ],
+  "sourceScale": 0.192,
+  "sourceWrist": [
+    551,
+    510
+  ],
+  "targetWrist": [
+    810,
+    762
+  ],
+  "registrationAngleDegrees": 15,
+  "sourceManifestSha256": "82cd699c60d664b579c9c860764ad9f0c7ee8536f059287df4d20f5b772ae9c8",
+  "sourcePlatesOnlyNotRig": true,
+  "registeredDerivativeWorkingReview": true,
+  "productionAccepted": false,
+  "defaultImported": false,
+  "flagsCleared": 0,
+  "localOutput": "outputs/evan-cartoon-clean-open-palm",
+  "next": "Integrate the calibrated open palm across the current23s speech candidate; inspect strongest wrist poses and preserve postroll thumb/cut"
+}

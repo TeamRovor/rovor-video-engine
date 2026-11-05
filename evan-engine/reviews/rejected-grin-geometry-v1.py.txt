@@ -1,0 +1,24 @@
+"""Isolated registered-plane expression study; not a narration profile."""
+import numpy as np
+from separated_oral_review import MaterialCapture,SeparatedOralReview,check_oral_mesh
+
+def grin_target(oral,strength):
+ if not np.isfinite(strength) or not 0<=strength<=1:raise ValueError('Grin strength must be within0..1')
+ if not strength:return oral.copy()
+ pose=oral.copy();angles=np.arange(16)*np.pi/8;u=(1+np.cos(angles))/2;arc=abs(np.sin(angles));lower=np.sin(angles)>=0
+ # shortcut: authored lower-face grin; cheek lift and tooth arc still need artist review.
+ for start,left,right,inset in [(0,187.,290.,1.2),(16,192.,285.,0.)]:
+  pose[start:start+16,0]=left+(right-left)*u
+  chord=328.-10.*u
+  pose[start:start+16,1]=chord+np.where(lower,(24.+inset)*arc,(-2.-inset)*arc)
+ result=oral.copy();result[:32]=oral[:32]*(1-strength)+pose[:32]*strength;check_oral_mesh(result)
+ return result
+
+class GrinCapture(MaterialCapture):
+ strength=0.
+ def oral_target(self,target,aperture):
+  oral=grin_target(super().oral_target(target,aperture),self.strength);self.current_oral=oral.copy();return oral
+
+class GrinReview(SeparatedOralReview):
+ def __init__(self):
+  super().__init__();self.head=GrinCapture()

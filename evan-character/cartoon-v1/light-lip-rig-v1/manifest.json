@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "source": "light-lip-source-v1/light-mouth-v2.png",
+  "sourceSha256": "d2b759ad9cc454d087a13c289d4bde1fe68753fb0252099fa4bbc4e9c8510e50",
+  "sourceBounds": [
+    491,
+    445,
+    802,
+    845
+  ],
+  "matrix": [
+    [
+      0.09324758499860764,
+      0.0,
+      165.21543884277344
+    ],
+    [
+      0.0,
+      0.11500000208616257,
+      268.82501220703125
+    ]
+  ],
+  "sourceGeometry": "E",
+  "targetBounds": [
+    211,
+    320,
+    240,
+    366
+  ],
+  "registration": "authored affine fit to existing E control space; not anatomical calibration",
+  "alphaSnapThreshold": 250,
+  "underlapSourcePixels": 12,
+  "supersample": 4,
+  "components": [
+    "cavity",
+    "rim"
+  ],
+  "mask": "interior-mask",
+  "animationReady": false,
+  "generationMode": "built-in imagegen",
+  "contextReference": "source/design-sheet-v1.png",
+  "contextSha256": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7",
+  "editReference": "round-source-v1/rounded-mouth-v2.png",
+  "editReferenceSha256": "8df357a20baaf542fb31a513bfad5f67fca6ea48e58469a971452295bbec28f3",
+  "promptSha256": {
+    "generation.txt": "94b7fac12d1c97ede6b93fcce97b065fa7f2f9aaca86618faa9a4100d0d4c73c",
+    "flatten-edit.txt": "633a57975c3686bec4ad5cf5a452a1e39133b142b638ae30934605367869d544"
+  },
+  "generationChain": [
+    {
+      "prompt": "generation.txt",
+      "editTarget": "round-source-v1/rounded-mouth-v2.png",
+      "editTargetSha256": "8df357a20baaf542fb31a513bfad5f67fca6ea48e58469a971452295bbec28f3",
+      "styleReference": "source/design-sheet-v1.png",
+      "output": "light-lip-source-v1/light-mouth-v1.png",
+      "outputSha256": "b32bbf520cae6f64ed2d030b23f16160198a1c14a611fa9ef1eeb3dcb1790f95"
+    },
+    {
+      "prompt": "flatten-edit.txt",
+      "editTarget": "light-lip-source-v1/light-mouth-v1.png",
+      "editTargetSha256": "b32bbf520cae6f64ed2d030b23f16160198a1c14a611fa9ef1eeb3dcb1790f95",
+      "output": "light-lip-source-v1/light-mouth-v2.png",
+      "outputSha256": "d2b759ad9cc454d087a13c289d4bde1fe68753fb0252099fa4bbc4e9c8510e50"
+    }
+  ],
+  "limitations": [
+    "Optional rounded-art study, not a complete rig",
+    "Flattening prompt did not remove all cavity gradient; retain generated pixels honestly",
+    "Canonical fit and radial correspondence do not register inner lip anatomy",
+    "Shallow contacts and distinct dental tongue shapes remain unfinished"
+  ]
+}

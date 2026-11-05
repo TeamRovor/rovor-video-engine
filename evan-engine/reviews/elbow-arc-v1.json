@@ -1,0 +1,58 @@
+{
+  "scope": "Right elbow source-material construction trial, existing fixed open hand, no speech or independent wrist",
+  "module": "evan-engine/elbow_arc_review.py",
+  "productionImported": false,
+  "sourceAlphaModified": false,
+  "defaultChanged": false,
+  "reviewOnly": true,
+  "geometryEnvelope": {
+    "shoulder": [
+      -5,
+      0
+    ],
+    "elbow": [
+      -135,
+      0
+    ],
+    "wrist": [
+      0,
+      0
+    ]
+  },
+  "minimumCandidateArea2": 140.474429607072,
+  "existingFoldFrames": 56,
+  "neutralVsExisting": {
+    "changedPixels": 0,
+    "maxChannelDelta": 0
+  },
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 96,
+      "sha256": "8b909928adecfd831ad8718bf09c4ec478c5fbb209a63b94add2ba414ab466c6"
+    },
+    "Slow.mp4": {
+      "decodedFrames": 384,
+      "sha256": "66ccb24a2198f341b4b6fb9aa27bd5bd12ccba0c67546effc4cf2f6b6770e70d"
+    },
+    "Stage-Normal.mp4": {
+      "decodedFrames": 96,
+      "sha256": "37973d7ee5763fe190b507c555dc92ace049a883fb32ce26e61b917de59c566b"
+    },
+    "Stage-Slow.mp4": {
+      "decodedFrames": 384,
+      "sha256": "2a374e18fb5c7161453103c8f8b8fb568d5bf2a988c08adba6de449a977bd33b"
+    }
+  },
+  "nativeCuffFramesInspected": 96,
+  "anatomyAccepted": false,
+  "animationAccepted": false,
+  "sourcePremultSha256": "f22e884dc53be6a715720380f620774f638d8eb073f453c54ecd69abe31dd1c4",
+  "limits": [
+    "Pointed inner cuff notch and compressed fold shading",
+    "Wrist fixed; old FK parent is invalid for curved distal anchor",
+    "No new hand attachment, finger rig or narration synchronization",
+    "Source matte defects unchanged"
+  ],
+  "localOutput": "outputs/evan-cartoon-cuff-forearm",
+  "next": "Derive and test moved rigid forearm parent, then fit held raised hand attachment"
+}

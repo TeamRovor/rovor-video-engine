@@ -1,0 +1,133 @@
+{
+  "baseCommit": "55c58b8d8f80d010e1b5f5109755b4e28f82c5c6",
+  "decision": "REJECT_RUNTIME_ADOPTION",
+  "reason": "The local P transition becomes smaller, but native full-resolution comparisons do not establish a convincing animation improvement. Whole-recording width maximum is unchanged; P95 is slightly larger and18 width steps grow by over1 native pixel. Larger coordinate motion alone is not proof of worse perceived animation.",
+  "recordingFrameComparisons": 1059,
+  "geometrySamples": 1307,
+  "geometryFailures": 0,
+  "minimumJawTriangleArea2": 27.415687561035156,
+  "nativeCoordinateNote": "512-head coordinates; differences are not optical flow or anatomical limits",
+  "metrics": {
+    "width": {
+      "priorMaximumStep": 14.6009521484375,
+      "candidateMaximumStep": 14.6009521484375,
+      "priorP95Step": 8.296308135986328,
+      "candidateP95Step": 8.35215835571289,
+      "maximumPositionChange": 13.788360595703125,
+      "stepWorseByOverOnePixel": 18
+    },
+    "lowerY": {
+      "priorMaximumStep": 14.667755126953125,
+      "candidateMaximumStep": 14.003814697265625,
+      "priorP95Step": 6.19515380859375,
+      "candidateP95Step": 6.181716918945312,
+      "maximumPositionChange": 1.708587646484375,
+      "stepWorseByOverOnePixel": 0
+    },
+    "chinY": {
+      "priorMaximumStep": 2.301361083984375,
+      "candidateMaximumStep": 2.301361083984375,
+      "priorP95Step": 1.171139526367187,
+      "candidateP95Step": 1.171139526367187,
+      "maximumPositionChange": 0.0,
+      "stepWorseByOverOnePixel": 0
+    }
+  },
+  "films": [
+    {
+      "label": "Super",
+      "sourcePcm16Samples": 24000,
+      "decodedPcm16Samples": 24000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": "",
+      "Normal": {
+        "decodedFrames": 72,
+        "sha256": "bc1bd0301acc9c4c1b2d5906fad2036e750a418da14683c991e7c072facf7a3c"
+      },
+      "Quarter-Speed": {
+        "decodedFrames": 288,
+        "sha256": "2636f05ba7a816b32128a74917b6dea0b7df3f0b5da5a135d78ef5bdda458967"
+      },
+      "sourceFrames": [
+        696,
+        768
+      ],
+      "sourceSamples": [
+        232000,
+        256000
+      ]
+    },
+    {
+      "label": "More-Finished",
+      "sourcePcm16Samples": 24000,
+      "decodedPcm16Samples": 24000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": "",
+      "Normal": {
+        "decodedFrames": 72,
+        "sha256": "5c115a092526ff74b6dfd58a54b02232a3bbb37efa40b02b6e39d43d821ca840"
+      },
+      "Quarter-Speed": {
+        "decodedFrames": 288,
+        "sha256": "607ee6f44cd670067463aa9a3bb49c19c79f566f4b7ba08d36d47fceb2b30752"
+      },
+      "sourceFrames": [
+        864,
+        936
+      ],
+      "sourceSamples": [
+        288000,
+        312000
+      ]
+    },
+    {
+      "label": "Up-All",
+      "sourcePcm16Samples": 16000,
+      "decodedPcm16Samples": 16000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": "",
+      "Normal": {
+        "decodedFrames": 48,
+        "sha256": "c9735e222ae8178c102b204866bf2395ce87acb31b9e7deb2b7e2db9f67fcdc1"
+      },
+      "Quarter-Speed": {
+        "decodedFrames": 192,
+        "sha256": "81a0b70a74c2a3a59eac486514769662240694ed8a704d08b4bd3040393c2f62"
+      },
+      "sourceFrames": [
+        960,
+        1008
+      ],
+      "sourceSamples": [
+        320000,
+        336000
+      ]
+    }
+  ],
+  "priorEmulationMatchesFrozen888PixelsExactly": true,
+  "testsPassedForCandidate": 36,
+  "independentListeningOrPlaybackAcceptance": false,
+  "animationAccepted": false,
+  "sourceArtworkChanged": false,
+  "phonemeTimingChanged": false,
+  "mohoAccessed": false,
+  "runtimeAdopted": false,
+  "candidateChangesReverted": true,
+  "restoredCodeMatchesBaseCommit": true,
+  "fullResolutionNativeMouthPairsVisuallyReviewed": 192,
+  "fullResolutionComparisonFramesVisuallyReviewed": [
+    725,
+    887,
+    979,
+    983
+  ],
+  "patchSha256": "6438d81d5f269798a70b29a7e65b359bec3d2467b0f515928eeb9d3a250645bd",
+  "polishedMilestoneReady": false,
+  "patchFormat": "Zero context unified diff; reproduction requires git apply --unidiff-zero against recorded base",
+  "referenceGeometryReport": "../../outputs/evan-cartoon-rounded-arcs/Geometry-Audit.json",
+  "referenceGeometrySha256": "64efbe96a5646664ed24619f68855ca75f88713c1ddc107c925f39984abb3ac6",
+  "candidateGeometrySha256": "9a688e319d735b8641ee18d28f74a29af5e1b29ae3b40ff42b98c78c17bb942a"
+}

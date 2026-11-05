@@ -1,0 +1,7 @@
+# Registered experimental grin crown
+
+source.png is the raw2167×726 imagegen transparent cutout of the opaque grin tooth-band source. The drawing was inspected with original-resolution view requested (tool display capped at2048×686). Source pixels/alpha are preserved. Its matte is imperfect:378 disconnected positive-alpha islands totaling1260pixels and mostly near-opaque interior. No threshold cleanup or color keying was performed.
+
+Registration.json records nine upper half-alpha edge measurements and the exact source hash. Measurement thresholds locate guides only; they never change source pixels. GrinToothPlane samples the premultiplied drawing through the existing arch_surface rig sampler. The target upper lip parents the crown; a1px authored burial and proportional thickness are experimental. The CALLER must clip this material to the actual oral lumen. This confines the component and does not establish a universally clean source matte.
+
+This is a registered/rendered experimental tooth plane, unlike the earlier whole-head source concepts. It is not attached to the finished scene or speech profile. Three tests check malformed guides, exact parent translation and zero visible crown in the actual closed lumen. Isolated B-grin/A-contact/FV pilots and48normal/192slow decoded component-motion frames are in outputs/evan-cartoon-grin-tooth-registration. The broader crown fixes the thin-dash read in the forced grin pilot, but the viewer-right skin wedge/lip ownership and cheek acting remain defective. No complete grin or polished animation is approved.

@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "sourceSha256": "8df357a20baaf542fb31a513bfad5f67fca6ea48e58469a971452295bbec28f3",
+  "sourceBounds": [
+    487,
+    440,
+    820,
+    851
+  ],
+  "matrix": [
+    [
+      0.08708708733320236,
+      0.0,
+      168.58859252929688
+    ],
+    [
+      0.0,
+      0.11192213743925095,
+      270.7542724609375
+    ]
+  ],
+  "sourceGeometry": "E",
+  "targetBounds": [
+    211,
+    320,
+    240,
+    366
+  ],
+  "registration": "authored affine fit to existing E control space; not anatomical calibration",
+  "alphaSnapThreshold": 250,
+  "underlapSourcePixels": 12,
+  "supersample": 4,
+  "components": [
+    "cavity",
+    "rim"
+  ],
+  "mask": "interior-mask",
+  "animationReady": false,
+  "limitations": [
+    "Rounded-art candidate; source plate is not a complete rig",
+    "Canonical source controls are authored, not traced anatomical landmarks",
+    "Shallow contacts and dental tongue shapes remain separate unfinished work"
+  ],
+  "generationMode": "built-in imagegen",
+  "contextReference": "source/design-sheet-v1.png",
+  "contextSha256": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7",
+  "editReferenceSha256": "3d75dea6904687ac4dd55138c36cb25156e224869076f2ddbf67414031a26e65",
+  "promptSha256": {
+    "generation-v1.txt": "5ff6b35c07983bfb314107a4c79bdd2143e07b1207937ad42161a428fb7b587b",
+    "contour-edit.txt": "b6287b9dee9142bb13845e2231ca809adcf97748f342184ebfa55b993ce87f8d"
+  }
+}

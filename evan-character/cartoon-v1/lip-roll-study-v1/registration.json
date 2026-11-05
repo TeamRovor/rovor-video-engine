@@ -1,0 +1,123 @@
+{
+  "source": "evan-character/cartoon-v1/lip-roll-study-v1/source/exploded-parts-v2.png",
+  "sourceSha256": "cb94d3c32c2c6d4fc228e6cfe56e32627fab90b5abbdc35f1dd6a919a676b484",
+  "reference": "evan-character/cartoon-v1/construction-skin-v1/references/Release.png",
+  "referenceSha256": "3ee3e6cf5f799f4a588251cf103d46e83b62d481bff89d09d9eb44cb0b8f0559",
+  "sourceRegion": [
+    860,
+    200,
+    1560,
+    600
+  ],
+  "partPixelsAndAlphaExact": true,
+  "sourceModified": false,
+  "registration": "three manually authored affine edge anchors; remaining anchors held out",
+  "matrixFullSourceTo512": [
+    [
+      0.26012891344383055,
+      -0.022559852670349857,
+      -60.4401473296501
+    ],
+    [
+      0.014727062378996049,
+      0.28814869906030116,
+      221.5436086320065
+    ]
+  ],
+  "anchors": [
+    {
+      "name": "left cheek overlap",
+      "source": [
+        887.0,
+        279.0
+      ],
+      "target": [
+        164.0,
+        315.0
+      ],
+      "mapped": [
+        163.99999999999997,
+        315.0
+      ],
+      "residualPixels": 2.842170943040401e-14,
+      "usedForFit": true
+    },
+    {
+      "name": "right jaw hinge overlap",
+      "source": [
+        1520.0,
+        264.0
+      ],
+      "target": [
+        329.0,
+        320.0
+      ],
+      "mapped": [
+        329.0,
+        320.0
+      ],
+      "residualPixels": 0.0,
+      "usedForFit": true
+    },
+    {
+      "name": "chin silhouette",
+      "source": [
+        1125.0,
+        541.0
+      ],
+      "target": [
+        220.0,
+        394.0
+      ],
+      "mapped": [
+        219.99999999999997,
+        394.0
+      ],
+      "residualPixels": 2.842170943040401e-14,
+      "usedForFit": true
+    },
+    {
+      "name": "lower lip center (held out)",
+      "source": [
+        1150.0,
+        347.0
+      ],
+      "target": [
+        231.0,
+        330.0
+      ],
+      "mapped": [
+        230.87983425414362,
+        338.4673289417765
+      ],
+      "residualPixels": 8.468181576626883,
+      "usedForFit": false
+    },
+    {
+      "name": "left chin bend (held out)",
+      "source": [
+        970.0,
+        492.0
+      ],
+      "target": [
+        194.0,
+        387.0
+      ],
+      "mapped": [
+        180.7854511970534,
+        377.5980190773008
+      ],
+      "residualPixels": 16.21793899779676,
+      "usedForFit": false
+    }
+  ],
+  "assemblyReady": false,
+  "runtimeLoaded": false,
+  "missing": [
+    "Designed lower-lip roll and pressure/contact key drawings",
+    "Compatible independent upper muzzle/lip (current source includes a complete mouth)",
+    "Verified cheek/neck occlusion and jaw overlap",
+    "Voiced normal/slow performance"
+  ],
+  "decision": "REJECT affine registration for animation; semantic lower-lip/chin residuals and missing lip anatomy remain"
+}

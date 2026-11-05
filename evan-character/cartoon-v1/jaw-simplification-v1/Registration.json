@@ -1,0 +1,130 @@
+{
+  "source": "jaw-v2.png",
+  "sourceSha256": "c3b5bc9ad6b7746cc475b38cab7c50e47731df4bf39474e7251c69c86e3b9ad0",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "sourceCorners": [
+    [
+      401,
+      763
+    ],
+    [
+      827,
+      774
+    ]
+  ],
+  "targetCorners": [
+    [
+      164,
+      313
+    ],
+    [
+      336,
+      317
+    ]
+  ],
+  "matrix": [
+    [
+      0.4037291467288441,
+      0.0010348630465831941,
+      1.3150116571905726
+    ],
+    [
+      -0.0010352425986557838,
+      0.40372848609339934,
+      5.370297392797257
+    ]
+  ],
+  "registration": "uniform two-corner parent; no chin fit or alpha cleanup",
+  "heldOutChin": {
+    "source": [
+      559,
+      985
+    ],
+    "target": [
+      230,
+      401
+    ],
+    "mapped": [
+      228.01894477949887,
+      402.4641555821471
+    ],
+    "residualPixels": 2.4633983347009285,
+    "withinTwoPixels": false
+  },
+  "correspondence": {
+    "knots": [
+      {
+        "x": 164.0,
+        "guideY": 315.0,
+        "paintedHalfAlphaY": 312.4259338378906,
+        "sourceResidualY": -2.574066162109375
+      },
+      {
+        "x": 181.0,
+        "guideY": 320.0,
+        "paintedHalfAlphaY": 319.3474426269531,
+        "sourceResidualY": -0.652557373046875
+      },
+      {
+        "x": 194.0,
+        "guideY": 325.0,
+        "paintedHalfAlphaY": 324.072509765625,
+        "sourceResidualY": -0.927490234375
+      },
+      {
+        "x": 211.0,
+        "guideY": 327.0,
+        "paintedHalfAlphaY": 328.47430419921875,
+        "sourceResidualY": 1.47430419921875
+      },
+      {
+        "x": 228.5,
+        "guideY": 328.5,
+        "paintedHalfAlphaY": 330.05859375,
+        "sourceResidualY": 1.55859375
+      },
+      {
+        "x": 246.0,
+        "guideY": 327.0,
+        "paintedHalfAlphaY": 329.86053466796875,
+        "sourceResidualY": 2.86053466796875
+      },
+      {
+        "x": 263.0,
+        "guideY": 325.0,
+        "paintedHalfAlphaY": 328.2652587890625,
+        "sourceResidualY": 3.2652587890625
+      },
+      {
+        "x": 278.0,
+        "guideY": 323.28570556640625,
+        "paintedHalfAlphaY": 325.4516906738281,
+        "sourceResidualY": 2.165985107421875
+      },
+      {
+        "x": 298.0,
+        "guideY": 321.0,
+        "paintedHalfAlphaY": 322.40374755859375,
+        "sourceResidualY": 1.40374755859375
+      },
+      {
+        "x": 329.0,
+        "guideY": 320.0,
+        "paintedHalfAlphaY": 317.5507507324219,
+        "sourceResidualY": -2.449249267578125
+      }
+    ],
+    "minimumSourceTriangleArea2": 45.5,
+    "sourcePixelsModified": false,
+    "sourceAlphaModified": false,
+    "targetGeometryChanged": false,
+    "chinArtCorrected": false
+  },
+  "sourceAlphaModified": false,
+  "placementAccepted": false,
+  "defaultProfileLoaded": false,
+  "animationReady": false
+}

@@ -1,0 +1,12 @@
+{
+  "mode": "built-in imagegen",
+  "prompts": [
+    null
+  ],
+  "references": [
+    "evan-character/cartoon-v1/source/design-sheet-v1.png",
+    "evan-character/cartoon-v1/tongue-rig/blade.png",
+    "evan-character/cartoon-v1/tongue-rig/root-floor.png"
+  ],
+  "intendedUse": "Separate source plate; not a registered rig component until registration and full-head review."
+}

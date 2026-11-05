@@ -1,0 +1,229 @@
+{
+  "baseCommit": "e1da3f7284a1cb9153b6900fd14f265edd4c8cf0",
+  "outputDirectory": "outputs/evan-cartoon-vertical-phase",
+  "newMotionIntegrated": false,
+  "sharedOralGateIntegrated": true,
+  "variants": [
+    {
+      "variant": 1,
+      "checkedSamples": 1307,
+      "failedSamples": 12,
+      "firstFailures": [
+        {
+          "time": 14.270833333333334,
+          "sourceFrame": 685,
+          "error": "Oral mesh triangle foldover: -3.436798095703125"
+        },
+        {
+          "time": 14.291666666666666,
+          "sourceFrame": 686,
+          "error": "Oral mesh triangle foldover: -11.03375244140625"
+        },
+        {
+          "time": 14.3125,
+          "sourceFrame": 687,
+          "error": "Oral mesh triangle foldover: -13.67193603515625"
+        },
+        {
+          "time": 14.333333333333334,
+          "sourceFrame": 688,
+          "error": "Oral mesh triangle foldover: -13.471221923828125"
+        },
+        {
+          "time": 14.354166666666666,
+          "sourceFrame": 689,
+          "error": "Oral mesh triangle foldover: -11.7222900390625"
+        }
+      ],
+      "decision": "REJECTED; not integrated"
+    },
+    {
+      "variant": 2,
+      "checkedSamples": 1307,
+      "failedSamples": 88,
+      "firstFailures": [
+        {
+          "time": 1.125,
+          "sourceFrame": 54,
+          "error": "Oral mesh triangle foldover: -3.8017845153808594"
+        },
+        {
+          "time": 1.1458333333333333,
+          "sourceFrame": 55,
+          "error": "Oral mesh triangle foldover: -2.532041549682617"
+        },
+        {
+          "time": 2.0,
+          "sourceFrame": 96,
+          "error": "Oral mesh triangle foldover: -7.093990325927734"
+        },
+        {
+          "time": 2.0208333333333335,
+          "sourceFrame": 97,
+          "error": "Oral mesh triangle foldover: -12.269222259521484"
+        },
+        {
+          "time": 2.0416666666666665,
+          "sourceFrame": 98,
+          "error": "Oral mesh triangle foldover: -13.938724517822266"
+        }
+      ],
+      "decision": "REJECTED; not integrated"
+    },
+    {
+      "variant": 3,
+      "checkedSamples": 1307,
+      "failedSamples": 65,
+      "firstFailures": [
+        {
+          "time": 1.1041666666666667,
+          "sourceFrame": 53,
+          "error": "Oral mesh triangle foldover: -0.6360355615615845"
+        },
+        {
+          "time": 1.125,
+          "sourceFrame": 54,
+          "error": "Oral mesh triangle foldover: -6.209316730499268"
+        },
+        {
+          "time": 1.1458333333333333,
+          "sourceFrame": 55,
+          "error": "Oral mesh triangle foldover: -1.3642559051513672"
+        },
+        {
+          "time": 2.0,
+          "sourceFrame": 96,
+          "error": "Oral mesh triangle foldover: -4.66065788269043"
+        },
+        {
+          "time": 2.0208333333333335,
+          "sourceFrame": 97,
+          "error": "Oral mesh triangle foldover: -16.719497680664062"
+        }
+      ],
+      "decision": "REJECTED; not integrated"
+    }
+  ],
+  "legacyJawOnlyMetrics": {
+    "width": {
+      "currentMaximumStep": 13.84722900390625,
+      "trialMaximumStep": 13.84722900390625,
+      "currentP95Step": 6.732852935791016,
+      "trialP95Step": 6.732852935791016,
+      "largerStepByOverOnePixel": 0
+    },
+    "lowerY": {
+      "currentMaximumStep": 14.667755126953125,
+      "trialMaximumStep": 12.09051513671875,
+      "currentP95Step": 6.100123596191404,
+      "trialP95Step": 4.963423156738281,
+      "largerStepByOverOnePixel": 64
+    },
+    "chinY": {
+      "currentMaximumStep": 2.301361083984375,
+      "trialMaximumStep": 2.301361083984375,
+      "currentP95Step": 1.171139526367187,
+      "trialP95Step": 1.171139526367187,
+      "largerStepByOverOnePixel": 0
+    }
+  },
+  "firstVariantMinimumOralArea2": -13.67193603515625,
+  "baselineSamples": 1307,
+  "baselineMinimumOralArea2": 0.04441152140498161,
+  "baselineMinimumJawArea2": 27.78942108154297,
+  "isolation": {
+    "samples": 1307,
+    "exactContactSamples": 180,
+    "widthChinFvUpperGuardExact": true,
+    "phaseKeys": 288,
+    "minimumKeySpacing": 0.009999999999999787,
+    "productionUnchanged": true,
+    "geometryOnly": true
+  },
+  "runtimeVerification": {
+    "currentStage868PixelsExact": true,
+    "knownBadTrial687Raises": true,
+    "error": "Oral mesh triangle foldover: -13.67193603515625",
+    "invalidPixelsReturned": false
+  },
+  "comparisons": [
+    {
+      "label": "More",
+      "sourceFrames": [
+        864,
+        912
+      ],
+      "sourceSamples": [
+        288000,
+        304000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "7439cf836649b38fb512b9c76ccbfe3eddf20a059396d59dd5e700a73cd21965"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "c46cf6ad4a9b7bd9e96d189196bc3dbc4c0f694c90c89ab2a7b48b2405756da9"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": true
+    },
+    {
+      "label": "Up-All",
+      "sourceFrames": [
+        960,
+        1008
+      ],
+      "sourceSamples": [
+        320000,
+        336000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "63efb0a291811fffd3e885224122957cb08389cb51b5a7762cbb5d6aa4dbd8f3"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "d72f6a48dd2579d9640acb6265aec0a33b6b81115e6e790f1e6a58d64bdeba31"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": true
+    }
+  ],
+  "nativePairsInspected": 96,
+  "nativeFailureFrameInspected": 687,
+  "originalSoundFiguresInspected": [
+    "More-Audio-Trajectory.png",
+    "Up-All-Audio-Trajectory.png"
+  ],
+  "independentListeningVerified": false,
+  "performanceAccepted": false,
+  "polishedMilestoneReady": false,
+  "focusedTestsPassed": 15,
+  "sourceHashes": {
+    "prototype.py": "90787401bbf86d060516e015c8a21337e3adfbf0a08ff4011a5ec1b3179e4eda",
+    "prototype2.py": "00cfba968f004df2de465177da4bd1e1e571d575918bc72bc8f5db1764d87a6e",
+    "prototype3.py": "152ba32ca7bbba6654c139c77223f417d4dd46a27fbb76aeb84915fa4ada22e7",
+    "Audit-Used-For-Renders.py": "f6f7e62ae1e58d468f8ae099502fb1e620335944f56d1ed116d0f4e97e74416b"
+  }
+}

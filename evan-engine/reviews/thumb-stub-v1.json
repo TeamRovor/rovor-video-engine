@@ -1,0 +1,73 @@
+{
+  "scope": "Two measured transverse guides and bounded runtime hand ownership; source art remains unchanged",
+  "sourceGuides": [
+    {
+      "y": 1050,
+      "edges": [
+        583,
+        873
+      ],
+      "center": 728,
+      "width": 290
+    },
+    {
+      "y": 1160,
+      "edges": [
+        578,
+        874
+      ],
+      "center": 726,
+      "width": 296
+    }
+  ],
+  "targetGuides": [
+    {
+      "axial": 0,
+      "center": -5.5,
+      "width": 52
+    },
+    {
+      "axial": -36,
+      "center": -6.75,
+      "width": 47
+    }
+  ],
+  "guideMeasurement": "Source alpha>=128; measurement only, no source cleanup",
+  "handDomainY": [
+    0,
+    1075
+  ],
+  "armDomainAxial": "less than -4",
+  "minimumHandArea2": 0.9094531223183159,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 48,
+      "sha256": "c62d77c2a04b3277c7329c1cc5dfec8762e0f5d40a32bc8746b1fd49245a40aa"
+    },
+    "Slow.mp4": {
+      "decodedFrames": 192,
+      "sha256": "256a19653e65cf55eb664fc8922668c935a31b7f930bc4311814652a1c1ee3d3"
+    },
+    "Stage-Normal.mp4": {
+      "decodedFrames": 48,
+      "sha256": "409e3468d6ccacf3e5ede91bd822964bbbb85decdc6d9bc319c4d8a9d0bb77b2"
+    },
+    "Stage-Slow.mp4": {
+      "decodedFrames": 192,
+      "sha256": "a91ef6a93aaecd195375c1deba327c361d33ed44320155131d0018b6ba7bfbe7"
+    }
+  },
+  "sourceAlphaCleanup": false,
+  "rawSourceArtworkModified": false,
+  "runtimeComponentOwnership": true,
+  "attachmentAccepted": false,
+  "animationAccepted": false,
+  "productionImported": false,
+  "nativeFramesInspected": 48,
+  "prototypeCommitted": false,
+  "sharedHelper": "evan-engine/elbow_arc_review.py:posed_points",
+  "testsPassed": 11,
+  "attachmentStatus": "REJECTED: pale diagonal wrist band and small contour step",
+  "next": "Generate continuous thumbs-up hand plus forearm source, join under cuff; retain independent wrist weights",
+  "localOutput": "outputs/evan-cartoon-thumb-stub"
+}

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "sourceSha256": "a01d8d64dd8dd49e310cc5d84a7d779c40d5fca0ab7f58a0743af53a38bbabbe",
+  "registration": {
+    "ecc": 0.9990822302560854,
+    "matrix": [
+      [
+        0.9998615384101868,
+        -0.000124895857879892,
+        0.17768029868602753
+      ],
+      [
+        -0.0001080617803381756,
+        1.000761866569519,
+        -0.2882644832134247
+      ]
+    ]
+  },
+  "geometry": [
+    196,
+    325,
+    274,
+    320,
+    316,
+    329,
+    319,
+    324,
+    393
+  ],
+  "animationReady": false,
+  "limitations": [
+    "Small stylized contact; rolled lower-lip anatomy still needs animator review",
+    "One contact design for F and V; no calibrated speaker anatomy",
+    "No timing or pronunciation corrections"
+  ]
+}

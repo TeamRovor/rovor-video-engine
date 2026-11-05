@@ -1,0 +1,73 @@
+{
+  "status": "forehead-broader-stage-sampled-construction",
+  "sourceFrames": [
+    120,
+    192
+  ],
+  "restFixtures": [
+    0,
+    269
+  ],
+  "restNativeBaselinesExact": true,
+  "newStageBaselinesExactCurrentFull": 48,
+  "reviewedComponentFramesByteExact": 24,
+  "totalFrames": 72,
+  "normalSeconds": 3,
+  "slowSeconds": 12,
+  "normalDecodedFrames": 72,
+  "slowDecodedFrames": 288,
+  "normalDecodedSourceFramesInspected": [
+    120,
+    130,
+    138,
+    158,
+    178,
+    188,
+    191
+  ],
+  "slowDecodedSourceFramesInspected": [
+    130,
+    138,
+    158,
+    178,
+    188
+  ],
+  "nativeFacesInspected": [
+    0,
+    269,
+    130,
+    138,
+    188
+  ],
+  "nativeJoinInspected": [
+    138
+  ],
+  "nativeBelow240Exact": true,
+  "oralJawAuditExact": true,
+  "nonHeadLayersAndNeckExact": true,
+  "officialStageExact": true,
+  "componentFrameHashesVerified": 100,
+  "selectedCurrentAndFrozenSourcesVerified": 55,
+  "contextWavByteExactPrevious": true,
+  "exactContextPcmSamples": 48000,
+  "exactContextPcmRange": [
+    80000,
+    128000
+  ],
+  "findings": [
+    "The local forehead transition remains stable in sampled rest, lowering, hold, blink and glasses return poses.",
+    "The broad skin band is reduced without swapping the face foundation at cue boundaries.",
+    "Small inner-brow flecks and lid/temple/frame edges persist; limited gaze, expression range and modest body acting remain below the concept sheet."
+  ],
+  "animationAccepted": false,
+  "realTimePlaybackReviewed": false,
+  "listeningReviewed": false,
+  "exactPhonemeBoundariesVerified": false,
+  "polishedMilestoneReady": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "defaultChanged": false,
+  "fullFilmUpdated": false,
+  "pendingJobs": [],
+  "next": "Five actual full-shot v4 pilots0/69/269/374/531, including existing digit flex269; preserve20closing frames exactly. Then separate full v4 candidate with the same foundation throughout speaking, original fullPCM and18unchanged timing markers. No new art or gesture variants."
+}

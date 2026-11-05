@@ -1,0 +1,22 @@
+{
+  "mode": "built-in image_gen",
+  "editTarget": "evan-character/cartoon-v1/labiodental-guide-v1/source/upper-cap-v2.png",
+  "styleReference": "evan-character/cartoon-v1/source/design-sheet-v1.png",
+  "prompt": "Prompt.txt",
+  "source": "upper-rim-v1.png",
+  "sourceSha256": "85308b5246a3d93231cabd8f028c323a35b46dcca8fb0e1d3098ddf1d10d4f79",
+  "referenceSha256": {
+    "evan-character/cartoon-v1/labiodental-guide-v1/source/upper-cap-v2.png": "13564cbada2c7ece2138bcee34c38bd06dc23fcb2c61d49f0969dd8699fc3280",
+    "evan-character/cartoon-v1/source/design-sheet-v1.png": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7"
+  },
+  "sourceAlphaModified": false,
+  "registeredCandidate": "Upper-Rim-Candidate.png",
+  "registration": "Registration.json",
+  "defaultProfileLoadsCandidate": false,
+  "reviewOnly": true,
+  "limits": [
+    "Central cleft removed; corner hooks remain partially present.",
+    "Two corner guides and1px ink underlap are authored, not anatomical calibration.",
+    "Registered material variant is mapped on the same current upper arch; no flattened head replacement."
+  ]
+}

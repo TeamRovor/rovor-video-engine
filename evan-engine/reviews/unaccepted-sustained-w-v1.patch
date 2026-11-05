@@ -1,0 +1,11 @@
+--- a/evan-engine/speech_planner.py
++++ b/evan-engine/speech_planner.py
+@@ -95,7 +95,7 @@
+         base=g['phone'].rstrip('012')
+         radius=max(.055,min(.14,(b-a)/2+.045))
+         distance=abs((t+.018-center)/radius)
+-        if base in VOWELS:
++        if base in VOWELS or base=='W':
+             # Sustain a long vowel instead of pulsing only at its midpoint.
+             strength=float(ease((t-(a-.035))/.060))*(1-float(ease((t-(b-.020))/.065)))
+         else:

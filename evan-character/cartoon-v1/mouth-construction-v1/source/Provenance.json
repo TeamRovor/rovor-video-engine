@@ -1,0 +1,34 @@
+{
+  "mode": "built-in image_gen",
+  "transparentBackground": true,
+  "selectedForConstructionOnly": "source/coordinated-face-v2.png",
+  "animationReady": false,
+  "registeredWorkingComponents": false,
+  "iterations": [
+    {
+      "file": "source/coordinated-face-v1.png",
+      "generatedFile": "exec-345f18e4-7a3c-4f5f-8357-f17a6a354d74.png",
+      "decision": "rejected corner hook and broad toothed release"
+    },
+    {
+      "file": "source/coordinated-face-v2.png",
+      "generatedFile": "exec-e92a4295-7543-459f-aa46-ebdb0da60773.png",
+      "decision": "construction reference only: improved narrow release; separate parts/correspondences missing"
+    }
+  ],
+  "sourceSha256": {
+    "mouth-construction-v1/source/coordinated-face-v1.png": "b8ab9f6a9884774a279c50388565c2bc9d54d9e2b6bab610bcdc473112307980",
+    "mouth-construction-v1/source/coordinated-face-v2.png": "6a5a01be2c90ef012281b6dc2f95dcd6cdf0d59cea9ac3966729515e7e3f02aa",
+    "mouth-construction-v1/source/Full-Face-Reference.png": "59a0ac79db432948b151499cba8e8b13126d1f9a3b495e089abe18dc0b3fff31",
+    "source/design-sheet-v1.png": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7",
+    "mouth-construction-v1/source/working-reference-738.png": "6422eab50ec6002802c3e84cdd6da68bd5d5863cc10a45c57ffe7772547b4ece"
+  },
+  "alpha": "original generated alpha retained in source; associated-color affine resampling for diagnostic alignment only",
+  "exactPrompts": "Prompt-Set.md",
+  "limits": [
+    "Full-head construction drawings, not animation-ready layered parts",
+    "Upper-face ECC does not validate anatomy or lip/jaw correspondence",
+    "Current rig/phone timing unchanged; no whole-head animation swaps"
+  ],
+  "registrationReference": "working-reference-738.png (unchanged current rig render, not generated redesign)"
+}

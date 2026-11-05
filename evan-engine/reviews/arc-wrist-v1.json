@@ -1,0 +1,48 @@
+{
+  "scope": "Independent continuous wrist on finite elbow arc; existing fixed open-hand drawing",
+  "minimumArea2": 140.474429607072,
+  "maximumParentError": 3.76374191546347e-06,
+  "oldFKAnchorDistance": 88.33655066035035,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 96,
+      "sha256": "aa6dc6529c14a579630130ffeb65734dd88385e7a6c90b6827bf5895687f3442"
+    },
+    "Slow.mp4": {
+      "decodedFrames": 384,
+      "sha256": "40ad5d86ea4eda4a62adb40d0818ff229ffb23122d884a85e3c0a6b1587f157c"
+    },
+    "Stage-Normal.mp4": {
+      "decodedFrames": 96,
+      "sha256": "d1e7520fc9600c0f3a1994b3a31266818db07e467b35d034b30f878500f6f5e6"
+    },
+    "Stage-Slow.mp4": {
+      "decodedFrames": 384,
+      "sha256": "a6f03604d7aaabba83e117703a47228c71058a349d71f950a6168e49d202861e"
+    }
+  },
+  "neutralPaddedPixelsExact": true,
+  "sourceArtworkModified": false,
+  "defaultChanged": false,
+  "anatomyAccepted": false,
+  "animationAccepted": false,
+  "attachmentAccepted": false,
+  "module": "evan-engine/elbow_arc_review.py",
+  "productionImported": false,
+  "nativeWristFramesInspected": 96,
+  "envelopeProbe": {
+    "poses": 1224,
+    "minArea2": 140.47442335903804,
+    "maxParentError": 7.68358177083428e-06
+  },
+  "heldAttachmentPilots": 6,
+  "heldAttachmentPilotsAccepted": 0,
+  "rawSourceAlphaModified": false,
+  "limits": [
+    "Fixed open-hand drawing, no independent fingers",
+    "Pointed cuff notch/compressed shading",
+    "All thumbs-up attachment pilots expose wrist-stub cuts",
+    "No narration synchronization or polished acting acceptance"
+  ],
+  "localOutput": "outputs/evan-cartoon-arc-wrist"
+}

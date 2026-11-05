@@ -1,0 +1,158 @@
+{
+  "parentCommit": "61647edb43b319fb13e27c3ac01a671a1c9aaa6f",
+  "sourceAudit": {
+    "tool": "built-in imagegen",
+    "sources": [
+      {
+        "variant": "v1",
+        "path": "work/engine/evan-character/cartoon-v1/thumbs-up-v1/source.png",
+        "sha256": "8d2133367427974d603f5292cfdddcc80bff4a742a19feeeabbe07387cd0dc98",
+        "size": [
+          1199,
+          1312
+        ],
+        "positiveAlphaComponents": 397,
+        "detachedPositiveAlphaComponents": 396,
+        "detachedPositiveAlphaPixels": 1001,
+        "interiorMeasurement": "11x11 erosion of alpha>=128, measurement only; source unmodified",
+        "coreAlphaPercentiles": [
+          251.0,
+          253.0,
+          253.0,
+          254.0,
+          254.0
+        ],
+        "coreOpaqueFraction": 0.0,
+        "sourcePixelsModified": false
+      },
+      {
+        "variant": "v2",
+        "path": "work/engine/evan-character/cartoon-v1/thumbs-up-v2/source.png",
+        "sha256": "a684a65b47aca8ea63a826cc4f3ac2c0ba19332b3f74ae942bb0fb36bd6cbb81",
+        "size": [
+          1199,
+          1312
+        ],
+        "positiveAlphaComponents": 66,
+        "detachedPositiveAlphaComponents": 65,
+        "detachedPositiveAlphaPixels": 99,
+        "interiorMeasurement": "11x11 erosion of alpha>=128, measurement only; source unmodified",
+        "coreAlphaPercentiles": [
+          249.0,
+          253.0,
+          254.0,
+          254.0,
+          254.0
+        ],
+        "coreOpaqueFraction": 0.0,
+        "sourcePixelsModified": false
+      }
+    ],
+    "halfAlphaSilhouetteIoU": 0.9753636255783604,
+    "nativeVisualReview": "One upright thumb and four curled fingers in both. v2 targeted matte edit retained near-opaque interior and introduced visible red lower-cut fringe; rejected. v1 used for isolated experimental registration only.",
+    "sourceMatteAccepted": false,
+    "alphaCleanupApplied": false
+  },
+  "registration": {
+    "sourceSha256": "8d2133367427974d603f5292cfdddcc80bff4a742a19feeeabbe07387cd0dc98",
+    "sourceSize": [
+      1199,
+      1312
+    ],
+    "sourceWristGuide": [
+      [
+        583.0,
+        1050.0
+      ],
+      [
+        873.0,
+        1050.0
+      ]
+    ],
+    "sourceAnchor": [
+      728.0,
+      1050.0
+    ],
+    "targetWrist": [
+      810.0,
+      762.0
+    ],
+    "targetOutwardAxis": [
+      0.40675706717165505,
+      0.9135363639756843
+    ],
+    "targetWidth": 47.0,
+    "targetWidthEvidence": "Runtime RelaxedWristArm alpha>=127.5 at quarter-pixel cross-section36px proximal to wrist; measurement only",
+    "targetGeometryEvidence": "FinishedCartoonSceneBody actual right wrist810,762 overrides original body manifest822,784; preserve existing geometry",
+    "sourceAlphaModified": false,
+    "sourceMatteAccepted": false,
+    "attachmentAccepted": false,
+    "animationAccepted": false,
+    "outputCanvas": [
+      1464,
+      1536
+    ],
+    "outputPadX": 220
+  },
+  "focusedTests": 5,
+  "nativeMotionFrames": 48,
+  "films": {
+    "Normal": {
+      "decodedFrames": 48,
+      "sha256": "3034996e2aa884e02a218994cf3e729177d14d6693f93b0edf51fa12bc0f3e4d"
+    },
+    "Slow": {
+      "decodedFrames": 192,
+      "sha256": "b5f98e7396d207fb94aed0b3244c81cef2f4f7cf327014c6a8cd25887ca186ef"
+    }
+  },
+  "minimumExistingArmArea2": -323.29906566796393,
+  "existingArmFoldFrames": 30,
+  "firstGridFold": {
+    "frame": 18,
+    "angles": [
+      -2.154829312699135,
+      -58.18039144287665,
+      -6.464487938097405
+    ],
+    "wrist": [
+      906.4607291817665,
+      637.2000874876976
+    ],
+    "minimumExistingArmArea2": -5.249911956998972,
+    "sourceMatteAccepted": false,
+    "attachmentAccepted": false
+  },
+  "foldSourceFootprint": [
+    {
+      "frame": 18,
+      "negativeCells": 1,
+      "negativeCellsWithSourceMaterial": 0
+    },
+    {
+      "frame": 24,
+      "negativeCells": 5,
+      "negativeCellsWithSourceMaterial": 2
+    },
+    {
+      "frame": 47,
+      "negativeCells": 5,
+      "negativeCellsWithSourceMaterial": 3
+    }
+  ],
+  "visualReview": [
+    "full1199x1312 sourcesv1/v2",
+    "all48 native hand crops",
+    "canonical held isolated parent pose",
+    "source negative cuff cells47"
+  ],
+  "sourceArtPixelsModified": false,
+  "sourceMatteAccepted": false,
+  "attachmentAccepted": false,
+  "raisedArmProfileAccepted": false,
+  "currentSpeakingProfileChanged": false,
+  "defaultChanged": false,
+  "polishedMilestoneReady": false,
+  "actingSweepAccepted": false,
+  "actingFinding": "Low-arm start exposes a thumbs-down silhouette; do not use the rigid-hand sweep as closing acting. Plan pose change/occlusion or a drawn transition after arm construction is valid."
+}

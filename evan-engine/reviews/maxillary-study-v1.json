@@ -1,0 +1,63 @@
+{
+  "sourceFrames": [
+    489,
+    693
+  ],
+  "sourceTime": [
+    10.1875,
+    14.4375
+  ],
+  "testsPassed": 7,
+  "minimumOralTriangleArea2": 0.044445283710956573,
+  "mixedFVFrames": 34,
+  "contourFallbacks": 0,
+  "dentalFallbacks": 0,
+  "upper290RowsExact": true,
+  "outsideOralROIExact": true,
+  "maxAlphaDifference": 1,
+  "baseRetractionPixels": 3,
+  "sourceAlphaAlreadyIsolated": true,
+  "sourceArtChanged": false,
+  "generatedStudyUsed": false,
+  "originalFaceRGBUnderZeroAlphaIsVisible": false,
+  "sourceApertureDiagnosis": [
+    {
+      "frame": 554,
+      "profile": "previous",
+      "postMaskToothCoveragePixels": 122.47502136230469,
+      "postMaskMaxAlpha": 253.0,
+      "opaqueToothPixelsOutsideSourceHole": 0
+    },
+    {
+      "frame": 554,
+      "profile": "maxillary",
+      "postMaskToothCoveragePixels": 160.2441864013672,
+      "postMaskMaxAlpha": 253.0,
+      "opaqueToothPixelsOutsideSourceHole": 0
+    },
+    {
+      "frame": 630,
+      "profile": "previous",
+      "postMaskToothCoveragePixels": 28.12421989440918,
+      "postMaskMaxAlpha": 225.94570922851562,
+      "opaqueToothPixelsOutsideSourceHole": 0
+    },
+    {
+      "frame": 630,
+      "profile": "maxillary",
+      "postMaskToothCoveragePixels": 169.173095703125,
+      "postMaskMaxAlpha": 253.0,
+      "opaqueToothPixelsOutsideSourceHole": 0
+    }
+  ],
+  "timingChanged": false,
+  "exactPhonemeBoundariesVerified": false,
+  "defaultChanged": false,
+  "readyForPromotion": false,
+  "visualLimits": [
+    "More stable tooth plane, but some narrow vowels still expose a stylized white strip",
+    "Lower opening and tongue are more prominent; artist-designed compression/roll and cheek/jaw planes still missing",
+    "Mixed FV remains a material/contour blend rather than redrawn lip acting",
+    "No independent listening/continuous-playback acceptance or studio-quality claim"
+  ]
+}

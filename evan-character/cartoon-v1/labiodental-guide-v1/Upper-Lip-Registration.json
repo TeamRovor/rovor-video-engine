@@ -1,0 +1,59 @@
+{
+  "sourceSha256": "cb57341e0a4a20d76cba761f21bbeb600943452a4acd5ad1f9197d35cbad8515",
+  "sourceSize": [
+    1774,
+    887
+  ],
+  "sourceCorners": [
+    [
+      546,
+      494
+    ],
+    [
+      1228,
+      494
+    ]
+  ],
+  "nativeCorners": [
+    [
+      198,
+      321
+    ],
+    [
+      274,
+      320.5
+    ]
+  ],
+  "matrix": [
+    [
+      0.11143695014662759,
+      0.0007331848144533243,
+      136.79323192160138
+    ],
+    [
+      -0.0007331378299120047,
+      0.11143646240234334,
+      266.3506808283743
+    ]
+  ],
+  "method": "uniform corner-width/rotation parent; no center warp or alpha cleanup",
+  "heldOutCenterSource": [
+    882.0,
+    485.0
+  ],
+  "heldOutCenterNative": [
+    235.4362165859368,
+    319.7507375275285
+  ],
+  "proposedCenterNative": [
+    235,
+    319
+  ],
+  "heldOutCenterResidualPixels": 0.8682693966079498,
+  "outsideUpperLipEnvelopeAlphaPixels": 0,
+  "sourceAlphaModified": false,
+  "registeredCandidateOnly": true,
+  "runtimeLoaded": false,
+  "anatomyAccepted": false,
+  "animationReady": false
+}

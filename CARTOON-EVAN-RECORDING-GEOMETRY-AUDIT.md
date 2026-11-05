@@ -1,0 +1,21 @@
+# Evan: complete-recording geometry audit and bounded pixel ownership review
+
+The ten-plane candidate now has an audit for every48fps output time across the original22.047375s recording, plus every original phoneme midpoint. It executes the actual head control path and stops immediately after oral/skin targets, before raster sampling. The real renderer and audit share jaw_target, avoiding a second approximation of articulation. Tests compare exact oral, skin and jaw arrays with the complete raster pipeline for contact/open fixtures, include a5ms phone between frame times and reject invalid duration.
+
+1059 frame samples plus248 phone midpoints=1307 geometry checks completed with zero failures. All source248 phones are represented, but the recording contains only37 of the39 supported ARPABET base phones: CH and OY are absent. Do not call this39-phone rendered validation. Minimum triangle double-area25.29311; width31.793–86.22495; lower oral center320.12–368.03537; upper-arch minimum315.2558–336.9726 stays below the protected310px guard in image coordinates; independent chin393–403.0261. Geometry positivity and finite coordinates establish no artistic merit or sync accuracy.
+
+The audit uses a named capture exception at the actual geometry boundary; other failures are not swallowed. ValueErrors are reported by source frame/phone and the command fails if any occur. No invalid mesh is accepted, clipped or replaced by a stale pose. No full-recording raster render is implied.
+
+## Actual pixel checks and selected shot
+
+Twelve native512px heads were rasterized: geometry extrema and selected TH/DH/P/M/UW/AO contexts. All12 upper288 rows remain byte-exact and nose delta0. Eroded mouth-core masks contain255alpha at all12 samples. Both100%-scale head sheets were inspected at full resolution. This is a sampled material-ownership check, not complete-recording pixel inspection. Geometry/Pixels JSON reports keep that distinction explicit.
+
+The narrowest actual output frame227 (logo/OW4.72917s) was selected for a new narrated shot: source208..247,4.3333–5.1667s,40 normal frames1280x720/48fps and160 muted quarter-speed frames. OriginalPCM69333:82667=13334 samples copied verbatim; AAC decodes exactly13334. Both videos fully decode. All40 native mouth details and full227 were inspected at full resolution. Upper288exact40, nose0, minimum triangle27.41569, sampled mouth alpha255. Ten-Plane-227.psd contains actual posed materials and reloads with mean premultiplied error.022197/255; inactive teeth/tip are legitimate. Six focused geometry/separation tests pass. Source paint, voice, timing and head behavior unchanged this pass; jaw_target is only a shared extraction.
+
+## Critical conclusion and next concrete change
+
+The current separated construction's narrow OW pose looks more triangular and less pleasantly rounded than the old combined carrier in the comparison. Mouth positivity/coverage does not rescue that silhouette. Closed lips remain a slash, mouth corners hooked, expression nearly static, and angular face/neck joins remain weaker than the selected cartoon concept. Do not promote the candidate or claim the new audit makes the animation look better.
+
+Next change the designed upper/lower oral arcs for rounded poses using source227/983 as explicit review cases. The current maxillary upper arc is capped at4px while most opening goes downward; inspect a fuller curved upper arc and softer corner ownership, with fixed-incisor occlusion and protected face checked. Keep the independent painted materials and original phone/audio controls. Redraw the rounded lip components with the imagegen workflow if the existing art cannot support that silhouette; distinguish source artwork from registered rig parts. Stop adding new timing profiles to compensate for drawing defects. Human character-art/animator review or redrawn rounded/contact assets remains needed for the intended finish. CPU hardware is adequate for these proofs.
+
+Original18 alignment flags and3 new audio-support warnings remain unverified. No independent listening/playback acceptance. Main/V3/V4, approved symlinks/updater/releases and native Moho unchanged; no Moho call, merge or deployment. Full polished milestone NOT ready; automation stays active.

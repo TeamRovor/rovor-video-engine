@@ -1,0 +1,50 @@
+{
+  "frames": 711,
+  "fps": 48,
+  "size": [
+    1920,
+    1080
+  ],
+  "duration_seconds": 14.8,
+  "frame_generation": "new direct rig renders; no post-process frame interpolation",
+  "tests_full": {
+    "run": 46,
+    "result": "OK"
+  },
+  "tests_system": {
+    "run": 46,
+    "skipped": 15,
+    "result": "OK"
+  },
+  "pipeline_48fps": "complete Whisper/Rhubarb/render/encode smoke passed",
+  "render_workers": [
+    {
+      "nextFrame": 178,
+      "totalFrames": 178,
+      "complete": true,
+      "elapsed_seconds": 270.468
+    },
+    {
+      "nextFrame": 356,
+      "totalFrames": 356,
+      "complete": true,
+      "elapsed_seconds": 267.445
+    },
+    {
+      "nextFrame": 534,
+      "totalFrames": 534,
+      "complete": true,
+      "elapsed_seconds": 267.023
+    },
+    {
+      "nextFrame": 711,
+      "totalFrames": 711,
+      "complete": true,
+      "elapsed_seconds": 267.498
+    }
+  ],
+  "artist_assets": "unchanged approved painted plates",
+  "visual_status": "development motion revision; human playback approval not claimed",
+  "video_decode": "complete H264/AAC decode passed",
+  "generic_gestures": "future cues no longer erase current acting"
+}

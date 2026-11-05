@@ -1,0 +1,51 @@
+{
+  "scope": "Modest X-rest grin entrance/hold/exit, independent crown crossfade and crease, silent postroll construction only",
+  "contacts": [
+    {
+      "contact": "bilabial",
+      "oralMinimum": 1.376952886581421,
+      "maximumOralDisplacement": 10.8499755859375,
+      "originalLumenSum": 0.0,
+      "trialLumenSum": 397.37347412109375,
+      "contactPreserved": false
+    },
+    {
+      "contact": "labiodental",
+      "oralMinimum": 3.6361184120178223,
+      "maximumOralDisplacement": 8.237548828125,
+      "originalLumenSum": 89.3994140625,
+      "trialLumenSum": 541.7918701171875,
+      "contactPreserved": false
+    }
+  ],
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "inSpeechAccepted": false,
+  "defaultChanged": false,
+  "focusedTests": 7,
+  "nativeMotionFrames": 48,
+  "normalDecodedFrames": 48,
+  "slowDecodedFrames": 192,
+  "upper310ExactFrames": 48,
+  "offEndpointsExact": true,
+  "minOral": 0.059276580810546875,
+  "minJaw": 45.5,
+  "fixedWidthRejected": {
+    "changedFrames": 9,
+    "maximumChangedPixels": 4,
+    "region": [
+      278,
+      309,
+      281,
+      309
+    ]
+  },
+  "scaleProbeStrengths": 25,
+  "scaleProbeUpper310MaxAlpha": 0,
+  "sourcePixelsUnchanged": true,
+  "visualReview": [
+    "native full peak",
+    "all48 native mouth/jaw crops",
+    "design sheet"
+  ],
+  "finding": "Restrained small smile, limited cheek/eye acting, thin crown. No narration or fullstage acceptance. Direct in-speech contact morph rejected."
+}

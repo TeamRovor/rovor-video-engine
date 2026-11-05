@@ -1,0 +1,32 @@
+{
+  "source": "oral-rig/upper-teeth.png",
+  "sourceSha256": "6a3de1c6bcc74fbf42e2cccc2926ef6ffbea32cf195733dfd3879303faab3fab",
+  "visibleAlphaBox": [
+    204,
+    318,
+    273,
+    333
+  ],
+  "nonzeroAlphaPixels": 772,
+  "alphaPixelsAboveY300": 0,
+  "sourceAnchor": [
+    237,
+    322
+  ],
+  "nativeToothScale": 1.0,
+  "upperLipMaxRise": 4.0,
+  "upperShareOfGapBeforeCap": 0.2,
+  "outerStrokeAllowanceEachSide": 1.1,
+  "roundedRetractionPixels": 16.0,
+  "sourceImageUnmodified": true,
+  "generatedStudyUsed": false,
+  "separatelyDrawnJaw": false,
+  "artistVerifiedAnatomy": false,
+  "defaultRendererChanged": false,
+  "readyForPromotion": false,
+  "baseRetractionPixels": 3.0,
+  "rejectedPlacementTrials": {
+    "0px": "Overexposed teeth on narrow vowels",
+    "6px": "Too much of the right side hidden; chip/sliver appearance"
+  }
+}

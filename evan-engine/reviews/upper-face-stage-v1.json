@@ -1,0 +1,72 @@
+{
+  "status": "full-stage-upper-face-component-sampled-not-polished",
+  "sourceFrames": [
+    120,
+    192
+  ],
+  "frames": 72,
+  "baselineFramesExactToCurrentTorsoFilm": 72,
+  "allNonHeadLayersExact": true,
+  "nativeSpeechPixelsBelow310Exact": true,
+  "nativeOralJawAuditExact": true,
+  "officialBrandAndBrowserExact": true,
+  "restFoundation": "v3 throughout all72 frames, including lowered amount0; not exact old rest",
+  "normalDecodedSourceFrames": [
+    123,
+    130,
+    138,
+    152,
+    168,
+    173,
+    178,
+    188
+  ],
+  "slowDecodedSourceFrames": [
+    130,
+    138,
+    173,
+    178
+  ],
+  "nativeJoinSamples": [
+    120,
+    130,
+    138,
+    152,
+    168,
+    173,
+    178
+  ],
+  "normalSeconds": 3,
+  "slowSeconds": 12,
+  "films": {
+    "Normal": {
+      "decodedFrames": 72,
+      "sha256": "91b38bd690a2777cd5363744dc480bf9b10e577c007bb5c49421f794bb943a8a"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 288,
+      "sha256": "c8df24fbf2dde5277c4f29299cdc95d07998ff1daeab9ea3310a09197d329823"
+    }
+  },
+  "exactPcmSampleRange": [
+    80000,
+    128000
+  ],
+  "exactPcmCount": 48000,
+  "frameAndNativeHashesVerified": 216,
+  "eyeArticulated": false,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "listeningAccepted": false,
+  "realtimeActingAccepted": false,
+  "animationAccepted": false,
+  "observations": [
+    "The lowered glasses reveal the eyes at the existing skeptical lean; original speech/brow poses, independent arms and planted torso remain coherent in sampled stage shots.",
+    "No new broad neck/collar gap or mouth/jaw slip observed in inspected samples.",
+    "Eyes remain a fixed relaxed drawing; forehead color band and small temple/frame edge defects persist. The concept calls for stronger eye/expression variety.",
+    "Native join crops are780x780 and cut off the highest hair; full1280x720 stage samples retain the visible head."
+  ],
+  "next": "Add one opt-in registered eyelid/blink construction to the same eye foundation, preserving original brows, glasses, speech pixels and source plates. Native open/half/closed tests before a short acting component; no new whole-head variants or full-film integration yet."
+}

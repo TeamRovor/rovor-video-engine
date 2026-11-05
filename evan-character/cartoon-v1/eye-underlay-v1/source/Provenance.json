@@ -1,0 +1,28 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "skill": "/Users/amarhavic/.codex/skills/.system/imagegen/SKILL.md",
+  "promptFile": "Prompt.txt",
+  "sourceFile": "glasses-free-v1.png",
+  "sourceSha256": "99a9325ded471a3af89ba33c8657dab641cdafddd6370a7fe20fc02058134bff",
+  "size": [
+    1254,
+    1254
+  ],
+  "rawSourceAlphaUnmodified": true,
+  "transparentPixelCount": 1076853,
+  "inputs": [
+    {
+      "path": "evan-character/cartoon-v1/expression-rig/browless-head.png",
+      "sha256": "10349164bd57dce24ac22721b16b2ca3b88523b634df6f9ed632297ccd390e78",
+      "role": "edit-target"
+    },
+    {
+      "path": "evan-character/cartoon-v1/source/design-sheet-v1.png",
+      "sha256": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7",
+      "role": "style-expression-reference"
+    }
+  ],
+  "sourceAssessment": "Full1254x1254source inspected: appealing relaxed cartoon eyes, no sunglasses/brows; existing three-quarter framing retained closely. Some mouth/skin reinterpretation is present in the raw source; only the registered region beneath original glasses is used in derivatives. Original oral/jaw pixels are preserved.",
+  "sourcePlateRegistered": false,
+  "animationReady": false
+}
