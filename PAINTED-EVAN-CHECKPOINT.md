@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: that’s→not acoustic/oral/tongue trace reviewed
+CARTOON-EVAN-THATS-NOT-TRACE.md / evan-engine/reviews/thats-not-trace-v1.json. Reused existingtrace locally; original5.03–5.90sPCM,25msFFT/5mshop,418actualcontrol samples480Hz. Oralmeshes/tongue-lift/dental-partition match4actualraster samples124/129/135/136to1e-9; actualtonguematerialguardsPASS. Older5.17anchor in near-blankprephrase stretch(-79.71dBFS/20ms); current5.64 nearbroad-noise→periodictransition(-40.28dBFS). Contextdoesnotsupportolderanchor; exactedge/listeningremainunverified. Currentgap~5.09px at5.64. Dentalpartitionisauthoredcontrol, NOTmeasuredtongueshape. NOretiming/controls/artchange;18flagsunresolved.
+
+outputs/evan-cartoon-thats-not-trace/Review.html:30BYTE-EXACTfullframes120..149;30/120normal/slowdecodes;20000exactPCM80000:100000.43PNGhashes/selectedcurrent+frozen sourcesverified. Nativeplothalves/faces129/135/136 +4normal/2slow samplesinspected. Sameconstruction/actinglimits; realtime/listening/exactphonetics/polishedFALSE. No pendingjobs. Fulls/defaults/protectedversions preserved;automationACTIVE.
+
+NEXT: Region02some→random/M→R near6.08versusolder5.69. Compareactualbilabialseal/release tooriginalPCM/spectral evidence. No automaticthresholdretiming/newartvariants. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync; localSSH/HTTPSpushauthunavailable.
+
 ## Current task: tiny→little phoneme-scale acoustic/lip trace reviewed
 CARTOON-EVAN-TINY-LITTLE-TRACE.md / evan-engine/reviews/tiny-little-trace-v1.json; new reference-only reviews/trace_tiny_little.py. Original2.28–2.82sPCM +centered25msFFT/5mshop +259actualcontrol samples480Hz. Fouroralmeshes56/63/64/67 matchactualrasterto1e-9; originalspeechbelow310/v3→v4below240 guarded. Both2.36/2.65wordhypotheses insidevoicedenergy; strongestadjacentspectralchange2.31746875s predatesboth. Gapcontinuousat2.65,12.3107nativepx. NOretiming/controls/artchange;18flagsunresolved.
 
