@@ -50,9 +50,11 @@ export async function googleGeminiCatalog(env,send=fetch) {
       url.searchParams.set('pageSize','100');
       if(pageToken)url.searchParams.set('pageToken',pageToken);
       const response=await send(url.toString(),{
-        method:'GET',redirect:'error',signal:AbortSignal.timeout(12000),
+        method:'GET',redirect:'manual',signal:AbortSignal.timeout(12000),
         headers:{'x-goog-api-key':env.GEMINI_API_KEY,'Accept':'application/json'}
       });
+      // Workers does not support redirect:'error'; manual means provider keys never follow redirects.
+      if(response.status>=300&&response.status<400)return {available:false,models:[],catalog_count:0,reason:'google_catalog_redirect_denied'};
       if(!response.ok)return {available:false,models:[],catalog_count:0,reason:'google_catalog_http_'+
         (response.status===401||response.status===403?'auth_denied':'unavailable')};
       const body=await response.text();
@@ -185,13 +187,18 @@ export async function cloudGeminiChat(body,env,now=Date.now(),send=fetch){
   let upstream;
   try{
     upstream=await send(ENDPOINT+'/'+model+':generateContent',{
-      method:'POST',redirect:'error',signal:AbortSignal.timeout(26000),
+      method:'POST',redirect:'manual',signal:AbortSignal.timeout(26000),
       headers:{'x-goog-api-key':env.GEMINI_API_KEY,'Content-Type':'application/json'},
       body:JSON.stringify({contents,generationConfig:{maxOutputTokens:model.endsWith('-lite')?1024:2048,temperature:0.25}})
     });
   }catch{
     await modelFailed(env.DB,day,model,'transport_error');
     return fixedError(502,'gemini_upstream_unavailable');
+  }
+  // Never forward the Google API key to a redirected destination.
+  if(upstream.status>=300&&upstream.status<400){
+    await modelFailed(env.DB,day,model,'provider_error');
+    return fixedError(502,'gemini_upstream_redirect_denied');
   }
   if(upstream.status===429){
     await modelFailed(env.DB,day,model,'provider_429');

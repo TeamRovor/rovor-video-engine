@@ -41,7 +41,7 @@ export async function googleServiceToken(env,fetcher=fetch,now=Date.now()){
  const assertion=signing+'.'+btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
  const response=await fetcher('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
   body:new URLSearchParams({grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',assertion}).toString(),
-  redirect:'error',signal:AbortSignal.timeout(8000)});
+  redirect:'manual',signal:AbortSignal.timeout(8000)});
  const value=await bounded(response);
  if(typeof value.access_token!=='string'||value.access_token.length<20||value.token_type!=='Bearer')throw Error('authentication_failed');
  return value.access_token;
@@ -114,7 +114,7 @@ export async function readGoogleGeminiQuota(env,{fetcher=fetch,tokenProvider=goo
       'interval.endTime':new Date(now).toISOString(),view:'FULL',pageSize:'200'});
     const response=await fetcher(ROOT+'projects/'+encodeURIComponent(project)+'/timeSeries?'+qs,
       {method:'GET',headers:{Authorization:'Bearer '+token,Accept:'application/json'},
-       redirect:'error',signal:AbortSignal.timeout(8000)});
+       redirect:'manual',signal:AbortSignal.timeout(8000)});
     docs.push(await bounded(response));
     if(docs.at(-1).nextPageToken)throw Error('metric_page_incomplete');
    }
