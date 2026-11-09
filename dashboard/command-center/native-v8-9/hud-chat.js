@@ -411,7 +411,7 @@
     ];
     repoOptions.forEach(([value,label])=>repoSelect.append(el('option',{value,textContent:label})));
     const repoNote=el('small',{className:'rvc-repo-note',
-      textContent:'Optional source excerpt · exact reviewed GitHub deployment on cloud, local origin/main on Mac. Choosing a file explicitly shares the excerpt with the selected model; never grants GitHub write access.'});
+      textContent:'Optional source excerpt · exact reviewed GitHub deployment on cloud, local origin/main on Mac. Choosing a file explicitly shares the excerpt with the selected model; no repository write access is granted.'});
     const repoRow=el('div',{className:'rvc-repo-row'},
       el('label',{textContent:'GitHub source',htmlFor:'rvc-repo-file'}),repoSelect,repoNote);
     document.head.append(el('style',{textContent:`
