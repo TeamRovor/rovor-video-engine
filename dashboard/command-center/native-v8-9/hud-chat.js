@@ -520,7 +520,7 @@
       sessionsList.textContent='';
       sessions.forEach(s=>{const b=el('button',{type:'button',textContent:s.title, title:s.title});
         b.setAttribute('aria-current',String(s.id===currentId));
-        b.onclick=()=>{if(busy)return;save();currentId=s.id;history=s.history.slice();panel.dataset.sideOpen='false';sourceSelect.value=['cloudflare','gemini','omniroute'].includes(s.source)?s.source:'gemini';load();redraw();drawSessions();};
+        b.onclick=()=>{if(busy)return;save();currentId=s.id;history=s.history.slice();panel.dataset.sideOpen='false';sourceSelect.value=['cloudflare','gemini','groq','omniroute'].includes(s.source)?s.source:'gemini';load();redraw();drawSessions();};
         sessionsList.append(b);});
     };
     const welcome=()=>{
@@ -648,6 +648,11 @@
         const r=await fetch(catalogPath,{credentials:'same-origin',cache:'no-store'});
         if(!r.ok)throw Error('catalog_unavailable');
         const info=await r.json(),models=requestedSource==='groq'?(Array.isArray(info.models)?info.models.filter(id=>id==='groq/openai/gpt-oss-20b'):[]):info.models;
+        let geminiUsage=null;
+        if(requestedSource==='gemini')try{
+          const usageResp=await fetch('/api/hud/gemini/usage',{credentials:'same-origin',cache:'no-store'});
+          if(usageResp.ok){const usage=await usageResp.json();if(usage.source==='cloud_gemini_direct'&&Array.isArray(usage.models))geminiUsage=usage;}
+        }catch{}
         if(epoch!==loadEpoch)return; // Ignore a slow catalog from the previous provider tab.
         if(((omni||requestedSource==='gemini')&&info.online!==true)||!Array.isArray(models)||!models.length)throw Error('catalog_unavailable');
         select.textContent='';
@@ -662,7 +667,10 @@
           if(typeof id!=='string')continue;
           const group=omni?routeGroup(id):requestedSource==='gemini'?'Google Gemini · cloud direct':requestedSource==='groq'?'Groq · cloud direct':'Cloudflare AI hosted routes';
           if(!groups.has(group)){const optgroup=el('optgroup',{label:group});groups.set(group,optgroup);select.append(optgroup);}
-          groups.get(group).append(el('option',{value:id,textContent:id}));
+          const measured=geminiUsage?.models?.find(x=>x.model===id);
+          const display=requestedSource==='gemini'&&id==='gemini-auto-free'?'✦ Smart Gemini · choose by task':id;
+          const label=requestedSource==='gemini'&&measured?display+' · '+measured.completed+' replies today':display;
+          groups.get(group).append(el('option',{value:id,textContent:label}));
         }
         if(!select.options.length)throw Error('catalog_unavailable');
         const preferred=sessions.find(s=>s.id===currentId)?.model;
@@ -670,13 +678,14 @@
         if(preferred&&(models.includes(preferred)||(omni&&preferred===AUTO_ROUTE)))select.value=preferred;
         else if(saved&&(models.includes(saved)||(omni&&saved===AUTO_ROUTE)))select.value=saved;
         else if(omni)select.value=AUTO_ROUTE;
+        else if(requestedSource==='gemini'&&models.includes('gemini-auto-free'))select.value='gemini-auto-free';
         stateLabel.textContent=omni?('Mac bridge reported · '+select.options.length+' allowed routes · confirm a reply to verify use · optional local execution'):
-          requestedSource==='gemini'?'Google Gemini cloud route ready · project free-tier attested; remaining quota unknown':
+          requestedSource==='gemini'?'Google key catalog lists '+Math.max(0,models.length-(models.includes('gemini-auto-free')?1:0))+' approved free-priced text models · reply/remaining quota still need verification':
           requestedSource==='groq'?'Groq cloud route available · no Mac required · remaining quota unverified':
           ('Cloudflare AI · '+select.options.length+' hosted models listed · allowance unverified');
         modelSheetInfo.textContent=omni
           ?'Mac-advertised chat routes only. Free-tagged model routes and Owner-allowlisted model routes still need live inference and free-quota checks.'
-          :requestedSource==='gemini'?'Direct Google Gemini cloud API; Mac not required. Free-tier project must remain Free. Google may use Free-tier content to improve services.':requestedSource==='groq'?'Direct Groq cloud API; Mac not required. Requires current owner-verified free-tier approval. Quota remaining is unknown.':'Cloudflare-hosted inference is separate from OmniRoute. Its allowance is not guaranteed.';
+          :requestedSource==='gemini'?'Direct Google Gemini cloud API. Smart Gemini selects a verified-free-listed text route by task. Each model has independent usage receipts; remaining Google account quotas are not verified. Free-tier content may be used by Google to improve services.':requestedSource==='groq'?'Direct Groq cloud API; Mac not required. Requires current owner-verified free-tier approval. Quota remaining is unknown.':'Cloudflare-hosted inference is separate from OmniRoute. Its allowance is not guaranteed.';
         ready=true;send.disabled=false;modelBrowse.disabled=false;updatePlan();
       }catch{
         if(epoch!==loadEpoch)return;
@@ -843,6 +852,7 @@
       }
       if(platform==='omniroute'&&plan.routes.length>1)return askBoth(text,plan);
       const target=plan.routes[0],attachedSource=platform==='omniroute'?repoSelect.value:'';
+      let resolvedModel=target;
       const thread=sessions.find(s=>s.id===currentId);if(thread){thread.source=platform;thread.model=target;}
       history.push({role:'user',content:text});add('rvc-user',text);
       const active=sessions.find(s=>s.id===currentId);
@@ -887,6 +897,10 @@
           const cloudEndpoint=platform==='gemini'?'/api/hud/gemini/chat':'/api/chat';
           const r=await fetch(cloudEndpoint,{method:'POST',credentials:'same-origin',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
           if(!r.ok){const err=await r.json().catch(()=>({}));throw Error(err.error||'cloud_chat_unavailable');}
+          if(platform==='gemini'){
+            const actual=r.headers.get('X-ROVOR-Resolved-Model');
+            if(actual&&/^gemini-[a-z0-9.-]{3,80}$/.test(actual))resolvedModel=actual;
+          }
           if(!r.body)throw Error('empty_stream');
           const reader=r.body.getReader(),dec=new TextDecoder();let buf='',completed=false;
           for(;;){
@@ -905,11 +919,11 @@
           if(!completed)throw Error('incomplete_stream');
         }
         renderText(bubble,reply);
-        history.push({role:'assistant',content:reply,platform,model:target,repo_file:platform==='omniroute'?(attachedSource||null):null,receipt:pendingJob?.id||null,outcome:'complete',recordedAt:Date.now()});save();
+        history.push({role:'assistant',content:reply,platform,model:resolvedModel,repo_file:platform==='omniroute'?(attachedSource||null):null,receipt:pendingJob?.id||null,outcome:'complete',recordedAt:Date.now()});save();
         redraw();
         stateLabel.textContent=platform==='omniroute'?
           'RESPONSE CONFIRMED · requested route '+target+' · actual upstream identity not separately attested':
-          platform==='gemini'?'GOOGLE GEMINI CLOUD RESPONSE RECEIVED · Mac not required · not an employee action':'CLOUD MODEL RESPONSE RECEIVED · not an employee or Mac action';
+          platform==='gemini'?'GOOGLE GEMINI CLOUD REPLY · '+resolvedModel+' · no Mac · per-model receipt recorded':'CLOUD MODEL RESPONSE RECEIVED · not an employee or Mac action';
       }catch(e){
         const messages={
           omniroute_offline:'The Mac bridge is offline. No model call was confirmed.',
