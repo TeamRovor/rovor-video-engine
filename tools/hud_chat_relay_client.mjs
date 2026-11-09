@@ -175,7 +175,10 @@ export async function runRelay({origin,writerKey,chat,stop,send=fetch,interval=2
 }
 async function main() {
   const origin=validateTarget(process.env.ROVOR_HUD_ORIGIN);
-  const writerKey=process.env.ROVOR_HUD_WRITER_TOKEN||await fromKeychain('rovordigital.hud.writer');
+  // The existing Cloudflare telemetry reporter uses the dedicated Cloudflare
+  // writer Keychain service. Reuse it for the outbound chat relay, with a
+  // legacy fallback; never disclose or copy its value into the HUD/browser.
+  const writerKey=process.env.ROVOR_HUD_WRITER_TOKEN||await fromKeychain('rovordigital.hud.cloudflare.writer')||await fromKeychain('rovordigital.hud.writer');
   const apiKey=process.env.OMNIROUTE_API_KEY||await fromKeychain('rovordigital.omniroute.endpoint');
   const cliAuth=await localCliAuth();
   if (!apiKey && !cliAuth) throw Error('omniroute_gateway_auth_missing');
