@@ -1,5 +1,6 @@
 import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';
 import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';
+import {probeGroqCatalogue} from './groq-quota-monitor.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
 import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';
 // Private telemetry only: no inference, job dispatch, or Mac control.
@@ -422,8 +423,15 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     }
     if (request.method === 'GET' && url.pathname === '/api/chat/models')
       return response(200,{models:[...(env.AI?CHAT_MODELS:[]),...(groqCloudReady(env,now)?[GROQ_CLOUD_ROUTE]:[])]});
-    if (request.method === 'GET' && url.pathname === '/api/chat/groq/status')
+    if (request.method === 'GET' && url.pathname === '/api/chat/groq/status') {
+      // Explicit read-only refresh, D1-throttled once per minute across clients.
+      // It reads the pinned model catalogue only; never triggers paid inference.
+      if(url.searchParams.get('refresh')==='1'){
+        try{await probeGroqCatalogue(env,env.DB,now,fetcher);}
+        catch{/* A diagnostic failure must not take down the private HUD. */}
+      }
       return response(200,await cloudGroqStatus(env,env.DB,now));
+    }
     if (request.method === 'POST' && url.pathname === '/api/chat') return chat(request, env, now, fetcher);
     if (url.pathname === '/api/hud/gemini/project-quota') {
       if (request.method !== 'GET') return response(405, {error: 'method_not_allowed'});
