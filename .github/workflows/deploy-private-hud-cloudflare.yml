@@ -19,7 +19,6 @@ on:
       - 'integrations/hud-cloud/verify-cloud-gemini.mjs'
       - 'tests/test_hud_cloud_gemini.mjs'
       - 'tests/test_hud_groq_cloud.mjs'
-      - 'tests/test_hud_groq_cloud.mjs'
       - 'tests/test_hud_omniroute_chat_relay.mjs'
       - 'tools/activate_hud_gemini_route.mjs'
       - 'tools/verify_hud_gemini_activation.mjs'
@@ -108,12 +107,14 @@ jobs:
   deploy:
     needs: safety-tests
     # Never expose secrets to pull_request, untrusted branches, or AI PR code.
-    # Default off after merge; owner opts into automatic main deploy after
-    # first private readback, setting ROVOR_HUD_GITHUB_AUTO_DEPLOY=enabled.
+    # Approved HUD changes merged into main deploy automatically after the
+    # safety-tests job; manual workflow_dispatch remains a recovery option.
+    # The protected production environment, fail-closed preflight, D1 checks,
+    # serialized deployments and live private readback stay mandatory.
     if: >-
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'workflow_dispatch' ||
-       (github.event_name == 'push' && vars.ROVOR_HUD_GITHUB_AUTO_DEPLOY == 'enabled'))
+       github.event_name == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: rovor-hud-production
@@ -165,27 +166,3 @@ jobs:
             wrangler secret bulk --config wrangler.github.jsonc
       - name: Verify anonymous denial, authenticated original HUD, quota script, and D1 status
         run: node verify-github-deploy.mjs
-
-  verify-existing:
-    # A code-only main push can verify the already-deployed Worker without
-    # pushing code, rewriting D1 or secrets, or requiring owner to run deploy.
-    needs: safety-tests
-    if: >-
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      vars.ROVOR_HUD_GITHUB_AUTO_DEPLOY != 'enabled'
-    runs-on: ubuntu-latest
-    timeout-minutes: 4
-    environment: rovor-hud-production
-    env:
-      ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
-      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-      - name: Verify existing private Worker without uploading or running inference
-        run: node integrations/hud-cloud/verify-github-deploy.mjs
