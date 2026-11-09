@@ -1316,6 +1316,13 @@ function startCloud(){
         models:cloudflare.models.filter(id=>typeof id==='string'&&id.startsWith('@cf/'))}:null;
       prev={cloud,geminiCatalog,geminiUsage,groq,cloudflare:hosted,checkedAt:Date.now()};
       updated=Date.now();
+      window.ROVOR_WORKLOAD?.setCloudSummary?.({
+        geminiModels:geminiCatalog?.directly_listed_models?.length,
+        geminiVerified:geminiCatalog?.verified_model_count,
+        groqReady:groq?.ready===true,
+        privateCloudFresh:cloud?.execution_source==='cloud_provider'&&
+          safeRecent(cloud.observed_at,Date.now(),120000)
+      });
       const target=slot();
       if(target){
         const state=captureState(target);
@@ -1330,7 +1337,7 @@ function startCloud(){
     observePending=true;
     Promise.resolve().then(()=>{
       observePending=false;
-      if(slot()&&slot().querySelector?.('[data-rovor-cloud-placeholder]'))void sync();
+      if(slot()&&isPlaceholder(slot()))void sync();
     });
   });
   observer.observe(document.body,{childList:true,subtree:true});
