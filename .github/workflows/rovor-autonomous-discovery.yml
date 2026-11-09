@@ -18,9 +18,12 @@ permissions:
   issues: read
   pull-requests: read
 
+# Pull requests must not hold up the hourly trusted-main discovery.
+# A newer PR revision supersedes earlier checks; scheduled/manual main runs
+# serialize without interruption so D1 receipts remain deterministic.
 concurrency:
-  group: rovor-autonomous-discovery
-  cancel-in-progress: false
+  group: rovor-autonomous-discovery-${{ github.event_name == 'pull_request' && github.head_ref || 'main' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
