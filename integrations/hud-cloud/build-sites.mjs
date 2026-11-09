@@ -23,6 +23,10 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const groqImport = "import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';";
   const groqProbeImport = "import {probeGroqCatalogue} from './groq-quota-monitor.mjs';";
   const groqCatalogImport = "import {groqCatalogEvidence} from './groq-quota-monitor.mjs';";
+  const ideaImport = "import {submitIdea,listIdeas} from './idea-inbox.mjs';";
+  const discoveryImport = "import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';";
+  const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
+  const discoveryValidatorImport = "import {validateIdea} from './idea-inbox.mjs';";
   const relayImport = "import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';";
   const chatParserImport = "import {parseChatRequest} from '../../tools/hud_chat.mjs';";
   if (core.split(relayImport).length !== 2) throw Error('Unexpected private chat relay import');
@@ -53,9 +57,29 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const groqCloud = 'const {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} = (() => {\n' +
     plain(groqCloudSource.replace(groqCatalogImport, '')) +
     '\nreturn {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus};})();\n';
-  return dependency + relay + groqQuota + groqCloud + geminiCloud +
+  // The legacy Site's self-contained worker must not retain ES module
+  // imports from the cloud HUD. Inline the newer modules in dependency order,
+  // with private lexical scopes so identical local constants cannot clash.
+  if(core.split(ideaImport).length!==2 || core.split(discoveryImport).length!==2 ||
+     core.split(sourceImport).length!==2)
+    throw Error('Unexpected private cloud intake/source import');
+  const ideaSrc = fs.readFileSync(path.join(here,'idea-inbox.mjs'),'utf8');
+  const discoverySrc = fs.readFileSync(path.join(here,'discovery-inbox.mjs'),'utf8');
+  const sourceSrc = fs.readFileSync(path.join(here,'repo-source.mjs'),'utf8');
+  if(discoverySrc.split(discoveryValidatorImport).length!==2)
+    throw Error('Unexpected discovery validation import');
+  const idea = 'const {submitIdea,listIdeas,validateIdea} = (() => {\\n'+
+    plain(ideaSrc)+'\\nreturn {submitIdea,listIdeas,validateIdea};})();\\n';
+  const discovery = 'const {submitDiscovery,discoveryStatus} = (() => {\\n'+
+    plain(discoverySrc.replace(discoveryValidatorImport,''))+
+    '\\nreturn {submitDiscovery,discoveryStatus};})();\\n';
+  const repoSource = 'const {getRepoSource} = (() => {\\n'+
+    plain(sourceSrc)+'\\nreturn {getRepoSource};})();\\n';
+  return dependency + relay + groqQuota + groqCloud + idea + discovery + repoSource + geminiCloud +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
-      .replace(groqImport, '').replace(groqProbeImport, '').replace(coreEnd, '')) +
+      .replace(groqImport, '').replace(groqProbeImport, '')
+      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '')
+      .replace(coreEnd, '')) +
     '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
 }
