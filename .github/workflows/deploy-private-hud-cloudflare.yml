@@ -147,7 +147,8 @@ jobs:
       ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
       ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
       ROVOR_GEMINI_CLOUD_API_KEY: ${{ secrets.ROVOR_GEMINI_API_KEY || secrets.GEMINI_API_KEY }}
-      GEMINI_ACTIVATE_ONCE: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[gemini-activate-once]') }}
+      GEMINI_ACTIVATE_ONCE: ${{ github.event_name == 'push' && (contains(github.event.head_commit.message, '[gemini-activate-once]') || contains(github.event.head_commit.message, '[gemini-verify-3.8-flash]')) }}
+      ROVOR_GEMINI_TEST_MODEL: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[gemini-verify-3.8-flash]') && 'gemini-3.8-flash' || '' }}
       GROQ_HUD_API_KEY: ${{ secrets.ROVOR_HUD_GROQ_API_KEY }}
       GROQ_HUD_CHAT_ENABLED: ${{ vars.ROVOR_HUD_GROQ_CHAT_ENABLED }}
       GROQ_HUD_FREE_TIER_VERIFIED: ${{ vars.ROVOR_HUD_GROQ_FREE_TIER_VERIFIED }}
