@@ -22,19 +22,31 @@ fi
 const value=process.argv[1];const url=new URL(value);
 if(url.protocol!=="https:"||url.origin!==value.replace(/\/$/,"")||url.username||url.password||url.hash||url.search)throw Error("Invalid private HUD HTTPS origin");
 ' "$origin"
-if ! /usr/bin/security find-generic-password -s rovordigital.hud.writer -w >/dev/null 2>&1; then
-  echo 'Existing HUD writer credential is missing from Keychain. No new credentials were created.' >&2
+if ! /usr/bin/security find-generic-password -s rovordigital.hud.cloudflare.writer -w >/dev/null 2>&1 &&
+   ! /usr/bin/security find-generic-password -s rovordigital.hud.writer -w >/dev/null 2>&1; then
+  echo 'Existing HUD writer credential is missing from Keychain (Cloudflare or legacy service). No new credentials were created.' >&2
   exit 2
 fi
 if ! /usr/bin/security find-generic-password -s rovordigital.omniroute.endpoint -w >/dev/null 2>&1; then
   echo 'Existing OmniRoute endpoint credential is missing from Keychain. No new credentials were created.' >&2
   exit 2
 fi
+# Optional exact IDs are provided only after owner verification of zero-cost
+# account/model eligibility and fallback behavior. An API key is not proof.
+approved_models="${ROVOR_HUD_CHAT_FREE_MODELS:-}"
+if [[ -n "$approved_models" ]]; then
+  "$python_bin" - "$approved_models" <<'PYVALIDATE'
+import re,sys
+routes=sys.argv[1].split(',')
+if len(routes)>100 or any(not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:/+@-]{0,199}',route.strip()) for route in routes):
+    raise SystemExit('Invalid ROVOR_HUD_CHAT_FREE_MODELS: expected comma-separated exact model IDs')
+PYVALIDATE
+fi
 plist="$HOME/Library/LaunchAgents/com.rovor.hud-chat-relay.plist"
 mkdir -p "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
-"$python_bin" - "$plist" "$root" "$node_bin" "$origin" <<'PY'
+"$python_bin" - "$plist" "$root" "$node_bin" "$origin" "$approved_models" <<'PY'
 import os,plistlib,sys
-target,root,node,origin=sys.argv[1:]
+target,root,node,origin,approved=sys.argv[1:]
 data={
  'Label':'com.rovor.hud-chat-relay',
  'ProgramArguments':[node,os.path.join(root,'tools/hud_chat_relay_client.mjs')],
@@ -45,6 +57,8 @@ data={
  'StandardOutPath':os.path.expanduser('~/Library/Logs/rovor-hud-chat.log'),
  'StandardErrorPath':os.path.expanduser('~/Library/Logs/rovor-hud-chat-error.log')
 }
+if approved:
+    data['EnvironmentVariables']['ROVOR_HUD_CHAT_FREE_MODELS']=approved
 with open(target,'wb') as f:plistlib.dump(data,f)
 os.chmod(target,0o600)
 PY
@@ -54,3 +68,6 @@ launchctl bootstrap "gui/$(id -u)" "$plist"
 launchctl kickstart -k "$label"
 echo 'Ask ROVOR outbound chat LaunchAgent installed. Verify the model list in your private HUD.'
 echo 'A model is not proven usable until one benign test prompt returns an actual completion receipt.'
+if [[ -n "$approved_models" ]]; then
+  echo 'Owner-approved exact routes configured. Free eligibility and billing evidence must be verified independently.'
+fi
