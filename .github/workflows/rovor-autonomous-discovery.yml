@@ -3,6 +3,11 @@ name: ROVOR cloud autonomous work discovery
 # Proactive issue/CI triage, not a hidden inference or GitHub-writing bot.
 # Actions cron may be delayed by GitHub; scheduled ≠ guaranteed continuous.
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/rovor-autonomous-discovery.yml'
+      - 'tools/rovor_auto_discovery.mjs'
+      - 'tests/test_rovor_auto_discovery.mjs'
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
@@ -18,8 +23,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify discovery is read-only and cannot spend or claim work
+        run: |
+          node --check tools/rovor_auto_discovery.mjs
+          node --test tests/test_rovor_auto_discovery.mjs
+
   discover:
-    if: github.ref == 'refs/heads/main'
+    needs: verify
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 6
     environment: rovor-hud-production
@@ -34,9 +55,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Verify discovery cannot claim, spend or write to GitHub
-        run: |
-          node --check tools/rovor_auto_discovery.mjs
-          node --test tests/test_rovor_auto_discovery.mjs
       - name: Find verified GitHub defects and store one review-only HUD draft
         run: node tools/rovor_auto_discovery.mjs
