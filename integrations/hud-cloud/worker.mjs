@@ -27,7 +27,7 @@ const LOGIN = `<!doctype html><meta name="viewport" content="width=device-width"
 <p id="status" role="status"></p><script>document.getElementById('login').onsubmit=async e=>{e.preventDefault();const key=document.getElementById('key');try{const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:key.value})});key.value='';if(r.ok)location.replace('/');else document.getElementById('status').textContent='Sign-in failed.'}catch{document.getElementById('status').textContent='Connection unavailable.'}}</script>`;
 // The production dashboard is cloud-first. The legacy device adapter remains
 // in source control for a later owner-authorized integration, not in this UI.
-const CLOUD_START = `<script src="/hud-quota.js"></script><script src="/hud-chat.js"></script><script src="/workload-popup.js"></script><script>document.getElementById('connectOmniRoute')?.remove();window.ROVOR_WORKLOAD?.mountPreview?.(document.getElementById('workloadPanel'),()=>window.ROVOR_NATIVE?.open?.('workload'));window.ROVOR_QUOTA_BOARD?.startCloud?.();</script>`;
+const CLOUD_START = `<script src="/hud-quota.js"></script><script src="/hud-chat.js"></script><script>document.getElementById('connectOmniRoute')?.remove();window.ROVOR_WORKLOAD?.mountPreview?.(document.getElementById('workloadPanel'),()=>window.ROVOR_NATIVE?.open?.('workload'));window.ROVOR_QUOTA_BOARD?.startCloud?.();</script>`;
 const response = (status, body) => Response.json(body, {status, headers: {
   'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
