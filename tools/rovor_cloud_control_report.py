@@ -259,7 +259,7 @@ def summary(report: dict) -> str:
     lines = [
         "## ROVOR cloud-only control center",
         "",
-        "This is a **read-only** runbook and evidence report. Configuration ≠ admission ≠ inference ≠ approved work.",
+        "This **report** is read-only. Deployment, one Gemini canary, and one guarded shift are separate explicit owner choices; configuration ≠ admission ≠ inference ≠ approved work.",
         "",
         "| Check | Verified observation |",
         "|---|---|",
