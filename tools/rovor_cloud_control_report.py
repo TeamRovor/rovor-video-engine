@@ -49,6 +49,9 @@ def credential(value: str, minimum: int = 32) -> bool:
 
 def deployment_secrets(env: dict) -> dict:
     google = env.get("ROVOR_GEMINI_API_KEY") or env.get("GEMINI_API_KEY") or ""
+    # Reuse the existing private Cloudflare Worker secret when its NAME has
+    # been read through the authenticated Cloudflare API. No secret values move.
+    existing_cloud_google = env.get("ROVOR_CLOUDFLARE_GEMINI_SECRET_PRESENT") == "true"
     hud_writer = env.get("ROVOR_HUD_WRITER_TOKEN", "")
     hud_reader = env.get("ROVOR_HUD_READER_TOKEN", "")
     d1 = env.get("ROVOR_HUD_D1_ID", "")
@@ -61,7 +64,7 @@ def deployment_secrets(env: dict) -> dict:
         "private_hud_reader": credential(hud_reader),
         "private_hud_writer": credential(hud_writer) and hud_reader != hud_writer,
         "original_hud_origin": origin.rstrip("/") == HUD_ORIGIN,
-        "google_free_project_key": credential(google, 24),
+        "google_free_project_key": credential(google, 24) or existing_cloud_google,
         "private_site_service_token": credential(env.get("ROVOR_GHOST_SERVICE_TOKEN", "")),
     }
 
@@ -117,7 +120,8 @@ def safe_request(origin: str, route: str, token: str | None = None,
 
 def summarize_hud(reader: str, opener=None) -> dict:
     answer = {"private": "unverified", "status": "not_checked",
-              "gemini_cloud": "not_checked", "gemini_completed_today": None,
+              "gemini_cloud": "not_checked", "gemini_free_text_models_listed": None,
+              "gemini_completed_today": None, "gemini_models_with_replies_today": None,
               "cloudflare_ai": "not_checked", "omniroute_mac_optional": "not_checked",
               "mac_telemetry_optional": "unknown"}
     code, _, err = safe_request(HUD_ORIGIN, "/api/hud/status", opener=opener)
@@ -145,15 +149,28 @@ def summarize_hud(reader: str, opener=None) -> dict:
         answer["status"] = "unavailable_" + (err or "invalid_source")
     code, m, err = safe_request(HUD_ORIGIN, ROUTES[1], reader, opener=opener)
     if code == 200 and isinstance(m, dict) and m.get("source") == "google_gemini_cloud_direct":
-        answer["gemini_cloud"] = "configured" if m.get("online") is True and (
-            m.get("models") == ["gemini-3.1-flash-lite"] and m.get("mac_required") is False
-        ) else "not_configured"
+        all_models = m.get("models")
+        # Listing is evidence that models were enumerated with the key,
+        # not proof a generation request works or has remaining free quota.
+        known = {"gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite",
+                 "gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"}
+        direct = [x for x in all_models if x != "gemini-auto-free"] if isinstance(all_models,list) else []
+        ready = (m.get("online") is True and m.get("mac_required") is False and
+                 isinstance(all_models,list) and all_models[0:1] == ["gemini-auto-free"] and
+                 bool(direct) and len(direct) == len(set(direct)) and set(direct) <= known)
+        answer["gemini_cloud"] = "key_listed_free_text_models" if ready else "not_configured"
+        answer["gemini_free_text_models_listed"] = len(direct) if ready else None
     else:
         answer["gemini_cloud"] = "unavailable_" + (err or "invalid_source")
     code, u, err = safe_request(HUD_ORIGIN, ROUTES[2], reader, opener=opener)
     if code == 200 and isinstance(u, dict) and u.get("source") == "cloud_gemini_direct":
         n = u.get("completed")
         answer["gemini_completed_today"] = n if type(n) is int and 0 <= n < 1000000 else None
+        rows = u.get("models")
+        if isinstance(rows,list) and len(rows) <= 12:
+            answer["gemini_models_with_replies_today"] = sum(
+                type(item.get("completed")) is int and 0 < item["completed"] < 1000000
+                for item in rows if isinstance(item,dict))
     code, c, err = safe_request(HUD_ORIGIN, ROUTES[3], reader, opener=opener)
     if code == 200 and isinstance(c, dict) and isinstance(c.get("models"), list):
         answer["cloudflare_ai"] = "models_advertised" if c["models"] else "no_models_advertised"
@@ -267,6 +284,8 @@ def summary(report: dict) -> str:
         f"| Existing HUD private auth | {hud['private']} |",
         f"| Existing Cloudflare HUD | {hud['status']} |",
         f"| Google Gemini cloud chat | {hud['gemini_cloud']} |",
+        f"| Google Free-tier text models listed by key (not inference proof) | {hud['gemini_free_text_models_listed'] if hud['gemini_free_text_models_listed'] is not None else 'unknown'} |",
+        f"| Gemini models with D1-confirmed replies today | {hud['gemini_models_with_replies_today'] if hud['gemini_models_with_replies_today'] is not None else 'unknown'} |",
         f"| Gemini completed responses today (cloud D1 only) | {hud['gemini_completed_today'] if hud['gemini_completed_today'] is not None else 'unknown'} |",
         f"| Cloudflare AI | {hud['cloudflare_ai']} |",
         f"| Mac OmniRoute (optional only) | {hud['omniroute_mac_optional']} |",
@@ -321,7 +340,7 @@ def main() -> int:
             shift_ready = (site["service"] == "reachable" and site["owner_stop"] == "dispatch_enabled"
                            and isinstance(site["eligible_providers"], int) and site["eligible_providers"] > 0)
             out.write("shift_ready=" + str(shift_ready).lower() + "\n")
-            out.write("gemini_cloud_online=" + str(report["hud"]["gemini_cloud"] == "configured").lower() + "\n")
+            out.write("gemini_cloud_online=" + str(report["hud"]["gemini_cloud"] == "key_listed_free_text_models").lower() + "\n")
     markdown = summary(report)
     if os.getenv("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as out:

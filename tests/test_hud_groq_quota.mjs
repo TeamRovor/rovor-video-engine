@@ -106,6 +106,9 @@ test('All cloud-provider fetch requests use the Cloudflare-supported manual redi
   for(const path of ['groq-cloud-chat.mjs','groq-quota-monitor.mjs',
     'cloud-gemini-chat.mjs','gemini-cloud-monitoring.mjs']){
     const src=readFileSync(new URL('../integrations/hud-cloud/'+path,import.meta.url),'utf8');
-    assert.doesNotMatch(src,/redirect\s*:\s*['"]error['"]/);
+    // Scan executable source only; a comment explaining a forbidden mode
+    // must not falsely fail the regression, while actual fetch code still does.
+    const executable=src.split('\n').filter(line=>!line.trimStart().startsWith('//')).join('\n');
+    assert.doesNotMatch(executable,/redirect\s*:\s*['"]error['"]/);
   }
 });

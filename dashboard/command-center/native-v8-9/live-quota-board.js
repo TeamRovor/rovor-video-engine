@@ -95,10 +95,10 @@ function usageRing(percent,label,kind='quota'){
    '<div class="rvq-ring-core"><strong>—</strong><small>UNKNOWN</small></div></div>';
  }
  const pct=percent.toFixed(1);
- return '<div class="rvq-ring'+(kind==='activity'?' rvq-ring-traffic':'')+'" role="progressbar" aria-label="'+esc(label)+
+ return '<div class="rvq-ring'+((kind==='activity'||kind==='cloud-activity')?' rvq-ring-traffic':'')+'" role="progressbar" aria-label="'+esc(label)+
   '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+
-  '" aria-valuetext="'+pct+(kind==='activity'?' percent of recorded Mac requests':' percent of verified allowance used')+'" style="--rvq-angle:'+pct+'%">'+
-  '<div class="rvq-ring-core"><strong>'+pct+'%</strong><small>'+(kind==='activity'?'TRAFFIC':'USED')+'</small></div></div>';
+  '" aria-valuetext="'+pct+(kind==='cloud-activity'?' percent of recorded ROVOR cloud Gemini requests':kind==='activity'?' percent of recorded Mac requests':' percent of verified allowance used')+'" style="--rvq-angle:'+pct+'%">'+
+  '<div class="rvq-ring-core"><strong>'+pct+'%</strong><small>'+((kind==='activity'||kind==='cloud-activity')?'TRAFFIC':'USED')+'</small></div></div>';
 }
 function meter(q){
  const used=q?.used,total=q?.total;
@@ -928,6 +928,33 @@ function reportAgeLabel(timestamp){
 // repaint) reuse these only inside the same 15s freshness gate; expired or
 // failed sources are never reused.
 let lastExtras=null;
+let lastGeminiDirect=null;
+// Separate from Mac OmniRoute quota: these rings represent only the observed
+// share of ROVOR Gemini requests, never provider-wide quota or free entitlement.
+function cloudGeminiPanel(){
+  const sample=lastGeminiDirect&&Date.now()-lastGeminiDirect.at<=15000?lastGeminiDirect:null;
+  const catalog=sample?.catalog,usage=sample?.usage;
+  if(!catalog||!usage||catalog.source!=='google_gemini_cloud_direct'||usage.source!=='cloud_gemini_direct')
+    return '<section class="rvq-cloud" aria-label="Google Gemini cloud model activity"><strong>GOOGLE GEMINI · DIRECT CLOUD · NO MAC</strong><span>Private cloud model/receipt readback unavailable. No quota or inference is assumed.</span></section>';
+  const allowed=Array.isArray(catalog.models)?catalog.models.filter(m=>typeof m==='string'&&/^gemini-(?:2[.]5|3[.](?:1|5|6|7|8))-flash(?:-lite)?$/.test(m)).slice(0,9):[];
+  const rows=Array.isArray(usage.models)?usage.models.filter(m=>m&&typeof m.model==='string'&&allowed.includes(m.model)&&
+    Number.isSafeInteger(m.attempts)&&m.attempts>=0&&Number.isSafeInteger(m.completed)&&m.completed>=0).slice(0,9):[];
+  const total=Number.isSafeInteger(usage.attempts)&&usage.attempts>=0?usage.attempts:null;
+  const modelRow=m=>{
+    const share=total>0?Math.min(100,m.attempts/total*100):0;
+    return '<div class="rvq-cloud-model-row"><span><strong>'+esc(m.model)+'</strong> · '+fmt(m.completed)+' completed · '+fmt(m.attempts)+' attempts</span>'+
+      usageRing(share,'Share of ROVOR Gemini local requests today (NOT quota)','cloud-activity')+
+      '<span>LOCAL REQUEST SHARE · NOT PROVIDER QUOTA · '+fmt(Number.isSafeInteger(m.failures)?m.failures:0)+' failures</span></div>';
+  };
+  return '<section class="rvq-cloud" aria-label="Google Gemini cloud model activity"><strong>GOOGLE GEMINI · '+fmt(allowed.length)+' KEY-LISTED FREE-PRICED TEXT MODELS · NO MAC</strong>'+
+    '<span>Listed by Google, but success and remaining Free-tier quotas require separate proof. Smart Gemini selects by task; no paid fallback.</span>'+
+    '<span>ROVOR local attempts today '+(total===null?'unknown':fmt(total))+
+    ' / '+(Number.isSafeInteger(usage.daily_local_cap)?fmt(usage.daily_local_cap):'unknown')+
+    ' local safety cap · completed '+fmt(Number.isSafeInteger(usage.completed)?usage.completed:0)+
+    ' · Google account remaining RPM/RPD/TPM UNKNOWN</span>'+
+    (rows.length?rows.map(modelRow).join(''):'<span>No Gemini model responses recorded in this private D1 today.</span>')+
+    '</section>';
+}
 function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,groqCloud=null){
  // Omitted sources (the popup's own repaint) reuse the last settled ones.
  if(arguments.length<3){
@@ -1007,7 +1034,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
      '<span>Independent cloud Groq status unavailable. This does NOT mean the Mac must be online.</span>')+quotaInfo+'</section>';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
- cloudGroqPanel+summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
+ cloudGroqPanel+cloudGeminiPanel()+summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
  workerBanner(data?.workforce,live)+ (slots.length?quotaGlance(slots,quota,live,cloudProviders)+(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
@@ -1113,7 +1140,7 @@ function start(){
    const fresh=accept(live?.('24h'),'24h')||await read('/api/hud/omniroute?period=24h',d=>accept(d,'24h'));
    // Independent sources run in parallel so one slow read cannot delay the rest.
    // A stale or incomplete 1h/1m report must not generate a zero-activity claim.
-   const [hourly,minute,cloud,geminiProject,groqCloud]=await Promise.all([
+   const [hourly,minute,cloud,geminiProject,groqCloud,geminiCatalog,geminiUsage]=await Promise.all([
      fresh?read('/api/hud/omniroute?period=1h',d=>accept(d,'1h'),live?.('1h')):null,
      fresh?read('/api/hud/omniroute?period=1m',d=>accept(d,'1m')):null,
      read('/api/ghost/status',d=>{
@@ -1124,12 +1151,17 @@ function start(){
      // Optional route: the original private Site may not have it.
      read('/api/hud/gemini/project-quota',d=>d?.source==='google_cloud_monitoring'&&typeof d.status==='string'?d:null),
      read('/api/chat/groq/status?refresh=1',d=>d?.source==='cloud_direct_groq'&&d.mac_required===false&&
-       Number.isFinite(Date.parse(d.observed_at||''))&&Math.abs(Date.now()-Date.parse(d.observed_at))<=15000?d:null)
+       Number.isFinite(Date.parse(d.observed_at||''))&&Math.abs(Date.now()-Date.parse(d.observed_at))<=15000?d:null),
+     read('/api/hud/gemini/models',d=>d?.source==='google_gemini_cloud_direct'&&d.mac_required===false&&
+       Array.isArray(d.models)&&d.models.length<=20?d:null),
+     read('/api/hud/gemini/usage',d=>d?.source==='cloud_gemini_direct'&&d.mac_required===false&&
+       Array.isArray(d.models)&&d.models.length<=20?d:null)
    ]);
    // Preserve only the last known provider/slot inventory through outages.
    // Never retain or display stale quota percentages as live.
    if(fresh)lastInventory={connections:fresh.connections,connection_slots:fresh.connection_slots,snapshot_at:fresh.snapshot_at};
    lastCloud=cloud;last=fresh;lastHourly=hourly;lastMinute=minute;lastGroqCloud=groqCloud;updated=Date.now();
+   lastGeminiDirect=geminiCatalog&&geminiUsage?{catalog:geminiCatalog,usage:geminiUsage,at:updated}:null;
    lastExtras={cloud,hourly,minute,geminiProject,groqCloud,at:updated};
    const target=slot();if(target){
      const state=captureState(target);

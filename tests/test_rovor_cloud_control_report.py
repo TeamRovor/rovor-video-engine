@@ -30,9 +30,9 @@ class HTTP:
                 "connections":[{"provider":p} for p in sorted(ops.PROVIDERS)]}})
         if url == ops.HUD_ORIGIN + "/api/hud/gemini/models":
             return Reply({"source":"google_gemini_cloud_direct","online":True,
-                          "models":["gemini-3.1-flash-lite"],"mac_required":False})
+                          "models":["gemini-auto-free","gemini-3.1-flash-lite"],"mac_required":False})
         if url == ops.HUD_ORIGIN + "/api/hud/gemini/usage":
-            return Reply({"source":"cloud_gemini_direct","completed":2})
+            return Reply({"source":"cloud_gemini_direct","completed":2,"models":[{"model":"gemini-3.1-flash-lite","completed":2}]})
         if url == ops.HUD_ORIGIN + "/api/chat/models":
             return Reply({"models":["@cf/google/gemma-3-12b-it"]})
         if url == ops.HUD_ORIGIN + "/api/hud/chat/models":
@@ -75,7 +75,9 @@ class ControlReportTests(unittest.TestCase):
         self.assertTrue(report["deploy_ready"])
         self.assertFalse(report["mac_required"])
         self.assertEqual(report["hud"]["private"],"verified_401")
-        self.assertEqual(report["hud"]["gemini_cloud"],"configured")
+        self.assertEqual(report["hud"]["gemini_cloud"],"key_listed_free_text_models")
+        self.assertEqual(report["hud"]["gemini_free_text_models_listed"],1)
+        self.assertEqual(report["hud"]["gemini_models_with_replies_today"],1)
         self.assertEqual(report["hud"]["gemini_completed_today"],2)
         self.assertEqual(report["hud"]["mac_telemetry_optional"],"stale")
         self.assertTrue(report["workforce"]["nine_provider_records"])
@@ -101,6 +103,14 @@ class ControlReportTests(unittest.TestCase):
         self.assertEqual(report["mode"],"audit_only")
         self.assertFalse(report["credentials_present"]["google_free_project_key"])
         self.assertNotIn("google_free_project_key",report["missing_deployment_prerequisites"])
+
+    def test_preexisting_cloudflare_gemini_secret_can_be_reused_without_github_key(self):
+        e=env()
+        e["ROVOR_GEMINI_API_KEY"]=""
+        e["ROVOR_CLOUDFLARE_GEMINI_SECRET_PRESENT"]="true"
+        self.assertTrue(ops.deployment_secrets(e)["google_free_project_key"])
+        self.assertTrue(ops.can_deploy(ops.deployment_secrets(e),"deploy_and_test_gemini",True))
+        self.assertFalse(ops.can_deploy(ops.deployment_secrets(e),"deploy_and_test_gemini",False))
 
     def test_site_service_key_missing_is_truthfully_unverified(self):
         e=env();e.pop("ROVOR_GHOST_SERVICE_TOKEN")

@@ -79,3 +79,16 @@ test('pagination is never silently interpreted as comprehensive project metric r
  assert.equal(result.status,'metric_page_incomplete');
  assert.deepEqual(result.models,[]);
 });
+
+test('Cloudflare Google Monitoring never follows a redirect to another host',async()=>{
+ let calls=0;
+ const result=await readGoogleGeminiQuota(base,{now:NOW,
+  tokenProvider:async()=> 'test-auth-token-at-least-20-characters',
+  fetcher:async(url,options)=>{
+   calls++;assert.equal(options.redirect,'manual');
+   return new Response(null,{status:302,headers:{Location:'https://not-google.example/steal'}});
+  }});
+ assert.equal(calls,1);
+ assert.notEqual(result.status,'sampled_project_quota');
+ assert.deepEqual(result.models,[]);
+});
