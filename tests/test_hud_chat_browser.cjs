@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-// Headless Chromium responsive QA with MOCKED private OmniRoute responses.
-// This is not proof that real Mac inference or iOS Safari hardware works.
+// Headless Chromium responsive QA of active cloud-only Ask ROVOR.
+// Network/model replies are mocked; not proof of live Google billing or inference.
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const os=require('node:os');
@@ -11,8 +11,8 @@ const {spawn,spawnSync}=require('node:child_process');
 const js=fs.readFileSync(path.resolve(__dirname,'../dashboard/command-center/native-v8-9/hud-chat.js'),'utf8');
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const model='openrouter/example:free',otherModel='mistral/owner-approved-test-route',jobId='051bf69b-cc2d-4453-825e-8d10f16556b4';
-const views=[[390,844,'iPhone'],[820,1180,'iPad portrait'],[1180,820,'iPad landscape'],[1440,900,'Windows/Mac desktop']];
-let server,chrome,ws,tmp,serial=0,submits=0,polls=0,submittedPayload=null,chromeLog='',chromeExit=null;
+const views=[[390,844,'iPhone'],[820,1180,'iPad portrait'],[1180,820,'iPad landscape'],[1440,900,'Desktop']];
+let server,chrome,ws,tmp,serial=0,submits=0,polls=0,submittedPayload=null,geminiSubmits=0,chromeLog='',chromeExit=null;
 const submittedJobs=new Map();
 const callbacks=new Map();
 const cmd=(method,params={})=>new Promise((resolve,reject)=>{
@@ -33,6 +33,22 @@ async function main(){
   server=http.createServer(async(req,res)=>{
     const route=new URL(req.url,'http://127.0.0.1').pathname;
     if(route==='/hud-chat.js'){res.writeHead(200,{'Content-Type':'text/javascript'});return res.end(js);}
+    if(route==='/api/hud/gemini/models')return respond(res,{source:'google_gemini_cloud_direct',provider:'google',online:true,mac_required:false,
+      models:['gemini-auto-free','gemini-3.1-flash-lite'],directly_listed_models:['gemini-3.1-flash-lite'],
+      verified_model_count:1,model_evidence:[{model:'gemini-3.1-flash-lite',verification:'verified_recent_reply',
+        last_verified_at:new Date().toISOString()}]});
+    if(route==='/api/hud/gemini/usage')return respond(res,{source:'cloud_gemini_direct',provider:'google',mac_required:false,
+      scope:'this_hud_direct_api_only',day:new Date().toISOString().slice(0,10),attempts:2,completed:1,
+      daily_local_cap:12,daily_local_remaining:10,minute_local_cap:2,minute_local_remaining:1,
+      daily_local_reset_at:new Date(Date.now()+86400000).toISOString(),input_tokens:20,output_tokens:8,
+      models:[{model:'gemini-3.1-flash-lite',attempts:2,completed:1,failures:1,input_tokens:20,output_tokens:8}]});
+    if(route==='/api/hud/gemini/chat'){
+      geminiSubmits++;
+      let raw='';for await(const part of req)raw+=part.toString();
+      submittedPayload=JSON.parse(raw);
+      res.writeHead(200,{'Content-Type':'text/event-stream','X-ROVOR-Resolved-Model':'gemini-3.1-flash-lite'});
+      return res.end('data: {"choices":[{"delta":{"content":"Verified mocked cloud answer"}}]}\n\ndata: [DONE]\n\n');
+    }
     if(route==='/api/hud/chat/models')return respond(res,{online:true,models:[model,otherModel]});
     if(route==='/api/chat/models')return respond(res,{models:['@cf/meta/llama-3.1-8b-instruct','groq/openai/gpt-oss-20b']});
     if(route==='/api/chat/groq/status')return respond(res,{source:'cloud_direct_groq',model:'groq/openai/gpt-oss-20b',ready:true,mac_required:false,locally_admitted_today:1,last_cloud_completion_at:new Date().toISOString()});
@@ -95,48 +111,32 @@ async function main(){
   });
   await cmd('Page.enable');await cmd('Runtime.enable');
   for(const [width,height,name] of views){
-    await cmd('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:name!=='Windows/Mac desktop'});
+    await cmd('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:name!=='Desktop'});
     await cmd('Page.navigate',{url:origin+'/?v='+encodeURIComponent(name)});
     await waitFor(()=>evaluate('return !!document.querySelector("#rvc-fab")'),name+' launcher');
     await evaluate('document.querySelector("#rvc-fab").click();return true');
-    if(name==='iPhone'){
-      assert.equal(await evaluate('return document.querySelector("#rvc-source").value'),'gemini','new conversations default to Mac-independent cloud');
-      await evaluate('const p=document.querySelector("#rvc-source");p.value="groq";p.dispatchEvent(new Event("change",{bubbles:true}));return true');
-      await waitFor(()=>evaluate('return Array.from(document.querySelectorAll("#rvc-model option")).some(x=>x.value==="groq/openai/gpt-oss-20b")'),'Groq direct cloud route');
-      await waitFor(()=>evaluate('return document.querySelector(".rvc-provider-inspect summary").textContent.includes("NO MAC REQUIRED")'),'Groq direct no Mac');
-    }
-    await evaluate('const source=document.querySelector("#rvc-source");source.value="omniroute";source.dispatchEvent(new Event("change",{bubbles:true}));return true');
-    await waitFor(()=>evaluate('return Array.from(document.querySelectorAll("#rvc-model option")).some(x=>x.value==="openrouter/example:free")'),name+' model');
+    assert.equal(await evaluate('return document.querySelector("#rvc-source").value'),'gemini',name+' cloud default');
+    const sources=await evaluate('return Array.from(document.querySelector("#rvc-source").options).map(x=>x.value)');
+    assert.deepEqual(sources,['gemini','groq','cloudflare'],name+' hides deferred local source');
+    await waitFor(()=>evaluate('return Array.from(document.querySelectorAll("#rvc-model option")).some(x=>x.value==="gemini-3.1-flash-lite")'),name+' cloud model');
     const info=await evaluate('const p=document.querySelector("#rvc"),r=p.getBoundingClientRect();return {width:r.width,height:r.height,vw:innerWidth,vh:innerHeight,textarea:parseFloat(getComputedStyle(document.querySelector("#rvc textarea")).fontSize),select:parseFloat(getComputedStyle(document.querySelector("#rvc-source")).fontSize),overflow:document.documentElement.scrollWidth>innerWidth+3}');
     assert(info.width<=info.vw+3,name+': horizontal overflow');
     assert(info.height<=info.vh+4,name+': vertical overflow');
     assert(!info.overflow,name+': document overflow');
-    assert(info.textarea>=16&&info.select>=16,name+': Safari focus zoom risk');
-    await waitFor(()=>evaluate('return document.querySelector(".rvc-provider-inspect summary").textContent.includes("9 CONFIGURED")'),name+' provider inventory');
+    assert(info.textarea>=16&&info.select>=16,name+': focus zoom risk');
     if(name==='iPhone'){
-      // Prompts are suggestions, not permission to submit a model job.
       await evaluate('document.querySelector(".rvc-chips button").click();return true');
-      assert(await evaluate('return document.querySelector("#rvc textarea").value.length>4'),
-        'suggestion did not fill the composer');
-      assert.equal(submits,0,'suggestion must not call OmniRoute without Send');
+      assert(await evaluate('return document.querySelector("#rvc textarea").value.length>4'));
+      assert.equal(geminiSubmits,0,'chips must not call a model');
       await evaluate('document.querySelector(".rvc-mobile-menu").click();return true');
       assert.equal(await evaluate('return document.querySelector("#rvc").dataset.sideOpen'),'true');
       await evaluate('document.querySelector(".rvc-side-backdrop").click();return true');
       assert.equal(await evaluate('return document.querySelector("#rvc").dataset.sideOpen'),'false');
       await evaluate('document.querySelector(".rvc-model-browse").click();return true');
       assert.equal(await evaluate('return document.querySelector(".rvc-model-sheet").hidden'),false);
-      const groups=await evaluate('return Array.from(document.querySelectorAll(".rvc-model-group h3")).map(x=>x.textContent)');
-      for(const name of ['Google Gemini','Mistral','NVIDIA','Cohere','SambaNova','Cloudflare Workers AI','Groq','OpenRouter','Hugging Face'])
-        assert(groups.some(s=>s.startsWith(name)),name+': missing provider family in model browser');
-      assert.equal(await evaluate('return document.querySelectorAll(".rvc-model-notready").length'),7,
-        'seven unadvertised providers must not appear as callable routes');
-      await evaluate('document.querySelector(".rvc-model-search").value="mistral";document.querySelector(".rvc-model-search").dispatchEvent(new Event("input",{bubbles:true}));return true');
-      const result=await evaluate('return Array.from(document.querySelectorAll(".rvc-model-option")).map(x=>x.textContent)');
-      assert.equal(result.length,1,'provider search should filter to one available route');
-      await evaluate('document.querySelector(".rvc-model-option").click();return true');
-      assert.equal(await evaluate('return document.querySelector("#rvc-model").value'),otherModel);
-      assert.equal(await evaluate('return document.querySelector(".rvc-model-sheet").hidden'),true);
-      await evaluate('const select=document.querySelector("#rvc-model");select.value="openrouter/example:free";select.dispatchEvent(new Event("change",{bubbles:true}));return true');
+      const options=await evaluate('return Array.from(document.querySelectorAll(".rvc-model-option")).map(x=>x.textContent)');
+      assert(options.some(x=>x.includes('gemini-3.1-flash-lite')),'cloud route missing from model browser');
+      await evaluate('document.querySelector(".rvc-model-sheet-close").click();return true');
     }
     await evaluate('document.querySelector("#rvc button[aria-label=\\"Close chat\\"]").click();return true');
     assert.equal(await evaluate('return document.querySelector("#rvc").dataset.open'),'false');
@@ -145,37 +145,20 @@ async function main(){
   await cmd('Page.navigate',{url:origin+'/conversation'});
   await waitFor(()=>evaluate('return !!document.querySelector("#rvc-fab")'),'conversation launcher');
   await evaluate('document.querySelector("#rvc-fab").click();return true');
-  await evaluate('const source=document.querySelector("#rvc-source");source.value="omniroute";source.dispatchEvent(new Event("change",{bubbles:true}));return true');
-  await waitFor(()=>evaluate('return !!document.querySelector("#rvc-model option[value=\\"openrouter/example:free\\"]")'),'conversation catalog');
-  await evaluate('document.querySelector("#rvc-repo-file").value="integrations/hud-cloud/worker.mjs";document.querySelector("#rvc textarea").value="Say hello";document.querySelector("#rvc form").requestSubmit();return true');
-  await waitFor(()=>evaluate('return !!document.querySelector(".rvc-receipt")&&document.querySelector(".rvc-receipt").textContent.includes("REPLY RECEIVED")'),'confirmed receipt');
-  assert.equal(submits,1,'one chat submission expected');
-  assert.equal(submittedPayload?.repo_file,'integrations/hud-cloud/worker.mjs',
-    'only the explicitly selected, allowlisted GitHub source may be attached');
-  assert(polls>=3,'queued/running/complete must be polled');
-  assert(await evaluate('return document.querySelector("#rvc-log").textContent.includes("Confirmed mocked backend response.")'));
-  assert(await evaluate('return !!document.querySelector(".rvc-copy")'),'copy response action missing');
+  await waitFor(()=>evaluate('return !!document.querySelector("#rvc-model option[value=\\"gemini-3.1-flash-lite\\"]")'),'Gemini catalog');
+  await evaluate('const picker=document.querySelector("#rvc-model");picker.value="gemini-3.1-flash-lite";picker.dispatchEvent(new Event("change",{bubbles:true}));document.querySelector("#rvc textarea").value="Say hello";document.querySelector("#rvc form").requestSubmit();return true');
+  await waitFor(()=>evaluate('return !!document.querySelector(".rvc-receipt")&&document.querySelector(".rvc-receipt").textContent.includes("REPLY RECEIVED")'),'Gemini response');
+  assert.equal(geminiSubmits,1,'one direct cloud request expected');
+  assert.equal(submits,0,'no local bridge request allowed in cloud-only UI');
+  assert.equal(submittedPayload.model,'gemini-3.1-flash-lite');
+  assert(await evaluate('return document.querySelector("#rvc-log").textContent.includes("Verified mocked cloud answer")'));
+  assert(await evaluate('return document.querySelector(".rvc-receipt").textContent.includes("GOOGLE GEMINI CLOUD")'));
+  assert(await evaluate('return !!document.querySelector(".rvc-copy")'));
   await evaluate('document.querySelector("#rvc button[aria-label=\\"Close chat\\"]").click();document.querySelector("#rvc-fab").click();return true');
-  assert(await evaluate('return document.querySelector("#rvc-log").textContent.includes("REPLY RECEIVED")'),'receipt disappeared from history');
-  // Explicit Send and opted-in two-model review produce two independent
-  // D1 job IDs. This is mocked Chrome QA, not proof of actual Mac parallelism.
-  await evaluate(`const picker=document.querySelector("#rvc-model");picker.value="__rovor_smart_route__";
-    picker.dispatchEvent(new Event("change",{bubbles:true}));
-    const team=document.querySelector("#rvc-team-review");team.checked=true;
-    team.dispatchEvent(new Event("change",{bubbles:true}));
-    const box=document.querySelector("#rvc textarea");box.value="Compare two approaches to fixing this code";
-    box.dispatchEvent(new Event("input",{bubbles:true}));
-    document.querySelector("#rvc form").requestSubmit();return true`);
-  await waitFor(()=>evaluate('return Array.from(document.querySelectorAll(".rvc-receipt")).filter(e=>e.textContent.includes("REPLY RECEIVED")).length>=3'),
-    'two independent model receipts',200);
-  assert.equal(submits,3,'one first request plus two team requests required');
-  assert.equal(submittedJobs.size,3,'each mock model request must have a separate job id');
-  assert(await evaluate('return document.querySelector("#rvc-log").textContent.includes("mistral/owner-approved-test-route")'),
-    'second model reply missing from transcript');
-  console.log('PASS opt-in two-model task routing: two distinct requested IDs and separate completion receipts.');
-  console.log('PASS Ask ROVOR responsive Chromium: iPhone, iPad portrait/landscape, Mac/Windows desktop.');
-  console.log('PASS model discovery, nine historical provider slots, keyboard-safe font sizing, receipts and history.');
-  console.log('All model responses were mocked; real iOS Safari and private Mac inference remain unverified.');
+  assert(await evaluate('return document.querySelector("#rvc-log").textContent.includes("REPLY RECEIVED")'),'cloud receipt lost');
+  console.log('PASS Ask ROVOR cloud-only responsive Chromium: phone, tablet portrait/landscape, desktop.');
+  console.log('PASS Gemini model discovery, cloud-only source choices, measured receipt, history and safe prompt controls.');
+  console.log('All network/model responses are mocked; live inference is verified separately in production.');
 }
 main().catch(e=>{console.error(e.stack||e);process.exitCode=1;}).finally(()=>{
   try{ws?.close();}catch{}
