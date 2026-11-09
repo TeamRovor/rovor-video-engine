@@ -6000,7 +6000,7 @@
         "https://github.com/TeamRovor/rovor-video-engine/issues/309",
         "https://github.com/TeamRovor/rovor-video-engine/pull/316"
       ],
-      "updated_at": "2026-11-09",
+      "updated_at": "2026-11-09T10:21:00Z",
       "blocker": "Stacked draft PR #316 awaits GitHub-hosted safety/mobile CI, review and integration into PR #314. Existing Cloudflare and private Sites are not deployed by this patch.",
       "validation": {
         "status": "isolated-v8-2-pass/github-actions-unverified/not-deployed",
