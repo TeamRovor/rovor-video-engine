@@ -442,3 +442,26 @@ test('Mac-off Workload Distribution keeps independently verified cloud Groq rece
  assert.match(rejected,/Independent cloud Groq status unavailable/);
  assert.doesNotMatch(rejected,/input\/output tokens 77 \/ 47/);
 });
+
+test('Cloud Groq quota panel shows only fresh provider RPD/TPM headers without Mac or false billing claims',()=>{
+ const at=new Date().toISOString();
+ const data={source:'cloud_direct_groq',mac_required:false,model:'groq/openai/gpt-oss-20b',
+   observed_at:at,ready:false,locally_admitted_today:0,
+   catalog:{source:'groq_api_models_catalog',state:'catalog_received',
+     model_present:true,observed_at:at,
+     requests_per_day:{unit:'requests',window:'day',limit:1000,remaining:975,used:25,reset_at:null},
+     tokens_per_minute:{unit:'tokens',window:'minute',limit:8000,remaining:7470,used:530,reset_at:null}}};
+ const html=board().render(null,false,null,null,null,null,data);
+ assert.match(html,/CLOUD GROQ · DIRECT · NO MAC REQUIRED/);
+ assert.match(html,/GROQ API · model IN CATALOG/);
+ assert.match(html,/Daily requests \(RPD\): 975 \/ 1,000 remaining/);
+ assert.match(html,/tokens\/min \(TPM\): 7,470 \/ 8,000 remaining/);
+ assert.match(html,/billing status NOT VERIFIED by headers/);
+ assert.match(html,/NOT VERIFIED \/ DISABLED/);
+ assert.doesNotMatch(html,/role="progressbar" aria-label="Reported quota used"/);
+ data.catalog.state='stale';
+ const stale=board().render(null,false,null,null,null,null,data);
+ assert.match(stale,/Daily requests \(RPD\): UNKNOWN/);
+ assert.match(stale,/tokens\/min \(TPM\): UNKNOWN/);
+ assert.doesNotMatch(stale,/975 \/ 1,000 remaining/);
+});
