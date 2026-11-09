@@ -173,7 +173,8 @@ def summarize_workforce(token: str, opener=None) -> dict:
               "owner_stop": "unknown", "eligible_providers": None,
               "queue_pending": None, "pending_reviews": None,
               "last_scheduled_shift": "unknown", "native_schedule_verified": False,
-              "actual_recent_model_attempts": None}
+              "actual_recent_model_attempts": None,
+              "reported_employee_roles": None, "recent_review_ready_attempts": None}
     if not credential(token):
         result["service"] = "blocked_service_secret_missing"
         return result
@@ -210,10 +211,19 @@ def summarize_workforce(token: str, opener=None) -> dict:
             if state in {"stopped", "idle", "dispatched", "failed", "running"}:
                 result["last_scheduled_shift"] = state
     result["native_schedule_verified"] = data.get("native_clock_verified") is True
+    employees = data.get("employees")
+    if isinstance(employees, list):
+        names = {e.get("name") for e in employees if isinstance(e, dict) and
+                 e.get("name") in {"Walter","Mike","Jane","Jesse","Gale","Gus","Saul","Hank"}}
+        result["reported_employee_roles"] = len(names)
     attempts = data.get("attempts")
     if isinstance(attempts, list):
         result["actual_recent_model_attempts"] = sum(
             a.get("status") in ("needs_review", "succeeded", "failed", "completed")
+            for a in attempts if isinstance(a, dict)
+        )
+        result["recent_review_ready_attempts"] = sum(
+            a.get("status") == "needs_review" and a.get("human_review") == "not_recorded"
             for a in attempts if isinstance(a, dict)
         )
     return result
@@ -271,6 +281,8 @@ def summary(report: dict) -> str:
         f"| Pending PASS/FAIL reviews | {workers['pending_reviews'] if workers['pending_reviews'] is not None else 'unknown'} |",
         f"| Last scheduled shift | {workers['last_scheduled_shift']} |",
         f"| Native schedule independently verified | {workers['native_schedule_verified']} |",
+        f"| Employee roles observed (not online proof) | {workers['reported_employee_roles'] if workers['reported_employee_roles'] is not None else 'unknown'} / 8 |",
+        f"| Recent unreviewed draft attempts (bounded sample) | {workers['recent_review_ready_attempts'] if workers['recent_review_ready_attempts'] is not None else 'unknown'} |",
         f"| Recent recorded attempts (bounded sample) | {workers['actual_recent_model_attempts'] if workers['actual_recent_model_attempts'] is not None else 'unknown'} |",
         "",
         "### Deployment readiness",
