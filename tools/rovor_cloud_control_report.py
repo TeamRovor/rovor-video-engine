@@ -149,7 +149,7 @@ def summarize_hud(reader: str, opener=None) -> dict:
         all_models = m.get("models")
         # Listing is evidence that models were enumerated with the key,
         # not proof a generation request works or has remaining free quota.
-        known = {"gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite",
+        known = {"gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite",
                  "gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"}
         direct = [x for x in all_models if x != "gemini-auto-free"] if isinstance(all_models,list) else []
         ready = (m.get("online") is True and m.get("mac_required") is False and
