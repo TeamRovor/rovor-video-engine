@@ -34,7 +34,8 @@ async function main(){
     const route=new URL(req.url,'http://127.0.0.1').pathname;
     if(route==='/hud-chat.js'){res.writeHead(200,{'Content-Type':'text/javascript'});return res.end(js);}
     if(route==='/api/hud/chat/models')return respond(res,{online:true,models:[model,otherModel]});
-    if(route==='/api/chat/models')return respond(res,{models:['@cf/meta/llama-3.1-8b-instruct']});
+    if(route==='/api/chat/models')return respond(res,{models:['@cf/meta/llama-3.1-8b-instruct','groq/openai/gpt-oss-20b']});
+    if(route==='/api/chat/groq/status')return respond(res,{source:'cloud_direct_groq',model:'groq/openai/gpt-oss-20b',ready:true,mac_required:false,locally_admitted_today:1,last_cloud_completion_at:new Date().toISOString(),last_prompt_tokens:77,last_completion_tokens:47,remaining_provider_quota:'unknown'});
     if(route==='/api/hud/omniroute')return respond(res,{snapshot_at:new Date().toISOString(),
       transport:{connection:'fresh'},connections:['gemini','groq','nvidia','mistral','cohere','sambanova',
         'cloudflare-ai','openrouter','huggingface'].map(provider=>({provider,name:provider,enabled_count:1,connection_count:1}))});
@@ -98,7 +99,13 @@ async function main(){
     await cmd('Page.navigate',{url:origin+'/?v='+encodeURIComponent(name)});
     await waitFor(()=>evaluate('return !!document.querySelector("#rvc-fab")'),name+' launcher');
     await evaluate('document.querySelector("#rvc-fab").click();return true');
-    await waitFor(()=>evaluate('return Array.from(document.querySelectorAll("#rvc-model option")).some(x=>x.value==="openrouter/example:free")'),name+' model');
+    // The cloud path must work as the default, without a Mac or a Mac route.
+    await waitFor(()=>evaluate('return Array.from(document.querySelectorAll("#rvc-model option")).some(x=>x.value==="groq/openai/gpt-oss-20b")'),name+' cloud Groq model');
+    assert.equal(await evaluate('return document.querySelector("#rvc-source").value'),'cloudflare');
+    await waitFor(()=>evaluate('return document.querySelector(".rvc-provider-inspect summary").textContent.includes("NO MAC REQUIRED")'),name+' Mac-independent cloud status');
+    // Preserve the legacy local OmniRoute tests by explicitly opting into it.
+    await evaluate('const p=document.querySelector("#rvc-source");p.value="omniroute";p.dispatchEvent(new Event("change",{bubbles:true}));return true');
+    await waitFor(()=>evaluate('return Array.from(document.querySelectorAll("#rvc-model option")).some(x=>x.value==="openrouter/example:free")'),name+' optional Mac model');
     const info=await evaluate('const p=document.querySelector("#rvc"),r=p.getBoundingClientRect();return {width:r.width,height:r.height,vw:innerWidth,vh:innerHeight,textarea:parseFloat(getComputedStyle(document.querySelector("#rvc textarea")).fontSize),select:parseFloat(getComputedStyle(document.querySelector("#rvc-source")).fontSize),overflow:document.documentElement.scrollWidth>innerWidth+3}');
     assert(info.width<=info.vw+3,name+': horizontal overflow');
     assert(info.height<=info.vh+4,name+': vertical overflow');
@@ -136,8 +143,8 @@ async function main(){
   await cmd('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   await cmd('Page.navigate',{url:origin+'/conversation'});
   await waitFor(()=>evaluate('return !!document.querySelector("#rvc-fab")'),'conversation launcher');
-  await evaluate('document.querySelector("#rvc-fab").click();return true');
-  await waitFor(()=>evaluate('return !!document.querySelector("#rvc-model option[value=\\"openrouter/example:free\\"]")'),'conversation catalog');
+  await evaluate('document.querySelector("#rvc-fab").click();const p=document.querySelector("#rvc-source");p.value="omniroute";p.dispatchEvent(new Event("change",{bubbles:true}));return true');
+  await waitFor(()=>evaluate('return !!document.querySelector("#rvc-model option[value=\\"openrouter/example:free\\"]")'),'optional Mac conversation catalog');
   await evaluate('document.querySelector("#rvc-repo-file").value="integrations/hud-cloud/worker.mjs";document.querySelector("#rvc textarea").value="Say hello";document.querySelector("#rvc form").requestSubmit();return true');
   await waitFor(()=>evaluate('return !!document.querySelector(".rvc-receipt")&&document.querySelector(".rvc-receipt").textContent.includes("REPLY RECEIVED")'),'confirmed receipt');
   assert.equal(submits,1,'one chat submission expected');
@@ -164,9 +171,9 @@ async function main(){
   assert(await evaluate('return document.querySelector("#rvc-log").textContent.includes("mistral/owner-approved-test-route")'),
     'second model reply missing from transcript');
   console.log('PASS opt-in two-model task routing: two distinct requested IDs and separate completion receipts.');
-  console.log('PASS Ask ROVOR responsive Chromium: iPhone, iPad portrait/landscape, Mac/Windows desktop.');
+  console.log('PASS Cloud Groq Mac-independent default and optional local OmniRoute; responsive Chromium: iPhone, iPad portrait/landscape, Mac/Windows desktop.');
   console.log('PASS model discovery, nine historical provider slots, keyboard-safe font sizing, receipts and history.');
-  console.log('All model responses were mocked; real iOS Safari and private Mac inference remain unverified.');
+  console.log('All model responses were mocked; real cloud Groq API and iOS Safari remain unverified.');
 }
 main().catch(e=>{console.error(e.stack||e);process.exitCode=1;}).finally(()=>{
   try{ws?.close();}catch{}
