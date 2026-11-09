@@ -19,6 +19,7 @@ function mockGoogle(ids=[model,fast,strong],replyStatus=200){
   const send=async(url,options)=>{
     calls.push({url,options});
     assert.equal(options.headers['x-goog-api-key'],key);
+    assert.equal(options.redirect,'manual','Cloudflare Workers accepts manual redirect handling, not error');
     if(options.method==='GET'){
       assert.match(url,/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\?pageSize=100/);
       return Response.json({models:[
@@ -196,6 +197,39 @@ test('An unlisted model is never attempted, even when published as Free tier',as
   const r=await cloudGeminiChat(contents,e,now,g.send);
   assert.equal(r.status,409);
   assert.equal(g.calls.filter(x=>x.options.method==='POST').length,0);
+});
+
+test('Google catalogue redirect is denied before any model becomes available',async()=>{
+  const e=env();let calls=0;
+  const send=async(url,opts)=>{
+    calls++;assert.equal(opts.redirect,'manual');assert.equal(opts.method,'GET');
+    return new Response(null,{status:302,headers:{Location:'https://not-google.example/steal'}});
+  };
+  const catalog=await googleGeminiCatalog(e,send);
+  assert.equal(calls,1);
+  assert.equal(catalog.available,false);
+  assert.equal(catalog.reason,'google_catalog_redirect_denied');
+  const result=await cloudGeminiChat(contents,e,now,send);
+  assert.equal(result.status,503);
+  assert.equal(calls,2);
+});
+
+test('One Google inference redirect fails closed, records failure, and never replays',async()=>{
+  const e=env();let outbound=0;
+  const google=mockGoogle();
+  const send=async(url,opts)=>{
+    if(opts.method==='GET')return google.send(url,opts);
+    outbound++;
+    assert.equal(opts.redirect,'manual');
+    return new Response(null,{status:302,headers:{Location:'https://not-google.example/steal'}});
+  };
+  const result=await cloudGeminiChat(contents,e,now,send);
+  assert.equal(result.status,502);
+  assert.equal((await result.json()).error,'gemini_upstream_redirect_denied');
+  assert.equal(outbound,1);
+  const usage=await (await cloudGeminiUsage(e,now)).json();
+  assert.equal(usage.completed,0);
+  assert.equal(usage.models.find(x=>x.model===model).failures,1);
 });
 
 test('Existing HUD denies anonymous and cross-site Gemini requests',async()=>{
