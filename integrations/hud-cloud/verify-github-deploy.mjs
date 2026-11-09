@@ -83,8 +83,15 @@ export function hasNineProviderMeterAsset(js) {
   ].every(marker => js.includes(marker));
 }
 
+export function verifyCloudGroqReadback(status,models){
+  if(status?.source!=='cloud_direct_groq'||status?.mac_required!==false||
+      status?.ready!==true||status.model!=='groq/openai/gpt-oss-20b'||
+      !Array.isArray(models?.models)||!models.models.includes(status.model))
+    throw Error('cloud_groq_mac_independent_readback_failed');
+  return true;
+}
 export async function verifyGithubHud({origin, readerToken, send = fetch, expectedQuotaAsset = null,
-  expectedChatAsset = null, requireLiveTelemetry = true, pause = delay}) {
+  expectedChatAsset = null, expectCloudGroq = false, requireLiveTelemetry = true, pause = delay}) {
   origin = verifiedOrigin(origin);
   if (typeof readerToken !== 'string' || readerToken.length < 32)
     throw Error('readback_credentials_missing');
@@ -148,6 +155,19 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
         (!modelsDocument.online && modelsDocument.models.length!==0))
       throw Error('private_chat_model_endpoint_invalid');
   }
+  // A cloud Groq deployment is complete only when the deployed protected
+  // Worker advertises the route and independently reports no Mac requirement.
+  // Never send an inference request during deployment verification.
+  if(expectCloudGroq){
+    const [groqResponse,groqModelsResponse]=await Promise.all([
+      read('/api/chat/groq/status',true),read('/api/chat/models',true)]);
+    if(groqResponse.status!==200||groqModelsResponse.status!==200)
+      throw Error('cloud_groq_readback_endpoint_unavailable');
+    let groqStatus,groqModels;
+    try{groqStatus=await groqResponse.json();groqModels=await groqModelsResponse.json();}
+    catch{throw Error('cloud_groq_readback_json_invalid');}
+    verifyCloudGroqReadback(groqStatus,groqModels);
+  }
   const status = await read('/api/hud/status?period=24h', true);
   if (status.status !== 200) throw Error('private_D1_status_unavailable');
   const telemetry = await status.json();
@@ -197,7 +217,8 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
       if (requireLiveTelemetry) throw error;
     }
   }
-  return {private_auth_verified: true, original_hud_verified: true,
+  return {cloud_groq_mac_independent_verified: expectCloudGroq?true:null,
+    private_auth_verified: true, original_hud_verified: true,
     quota_board_verified: true, database_api_verified: true,
     quota_asset_matches_checkout: expectedQuotaAsset === null ? null : true,
     chat_asset_matches_checkout: expectedChatAsset === null ? null : true,
@@ -222,11 +243,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     readerToken: process.env.ROVOR_HUD_READER_TOKEN,
     expectedQuotaAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/live-quota-board.js', import.meta.url), 'utf8'),
     expectedChatAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/hud-chat.js', import.meta.url), 'utf8'),
-    requireLiveTelemetry: false})
+    requireLiveTelemetry: false,
+    expectCloudGroq: process.env.GROQ_HUD_CHAT_ENABLED==='true'})
     .then(result => {
       console.log(JSON.stringify(result));
       if (!result.mac_telemetry_verified)
-        console.warn('::warning::HUD code/privacy/readback verified, but Mac usage telemetry is not fresh or complete. No 24/7 model activity verified; check the Mac reporter separately.');
+        console.warn('::warning::Optional local OmniRoute telemetry is stale or incomplete. Mac is NOT required for configured cloud Groq chat; no live inference is asserted without an actual cloud receipt.');
     })
     .catch(error => {console.error('Private HUD release readback failed: ' + error.message);
       process.exitCode = 1;});
