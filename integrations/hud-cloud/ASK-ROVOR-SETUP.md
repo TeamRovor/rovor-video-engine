@@ -148,3 +148,15 @@ rate-limit headers are **not a billing plan verification**, and cannot override
 `groqCloudReady`, enable a paid route, or renew an expired zero-cost approval.
 The receipt trail for actual inference remains separate and requires the
 existing protected authorization and owner-approved quota gates.
+
+## Automatic deployment proof of the Groq cloud key
+
+After reviewed changes merge, the private GitHub Actions deployment now performs
+a read-only (non-inference) Cloudflare → Groq `/models` check whenever
+`GROQ_HUD_API_KEY` is present. The authenticated release readback reports
+`cloud_groq_key_catalog`: whether that exact cloud key can list
+`openai/gpt-oss-20b`, provider-supplied RPD/TPM headers if present, or a
+truthful error state such as `auth_rejected`. It logs no key, prompts or
+responses. This is distinct from the separate owner-approved free-only
+inference gate, which still fails closed until verified; a catalogue readback
+never claims an actual completion.
