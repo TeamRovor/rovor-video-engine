@@ -10,6 +10,7 @@ const API='https://api.github.com/repos/'+REPO;
 const HUD='https://rovor-hud-telemetry.rovordigital.workers.dev';
 const HOUR=3600000,DAY=86400000;
 export const MAX_AUTOMATED_DRAFTS_PER_UTC_DAY=6;
+export const MAX_DUPLICATE_PROBES_PER_RUN=6;
 
 const safeInteger=n=>Number.isSafeInteger(n)&&n>=1;
 const within=(raw,now,maxAge)=>{
@@ -106,10 +107,14 @@ export async function runDiscovery({env=process.env,send=fetch,now=Date.now()}={
    return {state:'daily_draft_budget_reached',queued:false,inspected:true};
  const seen=new Set(record.recent_keys);
  const choices=discoverCandidates({runs:runData.workflow_runs,issues:issueData,pulls:pullData},now);
- // D1 still rejects duplicates even if an old key has fallen out of the
- // bounded metadata readback. Never resubmit an already accepted source.
+ // D1 still rejects duplicates if an old key fell out of the bounded
+ // readback. Bound retries so stale PRs cannot flood the private Worker.
+ let probeCount=0;
  for(const pick of choices){
    if(seen.has(pick.key))continue;
+   if(probeCount>=MAX_DUPLICATE_PROBES_PER_RUN)
+     return {state:'duplicate_probe_budget_reached',queued:false,inspected:true};
+   probeCount++;
    let res;
    try{
      res=await send(HUD+'/api/hud/discovery',{
