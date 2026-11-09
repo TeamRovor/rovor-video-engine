@@ -48,7 +48,7 @@ test('idea intake rejects anonymous, cross-origin and unexpected methods',async(
  assert.equal((await handle(req('GET','/api/hud/ideas',undefined,false),e,NOW)).status,401);
  assert.equal((await handle(req('POST','/api/hud/ideas',idea,false),e,NOW)).status,401);
  assert.equal((await handle(req('POST','/api/hud/ideas',idea,true,'https://attacker.test'),e,NOW)).status,403);
- assert.equal((await handle(req('DELETE','/api/hud/ideas',undefined,true),e,NOW)).status,405);
+ assert.equal((await handle(req('DELETE','/api/hud/ideas',undefined,true),e,NOW)).status,401,'unsupported verbs never pass the reader authentication guard');
  assert.equal((await handle(new Request('https://hud.test/api/hud/ideas',{method:'POST',
    headers:{Cookie:'rovor_hud_reader='+TOKEN,Origin:'https://hud.test','Content-Type':'text/plain'},
    body:JSON.stringify(idea)}),e,NOW)).status,415);
