@@ -288,7 +288,7 @@
 #rvc .rvc-model-slot{display:flex;align-items:center;gap:7px;flex:1;min-width:0;max-width:465px}
 #rvc .rvc-model-slot select{width:100%;min-width:0;max-width:none!important}
 #rvc .rvc-model-browse{flex:0 0 44px;min-width:44px;min-height:44px;background:#103f69;border:1px solid #3c7eac;border-radius:11px;font-size:24px;line-height:1;color:#d5eeff}
-#rvc .rvc-model-sheet[hidden]{display:none!important}
+#rvc .rvc-local-quota-ring{width:76px;height:76px;border-radius:50%;padding:7px;display:grid;place-items:center;margin:8px 0}\n#rvc .rvc-local-quota-ring span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:#06192c;color:#e3f5ff;font-weight:750;font-size:12px}\n#rvc .rvc-model-sheet[hidden]{display:none!important}
 #rvc .rvc-model-sheet{position:absolute;z-index:12;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:#010915dc;backdrop-filter:blur(7px)}
 #rvc .rvc-model-sheet-card{width:min(580px,100%);max-height:min(670px,90%);display:flex;flex-direction:column;min-height:0;padding:20px;background:linear-gradient(155deg,#092442,#031222);border:1px solid #3c749e;border-radius:17px;box-shadow:0 20px 70px #000b}
 #rvc .rvc-model-sheet-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
@@ -598,7 +598,72 @@
     async function refreshProviderInventory(){
       if(panel.dataset.open!=='true')return;
       if(sourceSelect.value!=='omniroute'){
-        if(sourceSelect.value==='groq'){
+        if(sourceSelect.value==='gemini'){
+          try{
+            const [c,u]=await Promise.all([
+              fetch('/api/hud/gemini/models',{credentials:'same-origin',cache:'no-store'}),
+              fetch('/api/hud/gemini/usage',{credentials:'same-origin',cache:'no-store'})
+            ]);
+            if(!c.ok||!u.ok)throw Error('gemini_evidence_unavailable');
+            const catalog=await c.json(),usage=await u.json();
+            if(panel.dataset.open!=='true'||sourceSelect.value!=='gemini')return;
+            if(catalog.source!=='google_gemini_cloud_direct'||usage.source!=='cloud_gemini_direct'||
+               !Array.isArray(catalog.model_evidence)||!Array.isArray(usage.models)||
+               !Array.isArray(catalog.directly_listed_models)||!Number.isSafeInteger(usage.attempts)||
+               !Number.isSafeInteger(usage.completed)||!Number.isSafeInteger(usage.daily_local_cap)||
+               usage.daily_local_cap<1||!Number.isSafeInteger(usage.daily_local_remaining)||
+               usage.scope!=='this_hud_direct_api_only')throw Error('gemini_evidence_invalid');
+            const listed=catalog.directly_listed_models;
+            const recent=catalog.model_evidence.filter(m=>m.verification==='verified_recent_reply').length;
+            providerSummary.textContent='GOOGLE GEMINI · '+listed.length+' KEY-LISTED · '+recent+
+              ' VERIFIED RECENT REPLIES · NO MAC';
+            providerList.textContent='';
+            const total=el('div',{className:'rvc-provider-item'});
+            total.append(el('strong',{textContent:'LOCAL HUD LEDGER · '+usage.day+' UTC'}));
+            const used=Math.min(usage.daily_local_cap,usage.attempts);
+            const percent=Math.round(100*used/usage.daily_local_cap);
+            const ring=el('div',{className:'rvc-local-quota-ring'});
+            ring.style.background='conic-gradient(#47b9ff '+percent+'%,#163753 '+percent+'%)';
+            ring.setAttribute('role','img');
+            ring.setAttribute('aria-label',used+' of '+usage.daily_local_cap+' locally reserved Google Gemini API attempts');
+            ring.append(el('span',{textContent:used+' / '+usage.daily_local_cap}));
+            total.append(ring);
+            total.append(el('small',{textContent:'Reserved today '+usage.attempts+
+              ' · local remaining '+usage.daily_local_remaining+
+              ' · resets '+new Date(usage.daily_local_reset_at).toLocaleString()+' (UTC)'}));
+            total.append(el('small',{textContent:'Current minute local reservations left: '+
+              (Number.isSafeInteger(usage.minute_local_remaining)?usage.minute_local_remaining:'unknown')+
+              ' · '+usage.completed+' confirmed replies · '+usage.input_tokens+
+              ' Google-reported input tokens · '+usage.output_tokens+' Google-reported output tokens'}));
+            total.append(el('small',{textContent:'Google project-wide remaining RPM / TPM / RPD: UNKNOWN. '+
+              'Local reservations include denied upstream attempts. Google RPD resets midnight Pacific, '+
+              'which is DIFFERENT from the HUD UTC cap.'}));
+            providerList.append(total);
+            for(const id of listed){
+              const evidence=catalog.model_evidence.find(x=>x.model===id);
+              const measured=usage.models.find(x=>x.model===id);
+              const state=evidence?.verification==='provider_cooldown'?'429 COOLDOWN':
+                evidence?.verification==='verified_recent_reply'?'RECENT REPLY VERIFIED':'KEY-LISTED ONLY';
+              const chip=el('div',{className:'rvc-provider-item'});
+              chip.append(el('strong',{textContent:id+' · '+state}));
+              chip.append(el('small',{textContent:'This HUD today: '+
+                (measured?.attempts??0)+' reserved · '+(measured?.completed??0)+
+                ' completed · '+(measured?.failures??0)+' failed · '+
+                (measured?.input_tokens??0)+' prompt / '+(measured?.output_tokens??0)+' output tokens'}));
+              if(evidence?.last_verified_at||evidence?.last_verified_day)
+                chip.append(el('small',{textContent:'Last confirmed reply: '+
+                  (evidence.last_verified_at?new Date(evidence.last_verified_at).toLocaleString():
+                    evidence.last_verified_day+' (UTC day only)')}));
+              if(evidence?.cooldown_until)
+                chip.append(el('small',{textContent:'Provider 429: paused until '+
+                  new Date(evidence.cooldown_until).toLocaleString()+' · NOT Google quota reset'}));
+              providerList.append(chip);
+            }
+          }catch{
+            providerSummary.textContent='GOOGLE GEMINI METRICS UNAVAILABLE · NO QUOTA INFERRED';
+            providerList.textContent='';
+          }
+        }else if(sourceSelect.value==='groq'){
           try{
             const response=await fetch('/api/chat/groq/status?refresh=1',{credentials:'same-origin',cache:'no-store'});
             if(!response.ok)throw Error('cloud_status_unavailable');
@@ -684,8 +749,13 @@
           const group=omni?routeGroup(id):requestedSource==='gemini'?'Google Gemini · cloud direct':requestedSource==='groq'?'Groq · cloud direct':'Cloudflare AI hosted routes';
           if(!groups.has(group)){const optgroup=el('optgroup',{label:group});groups.set(group,optgroup);select.append(optgroup);}
           const measured=geminiUsage?.models?.find(x=>x.model===id);
-          const display=requestedSource==='gemini'&&id==='gemini-auto-free'?'✦ Smart Gemini · choose by task':id;
-          const label=requestedSource==='gemini'&&measured?display+' · '+measured.completed+' replies today':display;
+          const evidence=requestedSource==='gemini'?info.model_evidence?.find(x=>x.model===id):null;
+          const display=requestedSource==='gemini'&&id==='gemini-auto-free'?'✦ Smart Gemini · verified routes only':id;
+          const state=evidence?.verification==='verified_recent_reply'?' · VERIFIED reply (7d)':
+            evidence?.verification==='provider_cooldown'?' · 429 cooldown':
+            evidence?' · listed, unverified':'';
+          const label=requestedSource==='gemini'&&measured?
+            display+state+' · '+measured.completed+' replies today':display+state;
           groups.get(group).append(el('option',{value:id,textContent:label}));
         }
         if(!select.options.length)throw Error('catalog_unavailable');
@@ -696,12 +766,13 @@
         else if(omni)select.value=AUTO_ROUTE;
         else if(requestedSource==='gemini'&&models.includes('gemini-auto-free'))select.value='gemini-auto-free';
         stateLabel.textContent=omni?('Mac bridge reported · '+select.options.length+' allowed routes · confirm a reply to verify use · optional local execution'):
-          requestedSource==='gemini'?'Google key catalog lists '+Math.max(0,models.length-(models.includes('gemini-auto-free')?1:0))+' approved free-priced text models · reply/remaining quota still need verification':
+          requestedSource==='gemini'?'Google key lists '+Math.max(0,models.length-(models.includes('gemini-auto-free')?1:0))+
+             ' approved text routes · '+(info.verified_model_count??'unknown')+' recently verified · external quota UNKNOWN':
           requestedSource==='groq'?'Groq cloud route available · no Mac required · remaining quota unverified':
           ('Cloudflare AI · '+select.options.length+' hosted models listed · allowance unverified');
         modelSheetInfo.textContent=omni
           ?'Mac-advertised chat routes only. Free-tagged model routes and Owner-allowlisted model routes still need live inference and free-quota checks.'
-          :requestedSource==='gemini'?'Direct Google Gemini cloud API. Smart Gemini selects a verified-free-listed text route by task. Each model has independent usage receipts; remaining Google account quotas are not verified. Free-tier content may be used by Google to improve services.':requestedSource==='groq'?'Direct Groq cloud API; Mac not required. Requires current owner-verified free-tier approval. Quota remaining is unknown.':'Cloudflare-hosted inference is separate from OmniRoute. Its allowance is not guaranteed.';
+          :requestedSource==='gemini'?'Direct Google Gemini cloud API. Smart Gemini uses only models with confirmed replies in the past seven days, choosing by task. A manually selected, key-listed route can establish a new verified model. Circular meters show this HUD\'s reserved requests, NOT Google project-wide quota. Free-tier content may be used by Google to improve services.':requestedSource==='groq'?'Direct Groq cloud API; Mac not required. Requires current owner-verified free-tier approval. Quota remaining is unknown.':'Cloudflare-hosted inference is separate from OmniRoute. Its allowance is not guaranteed.';
         ready=true;send.disabled=false;modelBrowse.disabled=false;updatePlan();
       }catch{
         if(epoch!==loadEpoch)return;
@@ -958,7 +1029,7 @@
         // text to the next model as if it were an assistant answer.
         history.push({role:'assistant',content:message,platform,model:target,receipt:pendingJob?.id||null,outcome:'failed',recordedAt:Date.now()});save();
         redraw();
-      }finally{pendingJob=null;controller=null;setBusy(false);updatePlan();}
+      }finally{pendingJob=null;controller=null;setBusy(false);updatePlan();if(platform==='gemini'&&panel.dataset.open==='true'){refreshProviderInventory();load();}}
     }
 
     repoRow.hidden=sourceSelect.value!=='omniroute';repoSelect.disabled=repoRow.hidden;
