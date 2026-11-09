@@ -206,7 +206,9 @@ export async function cloudGeminiUsage(env,now=Date.now()){
       failures:safeCount(m.failures),input_tokens:safeCount(m.input_tokens),
       output_tokens:safeCount(m.output_tokens),
       last_error_code:['provider_429','provider_error','invalid_response','no_completed_text',
-        'transport_error','receipt_error',null].includes(m.last_error_code)?m.last_error_code:null
+        'transport_error','receipt_error','google_400_request_rejected','google_401_auth_denied',
+        'google_403_access_denied','google_404_model_unavailable','google_5xx_service_error',
+        'google_other_http_error',null].includes(m.last_error_code)?m.last_error_code:null
     }));
     return Response.json({source:'cloud_gemini_direct',provider:'google',mac_required:false,
       day,observed_at:new Date(now).toISOString(),scope:'this_hud_direct_api_only',
@@ -289,8 +291,17 @@ export async function cloudGeminiChat(body,env,now=Date.now(),send=fetch){
     return fixedError(429,'gemini_provider_rate_limited');
   }
   if(!upstream.ok){
-    await modelFailed(env.DB,day,model,'provider_error');
-    return fixedError(502,'gemini_upstream_failed');
+    // An upstream 400/403/404 or 5xx is not a quota observation.
+    // Expose only the safe status class, never the Google response body,
+    // key, or a guessed claim about billing/free-tier entitlement.
+    const code=upstream.status===400?'google_400_request_rejected':
+      upstream.status===401?'google_401_auth_denied':
+      upstream.status===403?'google_403_access_denied':
+      upstream.status===404?'google_404_model_unavailable':
+      upstream.status>=500&&upstream.status<=599?'google_5xx_service_error':
+      'google_other_http_error';
+    await modelFailed(env.DB,day,model,code);
+    return fixedError(502,code);
   }
   let data;
   try{data=await upstream.json();}catch{
