@@ -202,3 +202,14 @@ test('a slow model reply keeps the private Mac bridge online without repeating i
   assert.equal(inference,1,'a heartbeat must never repeat the model prompt');
   assert.equal(finished,1);
 });
+
+test('Groq chat route needs explicit owner allowlist, and installer reuses existing Cloudflare writer key',()=>{
+  const id='groq/openai/gpt-oss-20b';
+  assert.deepEqual(eligibleModels([id]),[]);
+  assert.deepEqual(eligibleModels([id],[id]),[id]);
+  const installer=readFileSync(new URL('../tools/install_hud_chat_relay.sh',import.meta.url),'utf8');
+  const client=readFileSync(new URL('../tools/hud_chat_relay_client.mjs',import.meta.url),'utf8');
+  assert.match(installer,/rovordigital\\.hud\\.cloudflare\\.writer/);
+  assert.match(client,/fromKeychain\\('rovordigital\\.hud\\.cloudflare\\.writer'\\)/);
+  assert.match(installer,/ROVOR_HUD_CHAT_FREE_MODELS/);
+});
