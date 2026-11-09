@@ -78,6 +78,17 @@ test('global six-per-UTC-day limit persists and resets with next day',async()=>{
  assert.equal(all.items.length,7);
  assert(all.items.every(x=>x.state==='pending_review'));
 });
+test('concurrent runners cannot exceed six accepted proposals or duplicate one evidence key',async()=>{
+ const e=env();
+ const results=await Promise.all(Array.from({length:20},(_,i)=>
+   submitDiscovery(e.DB,idea(200+i),NOW,()=>uuid(200+i))));
+ assert.equal(results.filter(x=>x.status===202).length,6);
+ assert.equal(results.filter(x=>x.status===429).length,14);
+ const same=await Promise.all(Array.from({length:5},(_,i)=>
+   submitDiscovery(e.DB,idea(200),NOW+1000,()=>uuid(400+i))));
+ assert(same.every(x=>x.status===409));
+ assert.equal((await discoveryStatus(e.DB,NOW)).body.submitted_today,6);
+});
 test('malformed and credential-looking findings are rejected before database writes',async()=>{
  const e=env(),bad=[
  {text:'[ROVOR-DISCOVERY:run-1] work',key:'../.env',priority:90},
