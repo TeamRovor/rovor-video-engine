@@ -2,6 +2,7 @@ import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';
 import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';
 import {probeGroqCatalogue} from './groq-quota-monitor.mjs';
 import {submitIdea,listIdeas} from './idea-inbox.mjs';
+import {getRepoSource} from './repo-source.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
 import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';
 // Private telemetry only: no inference, job dispatch, or Mac control.
@@ -439,6 +440,12 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
         return response(result.status,result.body);
       }
       return response(405,{error:'method_not_allowed'});
+    }
+    // Source excerpt is pinned to this reviewed Cloudflare deployment's exact
+    // Git SHA. There are no browser-supplied Git paths or GitHub credentials.
+    if(request.method==='GET'&&url.pathname==='/api/hud/github/source'){
+      const result=await getRepoSource(env,request,url.searchParams.get('path'));
+      return response(result.status,result.body);
     }
     if (request.method === 'GET' && url.pathname === '/api/chat/models')
       return response(200,{models:[...(env.AI?CHAT_MODELS:[]),...(groqCloudReady(env,now)?[GROQ_CLOUD_ROUTE]:[])]});
