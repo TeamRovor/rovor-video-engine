@@ -81,8 +81,7 @@ function db(){
           return {meta:{changes:1}};
         }
       }; }
-    };}
-    },
+    };},
     async batch(statements){return Promise.all(statements.map(s=>s.run()));}
   };
 }
