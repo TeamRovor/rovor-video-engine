@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {eligibleModels,readEvents,executeClaim} from '../tools/hud_chat_relay_client.mjs';
+import {eligibleModels,readEvents,executeClaim,hudWriterCredential} from '../tools/hud_chat_relay_client.mjs';
 import {cleanCatalog,cleanReply,catalog,enqueue,RELAY} from '../integrations/hud-cloud/omniroute-chat-relay.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 
@@ -83,4 +83,22 @@ test('truncated model stream cannot manufacture a completed inference receipt',a
   const result=await executeClaim(chat,job,new AbortController().signal);
   assert.deepEqual(result,{state:'failed',error:'chat_upstream_failed'});
   assert.equal(released,true,'release local busy gate even after partial disconnect');
+});
+
+// The installed Mac reporter has used the Cloudflare-named Keychain entry.
+// Asking for a second secret prevents the chat relay from reaching this HUD.
+test('Ask ROVOR reuses the existing private Cloudflare writer credential', async()=>{
+  const calls=[];
+  const get=async service=>{calls.push(service);return service==='rovordigital.hud.cloudflare.writer'?'existing-secret':null;};
+  assert.equal(await hudWriterCredential(get),'existing-secret');
+  assert.deepEqual(calls,['rovordigital.hud.cloudflare.writer']);
+  assert.equal(await hudWriterCredential(async service=>service==='rovordigital.hud.writer'?'canonical-secret':null),'canonical-secret');
+});
+
+test('an approved exact Google Gemini route is distinct from Cloudflare Gemma',()=>{
+  const listed=['gemini/gemini-3.1-flash-lite','@cf/google/gemma-3-12b-it','openrouter/example:free'];
+  assert.deepEqual(eligibleModels(listed),['openrouter/example:free']);
+  assert.deepEqual(eligibleModels(listed,['gemini/gemini-3.1-flash-lite']),[
+    'gemini/gemini-3.1-flash-lite','openrouter/example:free']);
+  assert(!eligibleModels(listed,['gemini/gemini-3.1-flash-lite']).includes('@cf/google/gemma-3-12b-it'));
 });
