@@ -1,0 +1,80 @@
+name: Verify one Google Gemini model on existing ROVOR HUD
+
+# One owner-authorized FREE-tier direct Gemini request at most.
+# GitHub-hosted, no Mac, no paid fallback, no automatic retries.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Audit without a model call, or verify exactly one approved key-listed text model"
+        type: choice
+        required: true
+        default: audit_only
+        options: [audit_only, verify_one_model]
+      model:
+        description: "Exact Google model to verify (only used with verify_one_model)"
+        type: choice
+        required: true
+        default: gemini-3.1-flash-lite
+        options:
+          - gemini-3.8-flash
+          - gemini-3.7-flash
+          - gemini-3.6-flash
+          - gemini-3.5-flash
+          - gemini-3.5-flash-lite
+          - gemini-3.1-flash-lite
+          - gemini-2.5-flash
+          - gemini-2.5-flash-lite
+      free_tier_confirmed:
+        description: "I verified this Google project/model is Free-tier; authorize one small test request"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rovor-gemini-single-model-coverage
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.repository == 'TeamRovor/rovor-video-engine' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    environment: rovor-hud-production
+    env:
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+      ROVOR_GEMINI_TEST_MODEL: ${{ inputs.model }}
+      ROVOR_CANARY_MODE: ${{ inputs.mode }}
+      ROVOR_CANARY_FREE_CONFIRMED: ${{ inputs.free_tier_confirmed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify exact allowed model and owner confirmation
+        run: |
+          set -euo pipefail
+          if [ "$ROVOR_CANARY_MODE" = 'verify_one_model' ] && [ "$ROVOR_CANARY_FREE_CONFIRMED" != 'true' ]; then
+            echo "::error title=Free tier approval required::No Google request sent. Explicitly confirm that this project and model are Free-tier."
+            exit 1
+          fi
+          node --check integrations/hud-cloud/verify-cloud-gemini.mjs
+          node --check integrations/hud-cloud/verify-live-gemini-catalog.mjs
+      - name: Audit actual private Google catalog and D1 usage without inference
+        run: node integrations/hud-cloud/verify-live-gemini-catalog.mjs
+      - name: Verify precisely one model (no retry, D1 rate limited)
+        if: inputs.mode == 'verify_one_model'
+        run: node integrations/hud-cloud/verify-cloud-gemini.mjs
+      - name: Publish precise outcome
+        run: |
+          if [ "$ROVOR_CANARY_MODE" = 'audit_only' ]; then
+            echo '### Read-only Gemini catalog/usage inspection — no model request sent' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Verified a real Google Gemini reply and matching D1 receipt for $ROVOR_GEMINI_TEST_MODEL" >> "$GITHUB_STEP_SUMMARY"
+            echo 'All other catalog-listed models remain unverified until their own recorded reply. No Mac.' >> "$GITHUB_STEP_SUMMARY"
+          fi
