@@ -5984,7 +5984,7 @@
       "id": "ask-rovor-model-intelligence-20261109",
       "title": "Add fail-closed Ask ROVOR nine-provider model intelligence and selection contract",
       "priority": 1,
-      "status": "active",
+      "status": "blocked",
       "owner": "ChatGPT / Amar Ask ROVOR 2.0 registry session 2026-11-09",
       "branch": "feature/ask-rovor-model-intelligence-20261109",
       "scopes": [
@@ -5993,13 +5993,24 @@
         "integrations/hud-cloud/ASK-ROVOR-MODEL-REGISTRY.md"
       ],
       "depends_on": [],
-      "next_update": "After local focused Node.js tests and owner review of a draft PR for Issue #309",
-      "next_action": "Create read-only cloud-first registry from provider catalog and separately supplied eligibility receipts, fail-closed selector, and deterministic unit tests. Do not wire to production inference or change existing HUD yet.",
+      "next_update": "After owner review and hosted CI on draft PR #312",
+      "next_action": "Draft PR #312 contains read-only registry, strict dispatcher-intent contract, 18/18 offline Node 22 tests and rollout notes. Owner: review exact PR head and run hosted tests; only then merge. Separate future PR must provide authenticated server-side evidence adapter and atomic quotas before any production routing.",
       "acceptance": "All nine providers represented; exact model IDs and independently dated eligibility, billing and quota evidence; no unverified inference; manual selection and STOP fail closed; deterministic quality/latency preference instead of round robin; tests pass; PR review only.",
       "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/issues/309"
+        "https://github.com/TeamRovor/rovor-video-engine/issues/309",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/312"
       ],
-      "updated_at": "2026-11-09"
+      "updated_at": "2026-11-09",
+      "blocker": "Owner/hosted CI review pending; this standalone module is not wired to current Ask ROVOR worker or deployed. No live model selection or provider inference claimed.",
+      "validation": {
+        "status": "local-isolated-pass/hosted-ci-unverified/no-live-routing",
+        "commands": [
+          "node --check integrations/hud-cloud/ask-rovor-model-registry.mjs",
+          "node --test tests/test_ask_rovor_model_registry.mjs"
+        ],
+        "result": "Node.js v22.16.0 isolated local 18/18 PASS, remote code/tests/doc re-fetched and content hashes match. Not tested in GitHub-hosted CI or Cloudflare production.",
+        "branch": "feature/ask-rovor-model-intelligence-20261109"
+      }
     }
   ]
 }
