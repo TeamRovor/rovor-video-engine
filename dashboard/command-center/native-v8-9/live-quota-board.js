@@ -1354,7 +1354,10 @@ function startCloud(){
     });
   });
   observer.observe(document.body,{childList:true,subtree:true});
-  setInterval(()=>{void sync();},10000);
+  // A compact home preview needs a steady pulse but not full-drawer 10s
+  // polling overhead: refresh the home source at most once per minute.
+  // The open Workload drawer still receives the existing 10s cadence.
+  setInterval(()=>{if(slot()||Date.now()-updated>=60000)void sync();},10000);
   void sync();
 }
 
