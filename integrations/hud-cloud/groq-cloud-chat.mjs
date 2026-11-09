@@ -53,8 +53,8 @@ async function reserve(db,now,limit){
 
 export async function cloudGroqStatus(env,db,now=Date.now()) {
   const ready=groqCloudReady(env,now);
-  const usage=await db.prepare('SELECT day_id,attempts,last_started_at FROM hud_groq_chat_admission WHERE id=1').first();
-  const receipt=await db.prepare('SELECT created_at,model,prompt_tokens,completion_tokens FROM hud_groq_chat_receipts ORDER BY created_at DESC LIMIT 1').first();
+  const usage=await db.prepare('SELECT day_id,attempts,last_started_at FROM hud_groq_chat_admission WHERE id=1').bind().first();
+  const receipt=await db.prepare('SELECT created_at,model,prompt_tokens,completion_tokens FROM hud_groq_chat_receipts ORDER BY created_at DESC LIMIT 1').bind().first();
   return {source:'cloud_direct_groq',model:GROQ_CLOUD_ROUTE,ready,mac_required:false,
     observed_at:new Date(now).toISOString(),
     locally_admitted_today:usage?.day_id===Math.floor(now/DAY)?usage.attempts:0,
