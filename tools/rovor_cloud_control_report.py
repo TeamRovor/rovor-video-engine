@@ -49,6 +49,9 @@ def credential(value: str, minimum: int = 32) -> bool:
 
 def deployment_secrets(env: dict) -> dict:
     google = env.get("ROVOR_GEMINI_API_KEY") or env.get("GEMINI_API_KEY") or ""
+    # Reuse the existing private Cloudflare Worker secret when its NAME has
+    # been read through the authenticated Cloudflare API. No secret values move.
+    existing_cloud_google = env.get("ROVOR_CLOUDFLARE_GEMINI_SECRET_PRESENT") == "true"
     hud_writer = env.get("ROVOR_HUD_WRITER_TOKEN", "")
     hud_reader = env.get("ROVOR_HUD_READER_TOKEN", "")
     d1 = env.get("ROVOR_HUD_D1_ID", "")
@@ -61,7 +64,7 @@ def deployment_secrets(env: dict) -> dict:
         "private_hud_reader": credential(hud_reader),
         "private_hud_writer": credential(hud_writer) and hud_reader != hud_writer,
         "original_hud_origin": origin.rstrip("/") == HUD_ORIGIN,
-        "google_free_project_key": credential(google, 24),
+        "google_free_project_key": credential(google, 24) or existing_cloud_google,
         "private_site_service_token": credential(env.get("ROVOR_GHOST_SERVICE_TOKEN", "")),
     }
 
