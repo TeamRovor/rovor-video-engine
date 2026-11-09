@@ -38,6 +38,7 @@ test('collector polls only four official Cloud Monitoring GET metrics with scope
   fetcher:async(url,options)=>{
    const u=new URL(url);paths.push(u);
    assert.equal(options.method,'GET');
+   assert.equal(options.redirect,'manual');
    assert.equal(options.headers.Authorization,'Bearer test-auth-token-at-least-20-characters');
    assert.equal(u.hostname,'monitoring.googleapis.com');
    assert.equal(u.pathname,'/v3/projects/'+project+'/timeSeries');
@@ -76,5 +77,18 @@ test('pagination is never silently interpreted as comprehensive project metric r
   tokenProvider:async()=> 'test-auth-token-at-least-20-characters',
   fetcher:async()=>Response.json({timeSeries:[],nextPageToken:'more'})});
  assert.equal(result.status,'metric_page_incomplete');
+ assert.deepEqual(result.models,[]);
+});
+
+test('Cloudflare Google Monitoring never follows a redirect to another host',async()=>{
+ let calls=0;
+ const result=await readGoogleGeminiQuota(base,{now:NOW,
+  tokenProvider:async()=> 'test-auth-token-at-least-20-characters',
+  fetcher:async(url,options)=>{
+   calls++;assert.equal(options.redirect,'manual');
+   return new Response(null,{status:302,headers:{Location:'https://not-google.example/steal'}});
+  }});
+ assert.equal(calls,1);
+ assert.notEqual(result.status,'sampled_project_quota');
  assert.deepEqual(result.models,[]);
 });
