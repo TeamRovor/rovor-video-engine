@@ -209,7 +209,7 @@ test('Groq chat route needs explicit owner allowlist, and installer reuses exist
   assert.deepEqual(eligibleModels([id],[id]),[id]);
   const installer=readFileSync(new URL('../tools/install_hud_chat_relay.sh',import.meta.url),'utf8');
   const client=readFileSync(new URL('../tools/hud_chat_relay_client.mjs',import.meta.url),'utf8');
-  assert.match(installer,/rovordigital\\.hud\\.cloudflare\\.writer/);
-  assert.match(client,/fromKeychain\\('rovordigital\\.hud\\.cloudflare\\.writer'\\)/);
-  assert.match(installer,/ROVOR_HUD_CHAT_FREE_MODELS/);
+  assert.ok(installer.includes('rovordigital.hud.cloudflare.writer'));
+  assert.ok(client.includes("fromKeychain('rovordigital.hud.cloudflare.writer')"));
+  assert.ok(installer.includes('ROVOR_HUD_CHAT_FREE_MODELS'));
 });
