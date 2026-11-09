@@ -171,3 +171,20 @@ redirects that could forward provider credentials. Node-based GitHub runner
 read-only verification remains independent of the Cloudflare-specific behavior.
 This corrects a runtime incompatibility without lowering free-tier admission,
 changing any model, invoking an inference probe, or depending on the Mac.
+
+## Why the Groq allowance meter can show UNKNOWN
+
+Verified private Cloudflare readback returned Groq `catalog_received` and
+`model_in_catalog:true`, but both `requests_per_day` and
+`tokens_per_minute` were `null` on that response. The key and GPT-OSS
+20B catalogue connection are good; **remaining allowance was not returned**.
+Do not display an invented percentage, zero, or an offline Mac status. Groq
+documents organization/project limits and API rate headers, but the model
+catalogue check does not certify billing or infer a per-model spend balance.
+Daily local admitted requests and actual completed chat receipts are
+separate measurements from the private D1.
+
+An expired 24-hour Groq Free-tier owner approval still prevents **every new
+Groq inference call**. That expiry can no longer veto an otherwise authorized
+production HUD/Gemini security deployment. The Mac is never required for
+direct Groq/Gemini cloud chat, and an API key need not be re-entered.
