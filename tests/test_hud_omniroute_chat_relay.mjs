@@ -2,6 +2,7 @@ import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {eligibleModels,readEvents,executeClaim,hudWriterCredential} from '../tools/hud_chat_relay_client.mjs';
+import {selectGeminiRoute} from '../tools/activate_hud_gemini_route.mjs';
 import {cleanCatalog,cleanReply,catalog,enqueue,RELAY} from '../integrations/hud-cloud/omniroute-chat-relay.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 
@@ -101,4 +102,14 @@ test('an approved exact Google Gemini route is distinct from Cloudflare Gemma',(
   assert.deepEqual(eligibleModels(listed,['gemini/gemini-3.1-flash-lite']),[
     'gemini/gemini-3.1-flash-lite','openrouter/example:free']);
   assert(!eligibleModels(listed,['gemini/gemini-3.1-flash-lite']).includes('@cf/google/gemma-3-12b-it'));
+});
+
+test('Gemini one-step activation selects an exact Google direct model, not Cloudflare or paid combo',()=>{
+  const catalog=['@cf/google/gemma-3-12b-it','rovor-fast-free-v1',
+    'google/gemini-2.5-flash-lite','gemini/gemini-3.1-flash-lite','gemini/gemini-2.5-pro'];
+  assert.equal(selectGeminiRoute(catalog),'gemini/gemini-3.1-flash-lite');
+  assert.equal(selectGeminiRoute(['google/gemini-2.5-flash-lite']),'google/gemini-2.5-flash-lite');
+  assert.equal(selectGeminiRoute(['@cf/google/gemma-3-12b-it','rovor-fast-free-v1']),null);
+  assert.throws(()=>selectGeminiRoute(['gemini/gemini-3.1-flash-lite',
+    'google/gemini-3.1-flash-lite']),/ambiguous_gemini_direct_route/);
 });
