@@ -632,7 +632,7 @@
                usage.scope!=='this_hud_direct_api_only')throw Error('gemini_evidence_invalid');
             const listed=catalog.directly_listed_models;
             const recent=catalog.model_evidence.filter(m=>m.verification==='verified_recent_reply').length;
-            providerSummary.textContent='GOOGLE GEMINI · '+listed.length+' KEY-LISTED · '+recent+
+            providerSummary.textContent='GOOGLE GEMINI · +listed.length+' KEY-LISTED · '+recent+
               ' VERIFIED RECENT REPLIES · NO MAC';
             providerList.textContent='';
             const total=el('div',{className:'rvc-provider-item'});
@@ -788,7 +788,7 @@
         stateLabel.textContent=omni?('Mac bridge reported · '+select.options.length+' allowed routes · confirm a reply to verify use · optional local execution'):
           requestedSource==='gemini'?'Google key lists '+Math.max(0,models.length-(models.includes('gemini-auto-free')?1:0))+
              ' approved text routes · '+(info.verified_model_count??'unknown')+' recently verified · external quota UNKNOWN':
-          requestedSource==='groq'?'Groq cloud route available · no Mac required · remaining quota unverified':
+          requestedSource==='groq'?'Groq cloud route available · provider-wide remaining quota unverified':
           ('Cloudflare AI · '+select.options.length+' hosted models listed · allowance unverified');
         modelSheetInfo.textContent=omni
           ?'Mac-advertised chat routes only. Free-tagged model routes and Owner-allowlisted model routes still need live inference and free-quota checks.'
@@ -801,7 +801,7 @@
         stateLabel.textContent=sourceSelect.value==='omniroute'?
           'Optional Mac bridge unavailable · use cloud Gemini or Cloudflare AI.':
           sourceSelect.value==='gemini'?'Cloud Gemini unavailable · cloud key/free-tier configuration required.':
-          sourceSelect.value==='groq'?'Groq cloud model may be connected, but chat is paused until owner-approved Free-plan admission. Check Groq details; Mac not needed.':
+          sourceSelect.value==='groq'?'Groq cloud model may be connected, but chat is paused until current owner-approved Free-tier admission. Check Groq details.':
           'Cloudflare AI unavailable · no hosted model routes confirmed.';
       }
     }
@@ -1030,7 +1030,7 @@
         redraw();
         stateLabel.textContent=platform==='omniroute'?
           'RESPONSE CONFIRMED · requested route '+target+' · actual upstream identity not separately attested':
-          platform==='gemini'?'GOOGLE GEMINI CLOUD REPLY · '+resolvedModel+' · no Mac · per-model receipt recorded':'CLOUD MODEL RESPONSE RECEIVED · not an employee or Mac action';
+          platform==='gemini'?'GOOGLE GEMINI CLOUD REPLY · '+resolvedModel+' · per-model receipt recorded':'CLOUD MODEL RESPONSE RECEIVED · not an employee action';
       }catch(e){
         const messages={
           omniroute_offline:'The Mac bridge is offline. No model call was confirmed.',
