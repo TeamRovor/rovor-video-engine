@@ -95,10 +95,10 @@ function usageRing(percent,label,kind='quota'){
    '<div class="rvq-ring-core"><strong>—</strong><small>UNKNOWN</small></div></div>';
  }
  const pct=percent.toFixed(1);
- return '<div class="rvq-ring'+(kind==='activity'?' rvq-ring-traffic':'')+'" role="progressbar" aria-label="'+esc(label)+
+ return '<div class="rvq-ring'+((kind==='activity'||kind==='cloud-activity')?' rvq-ring-traffic':'')+'" role="progressbar" aria-label="'+esc(label)+
   '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+
-  '" aria-valuetext="'+pct+(kind==='activity'?' percent of recorded Mac requests':' percent of verified allowance used')+'" style="--rvq-angle:'+pct+'%">'+
-  '<div class="rvq-ring-core"><strong>'+pct+'%</strong><small>'+(kind==='activity'?'TRAFFIC':'USED')+'</small></div></div>';
+  '" aria-valuetext="'+pct+(kind==='cloud-activity'?' percent of recorded ROVOR cloud Gemini requests':kind==='activity'?' percent of recorded Mac requests':' percent of verified allowance used')+'" style="--rvq-angle:'+pct+'%">'+
+  '<div class="rvq-ring-core"><strong>'+pct+'%</strong><small>'+((kind==='activity'||kind==='cloud-activity')?'TRAFFIC':'USED')+'</small></div></div>';
 }
 function meter(q){
  const used=q?.used,total=q?.total;
@@ -943,7 +943,7 @@ function cloudGeminiPanel(){
   const modelRow=m=>{
     const share=total>0?Math.min(100,m.attempts/total*100):0;
     return '<div class="rvq-cloud-model-row"><span><strong>'+esc(m.model)+'</strong> · '+fmt(m.completed)+' completed · '+fmt(m.attempts)+' attempts</span>'+
-      usageRing(share,'Share of ROVOR Gemini local requests today (NOT quota)','activity')+
+      usageRing(share,'Share of ROVOR Gemini local requests today (NOT quota)','cloud-activity')+
       '<span>LOCAL REQUEST SHARE · NOT PROVIDER QUOTA · '+fmt(Number.isSafeInteger(m.failures)?m.failures:0)+' failures</span></div>';
   };
   return '<section class="rvq-cloud" aria-label="Google Gemini cloud model activity"><strong>GOOGLE GEMINI · '+fmt(allowed.length)+' KEY-LISTED FREE-PRICED TEXT MODELS · NO MAC</strong>'+
