@@ -90,8 +90,29 @@ export function verifyCloudGroqReadback(status,models){
     throw Error('cloud_groq_mac_independent_readback_failed');
   return true;
 }
+// Only whitelisted non-secret status from a real authenticated cloud-to-Groq
+// read-only catalogue probe is permitted into GitHub release logs.
+export function summarizeGroqKeyCatalog(status){
+  if(status?.source!=='cloud_direct_groq'||status?.mac_required!==false||
+      status?.catalog?.source!=='groq_api_models_catalog')throw Error('groq_catalog_readback_invalid');
+  const c=status.catalog;
+  const states=new Set(['catalog_received','not_checked','checking','stale','auth_rejected','rate_limited','upstream_error','invalid_catalog','unavailable']);
+  if(!states.has(c.state))throw Error('groq_catalog_readback_invalid');
+  const metric=(v,window)=>{
+    if(c.state!=='catalog_received'||v?.window!==window||
+       !Number.isSafeInteger(v.limit)||v.limit<=0||
+       !Number.isSafeInteger(v.remaining)||v.remaining<0||v.remaining>v.limit)return null;
+    return {limit:v.limit,remaining:v.remaining,reset_at:typeof v.reset_at==='string'?v.reset_at:null};
+  };
+  return {mac_required:false,provider:'groq',credentials_configured:status.credentials_present===true,
+    catalogue_status:c.state,model_in_catalog:c.state==='catalog_received'?c.model_present===true:null,
+    requests_per_day:metric(c.requests_per_day,'day'),
+    tokens_per_minute:metric(c.tokens_per_minute,'minute'),
+    billing_verified:false, inference_verified:false};
+}
 export async function verifyGithubHud({origin, readerToken, send = fetch, expectedQuotaAsset = null,
-  expectedChatAsset = null, expectCloudGroq = false, requireLiveTelemetry = true, pause = delay}) {
+  expectedChatAsset = null, expectCloudGroq = false, expectGroqKeyCatalog = false,
+  requireLiveTelemetry = true, pause = delay}) {
   origin = verifiedOrigin(origin);
   if (typeof readerToken !== 'string' || readerToken.length < 32)
     throw Error('readback_credentials_missing');
@@ -168,6 +189,16 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     catch{throw Error('cloud_groq_readback_json_invalid');}
     verifyCloudGroqReadback(groqStatus,groqModels);
   }
+  let cloudGroqCatalog=null;
+  if(expectGroqKeyCatalog){
+    // Verify the deployed private Worker can really use its Groq secret to
+    // read the provider catalogue. Never submit an inference prompt.
+    const result=await read('/api/chat/groq/status?refresh=1',true);
+    if(result.status!==200)throw Error('groq_catalog_probe_http_unavailable');
+    let report;try{report=await result.json();}
+    catch{throw Error('groq_catalog_probe_json_invalid');}
+    cloudGroqCatalog=summarizeGroqKeyCatalog(report);
+  }
   const status = await read('/api/hud/status?period=24h', true);
   if (status.status !== 200) throw Error('private_D1_status_unavailable');
   const telemetry = await status.json();
@@ -218,6 +249,7 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     }
   }
   return {cloud_groq_mac_independent_verified: expectCloudGroq?true:null,
+    cloud_groq_key_catalog:cloudGroqCatalog,
     private_auth_verified: true, original_hud_verified: true,
     quota_board_verified: true, database_api_verified: true,
     quota_asset_matches_checkout: expectedQuotaAsset === null ? null : true,
@@ -244,7 +276,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     expectedQuotaAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/live-quota-board.js', import.meta.url), 'utf8'),
     expectedChatAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/hud-chat.js', import.meta.url), 'utf8'),
     requireLiveTelemetry: false,
-    expectCloudGroq: process.env.GROQ_HUD_CHAT_ENABLED==='true'})
+    expectCloudGroq: process.env.GROQ_HUD_CHAT_ENABLED==='true',
+    expectGroqKeyCatalog:typeof process.env.GROQ_HUD_API_KEY==='string'&&process.env.GROQ_HUD_API_KEY.length>=16})
     .then(result => {
       console.log(JSON.stringify(result));
       if (!result.mac_telemetry_verified)

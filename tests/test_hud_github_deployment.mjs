@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {
   validateDeploymentSecrets, prepareConfig, assertGithubReleaseContext
 } from '../integrations/hud-cloud/prepare-github-deploy.mjs';
-import {verifyGithubHud, verifyAnonymousTelemetry, verifyAdvancingReports, verifiedOrigin, hasNineProviderMeterAsset} from '../integrations/hud-cloud/verify-github-deploy.mjs';
+import {verifyGithubHud, verifyAnonymousTelemetry, verifyAdvancingReports, verifiedOrigin, hasNineProviderMeterAsset, summarizeGroqKeyCatalog} from '../integrations/hud-cloud/verify-github-deploy.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 
 const dir = new URL('../integrations/hud-cloud/', import.meta.url);
@@ -245,6 +245,11 @@ test('deployment readback validates the exact Ask ROVOR release even while Mac t
       if(resource==='/hud-quota.js')return new Response(actualNineMeterAsset);
       if(resource==='/hud-chat.js')return new Response(oldChat?'old-release':currentChat);
       if(resource==='/api/hud/chat/models')return oldBackend?Response.json({error:'not_found'},{status:404}):Response.json({source:'omniroute_outbound_bridge',online:false,models:[]});
+      if(resource==='/api/chat/groq/status')return Response.json({source:'cloud_direct_groq',
+        mac_required:false,credentials_present:true,ready:false,
+        catalog:{source:'groq_api_models_catalog',state:'catalog_received',model_present:true,
+          requests_per_day:{unit:'requests',window:'day',limit:1000,remaining:975,reset_at:null},
+          tokens_per_minute:{unit:'tokens',window:'minute',limit:8000,remaining:7470,reset_at:null}}});
       if(resource==='/api/hud/status')return Response.json(report);
       return Response.json({error:'not_found'},{status:404});
     };
@@ -261,6 +266,12 @@ test('deployment readback validates the exact Ask ROVOR release even while Mac t
   assert.equal(result.telemetry_connection,'stale');
   assert.equal(result.active_usage_providers,null); // Unknown, not a fabricated zero
   assert.equal(result.tracked_pacific_day_requests,null);
+  const withGroq=await verifyGithubHud({...input,send:createSend(),expectGroqKeyCatalog:true});
+  assert.equal(withGroq.cloud_groq_key_catalog.catalogue_status,'catalog_received');
+  assert.equal(withGroq.cloud_groq_key_catalog.model_in_catalog,true);
+  assert.deepEqual(withGroq.cloud_groq_key_catalog.requests_per_day,{limit:1000,remaining:975,reset_at:null});
+  assert.equal(withGroq.cloud_groq_key_catalog.billing_verified,false);
+  assert.equal(withGroq.cloud_groq_key_catalog.inference_verified,false);
   await assert.rejects(()=>verifyGithubHud({...input,send:createSend({oldChat:true})}),
     /deployed_chat_asset_differs_from_checkout/);
   await assert.rejects(()=>verifyGithubHud({...input,send:createSend({publicChat:true})}),
@@ -299,4 +310,15 @@ test('asset deployment reports degraded rather than false live when two fresh Ma
   assert.equal(degraded.mac_telemetry_verified,false);
   assert.equal(degraded.all_nine_usage_readback_verified,false);
   await assert.rejects(()=>verifyGithubHud(props),/private_D1_reports_not_advancing/);
+});
+
+test('readback Groq response summary whitelists only catalog/limits and rejects forged readiness',()=>{
+ const base={source:'cloud_direct_groq',mac_required:false,credentials_present:true,
+   catalog:{source:'groq_api_models_catalog',state:'auth_rejected',model_present:null}};
+ const s=summarizeGroqKeyCatalog({...base,GROQ_HUD_API_KEY:'SHOULD_NEVER_LEAK'});
+ assert.equal(s.catalogue_status,'auth_rejected');
+ assert.equal(s.model_in_catalog,null);
+ assert(!JSON.stringify(s).includes('SHOULD_NEVER_LEAK'));
+ assert.throws(()=>summarizeGroqKeyCatalog({...base,mac_required:true}),/groq_catalog_readback_invalid/);
+ assert.throws(()=>summarizeGroqKeyCatalog({...base,catalog:{...base.catalog,state:'magically_free'}}),/groq_catalog_readback_invalid/);
 });
