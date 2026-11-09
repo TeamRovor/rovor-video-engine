@@ -1135,6 +1135,14 @@
         "github-read",
         "github-write"
       ]
+    },
+    "ask-rovor-model-intelligence-20261109": {
+      "lane": "integration",
+      "requires": [
+        "github-read",
+        "github-write"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
