@@ -425,3 +425,20 @@ test('stale Mac reporting gives one useful recovery path without inventing a liv
  assert.doesNotMatch(live,/Tracking needs attention · Restore Mac reporting/);
  assert.match(live,/Mac telemetry accepted/);
 });
+
+test('Mac-off Workload Distribution keeps independently verified cloud Groq receipts visible',()=>{
+ const groq={source:'cloud_direct_groq',model:'groq/openai/gpt-oss-20b',
+   mac_required:false,ready:true,observed_at:new Date().toISOString(),
+   locally_admitted_today:2,last_cloud_completion_at:new Date().toISOString(),
+   last_completion_model:'openai/gpt-oss-20b',last_prompt_tokens:77,last_completion_tokens:47};
+ const html=board().render(null,false,null,null,null,null,groq);
+ assert.match(html,/CLOUD GROQ · DIRECT · NO MAC REQUIRED/);
+ assert.match(html,/Last cloud completion:/);
+ assert.match(html,/input\/output tokens 77 \/ 47/);
+ assert.match(html,/Mac requests unverified|NO FRESH REPORT/);
+ assert.doesNotMatch(html,/75\.0 percent of verified allowance/);
+ groq.mac_required=true;
+ const rejected=board().render(null,false,null,null,null,null,groq);
+ assert.match(rejected,/Independent cloud Groq status unavailable/);
+ assert.doesNotMatch(rejected,/input\/output tokens 77 \/ 47/);
+});
