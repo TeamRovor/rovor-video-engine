@@ -188,3 +188,35 @@ An expired 24-hour Groq Free-tier owner approval still prevents **every new
 Groq inference call**. That expiry can no longer veto an otherwise authorized
 production HUD/Gemini security deployment. The Mac is never required for
 direct Groq/Gemini cloud chat, and an API key need not be re-entered.
+
+## Cloud-only Ask ROVOR idea inbox (separate from inference)
+
+The existing authenticated Cloudflare HUD now offers **Queue idea** in the
+Ask ROVOR composer. It records up to 1,600 characters as a private D1
+`pending_review` entry and returns an immutable receipt ID. The
+**Cloud idea inbox** disclosure reads the most recent 20 pending drafts;
+no Mac, OmniRoute, model key or Free-plan approval is required to submit.
+
+Security boundaries are deliberate:
+- The normal HUD reader login may submit **suggestions**, not approve, execute,
+  alter project coordination, promote into `ghost_cloud_jobs`, merge PRs or
+  change the GitHub repository.
+- A same-origin POST is required; unknown request fields, oversized inputs,
+  credential-like text and unauthorized requests are rejected. An atomic D1
+  reservation allows up to 30 submissions per UTC day and spaces submissions
+  at least five seconds across every Worker isolate; no unbounded spam loop.
+- `queued:true` in an idea receipt means **draft saved**, not model request
+  queued. `model_call_started:false`, `owner_review_required:true`.
+  Keep idea text private; do not submit credentials, client materials or
+  anything unsuitable for review by other authenticated HUD readers.
+- Nothing in this lane grants a model repository credentials or execution
+  privileges. Promotion to the existing canonical GitHub task queue, immutable
+  approved task feed and reviewed cloud shift remains a distinct owner action.
+  GitHub changes require a reviewed, least-privileged integration that creates
+  bounded branches/PRs; models cannot push directly to main, release secrets,
+  approve their own outputs, or bypass STOP/PASS-FAIL.
+
+This is **phase one of cloud job intake**, not a claim that unattended GitHub
+coding agents or 24/7 inference are already active. Existing hourly approved
+cloud shifts are separately observed via the owner-private cloud workforce
+status/receipts. The Mac is only an optional future compute booster.

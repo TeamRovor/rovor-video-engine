@@ -101,3 +101,21 @@ CREATE TABLE IF NOT EXISTS hud_gemini_model_health (
   last_failure_at INTEGER,
   last_failure_code TEXT
 );
+
+-- Owner-private suggestion intake. It never starts models or GitHub writes.
+-- Only human-reviewed canonical queue tasks can become cloud worker jobs.
+CREATE TABLE IF NOT EXISTS hud_idea_intake_limits (
+  day_id INTEGER PRIMARY KEY,
+  submissions INTEGER NOT NULL,
+  last_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS hud_idea_inbox (
+  id TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  state TEXT NOT NULL DEFAULT 'pending_review'
+    CHECK(state IN ('pending_review')),
+  source TEXT NOT NULL CHECK(source IN ('ask_rovor'))
+);
+CREATE INDEX IF NOT EXISTS hud_idea_inbox_recent
+  ON hud_idea_inbox(created_at DESC);
