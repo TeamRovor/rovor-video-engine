@@ -1228,7 +1228,8 @@ function renderCloudDashboard({cloud=null,geminiCatalog=null,geminiUsage=null,gr
     if(p&&cloudFresh)details.push(jobReceipts(id,attempts));
     const label=pretty(id);
     return '<article class="rvq-v2-provider rvq-overview-tile" data-rvq-attention="'+String(level!=='verified')+
-      '" data-state="'+esc(level)+'" data-rvq-slot="'+esc(id+':1')+'">'+
+      '" data-state="'+esc(level)+'" data-rvq-slot="'+esc(id+':1')+'"'+
+      (overviewFilter==='attention'&&level==='verified'?' hidden':'')+'>'+
       '<div class="rvq-v2-provider-top"><div><h5>'+esc(label)+'</h5><small>PROVIDER · '+esc(id.toUpperCase())+'</small></div></div>'+
       '<span class="rvq-v2-pill" data-state="'+esc(level)+'">'+esc(state)+'</span>'+
       '<div class="rvq-v2-quota">'+ring+'<div class="rvq-v2-quota-copy">'+quotaText+'</div></div>'+
@@ -1241,6 +1242,7 @@ function renderCloudDashboard({cloud=null,geminiCatalog=null,geminiUsage=null,gr
       '<details class="rvq-provider-details"><summary>MODEL, USAGE & ADMISSION DETAILS</summary>'+
       details.join('')+'</details></article>';
   }).join('');
+  const attentionCount=(tiles.match(/data-rvq-attention="true"/g)||[]).length;
   const summaries=[
     ['CLOUD PROVIDERS','09','Families tracked · not proof of activation'],
     ['WORKFORCE ELIGIBLE',eligible===null?'—':fmt(eligible),
@@ -1262,9 +1264,10 @@ function renderCloudDashboard({cloud=null,geminiCatalog=null,geminiUsage=null,gr
     '<div class="rvq-v2-section-head"><h4>NINE PROVIDER SOURCES</h4><small>Checked '+esc(new Date(checkedAt).toLocaleTimeString())+
     ' · read-only · refreshes while open</small></div>'+
     '<div class="rvq-v2-filters" role="group" aria-label="Provider dashboard filter">'+
-    '<button type="button" data-rvq-filter="all" aria-pressed="true">ALL 9</button>'+
-    '<button type="button" data-rvq-filter="attention" aria-pressed="false">NEEDS VERIFICATION</button>'+
-    '<span class="rvq-filter-note" aria-live="polite">Showing all nine provider families</span></div>'+
+    '<button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL 9</button>'+
+    '<button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">NEEDS VERIFICATION</button>'+
+    '<span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?
+       'Showing '+attentionCount+' providers needing verification':'Showing all nine provider families')+'</span></div>'+
     '<div class="rvq-v2-grid">'+tiles+'</div>'+
     '<div class="rvq-v2-secondary"><section class="rvq-v2-section" id="rvq-review"><div class="rvq-v2-section-head"><h4>OWNER PASS / FAIL</h4>'+
     '<span class="rvq-v2-pill">'+esc(count)+'</span></div>'+reviewPulse(review)+
