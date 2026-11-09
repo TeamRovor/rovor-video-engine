@@ -104,6 +104,14 @@ class ControlReportTests(unittest.TestCase):
         self.assertFalse(report["credentials_present"]["google_free_project_key"])
         self.assertNotIn("google_free_project_key",report["missing_deployment_prerequisites"])
 
+    def test_preexisting_cloudflare_gemini_secret_can_be_reused_without_github_key(self):
+        e=env()
+        e["ROVOR_GEMINI_API_KEY"]=""
+        e["ROVOR_CLOUDFLARE_GEMINI_SECRET_PRESENT"]="true"
+        self.assertTrue(ops.deployment_secrets(e)["google_free_project_key"])
+        self.assertTrue(ops.can_deploy(ops.deployment_secrets(e),"deploy_and_test_gemini",True))
+        self.assertFalse(ops.can_deploy(ops.deployment_secrets(e),"deploy_and_test_gemini",False))
+
     def test_site_service_key_missing_is_truthfully_unverified(self):
         e=env();e.pop("ROVOR_GHOST_SERVICE_TOKEN")
         report=ops.build_report(e,opener=HTTP("s"*48))
