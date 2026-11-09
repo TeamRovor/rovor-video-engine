@@ -98,6 +98,8 @@ async function main(){
     await cmd('Page.navigate',{url:origin+'/?v='+encodeURIComponent(name)});
     await waitFor(()=>evaluate('return !!document.querySelector("#rvc-fab")'),name+' launcher');
     await evaluate('document.querySelector("#rvc-fab").click();return true');
+    if(name==='iPhone')assert.equal(await evaluate('return document.querySelector("#rvc-source").value'),'gemini','new conversations default to Mac-independent cloud');
+    await evaluate('const source=document.querySelector("#rvc-source");source.value="omniroute";source.dispatchEvent(new Event("change",{bubbles:true}));return true');
     await waitFor(()=>evaluate('return Array.from(document.querySelectorAll("#rvc-model option")).some(x=>x.value==="openrouter/example:free")'),name+' model');
     const info=await evaluate('const p=document.querySelector("#rvc"),r=p.getBoundingClientRect();return {width:r.width,height:r.height,vw:innerWidth,vh:innerHeight,textarea:parseFloat(getComputedStyle(document.querySelector("#rvc textarea")).fontSize),select:parseFloat(getComputedStyle(document.querySelector("#rvc-source")).fontSize),overflow:document.documentElement.scrollWidth>innerWidth+3}');
     assert(info.width<=info.vw+3,name+': horizontal overflow');
@@ -137,6 +139,7 @@ async function main(){
   await cmd('Page.navigate',{url:origin+'/conversation'});
   await waitFor(()=>evaluate('return !!document.querySelector("#rvc-fab")'),'conversation launcher');
   await evaluate('document.querySelector("#rvc-fab").click();return true');
+  await evaluate('const source=document.querySelector("#rvc-source");source.value="omniroute";source.dispatchEvent(new Event("change",{bubbles:true}));return true');
   await waitFor(()=>evaluate('return !!document.querySelector("#rvc-model option[value=\\"openrouter/example:free\\"]")'),'conversation catalog');
   await evaluate('document.querySelector("#rvc-repo-file").value="integrations/hud-cloud/worker.mjs";document.querySelector("#rvc textarea").value="Say hello";document.querySelector("#rvc form").requestSubmit();return true');
   await waitFor(()=>evaluate('return !!document.querySelector(".rvc-receipt")&&document.querySelector(".rvc-receipt").textContent.includes("REPLY RECEIVED")'),'confirmed receipt');
