@@ -642,7 +642,7 @@
         if(preferred&&(models.includes(preferred)||(omni&&preferred===AUTO_ROUTE)))select.value=preferred;
         else if(saved&&(models.includes(saved)||(omni&&saved===AUTO_ROUTE)))select.value=saved;
         else if(omni)select.value=AUTO_ROUTE;
-        stateLabel.textContent=omni?('Optional Mac bridge · '+select.options.length+' routes · verify reply'):
+        stateLabel.textContent=omni?('Mac bridge reported · '+select.options.length+' allowed routes · optional local execution; confirm reply'):
           requestedSource==='gemini'?'Google Gemini cloud route ready · project free-tier attested; remaining quota unknown':
           ('Cloudflare AI · '+select.options.length+' hosted models listed · allowance unverified');
         modelSheetInfo.textContent=omni
