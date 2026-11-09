@@ -375,6 +375,23 @@
     const context=el('input',{type:'checkbox',checked:true,id:'rvc-ctx'});
     const input=el('textarea',{placeholder:'Message… (Enter to send, Shift+Enter for a new line)'});input.setAttribute('aria-label','Message');
     const send=el('button',{type:'submit',textContent:'Send'});
+    const queueIdea=el('button',{type:'button',className:'rvc-queue-idea',textContent:'Queue idea',title:'Store this idea in the private cloud inbox for owner review. No model or GitHub job runs.'});
+    queueIdea.setAttribute('aria-label','Queue idea for owner review without starting a model');
+    const ideaFeedback=el('div',{className:'rvc-idea-feedback',textContent:'Ideas are private and need owner approval before any model or GitHub work. Do not include secrets.'});
+    ideaFeedback.setAttribute('role','status');
+    const ideaList=el('div',{className:'rvc-idea-list'});
+    const ideaInbox=el('details',{className:'rvc-idea-inbox'},el('summary',{textContent:'Cloud idea inbox · pending owner review'}),ideaList);
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-queue-idea{min-height:43px;min-width:89px;background:#0b3156;border:1px solid #3e88b9;font-size:12px;font-weight:600}
+#rvc .rvc-idea-feedback{color:#96c1e2;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+#rvc .rvc-idea-inbox{border:1px solid #255174;background:#061a2f;border-radius:9px;padding:6px 10px;color:#b9ddf5}
+#rvc .rvc-idea-inbox summary{cursor:pointer;font-size:11px;padding:2px 0}
+#rvc .rvc-idea-list{max-height:145px;overflow:auto;padding:6px 0}
+#rvc .rvc-idea-row{padding:6px 4px;border-top:1px solid #1f4568;font-size:11px;overflow-wrap:anywhere}
+#rvc .rvc-idea-row small{display:block;color:#8eb1cf;font-size:10px}
+@media(max-width:760px){#rvc .rvc-queue-idea{min-width:79px;padding:6px;font-size:11px}#rvc .rvc-idea-inbox{padding:5px 9px}}
+`}));
+
     const stop=el('button',{type:'button',textContent:'Stop waiting',hidden:true});
     // Owners may explicitly attach one curated source excerpt from their
     // local origin/main Git mirror. Source is read only and never grants PR,
@@ -426,7 +443,7 @@
 #rvc .rvc-routing-note:not([data-error=true])::before{content:'✦ ';color:#7ed2ff}
 @media(max-width:760px){#rvc .rvc-routing-note{font-size:11px;max-height:70px;overflow:auto}}
 `}));
-    const form=el('form',{},input,send,stop);
+    const form=el('form',{},input,queueIdea,send,stop);
     const panel=el('section',{id:'rvc'},
       el('aside',{className:'rvc-sidebar'},el('div',{className:'rvc-brand'},'R O V O R',
         el('small',{},'MULTI-MODEL INTELLIGENCE')),newChat,el('div',{className:'rvc-label'},'CONVERSATIONS'),sessionsList,
@@ -434,7 +451,7 @@
       el('div',{className:'rvc-main'},
         el('header',{},mobileMenu,el('strong',{textContent:'ASK ROVOR'}),sourceSelect,modelSlot,clear,close),
         connectionBar,providerDetails,log,
-        el('footer',{},teamRow,repoRow,routingNote,el('div',{className:'rvc-context-note',textContent:'A routing plan does not start work. Send submits at most two eligible routes; completion requires receipts.'}),form)));
+        el('footer',{},teamRow,repoRow,routingNote,ideaInbox,ideaFeedback,el('div',{className:'rvc-context-note',textContent:'Send asks a model; Queue idea saves a draft for owner review only. No automatic GitHub writes or AI execution.'}),form)));
     panel.setAttribute('aria-label','ROVOR chat');
     const sideBackdrop=el('button',{type:'button',className:'rvc-side-backdrop'});
     sideBackdrop.setAttribute('aria-label','Close conversation history');
@@ -961,6 +978,48 @@
       }finally{pendingJob=null;controller=null;setBusy(false);updatePlan();}
     }
 
+    async function refreshIdeaInbox(){
+      if(!ideaInbox.open)return;
+      ideaList.textContent='Reading the private cloud inbox…';
+      try{
+        const reply=await fetch('/api/hud/ideas',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)});
+        if(!reply.ok)throw Error('not_available');
+        const data=await reply.json();
+        if(data.source!=='private_rovor_idea_inbox'||!Array.isArray(data.items))throw Error('invalid_inbox');
+        ideaList.textContent='';
+        if(!data.items.length){ideaList.textContent='No ideas queued yet.';return;}
+        for(const entry of data.items.slice(0,20)){
+          if(entry?.state!=='pending_review'||typeof entry.text!=='string')continue;
+          ideaList.append(el('div',{className:'rvc-idea-row'},
+            el('div',{textContent:entry.text.slice(0,1600)}),
+            el('small',{textContent:'PENDING OWNER REVIEW · '+(entry.created_at?new Date(entry.created_at).toLocaleString():'time unknown')+' · no job started'})));
+        }
+      }catch{ideaList.textContent='Private idea inbox is unavailable. This does not mean cloud inference is offline.';}
+    }
+    ideaInbox.addEventListener('toggle',()=>{if(ideaInbox.open)void refreshIdeaInbox();});
+    let queuingIdea=false;
+    queueIdea.onclick=async()=>{
+      if(queuingIdea||busy)return;
+      const text=input.value.trim();
+      if(text.length<8||text.length>1600){
+        ideaFeedback.textContent='Ideas must be 8–1,600 characters. No model call was made.';return;
+      }
+      queuingIdea=true;queueIdea.disabled=true;
+      ideaFeedback.textContent='Saving idea to private cloud review inbox…';
+      try{
+        const result=await fetch('/api/hud/ideas',{method:'POST',credentials:'same-origin',
+          headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),
+          signal:AbortSignal.timeout(12000)});
+        const receipt=await result.json();
+        if(result.status!==202||receipt?.state!=='pending_review'||receipt.model_call_started!==false)
+          throw Error(receipt?.error||'not_queued');
+        input.value='';
+        ideaFeedback.textContent='IDEA QUEUED · pending owner review · no model, job or GitHub action started.';
+        await refreshIdeaInbox();
+      }catch{
+        ideaFeedback.textContent='Idea not confirmed in private queue. No model or GitHub job was started.';
+      }finally{queuingIdea=false;queueIdea.disabled=false;}
+    };
     repoRow.hidden=sourceSelect.value!=='omniroute';repoSelect.disabled=repoRow.hidden;
     teamRow.hidden=sourceSelect.value!=='omniroute';teamInput.disabled=teamRow.hidden;
     form.onsubmit=e=>{e.preventDefault();const text=input.value.trim();if(!text||busy||!ready)return;input.value='';ask(text);};
