@@ -207,11 +207,18 @@ test('live verifier tolerates short rollout gaps but never accepts anonymous exp
   },{attempts:2,pause:async()=>{}}),/anonymous_telemetry_not_verified_transport_unavailable/);
 });
 
-test('GitHub deployment requires main and explicit opt-in for unattended releases', () => {
+test('Approved HUD main pushes auto-deploy only after safety checks, without exposing PR secrets', () => {
   const workflow=readFileSync(new URL('../.github/workflows/deploy-private-hud-cloudflare.yml',import.meta.url),'utf8');
   assert.match(workflow, /github.ref == 'refs\/heads\/main'/);
-  assert.match(workflow, /ROVOR_HUD_GITHUB_AUTO_DEPLOY == 'enabled'/);
+  assert.match(workflow, /github.event_name == 'push'/);
   assert.match(workflow, /github.event_name == 'workflow_dispatch'/);
+  assert.match(workflow, /push:\s*\n\s*branches: \[main\]/);
+  assert.match(workflow, /needs: safety-tests/);
+  assert.match(workflow, /environment: rovor-hud-production/);
+  assert.match(workflow, /concurrency:/);
+  assert.match(workflow, /cancel-in-progress: false/);
+  assert.doesNotMatch(workflow, /ROVOR_HUD_GITHUB_AUTO_DEPLOY/);
+  assert.doesNotMatch(workflow, /\n  verify-existing:/);
   assert.match(workflow, /wrangler d1 execute DB --remote/);
   assert.match(workflow, /wrangler deploy --config wrangler.github.jsonc/);
   assert.match(workflow, /verify-github-deploy\.mjs/);
