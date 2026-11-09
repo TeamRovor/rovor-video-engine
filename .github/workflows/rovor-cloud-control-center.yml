@@ -202,6 +202,7 @@ jobs:
     if: inputs.trigger_one_approved_shift == true && needs.cloud-readiness.outputs.shift_ready == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 4
+    environment: rovor-hud-production
     concurrency:
       group: rovor-cloud-hosted-shift
       cancel-in-progress: false
