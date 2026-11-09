@@ -37,6 +37,9 @@ test('single existing original HUD, bundled reviewed cloud-only Workload sources
   assert.doesNotMatch(html,/LAST MAC REPORT \/ 31 JOB CLAIMS/);
   assert.doesNotMatch(html,/LAST REPORT · HISTORICAL/);
   assert.doesNotMatch(html,/31 PAST CLAIMS/);
+  assert.doesNotMatch(html,/Mac worker|Mac provider usage|MacBook worker/);
+  assert.match(html,/Cloud workforce/);
+  assert.match(html,/Cloud model usage/);
   assert.doesNotMatch(html,/sessionStorage\.setItem\(KEY,JSON\.stringify\(\{origin:url\.origin,token:/);
 });
 test('cloud-first source does not simulate usage, invent worker receipts or poll a local device',()=>{
