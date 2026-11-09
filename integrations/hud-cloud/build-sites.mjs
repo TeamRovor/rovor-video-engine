@@ -68,13 +68,13 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const sourceSrc = fs.readFileSync(path.join(here,'repo-source.mjs'),'utf8');
   if(discoverySrc.split(discoveryValidatorImport).length!==2)
     throw Error('Unexpected discovery validation import');
-  const idea = 'const {submitIdea,listIdeas,validateIdea} = (() => {\\n'+
-    plain(ideaSrc)+'\\nreturn {submitIdea,listIdeas,validateIdea};})();\\n';
-  const discovery = 'const {submitDiscovery,discoveryStatus} = (() => {\\n'+
+  const idea = 'const {submitIdea,listIdeas,validateIdea} = (() => {\n'+
+    plain(ideaSrc)+'\nreturn {submitIdea,listIdeas,validateIdea};})();\n';
+  const discovery = 'const {submitDiscovery,discoveryStatus} = (() => {\n'+
     plain(discoverySrc.replace(discoveryValidatorImport,''))+
-    '\\nreturn {submitDiscovery,discoveryStatus};})();\\n';
-  const repoSource = 'const {getRepoSource} = (() => {\\n'+
-    plain(sourceSrc)+'\\nreturn {getRepoSource};})();\\n';
+    '\nreturn {submitDiscovery,discoveryStatus};})();\n';
+  const repoSource = 'const {getRepoSource} = (() => {\n'+
+    plain(sourceSrc)+'\nreturn {getRepoSource};})();\n';
   return dependency + relay + groqQuota + groqCloud + idea + discovery + repoSource + geminiCloud +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
       .replace(groqImport, '').replace(groqProbeImport, '')
