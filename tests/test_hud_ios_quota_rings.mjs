@@ -416,13 +416,13 @@ test('stale Mac reporting gives one useful recovery path without inventing a liv
    connections:providers.map(provider=>({provider,name:provider,connection_count:1,enabled_count:1})),
    quota:{records:[]}};
  const stale=board().render(oldData,false,cloud());
- assert.match(stale,/Tracking needs attention · Restore Mac reporting/);
+ assert.match(stale,/Optional local OmniRoute telemetry is stale · cloud Groq works separately/);
  assert.match(stale,/bash tools\/manage_hud_telemetry_agent\.sh status/);
  assert.match(stale,/data-rvq-copy-cmd="status"/);
  assert.match(stale,/cached inventory only; do not infer current traffic or quota/);
  const freshData={...oldData,snapshot_at:new Date().toISOString()};
  const live=board().render(freshData,true,cloud());
- assert.doesNotMatch(live,/Tracking needs attention · Restore Mac reporting/);
+ assert.doesNotMatch(live,/Optional local OmniRoute telemetry is stale · cloud Groq works separately/);
  assert.match(live,/Mac telemetry accepted/);
 });
 
