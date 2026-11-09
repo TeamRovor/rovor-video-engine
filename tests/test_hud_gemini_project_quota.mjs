@@ -38,6 +38,7 @@ test('collector polls only four official Cloud Monitoring GET metrics with scope
   fetcher:async(url,options)=>{
    const u=new URL(url);paths.push(u);
    assert.equal(options.method,'GET');
+   assert.equal(options.redirect,'manual');
    assert.equal(options.headers.Authorization,'Bearer test-auth-token-at-least-20-characters');
    assert.equal(u.hostname,'monitoring.googleapis.com');
    assert.equal(u.pathname,'/v3/projects/'+project+'/timeSeries');

@@ -34,6 +34,7 @@ const upstream=async(url,opts)=>{
   assert.equal(url,'https://api.groq.com/openai/v1/chat/completions');
   assert.equal(JSON.parse(opts.body).model,'openai/gpt-oss-20b');
   assert.equal(JSON.parse(opts.body).stream,false);
+  assert.equal(opts.redirect,'manual','Cloudflare Worker requests must use supported manual redirects');
   return Response.json({model:'openai/gpt-oss-20b',choices:[{finish_reason:'stop',
     message:{role:'assistant',content:'GROQ_CONNECTED'}}],
     usage:{prompt_tokens:77,completion_tokens:47}});
@@ -106,4 +107,15 @@ test('production readback proves a cloud-only Groq route, not local OmniRoute',(
   assert.equal(verifyCloudGroqReadback(proof,{models:[GROQ_CLOUD_ROUTE]}),true);
   assert.throws(()=>verifyCloudGroqReadback({...proof,mac_required:true},{models:[GROQ_CLOUD_ROUTE]}),/cloud_groq_mac_independent_readback_failed/);
   assert.throws(()=>verifyCloudGroqReadback(proof,{models:[]}),/cloud_groq_mac_independent_readback_failed/);
+});
+
+test('Groq refuses an upstream redirect without replay or forwarding the private API key',async()=>{
+  const e=env();let calls=0;
+  const response=await handle(req('/api/chat','POST',prompt),e,NOW,async(url,init)=>{
+    calls++;assert.equal(init.redirect,'manual');
+    return new Response(null,{status:302,headers:{Location:'https://not-groq.example/steal'}});
+  });
+  assert.equal(calls,1);
+  assert.equal(response.status,502);
+  assert.equal((await response.json()).error,'groq_upstream_redirect_denied');
 });

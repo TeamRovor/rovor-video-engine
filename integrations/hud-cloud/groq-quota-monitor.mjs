@@ -62,11 +62,14 @@ export async function probeGroqCatalogue(env,db,now=Date.now(),fetcher=fetch){
   if(!claimed)return;
   let state='unavailable',model=null,limits={requests_per_day:null,tokens_per_minute:null};
   try{
-    const upstream=await fetcher(CATALOG,{method:'GET',redirect:'error',
+    const upstream=await fetcher(CATALOG,{method:'GET',redirect:'manual',
       headers:{Authorization:'Bearer '+env.GROQ_HUD_API_KEY,Accept:'application/json'},
       signal:AbortSignal.timeout(7000)});
     if(upstream.status===401||upstream.status===403)state='auth_rejected';
     else if(upstream.status===429)state='rate_limited';
+    // Manual redirect is Cloudflare-compatible; never follow to another host
+    // with our Authorization header. This is a failed read-only probe.
+    else if(upstream.status>=300&&upstream.status<400)state='upstream_error';
     else if(!upstream.ok)state='upstream_error';
     else{
       const raw=await upstream.text();

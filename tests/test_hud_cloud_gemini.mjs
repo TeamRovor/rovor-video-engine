@@ -60,6 +60,7 @@ test('Cloud chat sends one Google request, no Mac, records tokens and emits comp
   const send=async(url,init)=>{
     calls++;assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent');
     assert.equal(init.headers['x-goog-api-key'],key);
+    assert.equal(init.redirect,'manual');
     const doc=JSON.parse(init.body);
     assert.equal(doc.contents[0].role,'user');assert(!JSON.stringify(doc).includes('tools'));
     return googleResult();
@@ -96,4 +97,15 @@ test('Existing HUD denies anonymous access and cross-site Gemini prompts',async(
   assert.equal((await handle(get('/api/hud/gemini/models',{Authorization:'Bearer '+READER}),e)).status,200);
   assert.equal((await handle(post('https://evil.test'),e)).status,403);
   assert.equal((await handle(post(origin,{Authorization:'Bearer wrong'}),e)).status,401);
+});
+
+test('Cloud Gemini rejects redirected upstream hosts without replay',async()=>{
+  const e=env();let calls=0;
+  const result=await cloudGeminiChat(body,e,Date.parse('2026-11-09T06:00:00Z'),async(url,init)=>{
+    calls++;assert.equal(init.redirect,'manual');
+    return new Response(null,{status:302,headers:{Location:'https://not-google.example/steal'}});
+  });
+  assert.equal(calls,1);
+  assert.equal(result.status,502);
+  assert.equal((await result.json()).error,'gemini_upstream_redirect_denied');
 });

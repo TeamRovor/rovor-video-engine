@@ -66,11 +66,13 @@ export async function cloudGeminiChat(body,env,now=Date.now(),send=fetch) {
   let upstream;
   try{
     upstream=await send(ORIGIN+MODEL+':generateContent',{
-      method:'POST',redirect:'error',signal:AbortSignal.timeout(26000),
+      method:'POST',redirect:'manual',signal:AbortSignal.timeout(26000),
       headers:{'x-goog-api-key':env.GEMINI_API_KEY,'Content-Type':'application/json'},
       body:JSON.stringify({contents,generationConfig:{maxOutputTokens:256,temperature:0.2}})
     });
   }catch{return json(502,{error:'gemini_upstream_unavailable'});}
+  // Explicitly reject 3xx: redirect:"error" is unsupported in Workers.
+  if(upstream.status>=300&&upstream.status<400)return json(502,{error:'gemini_upstream_redirect_denied'});
   if(upstream.status===429)return json(429,{error:'gemini_provider_rate_limited'});
   if(!upstream.ok)return json(502,{error:'gemini_upstream_failed'});
   let document;
