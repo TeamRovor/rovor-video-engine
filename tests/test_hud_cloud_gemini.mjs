@@ -30,7 +30,8 @@ function mockGoogle(ids=[model,fast,strong],replyStatus=200){
     }
     assert.equal(options.method,'POST');
     assert.match(url,/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\/gemini-/);
-    assert.equal(JSON.parse(options.body).generationConfig.maxOutputTokens,768);
+    const selected=url.split('/models/')[1]?.split(':')[0];
+    assert.equal(JSON.parse(options.body).generationConfig.maxOutputTokens,selected?.endsWith('-lite')?1024:2048);
     assert(!JSON.stringify(JSON.parse(options.body)).includes('tools'));
     return replyStatus===429?new Response('',{status:429}):googleReply();
   };
