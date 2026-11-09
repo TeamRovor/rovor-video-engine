@@ -48,6 +48,10 @@ function db(){
   }
   return {
     prepare(sql){return {
+      async all(){
+        if(sql.startsWith('SELECT model,last_success_at'))return {results:[...health.values()]};
+        return {results:[]};
+      },
       bind(...a){return {
         async first(){
           if(sql.includes('hud_gemini_chat_budget')&&sql.includes('RETURNING')){
