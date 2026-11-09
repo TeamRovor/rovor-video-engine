@@ -197,3 +197,31 @@ test('invalid task and selector shape fail without an inference call', () => {
   assert.equal(selectModelRoutes(r,{task_family:'execute-shell'}).status,'blocked');
   assert.equal(selectModelRoutes(r,{task_family:'code',allow_second_model_review:'true'}).status,'blocked');
 });
+
+test('prototype-like model names never inherit Object prototype capabilities', () => {
+  const r = snapshot([{provider:'groq',observed_at_ms:NOW-1000,
+    models:[{id:'constructor'},{id:'toString'},{id:'__proto__'}]}]);
+  const found = r.providers.find(p=>p.provider==='groq').models;
+  assert.equal(found.length,2,'invalid underscore-prefixed ID discarded');
+  assert(found.every(m => m.advisory_task_families.length===0 && !m.selectable));
+});
+
+test('automatic routing refuses an unrelated specialist even when its billing is verified', () => {
+  const r = snapshot([catalog(GROQ)],[admission(GROQ)]);
+  assert.equal(selectModelRoutes(r,{task_family:'multimodal'}).reason,'no_task_capable_eligible_models');
+  assert.equal(selectModelRoutes(r,{task_family:'retrieval',allow_second_model_review:true}).routes.length,0);
+  assert.equal(selectModelRoutes(r,{task_family:'classification'}).status,'ready');
+});
+
+test('second-model review selects only independently eligible specialists for the task', () => {
+  const r = snapshot([catalog(GROQ),catalog(OPENROUTER)], [admission(GROQ),admission(OPENROUTER)]);
+  const plan = selectModelRoutes(r,{task_family:'classification',allow_second_model_review:true});
+  assert.equal(plan.status,'ready');
+  assert.deepEqual(plan.routes,[{provider:'groq',model_id:'openai/gpt-oss-20b'}]);
+});
+
+test('multiple owner-review rejections can override an initial weak capability preference', () => {
+  const failures = Array.from({length:5},(_,i)=>reviewed(GROQ,'classification','rejected',i));
+  const r = snapshot([catalog(GROQ),catalog(GEMINI)], [admission(GROQ),admission(GEMINI)], failures);
+  assert.equal(selectModelRoutes(r,{task_family:'classification'}).routes[0].provider,'gemini');
+});
