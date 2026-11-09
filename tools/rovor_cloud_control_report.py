@@ -233,8 +233,10 @@ def build_report(env: dict, opener=None) -> dict:
         "mac_required": False,
         "credentials_present": flags,
         "deploy_ready": can_deploy(flags, mode, confirmed),
-        "missing_deployment_prerequisites": sorted(k for k, v in flags.items() if not v and
-            (k not in ("private_site_service_token", "google_free_project_key") or mode == "deploy_and_test_gemini")),
+        "missing_deployment_prerequisites": sorted(k for k, v in flags.items() if not v and (
+            k not in ("private_site_service_token", "google_free_project_key") or
+            (k == "google_free_project_key" and mode == "deploy_and_test_gemini")
+        )),
         "owner_confirmed_free_tier": confirmed,
         "hud": summarize_hud(env.get("ROVOR_HUD_READER_TOKEN", ""), opener=opener),
         "workforce": summarize_workforce(env.get("ROVOR_GHOST_SERVICE_TOKEN", ""), opener=opener),
@@ -300,7 +302,13 @@ def main() -> int:
     if github_output:
         with open(github_output, "a", encoding="utf-8") as out:
             out.write("deploy_ready=" + str(report["deploy_ready"]).lower() + "\n")
-            out.write("site_accessible=" + str(report["workforce"]["service"] == "reachable").lower() + "\n")
+            site = report["workforce"]
+            out.write("site_accessible=" + str(site["service"] == "reachable").lower() + "\n")
+            # An owner-requested cloud shift must never fire when STOP is active
+            # or the provider fleet has no current verified eligibility.
+            shift_ready = (site["service"] == "reachable" and site["owner_stop"] == "dispatch_enabled"
+                           and isinstance(site["eligible_providers"], int) and site["eligible_providers"] > 0)
+            out.write("shift_ready=" + str(shift_ready).lower() + "\n")
             out.write("gemini_cloud_online=" + str(report["hud"]["gemini_cloud"] == "configured").lower() + "\n")
     markdown = summary(report)
     if os.getenv("GITHUB_STEP_SUMMARY"):
