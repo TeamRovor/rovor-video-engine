@@ -78,8 +78,8 @@ test('Ask ROVOR GitHub source is explicit, read-only, and touch-safe on phone, i
   assert.match(src,/if\(attachedSource\)payload\.repo_file=attachedSource/);
   assert.match(src,/no repository write access/i);
   assert.match(src,/rvc-repo-file\{[^}]*font-size:16px!important/);
-  assert.match(src,/repoRow\.hidden=sourceSelect\.value!=='omniroute'/);
-  assert.match(src,/repoSelect\.disabled=b\|\|sourceSelect\.value!=='omniroute'/);
+  assert.match(src,/repoRow\.hidden=false/); // cloud models can explicitly attach one source
+  assert.match(src,/repoSelect\.disabled=b/);
 });
 
 function taskPlanner(seed=null){
