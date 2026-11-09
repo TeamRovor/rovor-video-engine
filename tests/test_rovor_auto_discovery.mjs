@@ -1,14 +1,14 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {discoverCandidates,runDiscovery,MAX_AUTOMATED_DRAFTS_PER_UTC_DAY} from '../tools/rovor_auto_discovery.mjs';
+import {discoverCandidates,runDiscovery,MAX_AUTOMATED_DRAFTS_PER_UTC_DAY,MAX_DUPLICATE_PROBES_PER_RUN} from '../tools/rovor_auto_discovery.mjs';
 const NOW=Date.parse('2026-11-09T12:00:00Z'),HUD='https://rovor-hud-telemetry.rovordigital.workers.dev';
 const env={GITHUB_TOKEN:'ghs_'+ 'a'.repeat(40),ROVOR_HUD_WRITER_TOKEN:'w'.repeat(48),ROVOR_HUD_DEPLOY_ORIGIN:HUD};
 const recent=new Date(NOW-3600000).toISOString(),old=new Date(NOW-40*86400000).toISOString();
 const runs=[{id:987654,head_branch:'main',event:'push',conclusion:'failure',created_at:recent,name:'Private HUD CI'}];
 const issues=[{number:42,state:'open',labels:[{name:'security'}],updated_at:recent,assignees:[]},{number:43,state:'open',labels:[{name:'bug'}],updated_at:recent,assignees:[]}];
 const pulls=[{number:123,draft:false,state:'open',assignees:[],updated_at:old}];
-function fake({keys=[],today=0,runSet=runs,issueSet=issues,pullSet=pulls,duplicateFirst=false}={}){
+function fake({keys=[],today=0,runSet=runs,issueSet=issues,pullSet=pulls,duplicateFirst=false,duplicateAll=false}={}){
  const posts=[],calls=[];
  const send=async(url,options)=>{
    calls.push({url,options});assert.equal(options.redirect,'manual');
@@ -28,7 +28,7 @@ function fake({keys=[],today=0,runSet=runs,issueSet=issues,pullSet=pulls,duplica
    const data=JSON.parse(options.body);
    assert.deepEqual(Object.keys(data).sort(),['key','priority','text']);
    assert(data.text.length<1600);posts.push(data);
-   if(duplicateFirst&&posts.length===1)return Response.json({state:'already_recorded'},{status:409});
+   if(duplicateAll||(duplicateFirst&&posts.length===1))return Response.json({state:'already_recorded'},{status:409});
    return Response.json({id:'12345678-1234-1234-1234-123456789abc',queued:true,
      source:'autonomous_discovery',state:'pending_review',owner_review_required:true,
      execution_authorized:false,model_call_started:false,mac_required:false},{status:202});
@@ -84,4 +84,17 @@ test('hourly production discovery and ephemeral PR verification use isolated con
  assert.match(workflow,/cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/);
  assert.match(workflow,/if: github\.ref == 'refs\/heads\/main' && \(github\.event_name == 'schedule'/);
  assert.match(workflow,/permissions:\s+contents: read\s+actions: read\s+issues: read\s+pull-requests: read/);
+});
+
+test('repeated old D1 duplicates cannot create an unbounded network retry loop',async()=>{
+ const dated=new Date(NOW-12*86400000).toISOString();
+ const backlog=Array.from({length:30},(_,i)=>({
+   number:200+i,draft:false,state:'open',assignees:[],updated_at:dated
+ }));
+ const f=fake({runSet:[],issueSet:[],pullSet:backlog,duplicateAll:true});
+ const result=await runDiscovery({env,send:f.send,now:NOW});
+ assert.equal(MAX_DUPLICATE_PROBES_PER_RUN,6);
+ assert.equal(result.state,'duplicate_probe_budget_reached');
+ assert.equal(result.queued,false);
+ assert.equal(f.posts.length,MAX_DUPLICATE_PROBES_PER_RUN);
 });
