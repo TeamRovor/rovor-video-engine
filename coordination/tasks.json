@@ -5979,6 +5979,26 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/105"
         }
       ]
+    },
+    {
+      "id": "hud-cloud-github-source-context-20261109",
+      "title": "Ask ROVOR: read reviewed GitHub source directly from private cloud HUD without Mac",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / ROVOR cloud GitHub source review 2026-11-09",
+      "branch": "feature/ask-rovor-cloud-github-source-20261109",
+      "scopes": [
+        "subsystem:ask-rovor-reviewed-cloud-github-source",
+        "integrations/hud-cloud/repo-source.mjs",
+        "integrations/hud-cloud/build-repo-snapshot.mjs",
+        "tests/test_hud_repo_source_cloud.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-09T09:14:38.835Z",
+      "next_update": "After focused GitHub CI, review, protected main deployment and exact-SHA readback",
+      "next_action": "Run full private HUD CI including snapshot safety and iOS/browser controls; review and merge source PR only when green; verify actual Cloudflare deployed bundle commit and anonymous-denial readback. Do not infer actual GitHub write permission or model inference.",
+      "acceptance": "Reviewed GitHub SHA compiled from exact Git objects; allowlisted file only, <=1,800-character bounded excerpt, private auth, explicit opt-in cloud model context, no Mac/network GitHub tokens, no GitHub writes, no paid route, CI PASS and deployment readback exact SHA.",
+      "evidence": []
     }
   ]
 }

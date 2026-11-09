@@ -1135,6 +1135,14 @@
         "github-read",
         "github-write"
       ]
+    },
+    "hud-cloud-github-source-context-20261109": {
+      "lane": "efficiency",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ]
     }
   }
 }
