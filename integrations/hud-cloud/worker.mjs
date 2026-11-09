@@ -413,7 +413,7 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       const result = await chatStatus(env.DB, url.pathname.slice('/api/hud/chat/status/'.length), now);
       return response(result.status, result.status === 200 ? result : {error:result.error});
     }
-    if (request.method === 'GET' && url.pathname === '/api/hud/gemini/models') return response(200, cloudGeminiModels(env));
+    if (request.method === 'GET' && url.pathname === '/api/hud/gemini/models') return response(200, await cloudGeminiModels(env));
     if (request.method === 'GET' && url.pathname === '/api/hud/gemini/usage') return cloudGeminiUsage(env,now);
     if (request.method === 'POST' && url.pathname === '/api/hud/gemini/chat') {
       if (request.headers.get('Origin') !== url.origin) return response(403,{error:'origin_denied'});
