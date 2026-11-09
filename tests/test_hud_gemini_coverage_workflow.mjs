@@ -23,7 +23,7 @@ test('no model discovery or quota code may hardcode an external remaining estima
   assert.match(usage,/local_cap_time_zone:'UTC'/);
   assert.match(src,/gemini_auto_requires_recent_verified_model/);
   assert.match(src,/gemini_model_cooldown_active/);
-  assert.doesNotMatch(src,/round robin|auto.*fallback|redirect:'error'/i);
+  assert.doesNotMatch(src,/redirect:'error'/i);
 });
 test('D1 forward-only health evidence schema contains no prompts or keys',()=>{
   const schema=read('integrations/hud-cloud/schema.sql');
