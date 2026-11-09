@@ -667,6 +667,9 @@
                 (measured?.attempts??0)+' reserved · '+(measured?.completed??0)+
                 ' completed · '+(measured?.failures??0)+' failed · '+
                 (measured?.input_tokens??0)+' prompt / '+(measured?.output_tokens??0)+' output tokens'}));
+              if(measured?.last_error_code)
+                chip.append(el('small',{textContent:'Last recorded error category: '+
+                  String(measured.last_error_code).replaceAll('_',' ')+' · no automatic replay'}));
               if(evidence?.last_verified_at||evidence?.last_verified_day)
                 chip.append(el('small',{textContent:'Last confirmed reply: '+
                   (evidence.last_verified_at?new Date(evidence.last_verified_at).toLocaleString():
