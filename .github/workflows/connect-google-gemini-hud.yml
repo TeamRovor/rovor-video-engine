@@ -1,0 +1,140 @@
+name: Connect Google Gemini to existing ROVOR HUD
+
+# Owner clicks Run workflow on main. This never opens the Mac to inbound traffic,
+# publishes a replacement HUD, or changes the nine OmniRoute provider secrets.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rovor-existing-hud-gemini-activation
+  cancel-in-progress: false
+
+jobs:
+  source-checks:
+    name: Check Gemini route safety before touching the Mac
+    if: github.repository == 'TeamRovor/rovor-video-engine' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate exact route selection, private auth, and one-shot HUD verification
+        run: |
+          set -euo pipefail
+          node --check tools/activate_hud_gemini_route.mjs
+          node --check tools/verify_hud_gemini_activation.mjs
+          node --check tools/hud_chat_relay_client.mjs
+          bash -n tools/install_hud_chat_relay.sh
+          node --test tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_gemini_activation_workflow.mjs
+
+  activate-on-owned-mac:
+    name: Activate only the existing Ask ROVOR relay on the owned Mac
+    needs: source-checks
+    # This label is ALREADY used by the repo's Mac workflows. If the owned
+    # Mac runner is offline this job remains queued: no Linux/cloud runner can
+    # secretly reach macOS Keychain or OmniRoute localhost.
+    runs-on: [self-hosted, macOS, X64, rovor-video]
+    timeout-minutes: 15
+    outputs:
+      route: ${{ steps.activate.outputs.route }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Require the actual signed-in ROVOR Mac with working telemetry
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -s)" = Darwin
+          test "$(uname -m)" = x86_64
+          command -v node >/dev/null
+          test "$(node -p 'Number(process.versions.node.split(".")[0])')" -ge 24
+          launchctl print "gui/$(id -u)/com.rovor.hud-reporting" >/dev/null || {
+            echo "::error::The runner is not the Mac user that owns the functioning ROVOR HUD telemetry LaunchAgent."
+            exit 1
+          }
+          test -d "$HOME/Documents/Rovor"
+          test ! -L "$HOME/Documents/Rovor"
+          # Existing writer credential, never printed or exported.
+          /usr/bin/security find-generic-password -s rovordigital.hud.cloudflare.writer -w >/dev/null 2>&1 ||
+          /usr/bin/security find-generic-password -s rovordigital.hud.writer -w >/dev/null 2>&1 || {
+            echo "::error::The existing private HUD writer credential is not available to this Mac account."
+            exit 1
+          }
+          echo "Owned Mac and existing reporting service found; no changes to reporter."
+
+      - name: Keep the chat relay in a persistent isolated reviewed checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$HOME/Documents/Rovor/AskRovor-Gemini-Relay"
+          REPO='https://github.com/TeamRovor/rovor-video-engine.git'
+          if [ -L "$ROOT" ]; then
+            echo "::error::Refusing redirected relay directory"
+            exit 1
+          fi
+          if [ ! -e "$ROOT" ]; then
+            # Source code only. Never clone into the existing reporter directory
+            # or reuse an ephemeral GitHub runner workspace for LaunchAgent.
+            git clone --quiet --depth 1 --filter=blob:none --sparse "$REPO" "$ROOT"
+          else
+            test -d "$ROOT/.git"
+            test "$(git -C "$ROOT" remote get-url origin)" = "$REPO"
+            test -z "$(git -C "$ROOT" status --porcelain)" || {
+              echo "::error::Persistent relay checkout has local changes; refusing overwrite"
+              exit 1
+            }
+          fi
+          git -C "$ROOT" fetch --quiet --depth 1 origin "$GITHUB_SHA"
+          git -C "$ROOT" checkout --quiet --detach "$GITHUB_SHA"
+          git -C "$ROOT" sparse-checkout set tools integrations/hud-cloud
+          test "$(git -C "$ROOT" rev-parse HEAD)" = "$GITHUB_SHA"
+          echo "Reviewed Gemini relay pinned to GitHub main commit."
+
+      - name: Activate exact direct Google Gemini route with no inference
+        id: activate
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$HOME/Documents/Rovor/AskRovor-Gemini-Relay"
+          RESULT="$(node "$ROOT/tools/activate_hud_gemini_route.mjs")"
+          printf '%s\n' "$RESULT"
+          ROUTE="$(printf '%s\n' "$RESULT" | sed -n 's/^Ask ROVOR Gemini route configured: //p' | tail -n 1)"
+          if [[ ! "$ROUTE" =~ ^(gemini|google|google-ai-studio)[/:]gemini-(3[.]1-flash-lite|2[.]5-flash-lite)$ ]]; then
+            echo "::error::No exact direct Google free-tier route was activated"
+            exit 1
+          fi
+          echo "route=$ROUTE" >> "$GITHUB_OUTPUT"
+          launchctl print "gui/$(id -u)/com.rovor.hud-chat-relay" >/dev/null
+          echo "Mac chat relay registered. Cloud HUD readback is required next."
+
+  verify-live-hud:
+    name: Verify Gemini is online in Ask ROVOR and completes one test
+    needs: activate-on-owned-mac
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: rovor-hud-production
+    env:
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+      ROVOR_GEMINI_ROUTE: ${{ needs.activate-on-owned-mac.outputs.route }}
+      ROVOR_GEMINI_CANARY: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Authenticate to existing HUD, prove live model catalog, run exactly one benign canary
+        run: |
+          set -euo pipefail
+          node tools/verify_hud_gemini_activation.mjs
+          echo "SUCCESS: Gemini appeared in Ask ROVOR and returned a nonempty receipt."
+          echo "The reported route is the requested route; ultimate upstream identity must be checked separately."

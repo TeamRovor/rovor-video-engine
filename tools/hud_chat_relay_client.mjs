@@ -14,6 +14,13 @@ import {isEntrypoint} from './hud_omniroute_bridge.mjs';
 
 const exec = promisify(execFile);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+// The existing Cloudflare HUD reporter uses the legacy Keychain service name.
+// Reuse that same private writer credential without copying it to a plist,
+// shell history or a second Keychain item. Keep canonical-name compatibility.
+export async function hudWriterCredential(read = fromKeychain) {
+  return await read('rovordigital.hud.cloudflare.writer') ||
+    await read('rovordigital.hud.writer');
+}
 async function fromKeychain(service) {
   if (process.platform !== 'darwin') return null;
   try { return (await exec('/usr/bin/security', ['find-generic-password','-s',service,'-w'],
@@ -175,10 +182,7 @@ export async function runRelay({origin,writerKey,chat,stop,send=fetch,interval=2
 }
 async function main() {
   const origin=validateTarget(process.env.ROVOR_HUD_ORIGIN);
-  // The existing Cloudflare telemetry reporter uses the dedicated Cloudflare
-  // writer Keychain service. Reuse it for the outbound chat relay, with a
-  // legacy fallback; never disclose or copy its value into the HUD/browser.
-  const writerKey=process.env.ROVOR_HUD_WRITER_TOKEN||await fromKeychain('rovordigital.hud.cloudflare.writer')||await fromKeychain('rovordigital.hud.writer');
+  const writerKey=process.env.ROVOR_HUD_WRITER_TOKEN||await hudWriterCredential();
   const apiKey=process.env.OMNIROUTE_API_KEY||await fromKeychain('rovordigital.omniroute.endpoint');
   const cliAuth=await localCliAuth();
   if (!apiKey && !cliAuth) throw Error('omniroute_gateway_auth_missing');

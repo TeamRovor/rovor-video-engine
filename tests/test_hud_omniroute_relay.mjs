@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 import {RELAY, cleanCatalog, cleanReply} from '../integrations/hud-cloud/omniroute-chat-relay.mjs';
-import {eligibleModels,executeClaim,readEvents,runRelay} from '../tools/hud_chat_relay_client.mjs';
+import {eligibleModels,executeClaim,readEvents,runRelay,hudWriterCredential} from '../tools/hud_chat_relay_client.mjs';
 
 const NOW=Date.parse('2026-11-04T05:00:00.000Z');
 const READER='r'.repeat(48),WRITER='w'.repeat(48);
@@ -203,13 +203,23 @@ test('a slow model reply keeps the private Mac bridge online without repeating i
   assert.equal(finished,1);
 });
 
-test('Groq chat route needs explicit owner allowlist, and installer reuses existing Cloudflare writer key',()=>{
+test('Groq Ask ROVOR advertisement requires exact owner approval; existing writer key is reused',async()=>{
   const id='groq/openai/gpt-oss-20b';
   assert.deepEqual(eligibleModels([id]),[]);
   assert.deepEqual(eligibleModels([id],[id]),[id]);
+  const lookups=[];
+  const writer=await hudWriterCredential(async service=>{
+    lookups.push(service);
+    return service==='rovordigital.hud.cloudflare.writer'?'existing-credential':null;
+  });
+  assert.equal(writer,'existing-credential');
+  assert.deepEqual(lookups,['rovordigital.hud.cloudflare.writer']);
+  const fallback=[];
+  assert.equal(await hudWriterCredential(async service=>{
+    fallback.push(service);
+    return service==='rovordigital.hud.writer'?'legacy-credential':null;
+  }),'legacy-credential');
+  assert.deepEqual(fallback,['rovordigital.hud.cloudflare.writer','rovordigital.hud.writer']);
   const installer=readFileSync(new URL('../tools/install_hud_chat_relay.sh',import.meta.url),'utf8');
-  const client=readFileSync(new URL('../tools/hud_chat_relay_client.mjs',import.meta.url),'utf8');
-  assert.ok(installer.includes('rovordigital.hud.cloudflare.writer'));
-  assert.ok(client.includes("fromKeychain('rovordigital.hud.cloudflare.writer')"));
   assert.ok(installer.includes('ROVOR_HUD_CHAT_FREE_MODELS'));
 });

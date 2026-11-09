@@ -24,7 +24,7 @@ if(url.protocol!=="https:"||url.origin!==value.replace(/\/$/,"")||url.username||
 ' "$origin"
 if ! /usr/bin/security find-generic-password -s rovordigital.hud.cloudflare.writer -w >/dev/null 2>&1 &&
    ! /usr/bin/security find-generic-password -s rovordigital.hud.writer -w >/dev/null 2>&1; then
-  echo 'Existing HUD writer credential is missing from Keychain (Cloudflare or legacy service). No new credentials were created.' >&2
+  echo 'Existing HUD writer credential is missing from Keychain (checked both supported service names). No new credentials were created.' >&2
   exit 2
 fi
 if ! /usr/bin/security find-generic-password -s rovordigital.omniroute.endpoint -w >/dev/null 2>&1; then
