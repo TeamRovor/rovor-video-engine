@@ -187,7 +187,7 @@ export async function cloudGeminiChat(body,env,now=Date.now(),send=fetch){
     upstream=await send(ENDPOINT+'/'+model+':generateContent',{
       method:'POST',redirect:'error',signal:AbortSignal.timeout(26000),
       headers:{'x-goog-api-key':env.GEMINI_API_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({contents,generationConfig:{maxOutputTokens:768,temperature:0.25}})
+      body:JSON.stringify({contents,generationConfig:{maxOutputTokens:model.endsWith('-lite')?1024:2048,temperature:0.25}})
     });
   }catch{
     await modelFailed(env.DB,day,model,'transport_error');
@@ -208,7 +208,7 @@ export async function cloudGeminiChat(body,env,now=Date.now(),send=fetch){
   }
   const candidate=data?.candidates?.[0];
   const output=candidate?.content?.parts?.filter(p=>typeof p?.text==='string').map(p=>p.text).join('')||'';
-  if(!output.trim()||output.length>12000||!['STOP','MAX_TOKENS'].includes(candidate?.finishReason)){
+  if(!output.trim()||output.length>12000||candidate?.finishReason!=='STOP'){
     await modelFailed(env.DB,day,model,'no_completed_text');
     return fixedError(502,'gemini_no_completed_text');
   }
