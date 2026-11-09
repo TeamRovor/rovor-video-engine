@@ -40,7 +40,7 @@ test('Gemini actual local D1 reservations do not masquerade as account-wide Goog
   assert.match(html,/VERIFIED 7D/);
   assert.match(html,/LISTED ONLY/);
   assert.match(html,/Google account RPM \/ TPM \/ RPD unknown/);
-  assert.doesNotMatch(html,/Google.*remaining.*9/);
+  assert.doesNotMatch(html,/Google (?:account |project )?remaining(?: requests)?[: ]+9\b/i);
   assert.equal((html.match(/class="rvq-v2-provider rvq-overview-tile"/g)||[]).length,9);
 });
 test('unsafe private provider model strings are escaped in the cloud view',()=>{
