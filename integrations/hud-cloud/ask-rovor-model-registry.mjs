@@ -192,7 +192,8 @@ export function createModelRegistry({catalogs = [], admissions = [], reviews = [
       models.push({provider, id,
         context_length: Number.isSafeInteger(source?.context_length) && source.context_length > 0 &&
           source.context_length <= 10_000_000 ? source.context_length : null,
-        advisory_task_families: [...(ADVISORY_CAPABILITIES[provider][id] || [])],
+        advisory_task_families: Object.hasOwn(ADVISORY_CAPABILITIES[provider], id)
+          ? [...ADVISORY_CAPABILITIES[provider][id]] : [],
         measured_quality_by_task: byTask,
         selectable: blocked_reason === null,
         blocked_reason,
@@ -230,19 +231,27 @@ export function selectModelRoutes(registry, {
       return {status: 'blocked', reason: match?.blocked_reason || 'manual_model_unavailable', routes: []};
     return {status: 'ready', reason: 'exact_manual_selection', routes: [{provider: match.provider, model_id: match.id}]};
   }
-  const candidates = all.filter(m => m.selectable);
-  if (!candidates.length) return {status: 'blocked', reason: 'no_verified_eligible_models', routes: []};
-  const fit = model => model.advisory_task_families.includes(task_family) ? 1 : 0;
-  const quality = model => model.measured_quality_by_task?.[task_family]?.accepted_rate;
-  candidates.sort((a,b) => fit(b)-fit(a) ||
-    ((quality(a) !== null && quality(a) !== undefined && quality(b) !== null && quality(b) !== undefined)
-      ? quality(b)-quality(a) : 0) ||
-    (a.provider.localeCompare(b.provider) || a.id.localeCompare(b.id)));
+  const eligible = all.filter(m => m.selectable);
+  if (!eligible.length) return {status: 'blocked', reason: 'no_verified_eligible_models', routes: []};
+  // Catalog presence does not establish task capability. Avoid choosing a
+  // random eligible model when no exact-ID or measured fit exists.
+  const quality = model => model.measured_quality_by_task?.[task_family]?.accepted_rate ?? null;
+  const advisory = model => model.advisory_task_families.includes(task_family);
+  const candidates = eligible.filter(m => advisory(m) || (quality(m) !== null && quality(m) > 0));
+  if (!candidates.length) return {status: 'blocked', reason: 'no_task_capable_eligible_models', routes: []};
+  const rank = model => {
+    const q = quality(model);
+    // Current owner-reviewed PASS/FAIL evidence can correct weak editorial
+    // task-fit hypotheses; no self-reported model-quality percentages.
+    return (advisory(model) ? 1 : 0) + (q === null ? 0 : 2 * (q - 0.5));
+  };
+  candidates.sort((a,b) => rank(b)-rank(a) ||
+    a.provider.localeCompare(b.provider) || a.id.localeCompare(b.id));
   const chosen = [candidates[0]];
   if (allow_second_model_review) {
     const second = candidates.find(m => m.provider !== chosen[0].provider);
     if (second) chosen.push(second);
   }
-  return {status: 'ready', reason: 'eligible_capability_hint_with_review_tiebreak',
+  return {status: 'ready', reason: 'verified_eligibility_then_task_fit_and_owner_review',
     routes: chosen.map(m => ({provider: m.provider, model_id: m.id}))};
 }
