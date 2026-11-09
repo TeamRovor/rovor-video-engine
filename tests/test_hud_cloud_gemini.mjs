@@ -98,6 +98,8 @@ test('Catalog is key-listed + free-text allowlisted, not a paid/imagery/embeddin
   assert(listing.other_catalog_models>0);
   assert.equal((await cloudGeminiModels({},async()=>{throw Error('no calls');})).online,false);
   assert.equal(FREE_GEMINI_MODELS.includes('gemini-3.1-pro-preview'),false);
+  assert(FREE_GEMINI_MODELS.includes('gemini-3.7-flash'));
+  assert(FREE_GEMINI_MODELS.includes('gemini-3.6-flash'));
 });
 
 test('Unknown owner Free-tier model allowlist fails closed',async()=>{
