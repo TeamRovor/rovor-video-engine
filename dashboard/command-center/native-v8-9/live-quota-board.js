@@ -936,7 +936,7 @@ function cloudGeminiPanel(){
   const catalog=sample?.catalog,usage=sample?.usage;
   if(!catalog||!usage||catalog.source!=='google_gemini_cloud_direct'||usage.source!=='cloud_gemini_direct')
     return '<section class="rvq-cloud" aria-label="Google Gemini cloud model activity"><strong>GOOGLE GEMINI · DIRECT CLOUD · NO MAC</strong><span>Private cloud model/receipt readback unavailable. No quota or inference is assumed.</span></section>';
-  const allowed=Array.isArray(catalog.models)?catalog.models.filter(m=>typeof m==='string'&&/^gemini-(?:2[.]5|3[.](?:1|5|8))-flash(?:-lite)?$/.test(m)).slice(0,9):[];
+  const allowed=Array.isArray(catalog.models)?catalog.models.filter(m=>typeof m==='string'&&/^gemini-(?:2[.]5|3[.](?:1|5|6|7|8))-flash(?:-lite)?$/.test(m)).slice(0,9):[];
   const rows=Array.isArray(usage.models)?usage.models.filter(m=>m&&typeof m.model==='string'&&allowed.includes(m.model)&&
     Number.isSafeInteger(m.attempts)&&m.attempts>=0&&Number.isSafeInteger(m.completed)&&m.completed>=0).slice(0,9):[];
   const total=Number.isSafeInteger(usage.attempts)&&usage.attempts>=0?usage.attempts:null;
