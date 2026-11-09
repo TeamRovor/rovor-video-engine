@@ -1021,10 +1021,12 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
   ' · catalogue '+esc(gc?.state||'unavailable')+' · billing status NOT VERIFIED by headers</span>'+
   '<span>Daily requests (RPD): '+(grpd?fmt(grpd.remaining)+' / '+fmt(grpd.limit)+' remaining'+(grpd.reset_at?' · reset '+esc(prettyTime(grpd.reset_at)):''):'UNKNOWN')+
   ' · tokens/min (TPM): '+(gtpm?fmt(gtpm.remaining)+' / '+fmt(gtpm.limit)+' remaining'+(gtpm.reset_at?' · reset '+esc(prettyTime(gtpm.reset_at)):''):'UNKNOWN')+
-  ' · only fresh Groq response headers are shown</span>';
+  ' · only fresh Groq response headers are shown</span>'+
+  (gc?.state==='catalog_received'&&(!grpd||!gtpm)?
+   '<span>Groq model lookup succeeded, but its catalogue response did not supply usable RPD/TPM rate headers. Remaining allowance cannot be calculated. UNKNOWN does not mean zero or a Mac disconnection.</span>':'');
  const cloudGroqPanel='<section class="rvq-cloud" aria-label="Mac independent cloud Groq activity"><strong>CLOUD GROQ · DIRECT · NO MAC REQUIRED</strong>'+
    (cloudGroqValid?'<span>Route: '+esc(groqCloud.model||'groq/openai/gpt-oss-20b')+
-     ' · '+(groqCloud.ready===true?'FREE-ELIGIBILITY CONFIGURED (not an inference receipt)':'NOT VERIFIED / DISABLED')+'</span>'+
+     ' · '+(groqCloud.ready===true?'FREE-ELIGIBILITY CONFIGURED (not an inference receipt)':'INFERENCE NOT APPROVED')+'</span>'+
      '<span>Locally admitted requests today: '+(Number.isSafeInteger(groqCloud.locally_admitted_today)?fmt(groqCloud.locally_admitted_today):'unknown')+
      ' · billing balance and other workloads UNKNOWN</span>'+
      '<span>Last cloud completion: '+(groqCloud.last_cloud_completion_at?esc(prettyTime(groqCloud.last_cloud_completion_at)):'none recorded')+

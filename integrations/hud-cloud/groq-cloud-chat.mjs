@@ -11,17 +11,23 @@ const digits=v=>typeof v==='string'&&/^(0|[1-9][0-9]{0,15})$/.test(v)?Number(v):
 
 // All conditions are independent private operator attestations; the hash and
 // booleans do NOT themselves prove billing or quota. Expiry fails closed.
-export function groqCloudReady(env, now=Date.now()) {
+// Provider catalogue presence and rate-limit headers do not prove Free billing.
+// Every inference call must pass this current owner-verified admission gate.
+export function groqAdmission(env,now=Date.now()){
+  const denied=reason=>({ready:false,reason,verification_expires_at:null});
+  if(env?.GROQ_HUD_CHAT_ENABLED!=='true')return denied('chat_disabled');
+  if(typeof env?.GROQ_HUD_API_KEY!=='string'||env.GROQ_HUD_API_KEY.length<16)return denied('cloud_key_unavailable');
+  if(env?.GROQ_HUD_FREE_TIER_VERIFIED!=='true')return denied('owner_free_tier_attestation_missing');
+  if(!/^[a-f0-9]{64}$/.test(env?.GROQ_HUD_EVIDENCE_SHA256||''))return denied('owner_evidence_digest_missing');
   const verified=digits(env?.GROQ_HUD_VERIFIED_AT),valid=digits(env?.GROQ_HUD_VALID_UNTIL);
+  if(!goodInteger(verified)||!goodInteger(valid)||verified>now||valid<=verified||valid>verified+DAY)
+    return denied('attestation_dates_invalid');
+  if(now-verified>DAY||valid<=now)return denied('owner_attestation_expired');
   const cap=digits(env?.GROQ_HUD_DAILY_BUDGET);
-  return env?.GROQ_HUD_CHAT_ENABLED==='true' &&
-    env?.GROQ_HUD_FREE_TIER_VERIFIED==='true' &&
-    typeof env?.GROQ_HUD_API_KEY==='string' && env.GROQ_HUD_API_KEY.length>=16 &&
-    /^[a-f0-9]{64}$/.test(env?.GROQ_HUD_EVIDENCE_SHA256||'') &&
-    goodInteger(verified)&&goodInteger(valid)&&verified<=now&&now-verified<=DAY &&
-    valid>now&&valid<=verified+DAY &&
-    goodInteger(cap)&&cap>=1&&cap<=30;
+  if(!goodInteger(cap)||cap<1||cap>30)return denied('daily_budget_invalid');
+  return {ready:true,reason:'ready',verification_expires_at:new Date(valid).toISOString(),local_daily_request_cap:cap};
 }
+export function groqCloudReady(env,now=Date.now()){return groqAdmission(env,now).ready;}
 
 function validatedMessages(body) {
   if(!body||!Array.isArray(body.messages)||body.messages.length<1||body.messages.length>12)return null;
@@ -53,11 +59,11 @@ async function reserve(db,now,limit){
 }
 
 export async function cloudGroqStatus(env,db,now=Date.now()) {
-  const ready=groqCloudReady(env,now);
+  const admission=groqAdmission(env,now),ready=admission.ready;
   const usage=await db.prepare('SELECT day_id,attempts,last_started_at FROM hud_groq_chat_admission WHERE id=1').bind().first();
   const receipt=await db.prepare('SELECT created_at,model,prompt_tokens,completion_tokens FROM hud_groq_chat_receipts ORDER BY created_at DESC LIMIT 1').bind().first();
   const catalog=await groqCatalogEvidence(db,now);
-  return {source:'cloud_direct_groq',model:GROQ_CLOUD_ROUTE,ready,mac_required:false,
+  return {source:'cloud_direct_groq',model:GROQ_CLOUD_ROUTE,ready,admission,mac_required:false,
     credentials_present:typeof env?.GROQ_HUD_API_KEY==='string'&&env.GROQ_HUD_API_KEY.length>=16,
     catalog,
     observed_at:new Date(now).toISOString(),

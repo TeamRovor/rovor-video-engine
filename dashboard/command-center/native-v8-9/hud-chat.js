@@ -4,6 +4,17 @@
   const KEY='rovor_hud_chat_v1',SESSIONS_KEY='rovor_chat_sessions_v2',MAX_KEPT=30;
   const PROMPTS=['Develop three visual campaign concepts','Review this code and suggest improvements','Create a high-end creative brief','Break down my project into clear steps'];
   const PROVIDERS=[['gemini','Google Gemini'],['mistral','Mistral'],['nvidia','NVIDIA'],['cohere','Cohere'],['sambanova','SambaNova'],['cloudflare-ai','Cloudflare Workers AI'],['groq','Groq'],['openrouter','OpenRouter'],['huggingface','Hugging Face']];
+  const GROQ_ADMISSION_LABELS=Object.freeze({
+    chat_disabled:'Cloud Groq inference is not enabled',
+    cloud_key_unavailable:'Cloud Groq key unavailable',
+    owner_free_tier_attestation_missing:'Owner Free-plan approval not recorded',
+    owner_evidence_digest_missing:'Owner Free-plan evidence missing',
+    attestation_dates_invalid:'Owner approval dates invalid',
+    owner_attestation_expired:'Owner Free-plan approval expired',
+    daily_budget_invalid:'Daily request safety budget invalid',
+    ready:'Owner-approved cloud inference available'
+  });
+  const groqAdmissionLabel=data=>GROQ_ADMISSION_LABELS[data?.admission?.reason]||'Inference approval unverified';
   // Group only by explicit route prefixes. A :free name or configured key
   // alone does not prove a live free entitlement or successful inference.
   function routeGroup(id){
@@ -593,9 +604,12 @@
             if(!response.ok)throw Error('cloud_status_unavailable');
             const data=await response.json();
             if(panel.dataset.open!=='true')return;
-            providerSummary.textContent='CLOUD GROQ · '+(data.ready?'CONFIGURED':'NOT VERIFIED')+' · NO MAC REQUIRED';
+            providerSummary.textContent='CLOUD GROQ · '+(data.ready?'CHAT READY':'CHAT PAUSED')+' · NO MAC REQUIRED';
             providerList.textContent='';
             const chip=el('div',{className:'rvc-provider-item',textContent:'Groq · GPT-OSS 20B'});
+            chip.append(el('small',{textContent:'Inference: '+groqAdmissionLabel(data)+
+              (data?.admission?.verification_expires_at?' · approval expires '+new Date(data.admission.verification_expires_at).toLocaleString():'')+
+              ' · billing/Free-tier verification is separate from model access'}));
             chip.append(el('small',{textContent:'Cloud calls admitted today: '+(Number.isSafeInteger(data.locally_admitted_today)?data.locally_admitted_today:'unknown')+
               ' · Last cloud completion: '+(data.last_cloud_completion_at?new Date(data.last_cloud_completion_at).toLocaleString():'none recorded')+' · Billing tier not proved by quota headers'}));
             const catalog=data.catalog||{},rpd=catalog.requests_per_day,tpm=catalog.tokens_per_minute;
@@ -605,6 +619,8 @@
               (rpd.reset_at?' · reset '+new Date(rpd.reset_at).toLocaleString():''):'Groq API daily request limit: unverified'}));
             chip.append(el('small',{textContent:tpm?'Groq API minute tokens: '+tpm.remaining+' / '+tpm.limit+
               (tpm.reset_at?' · reset '+new Date(tpm.reset_at).toLocaleString():''):'Groq API token limit: unverified'}));
+            if(catalog.state==='catalog_received'&&(!rpd||!tpm))
+              chip.append(el('small',{textContent:'Model access verified, but the catalogue response did not supply usable daily-request or per-minute-token limits. Remaining allowance UNKNOWN, not zero; no Mac needed.'}));
             providerList.append(chip);
           }catch{providerSummary.textContent='CLOUD GROQ STATUS UNAVAILABLE · NO MAC REQUIRED';providerList.textContent='';}
         }else{
@@ -694,7 +710,7 @@
         stateLabel.textContent=sourceSelect.value==='omniroute'?
           'Optional Mac bridge unavailable · use cloud Gemini or Cloudflare AI.':
           sourceSelect.value==='gemini'?'Cloud Gemini unavailable · cloud key/free-tier configuration required.':
-          sourceSelect.value==='groq'?'Cloud Groq unavailable · cloud key/free-tier configuration required.':
+          sourceSelect.value==='groq'?'Groq cloud model may be connected, but chat is paused until owner-approved Free-plan admission. Check Groq details; Mac not needed.':
           'Cloudflare AI unavailable · no hosted model routes confirmed.';
       }
     }
