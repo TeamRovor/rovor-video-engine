@@ -199,7 +199,7 @@ test('original HUD is served behind authentication with automatic same-origin te
   const env = environment(); env.ASSETS = {fetch: async () => new Response('<html><body>Original HUD</body></html>', {headers: {'Content-Type': 'text/html'}})};
   assert.equal((await handle(request('/', {token: null}), env, NOW)).status, 303);
   const html = await (await handle(request('/'), env, NOW)).text();
-  assert.match(html, /Original HUD/); assert.match(html, /ROVOR_QUOTA_BOARD\?\.startCloud/); assert.match(html, /workload-popup\.js/); assert.doesNotMatch(html, /ROVOR_START_OMNIROUTE\?\.\(/);
+  assert.match(html, /Original HUD/); assert.match(html, /ROVOR_QUOTA_BOARD\?\.startCloud/); assert.match(html, /ROVOR_WORKLOAD\?\.mountPreview/); assert.doesNotMatch(html, /ROVOR_START_OMNIROUTE\?\.\(/);
   assert.equal(html.includes(READER), false); assert.equal(html.includes(WRITER), false);
 });
 
