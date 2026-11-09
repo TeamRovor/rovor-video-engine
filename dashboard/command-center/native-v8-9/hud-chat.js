@@ -589,7 +589,7 @@
       if(sourceSelect.value!=='omniroute'){
         if(sourceSelect.value==='groq'){
           try{
-            const response=await fetch('/api/chat/groq/status',{credentials:'same-origin',cache:'no-store'});
+            const response=await fetch('/api/chat/groq/status?refresh=1',{credentials:'same-origin',cache:'no-store'});
             if(!response.ok)throw Error('cloud_status_unavailable');
             const data=await response.json();
             if(panel.dataset.open!=='true')return;
@@ -597,7 +597,14 @@
             providerList.textContent='';
             const chip=el('div',{className:'rvc-provider-item',textContent:'Groq · GPT-OSS 20B'});
             chip.append(el('small',{textContent:'Cloud calls admitted today: '+(Number.isSafeInteger(data.locally_admitted_today)?data.locally_admitted_today:'unknown')+
-              ' · Last cloud completion: '+(data.last_cloud_completion_at?new Date(data.last_cloud_completion_at).toLocaleString():'none recorded')+' · Provider quota unknown'}));
+              ' · Last cloud completion: '+(data.last_cloud_completion_at?new Date(data.last_cloud_completion_at).toLocaleString():'none recorded')+' · Billing tier not proved by quota headers'}));
+            const catalog=data.catalog||{},rpd=catalog.requests_per_day,tpm=catalog.tokens_per_minute;
+            chip.append(el('small',{textContent:'Groq model catalogue: '+(catalog.state||'not checked')+
+              ' · GPT-OSS 20B: '+(catalog.model_present===true?'listed':catalog.model_present===false?'not listed':'not verified')}));
+            chip.append(el('small',{textContent:rpd?'Groq API daily requests: '+rpd.remaining+' / '+rpd.limit+
+              (rpd.reset_at?' · reset '+new Date(rpd.reset_at).toLocaleString():''):'Groq API daily request limit: unverified'}));
+            chip.append(el('small',{textContent:tpm?'Groq API minute tokens: '+tpm.remaining+' / '+tpm.limit+
+              (tpm.reset_at?' · reset '+new Date(tpm.reset_at).toLocaleString():''):'Groq API token limit: unverified'}));
             providerList.append(chip);
           }catch{providerSummary.textContent='CLOUD GROQ STATUS UNAVAILABLE · NO MAC REQUIRED';providerList.textContent='';}
         }else{

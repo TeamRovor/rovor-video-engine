@@ -987,6 +987,14 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
   '<a href="https://github.com/TeamRovor/rovor-video-engine/blob/main/integrations/hud-cloud/ASK-ROVOR-SETUP.md" target="_blank" rel="noopener noreferrer">recovery instructions</a>.</p></details>');
  const cloudGroqValid=groqCloud?.source==='cloud_direct_groq'&&groqCloud?.mac_required===false&&
    Number.isFinite(Date.parse(groqCloud?.observed_at||''))&&Math.abs(Date.now()-Date.parse(groqCloud.observed_at))<=15000;
+ const gc=cloudGroqValid?groqCloud.catalog:null;
+ const grpd=gc?.state==='catalog_received'?gc.requests_per_day:null;
+ const gtpm=gc?.state==='catalog_received'?gc.tokens_per_minute:null;
+ const quotaInfo='<span>GROQ API · model '+(gc?.model_present===true?'IN CATALOG':gc?.model_present===false?'NOT IN CATALOG':'NOT VERIFIED')+
+  ' · catalogue '+esc(gc?.state||'unavailable')+' · billing status NOT VERIFIED by headers</span>'+
+  '<span>Daily requests (RPD): '+(grpd?fmt(grpd.remaining)+' / '+fmt(grpd.limit)+' remaining'+(grpd.reset_at?' · reset '+esc(prettyTime(grpd.reset_at)):''):'UNKNOWN')+
+  ' · tokens/min (TPM): '+(gtpm?fmt(gtpm.remaining)+' / '+fmt(gtpm.limit)+' remaining'+(gtpm.reset_at?' · reset '+esc(prettyTime(gtpm.reset_at)):''):'UNKNOWN')+
+  ' · only fresh Groq response headers are shown</span>';
  const cloudGroqPanel='<section class="rvq-cloud" aria-label="Mac independent cloud Groq activity"><strong>CLOUD GROQ · DIRECT · NO MAC REQUIRED</strong>'+
    (cloudGroqValid?'<span>Route: '+esc(groqCloud.model||'groq/openai/gpt-oss-20b')+
      ' · '+(groqCloud.ready===true?'FREE-ELIGIBILITY CONFIGURED (not an inference receipt)':'NOT VERIFIED / DISABLED')+'</span>'+
@@ -999,7 +1007,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
      '<span>Independent cloud Groq status unavailable. This does NOT mean the Mac must be online.</span>')+'</section>';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
- cloudGroqPanel+summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
+ cloudGroqPanel+quotaInfo+summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
  workerBanner(data?.workforce,live)+ (slots.length?quotaGlance(slots,quota,live,cloudProviders)+(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
@@ -1115,7 +1123,7 @@ function start(){
      }),
      // Optional route: the original private Site may not have it.
      read('/api/hud/gemini/project-quota',d=>d?.source==='google_cloud_monitoring'&&typeof d.status==='string'?d:null),
-     read('/api/chat/groq/status',d=>d?.source==='cloud_direct_groq'&&d.mac_required===false&&
+     read('/api/chat/groq/status?refresh=1',d=>d?.source==='cloud_direct_groq'&&d.mac_required===false&&
        Number.isFinite(Date.parse(d.observed_at||''))&&Math.abs(Date.now()-Date.parse(d.observed_at))<=15000?d:null)
    ]);
    // Preserve only the last known provider/slot inventory through outages.

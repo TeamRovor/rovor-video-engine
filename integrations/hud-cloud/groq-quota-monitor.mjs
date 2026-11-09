@@ -79,7 +79,7 @@ export async function probeGroqCatalogue(env,db,now=Date.now(),fetcher=fetch){
         }else state='invalid_catalog';
       }else state='invalid_catalog';
     }
-    if(state!=='catalog_received')await upstream.body?.cancel();
+    if(state!=='catalog_received'){try{await upstream.body?.cancel();}catch{/* discard */}}
   }catch{state='unavailable';}
   const rpd=limits.requests_per_day,tpm=limits.tokens_per_minute;
   // Stale/slower responses can never override a newer lease's result.

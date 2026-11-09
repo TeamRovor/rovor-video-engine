@@ -74,6 +74,7 @@ jobs:
         run: |
           node --check integrations/hud-cloud/worker.mjs
           node --check integrations/hud-cloud/groq-cloud-chat.mjs
+          node --check integrations/hud-cloud/groq-quota-monitor.mjs
           node --check integrations/hud-cloud/omniroute-chat-relay.mjs
           node --check tools/hud_chat_relay_client.mjs
           node --check tools/activate_hud_gemini_route.mjs
@@ -88,7 +89,7 @@ jobs:
           node --check integrations/hud-cloud/verify-github-deploy.mjs
           bash -n tools/manage_hud_telemetry_agent.sh
           bash -n tools/install_hud_chat_relay.sh
-          node --test tests/test_hud_cloud.mjs tests/test_hud_cloud_gemini.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_gemini_project_quota.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_omniroute_relay.mjs tests/test_hud_chat_mobile.mjs tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_gemini_activation_workflow.mjs tests/test_hud_repo_context.mjs tests/test_hud_groq_cloud.mjs
+          node --test tests/test_hud_cloud.mjs tests/test_hud_cloud_gemini.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_gemini_project_quota.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_omniroute_relay.mjs tests/test_hud_chat_mobile.mjs tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_gemini_activation_workflow.mjs tests/test_hud_repo_context.mjs tests/test_hud_groq_cloud.mjs tests/test_hud_groq_quota.mjs
 
       - name: Verify interactive Ask ROVOR on phone, tablet and desktop Chromium viewports
         run: node tests/test_hud_chat_browser.cjs

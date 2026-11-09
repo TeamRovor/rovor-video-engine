@@ -59,3 +59,19 @@ CREATE TABLE IF NOT EXISTS hud_groq_chat_receipts (
   completion_tokens INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS hud_groq_chat_receipts_time ON hud_groq_chat_receipts(created_at);
+
+-- Read-only Groq catalogue and rate-limit header cache. The model's public
+-- presence and headers DO NOT attest a $0 billing plan or permission to infer.
+CREATE TABLE IF NOT EXISTS hud_groq_quota_probe (
+  id INTEGER PRIMARY KEY CHECK(id=1),
+  checked_at INTEGER NOT NULL,
+  observed_at INTEGER,
+  status TEXT NOT NULL CHECK(status IN ('checking','catalog_received','auth_rejected','rate_limited','upstream_error','invalid_catalog','unavailable')),
+  model_present INTEGER CHECK(model_present IN (0,1)),
+  rpd_limit INTEGER,
+  rpd_remaining INTEGER,
+  rpd_reset_at TEXT,
+  tpm_limit INTEGER,
+  tpm_remaining INTEGER,
+  tpm_reset_at TEXT
+);

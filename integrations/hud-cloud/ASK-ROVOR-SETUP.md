@@ -126,3 +126,25 @@ The iOS interface uses 16px form inputs to prevent Safari focus zoom, adapts to 
 ## Later: Provider Manager
 
 A future provider-key form should send keys to an authenticated backend with encryption at rest, redacted logs, scoped permissions, rotation and revocation; the keys must never be in localStorage, public Pages or GitHub code. Provider-specific connectors would discover models, determine free/billing eligibility, track usage where APIs support it and refuse unsupported quotas. That is **not included in this PR**.
+
+## Groq live account usage monitoring (cloud-only)
+
+The authenticated Cloudflare HUD now exposes a read-only Groq model catalogue
+probe when opening Groq in Ask ROVOR or Workload Distribution. It uses the
+**already configured** `GROQ_HUD_API_KEY` secret in the existing Worker to call
+the pinned HTTPS `GET https://api.groq.com/openai/v1/models`. It is not inference,
+does not submit prompts, does not use the Mac, and is D1-throttled across devices
+to one catalogue probe per 60 seconds. GET
+`/api/chat/groq/status?refresh=1` displays its result; normal status GET does
+not perform an upstream call.
+
+Only validated response-header values are cached in the **existing** private
+D1 (`hud_groq_quota_probe`): `x-ratelimit-limit-requests` and
+`x-ratelimit-remaining-requests` refer to *requests per day*, while token
+headers refer to *tokens per minute*. Reset durations are taken from Groq
+headers, not guessed. If the catalogue lacks headers or evidence is over two
+minutes old, the corresponding quota is UNKNOWN. Catalogue presence and
+rate-limit headers are **not a billing plan verification**, and cannot override
+`groqCloudReady`, enable a paid route, or renew an expired zero-cost approval.
+The receipt trail for actual inference remains separate and requires the
+existing protected authorization and owner-approved quota gates.
