@@ -36,7 +36,8 @@ jobs:
       - name: Verify discovery is read-only and cannot spend or claim work
         run: |
           node --check tools/rovor_auto_discovery.mjs
-          node --test tests/test_rovor_auto_discovery.mjs
+          node --check integrations/hud-cloud/discovery-inbox.mjs
+          node --test tests/test_rovor_auto_discovery.mjs tests/test_hud_discovery_inbox.mjs
 
   discover:
     needs: verify
