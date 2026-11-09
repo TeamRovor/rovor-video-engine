@@ -4,6 +4,17 @@ name: ROVOR Cloud Control Center - audit deploy and verify
 # No Mac runner, local OmniRoute, replacement Site, automated paid inference,
 # task ownership mutation, secret logs, STOP override or automatic PASS/FAIL.
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/rovor-cloud-control-center.yml'
+      - 'tools/rovor_cloud_control_report.py'
+      - 'tests/test_rovor_cloud_control_report.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rovor-cloud-control-center.yml'
+      - 'tools/rovor_cloud_control_report.py'
+      - 'tests/test_rovor_cloud_control_report.py'
   workflow_dispatch:
     inputs:
       run_mode:
@@ -36,7 +47,7 @@ concurrency:
 jobs:
   offline-safety:
     name: Verify source, queue, cloud admission and private HUD contracts
-    if: github.repository == 'TeamRovor/rovor-video-engine' && github.ref == 'refs/heads/main'
+    if: github.repository == 'TeamRovor/rovor-video-engine' && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -73,6 +84,7 @@ jobs:
   cloud-readiness:
     name: Read existing HUD + cloud workforce and identify exactly what's missing
     needs: offline-safety
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment: rovor-hud-production
@@ -113,7 +125,7 @@ jobs:
   missing-deployment-requirements:
     name: Fail clearly if an explicitly requested deployment lacks credentials or approval
     needs: cloud-readiness
-    if: inputs.run_mode != 'audit_only' && needs.cloud-readiness.outputs.deploy_ready != 'true'
+    if: github.event_name == 'workflow_dispatch' && inputs.run_mode != 'audit_only' && needs.cloud-readiness.outputs.deploy_ready != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Report the audited blocker without touching production
