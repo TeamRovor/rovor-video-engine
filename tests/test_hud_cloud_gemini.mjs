@@ -1,99 +1,210 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {cloudGeminiChat,cloudGeminiModels,validateGeminiChat,cloudGeminiUsage} from '../integrations/hud-cloud/cloud-gemini-chat.mjs';
+import {cloudGeminiChat,cloudGeminiModels,googleGeminiCatalog,
+  validateGeminiChat,cloudGeminiUsage,selectGeminiForTask,FREE_GEMINI_MODELS,
+  AUTO_GEMINI_MODEL,ownerApprovedModels} from '../integrations/hud-cloud/cloud-gemini-chat.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 
-const key='g'.repeat(38),READER='r'.repeat(40),WRITER='w'.repeat(40);
-const model='gemini-3.1-flash-lite',origin='https://hud.test';
+const key='g'.repeat(38),reader='r'.repeat(40),writer='w'.repeat(40);
+const day='2026-11-09',now=Date.parse('2026-11-09T06:00:00Z');
+const model='gemini-3.1-flash-lite',fast='gemini-3.5-flash-lite',strong='gemini-3.8-flash';
+const origin='https://hud.test';
+const contents={model,messages:[{role:'user',content:'Say hello'}]};
+const googleReply=()=>Response.json({
+  candidates:[{content:{parts:[{text:'Hello via real model mock'}]},finishReason:'STOP'}],
+  usageMetadata:{promptTokenCount:8,candidatesTokenCount:4}
+});
+function mockGoogle(ids=[model,fast,strong],replyStatus=200){
+  const calls=[];
+  const send=async(url,options)=>{
+    calls.push({url,options});
+    assert.equal(options.headers['x-goog-api-key'],key);
+    if(options.method==='GET'){
+      assert.match(url,/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\?pageSize=100/);
+      return Response.json({models:[
+        ...ids.map(id=>({name:'models/'+id,supportedGenerationMethods:['generateContent']})),
+        {name:'models/gemini-3.1-pro-preview',supportedGenerationMethods:['generateContent']},
+        {name:'models/gemini-3.1-flash-image',supportedGenerationMethods:['generateContent']},
+        {name:'models/text-embedding-004',supportedGenerationMethods:['embedContent']}
+      ]});
+    }
+    assert.equal(options.method,'POST');
+    assert.match(url,/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\/gemini-/);
+    assert.equal(JSON.parse(options.body).generationConfig.maxOutputTokens,768);
+    assert(!JSON.stringify(JSON.parse(options.body)).includes('tools'));
+    return replyStatus===429?new Response('',{status:429}):googleReply();
+  };
+  return {send,calls};
+}
 function db(){
-  const counts=new Map(),usage=new Map();
-  return {prepare(sql){
-    return {bind(...args){
-      return {
+  const budgets=new Map(),usage=new Map(),models=new Map();
+  function getModel(day,model){
+    const key=day+'|'+model;
+    if(!models.has(key))models.set(key,{day,model,attempts:0,completed:0,
+      failures:0,input_tokens:0,output_tokens:0,last_error_code:null});
+    return models.get(key);
+  }
+  return {
+    prepare(sql){return {
+      bind(...a){return {
         async first(){
           if(sql.includes('hud_gemini_chat_budget')&&sql.includes('RETURNING')){
-            const [bucket,max]=args;
-            const count=counts.get(bucket)||0;
-            if(count>=max)return null;
-            counts.set(bucket,count+1);
-            return {attempts:count+1};
+            const [bucket,max]=a;
+            if((budgets.get(bucket)||0)>=max)return null;
+            budgets.set(bucket,(budgets.get(bucket)||0)+1);
+            return {attempts:budgets.get(bucket)};
           }
-          if(sql.includes('SELECT attempts FROM hud_gemini_chat_budget'))
-            return {attempts:counts.get(args[0])||0};
-          if(sql.includes('SELECT completed,input_tokens,output_tokens FROM hud_gemini_chat_usage'))
-            return usage.get(args[0])||null;
+          if(sql.startsWith('SELECT attempts FROM hud_gemini_chat_budget'))
+            return {attempts:budgets.get(a[0])||0};
+          if(sql.startsWith('SELECT completed,input_tokens,output_tokens FROM hud_gemini_chat_usage'))
+            return usage.get(a[0])||null;
           return null;
         },
+        async all(){
+          if(sql.includes('FROM hud_gemini_chat_model_usage'))
+            return {results:[...models.values()].filter(m=>m.day===a[0])};
+          return {results:[]};
+        },
         async run(){
-          if(sql.includes('hud_gemini_chat_usage')){
-            const [day,input,output]=args;
-            const previous=usage.get(day)||{completed:0,input_tokens:0,output_tokens:0};
-            usage.set(day,{completed:previous.completed+1,
-              input_tokens:previous.input_tokens+input,output_tokens:previous.output_tokens+output});
+          if(sql.startsWith('INSERT INTO hud_gemini_chat_model_usage')){
+            getModel(a[0],a[1]).attempts++;
+          }else if(sql.startsWith('UPDATE hud_gemini_chat_model_usage SET failures')){
+            const row=getModel(a[1],a[2]);row.failures++;row.last_error_code=a[0];
+          }else if(sql.startsWith('UPDATE hud_gemini_chat_model_usage SET completed')){
+            const row=getModel(a[2],a[3]);row.completed++;
+            row.input_tokens+=a[0];row.output_tokens+=a[1];row.last_error_code=null;
+          }else if(sql.startsWith('INSERT INTO hud_gemini_chat_usage')){
+            const prev=usage.get(a[0])||{completed:0,input_tokens:0,output_tokens:0};
+            usage.set(a[0],{completed:prev.completed+1,
+              input_tokens:prev.input_tokens+a[1],output_tokens:prev.output_tokens+a[2]});
           }
           return {meta:{changes:1}};
         }
-      };
-    }};
-  }};
+      }; }
+    };}
+    },
+    async batch(statements){return Promise.all(statements.map(s=>s.run()));}
+  };
 }
 const env=()=>({GEMINI_API_KEY:key,ROVOR_GEMINI_FREE_TIER_VERIFIED:'confirmed',DB:db()});
-const body={model,messages:[{role:'user',content:'Say hello'}]};
-const googleResult=()=>Response.json({candidates:[{content:{parts:[{text:'Hello via Google'}]},finishReason:'STOP'}],
-  usageMetadata:{promptTokenCount:8,candidatesTokenCount:4}});
 
-test('Cloud Google Gemini stays disabled without key AND free-tier confirmation',()=>{
-  assert.equal(cloudGeminiModels({}).online,false);
-  assert.deepEqual(cloudGeminiModels({GEMINI_API_KEY:key}).models,[]);
-  assert.deepEqual(cloudGeminiModels(env()).models,[model]);
-  assert.equal(cloudGeminiModels(env()).mac_required,false);
+test('Catalog is key-listed + free-text allowlisted, not a paid/imagery/embedding catalog',async()=>{
+  const e=env(),g=mockGoogle([fast,strong,model,'gemini-3.1-pro-preview']);
+  const cat=await googleGeminiCatalog(e,g.send);
+  assert.deepEqual(cat.models,[strong,fast,model]);
+  const listing=await cloudGeminiModels(e,g.send);
+  assert.equal(listing.online,true);
+  assert.equal(listing.mac_required,false);
+  assert.deepEqual(listing.models,[AUTO_GEMINI_MODEL,strong,fast,model]);
+  assert(listing.other_catalog_models>0);
+  assert.equal((await cloudGeminiModels({},async()=>{throw Error('no calls');})).online,false);
+  assert.equal(FREE_GEMINI_MODELS.includes('gemini-3.1-pro-preview'),false);
 });
-test('Only single fixed direct model and bounded text conversations accepted',()=>{
-  assert.equal(validateGeminiChat(body)[0].role,'user');
-  for(const wrong of ['@cf/google/gemma-3-12b-it','gemini-3.1-pro-preview',
-    'rovor-fast-free-v1','gemini-2.5-flash-lite'])
-    assert.throws(()=>validateGeminiChat({...body,model:wrong}),/invalid_gemini_chat/);
-  assert.throws(()=>validateGeminiChat({...body,messages:[{role:'user',content:'x'.repeat(4001)}]}),/invalid/);
+
+test('Unknown owner Free-tier model allowlist fails closed',async()=>{
+  const e=env(),g=mockGoogle();
+  e.ROVOR_GEMINI_FREE_MODELS=JSON.stringify([fast,'gemini-3.1-pro-preview']);
+  assert.deepEqual(ownerApprovedModels(e),[]);
+  assert.equal((await cloudGeminiModels(e,g.send)).online,false);
+  assert.equal(g.calls.length,0);
+  e.ROVOR_GEMINI_FREE_MODELS=JSON.stringify([fast]);
+  assert.deepEqual((await cloudGeminiModels(e,g.send)).models,[AUTO_GEMINI_MODEL,fast]);
 });
-test('Cloud chat sends one Google request, no Mac, records tokens and emits completed SSE',async()=>{
-  const e=env();let calls=0;
-  const send=async(url,init)=>{
-    calls++;assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent');
-    assert.equal(init.headers['x-goog-api-key'],key);
-    const doc=JSON.parse(init.body);
-    assert.equal(doc.contents[0].role,'user');assert(!JSON.stringify(doc).includes('tools'));
-    return googleResult();
+
+test('Google catalog pagination is required; cannot assume first 100 rows contain all models',async()=>{
+  const e=env();let pages=0;
+  const send=async(url)=>{
+    pages++;
+    if(pages===1)return Response.json({models:[{name:'models/'+model,supportedGenerationMethods:['generateContent']}],nextPageToken:'next'});
+    assert(new URL(url).searchParams.get('pageToken')==='next');
+    return Response.json({models:[{name:'models/'+fast,supportedGenerationMethods:['generateContent']}]});
   };
-  const r=await cloudGeminiChat(body,e,Date.parse('2026-11-09T06:00:00Z'),send);
+  const found=await googleGeminiCatalog(e,send);
+  assert.equal(pages,2);
+  assert.deepEqual(found.models,[fast,model]);
+});
+
+test('Only published Free-tier text models or smart free route accepted',()=>{
+  assert.equal(validateGeminiChat(contents)[0].role,'user');
+  assert.equal(validateGeminiChat({...contents,model:AUTO_GEMINI_MODEL})[0].role,'user');
+  for(const wrong of ['@cf/google/gemma-3-12b-it','gemini-3.1-pro-preview',
+    'rovor-fast-free-v1','gemini-3.1-flash-image'])
+    assert.throws(()=>validateGeminiChat({...contents,model:wrong}),/invalid_gemini_chat/);
+  assert.throws(()=>validateGeminiChat({...contents,messages:[{role:'user',content:'x'.repeat(4001)}]}),/invalid_gemini_chat/);
+});
+
+test('Smart chooses 3.8 Flash for coding and Flash-Lite for routine, never round robin',()=>{
+  const allowed=[fast,strong,model];
+  assert.equal(selectGeminiForTask({...contents,model:AUTO_GEMINI_MODEL},allowed),fast);
+  assert.equal(selectGeminiForTask({model:AUTO_GEMINI_MODEL,
+    messages:[{role:'user',content:'Debug this architecture and code'}]},allowed),strong);
+  assert.equal(selectGeminiForTask({...contents,model},allowed),model);
+  assert.equal(selectGeminiForTask({...contents,model:'gemini-3.5-flash'},allowed),null);
+});
+
+test('Direct model call records actual per-model and project-wide token receipt',async()=>{
+  const e=env(),g=mockGoogle();
+  const r=await cloudGeminiChat(contents,e,now,g.send);
   assert.equal(r.status,200);
   assert.equal(r.headers.get('X-ROVOR-Provider'),'google-gemini-cloud');
+  assert.equal(r.headers.get('X-ROVOR-Resolved-Model'),model);
   assert.match(await r.text(),/data: \[DONE\]/);
-  assert.equal(calls,1);
-  const usage=await cloudGeminiUsage(e,Date.parse('2026-11-09T06:00:00Z'));
-  const j=await usage.json();assert.equal(j.completed,1);
-  assert.equal(j.input_tokens,8);assert.equal(j.output_tokens,4);
+  assert.equal(g.calls.filter(x=>x.options.method==='POST').length,1);
+  const u=await cloudGeminiUsage(e,now);
+  const data=await u.json();
+  assert.equal(data.completed,1);
+  assert.equal(data.models.find(m=>m.model===model).completed,1);
+  assert.equal(data.models.find(m=>m.model===model).input_tokens,8);
+  assert.equal(data.models.find(m=>m.model===model).output_tokens,4);
 });
-test('D1 minute cap refuses third call without provider inference',async()=>{
-  const e=env();let calls=0;
-  const send=async()=>{calls++;return googleResult();};
-  for(let i=0;i<3;i++) {
-    const r=await cloudGeminiChat(body,e,Date.parse('2026-11-09T06:00:00Z')+i*1000,send);
+
+test('One smart request resolves a listed model only, exposing its exact route',async()=>{
+  const e=env(),g=mockGoogle();
+  const r=await cloudGeminiChat({model:AUTO_GEMINI_MODEL,
+    messages:[{role:'user',content:'Debug my GitHub code'}]},e,now,g.send);
+  assert.equal(r.status,200);
+  assert.equal(r.headers.get('X-ROVOR-Requested-Model'),AUTO_GEMINI_MODEL);
+  assert.equal(r.headers.get('X-ROVOR-Resolved-Model'),strong);
+  assert(g.calls.find(c=>c.options.method==='POST').url.endsWith('/'+strong+':generateContent'));
+});
+
+test('D1 project-wide minute limit refuses a third call across different models',async()=>{
+  const e=env(),g=mockGoogle();
+  for(const [i,route] of [model,fast,strong].entries()){
+    const r=await cloudGeminiChat({...contents,model:route},e,now+i*1000,g.send);
     assert.equal(r.status,i<2?200:429);
   }
-  assert.equal(calls,2);
+  assert.equal(g.calls.filter(x=>x.options.method==='POST').length,2);
 });
-test('No retries when Google returns 429, no invented completion',async()=>{
-  const r=await cloudGeminiChat(body,env(),Date.parse('2026-11-09T06:00:00Z'),async()=>new Response('',{status:429}));
-  assert.equal(r.status,429);assert.equal((await r.json()).error,'gemini_provider_rate_limited');
+
+test('A listed model may still be denied; no fallback or fake completion',async()=>{
+  const e=env(),g=mockGoogle([model],429);
+  const r=await cloudGeminiChat(contents,e,now,g.send);
+  assert.equal(r.status,429);
+  assert.equal((await r.json()).error,'gemini_provider_rate_limited');
+  assert.equal(g.calls.filter(x=>x.options.method==='POST').length,1);
+  const u=await (await cloudGeminiUsage(e,now)).json();
+  assert.equal(u.completed,0);
+  assert.equal(u.models[0].failures,1);
+  assert.equal(u.models[0].last_error_code,'provider_429');
 });
-test('Existing HUD denies anonymous access and cross-site Gemini prompts',async()=>{
-  const e={...env(),HUD_READER_TOKEN:READER,HUD_WRITER_TOKEN:WRITER};
+
+test('An unlisted model is never attempted, even when published as Free tier',async()=>{
+  const e=env(),g=mockGoogle([fast]);
+  const r=await cloudGeminiChat(contents,e,now,g.send);
+  assert.equal(r.status,409);
+  assert.equal(g.calls.filter(x=>x.options.method==='POST').length,0);
+});
+
+test('Existing HUD denies anonymous and cross-site Gemini requests',async()=>{
+  // Deliberately omit fake Google key, so auth tests cannot make a real outbound call.
+  const e={DB:db(),HUD_READER_TOKEN:reader,HUD_WRITER_TOKEN:writer};
   const get=(path,headers={})=>new Request(origin+path,{headers});
   const post=(o,headers={})=>new Request(origin+'/api/hud/gemini/chat',{
-    method:'POST',headers:{Authorization:'Bearer '+READER,'Content-Type':'application/json',Origin:o,...headers},
-    body:JSON.stringify(body)});
+    method:'POST',headers:{Authorization:'Bearer '+reader,'Content-Type':'application/json',Origin:o,...headers},
+    body:JSON.stringify(contents)});
   assert.equal((await handle(get('/api/hud/gemini/models'),e)).status,401);
-  assert.equal((await handle(get('/api/hud/gemini/models',{Authorization:'Bearer '+READER}),e)).status,200);
+  assert.equal((await handle(get('/api/hud/gemini/models',{Authorization:'Bearer '+reader}),e)).status,200);
   assert.equal((await handle(post('https://evil.test'),e)).status,403);
   assert.equal((await handle(post(origin,{Authorization:'Bearer wrong'}),e)).status,401);
 });
