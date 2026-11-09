@@ -89,3 +89,15 @@ CREATE TABLE IF NOT EXISTS hud_gemini_chat_model_usage (
   last_error_code TEXT,
   PRIMARY KEY (day, model)
 );
+
+-- Gemini verified-model and provider-429 evidence. Metadata only: no keys,
+-- prompts, output, or assumed Google-wide quota. Forward-only and idempotent.
+CREATE TABLE IF NOT EXISTS hud_gemini_model_health (
+  model TEXT PRIMARY KEY,
+  last_success_at INTEGER,
+  success_count INTEGER NOT NULL DEFAULT 0,
+  last_rate_limited_at INTEGER,
+  cooldown_until INTEGER,
+  last_failure_at INTEGER,
+  last_failure_code TEXT
+);
