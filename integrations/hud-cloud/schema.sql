@@ -30,6 +30,19 @@ CREATE TABLE IF NOT EXISTS hud_chat_jobs (
 );
 CREATE INDEX IF NOT EXISTS hud_chat_jobs_queue ON hud_chat_jobs(state, created_at);
 
+-- Cloud Gemini direct API admission/receipts. No prompts or model output stored.
+-- Immutable attempts within day/minute buckets enforce a conservative free usage cap.
+CREATE TABLE IF NOT EXISTS hud_gemini_chat_budget (
+  bucket TEXT PRIMARY KEY,
+  attempts INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS hud_gemini_chat_usage (
+  day TEXT PRIMARY KEY,
+  completed INTEGER NOT NULL DEFAULT 0,
+  input_tokens INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0
+);
+
 -- Cloud-only Groq chat; account-key and private prompts are never stored here.
 -- Atomic reservations survive Worker restarts and do not require a Mac.
 CREATE TABLE IF NOT EXISTS hud_groq_chat_admission (

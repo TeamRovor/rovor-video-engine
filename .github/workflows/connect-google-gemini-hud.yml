@@ -1,20 +1,26 @@
 name: Connect Google Gemini to existing ROVOR HUD
 
-# Owner clicks Run workflow on main. This never opens the Mac to inbound traffic,
-# publishes a replacement HUD, or changes the nine OmniRoute provider secrets.
+# CLOUD-ONLY. No self-hosted runner, Mac, OmniRoute localhost, Site replacement,
+# provider-key exposure, background job or paid fallback.
 on:
   workflow_dispatch:
+    inputs:
+      confirm_free_tier:
+        type: boolean
+        description: "I confirm my Google API key belongs to the Free-tier project (not a paid Gemini project)"
+        required: true
+        default: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: rovor-existing-hud-gemini-activation
+  group: rovor-existing-hud-gemini-cloud-activation
   cancel-in-progress: false
 
 jobs:
-  source-checks:
-    name: Check Gemini route safety before touching the Mac
+  cloud-tests:
+    name: Verify cloud-only Google Gemini security and HUD compatibility
     if: github.repository == 'TeamRovor/rovor-video-engine' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 7
@@ -25,106 +31,35 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Validate exact route selection, private auth, and one-shot HUD verification
+      - name: Test direct Gemini API, D1 caps, private reader auth and existing HUD
         run: |
           set -euo pipefail
-          node --check tools/activate_hud_gemini_route.mjs
-          node --check tools/verify_hud_gemini_activation.mjs
-          node --check tools/hud_chat_relay_client.mjs
-          bash -n tools/install_hud_chat_relay.sh
-          node --test tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_gemini_activation_workflow.mjs
+          node --check integrations/hud-cloud/worker.mjs
+          node --check integrations/hud-cloud/cloud-gemini-chat.mjs
+          node --check integrations/hud-cloud/verify-cloud-gemini.mjs
+          node --check integrations/hud-cloud/build-sites.mjs
+          node --check dashboard/command-center/native-v8-9/hud-chat.js
+          node --test tests/test_hud_cloud_gemini.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_cloud.mjs tests/test_hud_sites.mjs
+          node tests/test_hud_chat_browser.cjs
 
-  activate-on-owned-mac:
-    name: Activate only the existing Ask ROVOR relay on the owned Mac
-    needs: source-checks
-    # This label is ALREADY used by the repo's Mac workflows. If the owned
-    # Mac runner is offline this job remains queued: no Linux/cloud runner can
-    # secretly reach macOS Keychain or OmniRoute localhost.
-    runs-on: [self-hosted, macOS, X64, rovor-video]
-    timeout-minutes: 15
-    outputs:
-      route: ${{ steps.activate.outputs.route }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Require the actual signed-in ROVOR Mac with working telemetry
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(uname -s)" = Darwin
-          test "$(uname -m)" = x86_64
-          command -v node >/dev/null
-          test "$(node -p 'Number(process.versions.node.split(".")[0])')" -ge 24
-          launchctl print "gui/$(id -u)/com.rovor.hud-reporting" >/dev/null || {
-            echo "::error::The runner is not the Mac user that owns the functioning ROVOR HUD telemetry LaunchAgent."
-            exit 1
-          }
-          test -d "$HOME/Documents/Rovor"
-          test ! -L "$HOME/Documents/Rovor"
-          # Existing writer credential, never printed or exported.
-          /usr/bin/security find-generic-password -s rovordigital.hud.cloudflare.writer -w >/dev/null 2>&1 ||
-          /usr/bin/security find-generic-password -s rovordigital.hud.writer -w >/dev/null 2>&1 || {
-            echo "::error::The existing private HUD writer credential is not available to this Mac account."
-            exit 1
-          }
-          echo "Owned Mac and existing reporting service found; no changes to reporter."
-
-      - name: Keep the chat relay in a persistent isolated reviewed checkout
-        shell: bash
-        run: |
-          set -euo pipefail
-          ROOT="$HOME/Documents/Rovor/AskRovor-Gemini-Relay"
-          REPO='https://github.com/TeamRovor/rovor-video-engine.git'
-          if [ -L "$ROOT" ]; then
-            echo "::error::Refusing redirected relay directory"
-            exit 1
-          fi
-          if [ ! -e "$ROOT" ]; then
-            # Source code only. Never clone into the existing reporter directory
-            # or reuse an ephemeral GitHub runner workspace for LaunchAgent.
-            git clone --quiet --depth 1 --filter=blob:none --sparse "$REPO" "$ROOT"
-          else
-            test -d "$ROOT/.git"
-            test "$(git -C "$ROOT" remote get-url origin)" = "$REPO"
-            test -z "$(git -C "$ROOT" status --porcelain)" || {
-              echo "::error::Persistent relay checkout has local changes; refusing overwrite"
-              exit 1
-            }
-          fi
-          git -C "$ROOT" fetch --quiet --depth 1 origin "$GITHUB_SHA"
-          git -C "$ROOT" checkout --quiet --detach "$GITHUB_SHA"
-          git -C "$ROOT" sparse-checkout set tools integrations/hud-cloud
-          test "$(git -C "$ROOT" rev-parse HEAD)" = "$GITHUB_SHA"
-          echo "Reviewed Gemini relay pinned to GitHub main commit."
-
-      - name: Activate exact direct Google Gemini route with no inference
-        id: activate
-        shell: bash
-        run: |
-          set -euo pipefail
-          ROOT="$HOME/Documents/Rovor/AskRovor-Gemini-Relay"
-          RESULT="$(node "$ROOT/tools/activate_hud_gemini_route.mjs")"
-          printf '%s\n' "$RESULT"
-          ROUTE="$(printf '%s\n' "$RESULT" | sed -n 's/^Ask ROVOR Gemini route configured: //p' | tail -n 1)"
-          if [[ ! "$ROUTE" =~ ^(gemini|google|google-ai-studio)[/:]gemini-(3[.]1-flash-lite|2[.]5-flash-lite)$ ]]; then
-            echo "::error::No exact direct Google free-tier route was activated"
-            exit 1
-          fi
-          echo "route=$ROUTE" >> "$GITHUB_OUTPUT"
-          launchctl print "gui/$(id -u)/com.rovor.hud-chat-relay" >/dev/null
-          echo "Mac chat relay registered. Cloud HUD readback is required next."
-
-  verify-live-hud:
-    name: Verify Gemini is online in Ask ROVOR and completes one test
-    needs: activate-on-owned-mac
+  deploy-cloud:
+    name: Deploy cloud Gemini to existing private ROVOR HUD (no Mac)
+    needs: cloud-tests
+    if: inputs.confirm_free_tier == true
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     environment: rovor-hud-production
     env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ROVOR_HUD_D1_ID: ${{ secrets.ROVOR_HUD_D1_ID }}
+      ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
       ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
-      ROVOR_GEMINI_ROUTE: ${{ needs.activate-on-owned-mac.outputs.route }}
-      ROVOR_GEMINI_CANARY: 'true'
+      ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
+      ROVOR_GEMINI_CLOUD_API_KEY: ${{ secrets.ROVOR_GEMINI_API_KEY || secrets.GEMINI_API_KEY }}
+    defaults:
+      run:
+        working-directory: integrations/hud-cloud
     steps:
       - uses: actions/checkout@v4
         with:
@@ -132,9 +67,31 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Authenticate to existing HUD, prove live model catalog, run exactly one benign canary
+      - name: Confirm existing Cloudflare deployment and Google cloud secret are available
+        shell: bash
         run: |
           set -euo pipefail
-          node tools/verify_hud_gemini_activation.mjs
-          echo "SUCCESS: Gemini appeared in Ask ROVOR and returned a nonempty receipt."
-          echo "The reported route is the requested route; ultimate upstream identity must be checked separately."
+          if [ -z "${ROVOR_GEMINI_CLOUD_API_KEY:-}" ]; then
+            echo "::error::Google Gemini API key is not available in the existing GitHub environment. Add ROVOR_GEMINI_API_KEY (or GEMINI_API_KEY) as a repository/environment Actions secret, using your Google Free-tier project key. Do not paste keys into chat or GitHub source."
+            exit 1
+          fi
+          node prepare-github-deploy.mjs
+          echo "Trusted main, existing private HUD and free-tier owner approval confirmed."
+      - name: Install pinned major Wrangler for existing Cloudflare Worker
+        run: npm install --global wrangler@4
+      - name: Add only new forward-only Gemini D1 budget tables to existing private DB
+        run: wrangler d1 execute DB --remote --file=schema.sql --config wrangler.github.jsonc
+      - name: Deploy existing HUD with cloud Gemini route, keeping original auth and design
+        run: wrangler deploy --config wrangler.github.jsonc
+      - name: Set existing private HUD secrets and cloud Gemini secret without logging values
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e 'const e=process.env;process.stdout.write(JSON.stringify({HUD_WRITER_TOKEN:e.ROVOR_HUD_WRITER_TOKEN,HUD_READER_TOKEN:e.ROVOR_HUD_READER_TOKEN,GEMINI_API_KEY:e.ROVOR_GEMINI_CLOUD_API_KEY,ROVOR_GEMINI_FREE_TIER_VERIFIED:"confirmed"}))' |
+            wrangler secret bulk --config wrangler.github.jsonc
+      - name: Verify actual Google Gemini cloud answer and private D1 receipt (one canary)
+        run: node verify-cloud-gemini.mjs
+      - name: Report verified Mac-independent success
+        run: |
+          echo "Gemini cloud route completed one live answer in existing ROVOR HUD."
+          echo "No Mac runner or local OmniRoute gateway was involved. Free-tier account verification must remain current."
