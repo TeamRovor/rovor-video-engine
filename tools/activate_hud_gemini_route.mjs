@@ -31,12 +31,14 @@ async function keychain(service){
 }
 const PATCH=[
   "import os,plistlib,sys,tempfile",
-  "target,route,origin=sys.argv[1:]",
+  "target,route,origin,script=sys.argv[1:]",
   "if os.path.islink(target): raise SystemExit('refuse_redirected_launchagent')",
   "with open(target,'rb') as f: item=plistlib.load(f)",
   "if item.get('Label')!='com.rovor.hud-chat-relay': raise SystemExit('unexpected_launchagent')",
   "args=item.get('ProgramArguments')",
   "if not isinstance(args,list) or not any(isinstance(a,str) and a.endswith('/hud_chat_relay_client.mjs') for a in args): raise SystemExit('unexpected_chat_relay_program')",
+  "if not os.path.isfile(script) or os.path.islink(script): raise SystemExit('unsafe_relay_script')",
+  "item['ProgramArguments']=[script if isinstance(a,str) and a.endswith('/hud_chat_relay_client.mjs') else a for a in args]",
   "env=item.get('EnvironmentVariables')",
   "if not isinstance(env,dict) or env.get('ROVOR_HUD_ORIGIN')!=origin: raise SystemExit('unexpected_private_hud_origin')",
   "current=[s.strip() for s in env.get('ROVOR_HUD_CHAT_FREE_MODELS','').split(',') if s.strip()]",
@@ -72,7 +74,8 @@ export async function activate(){
     await exec('/bin/bash',[path.join(path.dirname(fileURLToPath(import.meta.url)),'install_hud_chat_relay.sh'),ORIGIN],{timeout:30000});
   }
   if(fs.lstatSync(plist).isSymbolicLink())throw Error('refuse_redirected_launchagent');
-  await exec('python3',['-c',PATCH,plist,route,ORIGIN],{timeout:10000});
+  const script=path.join(path.dirname(fileURLToPath(import.meta.url)),'hud_chat_relay_client.mjs');
+  await exec('python3',['-c',PATCH,plist,route,ORIGIN,script],{timeout:10000});
   // launchctl kickstart alone uses cached plist settings. Re-bootstrap the
   // same chat relay to load the owner-approved model list, not the HUD reporter.
   const domain='gui/'+process.getuid();
