@@ -18,6 +18,8 @@ on:
       - 'integrations/hud-cloud/cloud-gemini-chat.mjs'
       - 'integrations/hud-cloud/verify-cloud-gemini.mjs'
       - 'integrations/hud-cloud/verify-live-gemini-catalog.mjs'
+      - 'integrations/hud-cloud/private-worker-secret-payload.mjs'
+      - 'tests/test_hud_gemini_key_activation.mjs'
       - 'tests/test_hud_live_gemini_catalog.mjs'
       - 'tests/test_hud_cloud_gemini.mjs'
       - 'tests/test_hud_groq_cloud.mjs'
@@ -50,6 +52,8 @@ on:
       - 'integrations/hud-cloud/cloud-gemini-chat.mjs'
       - 'integrations/hud-cloud/verify-cloud-gemini.mjs'
       - 'integrations/hud-cloud/verify-live-gemini-catalog.mjs'
+      - 'integrations/hud-cloud/private-worker-secret-payload.mjs'
+      - 'tests/test_hud_gemini_key_activation.mjs'
       - 'tests/test_hud_live_gemini_catalog.mjs'
       - 'tests/test_hud_cloud_gemini.mjs'
       - 'tests/test_hud_omniroute_chat_relay.mjs'
@@ -93,11 +97,12 @@ jobs:
           node --check integrations/hud-cloud/cloud-gemini-chat.mjs
           node --check integrations/hud-cloud/verify-cloud-gemini.mjs
           node --check integrations/hud-cloud/verify-live-gemini-catalog.mjs
+          node --check integrations/hud-cloud/private-worker-secret-payload.mjs
           node --check integrations/hud-cloud/prepare-github-deploy.mjs
           node --check integrations/hud-cloud/verify-github-deploy.mjs
           bash -n tools/manage_hud_telemetry_agent.sh
           bash -n tools/install_hud_chat_relay.sh
-          node --test tests/test_hud_cloud.mjs tests/test_hud_cloud_gemini.mjs tests/test_hud_live_gemini_catalog.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_gemini_project_quota.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_omniroute_relay.mjs tests/test_hud_chat_mobile.mjs tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_gemini_activation_workflow.mjs tests/test_hud_repo_context.mjs tests/test_hud_groq_cloud.mjs tests/test_hud_groq_quota.mjs tests/test_hud_groq_key_probe.mjs
+          node --test tests/test_hud_cloud.mjs tests/test_hud_cloud_gemini.mjs tests/test_hud_gemini_key_activation.mjs tests/test_hud_live_gemini_catalog.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_gemini_project_quota.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_omniroute_relay.mjs tests/test_hud_chat_mobile.mjs tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_gemini_activation_workflow.mjs tests/test_hud_repo_context.mjs tests/test_hud_groq_cloud.mjs tests/test_hud_groq_quota.mjs tests/test_hud_groq_key_probe.mjs
 
       - name: Verify interactive Ask ROVOR on phone, tablet and desktop Chromium viewports
         run: node tests/test_hud_chat_browser.cjs
@@ -137,6 +142,8 @@ jobs:
       ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
       ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
       ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
+      ROVOR_GEMINI_CLOUD_API_KEY: ${{ secrets.ROVOR_GEMINI_API_KEY || secrets.GEMINI_API_KEY }}
+      GEMINI_ACTIVATE_ONCE: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[gemini-activate-once]') }}
       GROQ_HUD_API_KEY: ${{ secrets.ROVOR_HUD_GROQ_API_KEY }}
       GROQ_HUD_CHAT_ENABLED: ${{ vars.ROVOR_HUD_GROQ_CHAT_ENABLED }}
       GROQ_HUD_FREE_TIER_VERIFIED: ${{ vars.ROVOR_HUD_GROQ_FREE_TIER_VERIFIED }}
@@ -156,6 +163,9 @@ jobs:
           node-version: '24'
       - name: Verify trusted main, independently held credentials, and private Worker-first config
         run: node prepare-github-deploy.mjs
+      - name: Refuse incomplete owner-authorized Gemini activation before any cloud write
+        if: env.GEMINI_ACTIVATE_ONCE == 'true'
+        run: node private-worker-secret-payload.mjs --preflight
       - name: Install Wrangler (Cloudflare-owned hosting, no ChatGPT Site publisher)
         run: npm install --global wrangler@4
       - name: Ensure only the existing private telemetry tables exist in the assigned D1
@@ -163,19 +173,18 @@ jobs:
           wrangler d1 execute DB --remote --file=schema.sql --config wrangler.github.jsonc
       - name: Publish original HUD and private telemetry Worker from GitHub
         run: wrangler deploy --config wrangler.github.jsonc
-      - name: Set both independently stored Worker secrets without printing their values
+      - name: Restore existing HUD tokens, Groq settings, and one-time Gemini activation secrets
         shell: bash
         run: |
           set -euo pipefail
-          node -e 'const m={HUD_WRITER_TOKEN:process.env.ROVOR_HUD_WRITER_TOKEN,HUD_READER_TOKEN:process.env.ROVOR_HUD_READER_TOKEN};
-            for(const key of ["GROQ_HUD_API_KEY","GROQ_HUD_CHAT_ENABLED","GROQ_HUD_FREE_TIER_VERIFIED","GROQ_HUD_EVIDENCE_SHA256","GROQ_HUD_VERIFIED_AT","GROQ_HUD_VALID_UNTIL","GROQ_HUD_DAILY_BUDGET"]){
-              if(process.env[key])m[key]=process.env[key];
-            }
-            process.stdout.write(JSON.stringify(m))' |
+          node private-worker-secret-payload.mjs |
             wrangler secret bulk --config wrangler.github.jsonc
       - name: Verify anonymous denial, authenticated original HUD, quota script, and D1 status
         run: node verify-github-deploy.mjs
       - name: Report authenticated Google Gemini key-listed models from deployed Cloudflare HUD (no inference)
         run: node verify-live-gemini-catalog.mjs
+      - name: Prove one real Gemini answer and an advancing private D1 receipt (owner-approved, no replay)
+        if: env.GEMINI_ACTIVATE_ONCE == 'true'
+        run: node verify-cloud-gemini.mjs
       - name: Independently inspect Groq catalogue from trusted GitHub runner (no inference)
         run: node verify-groq-key.mjs
