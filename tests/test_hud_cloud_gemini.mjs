@@ -332,3 +332,29 @@ test('Expired real model verification does not silently enable Smart Gemini',asy
   assert.equal(next.status,409);
   assert.equal((await next.json()).error,'gemini_auto_requires_recent_verified_model');
 });
+
+test('Non-429 Google HTTP denials are precise, redacted per-model D1 failures with no retries',async()=>{
+  for(const [status,code] of [
+    [400,'google_400_request_rejected'],
+    [401,'google_401_auth_denied'],
+    [403,'google_403_access_denied'],
+    [404,'google_404_model_unavailable'],
+    [503,'google_5xx_service_error']
+  ]){
+    const e=env(),g=mockGoogle();let calls=0;
+    const send=async(url,options)=>{
+      if(options.method==='GET')return g.send(url,options);
+      calls++;
+      return new Response('PRIVATE UPSTREAM BODY MUST NEVER LEAK',{status});
+    };
+    const r=await cloudGeminiChat(contents,e,now,send);
+    assert.equal(r.status,502);
+    assert.equal((await r.json()).error,code);
+    assert.equal(calls,1);
+    const u=await(await cloudGeminiUsage(e,now)).json();
+    assert.equal(u.completed,0);
+    assert.equal(u.attempts,1);
+    assert.equal(u.models.find(x=>x.model===model)?.last_error_code,code);
+    assert.doesNotMatch(JSON.stringify(u),/PRIVATE UPSTREAM BODY/);
+  }
+});
