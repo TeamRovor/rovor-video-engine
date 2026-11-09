@@ -46,7 +46,7 @@ jobs:
     environment: rovor-hud-production
     env:
       GITHUB_TOKEN: ${{ github.token }}
-      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+      ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
       ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
     steps:
       - uses: actions/checkout@v4

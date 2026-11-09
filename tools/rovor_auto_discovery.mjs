@@ -83,56 +83,54 @@ export async function runDiscovery({env=process.env,send=fetch,now=Date.now()}={
  if(!safeInteger(now)||!legitHudOrigin(env.ROVOR_HUD_DEPLOY_ORIGIN))
    throw Error('discovery_configuration_invalid');
  if(typeof env.GITHUB_TOKEN!=='string'||env.GITHUB_TOKEN.length<16||
-    typeof env.ROVOR_HUD_READER_TOKEN!=='string'||env.ROVOR_HUD_READER_TOKEN.length<32)
+    typeof env.ROVOR_HUD_WRITER_TOKEN!=='string'||env.ROVOR_HUD_WRITER_TOKEN.length<32)
    return {state:'credentials_unavailable',queued:false};
  const gitHeaders={Authorization:'Bearer '+env.GITHUB_TOKEN,
    Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
- const hudHeaders={Authorization:'Bearer '+env.ROVOR_HUD_READER_TOKEN,
+ const hudHeaders={Authorization:'Bearer '+env.ROVOR_HUD_WRITER_TOKEN,
    Accept:'application/json'};
- // Fresh authenticated GitHub evidence, not a model's unverified assertion.
- const [runData,issueData,pullData,queue]=await Promise.all([
+ const [runData,issueData,pullData,record]=await Promise.all([
    fetchJSON(API+'/actions/runs?status=failure&per_page=40',gitHeaders,send),
    fetchJSON(API+'/issues?state=open&per_page=50',gitHeaders,send),
    fetchJSON(API+'/pulls?state=open&per_page=50',gitHeaders,send),
-   fetchJSON(HUD+'/api/hud/ideas',hudHeaders,send)
+   fetchJSON(HUD+'/api/hud/discovery/status',hudHeaders,send)
  ]);
  if(!Array.isArray(runData?.workflow_runs)||!Array.isArray(issueData)||
-    !Array.isArray(pullData)||queue?.source!=='private_rovor_idea_inbox'||
-    queue.execution_authorized!==false||!Array.isArray(queue.items)||
-    queue.items.length>20)throw Error('discovery_source_invalid');
- // Read private ideas only to detect existing evidence. Do not log their text.
- const today=new Date(now).toISOString().slice(0,10);
- const seen=new Set();
- let countToday=0;
- for(const item of queue.items){
-   if(!item||item.state!=='pending_review'||typeof item.text!=='string')continue;
-   const match=/\[ROVOR-DISCOVERY:([a-z]+-[0-9]+)\]/.exec(item.text);
-   if(!match)continue;
-   seen.add(match[1]);
-   if(typeof item.created_at==='string'&&item.created_at.startsWith(today))countToday++;
- }
- if(countToday>=MAX_AUTOMATED_DRAFTS_PER_UTC_DAY)
+    !Array.isArray(pullData)||record?.source!=='private_rovor_discovery'||
+    record.execution_authorized!==false||record.mac_required!==false||
+    record.daily_limit!==MAX_AUTOMATED_DRAFTS_PER_UTC_DAY||
+    !Number.isSafeInteger(record.submitted_today)||record.submitted_today<0||
+    !Array.isArray(record.recent_keys)||record.recent_keys.length>500)
+   throw Error('discovery_source_invalid');
+ if(record.submitted_today>=MAX_AUTOMATED_DRAFTS_PER_UTC_DAY)
    return {state:'daily_draft_budget_reached',queued:false,inspected:true};
- const candidates=discoverCandidates({runs:runData.workflow_runs,issues:issueData,pulls:pullData},now);
- const pick=candidates.find(c=>!seen.has(c.key));
- if(!pick)return {state:'no_new_evidence_backed_work',queued:false,inspected:true};
- // The existing HUD intake stores this as owner-review-only, rate-limited and
- // entirely independent of provider eligibility. It can never dispatch jobs.
- let res;try{
-   res=await send(HUD+'/api/hud/ideas',{
-     method:'POST',redirect:'manual',cache:'no-store',
-     headers:{...hudHeaders,Origin:HUD,'Content-Type':'application/json'},
-     body:JSON.stringify({text:pick.text}),signal:AbortSignal.timeout(12000)});
- }catch{throw Error('discovery_submission_unconfirmed');}
- if(res.status===429)return {state:'existing_hud_intake_rate_limited',queued:false,inspected:true};
- if(res.status!==202)throw Error('discovery_submission_unconfirmed');
- let receipt;try{receipt=await res.json();}catch{throw Error('discovery_receipt_invalid');}
- if(receipt?.state!=='pending_review'||receipt.owner_review_required!==true||
-    receipt.model_call_started!==false||receipt.mac_required!==false||
-    receipt.queued!==true||!/[a-f0-9-]{36}/i.test(receipt.id||''))
-   throw Error('discovery_receipt_invalid');
- return {state:'owner_review_draft_queued',queued:true,kind:pick.key.split('-')[0],
-   priority:pick.priority, model_call_started:false,execution_authorized:false,mac_required:false};
+ const seen=new Set(record.recent_keys);
+ const choices=discoverCandidates({runs:runData.workflow_runs,issues:issueData,pulls:pullData},now);
+ // D1 still rejects duplicates even if an old key has fallen out of the
+ // bounded metadata readback. Never resubmit an already accepted source.
+ for(const pick of choices){
+   if(seen.has(pick.key))continue;
+   let res;
+   try{
+     res=await send(HUD+'/api/hud/discovery',{
+       method:'POST',redirect:'manual',cache:'no-store',
+       headers:{...hudHeaders,'Content-Type':'application/json'},
+       body:JSON.stringify({key:pick.key,priority:pick.priority,text:pick.text}),
+       signal:AbortSignal.timeout(12000)});
+   }catch{throw Error('discovery_submission_unconfirmed');}
+   if(res.status===409)continue;
+   if(res.status===429)return {state:'daily_draft_budget_reached',queued:false,inspected:true};
+   if(res.status!==202)throw Error('discovery_submission_unconfirmed');
+   let receipt;try{receipt=await res.json();}catch{throw Error('discovery_receipt_invalid');}
+   if(receipt?.state!=='pending_review'||receipt.source!=='autonomous_discovery'||
+      receipt.execution_authorized!==false||receipt.owner_review_required!==true||
+      receipt.model_call_started!==false||receipt.mac_required!==false||
+      receipt.queued!==true||!/^[a-f0-9-]{36}$/i.test(receipt.id||''))
+     throw Error('discovery_receipt_invalid');
+   return {state:'owner_review_draft_queued',queued:true,kind:pick.key.split('-')[0],
+     priority:pick.priority,model_call_started:false,execution_authorized:false,mac_required:false};
+ }
+ return {state:'no_new_evidence_backed_work',queued:false,inspected:true};
 }
 if(process.argv[1]&&pathToFileURL(path.resolve(process.argv[1])).href===import.meta.url){
  runDiscovery().then(r=>{

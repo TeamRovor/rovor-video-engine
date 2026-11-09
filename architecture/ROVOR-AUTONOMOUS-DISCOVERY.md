@@ -54,3 +54,21 @@ actual private inbox receipt and CI logs establish that a proposal was saved.
 This lane never uses the local OmniRoute relay. It can find work while the
 Mac is off; local compute acceleration can be added later as an explicitly
 optional capability.
+
+## Durable discovery admission
+
+Dedupe, same-day limits and audit metadata belong to private D1, **not the
+20 most recent user ideas**. The scheduled job now uses the existing
+protected `ROVOR_HUD_WRITER_TOKEN` only for two narrowly scoped endpoints:
+`GET /api/hud/discovery/status` (metadata only), and
+`POST /api/hud/discovery` (one evidence-backed proposal). A reader
+session or browser cannot submit a discovery entry. SQLite enforces a unique
+`discovery_key` and six new review-only entries per UTC day in **one atomic
+insert**, across Worker restarts, GitHub retries, and concurrent requests.
+A duplicate returns 409 without creating another idea; a day cap returns 429.
+Review inbox results combine user suggestions and autonomous findings
+without exposing private source text to GitHub Actions.
+
+The source data is still **read-only GitHub evidence**. Discovery does not
+call an AI, pull sensitive repository contents into model prompts, authorize
+a coding shift, or push any branch.

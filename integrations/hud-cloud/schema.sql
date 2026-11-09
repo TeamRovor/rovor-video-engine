@@ -119,3 +119,20 @@ CREATE TABLE IF NOT EXISTS hud_idea_inbox (
 );
 CREATE INDEX IF NOT EXISTS hud_idea_inbox_recent
   ON hud_idea_inbox(created_at DESC);
+
+-- Evidence-backed GitHub proposals. One immutable source key per finding,
+-- with a durable six-per-UTC-day limit, independent of visible inbox length.
+-- Never a provider job or approval. Writer-only admission.
+CREATE TABLE IF NOT EXISTS hud_auto_discovery_inbox (
+  id TEXT PRIMARY KEY,
+  discovery_key TEXT NOT NULL UNIQUE,
+  day_id INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  priority INTEGER NOT NULL CHECK(priority BETWEEN 1 AND 100),
+  state TEXT NOT NULL DEFAULT 'pending_review' CHECK(state IN ('pending_review'))
+);
+CREATE INDEX IF NOT EXISTS hud_auto_discovery_day
+  ON hud_auto_discovery_inbox(day_id);
+CREATE INDEX IF NOT EXISTS hud_auto_discovery_recent
+  ON hud_auto_discovery_inbox(created_at DESC);
