@@ -19,6 +19,7 @@ on:
       - 'integrations/hud-cloud/verify-cloud-gemini.mjs'
       - 'tests/test_hud_cloud_gemini.mjs'
       - 'tests/test_hud_groq_cloud.mjs'
+      - 'tests/test_hud_groq_quota.mjs'
       - 'tests/test_hud_omniroute_chat_relay.mjs'
       - 'tools/activate_hud_gemini_route.mjs'
       - 'tools/verify_hud_gemini_activation.mjs'
