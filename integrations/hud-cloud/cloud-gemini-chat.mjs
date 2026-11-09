@@ -7,6 +7,8 @@
 export const AUTO_GEMINI_MODEL='gemini-auto-free';
 export const FREE_GEMINI_MODELS=Object.freeze([
   'gemini-3.8-flash',
+  'gemini-3.7-flash',
+  'gemini-3.6-flash',
   'gemini-3.5-flash',
   'gemini-3.5-flash-lite',
   'gemini-3.1-flash-lite',
@@ -114,7 +116,7 @@ export function selectGeminiForTask(body,allowed){
   const complex=/\b(debug|refactor|architecture|design system|research|analy[sz]e|reason|compare|code|algorithm|database|security|github|technical)\b/i.test(text)||
     text.length>2000;
   const choices=complex?
-    ['gemini-3.8-flash','gemini-3.5-flash','gemini-3.1-flash-lite','gemini-3.5-flash-lite']:
+    ['gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-3.1-flash-lite','gemini-3.5-flash-lite']:
     ['gemini-3.5-flash-lite','gemini-3.1-flash-lite','gemini-2.5-flash-lite',
       'gemini-3.5-flash','gemini-3.8-flash'];
   return choices.find(x=>allowed.includes(x))||allowed[0];
