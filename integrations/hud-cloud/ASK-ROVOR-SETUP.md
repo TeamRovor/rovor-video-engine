@@ -33,7 +33,15 @@ git pull --ff-only
 bash tools/install_hud_chat_relay.sh https://rovor-hud-telemetry.rovordigital.workers.dev
 ```
 
-The installer creates an isolated `com.rovor.hud-chat-relay` LaunchAgent and changes no existing OmniRoute or HUD telemetry LaunchAgent. It does not read or write model API keys outside their existing private OmniRoute runtime.
+The installer creates an isolated `com.rovor.hud-chat-relay` LaunchAgent and changes no existing OmniRoute or HUD telemetry LaunchAgent. It does not read or write model API keys outside their existing private OmniRoute runtime. It accepts the existing `rovordigital.hud.cloudflare.writer` Mac Keychain entry used by the working telemetry publisher (or the legacy `rovordigital.hud.writer` service); do not create, copy or paste another writer token.
+
+**Groq-specific activation:** Your successful local OmniRoute test with `groq/openai/gpt-oss-20b` proves inference routing, not a zero-cost billing entitlement. After independently verifying that exact Groq model, account, quotas and commercial terms permit $0 usage, opt that one exact ID into **Ask ROVOR chat** using the private launch agent installer:
+
+```bash
+ROVOR_HUD_CHAT_FREE_MODELS='groq/openai/gpt-oss-20b' bash tools/install_hud_chat_relay.sh https://rovor-hud-telemetry.rovordigital.workers.dev
+```
+
+This persists only the model ID in the dedicated relay LaunchAgent, **never a secret**, and never enables all Groq routes or paid fallback. The existing `com.rovor.hud-reporting` telemetry agent is not the chat relay. Check `launchctl print gui/$(id -u)/com.rovor.hud-chat-relay` and then confirm the selected Groq model produces a private HUD queued → claimed → complete receipt. It does not activate Groq in the separate ghost-employee cloud scheduler or update the old ChatGPT Site.
 
 Verify it is loaded:
 
