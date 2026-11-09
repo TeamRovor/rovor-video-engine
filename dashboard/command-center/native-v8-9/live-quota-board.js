@@ -928,11 +928,11 @@ function reportAgeLabel(timestamp){
 // repaint) reuse these only inside the same 15s freshness gate; expired or
 // failed sources are never reused.
 let lastExtras=null;
-function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null){
+function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,groqCloud=null){
  // Omitted sources (the popup's own repaint) reuse the last settled ones.
  if(arguments.length<3){
    const reuse=lastExtras&&Date.now()-lastExtras.at<=15000?lastExtras:null;
-   cloud=reuse?.cloud??null;hourly=reuse?.hourly??null;minute=reuse?.minute??null;geminiProject=reuse?.geminiProject??null;
+   cloud=reuse?.cloud??null;hourly=reuse?.hourly??null;minute=reuse?.minute??null;geminiProject=reuse?.geminiProject??null;groqCloud=reuse?.groqCloud??null;
  }
  mount();
  const cloudFresh=cloud?.execution_source==='cloud_provider'&&Number.isFinite(cloud.observed_at)&&
@@ -979,15 +979,27 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null)
  const macAge=reportAgeLabel(data?.snapshot_at);
  const macFreshness='<p class="rvq-last-report" role="status">'+esc(macAge)+(live?' · Mac telemetry accepted':' · cached inventory only; do not infer current traffic or quota')+'</p>';
  // Stale telemetry should have a user action rather than a false live badge.
- const macRecovery=live?'':('<details class="rvq-recovery"><summary>Tracking needs attention · Restore Mac reporting</summary>'+
+ const macRecovery=live?'':('<details class="rvq-recovery"><summary>Optional local OmniRoute telemetry is stale · cloud Groq works separately</summary>'+
   '<p>This is historical telemetry. On your Mac, open the current ROVOR checkout and run:</p>'+
   '<code>bash tools/manage_hud_telemetry_agent.sh status</code>'+
   '<button type="button" class="rvq-copy-recovery" data-rvq-copy-cmd="status">Copy diagnostic command</button>'+
   '<p>A site deployment cannot restart an offline Mac. Inspect the LaunchAgent and follow the '+
   '<a href="https://github.com/TeamRovor/rovor-video-engine/blob/main/integrations/hud-cloud/ASK-ROVOR-SETUP.md" target="_blank" rel="noopener noreferrer">recovery instructions</a>.</p></details>');
+ const cloudGroqValid=groqCloud?.source==='cloud_direct_groq'&&groqCloud?.mac_required===false&&
+   Number.isFinite(Date.parse(groqCloud?.observed_at||''))&&Math.abs(Date.now()-Date.parse(groqCloud.observed_at))<=15000;
+ const cloudGroqPanel='<section class="rvq-cloud" aria-label="Mac independent cloud Groq activity"><strong>CLOUD GROQ · DIRECT · NO MAC REQUIRED</strong>'+
+   (cloudGroqValid?'<span>Route: '+esc(groqCloud.model||'groq/openai/gpt-oss-20b')+
+     ' · '+(groqCloud.ready===true?'FREE-ELIGIBILITY CONFIGURED (not an inference receipt)':'NOT VERIFIED / DISABLED')+'</span>'+
+     '<span>Locally admitted requests today: '+(Number.isSafeInteger(groqCloud.locally_admitted_today)?fmt(groqCloud.locally_admitted_today):'unknown')+
+     ' · remaining Groq organization quota UNKNOWN</span>'+
+     '<span>Last cloud completion: '+(groqCloud.last_cloud_completion_at?esc(prettyTime(groqCloud.last_cloud_completion_at)):'none recorded')+
+     ' · model '+esc(groqCloud.last_completion_model||'unreported')+
+     ' · input/output tokens '+(Number.isSafeInteger(groqCloud.last_prompt_tokens)?fmt(groqCloud.last_prompt_tokens):'—')+
+     ' / '+(Number.isSafeInteger(groqCloud.last_completion_tokens)?fmt(groqCloud.last_completion_tokens):'—')+'</span>':
+     '<span>Independent cloud Groq status unavailable. This does NOT mean the Mac must be online.</span>')+'</section>';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
- summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
+ cloudGroqPanel+summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
  workerBanner(data?.workforce,live)+ (slots.length?quotaGlance(slots,quota,live,cloudProviders)+(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
@@ -1053,7 +1065,7 @@ let started=false;
 function start(){
  if(started)return;
  started=true;
- let busy=false,last=null,lastInventory=null,lastCloud=null,lastHourly=null,lastMinute=null,updated=0;
+ let busy=false,last=null,lastInventory=null,lastCloud=null,lastHourly=null,lastMinute=null,lastGroqCloud=null,updated=0;
  const isOriginal=n=>n.querySelector('h3')?.textContent?.trim()==='YOUR OMNIROUTE CONNECTIONS';
  // After first render the heading changes, so the old placeholder selector
  // cannot find the board again. Keep the replacement selectable for live sync.
@@ -1065,7 +1077,7 @@ function start(){
    if(Date.now()-updated<5000){
      if(!original.classList.contains('rvq-board')){
        const state=captureState(original);
-       original.outerHTML=render(last||lastInventory,!!last,lastCloud,lastHourly,lastMinute);
+       original.outerHTML=render(last||lastInventory,!!last,lastCloud,lastHourly,lastMinute,null,lastGroqCloud);
        restoreState(slot(),state);
      }
      return;
@@ -1093,7 +1105,7 @@ function start(){
    const fresh=accept(live?.('24h'),'24h')||await read('/api/hud/omniroute?period=24h',d=>accept(d,'24h'));
    // Independent sources run in parallel so one slow read cannot delay the rest.
    // A stale or incomplete 1h/1m report must not generate a zero-activity claim.
-   const [hourly,minute,cloud,geminiProject]=await Promise.all([
+   const [hourly,minute,cloud,geminiProject,groqCloud]=await Promise.all([
      fresh?read('/api/hud/omniroute?period=1h',d=>accept(d,'1h'),live?.('1h')):null,
      fresh?read('/api/hud/omniroute?period=1m',d=>accept(d,'1m')):null,
      read('/api/ghost/status',d=>{
@@ -1102,16 +1114,18 @@ function start(){
          Math.abs(Date.now()-d.observed_at)<=15000&&Array.isArray(d.providers)&&d.providers.length<=20?d:null;
      }),
      // Optional route: the original private Site may not have it.
-     read('/api/hud/gemini/project-quota',d=>d?.source==='google_cloud_monitoring'&&typeof d.status==='string'?d:null)
+     read('/api/hud/gemini/project-quota',d=>d?.source==='google_cloud_monitoring'&&typeof d.status==='string'?d:null),
+     read('/api/chat/groq/status',d=>d?.source==='cloud_direct_groq'&&d.mac_required===false&&
+       Number.isFinite(Date.parse(d.observed_at||''))&&Math.abs(Date.now()-Date.parse(d.observed_at))<=15000?d:null)
    ]);
    // Preserve only the last known provider/slot inventory through outages.
    // Never retain or display stale quota percentages as live.
    if(fresh)lastInventory={connections:fresh.connections,connection_slots:fresh.connection_slots,snapshot_at:fresh.snapshot_at};
-   lastCloud=cloud;last=fresh;lastHourly=hourly;lastMinute=minute;updated=Date.now();
-   lastExtras={cloud,hourly,minute,geminiProject,at:updated};
+   lastCloud=cloud;last=fresh;lastHourly=hourly;lastMinute=minute;lastGroqCloud=groqCloud;updated=Date.now();
+   lastExtras={cloud,hourly,minute,geminiProject,groqCloud,at:updated};
    const target=slot();if(target){
      const state=captureState(target);
-     target.outerHTML=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject);
+     target.outerHTML=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject,groqCloud);
      restoreState(slot(),state);
    }
    } finally {
