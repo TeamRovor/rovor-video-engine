@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
+import {validateDeploymentSecrets} from '../integrations/hud-cloud/prepare-github-deploy.mjs';
+import {verifyCloudGroqReadback} from '../integrations/hud-cloud/verify-github-deploy.mjs';
 import {groqCloudReady,GROQ_CLOUD_ROUTE} from '../integrations/hud-cloud/groq-cloud-chat.mjs';
 const NOW=Date.parse('2026-11-09T04:00:00Z');
 const R='r'.repeat(48),W='w'.repeat(48);
@@ -86,4 +88,22 @@ test('No unapproved upstream tools, retry, or private credentials in cloud repli
   });
   assert.equal(res.status,200);assert.equal(count,1);
   assert(!(await res.text()).includes(e.GROQ_HUD_API_KEY));
+});
+
+test('production release refuses Groq activation without fresh cloud-side proof or key',()=>{
+  const base={CLOUDFLARE_API_TOKEN:'test',CLOUDFLARE_ACCOUNT_ID:'f'.repeat(32),
+    ROVOR_HUD_D1_ID:'00000000-0000-4000-8000-000000000001',
+    ROVOR_HUD_READER_TOKEN:R,ROVOR_HUD_WRITER_TOKEN:W};
+  const fresh={...base,...env(),GROQ_HUD_VERIFIED_AT:String(Date.now()-1000),
+    GROQ_HUD_VALID_UNTIL:String(Date.now()+3600000)};
+  assert.equal(validateDeploymentSecrets(fresh),true);
+  assert.throws(()=>validateDeploymentSecrets({...fresh,GROQ_HUD_API_KEY:''}),/cloud_groq_free_eligibility_missing_or_expired/);
+  assert.throws(()=>validateDeploymentSecrets({...fresh,GROQ_HUD_VALID_UNTIL:String(Date.now()-1)}),/cloud_groq_free_eligibility_missing_or_expired/);
+  assert.equal(validateDeploymentSecrets({...base,GROQ_HUD_CHAT_ENABLED:'false'}),true);
+});
+test('production readback proves a cloud-only Groq route, not local OmniRoute',()=>{
+  const proof={source:'cloud_direct_groq',mac_required:false,ready:true,model:GROQ_CLOUD_ROUTE};
+  assert.equal(verifyCloudGroqReadback(proof,{models:[GROQ_CLOUD_ROUTE]}),true);
+  assert.throws(()=>verifyCloudGroqReadback({...proof,mac_required:true},{models:[GROQ_CLOUD_ROUTE]}),/cloud_groq_mac_independent_readback_failed/);
+  assert.throws(()=>verifyCloudGroqReadback(proof,{models:[]}),/cloud_groq_mac_independent_readback_failed/);
 });
