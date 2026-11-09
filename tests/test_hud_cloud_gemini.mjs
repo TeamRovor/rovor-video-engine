@@ -14,7 +14,7 @@ const googleReply=()=>Response.json({
   candidates:[{content:{parts:[{text:'Hello via real model mock'}]},finishReason:'STOP'}],
   usageMetadata:{promptTokenCount:8,candidatesTokenCount:4}
 });
-function mockGoogle(ids=[model,fast,strong],reply=googleReply()){
+function mockGoogle(ids=[model,fast,strong],replyStatus=200){
   const calls=[];
   const send=async(url,options)=>{
     calls.push({url,options});
@@ -32,7 +32,7 @@ function mockGoogle(ids=[model,fast,strong],reply=googleReply()){
     assert.match(url,/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\/gemini-/);
     assert.equal(JSON.parse(options.body).generationConfig.maxOutputTokens,768);
     assert(!JSON.stringify(JSON.parse(options.body)).includes('tools'));
-    return reply;
+    return replyStatus===429?new Response('',{status:429}):googleReply();
   };
   return {send,calls};
 }
@@ -178,7 +178,7 @@ test('D1 project-wide minute limit refuses a third call across different models'
 });
 
 test('A listed model may still be denied; no fallback or fake completion',async()=>{
-  const e=env(),g=mockGoogle([model],new Response('',{status:429}));
+  const e=env(),g=mockGoogle([model],429);
   const r=await cloudGeminiChat(contents,e,now,g.send);
   assert.equal(r.status,429);
   assert.equal((await r.json()).error,'gemini_provider_rate_limited');
