@@ -5,7 +5,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 import {validateDeploymentSecrets} from '../integrations/hud-cloud/prepare-github-deploy.mjs';
 import {verifyCloudGroqReadback} from '../integrations/hud-cloud/verify-github-deploy.mjs';
-import {groqCloudReady,GROQ_CLOUD_ROUTE} from '../integrations/hud-cloud/groq-cloud-chat.mjs';
+import {groqCloudReady,groqAdmission,GROQ_CLOUD_ROUTE} from '../integrations/hud-cloud/groq-cloud-chat.mjs';
 const NOW=Date.parse('2026-11-09T04:00:00Z');
 const R='r'.repeat(48),W='w'.repeat(48);
 function db(){
@@ -91,15 +91,20 @@ test('No unapproved upstream tools, retry, or private credentials in cloud repli
   assert(!(await res.text()).includes(e.GROQ_HUD_API_KEY));
 });
 
-test('production release refuses Groq activation without fresh cloud-side proof or key',()=>{
+test('expired Groq approval blocks inference but not an unrelated protected HUD release',()=>{
   const base={CLOUDFLARE_API_TOKEN:'test',CLOUDFLARE_ACCOUNT_ID:'f'.repeat(32),
     ROVOR_HUD_D1_ID:'00000000-0000-4000-8000-000000000001',
     ROVOR_HUD_READER_TOKEN:R,ROVOR_HUD_WRITER_TOKEN:W};
   const fresh={...base,...env(),GROQ_HUD_VERIFIED_AT:String(Date.now()-1000),
     GROQ_HUD_VALID_UNTIL:String(Date.now()+3600000)};
   assert.equal(validateDeploymentSecrets(fresh),true);
-  assert.throws(()=>validateDeploymentSecrets({...fresh,GROQ_HUD_API_KEY:''}),/cloud_groq_free_eligibility_missing_or_expired/);
-  assert.throws(()=>validateDeploymentSecrets({...fresh,GROQ_HUD_VALID_UNTIL:String(Date.now()-1)}),/cloud_groq_free_eligibility_missing_or_expired/);
+  const missing={...fresh,GROQ_HUD_API_KEY:''};
+  const expired={...fresh,GROQ_HUD_VALID_UNTIL:String(Date.now()-1)};
+  assert.equal(validateDeploymentSecrets(missing),true);
+  assert.equal(validateDeploymentSecrets(expired),true);
+  assert.equal(groqCloudReady(missing),false);
+  assert.equal(groqCloudReady(expired),false);
+  assert.equal(groqAdmission(expired).reason,'owner_attestation_expired');
   assert.equal(validateDeploymentSecrets({...base,GROQ_HUD_CHAT_ENABLED:'false'}),true);
 });
 test('production readback proves a cloud-only Groq route, not local OmniRoute',()=>{
@@ -118,4 +123,25 @@ test('Groq refuses an upstream redirect without replay or forwarding the private
   assert.equal(calls,1);
   assert.equal(response.status,502);
   assert.equal((await response.json()).error,'groq_upstream_redirect_denied');
+});
+
+test('Groq status redacts private evidence and explains admission blocks without a Mac',async()=>{
+ const e=env();
+ const cases=[
+   [{...e,GROQ_HUD_CHAT_ENABLED:'false'},'chat_disabled'],
+   [{...e,GROQ_HUD_API_KEY:''},'cloud_key_unavailable'],
+   [{...e,GROQ_HUD_FREE_TIER_VERIFIED:'false'},'owner_free_tier_attestation_missing'],
+   [{...e,GROQ_HUD_EVIDENCE_SHA256:''},'owner_evidence_digest_missing'],
+   [{...e,GROQ_HUD_VALID_UNTIL:String(NOW-1)},'owner_attestation_expired'],
+   [{...e,GROQ_HUD_DAILY_BUDGET:'0'},'daily_budget_invalid']
+ ];
+ for(const [cfg,reason] of cases){
+   const status=await(await handle(req('/api/chat/groq/status'),cfg,NOW)).json();
+   assert.equal(status.admission.ready,false);
+   assert.equal(status.admission.reason,reason);
+   assert.equal(status.ready,false);
+   assert.equal(status.mac_required,false);
+   assert(!JSON.stringify(status).includes(e.GROQ_HUD_API_KEY));
+   assert(!JSON.stringify(status).includes(e.GROQ_HUD_EVIDENCE_SHA256));
+ }
 });
