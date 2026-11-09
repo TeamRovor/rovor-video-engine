@@ -138,6 +138,9 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     const anonymousModels = await read('/api/hud/chat/models', false);
     if (anonymousModels.status !== 401) throw Error('anonymous_chat_model_catalog_was_not_denied');
   }
+  // Private D1 idea inbox must not be accessible without reader identity.
+  const anonymousIdeas=await read('/api/hud/ideas',false);
+  if(anonymousIdeas.status!==401)throw Error('anonymous_idea_inbox_exposed');
   const anonymousRoot = await read('/', false);
   if (anonymousRoot.status !== 303 ||
       !new URL(anonymousRoot.headers.get('Location') || '/', origin).href.startsWith(origin + '/login'))
@@ -200,6 +203,18 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     catch{throw Error('groq_catalog_probe_json_invalid');}
     cloudGroqCatalog=summarizeGroqKeyCatalog(report);
   }
+  // Read only; never insert test ideas or dispatch models during release.
+  const ideasReply=await read('/api/hud/ideas',true);
+  if(ideasReply.status!==200)throw Error('private_idea_inbox_unavailable');
+  let ideas;try{ideas=await ideasReply.json();}
+  catch{throw Error('private_idea_inbox_invalid');}
+  if(ideas?.source!=='private_rovor_idea_inbox'||ideas.execution_authorized!==false||
+      ideas.mac_required!==false||!Array.isArray(ideas.items)||ideas.items.length>20||
+      ideas.items.some(row=>row?.state!=='pending_review'||
+        !/^[a-f0-9-]{36}$/i.test(row.id)||typeof row.text!=='string'||
+        row.text.length<8||row.text.length>1600||
+        !Number.isFinite(Date.parse(row.created_at||''))))
+    throw Error('private_idea_inbox_invalid');
   const status = await read('/api/hud/status?period=24h', true);
   if (status.status !== 200) throw Error('private_D1_status_unavailable');
   const telemetry = await status.json();
@@ -252,6 +267,7 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
   return {cloud_groq_mac_independent_verified: expectCloudGroq?true:null,
     cloud_groq_key_catalog:cloudGroqCatalog,
     private_auth_verified: true, original_hud_verified: true,
+    private_idea_inbox_verified: true,
     quota_board_verified: true, database_api_verified: true,
     quota_asset_matches_checkout: expectedQuotaAsset === null ? null : true,
     chat_asset_matches_checkout: expectedChatAsset === null ? null : true,
