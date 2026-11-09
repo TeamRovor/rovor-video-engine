@@ -457,11 +457,25 @@ test('Cloud Groq quota panel shows only fresh provider RPD/TPM headers without M
  assert.match(html,/Daily requests \(RPD\): 975 \/ 1,000 remaining/);
  assert.match(html,/tokens\/min \(TPM\): 7,470 \/ 8,000 remaining/);
  assert.match(html,/billing status NOT VERIFIED by headers/);
- assert.match(html,/NOT VERIFIED \/ DISABLED/);
+ assert.match(html,/INFERENCE NOT APPROVED/);
  assert.doesNotMatch(html,/role="progressbar" aria-label="Reported quota used"/);
  data.catalog.state='stale';
  const stale=board().render(null,false,null,null,null,null,data);
  assert.match(stale,/Daily requests \(RPD\): UNKNOWN/);
  assert.match(stale,/tokens\/min \(TPM\): UNKNOWN/);
  assert.doesNotMatch(stale,/975 \/ 1,000 remaining/);
+});
+
+test('Groq catalogue does not invent an allowance when provider omits rate limit headers',()=>{
+ const datum={source:'cloud_direct_groq',mac_required:false,model:'groq/openai/gpt-oss-20b',
+   observed_at:new Date().toISOString(),ready:false,locally_admitted_today:0,
+   catalog:{source:'groq_api_models_catalog',state:'catalog_received',
+      model_present:true,requests_per_day:null,tokens_per_minute:null}};
+ const html=board().render(null,false,null,null,null,null,datum);
+ assert.match(html,/Groq model lookup succeeded/);
+ assert.match(html,/Remaining allowance cannot be calculated/);
+ assert.match(html,/UNKNOWN does not mean zero or a Mac disconnection/);
+ assert.match(html,/Daily requests \(RPD\): UNKNOWN/);
+ assert.match(html,/INFERENCE NOT APPROVED/);
+ assert.doesNotMatch(html,/Daily requests \(RPD\): 0/);
 });
