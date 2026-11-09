@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {readFileSync} from 'node:fs';
 import {setTimeout as delay} from 'node:timers/promises';
+import {groqCloudReady} from './groq-cloud-chat.mjs';
 
 export function verifiedOrigin(raw) {
   if (typeof raw !== 'string') throw Error('explicit_private_hud_origin_required');
@@ -276,7 +277,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     expectedQuotaAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/live-quota-board.js', import.meta.url), 'utf8'),
     expectedChatAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/hud-chat.js', import.meta.url), 'utf8'),
     requireLiveTelemetry: false,
-    expectCloudGroq: process.env.GROQ_HUD_CHAT_ENABLED==='true',
+    expectCloudGroq: groqCloudReady(process.env,Date.now()),
     expectGroqKeyCatalog:typeof process.env.GROQ_HUD_API_KEY==='string'&&process.env.GROQ_HUD_API_KEY.length>=16})
     .then(result => {
       console.log(JSON.stringify(result));
