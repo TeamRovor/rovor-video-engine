@@ -5979,6 +5979,49 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/105"
         }
       ]
+    },
+    {
+      "id": "python39-ubuntu24-github-actions-20261109",
+      "title": "Pin unsupported Python 3.9 GitHub Actions jobs to Ubuntu 24.04 runners",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar CI runner compatibility 2026-11-09",
+      "branch": "fix/python39-ubuntu24-workflow-runners-20261109",
+      "scopes": [
+        ".github/workflows/painting-video-qa.yml",
+        ".github/workflows/ghost-role-bootstrap.yml",
+        ".github/workflows/omniroute-model-fleet.yml",
+        ".github/workflows/ghost-provider-policy.yml",
+        ".github/workflows/walter-staged-dispatch.yml",
+        ".github/workflows/omniroute-ops-snapshot.yml",
+        ".github/workflows/walter-research-backlog.yml",
+        ".github/workflows/task-routing-pair-check.yml",
+        ".github/workflows/walter-workpack-compile.yml",
+        ".github/workflows/work-brief-routing-check.yml",
+        ".github/workflows/walter-soak-evidence-gate.yml",
+        ".github/workflows/omniroute-dispatch-permit.yml",
+        ".github/workflows/walter-specialist-coverage.yml",
+        ".github/workflows/walter-task-identity-guard.yml",
+        ".github/workflows/walter-real-receipt-bridge.yml",
+        ".github/workflows/github-atomic-intake-check.yml",
+        ".github/workflows/walter-snapshot-continuity.yml",
+        ".github/workflows/walter-source-citation-gate.yml",
+        ".github/workflows/walter-public-task-grounding.yml",
+        ".github/workflows/omniroute-reasoning-admission.yml",
+        ".github/workflows/walter-public-queue-admission.yml",
+        ".github/workflows/private-control-repo-bootstrap.yml",
+        ".github/workflows/walter-reviewed-finding-handoff.yml",
+        ".github/workflows/walter-grounded-coverage-pipeline.yml"
+      ],
+      "depends_on": [],
+      "next_action": "Pin 24 unclaimed Python 3.9 workflows from ubuntu-latest to ubuntu-24.04 while retaining Python 3.9 and all tests. Do not modify two workflows under existing active owner scopes.",
+      "next_update": "After GitHub CI on the dedicated runner compatibility PR",
+      "acceptance": "No removed Python 3.9 matrix tests; pinned Ubuntu 24.04 on workflows using Python 3.9; no conflicting active owner scopes; exact GitHub checks run; PR review before merge.",
+      "updated_at": "2026-11-09T10:27:00Z",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/316",
+        "https://github.com/actions/runner-images/issues/14748"
+      ]
     }
   ]
 }
