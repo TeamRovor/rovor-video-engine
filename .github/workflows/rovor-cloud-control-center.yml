@@ -1,0 +1,266 @@
+name: ROVOR Cloud Control Center - audit deploy and verify
+
+# Single owner-operated control workflow for the EXISTING ROVOR systems.
+# No Mac runner, local OmniRoute, replacement Site, automated paid inference,
+# task ownership mutation, secret logs, STOP override or automatic PASS/FAIL.
+on:
+  workflow_dispatch:
+    inputs:
+      run_mode:
+        description: "Audit only, deploy existing Cloudflare HUD, or deploy and test one Google Gemini reply"
+        type: choice
+        required: true
+        default: audit_only
+        options:
+          - audit_only
+          - deploy_existing_hud
+          - deploy_and_test_gemini
+      confirm_free_tier:
+        description: "Only for Gemini canary: I verified this key/project is Free tier and authorize one small request"
+        type: boolean
+        required: false
+        default: false
+      trigger_one_approved_shift:
+        description: "Optional: request one bounded existing private Site shift, if STOP/eligibility permit"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rovor-cloud-control-center
+  cancel-in-progress: false
+
+jobs:
+  offline-safety:
+    name: Verify source, queue, cloud admission and private HUD contracts
+    if: github.repository == 'TeamRovor/rovor-video-engine' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate cloud-only runner and source syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/rovor_cloud_control_report.py
+          node --check integrations/hud-cloud/worker.mjs
+          node --check integrations/hud-cloud/cloud-gemini-chat.mjs
+          node --check integrations/hud-cloud/verify-cloud-gemini.mjs
+          node --check integrations/ghost-cloud/site-operations.mjs
+          node --check integrations/ghost-cloud/scheduled-shift.mjs
+          node --check dashboard/command-center/native-v8-9/hud-chat.js
+          bash -n tools/install_hud_chat_relay.sh
+      - name: Verify existing private HUD security and cloud runtime admission
+        run: |
+          set -euo pipefail
+          node --test tests/test_hud_cloud_gemini.mjs tests/test_hud_cloud.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_chat_mobile.mjs tests/test_ghost_cloud.mjs tests/test_ghost_cloud_canary_preflight.mjs tests/test_ghost_cloud_operations.mjs tests/test_ghost_cloud_scheduled_shift.mjs
+          python3 -m unittest discover -s tests -p test_ghost_cloud_hosted_shift.py -v
+          python3 -m unittest discover -s tests -p test_rovor_cloud_control_report.py -v
+      - name: Verify one canonical owner/role/task routing queue
+        run: |
+          set -euo pipefail
+          python3 tools/project_loop.py check
+          python3 tools/task_routing_pair.py --check
+
+  cloud-readiness:
+    name: Read existing HUD + cloud workforce and identify exactly what's missing
+    needs: offline-safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: rovor-hud-production
+    outputs:
+      deploy_ready: ${{ steps.audit.outputs.deploy_ready }}
+      site_accessible: ${{ steps.audit.outputs.site_accessible }}
+      shift_ready: ${{ steps.audit.outputs.shift_ready }}
+    env:
+      ROVOR_CONTROL_MODE: ${{ inputs.run_mode }}
+      ROVOR_OWNER_CONFIRMS_FREE_TIER: ${{ inputs.confirm_free_tier }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ROVOR_HUD_D1_ID: ${{ secrets.ROVOR_HUD_D1_ID }}
+      ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+      ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
+      ROVOR_GEMINI_API_KEY: ${{ secrets.ROVOR_GEMINI_API_KEY || secrets.GEMINI_API_KEY }}
+      ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Private, read-only check of two existing cloud systems
+        id: audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ROVOR_REPORT_OUTPUT="$RUNNER_TEMP/rovor-cloud-readiness.json"
+          python3 tools/rovor_cloud_control_report.py
+      - name: Save sanitized readiness report (no secrets, no prompts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: rovor-cloud-readiness
+          path: ${{ runner.temp }}/rovor-cloud-readiness.json
+          retention-days: 7
+          if-no-files-found: error
+
+  missing-deployment-requirements:
+    name: Fail clearly if an explicitly requested deployment lacks credentials or approval
+    needs: cloud-readiness
+    if: inputs.run_mode != 'audit_only' && needs.cloud-readiness.outputs.deploy_ready != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report the audited blocker without touching production
+        run: |
+          echo "::error title=ROVOR deployment not armed::Read the Cloud Readiness summary above. Supply only the missing existing environment secrets and Free-tier consent. No deployment or model call occurred."
+          echo "### Deployment refused safely" >> "$GITHUB_STEP_SUMMARY"
+          echo "The read-only readiness job lists the exact missing configuration. No Mac and no replacement HUD are required." >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
+  deploy-hud:
+    name: Publish existing private Cloudflare HUD and verify exact source/readback
+    needs: cloud-readiness
+    if: inputs.run_mode != 'audit_only' && needs.cloud-readiness.outputs.deploy_ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: rovor-hud-production
+    concurrency:
+      group: rovor-hud-private-deployment
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ROVOR_HUD_D1_ID: ${{ secrets.ROVOR_HUD_D1_ID }}
+      ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+      ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
+      ROVOR_GEMINI_CLOUD_API_KEY: ${{ secrets.ROVOR_GEMINI_API_KEY || secrets.GEMINI_API_KEY }}
+      ROVOR_OWNER_CONFIRMS_FREE_TIER: ${{ inputs.confirm_free_tier }}
+    defaults:
+      run:
+        working-directory: integrations/hud-cloud
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Enforce trusted main and existing credentials before production writes
+        run: node prepare-github-deploy.mjs
+      - name: Install Wrangler for the existing Cloudflare Worker
+        run: npm install --global wrangler@4
+      - name: Apply existing idempotent forward-only D1 schema
+        run: wrangler d1 execute DB --remote --file=schema.sql --config wrangler.github.jsonc
+      - name: Publish existing private HUD (never create a new Site)
+        run: wrangler deploy --config wrangler.github.jsonc
+      - name: Restore existing private reader/writer tokens and opt-in Gemini secret only
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e 'const e=process.env;const x={HUD_WRITER_TOKEN:e.ROVOR_HUD_WRITER_TOKEN,HUD_READER_TOKEN:e.ROVOR_HUD_READER_TOKEN};if(e.ROVOR_OWNER_CONFIRMS_FREE_TIER==="true"&&e.ROVOR_GEMINI_CLOUD_API_KEY){x.GEMINI_API_KEY=e.ROVOR_GEMINI_CLOUD_API_KEY;x.ROVOR_GEMINI_FREE_TIER_VERIFIED="confirmed";}process.stdout.write(JSON.stringify(x));' |
+            wrangler secret bulk --config wrangler.github.jsonc
+      - name: Verify private authentication, nine-provider HUD UI, D1 and exact source
+        run: node verify-github-deploy.mjs
+      - name: Report deployment without falsely claiming a model answered
+        run: |
+          echo "### Existing Cloudflare HUD deployed and privately verified" >> "$GITHUB_STEP_SUMMARY"
+          echo "This verifies source and private readback; cloud model inference is only proven by an independently successful canary." >> "$GITHUB_STEP_SUMMARY"
+
+  gemini-canary:
+    name: One real, bounded Google Gemini cloud reply (never Mac or paid fallback)
+    needs: deploy-hud
+    if: inputs.run_mode == 'deploy_and_test_gemini' && needs.deploy-hud.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    environment: rovor-hud-production
+    env:
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Confirm real Google answer and advancing D1 usage receipt
+        run: node integrations/hud-cloud/verify-cloud-gemini.mjs
+      - name: Record precisely what was verified
+        run: |
+          echo "### Google Gemini cloud canary completed" >> "$GITHUB_STEP_SUMMARY"
+          echo "One real direct Google Gemini response and increased D1 completed count were observed. This does not verify project-wide remaining free quota or the nine-provider workforce." >> "$GITHUB_STEP_SUMMARY"
+
+  one-approved-cloud-shift:
+    name: Optional single existing private Site workforce shift
+    needs: cloud-readiness
+    if: inputs.trigger_one_approved_shift == true && needs.cloud-readiness.outputs.shift_ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    concurrency:
+      group: rovor-cloud-hosted-shift
+      cancel-in-progress: false
+    env:
+      ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Request exactly one guarded existing private Site shift
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/ghost_cloud_hosted_shift.py
+          echo "One privately admitted cloud shift request was processed. A zero-dispatch result is NOT AI activity proof." >> "$GITHUB_STEP_SUMMARY"
+
+  unavailable-cloud-shift:
+    name: Explain why requested cloud shift was not attempted
+    needs: cloud-readiness
+    if: inputs.trigger_one_approved_shift == true && needs.cloud-readiness.outputs.shift_ready != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail closed on STOP, provider admission or Site service auth
+        run: |
+          echo "::warning title=Cloud shift not eligible::Existing private Site service is unavailable, STOP is active, or no cloud provider is currently verified eligible. Nothing was dispatched."
+          echo "### Cloud shift not executed" >> "$GITHUB_STEP_SUMMARY"
+          echo "The read-only readiness report identifies the Site reachability/STOP/provider admission blocker. No failed job was replayed." >> "$GITHUB_STEP_SUMMARY"
+
+  final-readback:
+    name: Recheck HUD, nine providers, activity, reviews and schedule after selected operations
+    needs: [cloud-readiness, deploy-hud, gemini-canary, one-approved-cloud-shift, unavailable-cloud-shift, missing-deployment-requirements]
+    if: always() && needs.cloud-readiness.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: rovor-hud-production
+    env:
+      ROVOR_CONTROL_MODE: ${{ inputs.run_mode }}
+      ROVOR_OWNER_CONFIRMS_FREE_TIER: ${{ inputs.confirm_free_tier }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ROVOR_HUD_D1_ID: ${{ secrets.ROVOR_HUD_D1_ID }}
+      ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+      ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
+      ROVOR_GEMINI_API_KEY: ${{ secrets.ROVOR_GEMINI_API_KEY || secrets.GEMINI_API_KEY }}
+      ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Final private read-only evidence (no inference or secret output)
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ROVOR_REPORT_OUTPUT="$RUNNER_TEMP/rovor-cloud-final.json"
+          python3 tools/rovor_cloud_control_report.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rovor-cloud-final-readback
+          path: ${{ runner.temp }}/rovor-cloud-final.json
+          retention-days: 7
+          if-no-files-found: error
