@@ -19,6 +19,7 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   if (!html.includes('window.ROVOR_START_OMNIROUTE') || !html.includes('</body>')) throw Error('Original HUD live adapter missing');
   const plain = code => code.replace(/^export (?=(?:(?:async )?function|(?:const|let|class))\b)/gm, '');
   const monitorImport = "import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';";
+  const cloudGeminiImport = "import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';";
   const relayImport = "import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';";
   const chatParserImport = "import {parseChatRequest} from '../../tools/hud_chat.mjs';";
   if (core.split(relayImport).length !== 2) throw Error('Unexpected private chat relay import');
@@ -32,7 +33,10 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   if (core.split(monitorImport).length !== 2) throw Error('Unexpected Gemini monitoring import');
   const monitor = fs.readFileSync(path.join(here, 'gemini-cloud-monitoring.mjs'), 'utf8');
   const dependency = 'const {readGoogleGeminiQuota} = (() => {\n' + plain(monitor) + '\nreturn {readGoogleGeminiQuota};})();\n';
-  return dependency + relay + plain(core.replace(monitorImport, '').replace(relayImport, '').replace(coreEnd, '')) + '\n' + plain(adapter.replace(adapterImport, '')) +
+  const geminiCloudSource = fs.readFileSync(path.join(here, 'cloud-gemini-chat.mjs'), 'utf8');
+  if (core.split(cloudGeminiImport).length !== 2) throw Error('Unexpected cloud Gemini import');
+  const geminiCloud = plain(geminiCloudSource) + '\n';
+  return dependency + relay + geminiCloud + plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '').replace(coreEnd, '')) + '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
 }
 
