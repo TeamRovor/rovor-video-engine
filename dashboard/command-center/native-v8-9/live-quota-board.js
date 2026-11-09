@@ -1132,7 +1132,7 @@ function start(){
    const fresh=accept(live?.('24h'),'24h')||await read('/api/hud/omniroute?period=24h',d=>accept(d,'24h'));
    // Independent sources run in parallel so one slow read cannot delay the rest.
    // A stale or incomplete 1h/1m report must not generate a zero-activity claim.
-   const [hourly,minute,cloud,geminiProject,groqCloud]=await Promise.all([
+   const [hourly,minute,cloud,geminiProject,groqCloud,geminiCatalog,geminiUsage]=await Promise.all([
      fresh?read('/api/hud/omniroute?period=1h',d=>accept(d,'1h'),live?.('1h')):null,
      fresh?read('/api/hud/omniroute?period=1m',d=>accept(d,'1m')):null,
      read('/api/ghost/status',d=>{
@@ -1143,12 +1143,17 @@ function start(){
      // Optional route: the original private Site may not have it.
      read('/api/hud/gemini/project-quota',d=>d?.source==='google_cloud_monitoring'&&typeof d.status==='string'?d:null),
      read('/api/chat/groq/status',d=>d?.source==='cloud_direct_groq'&&d.mac_required===false&&
-       Number.isFinite(Date.parse(d.observed_at||''))&&Math.abs(Date.now()-Date.parse(d.observed_at))<=15000?d:null)
+       Number.isFinite(Date.parse(d.observed_at||''))&&Math.abs(Date.now()-Date.parse(d.observed_at))<=15000?d:null),
+     read('/api/hud/gemini/models',d=>d?.source==='google_gemini_cloud_direct'&&d.mac_required===false&&
+       Array.isArray(d.models)&&d.models.length<=20?d:null),
+     read('/api/hud/gemini/usage',d=>d?.source==='cloud_gemini_direct'&&d.mac_required===false&&
+       Array.isArray(d.models)&&d.models.length<=20?d:null)
    ]);
    // Preserve only the last known provider/slot inventory through outages.
    // Never retain or display stale quota percentages as live.
    if(fresh)lastInventory={connections:fresh.connections,connection_slots:fresh.connection_slots,snapshot_at:fresh.snapshot_at};
    lastCloud=cloud;last=fresh;lastHourly=hourly;lastMinute=minute;lastGroqCloud=groqCloud;updated=Date.now();
+   lastGeminiDirect=geminiCatalog&&geminiUsage?{catalog:geminiCatalog,usage:geminiUsage,at:updated}:null;
    lastExtras={cloud,hourly,minute,geminiProject,groqCloud,at:updated};
    const target=slot();if(target){
      const state=captureState(target);
