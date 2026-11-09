@@ -37,7 +37,7 @@ The module discards unknown catalog fields, including anything that looks like a
 `selectModelRoutes()` is deterministic, bounded and read-only:
 
 - Explicit/manual `{provider,model_id}` requests either select that *exact eligible* identity or return a block; no hidden substitution.
-- Automatic selection considers only eligible models. Exact-ID advisory task-family matches guide initial ranking; these are editorial hypotheses, not a measured benchmark or a guarantee of quality.
+- Automatic selection considers only eligible models with an exact-ID advisory match or enough owner-reviewed evidence for that task. Otherwise it blocks instead of guessing a model alphabetically. A task-irrelevant model cannot be added merely to fill the optional second-review slot. Repeated owner-rejected outputs can downgrade editorial preferences. This does not claim measured superiority.
 - Owner `accepted/rejected` quality metrics appear and influence ranking only after at least five distinct valid receipts for that task and model. Never infer quality from request share or mere completion.
 - Optional review selects **at most two** models from different providers. No round robin or uncontrolled fan-out. Selecting a model does not execute it.
 - When all providers are unverified, the correct result is `no_verified_eligible_models` and zero calls.
@@ -53,7 +53,7 @@ node --check integrations/hud-cloud/ask-rovor-model-registry.mjs
 node --test tests/test_ask_rovor_model_registry.mjs
 ```
 
-Tests cover nine fixed provider slots, catalog-only denial, `:free` suffix non-authority, current evidence, redaction, stale/future proof, STOP, billing, canary identity, quota, cooldown, duplicate admissions, manual failure, independent review count, deduplicated PASS/FAIL metrics, deterministic task-aware choice, hostile intent fields and bounded inputs. These are **synthetic/offline tests**, not provider benchmark or production proof.
+Tests cover nine fixed provider slots, catalog-only denial, `:free` suffix non-authority, current evidence, redaction, stale/future proof, STOP, billing, canary identity, quota, cooldown, duplicate admissions, manual failure, independent review count, deduplicated PASS/FAIL metrics, deterministic task-aware choice, prototype-like catalog IDs, unrelated-task refusal, hostile intent fields and bounded inputs. These are **synthetic/offline tests**, not provider benchmark or production proof.
 
 ## Next integration PRs (separate scoped changes)
 
