@@ -33,3 +33,12 @@ test('D1 forward-only health evidence schema contains no prompts or keys',()=>{
   assert.match(block,/cooldown_until INTEGER/);
   assert.doesNotMatch(block,/prompt TEXT|api_key|private_key|output TEXT|billing_spent/);
 });
+test('single trusted-main Gemini 3.8 canary marker selects only its exact allowed model',()=>{
+  const y=read('.github/workflows/deploy-private-hud-cloudflare.yml');
+  assert.match(y,/GEMINI_ACTIVATE_ONCE:/);
+  assert.match(y,/\[gemini-verify-3\.8-flash\]/);
+  assert.match(y,/ROVOR_GEMINI_TEST_MODEL:/);
+  assert.match(y,/&& 'gemini-3\.8-flash' \|\| ''/);
+  assert.match(y,/github\.event_name == 'push'/);
+  assert.match(y,/verify-cloud-gemini\.mjs/);
+});
