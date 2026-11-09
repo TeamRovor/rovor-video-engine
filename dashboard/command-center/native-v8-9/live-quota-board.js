@@ -906,10 +906,66 @@ const css=`
 #rovor-workload-popup .rvq-glance-unknown summary{cursor:pointer}
 #rovor-workload-popup .rvq-glance-unknown ul{margin:4px 0 0;padding-left:16px}
 `;
+
+const cloudCSS=String.raw`
+#rovor-workload-popup .rvq-cloud-v2{display:grid;gap:17px;width:100%;min-width:0;padding:clamp(12px,2vw,22px)!important;background:radial-gradient(ellipse at 85% 0%,#123e69 0%,#071d35 42%,#04101f 100%)!important;border:1px solid #3875a5!important;border-radius:16px;clip-path:none;box-shadow:inset 0 0 50px #1578c018}
+#rovor-workload-popup .rvq-v2-hero{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;border-bottom:1px solid #346b995c;padding-bottom:16px}
+#rovor-workload-popup .rvq-v2-hero h3{font-size:clamp(21px,2.5vw,30px);letter-spacing:-.04em;border:0;padding:0;margin:5px 0 7px;color:#ecf9ff}
+#rovor-workload-popup .rvq-v2-hero p{font:12px/1.6 system-ui;max-width:650px;color:#91c0df;margin:0}
+#rovor-workload-popup .rvq-v2-pill{border:1px solid #4185af;background:#082e4b;color:#a9dafa;border-radius:999px;padding:7px 12px;font:700 10px/1.4 system-ui;letter-spacing:.07em}
+#rovor-workload-popup .rvq-v2-pill[data-state=verified]{border-color:#4ab5e6;color:#d1f1ff;box-shadow:0 0 16px #238acf33}
+#rovor-workload-popup .rvq-v2-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#rovor-workload-popup .rvq-v2-metric{min-width:0;padding:13px 14px;border:1px solid #2b5e89;background:#061a30;border-radius:12px}
+#rovor-workload-popup .rvq-v2-metric span{display:block;color:#8cbedf;font:700 10px/1.4 system-ui;letter-spacing:.1em;text-transform:uppercase}
+#rovor-workload-popup .rvq-v2-metric strong{display:block;margin:5px 0 2px;font:750 clamp(20px,2.4vw,28px)/1.1 system-ui;letter-spacing:-.035em;color:#eaf8ff}
+#rovor-workload-popup .rvq-v2-metric small{display:block;color:#86aeca;font:10px/1.5 system-ui}
+#rovor-workload-popup .rvq-v2-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#rovor-workload-popup .rvq-v2-section-head h4{margin:0;color:#d9f3ff;font:750 13px/1.3 system-ui;letter-spacing:.035em}
+#rovor-workload-popup .rvq-v2-section-head small{color:#8dbbd8;font:11px/1.5 system-ui}
+#rovor-workload-popup .rvq-v2-filters{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+#rovor-workload-popup .rvq-v2-filters button{font:650 11px system-ui;min-height:38px;border-radius:9px;padding:7px 12px;background:#0a2a47;color:#add6ef;border:1px solid #356b95;cursor:pointer}
+#rovor-workload-popup .rvq-v2-filters button[aria-pressed=true]{background:#15517c;color:#f0faff;border-color:#70bfea}
+#rovor-workload-popup .rvq-v2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#rovor-workload-popup .rvq-v2-provider{display:grid;align-content:start;gap:8px;min-width:0;padding:14px;border:1px solid #285477;background:linear-gradient(155deg,#092440,#051425);border-radius:12px;box-shadow:inset 0 1px #7cbbe513}
+#rovor-workload-popup .rvq-v2-provider[data-state=verified]{border-color:#368cba}
+#rovor-workload-popup .rvq-v2-provider[hidden]{display:none!important}
+#rovor-workload-popup .rvq-v2-provider-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+#rovor-workload-popup .rvq-v2-provider h5{font:750 14px/1.3 system-ui;color:#edf9ff;margin:0;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-v2-provider-top small{font:600 9px/1.5 system-ui;color:#9bc7df}
+#rovor-workload-popup .rvq-v2-provider .rvq-ring{width:66px;height:66px;flex:0 0 66px}
+#rovor-workload-popup .rvq-v2-provider .rvq-ring:before{inset:8px}
+#rovor-workload-popup .rvq-v2-provider .rvq-ring-core strong{font-size:15px}
+#rovor-workload-popup .rvq-v2-provider .rvq-ring-core small{font-size:8px}
+#rovor-workload-popup .rvq-v2-quota{display:flex;gap:12px;align-items:center;min-width:0}
+#rovor-workload-popup .rvq-v2-quota-copy{color:#c2e0f2;font:11px/1.6 system-ui;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-v2-quota-copy small{display:block;color:#85b2cf;font-size:10px}
+#rovor-workload-popup .rvq-v2-evidence{display:grid;gap:4px;color:#9bc0db;font:11px/1.5 system-ui}
+#rovor-workload-popup .rvq-v2-evidence b{color:#e2f5ff}
+#rovor-workload-popup .rvq-v2-provider details{border-top:1px solid #284d6b;padding-top:8px}
+#rovor-workload-popup .rvq-v2-provider summary{font:700 11px/1.5 system-ui;color:#b7e2fc;cursor:pointer;min-height:28px}
+#rovor-workload-popup .rvq-v2-provider details p{font:11px/1.6 system-ui;color:#a3cae2;margin:6px 0}
+#rovor-workload-popup .rvq-v2-models{display:grid;gap:7px}
+#rovor-workload-popup .rvq-v2-model{padding:9px;border:1px solid #294d6a;background:#07182b;border-radius:8px}
+#rovor-workload-popup .rvq-v2-model strong{display:block;font:650 11px/1.5 system-ui;color:#e2f4ff;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-v2-model small{display:block;font:10px/1.5 system-ui;color:#92b9d2}
+#rovor-workload-popup .rvq-v2-secondary{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#rovor-workload-popup .rvq-v2-section{min-width:0;border:1px solid #2d618e;background:#06192e;border-radius:13px;padding:14px}
+#rovor-workload-popup .rvq-v2-section p{font:11px/1.6 system-ui;color:#9dc8df;margin:9px 0}
+#rovor-workload-popup .rvq-v2-section a{color:#a0d9ff;text-underline-offset:3px;overflow-wrap:anywhere}
+#rovor-workload-popup .rvq-v2-section .rvq-emp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#rovor-workload-popup .rvq-v2-sources{border-top:1px solid #294f73;padding-top:12px;color:#8dbbd6;font:11px/1.7 system-ui}
+#rovor-workload-popup .rvq-v2-sources strong{color:#d9f0ff}
+#rovor-workload-popup .rvq-v2-empty{font:11px/1.6 system-ui;color:#98c0d9}
+#rovor-workload-popup .rvq-v2-loading{min-height:240px;padding:20px;border:1px solid #325b81;background:#061a2f;color:#b7dcf2;font:12px/1.6 system-ui;border-radius:12px}
+@media(max-width:940px){#rovor-workload-popup .rvq-v2-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#rovor-workload-popup .rvq-v2-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}#rovor-workload-popup .rvq-v2-secondary{grid-template-columns:1fr}}
+@media(max-width:540px){#rovor-workload-popup .rvq-cloud-v2{padding:12px!important;gap:13px}#rovor-workload-popup .rvq-v2-grid{grid-template-columns:1fr}#rovor-workload-popup .rvq-v2-metrics{gap:7px}#rovor-workload-popup .rvq-v2-metric{padding:10px}#rovor-workload-popup .rvq-v2-metric strong{font-size:21px}#rovor-workload-popup .rvq-v2-hero h3{font-size:23px}}
+@media(prefers-reduced-motion:reduce){#rovor-workload-popup .rvq-cloud-v2 *{animation:none!important;transition:none!important}}
+`;
+
 function mount(){
  if(document.getElementById('rvq-style'))return;
  listenForQuotaInteraction();
- const s=document.createElement('style');s.id='rvq-style';s.textContent=css;document.head.append(s);
+ const s=document.createElement('style');s.id='rvq-style';s.textContent=css+cloudCSS;document.head.append(s);
 }
 function reportAgeLabel(timestamp){
  const when=typeof timestamp==='string'?Date.parse(timestamp):NaN;
@@ -1047,6 +1103,251 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
  '<details class="rvq-source-notes"><summary>DATA SOURCES & VERIFICATION RULES</summary><p>Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Mac traffic percentages are shares of recorded provider requests, NOT quota usage. Local quota rings are cached gateway limits; separate cloud quota rings require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></details></section>';
 }
 // Preserve owner inspection context even when live evidence must be refreshed.
+
+const CLOUD_ONLY_PROVIDERS=Object.freeze(['gemini','groq','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface']);
+const CLOUD_SITE='https://rovor-private-hud.mm98z652cq.chatgpt.site/';
+const boundInt=x=>Number.isSafeInteger(x)&&x>=0?x:null;
+const validDate=x=>{
+  const v=Date.parse(x||'');return Number.isFinite(v)?v:null;
+};
+const safeRecent=(v,now,age=120000)=>Number.isFinite(v)&&v>=now-age&&v<=now+10000;
+function cloudQuota(p,now) {
+  const q=p?.quota;
+  if(!q||q.status!=='verified'||!safeRecent(q.observed_at,now,90000)||
+    !Number.isSafeInteger(q.used)||!Number.isSafeInteger(q.limit)||q.limit<1||
+    q.used<0||q.used>q.limit)return null;
+  const reset=q.resets_at?validDate(q.resets_at):null;
+  if(q.resets_at&&(!reset||reset<=now))return null;
+  return {used:q.used,limit:q.limit,remaining:q.limit-q.used,
+    label:'PRIVATE CLOUD LEDGER',unit:String(q.unit||'requests').slice(0,25),
+    reset:q.resets_at||null};
+}
+function cloudGeminiQuota(catalog,usage,now){
+  if(catalog?.source!=='google_gemini_cloud_direct'||usage?.source!=='cloud_gemini_direct'||
+     usage.scope!=='this_hud_direct_api_only'||!safeRecent(validDate(usage.observed_at),now,90000)||
+     !Number.isSafeInteger(usage.attempts)||!Number.isSafeInteger(usage.daily_local_cap)||
+     usage.daily_local_cap<1||usage.attempts<0||usage.attempts>usage.daily_local_cap||
+     usage.daily_local_remaining!==usage.daily_local_cap-usage.attempts)return null;
+  return {used:usage.attempts,limit:usage.daily_local_cap,remaining:usage.daily_local_remaining,
+    label:'LOCAL HUD SAFETY CAP',unit:'reserved attempts',reset:usage.daily_local_reset_at||null};
+}
+function cloudGroqQuota(groq,now){
+  const q=groq?.catalog?.requests_per_day;
+  if(groq?.source!=='cloud_direct_groq'||!safeRecent(validDate(groq.observed_at),now,90000)||
+    q?.state==='unknown'||!Number.isSafeInteger(q?.limit)||q.limit<1||
+    !Number.isSafeInteger(q?.remaining)||q.remaining<0||q.remaining>q.limit)return null;
+  const reset=q.reset_at?validDate(q.reset_at):null;
+  if(q.reset_at&&(!reset||reset<=now))return null;
+  return {used:q.limit-q.remaining,remaining:q.remaining,limit:q.limit,
+    label:'GROQ API RATE HEADERS',unit:'requests',reset:q.reset_at||null};
+}
+function cloudModelRows(catalog,usage) {
+  if(catalog?.source!=='google_gemini_cloud_direct'||!Array.isArray(catalog.directly_listed_models)||
+     !Array.isArray(catalog.model_evidence)||!Array.isArray(usage?.models))return '';
+  return catalog.directly_listed_models.filter(id=>typeof id==='string'&&id.length<130).slice(0,12).map(id=>{
+    const rec=catalog.model_evidence.find(m=>m.model===id),used=usage.models.find(m=>m.model===id);
+    const flag=rec?.verification==='verified_recent_reply'?'VERIFIED 7D':
+      rec?.verification==='provider_cooldown'?'COOLDOWN':'LISTED ONLY';
+    const status=rec?.cooldown_until?' · paused until '+prettyTime(rec.cooldown_until):'';
+    const usageTxt=used&&boundInt(used.attempts)!==null&&boundInt(used.completed)!==null?
+      fmt(used.attempts)+' attempts · '+fmt(used.completed)+' replies · '+
+        (boundInt(used.input_tokens)===null?'tokens unverified':fmt(used.input_tokens)+' in')+
+        ' / '+(boundInt(used.output_tokens)===null?'tokens unverified':fmt(used.output_tokens)+' out'):
+      'No per-model reply recorded today';
+    return '<div class="rvq-v2-model"><strong>'+esc(id)+'</strong><small>'+flag+status+'</small><small>'+esc(usageTxt)+'</small></div>';
+  }).join('');
+}
+function renderCloudDashboard({cloud=null,geminiCatalog=null,geminiUsage=null,groq=null,
+  cloudflare=null,checkedAt=Date.now()}={}){
+  mount();
+  const now=Date.now(),cloudFresh=cloud?.execution_source==='cloud_provider'&&
+    safeRecent(cloud.observed_at,now,120000)&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
+  const providers=cloudFresh?new Map(cloud.providers.filter(p=>p&&CLOUD_ONLY_PROVIDERS.includes(p.provider))
+    .map(p=>[p.provider,p])):new Map();
+  const attempts=cloudFresh&&Array.isArray(cloud.attempts)&&cloud.attempts.length<=500?cloud.attempts:[];
+  const review=reviewSample(attempts,cloudFresh&&Array.isArray(cloud.attempts));
+  const geminiOk=geminiCatalog?.source==='google_gemini_cloud_direct'&&
+    Array.isArray(geminiCatalog.directly_listed_models)&&
+    Array.isArray(geminiCatalog.model_evidence);
+  const usageOk=geminiUsage?.source==='cloud_gemini_direct'&&
+    safeRecent(validDate(geminiUsage.observed_at),now,120000)&&
+    Array.isArray(geminiUsage.models);
+  const geminiCount=geminiOk?geminiCatalog.directly_listed_models.length:null;
+  const verifiedGemini=geminiOk?geminiCatalog.model_evidence.filter(m=>
+    geminiCatalog.directly_listed_models.includes(m.model)&&m.verification==='verified_recent_reply').length:null;
+  const completions=usageOk?boundInt(geminiUsage.completed):null;
+  const groqOk=groq?.source==='cloud_direct_groq'&&safeRecent(validDate(groq.observed_at),now,120000);
+  const cloudflareCount=cloudflare?.source==='cloudflare_hosted_models'&&Array.isArray(cloudflare.models)?
+    cloudflare.models.length:null;
+  const eligible=cloudFresh?CLOUD_ONLY_PROVIDERS.filter(id=>providers.get(id)?.admission==='eligible').length:null;
+  const checked=validDate(new Date(checkedAt).toISOString());
+  const title=cloudFresh?'PRIVATE CLOUD WORKFORCE · FRESH':'PRIVATE CLOUD WORKFORCE · STATUS NOT VERIFIED';
+  const tiles=CLOUD_ONLY_PROVIDERS.map(id=>{
+    const p=providers.get(id);
+    let state='UNVERIFIED',level='unknown';
+    if(p){
+      if(p.admission==='eligible'){state='ELIGIBLE · RECEIPT REQUIRED';level='verified';}
+      else{state=String(p.admission||'verification_pending').replaceAll('_',' ').toUpperCase().slice(0,52);level='attention';}
+    }
+    if(id==='gemini'&&geminiOk){
+      if(verifiedGemini>0){state=verifiedGemini+' MODEL REPL'+(verifiedGemini===1?'Y':'IES')+' VERIFIED';level='verified';}
+      else if(geminiCatalog.online){state='KEY-LISTED · REPLIES UNVERIFIED';level='attention';}
+    }
+    if(id==='groq'&&groqOk){
+      if(groq.last_cloud_completion_at){state='RECORDED CLOUD COMPLETION';level='verified';}
+      else{state=groq.ready===true?'MODEL ELIGIBLE · REPLY UNVERIFIED':'INFERENCE NOT VERIFIED';level='attention';}
+    }
+    if(id==='cloudflare-ai'&&cloudflareCount!==null){state=cloudflareCount+' HOSTED MODEL'+(cloudflareCount===1?'':'S')+' LISTED';level='attention';}
+    const quota=(id==='gemini'?cloudGeminiQuota(geminiCatalog,geminiUsage,now):
+      id==='groq'?cloudGroqQuota(groq,now):null)||cloudQuota(p,now);
+    const pct=quota?100*quota.used/quota.limit:null;
+    const ring=quota?usageRing(pct,quota.label+' used for '+pretty(id)):
+      usageRing(null);
+    const quotaText=quota?
+      '<b>'+fmt(quota.used)+' / '+fmt(quota.limit)+'</b> '+esc(quota.unit)+
+      '<small>'+fmt(quota.remaining)+' remaining · '+esc(quota.label)+'</small>'+
+      '<small>Reset: '+esc(quota.reset?resetText(quota.reset):'not verified')+'</small>':
+      '<b>Allowance unknown</b><small>No verified fresh limit denominator</small>';
+    const details=['<p>Cloud workforce admission: '+esc(cloudFresh?
+      String(p?.admission||'not reported').replaceAll('_',' '):'Private Site ledger not accessible from this HUD')+'</p>'];
+    if(p?.dispatch_gate?.reason)details.push('<p>Dispatch gate: '+esc(String(p.dispatch_gate.reason).replaceAll('_',' ').slice(0,100))+'</p>');
+    const recorded=boundInt(p?.recorded_24h?.requests);
+    details.push('<p>Private cloud 24h attempts: '+(cloudFresh&&recorded!==null?fmt(recorded):'not verified')+'</p>');
+    if(id==='gemini'){
+      details.push('<p>Direct Google text-model catalog: '+(geminiCount===null?'unavailable':fmt(geminiCount)+' key-listed')+
+        ' · completed through this HUD today: '+(completions===null?'unknown':fmt(completions))+
+        ' · remaining Google account RPM / TPM / RPD unknown</p>');
+      const models=usageOk&&geminiOk?cloudModelRows(geminiCatalog,geminiUsage):'';
+      if(models)details.push('<div class="rvq-v2-models">'+models+'</div>');
+    }
+    if(id==='groq'&&groqOk)details.push('<p>Last direct model completion: '+
+      esc(groq.last_cloud_completion_at?prettyTime(groq.last_cloud_completion_at):'not verified')+
+      '. Provider account billing tier is not established by model headers.</p>');
+    if(id==='cloudflare-ai'&&cloudflareCount!==null)
+      details.push('<p>'+cloudflareCount+' hosted model IDs returned by this HUD. Listing is not inference proof.</p>');
+    if(p&&cloudFresh)details.push(jobReceipts(id,attempts));
+    const label=pretty(id);
+    return '<article class="rvq-v2-provider rvq-overview-tile" data-rvq-attention="'+String(level!=='verified')+
+      '" data-state="'+esc(level)+'" data-rvq-slot="'+esc(id+':1')+'"'+
+      (overviewFilter==='attention'&&level==='verified'?' hidden':'')+'>'+
+      '<div class="rvq-v2-provider-top"><div><h5>'+esc(label)+'</h5><small>PROVIDER · '+esc(id.toUpperCase())+'</small></div></div>'+
+      '<span class="rvq-v2-pill" data-state="'+esc(level)+'">'+esc(state)+'</span>'+
+      '<div class="rvq-v2-quota">'+ring+'<div class="rvq-v2-quota-copy">'+quotaText+'</div></div>'+
+      '<div class="rvq-v2-evidence"><span>'+(
+        id==='gemini'&&geminiOk?'DIRECT GOOGLE CLOUD · '+geminiCount+' MODELS LISTED':
+        id==='groq'&&groqOk?'DIRECT GROQ CLOUD · STATUS RECORDED':
+        id==='cloudflare-ai'&&cloudflareCount!==null?'DIRECT CLOUDFLARE AI · CATALOG READ':
+        cloudFresh?'PRIVATE CLOUD SITE · '+(p?'PROVIDER OBSERVED':'NOT IN FRESH FEED'):
+          'PRIVATE CLOUD SITE · READBACK UNAVAILABLE')+'</span></div>'+
+      '<details class="rvq-provider-details"><summary>MODEL, USAGE & ADMISSION DETAILS</summary>'+
+      details.join('')+'</details></article>';
+  }).join('');
+  const attentionCount=(tiles.match(/data-rvq-attention="true"/g)||[]).length;
+  const summaries=[
+    ['CLOUD PROVIDERS','09','Families tracked · not proof of activation'],
+    ['WORKFORCE ELIGIBLE',eligible===null?'—':fmt(eligible),
+      cloudFresh?'Private Site admission checks':'Private Site readback unavailable'],
+    ['GEMINI VERIFIED',verifiedGemini===null?'—':fmt(verifiedGemini)+' / '+fmt(geminiCount),
+      'Recent real replies · key-listed models'],
+    ['GEMINI REPLIES TODAY',completions===null?'—':fmt(completions),
+      'Private D1 · direct HUD only']
+  ].map(([label,value,info])=>'<div class="rvq-v2-metric"><span>'+esc(label)+'</span><strong>'+
+    esc(value)+'</strong><small>'+esc(info)+'</small></div>').join('');
+  const reviewLink='<a href="'+CLOUD_SITE+'" target="_blank" rel="noopener noreferrer">OPEN PRIVATE OWNER REVIEW QUEUE</a>';
+  const count=review.known?fmt(review.pending.length)+' returned drafts awaiting review':'Pending review count not verified';
+  return '<section class="wl-card rvq-board rvq-cloud-v2" data-rovor-cloud-dashboard="true">'+
+    '<header class="rvq-v2-hero"><div><span class="rvq-eyebrow">ROVOR DIGITAL / LIVE OPERATIONS</span>'+
+    '<h3>Workload Distribution</h3><p>Cloud inference, provider eligibility, recorded model replies and review gates. '+
+    'No assumed worker activity or invented quota percentages.</p></div>'+
+    '<span class="rvq-v2-pill" data-state="'+(cloudFresh?'verified':'unknown')+'">'+title+'</span></header>'+
+    '<div class="rvq-v2-metrics">'+summaries+'</div>'+
+    '<div class="rvq-v2-section-head"><h4>NINE PROVIDER SOURCES</h4><small>Checked '+esc(new Date(checkedAt).toLocaleTimeString())+
+    ' · read-only · refreshes while open</small></div>'+
+    '<div class="rvq-v2-filters" role="group" aria-label="Provider dashboard filter">'+
+    '<button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL 9</button>'+
+    '<button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">NEEDS VERIFICATION</button>'+
+    '<span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?
+       'Showing '+attentionCount+' providers needing verification':'Showing all nine provider families')+'</span></div>'+
+    '<div class="rvq-v2-grid">'+tiles+'</div>'+
+    '<div class="rvq-v2-secondary"><section class="rvq-v2-section" id="rvq-review"><div class="rvq-v2-section-head"><h4>OWNER PASS / FAIL</h4>'+
+    '<span class="rvq-v2-pill">'+esc(count)+'</span></div>'+reviewPulse(review)+
+    '<p>This viewer does not approve jobs. Human decisions stay in the original private Site.</p>'+reviewLink+
+    '</section><section class="rvq-v2-section"><div class="rvq-v2-section-head"><h4>CLOUD WORKFORCE</h4>'+
+    '<span class="rvq-v2-pill">'+(cloudFresh?'PRIVATE LEDGER READ':'SOURCE UNAVAILABLE')+'</span></div>'+
+    '<p>Eight worker roles. Work is counted only when a private receipt names the employee and actual model.</p>'+
+    '<p>'+esc(cloudFresh?'Fresh private Site report; queued and executing are separate states.':
+      'Private cloud execution status cannot be confirmed from this HUD. No local machine is required for the cloud sources shown above.')+
+    '</p><p>Review activity and execution receipts in the '+reviewLink+'.</p></section></div>'+
+    cloudEmployeeUsage(attempts,cloudFresh&&Array.isArray(cloud?.attempts))+
+    '<div class="rvq-v2-sources"><strong>INSTRUMENT RULES</strong> · The cyan circles fill only with an actual verified used/limit pair. '+
+    'Gemini’s 12/day allowance is ROVOR’s own local reservation cap, not Google’s project quota. '+
+    'A key-listed model is not a completed inference. Google, Groq and private Site receipts are distinct data sources. '+
+    'No paid-route fallback, task dispatch, approvals or local-device health checks are performed here.</div></section>';
+}
+let cloudOnlyStarted=false;
+function startCloud(){
+  if(cloudOnlyStarted)return;
+  cloudOnlyStarted=true;
+  mount();
+  let busy=false,updated=0,prev={};
+  const isPlaceholder=node=>node?.querySelector?.('[data-rovor-cloud-placeholder]')||
+    node?.getAttribute?.('data-rovor-cloud-placeholder')!==null&&
+    node?.getAttribute?.('data-rovor-cloud-placeholder')!==undefined;
+  const slot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
+    n=>!n.hidden&&(n.classList.contains('rvq-cloud-v2')||isPlaceholder(n)));
+  async function sync(){
+    if(busy||document.hidden||!slot())return;
+    if(Date.now()-updated<5000)return;
+    busy=true;
+    const read=async(url,valid)=>{
+      try{
+        const res=await fetch(url,{credentials:'same-origin',cache:'no-store',
+          signal:AbortSignal.timeout(8500)});
+        if(!res.ok)return null;
+        const j=await res.json();return valid(j)?j:null;
+      }catch{return null;}
+    };
+    try{
+      const [cloud,geminiCatalog,geminiUsage,groq,cloudflare]=await Promise.all([
+        read('/api/ghost/status',v=>v?.execution_source==='cloud_provider'&&Array.isArray(v.providers)),
+        read('/api/hud/gemini/models',v=>v?.source==='google_gemini_cloud_direct'),
+        read('/api/hud/gemini/usage',v=>v?.source==='cloud_gemini_direct'),
+        read('/api/chat/groq/status',v=>v?.source==='cloud_direct_groq'),
+        read('/api/chat/models',v=>Array.isArray(v?.models)&&v.models.length<=100)
+      ]);
+      const hosted=cloudflare?{source:'cloudflare_hosted_models',
+        models:cloudflare.models.filter(id=>typeof id==='string'&&id.startsWith('@cf/'))}:null;
+      prev={cloud,geminiCatalog,geminiUsage,groq,cloudflare:hosted,checkedAt:Date.now()};
+      updated=Date.now();
+      window.ROVOR_WORKLOAD?.setCloudSummary?.({
+        geminiModels:geminiCatalog?.directly_listed_models?.length,
+        geminiVerified:geminiCatalog?.verified_model_count,
+        groqReady:groq?.ready===true,
+        privateCloudFresh:cloud?.execution_source==='cloud_provider'&&
+          safeRecent(cloud.observed_at,Date.now(),120000)
+      });
+      const target=slot();
+      if(target){
+        const state=captureState(target);
+        target.outerHTML=renderCloudDashboard(prev);
+        restoreState(slot(),state);
+      }
+    }finally{busy=false;}
+  }
+  let observePending=false;
+  const observer=new MutationObserver(()=>{
+    if(observePending)return;
+    observePending=true;
+    Promise.resolve().then(()=>{
+      observePending=false;
+      if(slot()&&isPlaceholder(slot()))void sync();
+    });
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
+  setInterval(()=>{if(slot())void sync();},10000);
+  void sync();
+}
+
 function captureState(root){
  const board=root?.classList?.contains('rvq-board')?root:root?.querySelector?.('.rvq-board');
  if(!board||typeof board.querySelectorAll!=='function')return null;
@@ -1204,5 +1505,5 @@ function start(){
  setInterval(()=>{if(slot())void sync();},10000);
  void sync();
 }
-return {render,start,captureState,restoreState};
+return {render,start,renderCloudDashboard,startCloud,captureState,restoreState};
 })();

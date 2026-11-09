@@ -1577,209 +1577,91 @@ body{background:#01030a}
 </div>
 <div id="screen" class="screen" hidden><div class="scrim" data-close></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle"><header><div><div class="kicker">ROVOR DIGITAL / COMMAND INTERFACE</div><h2 id="drawerTitle">COMMAND CONSOLE</h2></div><button class="close" data-close aria-label="Close panel">×</button></header><div class="drawer-inner" id="drawerBody"></div><div class="drawer-footnote">STATUS DATA IS VERIFIED AGAINST ONE GITHUB COMMIT. A CLAIMED TASK IS NOT A RUNNING MAC WORKER.</div></aside></div>
 <script>
-/* Embedded module for the existing native v8.9 Workload Distribution focus popup.
-   No requests, dispatch, keys, storage, or runtime-worker claims. */
+/* ROVOR Workload — cloud-first preview and shell.
+ * Read-only. Live evidence is supplied by the private same-origin quota board.
+ * No synthetic usage, local bridge pairing, device recovery or worker control.
+ */
 (() => {
   'use strict';
-  const EMPLOYEES=[
-    ['walter','Walter','Supervisor'],['mike','Mike','Mac systems'],
-    ['jane','Jane','Final Cut'],['jesse','Jesse','Moho 2D'],
-    ['gale','Gale','Blender 3D'],['gus','Gus','Operations'],
-    ['saul','Saul','Marketing'],['hank','Hank','Quality']
+  const PROVIDERS=[
+    ['gemini','Gemini'],['groq','Groq'],['cloudflare-ai','Cloudflare AI'],
+    ['mistral','Mistral'],['nvidia','NVIDIA'],['openrouter','OpenRouter'],
+    ['sambanova','SambaNova'],['cohere','Cohere'],['huggingface','Hugging Face']
   ];
-  // Owner-published Mac observation, not a live connection or inference proof.
-  const OBSERVATION={at:'2026-10-24T09:53:41.264Z',connections:9,
-    evidence:'https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382848776',
-    inventoryEvidence:'https://github.com/TeamRovor/rovor-video-engine/pull/137#issuecomment-6382529114',
-    claims:31,outcomes:[['Review-ready drafts',10],['Not review-ready',12],['Pending / failed review',8],['Running then',1]]};
-  const MODEL_IDS=['openrouter/cohere/north-mini-code:free','openrouter/nvidia/nemotron-3-ultra-550b-a55b:free','openrouter/nvidia/nemotron-3.5-super-vl:free'];
-  const MODELS=['North Mini Code','Nemotron 3 Ultra','Nemotron 3.5 Super VL'];
-  const ROUTES=[['Code','Fast'],['Code','Reason'],['Fast','Reason','Vision']];
-  const observedTime=()=>new Date(OBSERVATION.at).toLocaleString('en-US',{timeZone:'America/Chicago',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
-  const outcomeBars=()=>`<section class="wl-card wl-outcomes"><h3>LAST MAC REPORT / 31 JOB CLAIMS</h3>
-    <p class="wl-empty">${observedTime()} · historical owner-shared report, not current activity. Claims are attempts; review-ready drafts still need approval.</p>
-    ${OBSERVATION.outcomes.map(([label,n])=>`<div class="wl-outcome"><span>${label}</span><span class="wl-meter"><i style="--wl-share:${(100*n/OBSERVATION.claims).toFixed(1)}%"></i></span><strong>${n} / 31</strong></div>`).join('')}
-    <p class="wl-empty">Live link missing · per-model attribution missing · quota unknown. Nine provider connections do not establish nine working models.</p>
-    <a class="wl-evidence" href="${OBSERVATION.evidence}" target="_blank" rel="noopener">Open recorded Mac evidence ↗</a></section>`;
-  const htmlEscape=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  const fmt=n=>Number(n).toLocaleString('en-US');
-  const periodScale={ '1H':1,'24H':6,'7D':19 };
-  function simulatedCounts(period) {
-    const factor=periodScale[period];
-    return EMPLOYEES.map((_,i)=>MODELS.map((_,j)=>{
-      const base=((i*13+j*7+3)%17);
-      return (base<3?0:(base+((i+j)%5)))*factor;
-    }));
+  const EMPLOYEES=['Walter','Mike','Jane','Jesse','Gale','Gus','Saul','Hank'];
+  let tab='providers',evidence=null;
+  const roots=new Set();
+  const escapeText=s=>String(s??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+  function paint(root) {
+    const providers=tab==='providers',names=providers?PROVIDERS:EMPLOYEES;
+    const labels=names.slice(0,4).map((row,i)=>{
+      const id=providers?row[0]:row.toLowerCase(),name=providers?row[1]:row;
+      let signal='Not verified';
+      if(providers&&id==='gemini'&&Number.isSafeInteger(evidence?.geminiModels))
+        signal=evidence.geminiModels+' listed · '+(evidence.geminiVerified??0)+' verified';
+      else if(providers&&id==='groq'&&evidence?.groqReady===true)
+        signal='Cloud configured · receipt required';
+      else if(providers&&evidence?.privateCloudFresh===true)
+        signal='See cloud admission';
+      const label=escapeText(name);
+      return '<button type="button" class="wl-compact-row" data-cloud-row="'+i+
+        '" aria-label="Open live '+label+' details"><span class="wl-compact-name">'+label+
+        '</span><span class="wl-compact-status">'+escapeText(signal)+
+        '</span><span class="wl-compact-value">›</span></button>';
+    }).join('');
+    root.innerHTML='<div class="wl-compact-tabs" role="group" aria-label="Cloud workload preview">'+
+      '<button type="button" data-cloud-tab="providers" aria-pressed="'+providers+'">PROVIDERS <small>09</small></button>'+
+      '<button type="button" data-cloud-tab="employees" aria-pressed="'+(!providers)+'">EMPLOYEES <small>08</small></button></div>'+
+      '<div class="wl-compact-meta" role="status"><span class="wl-compact-dot"></span> '+
+      (evidence?'PRIVATE CLOUD READBACK · '+(evidence.privateCloudFresh?'RECEIVED':'NOT VERIFIED'):
+        'CLOUD READBACK · CHECKING')+
+      '<span>NO ASSUMED ACTIVITY</span></div><div class="wl-compact-items">'+labels+'</div>'+
+      '<div class="wl-compact-foot">'+(providers?'9 provider families':'8 named worker roles')+
+      ' · LIVE RECEIPTS ONLY <button type="button" data-cloud-open>VIEW WORKLOAD ↗</button></div>';
   }
-  function makeUI(state){
-    const matrix=state.demo?simulatedCounts(state.period):null;
-    const totals=MODELS.map((_,j)=>matrix?matrix.reduce((n,row)=>n+row[j],0):null);
-    const grandTotal=state.demo?totals.reduce((a,b)=>a+b,0):null;
-    const role=EMPLOYEES[state.employee];
-    const model=MODELS[state.model];
-    const chosen=matrix?.[state.employee]?.[state.model]??null;
-    const countText=n=>n===null?'—':fmt(n);
-    const viewButton=(id,name)=>`<button type="button" class="wl-button" data-wl-tab="${id}" aria-pressed="${state.view===id}">${name}</button>`;
-    const periodButton=id=>`<button type="button" class="wl-button" data-wl-period="${id}" aria-pressed="${state.period===id}">${id}</button>`;
-    const summary=`<div class="wl-summary">
-      <div class="wl-stat"><small>Distinct routed models · last report</small><b>3 <span style="font-size:11px;font-weight:400">/ 9 connections reported</span></b></div>
-      <div class="wl-stat"><small>Recorded model calls · ${state.period}</small><b>${countText(grandTotal)}</b></div>
-      <div class="wl-stat"><small>Runtime source</small><b style="font-size:12px">${state.demo?'SAMPLE DATA':'NOT CONNECTED'}</b></div>
-    </div>`;
-    const details=`<section class="wl-card">
-      <h3>SELECTED PAIR / ${role[1].toUpperCase()} × ${model}</h3>
-      <div class="wl-details">
-        <div><div class="wl-kicker">Ghost employee</div><p><strong>${role[1]}</strong> · ${role[2]}</p><p>${state.demo?'Illustrative workload only':'No verified worker heartbeat or active job'}</p></div>
-        <div><div class="wl-kicker">Reported OmniRoute model</div><p><strong>${model}</strong></p><p class="wl-model-id">${MODEL_IDS[state.model]}</p><p>Routes: ${ROUTES[state.model].join(" / ")}</p><p>${state.demo?fmt(chosen)+' sample calls in selected period':'No measured requests, quota, cost or capacity'}</p></div>
-      </div>
-    </section>`;
-    const header=`<div class="wl-toolbar">
-      <span class="wl-kicker">OmniRoute / named employees / routing telemetry</span>
-      ${state.view==='outcomes'?'':`<div class="wl-period" aria-label="Usage period">${['1H','24H','7D'].map(periodButton).join('')}</div>`}
-    </div>
-    <div class="wl-notice" role="status">
-      <strong>${state.demo?'DEMONSTRATION — SYNTHETIC NUMBERS':'NO VERIFIED LIVE MODEL TELEMETRY'}</strong> ·
-      ${state.demo?'All counts and illuminated routes are fabricated for layout testing. Nothing is running from this preview.':'Model names below come from the last Mac report. Live heartbeat and per-model inference receipts are not connected. Unknown is not zero usage.'}
-    </div>
-    <div class="wl-toolbar"><div class="wl-actions" role="group" aria-label="Workload views">
-      ${viewButton('outcomes','JOB OUTCOMES')}${viewButton('matrix','EMPLOYEE × MODEL')}
-      ${viewButton('models','3 REPORTED MODELS')}
-      ${viewButton('routing','ROUTING')}
-    </div>
-    <button type="button" class="wl-button" data-wl-demo aria-pressed="${state.demo}">${state.demo?'EXIT SAMPLE MODE':'VIEW SAMPLE LAYOUT'}</button></div>`;
-    let visual='';
-    if(state.view==='outcomes'){visual=outcomeBars();}else if(state.view==='matrix'){
-      visual=`<section class="wl-card">
-        <h3>EMPLOYEE × AI MODEL / REQUEST ACTIVITY</h3>
-        <div class="wl-scrollhint">SWIPE LEFT OR RIGHT FOR MODEL NAMES ↔</div>
-        <div class="wl-matrix-scroll" tabindex="0" role="region" aria-label="Scrollable employee model usage matrix">
-          <table class="wl-matrix"><thead><tr><th scope="col">EMPLOYEE</th>${MODELS.map((m,j)=>`<th scope="col"><span title="${MODEL_IDS[j]}">${htmlEscape(m)}</span></th>`).join('')}</tr></thead>
-          <tbody>${EMPLOYEES.map((emp,i)=>`<tr>
-          <th scope="row"><button type="button" class="wl-row-select" data-wl-employee="${i}" aria-pressed="${state.employee===i}">${emp[1]}</button></th>
-          ${MODELS.map((m,j)=>{
-            const n=matrix?.[i]?.[j]??null;
-            const value=n===null?'—':(n===0?'0':String(n));
-            const selected=state.employee===i&&state.model===j;
-            const alpha=n===null?0:Math.max(.2,Math.min(.95,n/(Math.max(...(totals.filter(Number.isFinite)))||1)));
-            return `<td><button class="wl-cell" type="button" data-wl-cell="${i}-${j}" data-active="${n!==null&&n>0?'yes':'no'}" aria-pressed="${selected}" style="--wl-intensity:${alpha.toFixed(2)}" aria-label="${emp[1]}, ${htmlEscape(m)}, ${n===null?'unverified':n+' sample calls'}">${value}</button></td>`;
-          }).join('')}</tr>`).join('')}</tbody></table>
-        </div>
-        <div class="wl-key"><span>Blue intensity: relative calls (sample mode only)</span><span>— : no verified telemetry</span></div>
-      </section>`;
-    }else if(state.view==='models'){
-      visual=`<section class="wl-card"><h3>OMNIROUTE / REPORTED MODEL IDENTITIES</h3>
-        <p class="wl-empty">Request share is not remaining quota or model capacity. Names and routes were reported on ${observedTime()}; request counts and remaining quota are unavailable. Six additional model identities have not been established.</p>
-        <div class="wl-models">${MODELS.map((m,j)=>{
-           const v=totals[j],share=grandTotal?100*v/grandTotal:0;
-           return `<button type="button" class="wl-model-entry" data-wl-model="${j}" aria-pressed="${state.model===j}">
-             <span class="wl-row"><strong>${m}</strong><small>${state.demo?share.toFixed(1)+'% of sample calls':'NO USAGE RECEIPTS'}</small></span>
-             ${state.demo?`<span class="wl-meter" aria-hidden="true"><i style="--wl-share:${share.toFixed(1)}%"></i></span>`:''}
-             <span class="wl-row"><small>${state.demo?fmt(v)+' sample requests':htmlEscape(MODEL_IDS[j])}</small><small>↗ INSPECT</small></span>
-           </button>`}).join('')}</div></section>`;
-    }else{
-      // Static SVG is driven only by explicit sample mode. Unverified routes are intentionally unlit.
-      const left=EMPLOYEES.map((emp,i)=>{
-        const y=24+i*34,selected=state.employee===i;
-        return `<text x="18" y="${y+4}" font-size="11" fill="${selected?'#e6f8ff':'#80b1dc'}">${emp[1]}</text>
-        <line x1="92" y1="${y}" x2="205" y2="143" stroke="${state.demo&&selected?'#8cd6ff':'#38577a'}" stroke-width="${selected?2:1}" stroke-dasharray="${state.demo&&selected?'none':'3 6'}" opacity="${state.demo&&selected?0.9:0.3}"/>`}).join('');
-      const right=MODELS.map((m,j)=>{
-        const y=16+j*33;
-        const active=state.demo&&matrix[state.employee][j]>0;
-        return `<line x1="275" y1="143" x2="400" y2="${y+4}" stroke="${active?'#8cd6ff':'#38577a'}" stroke-width="${active?2:1}" stroke-dasharray="${active?'none':'3 6'}" opacity="${active?0.8:0.25}"/>
-        <circle cx="407" cy="${y+4}" r="7" fill="${active?'#257bbf':'#0c2748'}" stroke="#73b8e9"/>
-        <text x="421" y="${y+8}" font-size="11" fill="${state.model===j?'#e6f8ff':'#9acbea'}">${htmlEscape(m)}</text>`}).join('');
-      visual=`<section class="wl-card"><h3>SELECTED EMPLOYEE / ROUTE TO OMNIROUTE MODELS</h3>
-      <div class="wl-route-layout"><div><div class="wl-kicker" style="margin-bottom:9px">Choose employee</div>
-        <div class="wl-employees">${EMPLOYEES.map((emp,i)=>`<button type="button" data-wl-employee="${i}" aria-pressed="${state.employee===i}">${emp[1]}</button>`).join('')}</div></div>
-        <div><svg class="wl-route-chart" viewBox="0 0 610 315" role="img" aria-label="Conceptual routing diagram. Only sample mode shows synthetic route activity.">
-          ${left}${right}<circle cx="240" cy="143" r="38" fill="#10355c" stroke="#8ad6ff" stroke-width="2"/>
-          <circle cx="240" cy="143" r="31" fill="none" stroke="#4d9bd5" stroke-dasharray="3 5"/>
-          <text x="240" y="139" text-anchor="middle" font-size="13" fill="#f1fbff">OMNI</text><text x="240" y="153" text-anchor="middle" font-size="10" fill="#b1d9fa">ROUTE</text></svg></div>
-      </div><p class="wl-empty">Routing connections are only illuminated in sample mode. Live edges will require authenticated inference receipts—not estimates from GitHub task claims.</p>
-      </section>`;
-    }
-    return header+summary+visual+(state.view==='outcomes'?'':details);
-  }
-
-  // Workload Distribution card content only. The parent panel dimensions and
-  // existing ROVOR HUD frame are untouched.
-  let compactTab='models';
-  let compactPick=null;
-  let retainedPopup=null;
-  function mountPreview(container,openDetails){
+  function mountPreview(container,openDetails) {
     if(!container)return;
     container.replaceChildren();
-    const root=document.createElement('div');
-    root.className='wl-compact';
-    const paint=()=>{
-      const models=compactTab==='models';
-      root.innerHTML=`<div class="wl-compact-tabs" role="group" aria-label="Workload preview type">
-        <button type="button" data-wl-compact-tab="models" aria-pressed="${models}">AI MODELS <small>03 OLD</small></button>
-        <button type="button" data-wl-compact-tab="employees" aria-pressed="${!models}">EMPLOYEES <small>08</small></button>
-      </div>
-      <div class="wl-compact-meta" aria-label="OmniRoute live telemetry unavailable"><span class="wl-compact-dot"></span> LAST REPORT · HISTORICAL · ${observedTime()} <span>LIVE USAGE UNKNOWN</span></div>
-      <div class="wl-compact-items">${(models?MODELS:EMPLOYEES.map(e=>e[1])).map((label,i)=>`
-        <button type="button" class="wl-compact-row" data-wl-compact-row="${i}" aria-label="${label}, usage unknown, open workload details">
-          <span class="wl-compact-name">${htmlEscape(label)}</span>
-          <span class="wl-compact-status">${models?'Archived model':'No live link'}</span>
-          <span class="wl-compact-value">—</span>
-        </button>`).join('')}</div>
-      <div class="wl-compact-foot">3 ROUTED / 9 CONNECTIONS · OCT 24 ARCHIVE <button type="button" data-wl-outcomes>31 PAST CLAIMS ↗</button></div>`;
-    };
+    const root=document.createElement('div');root.className='wl-compact';
+    roots.add(root);
     root.addEventListener('click',event=>{
-      const target=event.target.closest('button');
-      if(!target||!root.contains(target))return;
-      if(target.hasAttribute('data-wl-outcomes')){compactPick={view:'outcomes'};if(typeof openDetails==='function')openDetails();}else if(target.hasAttribute('data-wl-compact-tab')){
-        compactTab=target.dataset.wlCompactTab;
-        paint();
-      }else if(target.hasAttribute('data-wl-compact-row')){
-        const index=Number(target.dataset.wlCompactRow);
-        compactPick=compactTab==='models'?{view:'models',model:index}:{view:'matrix',employee:index};
+      const button=event.target?.closest?.('button');
+      if(!button||!root.contains(button))return;
+      if(button.hasAttribute('data-cloud-tab')){
+        tab=button.getAttribute('data-cloud-tab')==='employees'?'employees':'providers';
+        for(const item of roots)paint(item);
+      }else if(button.hasAttribute('data-cloud-row')||button.hasAttribute('data-cloud-open')){
         if(typeof openDetails==='function')openDetails();
       }
     });
     container.append(root);
-    paint();
+    paint(root);
   }
   function mount(container) {
     if(!container)return;
-    const carriedLeft=container.querySelector?.('.wl-matrix-scroll')?.scrollLeft??0;
     container.replaceChildren();
-    const root=document.createElement('div');
-    root.id='rovor-workload-popup';
-    const state=retainedPopup
-      ? {...retainedPopup}
-      : {view:'outcomes',period:'24H',demo:false,employee:0,model:0};
-    if(compactPick)Object.assign(state,compactPick);
-    compactPick=null;
-    const paint=()=>{
-      const previousLeft=root.querySelector?.('.wl-matrix-scroll')?.scrollLeft??0;
-      retainedPopup={...state};
-      root.innerHTML=makeUI(state);
-      const nextScroll=root.querySelector?.('.wl-matrix-scroll');
-      if(nextScroll)nextScroll.scrollLeft=previousLeft;
-    };
-    root.addEventListener('click',ev=>{
-      const b=ev.target.closest('button');
-      if(!b||!root.contains(b))return;
-      if(b.hasAttribute('data-wl-tab'))state.view=b.dataset.wlTab;
-      else if(b.hasAttribute('data-wl-period'))state.period=b.dataset.wlPeriod;
-      else if(b.hasAttribute('data-wl-demo')){state.demo=!state.demo;if(state.view==='outcomes')state.view='models';}
-      else if(b.hasAttribute('data-wl-employee'))state.employee=Number(b.dataset.wlEmployee);
-      else if(b.hasAttribute('data-wl-model'))state.model=Number(b.dataset.wlModel);
-      else if(b.hasAttribute('data-wl-cell')){
-        const [r,m]=b.dataset.wlCell.split('-').map(Number);
-        state.employee=r;state.model=m;
-      }else return;
-      paint();
-    });
+    const root=document.createElement('div');root.id='rovor-workload-popup';
+    root.innerHTML='<section class="wl-card" data-rovor-cloud-placeholder="true">'+
+      '<span class="wl-kicker">ROVOR DIGITAL / LIVE CLOUD OPERATIONS</span>'+
+      '<h3>Workload Distribution</h3><p class="wl-empty" role="status">Loading authenticated cloud provider, quota, job and review evidence…</p>'+
+      '<p class="wl-empty">No activity will be assumed when a source is unavailable. '+
+      'The live cloud dashboard replaces this loading view once its readback finishes.</p></section>';
     container.append(root);
-    paint();
-    const matrix=root.querySelector?.('.wl-matrix-scroll');
-    if(matrix)matrix.scrollLeft=carriedLeft;
+    window.ROVOR_QUOTA_BOARD?.startCloud?.();
   }
-  function resetPopup(){retainedPopup=null;}
-  window.ROVOR_WORKLOAD={mount,mountPreview,resetPopup};
+  function setCloudSummary(summary) {
+    evidence=summary&&typeof summary==='object'?{
+      geminiModels:Number.isSafeInteger(summary.geminiModels)?summary.geminiModels:null,
+      geminiVerified:Number.isSafeInteger(summary.geminiVerified)?summary.geminiVerified:null,
+      groqReady:summary.groqReady===true,
+      privateCloudFresh:summary.privateCloudFresh===true
+    }:null;
+    for(const root of roots)if(root.isConnected!==false)paint(root);
+  }
+  function resetPopup(){tab='providers';}
+  window.ROVOR_WORKLOAD={mount,mountPreview,resetPopup,setCloudSummary};
 })();
 (() => {
 'use strict';
@@ -1809,12 +1691,12 @@ $('healthMain').textContent=routingRatio===null?'—':Math.round(100*routingRati
 $('healthMain').style.fontSize='clamp(23px,2.1vw,36px)';
 $('healthSub').textContent=ok?'TASKS ROUTED':'UNVERIFIED';
 $('healthMain').closest('.gauge').style.setProperty('--gauge-angle',Math.round(360*(routingRatio??0))+'deg');
-$('healthMain').closest('.gauge').dataset.gaugeState=routingRatio===null?'unknown':'measured';const services=$('systemsList');services.replaceChildren();[['GitHub queue',ok?'Verified':'Unknown'],['Routing map',ok?'Loaded':'Unknown'],['Commit pin',ok?'Matched':'Unknown'],['Mac worker','Unverified'],['Video render','Not monitored'],['Task records',ok?String(state.tasks.length):'Unknown'],['Open tasks',ok?String(state.tasks.filter(t=>t.status!=='done').length):'Unknown'],['GitHub issues',ok?String(state.issues.length):'Unknown']].forEach(([k,v])=>{const p=document.createElement('div');p.className='service';const i=document.createElement('i');i.className='led '+(v==='Verified'||v==='Loaded'||v==='Matched'?'':'dim');i.style.height='8px';i.style.width='8px';const name=document.createElement('span');name.textContent=k;const value=document.createElement('strong');value.textContent=v;p.append(i,name,value);services.append(p)});
+$('healthMain').closest('.gauge').dataset.gaugeState=routingRatio===null?'unknown':'measured';const services=$('systemsList');services.replaceChildren();[['GitHub queue',ok?'Verified':'Unknown'],['Routing map',ok?'Loaded':'Unknown'],['Commit pin',ok?'Matched':'Unknown'],['Cloud workforce','Review Workload'],['Video render','Not monitored'],['Task records',ok?String(state.tasks.length):'Unknown'],['Open tasks',ok?String(state.tasks.filter(t=>t.status!=='done').length):'Unknown'],['GitHub issues',ok?String(state.issues.length):'Unknown']].forEach(([k,v])=>{const p=document.createElement('div');p.className='service';const i=document.createElement('i');i.className='led '+(v==='Verified'||v==='Loaded'||v==='Matched'?'':'dim');i.style.height='8px';i.style.width='8px';const name=document.createElement('span');name.textContent=k;const value=document.createElement('strong');value.textContent=v;p.append(i,name,value);services.append(p)});
 const quotaRatio=ok&&state.rate!==null&&state.rateLimit>0?Math.min(1,state.rate/state.rateLimit):null;
 $('quotaMain').closest('.gauge').style.setProperty('--gauge-angle',Math.round(360*(quotaRatio??0))+'deg');
 $('quotaMain').closest('.gauge').dataset.gaugeState=quotaRatio===null?'unknown':'measured';
 $('quotaMain').textContent=ok&&state.rate!==null?state.rate:'—';$('quotaSub').textContent=!ok?'UNVERIFIED':state.rate===null?'NOT EXPOSED':'REMAINING';$('quotaDetail').textContent='Requests '+state.requestEvents.length+' · Limit '+(!ok||state.rateLimit===null?'unknown':String(state.rateLimit));
-const quota=$('quotaPreview');quota.querySelectorAll('.mini-telemetry').forEach(x=>x.remove());const quotaRows=[['Session requests',String(state.requestEvents.length)],['GitHub remaining',ok&&state.rate!==null?String(state.rate):'NOT EXPOSED'],['GitHub limit',ok&&state.rateLimit!==null?String(state.rateLimit):'NOT EXPOSED'],['Issues fetched',ok?String(state.issues.length):'UNVERIFIED'],['Mac provider usage','NOT CONNECTED']];quotaRows.forEach(([name,value])=>{const item=document.createElement('div');item.className='mini-telemetry tiny-label';item.textContent=name+' · '+value;quota.append(item)});
+const quota=$('quotaPreview');quota.querySelectorAll('.mini-telemetry').forEach(x=>x.remove());const quotaRows=[['Session requests',String(state.requestEvents.length)],['GitHub remaining',ok&&state.rate!==null?String(state.rate):'NOT EXPOSED'],['GitHub limit',ok&&state.rateLimit!==null?String(state.rateLimit):'NOT EXPOSED'],['Issues fetched',ok?String(state.issues.length):'UNVERIFIED'],['Cloud model usage','See Workload']];quotaRows.forEach(([name,value])=>{const item=document.createElement('div');item.className='mini-telemetry tiny-label';item.textContent=name+' · '+value;quota.append(item)});
 renderApiGraph();$('feedMain').textContent=ok?'GITHUB SOURCE':'OFFLINE';$('feedDetail').textContent=ok?'Pinned task/routing source':'No runtime camera connected';$('feedSha').textContent=ok?'SHA '+state.sha.slice(0,10):'NO VERIFIED SHA';
 const feed=$('sourcePreview');feed.querySelectorAll('.mini-telemetry').forEach(x=>x.remove());if(ok){const n=document.createElement('div');n.className='mini-telemetry tiny-label';n.textContent='COMMITS RECEIVED · '+state.commits.length;feed.append(n);state.commits.forEach(c=>{const item=document.createElement('div');item.className='mini-telemetry tiny-label';item.textContent=(c.sha?.slice(0,7)||'')+' · '+(c.commit?.message?.split('\n')[0]||'').slice(0,38);feed.append(item)})}else{const n=document.createElement('div');n.className='mini-telemetry tiny-label';n.textContent='Refresh to verify public GitHub source';feed.append(n)};
 for(const [id,pos] of Object.entries(previewPositions)){if($(id))$(id).scrollTop=pos;}requestAnimationFrame(updateAllPreviewCues);}
@@ -1836,7 +1718,7 @@ function renderDrawer(view){
  if(view==='workload'&&document.getElementById('omniConnectForm'))return;
  const footnote=$('screen').querySelector('.drawer-footnote');
  if(footnote)footnote.textContent=view==='workload'
-   ?'OMNIROUTE / GHOST EMPLOYEE USAGE: NOT CONNECTED. SAMPLE MODE IS SYNTHETIC; NO WORKER OR MODEL CALLS ARE IMPLIED.'
+   ?'CLOUD PROVIDERS / MODEL RECEIPTS / APPROVALS. UNVERIFIED SOURCES ARE LABELED UNKNOWN, NEVER SIMULATED.'
    :'STATUS DATA IS VERIFIED AGAINST ONE GITHUB COMMIT. A CLAIMED TASK IS NOT A RUNNING MAC WORKER.';
  if(view==='workload'){
    $('drawerTitle').textContent='WORKLOAD DISTRIBUTION';
@@ -1847,7 +1729,7 @@ function renderDrawer(view){
  }
  const titles={dashboard:'DASHBOARD',tasks:'TASK CONTROL',task:'TASK DETAILS',activity:'RECENT ACTIVITY',systems:'SYSTEM HEALTH',quota:'API QUOTA',media:'MEDIA PIPELINE',github:'GITHUB REPOSITORY',settings:'HUD SETTINGS',command:'COMMAND CONSOLE',help:'KEYBOARD SHORTCUTS'};$('drawerTitle').textContent=titles[view]||view.toUpperCase();const container=$('drawerBody');container.replaceChildren();const root=document.createElement('div');let html='';if(view==='task'&&state.selected){let t=state.selected;html+=card(safe(t.title),row('ID',t.id)+row('Status',t.status)+row('Owner',t.owner||'Unclaimed')+row('Priority',t.priority??'—')+row('Updated',dateStr(t.updated_at))+(t.next_action?`<p>${safe(t.next_action)}</p>`:''));html+='<div class="warn">A claimed task is not proof that an autonomous worker is running.</div>';}else if(view==='settings'){html+=card('DISPLAY SETTINGS','<label class="choice">Animated reactor <input type="checkbox" id="motionToggle" '+(state.motion?'checked':'')+'></label><label class="choice">Earth rotation speed <select class="tool-input" id="earthSpeedSelect"><option value="0.5" '+(state.earthSpeed===.5?'selected':'')+'>Slow · 7 min</option><option value="1" '+(state.earthSpeed===1?'selected':'')+'>Normal · 3 min 40 sec</option><option value="2" '+(state.earthSpeed===2?'selected':'')+'>Fast · 1 min 50 sec</option></select></label><label class="choice">Compact source panels <input type="checkbox" id="detailsToggle" '+(state.showDetails?'checked':'')+'></label>');}else if(view==='help'){html+=card('KEYBOARD CONTROLS',row('⌘ / Ctrl + K','Open command console')+row('1–5','Switch dashboard views')+row('Escape','Close current panel')+row('Tab / Shift+Tab','Cycle inspector controls')+row('Enter','Activate focused control'));}else if(view==='command'){html+=card('SEARCH YOUR WORK','<input id="cmdSearch" type="search" class="tool-input" placeholder="Search tasks or commands"><div id="cmdResults"></div>');}else if(view==='github'){html+=card('PUBLIC SOURCE',row('Repository',repo)+row('Verification',state.mode.toUpperCase())+row('Commit',state.sha.slice(0,12)||'—')+row('Tasks',dataOK()?state.tasks.length:'Unverified'));if(dataOK()&&state.commits.length)html+=card('RECENT COMMITS',state.commits.slice(0,5).map(x=>row(x.sha?.slice(0,7),x.commit?.message?.split('\n')[0]?.slice(0,95))).join(''));
  html+=card('OPEN ISSUES',dataOK()&&state.issues.length?state.issues.slice(0,8).map(x=>'<a class="issue-link" rel="noopener noreferrer" target="_blank" href="https://github.com/'+repo+'/issues/'+Number(x.number)+'"><span>#'+Number(x.number)+'</span><strong>'+safe(x.title||'Untitled issue')+'</strong><span aria-hidden="true">↗</span></a>').join(''):'<p>No open issues returned by the GitHub API.</p>');
- html+=card('LINKS','<a href="https://github.com/'+repo+'" target="_blank" rel="noopener noreferrer" style="color:#8fd0ff">OPEN REPOSITORY ↗</a>');}else if(view==='systems'){const missing=dataOK()?state.tasks.filter(t=>!(t.id in state.routes)).length:'Unknown';html+=card('VERIFIED VS CONNECTED',row('GitHub queue',dataOK()?'VERIFIED':'UNAVAILABLE')+row('Routing coverage',dataOK()?(state.tasks.length-missing)+' / '+state.tasks.length:'Unknown')+row('MacBook worker','NOT CONNECTED')+row('Video engine status','NOT MONITORED'));}else if(view==='quota'){html+=card('GITHUB API',row('Remaining',state.rate??'Unknown')+row('Rate limit',state.rateLimit??'Unknown')+row('OmniRoute provider','NOT CONNECTED'));}else if(view==='media'){html+=card('MEDIA PIPELINE','<p>This panel links to repository media work. No webcam or live render feed is connected.</p><a href="https://github.com/'+repo+'/actions" target="_blank" rel="noopener noreferrer" style="color:#8fd0ff">VIEW GITHUB WORKFLOWS ↗</a>');}else if(view==='activity'){html+=card('SOURCE-VERIFIED ACTIVITY',dataOK()?state.tasks.filter(t=>t.updated_at).sort((x,y)=>Date.parse(y.updated_at)-Date.parse(x.updated_at)).slice(0,12).map(t=>row(t.id,dateStr(t.updated_at))).join(''):'<p>No verified activity</p>');}else if(view==='tasks'){html+=card('TASK QUEUE',`<input class="tool-input" type="search" id="taskSearch" placeholder="Filter tasks by title or ID"><label class="filter-label" for="taskStatusFilter">Task state</label><select id="taskStatusFilter" class="tool-input"><option value="all">All states</option><option value="active">Claimed</option><option value="ready">Ready</option><option value="blocked">Blocked</option><option value="done">Done</option></select><div id="taskResults"></div>`);}else{html+=card('SOURCE STATUS',row('GitHub',state.mode)+row('Last checked',dateStr(state.updated)));}root.innerHTML=html;container.append(root);if(state.mode!=='verified'&&view!=='settings'){const div=document.createElement('div');div.className='warn';div.textContent='LIVE DATA NOT VERIFIED. '+state.error;container.append(div)}if(view==='tasks')renderTaskSearch('');if(view==='command')renderCommandSearch('');}
+ html+=card('LINKS','<a href="https://github.com/'+repo+'" target="_blank" rel="noopener noreferrer" style="color:#8fd0ff">OPEN REPOSITORY ↗</a>');}else if(view==='systems'){const missing=dataOK()?state.tasks.filter(t=>!(t.id in state.routes)).length:'Unknown';html+=card('VERIFIED VS CONNECTED',row('GitHub queue',dataOK()?'VERIFIED':'UNAVAILABLE')+row('Routing coverage',dataOK()?(state.tasks.length-missing)+' / '+state.tasks.length:'Unknown')+row('Cloud workforce','See Workload')+row('Video engine status','NOT MONITORED'));}else if(view==='quota'){html+=card('GITHUB API',row('Remaining',state.rate??'Unknown')+row('Rate limit',state.rateLimit??'Unknown')+row('Cloud provider status','See authenticated Workload view'));}else if(view==='media'){html+=card('MEDIA PIPELINE','<p>This panel links to repository media work. No webcam or live render feed is connected.</p><a href="https://github.com/'+repo+'/actions" target="_blank" rel="noopener noreferrer" style="color:#8fd0ff">VIEW GITHUB WORKFLOWS ↗</a>');}else if(view==='activity'){html+=card('SOURCE-VERIFIED ACTIVITY',dataOK()?state.tasks.filter(t=>t.updated_at).sort((x,y)=>Date.parse(y.updated_at)-Date.parse(x.updated_at)).slice(0,12).map(t=>row(t.id,dateStr(t.updated_at))).join(''):'<p>No verified activity</p>');}else if(view==='tasks'){html+=card('TASK QUEUE',`<input class="tool-input" type="search" id="taskSearch" placeholder="Filter tasks by title or ID"><label class="filter-label" for="taskStatusFilter">Task state</label><select id="taskStatusFilter" class="tool-input"><option value="all">All states</option><option value="active">Claimed</option><option value="ready">Ready</option><option value="blocked">Blocked</option><option value="done">Done</option></select><div id="taskResults"></div>`);}else{html+=card('SOURCE STATUS',row('GitHub',state.mode)+row('Last checked',dateStr(state.updated)));}root.innerHTML=html;container.append(root);if(state.mode!=='verified'&&view!=='settings'){const div=document.createElement('div');div.className='warn';div.textContent='LIVE DATA NOT VERIFIED. '+state.error;container.append(div)}if(view==='tasks')renderTaskSearch('');if(view==='command')renderCommandSearch('');}
 function renderTaskSearch(q){let target=$('taskResults');if(!target)return;target.replaceChildren();(dataOK()?state.tasks:[]).filter(t=>(t.title+' '+t.id).toLowerCase().includes(q.toLowerCase())&&(!$('taskStatusFilter')||$('taskStatusFilter').value==='all'||t.status===$('taskStatusFilter').value)).slice(0,60).forEach(t=>{let b=document.createElement('button');b.className='drawer-button';b.textContent=t.title;const sub=document.createElement('small');sub.textContent=t.status.toUpperCase()+' · '+t.id;b.append(sub);b.addEventListener('click',()=>openTask(t));target.append(b)})}
 function renderCommandSearch(q){const t=$('cmdResults');if(!t)return;t.replaceChildren();let cmds=['tasks','github','systems','quota','activity','media','settings'];for(const c of cmds.filter(k=>k.includes(q.toLowerCase()))){const b=document.createElement('button');b.className='drawer-button';b.textContent=c.toUpperCase();b.addEventListener('click',()=>open(c));t.append(b)}(dataOK()?state.tasks:[]).filter(x=>(x.title+' '+x.id).toLowerCase().includes(q.toLowerCase())).slice(0,15).forEach(k=>{const b=document.createElement('button');b.className='drawer-button';b.textContent=k.title;b.addEventListener('click',()=>openTask(k));t.append(b)})}
 function open(view, source){
@@ -2051,41 +1933,7 @@ window.ROVOR_START_OMNIROUTE=()=>{
   poll();
 };
 
-/* Connect the published HUD to a narrowly authorized private Mac snapshot bridge. */
-(()=>{
- const KEY='rovor-private-hud-link-v1';
- let saved=null;try{saved=JSON.parse(sessionStorage.getItem(KEY));}catch{}
- const trusted=url=>url.protocol==='https:'&&/^[a-z0-9-]+\.trycloudflare\.com$/.test(url.hostname)&&!url.username&&!url.password&&!url.port;
- function connectionForm(){
-  window.ROVOR_NATIVE.open('workload');
-  window.ROVOR_WORKLOAD?.resetPopup?.();
-  const host=document.getElementById('drawerBody');
-  host.innerHTML='<div id="rovor-workload-popup"><section class="wl-card"><h3>CONNECT OMNIROUTE</h3><p class="wl-empty">Paste the private bridge link printed on your Mac. This connects live usage to this existing HUD address. The Mac bridge must stay running.</p><form id="omniConnectForm"><input class="tool-input" id="omniBridgeLink" type="password" autocomplete="off" aria-label="Private Mac bridge link" placeholder="Private bridge link"><button class="wl-button" type="submit">CONNECT TO THIS HUD</button><button class="wl-button" type="button" id="omniDisconnect">DISCONNECT</button></form><p class="wl-empty" id="omniConnectStatus" role="status"></p></section></div>';
-  document.getElementById('omniDisconnect').onclick=()=>{sessionStorage.removeItem(KEY);location.reload()};
-  document.getElementById('omniConnectForm').onsubmit=async event=>{
-   event.preventDefault();const status=document.getElementById('omniConnectStatus');status.textContent='Connecting…';
-   try{
-    const url=new URL(document.getElementById('omniBridgeLink').value.trim());
-    const code=new URLSearchParams(url.hash.slice(1)).get('pair');
-    if(!trusted(url)||!/^[a-f0-9]{64}$/.test(code||''))throw Error();
-    document.getElementById('omniBridgeLink').value='';
-    const res=await fetch(url.origin+'/pair/external',{method:'POST',credentials:'omit',headers:{'Content-Type':'application/json'},body:JSON.stringify({code}),signal:AbortSignal.timeout(15000)});
-    const data=await res.json();if(!res.ok||data.scope!=='read_hud_snapshot'||!/^[a-f0-9]{64}$/.test(data.token||''))throw Error();
-    sessionStorage.setItem(KEY,JSON.stringify({origin:url.origin,token:data.token,expires:data.expires_at}));location.reload();
-   }catch{status.textContent='Could not connect. Use a fresh unused link from the updated Mac bridge. Keep its Terminal running.';}
-  };
- }
- const button=document.createElement('button');button.type='button';button.textContent='LINK';button.title='Connect OmniRoute';button.setAttribute('aria-label','Connect OmniRoute');button.id='connectOmniRoute';
- button.style.cssText='font:inherit;font-size:9px;color:#bfeaff;background:#081a30;border:1px solid #568fbc;padding:5px;cursor:pointer';button.onclick=connectionForm;
- document.getElementById('workloadPanel').closest('.panel').querySelector('.panel-header').append(button);
- if(saved){
-  try{
-   if(!trusted(new URL(saved.origin))||!/^[a-f0-9]{64}$/.test(saved.token)||Date.parse(saved.expires)<=Date.now())throw Error();
-   window.ROVOR_OMNIROUTE_REQUEST=(resource,opts)=>fetch(saved.origin+resource,{...opts,credentials:'omit',headers:{Authorization:'Bearer '+saved.token}});
-   window.ROVOR_START_OMNIROUTE();button.textContent='LINKED';
-  }catch{sessionStorage.removeItem(KEY);}
- }
-})();
+/* Local bridge pairing is not part of the active cloud HUD. Retained as an optional source module only. */
 (()=>{
  const g=document.getElementById('glance'),mq=window.matchMedia('(min-width:1181px)');
  function place(){const rail=document.querySelector('.rail.left'),core=document.querySelector('.core');if(!g||!rail||!core)return;
