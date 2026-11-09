@@ -80,13 +80,19 @@ export async function cloudGroqChat(body,env,db,now=Date.now(),fetcher=fetch){
   if(!admitted)return error(429,'groq_local_budget_or_spacing_exceeded');
   let upstream;
   try {
-    upstream=await fetcher(ENDPOINT,{method:'POST',redirect:'error',
+    upstream=await fetcher(ENDPOINT,{method:'POST',redirect:'manual',
       headers:{'Authorization':'Bearer '+env.GROQ_HUD_API_KEY,'Content-Type':'application/json','Accept':'application/json'},
       body:JSON.stringify({model:UPSTREAM_MODEL,
         messages:[{role:'system',content:'You are Ask ROVOR. Answer the user. You have no tools, repository write access, background task authority, or employee dispatch capability. Do not claim actions you did not perform.'},...messages],
         stream:false,max_tokens:512,tool_choice:'none'}),
       signal:AbortSignal.timeout(25000)});
   }catch{return error(502,'groq_upstream_unavailable');}
+  // Cloudflare Workers does not support redirect:"error". Manual redirect
+  // handling rejects 3xx without forwarding provider credentials to a new host.
+  if(upstream.status>=300&&upstream.status<400){
+    try{await upstream.body?.cancel();}catch{}
+    return error(502,'groq_upstream_redirect_denied');
+  }
   if(upstream.status===429){await upstream.body?.cancel();return error(429,'groq_provider_rate_limited');}
   if(!upstream.ok){await upstream.body?.cancel();return error(502,'groq_upstream_failed');}
   let doc;

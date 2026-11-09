@@ -35,6 +35,7 @@ test('Read-only Groq catalogue probes once per minute and reports real header sc
   const fetcher=async(url,options)=>{
     calls++;assert.equal(url,'https://api.groq.com/openai/v1/models');
     assert.equal(options.method,'GET');assert.equal(options.headers.Authorization,'Bearer '+env.GROQ_HUD_API_KEY);
+    assert.equal(options.redirect,'manual');
     assert(!options.body,'never sends prompts');return catalog();
   };
   const first=await handle(req(),env,NOW,fetcher);
@@ -89,4 +90,25 @@ test('Concurrent authenticated refreshes share a D1 lease, never fan out',async(
   const upstream=async()=>{calls++;return catalog()};
   const results=await Promise.all(Array.from({length:5},()=>handle(req(),env,NOW,upstream)));
   assert.equal(calls,1);assert(results.every(r=>r.status===200));
+});
+
+test('Groq catalogue never follows credential-bearing redirects',async()=>{
+  const env=e();
+  const data=await(await handle(req(),env,NOW,async(url,options)=>{
+    assert.equal(options.redirect,'manual');
+    return new Response(null,{status:302,headers:{Location:'https://not-groq.example/steal'}});
+  })).json();
+  assert.equal(data.catalog.state,'upstream_error');
+  assert.equal(data.catalog.model_present,null);
+  assert.equal(data.catalog.requests_per_day,null);
+});
+test('All cloud-provider fetch requests use the Cloudflare-supported manual redirect mode',()=>{
+  for(const path of ['groq-cloud-chat.mjs','groq-quota-monitor.mjs',
+    'cloud-gemini-chat.mjs','gemini-cloud-monitoring.mjs']){
+    const src=readFileSync(new URL('../integrations/hud-cloud/'+path,import.meta.url),'utf8');
+    // Scan executable source only; a comment explaining a forbidden mode
+    // must not falsely fail the regression, while actual fetch code still does.
+    const executable=src.split('\n').filter(line=>!line.trimStart().startsWith('//')).join('\n');
+    assert.doesNotMatch(executable,/redirect\s*:\s*['"]error['"]/);
+  }
 });

@@ -160,3 +160,14 @@ truthful error state such as `auth_rejected`. It logs no key, prompts or
 responses. This is distinct from the separate owner-approved free-only
 inference gate, which still fails closed until verified; a catalogue readback
 never claims an actual completion.
+
+## Cloudflare-compatible redirect protection (Groq and Gemini)
+
+Cloudflare Workers intentionally rejects `redirect: "error"` when creating
+outbound `fetch` requests. Cloud-only Groq catalogue, Groq chat, Gemini chat
+and Gemini Monitoring requests now use **`redirect: "manual"`** and explicitly
+reject 3xx or other non-success statuses. They **never automatically follow**
+redirects that could forward provider credentials. Node-based GitHub runner
+read-only verification remains independent of the Cloudflare-specific behavior.
+This corrects a runtime incompatibility without lowering free-tier admission,
+changing any model, invoking an inference probe, or depending on the Mac.

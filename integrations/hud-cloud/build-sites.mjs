@@ -20,6 +20,9 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const plain = code => code.replace(/^export (?=(?:(?:async )?function|(?:const|let|class))\b)/gm, '');
   const monitorImport = "import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';";
   const cloudGeminiImport = "import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';";
+  const groqImport = "import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';";
+  const groqProbeImport = "import {probeGroqCatalogue} from './groq-quota-monitor.mjs';";
+  const groqCatalogImport = "import {groqCatalogEvidence} from './groq-quota-monitor.mjs';";
   const relayImport = "import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';";
   const chatParserImport = "import {parseChatRequest} from '../../tools/hud_chat.mjs';";
   if (core.split(relayImport).length !== 2) throw Error('Unexpected private chat relay import');
@@ -36,7 +39,24 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const geminiCloudSource = fs.readFileSync(path.join(here, 'cloud-gemini-chat.mjs'), 'utf8');
   if (core.split(cloudGeminiImport).length !== 2) throw Error('Unexpected cloud Gemini import');
   const geminiCloud = plain(geminiCloudSource) + '\n';
-  return dependency + relay + geminiCloud + plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '').replace(coreEnd, '')) + '\n' + plain(adapter.replace(adapterImport, '')) +
+  // The original ChatGPT-hosted private Site uses a self-contained data URL.
+  // Inline the new cloud-only Groq modules in dependency order, isolated in
+  // closures to prevent collisions (e.g. ENDPOINT/MODEL) with Gemini.
+  if (core.split(groqImport).length !== 2 || core.split(groqProbeImport).length !== 2)
+    throw Error('Unexpected cloud Groq imports');
+  const groqQuotaSource = fs.readFileSync(path.join(here, 'groq-quota-monitor.mjs'), 'utf8');
+  const groqCloudSource = fs.readFileSync(path.join(here, 'groq-cloud-chat.mjs'), 'utf8');
+  if (groqCloudSource.split(groqCatalogImport).length !== 2)
+    throw Error('Unexpected Groq quota module import');
+  const groqQuota = 'const {groqCatalogEvidence,probeGroqCatalogue} = (() => {\n' +
+    plain(groqQuotaSource) + '\nreturn {groqCatalogEvidence,probeGroqCatalogue};})();\n';
+  const groqCloud = 'const {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} = (() => {\n' +
+    plain(groqCloudSource.replace(groqCatalogImport, '')) +
+    '\nreturn {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus};})();\n';
+  return dependency + relay + groqQuota + groqCloud + geminiCloud +
+    plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
+      .replace(groqImport, '').replace(groqProbeImport, '').replace(coreEnd, '')) +
+    '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
 }
 
