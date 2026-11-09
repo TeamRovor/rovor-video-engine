@@ -444,7 +444,7 @@
       const options=Array.from(select.options).filter(o=>o.value&&
         (o.value.toLowerCase().includes(query)||(o.parentElement?.label||'').toLowerCase().includes(query)));
       if(!options.length){
-        modelRows.append(el('p',{className:'rvc-model-empty',textContent:'No matching free-eligible chat routes. Search another provider or refresh the Mac bridge.'}));
+        modelRows.append(el('p',{className:'rvc-model-empty',textContent:sourceSelect.value==='omniroute'?'No matching local route. Refresh the optional Mac bridge.':'No cloud model available. Check private cloud Groq free-tier configuration.'}));
       }
       const groups=new Map();
       for(const option of options){
@@ -586,6 +586,27 @@
 
     async function refreshProviderInventory(){
       if(panel.dataset.open!=='true')return;
+      // The default cloud experience is independent of Mac telemetry.
+      // Never represent a stale local OmniRoute snapshot as Groq cloud status.
+      if(sourceSelect.value!=='omniroute'){
+        try{
+          const reply=await fetch('/api/chat/groq/status',{credentials:'same-origin',cache:'no-store'});
+          if(!reply.ok)throw Error('cloud_status_unavailable');
+          const data=await reply.json();
+          if(panel.dataset.open!=='true')return;
+          providerSummary.textContent='CLOUD GROQ · '+(data.ready?'CONFIGURED':'DISABLED / NOT VERIFIED')+' · NO MAC REQUIRED';
+          providerList.textContent='';
+          const chip=el('div',{className:'rvc-provider-item',textContent:'Groq · GPT-OSS 20B'});
+          const last=data.last_cloud_completion_at?new Date(data.last_cloud_completion_at).toLocaleString():'no completion recorded';
+          const count=Number.isSafeInteger(data.locally_admitted_today)?data.locally_admitted_today:'unknown';
+          chip.append(el('small',{textContent:'Cloud calls admitted today: '+count+' · Last cloud completion: '+last+' · Provider remaining quota unknown'}));
+          providerList.append(chip);
+        }catch{
+          providerSummary.textContent='CLOUD GROQ STATUS UNAVAILABLE · NO MAC REQUIRED';
+          providerList.textContent='';
+        }
+        return;
+      }
       try{
         const reply=await fetch('/api/hud/omniroute?period=24h',{credentials:'same-origin',cache:'no-store'});
         if(!reply.ok)throw Error('telemetry_unavailable');
@@ -679,7 +700,7 @@
       teamRow.hidden=sourceSelect.value!=='omniroute';teamInput.disabled=teamRow.hidden;
       const active=sessions.find(s=>s.id===currentId);
       if(active){active.source=sourceSelect.value;active.model=null;save();}
-      load();updatePlan();
+      load();refreshProviderInventory();updatePlan();
     }};
     select.onchange=()=>{
       const active=sessions.find(s=>s.id===currentId);
