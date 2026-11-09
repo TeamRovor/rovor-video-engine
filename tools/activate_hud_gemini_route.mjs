@@ -64,13 +64,22 @@ export async function activate(){
   const route=selectGeminiRoute(models);
   if(!route)throw Error('no_direct_gemini_flash_lite_route_in_omniroute_catalog');
   const plist=path.join(os.homedir(),'Library/LaunchAgents',RELAY+'.plist');
-  if(!fs.existsSync(plist)){
+  let existing=null;
+  try{existing=fs.lstatSync(plist);}catch(error){if(error.code!=='ENOENT')throw error;}
+  if(existing?.isSymbolicLink())throw Error('refuse_redirected_launchagent');
+  if(!existing){
     // Install only the separate chat relay after verifying a direct Google route.
     await exec('/bin/bash',[path.join(path.dirname(fileURLToPath(import.meta.url)),'install_hud_chat_relay.sh'),ORIGIN],{timeout:30000});
   }
   if(fs.lstatSync(plist).isSymbolicLink())throw Error('refuse_redirected_launchagent');
   await exec('python3',['-c',PATCH,plist,route,ORIGIN],{timeout:10000});
-  await exec('/bin/launchctl',['kickstart','-k','gui/'+process.getuid()+'/'+RELAY],{timeout:10000});
+  // launchctl kickstart alone uses cached plist settings. Re-bootstrap the
+  // same chat relay to load the owner-approved model list, not the HUD reporter.
+  const domain='gui/'+process.getuid();
+  try{await exec('/bin/launchctl',['bootout',domain+'/'+RELAY],{timeout:10000});}
+  catch{/* The relay might be installed but not registered. */}
+  await exec('/bin/launchctl',['bootstrap',domain,plist],{timeout:10000});
+  await exec('/bin/launchctl',['kickstart','-k',domain+'/'+RELAY],{timeout:10000});
   console.log('Ask ROVOR Gemini route configured: '+route);
   console.log('No inference sent. Open Ask ROVOR > OmniRoute · Mac, then select this exact route.');
 }
