@@ -57,7 +57,7 @@ def deployment_secrets(env: dict) -> dict:
     return {
         "cloudflare_api_token": bool(env.get("CLOUDFLARE_API_TOKEN")),
         "cloudflare_account_id": bool(re.fullmatch(r"[a-fA-F0-9]{32}", cf_account)),
-        "existing_d1_id": bool(re.fullmatch(r"[a-fA-F0-9-]{36}", d1)),
+        "existing_d1_id": bool(re.fullmatch(r"[a-fA-F0-9]{8}-(?:[a-fA-F0-9]{4}-){3}[a-fA-F0-9]{12}", d1)),
         "private_hud_reader": credential(hud_reader),
         "private_hud_writer": credential(hud_writer) and hud_reader != hud_writer,
         "original_hud_origin": origin.rstrip("/") == HUD_ORIGIN,
