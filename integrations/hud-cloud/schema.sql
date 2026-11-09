@@ -75,3 +75,17 @@ CREATE TABLE IF NOT EXISTS hud_groq_quota_probe (
   tpm_remaining INTEGER,
   tpm_reset_at TEXT
 );
+
+-- Per-Google-model request admission and usage receipts, without prompts, keys,
+-- client data or generated output. Additive to the existing project-wide caps.
+CREATE TABLE IF NOT EXISTS hud_gemini_chat_model_usage (
+  day TEXT NOT NULL,
+  model TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  completed INTEGER NOT NULL DEFAULT 0,
+  failures INTEGER NOT NULL DEFAULT 0,
+  input_tokens INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  last_error_code TEXT,
+  PRIMARY KEY (day, model)
+);
