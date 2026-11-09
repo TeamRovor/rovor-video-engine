@@ -108,7 +108,7 @@ class ControlReportTests(unittest.TestCase):
     def test_reject_wrong_origin_unknown_status_or_shift_request(self):
         with self.assertRaisesRegex(ValueError,"unapproved_status_target"):
             ops.safe_request("https://evil.example","/api/hud/status")
-        with self.assertRaisesRegex(ValueError,"unapproved_status_operation"):
+        with self.assertRaisesRegex(ValueError,"unapproved_status_body"):
             ops.safe_request(ops.SITE_ORIGIN,ops.GHOST_ROUTE,"s"*48,
                              method="POST",document={"operation":"shift"})
         with self.assertRaisesRegex(ValueError,"unapproved_status_operation"):
