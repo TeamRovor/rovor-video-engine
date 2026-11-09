@@ -171,11 +171,11 @@
 @media (max-width:700px){#rvc{right:6px;bottom:64px;width:calc(100vw - 12px)}}
 @media (prefers-reduced-motion:no-preference){#rvc[data-open=true]{animation:rvcin .12s ease-out}@keyframes rvcin{from{opacity:0;transform:translateY(6px)}}}`;
   const el=(tag,props={},...kids)=>{const n=document.createElement(tag);Object.assign(n,props);for(const k of kids)n.append(k);return n;};
-  let history=[],busy=false,controller=null,ready=false,source='omniroute',currentId=null;
+  let history=[],busy=false,controller=null,ready=false,source='cloudflare',currentId=null;
   let sessions=[];
   try{sessions=JSON.parse(localStorage.getItem(SESSIONS_KEY)||'[]').filter(s=>s&&typeof s.id==='string'&&Array.isArray(s.history)).slice(0,16);}catch{}
   if(sessions.length){currentId=sessions[0].id;history=sessions[0].history;}else{
-    currentId=crypto.randomUUID();sessions=[{id:currentId,title:'New conversation',source:'omniroute',model:null,history:[]}];
+    currentId=crypto.randomUUID();sessions=[{id:currentId,title:'New conversation',source:'cloudflare',model:null,history:[]}];
   }
   // Prior single-chat history remains on this device but new sessions have isolated histories.
   const save=()=>{try{
@@ -304,7 +304,7 @@
     fab.setAttribute('aria-expanded','false');fab.setAttribute('aria-controls','rvc');
     const sourceSelect=el('select',{id:'rvc-source',className:'rvc-source'});
     sourceSelect.setAttribute('aria-label','Inference source');
-    for(const [value,label] of [['omniroute','OmniRoute · Mac'],['cloudflare','Cloudflare AI']]) sourceSelect.append(el('option',{value,textContent:label}));
+    for(const [value,label] of [['cloudflare','Cloud AI · no Mac'],['omniroute','Local OmniRoute · optional Mac']]) sourceSelect.append(el('option',{value,textContent:label}));
     const select=el('select',{id:'rvc-model',className:'rvc-model'});select.setAttribute('aria-label','Model');
     const modelBrowse=el('button',{type:'button',className:'rvc-model-browse',textContent:'⌕',title:'Search available models',disabled:true});
     modelBrowse.setAttribute('aria-label','Search available models');
@@ -631,7 +631,7 @@
         const groups=new Map();
         for(const id of models){
           if(typeof id!=='string')continue;
-          const group=omni?routeGroup(id):'Cloudflare AI hosted routes';
+          const group=omni?routeGroup(id):id.startsWith('groq/')?'Groq · Cloud Direct (Mac-independent)':'Cloudflare AI hosted routes';
           if(!groups.has(group)){const optgroup=el('optgroup',{label:group});groups.set(group,optgroup);select.append(optgroup);}
           groups.get(group).append(el('option',{value:id,textContent:id}));
         }
@@ -642,10 +642,10 @@
         else if(saved&&(models.includes(saved)||(omni&&saved===AUTO_ROUTE)))select.value=saved;
         else if(omni)select.value=AUTO_ROUTE;
         stateLabel.textContent=omni?('Mac bridge reported · '+select.options.length+' allowed routes · confirm a reply to verify use'):
-          ('Cloudflare AI · '+select.options.length+' hosted models listed · allowance unverified');
+          ('Cloud hosted · '+select.options.length+' models available · no Mac required');
         modelSheetInfo.textContent=omni
           ?'Mac-advertised chat routes only. Free-tagged model routes and Owner-allowlisted model routes still need live inference and free-quota checks.'
-          :'Cloudflare-hosted inference is separate from OmniRoute. Its allowance is not guaranteed.';
+          :'Cloud Groq talks directly to Groq without a Mac. Only privately verified free-tier models appear; quota remaining is not guaranteed.';
         ready=true;send.disabled=false;modelBrowse.disabled=false;updatePlan();
       }catch{
         if(epoch!==loadEpoch)return;
@@ -875,7 +875,7 @@
         redraw();
         stateLabel.textContent=platform==='omniroute'?
           'RESPONSE CONFIRMED · requested route '+target+' · actual upstream identity not separately attested':
-          'CLOUDFLARE AI RESPONSE RECEIVED · not an OmniRoute or employee action';
+          'CLOUD MODEL RESPONSE RECEIVED · not an employee or Mac action';
       }catch(e){
         const messages={
           omniroute_offline:'The Mac bridge is offline. No model call was confirmed.',

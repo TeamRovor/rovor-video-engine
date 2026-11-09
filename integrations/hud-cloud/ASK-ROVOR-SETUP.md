@@ -35,13 +35,14 @@ bash tools/install_hud_chat_relay.sh https://rovor-hud-telemetry.rovordigital.wo
 
 The installer creates an isolated `com.rovor.hud-chat-relay` LaunchAgent and changes no existing OmniRoute or HUD telemetry LaunchAgent. It does not read or write model API keys outside their existing private OmniRoute runtime. It accepts the existing `rovordigital.hud.cloudflare.writer` Mac Keychain entry used by the working telemetry publisher (or the legacy `rovordigital.hud.writer` service); do not create, copy or paste another writer token.
 
-**Groq-specific activation:** Your successful local OmniRoute test with `groq/openai/gpt-oss-20b` proves inference routing, not a zero-cost billing entitlement. After independently verifying that exact Groq model, account, quotas and commercial terms permit $0 usage, opt that one exact ID into **Ask ROVOR chat** using the private launch agent installer:
+**Cloud Groq, Mac-independent (PR #290):** Ask ROVOR's default **Cloud AI · no Mac** source can call the fixed `groq/openai/gpt-oss-20b` route directly from the existing authenticated Cloudflare HUD Worker to Groq's official HTTPS API. It does not use the local OmniRoute gateway, outbound Mac relay, telemetry publisher, or a second HUD. Local OmniRoute remains an optional, explicitly labeled source.
 
-```bash
-ROVOR_HUD_CHAT_FREE_MODELS='groq/openai/gpt-oss-20b' bash tools/install_hud_chat_relay.sh https://rovor-hud-telemetry.rovordigital.workers.dev
-```
+This cloud route is **disabled by default**. In the existing private GitHub environment `rovor-hud-production`, the owner must securely set `ROVOR_HUD_GROQ_API_KEY` as a secret (never in source or chat). After checking the **actual Groq free plan, commercial terms, organization/project quota and fallback behavior**, set the environment variables `ROVOR_HUD_GROQ_CHAT_ENABLED=true`, `ROVOR_HUD_GROQ_FREE_TIER_VERIFIED=true`, `ROVOR_HUD_GROQ_EVIDENCE_SHA256` (SHA-256 of privately retained eligibility evidence), `ROVOR_HUD_GROQ_VERIFIED_AT` and `ROVOR_HUD_GROQ_VALID_UNTIL` (epoch milliseconds, at most 24 hours apart), and a conservative `ROVOR_HUD_GROQ_DAILY_BUDGET` (1–30, no more than actual remaining account allowance). Re-run the existing **GitHub-owned PRIVATE ROVOR HUD (Cloudflare Worker)** deployment on main. Missing or expired proof disables the Groq model and inference. The digest/flags alone are *operator attestations*, not independent billing verification; renew only with real account evidence.
 
-This persists only the model ID in the dedicated relay LaunchAgent, **never a secret**, and never enables all Groq routes or paid fallback. The existing `com.rovor.hud-reporting` telemetry agent is not the chat relay. Check `launchctl print gui/$(id -u)/com.rovor.hud-chat-relay` and then confirm the selected Groq model produces a private HUD queued → claimed → complete receipt. It does not activate Groq in the separate ghost-employee cloud scheduler or update the old ChatGPT Site.
+The Cloudflare Worker sends bounded requests to only `https://api.groq.com/openai/v1/chat/completions` with the exact Groq upstream `openai/gpt-oss-20b`. No flexible URL, paid fallback, multi-model fanout, tool execution, job replay or Mac endpoint is used. An atomic D1 local request counter, three-second spacing, daily allowance, fixed output cap, and short timeout fail closed. Other Groq organization/project traffic is **not measured**, so this local budget is not a provider quota guarantee. The new `/api/chat/groq/status` reader endpoint returns only cloud readiness, local request count, last completed model/token evidence and Mac-independent status; no key, prompts or output.
+
+Cloudflare's existing `/api/hud/omniroute` metrics still describe Mac-origin OmniRoute snapshots; they can be stale while cloud Groq chat works. Do not equate a successful cloud Groq reply with current local OmniRoute telemetry.
+
 
 Verify it is loaded:
 

@@ -66,6 +66,7 @@ jobs:
       - name: Test private auth, nine-provider meters and GitHub release preflight
         run: |
           node --check integrations/hud-cloud/worker.mjs
+          node --check integrations/hud-cloud/groq-cloud-chat.mjs
           node --check integrations/hud-cloud/omniroute-chat-relay.mjs
           node --check tools/hud_chat_relay_client.mjs
           node --check tools/activate_hud_gemini_route.mjs
@@ -78,7 +79,7 @@ jobs:
           node --check integrations/hud-cloud/verify-github-deploy.mjs
           bash -n tools/manage_hud_telemetry_agent.sh
           bash -n tools/install_hud_chat_relay.sh
-          node --test tests/test_hud_cloud.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_gemini_project_quota.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_omniroute_relay.mjs tests/test_hud_chat_mobile.mjs tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_gemini_activation_workflow.mjs tests/test_hud_repo_context.mjs
+          node --test tests/test_hud_cloud.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_gemini_project_quota.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_omniroute_relay.mjs tests/test_hud_chat_mobile.mjs tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_gemini_activation_workflow.mjs tests/test_hud_repo_context.mjs tests/test_hud_groq_cloud.mjs
 
       - name: Verify interactive Ask ROVOR on phone, tablet and desktop Chromium viewports
         run: node tests/test_hud_chat_browser.cjs
@@ -116,6 +117,13 @@ jobs:
       ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
       ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
       ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
+      GROQ_HUD_API_KEY: ${{ secrets.ROVOR_HUD_GROQ_API_KEY }}
+      GROQ_HUD_CHAT_ENABLED: ${{ vars.ROVOR_HUD_GROQ_CHAT_ENABLED }}
+      GROQ_HUD_FREE_TIER_VERIFIED: ${{ vars.ROVOR_HUD_GROQ_FREE_TIER_VERIFIED }}
+      GROQ_HUD_EVIDENCE_SHA256: ${{ vars.ROVOR_HUD_GROQ_EVIDENCE_SHA256 }}
+      GROQ_HUD_VERIFIED_AT: ${{ vars.ROVOR_HUD_GROQ_VERIFIED_AT }}
+      GROQ_HUD_VALID_UNTIL: ${{ vars.ROVOR_HUD_GROQ_VALID_UNTIL }}
+      GROQ_HUD_DAILY_BUDGET: ${{ vars.ROVOR_HUD_GROQ_DAILY_BUDGET }}
     defaults:
       run:
         working-directory: integrations/hud-cloud
@@ -139,7 +147,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node -e 'process.stdout.write(JSON.stringify({HUD_WRITER_TOKEN:process.env.ROVOR_HUD_WRITER_TOKEN,HUD_READER_TOKEN:process.env.ROVOR_HUD_READER_TOKEN}))' |
+          node -e 'const m={HUD_WRITER_TOKEN:process.env.ROVOR_HUD_WRITER_TOKEN,HUD_READER_TOKEN:process.env.ROVOR_HUD_READER_TOKEN};
+            for(const key of ["GROQ_HUD_API_KEY","GROQ_HUD_CHAT_ENABLED","GROQ_HUD_FREE_TIER_VERIFIED","GROQ_HUD_EVIDENCE_SHA256","GROQ_HUD_VERIFIED_AT","GROQ_HUD_VALID_UNTIL","GROQ_HUD_DAILY_BUDGET"]){
+              if(process.env[key])m[key]=process.env[key];
+            }
+            process.stdout.write(JSON.stringify(m))' |
             wrangler secret bulk --config wrangler.github.jsonc
       - name: Verify anonymous denial, authenticated original HUD, quota script, and D1 status
         run: node verify-github-deploy.mjs
