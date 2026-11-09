@@ -6,6 +6,7 @@ import {readFileSync, writeFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {verifiedOrigin} from './verify-github-deploy.mjs';
+import {groqCloudReady} from './groq-cloud-chat.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const D1_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -20,6 +21,10 @@ export function validateDeploymentSecrets(env) {
       env.ROVOR_HUD_WRITER_TOKEN === env.ROVOR_HUD_READER_TOKEN)
     throw Error('independent_hud_secrets_required');
   if (!D1_UUID.test(env.ROVOR_HUD_D1_ID || '')) throw Error('provisioned_d1_id_required');
+  // A requested cloud-Groq release must have fresh operator-verified free-tier
+  // evidence and its *cloud* API key. A working local Mac key never qualifies.
+  if(env.GROQ_HUD_CHAT_ENABLED==='true'&&!groqCloudReady(env,Date.now()))
+    throw Error('cloud_groq_free_eligibility_missing_or_expired');
   return true;
 }
 
