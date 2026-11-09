@@ -5979,6 +5979,27 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/105"
         }
       ]
+    },
+    {
+      "id": "hud-cloud-home-preview-poll-20261109",
+      "title": "Refresh cloud workload home preview without opening full Workload drawer",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar HUD home-preview patch 2026-11-09",
+      "branch": "fix/hud-cloud-home-preview-poll-20261109",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/live-quota-board.js",
+        "tests/test_hud_cloud_home_preview.mjs"
+      ],
+      "depends_on": [],
+      "next_update": "After isolated browser-mock regression and stacked PR review against HUD PR #314",
+      "next_action": "Allow cloud readbacks while home preview is visible, independently of full drawer. Preserve existing request spacing, authenticated same-origin fetches, no local Mac telemetry, and no false activity. Add focused regression.",
+      "acceptance": "Cloud readback starts on HUD boot without opening drawer; preview updates with factual evidence; opening drawer renders cached cloud response immediately without repeat network call; background refresh bounded; no false provider activation.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/314",
+        "https://github.com/TeamRovor/rovor-video-engine/issues/309"
+      ],
+      "updated_at": "2026-11-09"
     }
   ]
 }
