@@ -733,8 +733,13 @@
           const group=omni?routeGroup(id):requestedSource==='gemini'?'Google Gemini · cloud direct':requestedSource==='groq'?'Groq · cloud direct':'Cloudflare AI hosted routes';
           if(!groups.has(group)){const optgroup=el('optgroup',{label:group});groups.set(group,optgroup);select.append(optgroup);}
           const measured=geminiUsage?.models?.find(x=>x.model===id);
-          const display=requestedSource==='gemini'&&id==='gemini-auto-free'?'✦ Smart Gemini · choose by task':id;
-          const label=requestedSource==='gemini'&&measured?display+' · '+measured.completed+' replies today':display;
+          const evidence=requestedSource==='gemini'?info.model_evidence?.find(x=>x.model===id):null;
+          const display=requestedSource==='gemini'&&id==='gemini-auto-free'?'✦ Smart Gemini · verified routes only':id;
+          const state=evidence?.verification==='verified_recent_reply'?' · VERIFIED reply (7d)':
+            evidence?.verification==='provider_cooldown'?' · 429 cooldown':
+            evidence?' · listed, unverified':'';
+          const label=requestedSource==='gemini'&&measured?
+            display+state+' · '+measured.completed+' replies today':display+state;
           groups.get(group).append(el('option',{value:id,textContent:label}));
         }
         if(!select.options.length)throw Error('catalog_unavailable');
@@ -745,12 +750,13 @@
         else if(omni)select.value=AUTO_ROUTE;
         else if(requestedSource==='gemini'&&models.includes('gemini-auto-free'))select.value='gemini-auto-free';
         stateLabel.textContent=omni?('Mac bridge reported · '+select.options.length+' allowed routes · confirm a reply to verify use · optional local execution'):
-          requestedSource==='gemini'?'Google key catalog lists '+Math.max(0,models.length-(models.includes('gemini-auto-free')?1:0))+' approved free-priced text models · reply/remaining quota still need verification':
+          requestedSource==='gemini'?'Google key lists '+Math.max(0,models.length-(models.includes('gemini-auto-free')?1:0))+
+             ' approved text routes · '+(info.verified_model_count??'unknown')+' recently verified · external quota UNKNOWN':
           requestedSource==='groq'?'Groq cloud route available · no Mac required · remaining quota unverified':
           ('Cloudflare AI · '+select.options.length+' hosted models listed · allowance unverified');
         modelSheetInfo.textContent=omni
           ?'Mac-advertised chat routes only. Free-tagged model routes and Owner-allowlisted model routes still need live inference and free-quota checks.'
-          :requestedSource==='gemini'?'Direct Google Gemini cloud API. Smart Gemini selects a verified-free-listed text route by task. Each model has independent usage receipts; remaining Google account quotas are not verified. Free-tier content may be used by Google to improve services.':requestedSource==='groq'?'Direct Groq cloud API; Mac not required. Requires current owner-verified free-tier approval. Quota remaining is unknown.':'Cloudflare-hosted inference is separate from OmniRoute. Its allowance is not guaranteed.';
+          :requestedSource==='gemini'?'Direct Google Gemini cloud API. Smart Gemini uses only models with confirmed replies in the past seven days, choosing by task. A manually selected, key-listed route can establish a new verified model. Circular meters show this HUD\'s reserved requests, NOT Google project-wide quota. Free-tier content may be used by Google to improve services.':requestedSource==='groq'?'Direct Groq cloud API; Mac not required. Requires current owner-verified free-tier approval. Quota remaining is unknown.':'Cloudflare-hosted inference is separate from OmniRoute. Its allowance is not guaranteed.';
         ready=true;send.disabled=false;modelBrowse.disabled=false;updatePlan();
       }catch{
         if(epoch!==loadEpoch)return;
@@ -1007,7 +1013,7 @@
         // text to the next model as if it were an assistant answer.
         history.push({role:'assistant',content:message,platform,model:target,receipt:pendingJob?.id||null,outcome:'failed',recordedAt:Date.now()});save();
         redraw();
-      }finally{pendingJob=null;controller=null;setBusy(false);updatePlan();}
+      }finally{pendingJob=null;controller=null;setBusy(false);updatePlan();if(platform==='gemini'&&panel.dataset.open==='true'){refreshProviderInventory();load();}}
     }
 
     repoRow.hidden=sourceSelect.value!=='omniroute';repoSelect.disabled=repoRow.hidden;
