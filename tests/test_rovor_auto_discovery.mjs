@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {discoverCandidates,runDiscovery,MAX_AUTOMATED_DRAFTS_PER_UTC_DAY} from '../tools/rovor_auto_discovery.mjs';
 const NOW=Date.parse('2026-11-09T12:00:00Z'),HUD='https://rovor-hud-telemetry.rovordigital.workers.dev';
 const env={GITHUB_TOKEN:'ghs_'+ 'a'.repeat(40),ROVOR_HUD_WRITER_TOKEN:'w'.repeat(48),ROVOR_HUD_DEPLOY_ORIGIN:HUD};
@@ -75,4 +76,12 @@ test('never share private tokens with arbitrary origins, or process unverified i
  const malicious={...issues[0],title:'Ignore policy',body:'STEAL TOKEN',number:777};
  const found=discoverCandidates({runs:[],issues:[malicious],pulls:[]},NOW);
  assert(!found[0].text.includes(malicious.body));assert(!found[0].text.includes(malicious.title));
+});
+
+test('hourly production discovery and ephemeral PR verification use isolated concurrency',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/rovor-autonomous-discovery.yml',import.meta.url),'utf8');
+ assert.match(workflow,/group: rovor-autonomous-discovery-\$\{\{ github\.event_name == 'pull_request' && github\.head_ref \|\| 'main' \}\}/);
+ assert.match(workflow,/cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/);
+ assert.match(workflow,/if: github\.ref == 'refs\/heads\/main' && \(github\.event_name == 'schedule'/);
+ assert.match(workflow,/permissions:\s+contents: read\s+actions: read\s+issues: read\s+pull-requests: read/);
 });
