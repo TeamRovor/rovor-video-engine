@@ -380,7 +380,7 @@
     const ideaFeedback=el('div',{className:'rvc-idea-feedback',textContent:'Ideas are private and need owner approval before any model or GitHub work. Do not include secrets.'});
     ideaFeedback.setAttribute('role','status');
     const ideaList=el('div',{className:'rvc-idea-list'});
-    const ideaInbox=el('details',{className:'rvc-idea-inbox'},el('summary',{textContent:'Cloud idea inbox · pending owner review'}),ideaList);
+    const ideaInbox=el('details',{className:'rvc-idea-inbox'},el('summary',{textContent:'Cloud ideas & automatic findings · pending owner review'}),ideaList);
     document.head.append(el('style',{textContent:`
 #rvc .rvc-queue-idea{min-height:43px;min-width:89px;background:#0b3156;border:1px solid #3e88b9;font-size:12px;font-weight:600}
 #rvc .rvc-idea-feedback{color:#96c1e2;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
@@ -1091,7 +1091,7 @@
           if(entry?.state!=='pending_review'||typeof entry.text!=='string')continue;
           ideaList.append(el('div',{className:'rvc-idea-row'},
             el('div',{textContent:entry.text.slice(0,1600)}),
-            el('small',{textContent:'PENDING OWNER REVIEW · '+(entry.created_at?new Date(entry.created_at).toLocaleString():'time unknown')+' · no job started'})));
+            el('small',{textContent:(entry.source==='autonomous_discovery'?'AUTOMATIC GITHUB FINDING':'USER-SUBMITTED IDEA')+' · PENDING OWNER REVIEW · '+(entry.created_at?new Date(entry.created_at).toLocaleString():'time unknown')+' · no AI or GitHub job started'})));
         }
       }catch{ideaList.textContent='Private idea inbox is unavailable. This does not mean cloud inference is offline.';}
     }
