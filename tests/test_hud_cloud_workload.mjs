@@ -147,7 +147,9 @@ test('cloud home preview fetches live sources even without opening the Workload 
   app.tick();await settleCloud();
   assert.equal(app.requests.length,5,'respect cooldown; avoid duplicate network calls');
   app.advance(10000);app.tick();await settleCloud();
-  assert.equal(app.requests.length,10,'refresh home readback on bounded cadence');
+  assert.equal(app.requests.length,5,'home readback should not poll every ten seconds');
+  app.advance(50000);app.tick();await settleCloud();
+  assert.equal(app.requests.length,10,'refresh home readback at the one-minute cadence');
   app.document.hidden=true;app.advance(10000);app.tick();await settleCloud();
   assert.equal(app.requests.length,10,'do not poll in background tabs');
 });
