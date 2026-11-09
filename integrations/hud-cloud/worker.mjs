@@ -1,6 +1,7 @@
 import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';
 import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';
 import {probeGroqCatalogue} from './groq-quota-monitor.mjs';
+import {submitIdea,listIdeas} from './idea-inbox.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
 import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';
 // Private telemetry only: no inference, job dispatch, or Mac control.
@@ -347,7 +348,7 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     (url.pathname === '/api/hud/chat/bridge' || url.pathname === '/api/hud/chat/claim' ||
       /^\/api\/hud\/chat\/result\/[a-f0-9-]{36}$/i.test(url.pathname));
   let authRequest = request;
-  if (!ingest && !chatWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
+  if (!ingest && !chatWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
     try {
       const cookie = String(request.headers.get('Cookie') || '').split(';').map(c => c.trim()).find(c => c.startsWith('rovor_hud_reader='));
       if (cookie) authRequest = {headers: new Headers({Authorization: 'Bearer ' + decodeURIComponent(cookie.slice(17))})};
@@ -420,6 +421,24 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       if (request.headers.get('Origin') !== url.origin) return response(403,{error:'origin_denied'});
       let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_gemini_chat'});}
       return cloudGeminiChat(body,env,now);
+    }
+    // Owner-private intake saves a reviewable idea only; it never dispatches
+    // models, writes GitHub, schedules jobs or bypasses the canonical feed.
+    if (url.pathname === '/api/hud/ideas') {
+      if(request.method === 'GET'){
+        const result=await listIdeas(env.DB);
+        return response(result.status,result.body);
+      }
+      if(request.method === 'POST'){
+        if(request.headers.get('Origin')!==url.origin)return response(403,{error:'origin_denied'});
+        if(!request.headers.get('Content-Type')?.startsWith('application/json'))
+          return response(415,{error:'json_required'});
+        let body;try{body=await boundedJSON(request);}
+        catch{return response(400,{error:'invalid_idea'});}
+        const result=await submitIdea(env.DB,body,now);
+        return response(result.status,result.body);
+      }
+      return response(405,{error:'method_not_allowed'});
     }
     if (request.method === 'GET' && url.pathname === '/api/chat/models')
       return response(200,{models:[...(env.AI?CHAT_MODELS:[]),...(groqCloudReady(env,now)?[GROQ_CLOUD_ROUTE]:[])]});
