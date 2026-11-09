@@ -46,6 +46,8 @@ class HTTP:
                                         "online_verified":False,
                                         "admission":"disabled_pending_verification"} for p in sorted(ops.PROVIDERS)],
                           "queue_pending":0,"review_queue":{"pending_count":3},
+                          "employees":[{"name":name} for name in
+                            ("Walter","Mike","Jane","Jesse","Gale","Gus","Saul","Hank")],
                           "scheduled_shifts":{"runs":[{"status":"idle"}]},
                           "native_clock_verified":False, "attempts":[{"status":"needs_review"}]})
         raise AssertionError("unexpected URL: " + url)
@@ -81,6 +83,7 @@ class ControlReportTests(unittest.TestCase):
         self.assertEqual(report["workforce"]["verified_online_providers"],0)
         self.assertEqual(report["workforce"]["eligible_providers"],0)
         self.assertEqual(report["workforce"]["pending_reviews"],3)
+        self.assertEqual(report["workforce"]["reported_employee_roles"],8)
         self.assertEqual(report["workforce"]["last_scheduled_shift"],"idle")
         for secret in (e["ROVOR_GEMINI_API_KEY"],e["ROVOR_HUD_READER_TOKEN"],
                        e["ROVOR_HUD_WRITER_TOKEN"],e["ROVOR_GHOST_SERVICE_TOKEN"]):
