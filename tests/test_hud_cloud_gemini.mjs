@@ -39,7 +39,7 @@ function mockGoogle(ids=[model,fast,strong],replyStatus=200){
   return {send,calls};
 }
 function db(){
-  const budgets=new Map(),usage=new Map(),models=new Map();
+  const budgets=new Map(),usage=new Map(),models=new Map(),health=new Map();
   function getModel(day,model){
     const key=day+'|'+model;
     if(!models.has(key))models.set(key,{day,model,attempts:0,completed:0,
@@ -48,6 +48,10 @@ function db(){
   }
   return {
     prepare(sql){return {
+      async all(){
+        if(sql.startsWith('SELECT model,last_success_at'))return {results:[...health.values()]};
+        return {results:[]};
+      },
       bind(...a){return {
         async first(){
           if(sql.includes('hud_gemini_chat_budget')&&sql.includes('RETURNING')){
@@ -63,12 +67,29 @@ function db(){
           return null;
         },
         async all(){
+          if(sql.startsWith('SELECT model,MAX(day)')){
+            const out=new Map();
+            for(const m of models.values())if(m.day>=a[0]&&m.completed>0&&(!out.has(m.model)||out.get(m.model).last_day<m.day))
+              out.set(m.model,{model:m.model,last_day:m.day});
+            return {results:[...out.values()]};
+          }
+          if(sql.startsWith('SELECT model,last_success_at'))return {results:[...health.values()]};
           if(sql.includes('FROM hud_gemini_chat_model_usage'))
             return {results:[...models.values()].filter(m=>m.day===a[0])};
           return {results:[]};
         },
         async run(){
-          if(sql.startsWith('INSERT INTO hud_gemini_chat_model_usage')){
+          if(sql.startsWith('INSERT INTO hud_gemini_model_health')){
+            if(sql.includes('last_success_at')){
+              const [model,at]=a;const old=health.get(model)||{model,success_count:0};
+              health.set(model,{...old,last_success_at:at,success_count:old.success_count+1,
+                cooldown_until:null,last_failure_code:null});
+            }else if(sql.includes('last_rate_limited_at')){
+              const [model,at,until,failed,code]=a;
+              health.set(model,{...(health.get(model)||{model,success_count:0}),
+                last_rate_limited_at:at,cooldown_until:until,last_failure_at:failed,last_failure_code:code});
+            }
+          }else if(sql.startsWith('INSERT INTO hud_gemini_chat_model_usage')){
             getModel(a[0],a[1]).attempts++;
           }else if(sql.startsWith('UPDATE hud_gemini_chat_model_usage SET failures')){
             const row=getModel(a[1],a[2]);row.failures++;row.last_error_code=a[0];
@@ -161,10 +182,12 @@ test('Direct model call records actual per-model and project-wide token receipt'
   assert.equal(data.models.find(m=>m.model===model).output_tokens,4);
 });
 
-test('One smart request resolves a listed model only, exposing its exact route',async()=>{
+test('One smart request uses a recently verified reply, never a merely catalog-listed strong model',async()=>{
   const e=env(),g=mockGoogle();
+  const first=await cloudGeminiChat({...contents,model:strong},e,now,g.send);
+  assert.equal(first.status,200);
   const r=await cloudGeminiChat({model:AUTO_GEMINI_MODEL,
-    messages:[{role:'user',content:'Debug my GitHub code'}]},e,now,g.send);
+    messages:[{role:'user',content:'Debug my GitHub code'}]},e,now+1000,g.send);
   assert.equal(r.status,200);
   assert.equal(r.headers.get('X-ROVOR-Requested-Model'),AUTO_GEMINI_MODEL);
   assert.equal(r.headers.get('X-ROVOR-Resolved-Model'),strong);
@@ -243,4 +266,69 @@ test('Existing HUD denies anonymous and cross-site Gemini requests',async()=>{
   assert.equal((await handle(get('/api/hud/gemini/models',{Authorization:'Bearer '+reader}),e)).status,200);
   assert.equal((await handle(post('https://evil.test'),e)).status,403);
   assert.equal((await handle(post(origin,{Authorization:'Bearer wrong'}),e)).status,401);
+});
+
+
+test('Smart routing declines unseen models without a provider call or hidden fallback',async()=>{
+  const e=env(),g=mockGoogle();
+  const r=await cloudGeminiChat({...contents,model:AUTO_GEMINI_MODEL},e,now,g.send);
+  assert.equal(r.status,409);
+  assert.equal((await r.json()).error,'gemini_auto_requires_recent_verified_model');
+  assert.equal(g.calls.filter(x=>x.options.method==='POST').length,0);
+});
+test('Recently verified one model promotes only that model, and exact metrics separate local from Google quota',async()=>{
+  const e=env(),g=mockGoogle();
+  const response=await cloudGeminiChat(contents,e,now,g.send);
+  assert.equal(response.status,200);
+  const listing=await cloudGeminiModels(e,g.send,now+2000);
+  assert.equal(listing.verified_model_count,1);
+  const verified=listing.model_evidence.find(x=>x.model===model);
+  assert.equal(verified.verification,'verified_recent_reply');
+  assert.equal(verified.last_verified_at,new Date(now).toISOString());
+  assert.equal(listing.model_evidence.find(x=>x.model===strong).verification,'listed_unverified');
+  const u=await (await cloudGeminiUsage(e,now+2000)).json();
+  assert.equal(u.scope,'this_hud_direct_api_only');
+  assert.equal(u.daily_local_remaining,11);
+  assert.equal(u.minute_local_remaining,1);
+  assert.equal(u.local_cap_time_zone,'UTC');
+  assert.equal(u.quota_remaining,'not_verified_provider_wide');
+  assert.equal(u.local_attempts_include_reservations_not_only_provider_calls,true);
+});
+test('Google 429 records cooldown and prevents follow-up spend or inaccurate available label',async()=>{
+  const e=env(),g=mockGoogle([model],429);
+  const one=await cloudGeminiChat(contents,e,now,g.send);
+  assert.equal(one.status,429);
+  const two=await cloudGeminiChat(contents,e,now+1000,g.send);
+  assert.equal(two.status,429);
+  assert.equal((await two.json()).error,'gemini_model_cooldown_active');
+  assert.equal(g.calls.filter(x=>x.options.method==='POST').length,1);
+  const listing=await cloudGeminiModels(e,g.send,now+1000);
+  const evidence=listing.model_evidence.find(x=>x.model===model);
+  assert.equal(evidence.verification,'provider_cooldown');
+  assert.equal(evidence.cooldown_until,new Date(now+3600000).toISOString());
+  const usage=await (await cloudGeminiUsage(e,now+1000)).json();
+  assert.equal(usage.attempts,1);
+  assert.equal(usage.completed,0);
+  assert.equal(usage.models.find(x=>x.model===model).failures,1);
+});
+test('Missing Google token metadata never reports precise zero tokens or verified completion',async()=>{
+  const e=env(),g=mockGoogle();
+  const send=async(url,opts)=>opts.method==='GET'?g.send(url,opts):Response.json({
+    candidates:[{content:{parts:[{text:'Good reply'}]},finishReason:'STOP'}]
+  });
+  const r=await cloudGeminiChat(contents,e,now,send);
+  assert.equal(r.status,502);
+  assert.equal((await r.json()).error,'gemini_token_usage_unverified');
+  const u=await (await cloudGeminiUsage(e,now)).json();
+  assert.equal(u.completed,0);
+  assert.equal(u.models[0].last_error_code,'invalid_response');
+});
+test('Expired real model verification does not silently enable Smart Gemini',async()=>{
+  const e=env(),g=mockGoogle();
+  const prior=now-9*86400000;
+  const first=await cloudGeminiChat({...contents,model:strong},e,prior,g.send);
+  assert.equal(first.status,200);
+  const next=await cloudGeminiChat({...contents,model:AUTO_GEMINI_MODEL},e,now,g.send);
+  assert.equal(next.status,409);
+  assert.equal((await next.json()).error,'gemini_auto_requires_recent_verified_model');
 });

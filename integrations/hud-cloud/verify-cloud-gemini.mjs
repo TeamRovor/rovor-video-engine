@@ -32,8 +32,15 @@ async function main(){
   if(!before.ok)throw Error('private_gemini_usage_unavailable');
   const prior=await before.json();
   const completedBefore=prior.models?.find(m=>m.model===model)?.completed||0;
-  if(!Array.isArray(prior.models)||prior.source!=='cloud_gemini_direct')
+  if(!Array.isArray(prior.models)||prior.source!=='cloud_gemini_direct'||
+     prior.scope!=='this_hud_direct_api_only'||
+     !Number.isSafeInteger(prior.daily_local_remaining)||
+     !Number.isSafeInteger(prior.minute_local_remaining))
     throw Error('per_model_usage_schema_not_ready');
+  if(prior.daily_local_remaining<1||prior.minute_local_remaining<1)
+    throw Error('local_gemini_reservation_budget_exhausted');
+  if(catalog.model_evidence?.some(m=>m.model===model&&m.verification==='provider_cooldown'))
+    throw Error('selected_gemini_model_429_cooldown_active');
   console.log('Verified private HUD lists '+(catalog.models.length-1)+
     ' approved project-listed text models. One model selected for canary.');
   const r=await fetch(ORIGIN+'/api/hud/gemini/chat',{
