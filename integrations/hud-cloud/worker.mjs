@@ -1,4 +1,5 @@
 import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';
+import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
 import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';
 // Private telemetry only: no inference, job dispatch, or Mac control.
@@ -284,10 +285,11 @@ const CHAT_MODELS = ['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/qwen/qwen2
   '@cf/mistralai/mistral-small-3.1-24b-instruct', '@cf/google/gemma-3-12b-it', '@cf/meta/llama-3.1-8b-instruct'];
 const CHAT_SYSTEM = 'You are ROVOR, the assistant inside the Rovor Digital HUD. You can answer questions only. You cannot launch employees, commit code, schedule jobs, or perform background tasks. Never claim an action is running or completed without a real tool receipt. Never promise to deliver work in an hour or later. Be concise, precise, and explicitly acknowledge limitations.';
 
-async function chat(request, env, now) {
+async function chat(request, env, now, fetcher = fetch) {
   if (request.headers.get('Origin') !== new URL(request.url).origin) return response(403, {error: 'origin_denied'});
-  if (!env.AI) return response(503, {error: 'chat_not_configured'});
   let body; try { body = await boundedJSON(request); } catch { return response(400, {error: 'invalid_chat'}); }
+  if(body?.model===GROQ_CLOUD_ROUTE)return cloudGroqChat(body,env,env.DB,now,fetcher);
+  if (!env.AI) return response(503, {error: 'chat_not_configured'});
   if (!CHAT_MODELS.includes(body.model) || !Array.isArray(body.messages)) return response(400, {error: 'model_not_available'});
   const messages = body.messages.slice(-20)
     .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
@@ -324,7 +326,7 @@ async function chat(request, env, now) {
   return new Response(out, {headers: {'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'}});
 }
 
-export async function handle(request, env, now = Date.now()) {
+export async function handle(request, env, now = Date.now(), fetcher = fetch) {
   const url = new URL(request.url);
   if (url.pathname === '/login') {
     if (request.method === 'GET') return new Response(LOGIN, {headers: {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store'}});
@@ -418,8 +420,11 @@ export async function handle(request, env, now = Date.now()) {
       let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_gemini_chat'});}
       return cloudGeminiChat(body,env,now);
     }
-    if (request.method === 'GET' && url.pathname === '/api/chat/models') return response(200, {models: env.AI ? CHAT_MODELS : []});
-    if (request.method === 'POST' && url.pathname === '/api/chat') return chat(request, env, now);
+    if (request.method === 'GET' && url.pathname === '/api/chat/models')
+      return response(200,{models:[...(env.AI?CHAT_MODELS:[]),...(groqCloudReady(env,now)?[GROQ_CLOUD_ROUTE]:[])]});
+    if (request.method === 'GET' && url.pathname === '/api/chat/groq/status')
+      return response(200,await cloudGroqStatus(env,env.DB,now));
+    if (request.method === 'POST' && url.pathname === '/api/chat') return chat(request, env, now, fetcher);
     if (url.pathname === '/api/hud/gemini/project-quota') {
       if (request.method !== 'GET') return response(405, {error: 'method_not_allowed'});
       // Reader auth has already been validated; NEVER expose secrets or proxy arbitrary URLs.

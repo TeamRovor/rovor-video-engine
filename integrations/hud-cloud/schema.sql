@@ -42,3 +42,20 @@ CREATE TABLE IF NOT EXISTS hud_gemini_chat_usage (
   input_tokens INTEGER NOT NULL DEFAULT 0,
   output_tokens INTEGER NOT NULL DEFAULT 0
 );
+
+-- Cloud-only Groq chat; account-key and private prompts are never stored here.
+-- Atomic reservations survive Worker restarts and do not require a Mac.
+CREATE TABLE IF NOT EXISTS hud_groq_chat_admission (
+  id INTEGER PRIMARY KEY CHECK(id=1),
+  day_id INTEGER NOT NULL,
+  attempts INTEGER NOT NULL,
+  last_started_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS hud_groq_chat_receipts (
+  id TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL,
+  model TEXT NOT NULL,
+  prompt_tokens INTEGER NOT NULL,
+  completion_tokens INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS hud_groq_chat_receipts_time ON hud_groq_chat_receipts(created_at);

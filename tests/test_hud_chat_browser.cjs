@@ -34,7 +34,8 @@ async function main(){
     const route=new URL(req.url,'http://127.0.0.1').pathname;
     if(route==='/hud-chat.js'){res.writeHead(200,{'Content-Type':'text/javascript'});return res.end(js);}
     if(route==='/api/hud/chat/models')return respond(res,{online:true,models:[model,otherModel]});
-    if(route==='/api/chat/models')return respond(res,{models:['@cf/meta/llama-3.1-8b-instruct']});
+    if(route==='/api/chat/models')return respond(res,{models:['@cf/meta/llama-3.1-8b-instruct','groq/openai/gpt-oss-20b']});
+    if(route==='/api/chat/groq/status')return respond(res,{source:'cloud_direct_groq',model:'groq/openai/gpt-oss-20b',ready:true,mac_required:false,locally_admitted_today:1,last_cloud_completion_at:new Date().toISOString()});
     if(route==='/api/hud/omniroute')return respond(res,{snapshot_at:new Date().toISOString(),
       transport:{connection:'fresh'},connections:['gemini','groq','nvidia','mistral','cohere','sambanova',
         'cloudflare-ai','openrouter','huggingface'].map(provider=>({provider,name:provider,enabled_count:1,connection_count:1}))});
@@ -98,7 +99,12 @@ async function main(){
     await cmd('Page.navigate',{url:origin+'/?v='+encodeURIComponent(name)});
     await waitFor(()=>evaluate('return !!document.querySelector("#rvc-fab")'),name+' launcher');
     await evaluate('document.querySelector("#rvc-fab").click();return true');
-    if(name==='iPhone')assert.equal(await evaluate('return document.querySelector("#rvc-source").value'),'gemini','new conversations default to Mac-independent cloud');
+    if(name==='iPhone'){
+      assert.equal(await evaluate('return document.querySelector("#rvc-source").value'),'gemini','new conversations default to Mac-independent cloud');
+      await evaluate('const p=document.querySelector("#rvc-source");p.value="groq";p.dispatchEvent(new Event("change",{bubbles:true}));return true');
+      await waitFor(()=>evaluate('return Array.from(document.querySelectorAll("#rvc-model option")).some(x=>x.value==="groq/openai/gpt-oss-20b")'),'Groq direct cloud route');
+      await waitFor(()=>evaluate('return document.querySelector(".rvc-provider-inspect summary").textContent.includes("NO MAC REQUIRED")'),'Groq direct no Mac');
+    }
     await evaluate('const source=document.querySelector("#rvc-source");source.value="omniroute";source.dispatchEvent(new Event("change",{bubbles:true}));return true');
     await waitFor(()=>evaluate('return Array.from(document.querySelectorAll("#rvc-model option")).some(x=>x.value==="openrouter/example:free")'),name+' model');
     const info=await evaluate('const p=document.querySelector("#rvc"),r=p.getBoundingClientRect();return {width:r.width,height:r.height,vw:innerWidth,vh:innerHeight,textarea:parseFloat(getComputedStyle(document.querySelector("#rvc textarea")).fontSize),select:parseFloat(getComputedStyle(document.querySelector("#rvc-source")).fontSize),overflow:document.documentElement.scrollWidth>innerWidth+3}');
