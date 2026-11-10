@@ -173,13 +173,25 @@ export function createCloudOperations(base, cloud) {
 
  // Browser-initiated inference on the EXISTING private Site. Nine provider
  // secrets and the execution ledger stay in the cloud. Never call a Mac relay.
- function ownerChatModels(env,now=Date.now()) {
+ async function ownerChatSchemaReady(env) {
+  if(!env.DB)return false;
+  try{await sql(env,'SELECT id FROM ghost_cloud_owner_chat LIMIT 0').all();return true;}
+  catch{return false;}
+ }
+ async function ownerChatModels(env,now=Date.now()) {
+  const storageReady=await ownerChatSchemaReady(env);
+  let dispatchEnabled=false;
+  if(storageReady)try{
+   dispatchEnabled=(await sql(env,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled===1;
+  }catch{/* Control unavailable: fail closed. */}
   const cfg=config(env,'GHOST_FLEET_CONFIG');
   return {source:'private_site_cloud',mac_required:false,observed_at:now,
+   storage_ready:storageReady,dispatch_enabled:dispatchEnabled,
    providers:Object.keys(cloud.PROVIDERS).map(provider=>{
     const route=cfg[provider],reason=cloud.eligibility(provider,route,env,now);
     return {provider,model:typeof route?.model==='string'?route.model:null,
-     admission:reason||'eligible',ready:!reason};
+     admission:!storageReady?'owner_chat_migration_required':!dispatchEnabled?'global_stop':reason||'eligible',
+     ready:storageReady&&dispatchEnabled&&!reason};
    })};
  }
  async function ownerChat(request,env,actor) {
@@ -188,6 +200,7 @@ export function createCloudOperations(base, cloud) {
      request.headers.get('Sec-Fetch-Site')!=='same-origin')
    return json({error:'owner_browser_required'},403);
   if(!env.DB)return json({error:'private_store_unavailable'},503);
+  if(!await ownerChatSchemaReady(env))return json({error:'owner_chat_migration_required'},503);
   let body;
   try{body=await bounded(request,8192);}catch{return json({error:'invalid_chat_request'},400);}
   if(!body||Array.isArray(body)||typeof body!=='object'||
@@ -646,7 +659,7 @@ export function createCloudOperations(base, cloud) {
     if(!actor)return json({error:'site_identity_required'},401);
     try{
      if(url.pathname==='/api/ghost/status'&&request.method==='GET')return json(await status(env));
-     if(url.pathname==='/api/ghost/chat/models'&&request.method==='GET')return json(ownerChatModels(env));
+     if(url.pathname==='/api/ghost/chat/models'&&request.method==='GET')return json(await ownerChatModels(env));
      if(url.pathname==='/api/ghost/chat'&&request.method==='POST')return ownerChat(request,env,actor);
      if(url.pathname==='/api/ghost/control'&&request.method==='POST'){
       const body=await bounded(request);if(Object.keys(body).join(',')!=='enabled')throw Error('invalid_control');return json(await control(env,body.enabled));

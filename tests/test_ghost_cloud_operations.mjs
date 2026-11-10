@@ -10,6 +10,7 @@ import worker from '../integrations/ghost-cloud/worker.mjs';
 import {runCanary} from '../integrations/ghost-cloud/canary-preflight.mjs';
 import {createCloudOperations} from '../integrations/ghost-cloud/site-operations.mjs';
 import {compileOperations,composeOperations} from '../integrations/ghost-cloud/compose-operations.mjs';
+import {stageOwnerCloudChatMigration} from '../integrations/ghost-cloud/stage-owner-cloud-chat-migration.mjs';
 
 const root=new URL('../integrations/ghost-cloud/',import.meta.url);
 const read=name=>fs.readFileSync(new URL(name,root),'utf8');
@@ -563,4 +564,96 @@ test('owner cloud chat denies anonymous, cross-origin, unverified, unsupported a
  assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body:{provider:'groq',prompt:'hello',model:'arbitrary-paid-route'},browser:true}),s.env)).status,400);
  assert.equal(calls,0);
  assert.equal(s.db.prepare('SELECT COUNT(*) n FROM ghost_cloud_owner_chat').get().n,0);
+});
+
+
+test('owner cloud chat refuses any inference before forward-only D1 migration exists',async()=>{
+ const s=setup();
+ s.db.exec('DROP TABLE ghost_cloud_owner_chat');
+ const list=await s.ops.fetch(request('/api/ghost/chat/models'),s.env);
+ assert.equal(list.status,200);
+ const catalog=await list.json();
+ assert.equal(catalog.storage_ready,false);
+ assert.equal(catalog.mac_required,false);
+ assert.equal(catalog.providers.length,9);
+ assert(catalog.providers.every(p=>p.ready===false&&p.admission==='owner_chat_migration_required'));
+ let calls=0;
+ s.cloud.infer=async()=>{calls++;throw Error('must_not_call_provider');};
+ const reply=await s.ops.fetch(request('/api/ghost/chat',{
+  body:{provider:'groq',prompt:'Do not make an upstream call'},browser:true
+ }),s.env);
+ assert.equal(reply.status,503);
+ assert.equal((await reply.json()).error,'owner_chat_migration_required');
+ assert.equal(calls,0);
+});
+
+test('owner cloud chat migration stages only a new journal entry, preserving prior Site source and migration bytes',t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'rovor-cloud-chat-migrate-'));
+ t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ for(const p of ['.openai','worker','dist/server','drizzle/meta'])fs.mkdirSync(path.join(dir,p),{recursive:true});
+ fs.writeFileSync(path.join(dir,'.openai/hosting.json'),JSON.stringify({
+  project_id:'appgprj_6add1e2cc8c08191839344b34d7dbf50',d1:'DB'
+ }));
+ const bundle="// ROVOR_CLOUD_OPERATIONS_V1\n// ROVOR_CLOUD_SCHEDULED_SHIFT_V1\nexport default {};\n";
+ fs.writeFileSync(path.join(dir,'worker/index.js'),bundle);
+ fs.writeFileSync(path.join(dir,'dist/server/index.js'),bundle);
+ const priorEntries=[{idx:0,tag:'0000_hud_telemetry',version:'6',breakpoints:true},
+  {idx:1,tag:'0001_cloud_operations',version:'6',breakpoints:true},
+  {idx:2,tag:'0002_cloud_scheduled_shift',version:'6',breakpoints:true}];
+ const priorSql='CREATE TABLE IF NOT EXISTS already_existing(id TEXT);\n';
+ for(const e of priorEntries)fs.writeFileSync(path.join(dir,'drizzle',e.tag+'.sql'),priorSql);
+ const journalPath=path.join(dir,'drizzle/meta/_journal.json');
+ const originalJournal=JSON.stringify({version:'7',dialect:'sqlite',entries:priorEntries});
+ fs.writeFileSync(journalPath,originalJournal);
+ const dry=stageOwnerCloudChatMigration(dir);
+ assert.equal(dry.prepared,false);
+ assert.equal(dry.deployment_performed,false);
+ assert.equal(dry.d1_applied,false);
+ assert.equal(fs.readFileSync(journalPath,'utf8'),originalJournal);
+ assert.equal(fs.existsSync(path.join(dir,'drizzle/0003_owner_cloud_chat.sql')),false);
+ const prepared=stageOwnerCloudChatMigration(dir,{apply:true});
+ assert.equal(prepared.prepared,true);
+ assert.equal(prepared.runtime_bundle_contains_owner_chat,false,
+  'staging schema is not proof the Site source bundle has been deployed');
+ assert.equal(prepared.migration,'0003_owner_cloud_chat.sql');
+ const after=JSON.parse(fs.readFileSync(journalPath,'utf8'));
+ assert.equal(after.entries.length,4);
+ assert.equal(after.entries[3].tag,'0003_owner_cloud_chat');
+ assert.equal(after.entries[3].idx,3);
+ assert.equal(fs.readFileSync(path.join(dir,'drizzle/0000_hud_telemetry.sql'),'utf8'),priorSql);
+ assert.equal(fs.readFileSync(path.join(dir,'worker/index.js'),'utf8'),bundle);
+ assert.equal(fs.readFileSync(path.join(dir,'dist/server/index.js'),'utf8'),bundle);
+ const sql=fs.readFileSync(path.join(dir,'drizzle/0003_owner_cloud_chat.sql'),'utf8')
+  .replaceAll('--> statement-breakpoint','');
+ const db=new DatabaseSync(':memory:');
+ try{
+  db.exec(sql);
+  db.exec(sql);
+  const row=db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='ghost_cloud_owner_chat'").get();
+  assert.equal(row.name,'ghost_cloud_owner_chat');
+  db.prepare("INSERT INTO ghost_cloud_owner_chat(id,actor,provider,model,pool,started_at,reserved_tokens,status) VALUES(?,?,?,?,?,?,?,?)")
+   .run('receipt-1','owner','groq','pinned','pool',1,12,'running');
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM ghost_cloud_owner_chat').get().n,1);
+ }finally{db.close();}
+ const rerun=stageOwnerCloudChatMigration(dir,{apply:true});
+ assert.equal(rerun.already_journaled,true);
+ assert.equal(rerun.prepared,false);
+ assert.equal(JSON.parse(fs.readFileSync(journalPath,'utf8')).entries.length,4);
+});
+
+test('owner cloud chat migration rejects wrong project, altered build and redirected Site',t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'rovor-cloud-migration-guard-'));
+ t.after(()=>fs.rmSync(dir,{force:true,recursive:true}));
+ for(const p of ['.openai','worker','dist/server','drizzle/meta'])fs.mkdirSync(path.join(dir,p),{recursive:true});
+ const manifest=path.join(dir,'.openai/hosting.json');
+ fs.writeFileSync(manifest,JSON.stringify({project_id:'wrong-private-site',d1:'DB'}));
+ assert.throws(()=>stageOwnerCloudChatMigration(dir),/wrong_private_site_or_database/);
+ fs.writeFileSync(manifest,JSON.stringify({project_id:'appgprj_6add1e2cc8c08191839344b34d7dbf50',d1:'DB'}));
+ fs.writeFileSync(path.join(dir,'worker/index.js'),'stale deployed source');
+ fs.writeFileSync(path.join(dir,'dist/server/index.js'),'different generated source');
+ assert.throws(()=>stageOwnerCloudChatMigration(dir),/site_bundle_mismatch/);
+ const alias=path.join(os.tmpdir(),'rovor-cloud-chat-site-alias-'+path.basename(dir));
+ fs.symlinkSync(dir,alias,'dir');
+ t.after(()=>fs.rmSync(alias,{force:true}));
+ assert.throws(()=>stageOwnerCloudChatMigration(alias),/redirected_site/);
 });
