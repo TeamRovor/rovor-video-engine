@@ -10,6 +10,10 @@ const API='https://api.github.com/repos/'+REPO;
 const HUD='https://rovor-hud-telemetry.rovordigital.workers.dev';
 const HOUR=3600000,DAY=86400000;
 export const MAX_AUTOMATED_DRAFTS_PER_UTC_DAY=6;
+// GitHub runs/PR list documents can be large (~0.5-0.9 MB at 40-50 items).
+// The fail-closed JSON parser accepts 400k characters per response. Request
+// small pages instead of letting otherwise healthy hourly discovery abort.
+export const DISCOVERY_PER_PAGE=8;
 export const MAX_DUPLICATE_PROBES_PER_RUN=6;
 
 const safeInteger=n=>Number.isSafeInteger(n)&&n>=1;
@@ -91,9 +95,9 @@ export async function runDiscovery({env=process.env,send=fetch,now=Date.now()}={
  const hudHeaders={Authorization:'Bearer '+env.ROVOR_HUD_WRITER_TOKEN,
    Accept:'application/json'};
  const [runData,issueData,pullData,record]=await Promise.all([
-   fetchJSON(API+'/actions/runs?status=failure&per_page=40',gitHeaders,send),
-   fetchJSON(API+'/issues?state=open&per_page=50',gitHeaders,send),
-   fetchJSON(API+'/pulls?state=open&per_page=50',gitHeaders,send),
+   fetchJSON(API+'/actions/runs?status=failure&per_page='+DISCOVERY_PER_PAGE+'',gitHeaders,send),
+   fetchJSON(API+'/issues?state=open&per_page='+DISCOVERY_PER_PAGE+'',gitHeaders,send),
+   fetchJSON(API+'/pulls?state=open&per_page='+DISCOVERY_PER_PAGE+'',gitHeaders,send),
    fetchJSON(HUD+'/api/hud/discovery/status',hudHeaders,send)
  ]);
  if(!Array.isArray(runData?.workflow_runs)||!Array.isArray(issueData)||
