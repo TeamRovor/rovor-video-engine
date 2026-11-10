@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import worker, {handle, latest, sanitize} from '../integrations/hud-cloud/worker.mjs';
-import {publishOnce, fitSnapshot, validateTarget, isAllowedLocalReadPath} from '../tools/hud_telemetry_publisher.mjs';
+import {publishOnce, fitSnapshot, validateTarget, isAllowedLocalReadPath, telemetryFailureCode} from '../tools/hud_telemetry_publisher.mjs';
 import {HUD_PROVIDERS, reduceCallLogs} from '../tools/hud_provider_usage.mjs';
 
 const NOW = Date.parse('2026-10-24T20:00:00Z');
@@ -170,6 +170,23 @@ test('publisher trims oversized per-model usage instead of going dark', async ()
   assert.equal(fit.request_usage.providers[0].models[0].model_id, 'model-399');
   const small = sample(); assert.equal(fitSnapshot(small), small);
 });
+test('publisher returns safe diagnostic categories without leaking errors or secrets', async () => {
+  assert.equal(telemetryFailureCode(Error('omniroute_cli_missing')), 'omniroute_cli_missing');
+  assert.equal(telemetryFailureCode(Error('Bearer private-token; /Users/private/file')), 'telemetry_unclassified_failure');
+  assert.equal(telemetryFailureCode({message: 'cloud_http_401'}), 'telemetry_unclassified_failure');
+  for (const [status, reason] of [[400, 'cloud_http_400'], [401, 'cloud_http_401'], [403, 'cloud_http_403'], [429, 'cloud_http_429'], [503, 'cloud_http_5xx']]) {
+    await assert.rejects(publishOnce({origin: 'https://hud.example', token: WRITER,
+      collect: async p => sample(p), workers: async () => sample().workforce,
+      send: async () => new Response('{}', {status})}), new RegExp(reason));
+  }
+  await assert.rejects(publishOnce({origin: 'https://hud.example', token: WRITER,
+    collect: async () => { throw Error('a secret from a provider'); }, workers: async () => sample().workforce,
+    send: async () => { throw Error('should not reach cloud'); }}), /omniroute_collection_unavailable/);
+  await assert.rejects(publishOnce({origin: 'https://hud.example', token: WRITER,
+    collect: async p => sample(p), workers: async () => sample().workforce,
+    send: async () => { throw Error('private proxy URL'); }}), /cloud_transport_unavailable/);
+});
+
 test('publisher rejects duplicate or malformed successful acknowledgments', async () => {
   for (const body of [{accepted: false}, {}]) await assert.rejects(publishOnce({origin: 'https://hud.example', token: WRITER,
     collect: async p => sample(p), workers: async () => sample().workforce, send: async () => Response.json(body)}), /cloud_report_unconfirmed/);
