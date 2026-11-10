@@ -83,6 +83,57 @@ export async function planApprovedJobs(tasks,routing,commit,approvals) {
  return jobs;
 }
 
+// Optional recurring inference requires a SEPARATE explicit private owner approval.
+// A one-shot approval never implies permission to run again.
+const SERIES_APPROVAL='owner_approved_recurring_cloud_inference_v1';
+const SERIES_WINDOW='{{RUN_WINDOW_UTC}}';
+const HOUR=3600000;
+function checkSeries(series,now) {
+ if(!Array.isArray(series)||series.length>MAX_APPROVALS||
+    !Number.isSafeInteger(now)||now<0)throw Error('invalid_recurring_approvals');
+ const seen=new Set();
+ for(const item of series){
+  if(!item||Object.keys(item).sort().join(',')!==
+      'approval,cadence_minutes,expires_at,max_runs,revision,starts_at,task_id'||
+     item.approval!==SERIES_APPROVAL||!ID.test(item.task_id)||!REV.test(item.revision)||
+     ![60,1440].includes(item.cadence_minutes)||
+     !Number.isSafeInteger(item.max_runs)||item.max_runs<1||item.max_runs>168||
+     typeof item.starts_at!=='string'||typeof item.expires_at!=='string'||
+     seen.has(item.task_id))throw Error('invalid_recurring_approvals');
+  const start=Date.parse(item.starts_at),end=Date.parse(item.expires_at);
+  const interval=item.cadence_minutes*60000;
+  if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||
+     new Date(start).toISOString()!==item.starts_at||
+     new Date(end).toISOString()!==item.expires_at||
+     start<0||start%interval!==0||end<=start||
+     end-start>7*24*HOUR||
+     end>start+item.max_runs*interval)throw Error('invalid_recurring_approvals');
+  seen.add(item.task_id);
+ }
+}
+async function planRecurringJobs(tasks,routing,commit,series,now) {
+ const jobs=[];
+ for(const approval of series){
+  const start=Date.parse(approval.starts_at),end=Date.parse(approval.expires_at);
+  if(now<start||now>=end)continue; // Never catch up missed slots.
+  const interval=approval.cadence_minutes*60000;
+  const slot=Math.floor((now-start)/interval);
+  if(slot>=approval.max_runs)continue;
+  const [base]=await planApprovedJobs(tasks,routing,commit,
+    [{task_id:approval.task_id,revision:approval.revision}]);
+  if(!base.prompt.includes(SERIES_WINDOW))throw Error('recurring_template_missing');
+  const windowStart=new Date(start+slot*interval).toISOString();
+  const prompt=base.prompt.replaceAll(SERIES_WINDOW,windowStart);
+  // The same task/window has the same ID even after unrelated source changes;
+  // changed content then conflicts rather than silently replaying.
+  const key=JSON.stringify([base.task_id,approval.starts_at,slot]);
+  const digest=await crypto.subtle.digest('SHA-256',utf8.encode(key));
+  const id='gc-rec-'+Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('').slice(0,48);
+  jobs.push(validateJob({...base,id,prompt,data_class:'public_repository'}));
+ }
+ return jobs;
+}
+
 async function enabled(db) {
  if(!db?.prepare)throw Error('missing_database');
  return (await db.prepare('SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled===1;
@@ -102,21 +153,37 @@ async function submitToExistingWriter(job,env) {
  return data;
 }
 
-export async function replenishApprovedJobs(env,{fetcher=fetch,submit=submitToExistingWriter}={}) {
+export async function replenishApprovedJobs(env,{fetcher=fetch,submit=submitToExistingWriter,now=Date.now()}={}) {
  // STOP is persistent in D1. Recheck before every writer operation.
  if(!await enabled(env.DB))return {status:'stopped',queued:0,duplicates:0};
  const commit=env.GHOST_FEED_COMMIT;
  if(!SHA.test(commit||''))throw Error('invalid_source_commit');
- let approvals;
- try{approvals=JSON.parse(env.GHOST_APPROVED_TASKS||'');}
- catch{throw Error('invalid_approvals');}
- checkApprovals(approvals);
- if(!approvals.length)return {status:'empty',queued:0,duplicates:0};
+ let approvals,series;
+ try{
+  approvals=JSON.parse(env.GHOST_APPROVED_TASKS||'[]');
+  series=JSON.parse(env.GHOST_APPROVED_SERIES||'[]');
+ }catch{throw Error('invalid_approvals');}
+ checkApprovals(approvals);checkSeries(series,now);
+ if(approvals.length+series.length>MAX_APPROVALS)throw Error('too_many_approved_packets');
+ if(!approvals.length&&!series.length)return {status:'empty',queued:0,duplicates:0};
  const {tasks,routing}=await fetchCanonicalQueue(commit,fetcher);
- const jobs=await planApprovedJobs(tasks,routing,commit,approvals);
+ const jobs=[...await planApprovedJobs(tasks,routing,commit,approvals),
+   ...await planRecurringJobs(tasks,routing,commit,series,now)];
  let queued=0,duplicates=0;
  for(const job of jobs){
   if(!await enabled(env.DB))return {status:'stopped',queued,duplicates};
+  if(job.id.startsWith('gc-rec-')){
+   // A stalled provider cannot create an unlimited backlog of hourly work.
+   // The current slot is idempotent, and an older unattempted slot blocks
+   // newer slots for the SAME canonical task until it is attempted.
+   const prior=await env.DB.prepare('SELECT id FROM ghost_cloud_jobs WHERE id=?').bind(job.id).first();
+   if(prior){duplicates++;continue;}
+   const pending=await env.DB.prepare(
+     "SELECT 1 AS pending FROM ghost_cloud_jobs j WHERE j.task_id=? AND j.id LIKE 'gc-rec-%' "+
+     "AND NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts a WHERE a.job_id=j.id) LIMIT 1"
+   ).bind(job.task_id).first();
+   if(pending)continue;
+  }
   const receipt=await submit(job,env);
   if(receipt?.id!==job.id)throw Error('writer_invalid_receipt');
   if(receipt.queued===true)queued++;
