@@ -659,7 +659,7 @@ export function createCloudOperations(base, cloud) {
     if(!actor)return json({error:'site_identity_required'},401);
     try{
      if(url.pathname==='/api/ghost/status'&&request.method==='GET')return json(await status(env));
-     if(url.pathname==='/api/ghost/chat/models'&&request.method==='GET')return json(ownerChatModels(env));
+     if(url.pathname==='/api/ghost/chat/models'&&request.method==='GET')return json(await ownerChatModels(env));
      if(url.pathname==='/api/ghost/chat'&&request.method==='POST')return ownerChat(request,env,actor);
      if(url.pathname==='/api/ghost/control'&&request.method==='POST'){
       const body=await bounded(request);if(Object.keys(body).join(',')!=='enabled')throw Error('invalid_control');return json(await control(env,body.enabled));
