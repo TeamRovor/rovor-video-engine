@@ -93,3 +93,103 @@ test('empty allowlist performs no remote fetch',async()=>{
  const result=await replenishApprovedJobs(e,{fetcher:async()=>{calls++;},submit:async()=>{calls++;}});
  assert.equal(result.status,'empty');assert.equal(calls,0);
 });
+
+const SERIES_START='2026-11-10T00:00:00.000Z';
+const SERIES_END='2026-11-11T00:00:00.000Z';
+const SERIES_NOW=Date.parse(SERIES_START);
+const seriesApproval={
+ approval:'owner_approved_recurring_cloud_inference_v1',
+ task_id:'public-task',revision:'v1',cadence_minutes:60,max_runs:24,
+ starts_at:SERIES_START,expires_at:SERIES_END
+};
+function recurringFixture(){
+ const q=queue();
+ q.tasks[0].cloud_inference.prompt='Review public status for {{RUN_WINDOW_UTC}}; state uncertainty explicitly.';
+ const e=env();e.GHOST_APPROVED_TASKS='[]';
+ e.GHOST_APPROVED_SERIES=JSON.stringify([seriesApproval]);
+ const jobs=new Map(),attempted=new Set(),writes=[];
+ e.DB.prepare=(query)=>({
+  first:async()=>({enabled:1}),
+  bind(...args){return{first:async()=>{
+   if(query.startsWith('SELECT id FROM ghost_cloud_jobs'))return jobs.has(args[0])?{id:args[0]}:null;
+   if(query.includes('FROM ghost_cloud_jobs j'))return [...jobs.values()].some(
+    j=>j.task_id===args[0]&&!attempted.has(j.id))?{pending:1}:null;
+   throw Error('unexpected_recurring_query');
+  }};}
+ });
+ const submit=async job=>{
+  writes.push(job);
+  if(jobs.has(job.id))return {id:job.id,duplicate:true};
+  jobs.set(job.id,job);return {id:job.id,queued:true};
+ };
+ const call=now=>replenishApprovedJobs(e,{fetcher:fetcher(q),submit,now});
+ return {e,q,jobs,attempted,writes,call};
+}
+
+test('recurring series requires an explicit private opt-in and an approved public template',async()=>{
+ const s=recurringFixture();delete s.e.GHOST_APPROVED_SERIES;
+ let calls=0;
+ const output=await replenishApprovedJobs(s.e,{now:SERIES_NOW,fetcher:async()=>{calls++;throw Error('unexpected');}});
+ assert.equal(output.status,'empty');assert.equal(calls,0);
+ s.e.GHOST_APPROVED_SERIES=JSON.stringify([seriesApproval]);
+ s.q.tasks[0].cloud_inference.prompt='Regular non-templated output';
+ await rejects(()=>s.call(SERIES_NOW),'recurring_template_missing');
+ assert.equal(s.writes.length,0);
+});
+
+test('hourly approved recurring work is idempotent, bounded and never backfills missed slots',async()=>{
+ const s=recurringFixture();
+ const first=await s.call(SERIES_NOW+2000);
+ assert.deepEqual(first,{status:'complete',queued:1,duplicates:0});
+ const job=s.writes[0];
+ assert.match(job.id,/^gc-rec-[a-f0-9]{48}$/);
+ assert.match(job.prompt,/2026-11-10T00:00:00.000Z/);
+ assert.equal(job.data_class,'public_repository');
+ assert.equal((await s.call(SERIES_NOW+5000)).duplicates,1);
+ assert.deepEqual(await s.call(SERIES_NOW+HOUR_MS),{status:'complete',queued:0,duplicates:0},
+  'stalled prior window prevents unbounded pending backlog');
+ s.attempted.add(job.id);
+ assert.equal((await s.call(SERIES_NOW+HOUR_MS)).queued,1);
+ assert.notEqual(s.writes.at(-1).id,job.id);
+ assert.match(s.writes.at(-1).prompt,/2026-11-10T01:00:00.000Z/);
+ s.attempted.add(s.writes.at(-1).id);
+ assert.equal((await s.call(SERIES_NOW+22*HOUR_MS)).queued,1,
+  'offline hours are not automatically replayed');
+ assert.equal((await s.call(Date.parse(SERIES_END))).queued,0);
+ assert.equal(s.jobs.size,3);
+});
+const HOUR_MS=3600000;
+
+test('recurring series invalid intent, bounds, or overly broad approvals fail before any job',async()=>{
+ const s=recurringFixture();
+ for(const change of [
+  {approval:'not-explicit'},
+  {cadence_minutes:1},
+  {max_runs:169},
+  {starts_at:'not-a-date'},
+  {expires_at:'2026-11-25T00:00:00.000Z'},
+  {revision:'v2'},
+ ]){
+  s.e.GHOST_APPROVED_SERIES=JSON.stringify([{...seriesApproval,...change}]);
+  await rejects(()=>s.call(SERIES_NOW),change.revision?'cloud_packet_not_approved':'invalid_recurring_approvals');
+ }
+ assert.equal(s.writes.length,0);
+});
+
+test('recurring work cannot exceed the existing nine-packet shift budget',async()=>{
+ const s=recurringFixture();
+ s.e.GHOST_APPROVED_TASKS=JSON.stringify(Array.from({length:9},(_,i)=>({task_id:'a'+i,revision:'v1'})));
+ let calls=0;
+ await rejects(()=>replenishApprovedJobs(s.e,{now:SERIES_NOW,fetcher:async()=>{calls++;throw Error('unexpected');}}),
+  'too_many_approved_packets');
+ assert.equal(calls,0);
+});
+
+test('persistent STOP also prevents recurring work without reading any public source',async()=>{
+ const s=recurringFixture();
+ s.e.DB.prepare=()=>({first:async()=>({enabled:0})});
+ let calls=0;
+ const output=await replenishApprovedJobs(s.e,{now:SERIES_NOW,fetcher:async()=>{calls++;throw Error('unexpected');},
+  submit:async()=>{calls++;throw Error('unexpected');}});
+ assert.equal(output.status,'stopped');assert.equal(calls,0);
+});
