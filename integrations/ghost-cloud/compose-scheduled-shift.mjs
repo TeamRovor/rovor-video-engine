@@ -134,7 +134,14 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
     ' if(env.GHOST_CRON_OPT_IN==='+JSON.stringify(OPT_IN)+')ctx.waitUntil((async()=>{\n'+
     '  // Existing private Site executes its own catalog health checks and D1 writes.\n'+
     '  // No public URL, service bearer, GitHub HTTP call, or model inference.\n'+
-    '  if(typeof __operations.refreshCatalogs==="function")await __operations.refreshCatalogs(env).catch(()=>null);\n'+
+    '  try{\n'+
+    '   if(typeof __operations.refreshCatalogs!=="function")throw Error("refresh_unavailable");\n'+
+    '   const check=await __operations.refreshCatalogs(env);\n'+
+    '   console.log("rovor_catalog_refresh",JSON.stringify({checked:check.checked,persisted:check.persisted,skipped_fresh:check.skipped_fresh,failed:check.checked-check.persisted}));\n'+
+    '  }catch(error){\n'+
+    '   // Never log credentials, provider response bodies or private Site tokens.\n'+
+    '   console.error("rovor_catalog_refresh_failed",error?.message==="private_store_unavailable"?"private_store_unavailable":"refresh_unavailable");\n'+
+    '  }\n'+
     '  return __shift.runScheduledShift(env,{replenish:env.GHOST_FEED_COMMIT?(__feed?__feed.replenishApprovedJobs:async()=>{throw Error("approved_feed_not_bundled")}):__operations.replenish,tick:__cloud.tick});\n'+
     ' })());\n'+
     "}\n};\n";
