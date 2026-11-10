@@ -15,6 +15,13 @@ async function keychain(service) {
   catch { return null; }
 }
 
+// Match the existing outbound chat relay: the Mac may already have the writer
+// under the Cloudflare-specific Keychain service. Never copy or print the key.
+export async function hudWriterCredential(read = keychain) {
+  return await read('rovordigital.hud.cloudflare.writer') ||
+    await read('rovordigital.hud.writer');
+}
+
 export function validateTarget(value) {
   const url = new URL(value);
   if (url.protocol !== 'https:' || url.username || url.password || url.hash || url.search || (url.pathname !== '/' && url.pathname !== '')) throw Error('invalid_cloud_origin');
@@ -102,7 +109,7 @@ export async function publishOnce({origin, token, serviceToken, collect, workers
 
 async function main() {
   const origin = validateTarget(process.env.ROVOR_HUD_ORIGIN);
-  const token = process.env.ROVOR_HUD_WRITER_TOKEN || await keychain('rovordigital.hud.writer');
+  const token = process.env.ROVOR_HUD_WRITER_TOKEN || await hudWriterCredential();
   const serviceToken = process.env.ROVOR_HUD_SERVICE_TOKEN || await keychain('rovordigital.hud.service') || undefined;
   const collect = createCollector(await localReader()), workers = createWorkerReader();
   const stop = new AbortController();
