@@ -60,6 +60,7 @@ test('compiler uses one exact v2 suffix, retains original HUD and no duplicate e
   assert.match(compiled,/ROVOR_CLOUD_SCHEDULED_SHIFT_V1 [a-f0-9]{64}/);
   assert.equal((compiled.match(/export default/g)||[]).length,1);
   assert.match(compiled,/__operations\.replenish/);assert.match(compiled,/__cloud\.tick/);
+  assert.match(compiled,/__operations\.refreshCatalogs\(env\)/,'catalog refresh stays inside opted-in Site schedule');
   assert.throws(()=>compileScheduledShift(compiled,shiftSource),/unexpected_existing_site_bundle/);
 });
 test('compiler refuses wrong Site or unexpected module shape',()=>{
