@@ -37,7 +37,15 @@ if [[ "$MODE" == "status" ]]; then
   if [[ ! -f "$PLIST" ]]; then
     echo 'Not installed. Run: bash tools/manage_hud_telemetry_agent.sh install'
   fi
-  echo 'The command does not prove a fresh report; check your private HUD last-report timestamp.'
+  # Show only the reporter's known-safe delivery/status lines, not raw logs.
+  # A registered LaunchAgent alone does not prove successful outbound uploads.
+  for log in "$HOME/Library/Logs/rovor-hud-reporting.log" "$HOME/Library/Logs/rovor-hud-reporting-error.log"; do
+    if [[ -r "$log" ]]; then
+      last="$(grep -E 'HUD report (delivered|unavailable)' "$log" | tail -n 1 || true)"
+      if [[ -n "$last" ]]; then echo "Last recorded reporter event: $last"; fi
+    fi
+  done
+  echo 'Historical logs alone do not prove live delivery; verify an advancing private HUD timestamp.'
   exit 0
 fi
 
