@@ -153,10 +153,15 @@ export async function claim(db,provider,cfg,now) {
  WHERE (SELECT enabled FROM ghost_cloud_control WHERE id=1)=1
  AND j.employee IN (SELECT value FROM json_each(?)) AND j.kind IN (SELECT value FROM json_each(?)) AND j.input_bytes<=?
  AND NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts WHERE job_id=j.id)
- AND (SELECT count(*) FROM ghost_cloud_attempts WHERE started_at>?)<144
- AND (SELECT count(*) FROM ghost_cloud_attempts WHERE pool=? AND started_at>?)<?
- AND COALESCE((SELECT sum(reserved_tokens) FROM ghost_cloud_attempts WHERE pool=? AND started_at>?),0)+j.input_bytes+?+256<=?
- AND NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts WHERE pool=? AND (status='running' OR started_at>? OR retry_after>?))
+ AND (SELECT count(*) FROM (SELECT started_at FROM ghost_cloud_attempts WHERE started_at>?
+      UNION ALL SELECT started_at FROM ghost_cloud_owner_chat WHERE started_at>?))<144
+ AND (SELECT count(*) FROM (SELECT started_at FROM ghost_cloud_attempts WHERE pool=? AND started_at>?
+      UNION ALL SELECT started_at FROM ghost_cloud_owner_chat WHERE pool=? AND started_at>?))<?
+ AND COALESCE((SELECT sum(reserved_tokens) FROM (
+      SELECT reserved_tokens FROM ghost_cloud_attempts WHERE pool=? AND started_at>?
+      UNION ALL SELECT reserved_tokens FROM ghost_cloud_owner_chat WHERE pool=? AND started_at>?)),0)+j.input_bytes+?+256<=?
+ AND NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts WHERE pool=? AND (status='running' OR started_at>? OR retry_after>?)
+      UNION ALL SELECT 1 FROM ghost_cloud_owner_chat WHERE pool=? AND (status='running' OR started_at>? OR retry_after>?))
  AND (SELECT count(*) FROM ghost_cloud_attempts WHERE pool=? AND status IN ('failed','uncertain')
       AND started_at>COALESCE((SELECT max(started_at) FROM ghost_cloud_attempts WHERE pool=? AND status='needs_review'),0))<3
  ORDER BY j.created_at,j.id LIMIT 1 RETURNING *`,id,provider,cfg.model,cfg.pool,now,cfg.max_output_tokens,roles,kinds,cfg.max_input_bytes,
