@@ -542,6 +542,8 @@ test('owner cloud inference shares D1 ledger, returns real model and token recei
  const record=s.db.prepare('SELECT status,provider,pool,tokens_input,tokens_output FROM ghost_cloud_owner_chat').get();
  assert.equal(record.status,'complete');
  assert.equal(record.pool,'verified-groq-pool');
+ assert.equal(record.tokens_input,11);
+ assert.equal(record.tokens_output,14);
  const report=await s.ops.status(s.env);
  const groq=report.providers.find(p=>p.provider==='groq');
  assert.equal(groq.owner_chat_24h.attempts,1);
@@ -552,6 +554,33 @@ test('owner cloud inference shares D1 ledger, returns real model and token recei
  }),s.env);
  assert.equal(repeated.status,429);
  assert.equal(calls,1,'pacing must deny before any extra provider call');
+});
+
+test('owner cloud inference refuses success when exact private D1 receipt readback is absent',async()=>{
+ const s=setup(),now=Date.now();
+ s.env.GHOST_FLEET_CONFIG=JSON.stringify({groq:{
+  enabled:true,model:'openai/gpt-oss-20b',pool:'verified-groq-pool',
+  zero_cost:true,commercial_use:true,evidence_sha256:'a'.repeat(64),
+  verified_at:now-1000,valid_until:now+3600000,canary_sha256:'b'.repeat(64),
+  canary_at:now-500,requests_per_day:2,tokens_per_day:5000,
+  min_interval_ms:1000,max_input_bytes:4000,max_output_tokens:128,
+  roles:['Saul'],kinds:['research']
+ }});
+ await s.ops.control(s.env,true);
+ s.cloud.infer=async()=>({status:'needs_review',output:'Unconfirmed answer',
+   actual_model:'openai/gpt-oss-20b',tokens_input:11,tokens_output:14});
+ const original=s.env.DB;
+ s.env.DB={...original,prepare(query){
+  if(query.includes('SELECT provider,model,status,actual_model,tokens_input,tokens_output,output,error_code,finished_at FROM ghost_cloud_owner_chat WHERE id=?'))
+   return {bind(){return {first:async()=>null};}};
+  return original.prepare(query);
+ }};
+ const response=await s.ops.fetch(request('/api/ghost/chat',{
+  body:{provider:'groq',prompt:'Prove readback'},browser:true
+ }),s.env);
+ assert.equal(response.status,503);
+ assert.deepEqual(await response.json(),{error:'inference_receipt_unconfirmed'});
+ assert.equal(s.db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_owner_chat').get().n,1);
 });
 
 test('owner cloud chat denies anonymous, cross-origin, unverified, unsupported and paused requests',async()=>{

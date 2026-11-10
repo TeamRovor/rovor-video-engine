@@ -272,6 +272,20 @@ export function createCloudOperations(base, cloud) {
    outcome.tokens_input??null,outcome.tokens_output??null,output,
    outcome.retry_after??null,end,uid).run();
   if(saved?.meta?.changes!==1)return json({error:'inference_receipt_unconfirmed'},503);
+  // A write acknowledgement is not proof that the exact inference/token
+  // receipt is durably readable. Fail closed if the private D1 row differs.
+  let persisted;
+  try {
+   persisted=await sql(env,
+    'SELECT provider,model,status,actual_model,tokens_input,tokens_output,output,error_code,finished_at FROM ghost_cloud_owner_chat WHERE id=?',
+    uid).first();
+  } catch {return json({error:'inference_receipt_unconfirmed'},503);}
+  if(!persisted||persisted.provider!==provider||persisted.model!==cfg.model||
+     persisted.status!==status||persisted.actual_model!==(outcome.actual_model||null)||
+     persisted.tokens_input!==(outcome.tokens_input??null)||
+     persisted.tokens_output!==(outcome.tokens_output??null)||
+     persisted.output!==output||persisted.error_code!==(outcome.error_code||null)||
+     persisted.finished_at!==end)return json({error:'inference_receipt_unconfirmed'},503);
   return json({source:'private_site_cloud',mac_required:false,id:uid,provider,
    requested_model:cfg.model,actual_model:outcome.actual_model||null,
    status,output,tokens_input:outcome.tokens_input??null,
