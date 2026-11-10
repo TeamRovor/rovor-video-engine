@@ -41,6 +41,8 @@ export async function submitIdea(db,body,now=Date.now(),uuid=()=>crypto.randomUU
 export async function listIdeas(db){
   try{
     const result=await db.prepare(`SELECT id,created_at,content,state,source FROM hud_idea_inbox
+      UNION ALL SELECT id,created_at,content,state,'autonomous_discovery' AS source
+      FROM hud_auto_discovery_inbox
       ORDER BY created_at DESC,id DESC LIMIT 20`).bind().all();
     return {status:200,body:{source:'private_rovor_idea_inbox',
       execution_authorized:false,mac_required:false,

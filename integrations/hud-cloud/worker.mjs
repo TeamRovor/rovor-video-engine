@@ -2,6 +2,7 @@ import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';
 import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';
 import {probeGroqCatalogue} from './groq-quota-monitor.mjs';
 import {submitIdea,listIdeas} from './idea-inbox.mjs';
+import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
 import {getRepoSource} from './repo-source.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
 import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';
@@ -343,19 +344,20 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       'Set-Cookie': 'rovor_hud_reader=' + encodeURIComponent(token) + '; Path=/; Max-Age=604800; Secure; HttpOnly; SameSite=Strict'}});
   }
   const ingest = url.pathname === '/api/hud/ingest';
+  const discoveryWriter = url.pathname === '/api/hud/discovery' || url.pathname === '/api/hud/discovery/status';
   // A separate writer-only channel allows the Mac to report its available
   // routes and execute explicitly submitted chat requests via outbound polling.
   const chatWriter = request.method === 'POST' &&
     (url.pathname === '/api/hud/chat/bridge' || url.pathname === '/api/hud/chat/claim' ||
       /^\/api\/hud\/chat\/result\/[a-f0-9-]{36}$/i.test(url.pathname));
   let authRequest = request;
-  if (!ingest && !chatWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
+  if (!ingest && !chatWriter && !discoveryWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
     try {
       const cookie = String(request.headers.get('Cookie') || '').split(';').map(c => c.trim()).find(c => c.startsWith('rovor_hud_reader='));
       if (cookie) authRequest = {headers: new Headers({Authorization: 'Bearer ' + decodeURIComponent(cookie.slice(17))})};
     } catch {}
   }
-  if (!await authorized(authRequest, ingest || chatWriter ? env.HUD_WRITER_TOKEN : env.HUD_READER_TOKEN)) {
+  if (!await authorized(authRequest, ingest || chatWriter || discoveryWriter ? env.HUD_WRITER_TOKEN : env.HUD_READER_TOKEN)) {
     if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return Response.redirect(url.origin + '/login', 303);
     return response(401, {error: 'unauthorized'});
   }
@@ -422,6 +424,22 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       if (request.headers.get('Origin') !== url.origin) return response(403,{error:'origin_denied'});
       let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_gemini_chat'});}
       return cloudGeminiChat(body,env,now);
+    }
+    // Writer-only, durable GitHub evidence intake. Unlike browser ideas,
+    // it requires the existing private writer credential, not a reader cookie.
+    // No inference, auto-approval, GitHub write or canonical job dispatch.
+    if(url.pathname==='/api/hud/discovery/status'){
+      if(request.method!=='GET')return response(405,{error:'method_not_allowed'});
+      const result=await discoveryStatus(env.DB,now);
+      return response(result.status,result.body);
+    }
+    if(url.pathname==='/api/hud/discovery'){
+      if(request.method!=='POST')return response(405,{error:'method_not_allowed'});
+      if(!request.headers.get('Content-Type')?.startsWith('application/json'))
+        return response(415,{error:'json_required'});
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_discovery'});}
+      const result=await submitDiscovery(env.DB,body,now);
+      return response(result.status,result.body);
     }
     // Owner-private intake saves a reviewable idea only; it never dispatches
     // models, writes GitHub, schedules jobs or bypasses the canonical feed.
