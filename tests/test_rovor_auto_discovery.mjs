@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {discoverCandidates,runDiscovery,MAX_AUTOMATED_DRAFTS_PER_UTC_DAY,MAX_DUPLICATE_PROBES_PER_RUN} from '../tools/rovor_auto_discovery.mjs';
+import {discoverCandidates,runDiscovery,MAX_AUTOMATED_DRAFTS_PER_UTC_DAY,MAX_DUPLICATE_PROBES_PER_RUN,DISCOVERY_PER_PAGE} from '../tools/rovor_auto_discovery.mjs';
 const NOW=Date.parse('2026-11-09T12:00:00Z'),HUD='https://rovor-hud-telemetry.rovordigital.workers.dev';
 const env={GITHUB_TOKEN:'ghs_'+ 'a'.repeat(40),ROVOR_HUD_WRITER_TOKEN:'w'.repeat(48),ROVOR_HUD_DEPLOY_ORIGIN:HUD};
 const recent=new Date(NOW-3600000).toISOString(),old=new Date(NOW-40*86400000).toISOString();
@@ -97,4 +97,24 @@ test('repeated old D1 duplicates cannot create an unbounded network retry loop',
  assert.equal(result.state,'duplicate_probe_budget_reached');
  assert.equal(result.queued,false);
  assert.equal(f.posts.length,MAX_DUPLICATE_PROBES_PER_RUN);
+});
+
+test('GitHub list requests remain below parser capacity even when real 40/50-item responses exceed 400k',async()=>{
+ const f=fake();
+ const send=async(url,options)=>{
+   if(url.startsWith('https://api.github.com')){
+     const parsed=new URL(url);
+     const requested=Number(parsed.searchParams.get('per_page'));
+     assert.equal(requested,DISCOVERY_PER_PAGE);
+     assert(requested<=8,'discovery must not fetch 40-50 large GitHub objects at once');
+     // A provider with unusually large data must still respect the existing
+     // bounded parser; normal eight-item GitHub evidence remains actionable.
+   }
+   return f.send(url,options);
+ };
+ const result=await runDiscovery({env,send,now:NOW});
+ assert.equal(result.state,'owner_review_draft_queued');
+ assert.equal(result.queued,true);
+ assert.equal(f.calls.filter(v=>v.url.startsWith('https://api.github.com')).length,3);
+ assert.equal(f.posts.length,1);
 });
