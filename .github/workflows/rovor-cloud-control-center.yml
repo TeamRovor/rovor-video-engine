@@ -150,9 +150,10 @@ jobs:
           if-no-files-found: error
 
   provider-catalog-readback:
-    name: Check nine catalog endpoints and durable private Site D1 readback
-    needs: cloud-readiness
-    if: github.event_name == 'workflow_dispatch' && inputs.verify_provider_catalog_readback == true
+    name: Verify nine cloud provider catalog checks persist in existing private Site
+    # On a reviewed main-branch change this audit runs unattended. PRs never
+    # receive production credentials; manual dispatch remains separately opt-in.
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.verify_provider_catalog_readback == true)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment: rovor-hud-production
