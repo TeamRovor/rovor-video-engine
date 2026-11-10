@@ -59,9 +59,10 @@ class CatalogReadbackTests(unittest.TestCase):
         self.assertEqual(report["persisted"], 9)
         self.assertFalse(report["inference_verified"])
         self.assertFalse(report["free_billing_verified"])
-        self.assertEqual(len(client.calls), 10)
+        self.assertEqual(len(client.calls), 11)
+        self.assertEqual(client.calls[0], {"operation": "status"})
         self.assertEqual(client.calls[-1], {"operation": "status"})
-        self.assertTrue(all(c["operation"] == "inventory" for c in client.calls[:-1]))
+        self.assertTrue(all(c["operation"] == "inventory" for c in client.calls[1:-1]))
 
     def test_stale_site_timestamp_fails_even_with_successful_live_catalogs(self):
         report = check.audit_catalog_persistence(
@@ -87,6 +88,40 @@ class CatalogReadbackTests(unittest.TestCase):
         self.assertEqual(report["state"], "service_secret_missing")
         self.assertEqual(client.calls, [])
         self.assertEqual(report["providers"], [])
+
+
+    def test_private_site_auth_failure_is_not_reported_as_nine_provider_failures(self):
+        for code, state in [
+            (401, "site_service_auth_denied"),
+            (403, "site_service_auth_denied"),
+            (302, "site_service_login_redirect"),
+            (503, "site_service_http_unavailable"),
+            (0, "site_service_transport_unavailable"),
+        ]:
+            calls = []
+
+            def denied(origin, route, token, method, document):
+                calls.append(document)
+                return code, None, "untrusted vendor body must not appear"
+
+            report = check.audit_catalog_persistence(TOKEN, request=denied)
+            self.assertEqual(report["state"], state)
+            self.assertEqual(report["site_http_code"], code)
+            self.assertEqual(report["catalog_received"], 0)
+            self.assertEqual(report["persisted"], 0)
+            self.assertEqual(calls, [{"operation": "status"}])
+            self.assertNotIn("untrusted vendor body", check.markdown(report))
+            self.assertIn(state, check.markdown(report))
+
+    def test_private_site_invalid_status_schema_sends_no_provider_catalog_calls(self):
+        calls = []
+        def malformed(origin, route, token, method, document):
+            calls.append(document)
+            return 200, {"execution_source": "cloud_provider", "providers": []}, None
+        report = check.audit_catalog_persistence(TOKEN, request=malformed)
+        self.assertEqual(report["state"], "site_service_contract_invalid")
+        self.assertEqual(report["site_http_code"], 200)
+        self.assertEqual(calls, [{"operation": "status"}])
 
     def test_original_status_client_remains_strict_and_inventory_is_fixed(self):
         with self.assertRaisesRegex(ValueError, "unapproved_status_body"):
