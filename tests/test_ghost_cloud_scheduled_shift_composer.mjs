@@ -61,6 +61,9 @@ test('compiler uses one exact v2 suffix, retains original HUD and no duplicate e
   assert.equal((compiled.match(/export default/g)||[]).length,1);
   assert.match(compiled,/__operations\.replenish/);assert.match(compiled,/__cloud\.tick/);
   assert.match(compiled,/__operations\.refreshCatalogs\(env\)/,'catalog refresh stays inside opted-in Site schedule');
+  assert.match(compiled,/rovor_catalog_refresh_failed/,'failed D1/catalog checks are observable in private Site logs');
+  assert.match(compiled,/checked:check\.checked,persisted:check\.persisted/,'logged refresh counts are based on persisted checks');
+  assert.doesNotMatch(compiled,/refreshCatalogs\(env\)\.catch\(\(\)=>null\)/,'do not silently swallow monitoring failures');
   assert.throws(()=>compileScheduledShift(compiled,shiftSource),/unexpected_existing_site_bundle/);
 });
 test('compiler refuses wrong Site or unexpected module shape',()=>{
