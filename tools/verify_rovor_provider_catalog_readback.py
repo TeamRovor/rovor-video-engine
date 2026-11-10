@@ -26,6 +26,34 @@ def audit_catalog_persistence(token: str, request=control.safe_request) -> dict:
     if not control.credential(token):
         return {"state": "service_secret_missing", "catalog_received": 0,
                 "persisted": 0, "providers": rows}
+    # Check the private service boundary before issuing nine catalog reads.
+    # A redirect to login or a 401 is a Site transport/auth problem, not a
+    # provider failure or an empty catalog. No provider calls are made then.
+    code, preflight, _error = request(
+        SITE, ROUTE, token, method="POST", document={"operation": "status"}
+    )
+    safe_code = code if type(code) is int and 0 <= code <= 599 else 0
+    if safe_code != 200 or not isinstance(preflight, dict) or (
+        preflight.get("execution_source") != "cloud_provider"
+        or not isinstance(preflight.get("providers"), list)
+        or len(preflight["providers"]) != len(PROVIDERS)
+        or {p.get("provider") for p in preflight["providers"] if isinstance(p, dict)}
+        != set(PROVIDERS)
+    ):
+        if safe_code in (401, 403):
+            state = "site_service_auth_denied"
+        elif 300 <= safe_code < 400:
+            state = "site_service_login_redirect"
+        elif safe_code == 0:
+            state = "site_service_transport_unavailable"
+        elif safe_code == 200:
+            state = "site_service_contract_invalid"
+        else:
+            state = "site_service_http_unavailable"
+        return {"state": state, "site_http_code": safe_code,
+                "catalog_received": 0, "persisted": 0,
+                "providers": rows, "inference_verified": False,
+                "free_billing_verified": False}
     sent = {}
     for provider in PROVIDERS:
         # The service internally sends GET /models, not POST /chat/completions.
@@ -89,6 +117,7 @@ def audit_catalog_persistence(token: str, request=control.safe_request) -> dict:
                  else ("status_unavailable" if not valid_status else "catalog_or_persistence_incomplete"),
         "catalog_received": catalog_received,
         "persisted": persisted,
+        "site_http_code": code if type(code) is int and 0 <= code <= 599 else 0,
         "providers": rows,
         "inference_verified": False,
         "free_billing_verified": False,
@@ -104,6 +133,8 @@ def markdown(report: dict) -> str:
         "",
         f"Catalogs received: **{report['catalog_received']} / 9**. "
         f"Checks stored and read back: **{report['persisted']} / 9**.",
+        f"Private Site service: **{report['state']}**"
+        + (f" (HTTP {report['site_http_code']})" if 'site_http_code' in report else ""),
         "",
         "| Provider | Catalog | Private D1 readback | Eligible inference |",
         "|---|---|---|---|",
@@ -131,8 +162,9 @@ def main() -> int:
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as stream:
             stream.write(markdown(report))
-    print(json.dumps({key: report[key] for key in ("state", "catalog_received", "persisted")},
-                     sort_keys=True))
+    print(json.dumps({key: report.get(key) for key in (
+        "state", "site_http_code", "catalog_received", "persisted")},
+        sort_keys=True))
     return 0 if report["state"] == "catalog_persistence_verified" else 1
 
 
