@@ -200,6 +200,7 @@ export function createCloudOperations(base, cloud) {
      request.headers.get('Sec-Fetch-Site')!=='same-origin')
    return json({error:'owner_browser_required'},403);
   if(!env.DB)return json({error:'private_store_unavailable'},503);
+  if(!await ownerChatSchemaReady(env))return json({error:'owner_chat_migration_required'},503);
   let body;
   try{body=await bounded(request,8192);}catch{return json({error:'invalid_chat_request'},400);}
   if(!body||Array.isArray(body)||typeof body!=='object'||
