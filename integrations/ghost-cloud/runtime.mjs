@@ -165,8 +165,9 @@ export async function claim(db,provider,cfg,now) {
  AND (SELECT count(*) FROM ghost_cloud_attempts WHERE pool=? AND status IN ('failed','uncertain')
       AND started_at>COALESCE((SELECT max(started_at) FROM ghost_cloud_attempts WHERE pool=? AND status='needs_review'),0))<3
  ORDER BY j.created_at,j.id LIMIT 1 RETURNING *`,id,provider,cfg.model,cfg.pool,now,cfg.max_output_tokens,roles,kinds,cfg.max_input_bytes,
- now-DAY,cfg.pool,now-DAY,cfg.requests_per_day,cfg.pool,now-DAY,cfg.max_output_tokens,cfg.tokens_per_day,
- cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,cfg.pool).first();
+ now-DAY,now-DAY,cfg.pool,now-DAY,cfg.pool,now-DAY,cfg.requests_per_day,
+ cfg.pool,now-DAY,cfg.pool,now-DAY,cfg.max_output_tokens,cfg.tokens_per_day,
+ cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,cfg.pool).first();
 }
 
 // Read only when an otherwise eligible route has no successful atomic claim.
