@@ -367,6 +367,33 @@ export function createCloudOperations(base, cloud) {
    // Never pretend a quota was durably recorded.
   }
  }
+
+ // Native Site scheduled refresh: provider metadata only, never chat/inference.
+ // Private Site identity and the existing D1 database are used directly;
+ // there is no GitHub->private-Site HTTP call or local machine dependency.
+ async function refreshCatalogs(env,fetcher=(...args)=>globalThis.fetch(...args),now=Date.now()) {
+  if(!env.DB)throw Error('private_store_unavailable');
+  const names=Object.keys(cloud.PROVIDERS);
+  const existing=(await sql(env,'SELECT provider,observed_at FROM ghost_cloud_provider_checks').all()).results;
+  const stale=names.filter(provider=>{
+   const row=existing.find(r=>r.provider===provider);
+   return !row||!Number.isSafeInteger(row.observed_at)||
+    row.observed_at>now+60000||now-row.observed_at>=3600000;
+  });
+  if(!stale.length)return {source:'site_native_catalog_refresh',checked:0,
+   persisted:0,skipped_fresh:names.length,inference_attempts:0};
+  const outcomes=await Promise.allSettled(stale.map(async provider=>{
+   const report=await inventory(env,provider,fetcher);
+   await recordInventory(env,provider,report);
+   const saved=await sql(env,'SELECT observed_at,status FROM ghost_cloud_provider_checks WHERE provider=?',provider).first();
+   return !!saved&&saved.status===report.status&&
+    saved.observed_at===(Number.isSafeInteger(report.observed_at)?report.observed_at:now);
+  }));
+  return {source:'site_native_catalog_refresh',checked:stale.length,
+   persisted:outcomes.filter(r=>r.status==='fulfilled'&&r.value===true).length,
+   skipped_fresh:names.length-stale.length,inference_attempts:0};
+ }
+
  const tools=[
   {name:'rovor_cloud_workforce_status',description:'Read actual private cloud job/model/token receipts. Missing or disabled providers are explicit.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true}},
   {name:'rovor_provider_inventory',description:'Read a fixed provider models endpoint without inference. Does not establish account billing, remaining quota or successful inference.',inputSchema:{type:'object',properties:{provider:{type:'string',enum:Object.keys(cloud.PROVIDERS)}},required:['provider'],additionalProperties:false},annotations:{readOnlyHint:true}},
@@ -630,7 +657,7 @@ export function createCloudOperations(base, cloud) {
  }
  const script='<script>('+browserUI.toString()+')();</script>';
  return {
-  inventory,status,control,replenish,installApprovedFeeder,installHostedShiftRunner,
+  inventory,status,refreshCatalogs,control,replenish,installApprovedFeeder,installHostedShiftRunner,
   async fetch(request,env){
    const url=new URL(request.url),actor=owner(request);
    // Only the registered owner-private Site's dispatch may invoke this shared

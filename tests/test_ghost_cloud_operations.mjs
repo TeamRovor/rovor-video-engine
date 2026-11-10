@@ -657,3 +657,43 @@ test('owner cloud chat migration rejects wrong project, altered build and redire
  t.after(()=>fs.rmSync(alias,{force:true}));
  assert.throws(()=>stageOwnerCloudChatMigration(alias),/redirected_site/);
 });
+
+
+test('native cloud catalog refresh persists nine real GET observations without a model call and skips fresh checks',async()=>{
+ const {env,db,ops}=setup();
+ const seen=[];
+ const fetcher=async(url,options)=>{
+  seen.push({url,method:options.method});
+  assert.equal(options.method,'GET');
+  assert.equal(options.redirect,'manual');
+  assert.ok(!url.includes('/chat/completions'));
+  return Response.json({data:[{id:'catalogued-model'}]});
+ };
+ const first=await ops.refreshCatalogs(env,fetcher);
+ assert.deepEqual(first,{source:'site_native_catalog_refresh',checked:9,
+  persisted:9,skipped_fresh:0,inference_attempts:0});
+ assert.equal(seen.length,9);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
+ const report=await ops.status(env);
+ for(const item of report.providers){
+  assert.equal(item.last_check.status,'catalog_received');
+  assert.equal(item.admission,'disabled_pending_verification',
+   'catalog alone must never authorize paid or unverified inference');
+ }
+ const second=await ops.refreshCatalogs(env,fetcher);
+ assert.deepEqual(second,{source:'site_native_catalog_refresh',checked:0,
+  persisted:0,skipped_fresh:9,inference_attempts:0});
+ assert.equal(seen.length,9);
+ db.prepare("UPDATE ghost_cloud_provider_checks SET observed_at=1 WHERE provider='nvidia'").run();
+ const partial=await ops.refreshCatalogs(env,fetcher);
+ assert.equal(partial.checked,1);
+ assert.equal(partial.persisted,1);
+ assert.equal(seen.length,10);
+});
+test('native cloud catalog refresh fails safely when private D1 checks table is missing',async()=>{
+ const {env,ops,db}=setup();
+ db.exec('DROP TABLE ghost_cloud_provider_checks');
+ let outgoing=0;
+ await assert.rejects(ops.refreshCatalogs(env,async()=>{outgoing++;return Response.json({data:[]});}));
+ assert.equal(outgoing,0);
+});
