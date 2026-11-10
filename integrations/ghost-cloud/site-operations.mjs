@@ -413,7 +413,14 @@ export function createCloudOperations(base, cloud) {
    // this exact provider was last checked rather than a stale historical row.
    const report=await inventory(env,args.provider);
    await recordInventory(env,args.provider,report);
-   return report;
+   // A provider GET alone cannot prove that the Site wrote to its bound D1.
+   // Verify the exact persisted row before reporting durable monitoring.
+   const stored=await sql(env,'SELECT observed_at,status FROM ghost_cloud_provider_checks WHERE provider=?',args.provider).first();
+   const observed=Number.isSafeInteger(report.observed_at)?report.observed_at:null;
+   const saved=!!stored&&stored.status===report.status&&
+    (observed===null||stored.observed_at===observed);
+   if(!saved)throw Error('provider_catalog_d1_readback_mismatch');
+   return {...report,d1_persisted:true,d1_observed_at:stored.observed_at};
   }
   if(name==='rovor_cloud_control')return control(env,args.enabled);
   if(name==='rovor_cloud_replenish')return replenish(env);
