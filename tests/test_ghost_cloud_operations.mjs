@@ -139,13 +139,14 @@ test('owner inventory checks refresh the exact provider HUD health row without c
  const fresh=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
  assert.equal(fresh.status,'catalog_received');assert.equal(fresh.models.length,1);
  assert.equal(fresh.quota_verified,false);assert.equal(fresh.billing_verified,false);
+ assert.equal(fresh.d1_persisted,true);assert.equal(fresh.d1_observed_at,fresh.observed_at);
  const after=await ops.status(env),provider=after.providers.find(p=>p.provider==='gemini');
  assert.equal(provider.last_check.status,'catalog_received');
  assert.equal(provider.last_check.observed_at,fresh.observed_at);
  assert.equal(provider.admission,'disabled_pending_verification');
  deny=true;
  const unavailable=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
- assert.equal(unavailable.status,'http_403');
+ assert.equal(unavailable.status,'http_403');assert.equal(unavailable.d1_persisted,true);
  const stored=await ops.status(env);
  assert.equal(stored.providers.find(p=>p.provider==='gemini').last_check.status,'http_403');
  assert.equal(db.prepare('SELECT count(*) AS n FROM ghost_cloud_provider_checks').get().n,1);
