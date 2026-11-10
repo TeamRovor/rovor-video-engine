@@ -405,6 +405,59 @@ export function createCloudOperations(base, cloud) {
  function browserUI(){
   let busy=false,data=null,painted='',connection='connecting',lastOk=null;
   const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
+
+ // Same-origin cloud inference on the existing private Site. No Mac bridge.
+ function installOwnerCloudChat(){
+  const panel=document.getElementById('workloadPanel');
+  if(!panel||document.getElementById('rovor-owner-cloud-chat'))return;
+  const section=el('section');section.id='rovor-owner-cloud-chat';section.className='wl-card';
+  section.append(el('strong','ASK ROVOR · PRIVATE CLOUD PROVIDERS'));
+  section.append(el('p','Direct cloud API execution · all nine provider connections · zero Mac dependency · only verified free routes admitted'));
+  const select=el('select');select.setAttribute('aria-label','Cloud provider');select.className='wl-button';
+  const input=el('textarea');input.placeholder='Ask a selected verified free provider…';
+  input.maxLength=4000;input.rows=3;input.style.cssText='box-sizing:border-box;width:100%;max-width:100%;min-height:80px;display:block';
+  const submit=el('button','SEND TO CLOUD PROVIDER');submit.type='button';submit.className='wl-button';submit.disabled=true;
+  const notice=el('p','Checking private cloud provider admission…');notice.setAttribute('role','status');
+  const answer=el('pre');answer.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto';
+  section.append(select,input,submit,notice,answer);panel.prepend(section);
+  async function inventory(){
+   try{
+    const r=await fetch('/api/ghost/chat/models',{cache:'no-store',signal:AbortSignal.timeout(10000)});
+    if(!r.ok)throw Error('unavailable');
+    const data=await r.json();
+    if(data.source!=='private_site_cloud'||data.mac_required!==false||!Array.isArray(data.providers)||data.providers.length!==9)throw Error('invalid');
+    select.textContent='';let eligible=0;
+    for(const p of data.providers){
+     const option=el('option',p.provider.toUpperCase()+' · '+(p.model||'no pinned model')+' · '+p.admission);
+     option.value=p.provider;option.disabled=!p.ready;if(p.ready)eligible++;
+     select.append(option);
+    }
+    submit.disabled=eligible===0;
+    notice.textContent=eligible?eligible+' cloud provider route(s) admitted. Requests use the existing shared free-only limits.':
+     'All nine cloud providers are currently blocked by free-tier verification or configuration. No chargeable requests will be sent.';
+   }catch{submit.disabled=true;notice.textContent='Private cloud provider status unavailable. No request sent.';}
+  }
+  submit.onclick=async()=>{
+   if(submit.disabled||!input.value.trim())return;
+   const provider=select.value,prompt=input.value;
+   submit.disabled=true;answer.textContent='';notice.textContent='Cloud request submitted; awaiting recorded provider response…';
+   try{
+    const r=await fetch('/api/ghost/chat',{method:'POST',credentials:'same-origin',
+     headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,prompt}),signal:AbortSignal.timeout(60000)});
+    const data=await r.json();
+    if(!r.ok||data.status!=='complete'||typeof data.output!=='string')throw Error(data.reason||data.error||'cloud_request_unconfirmed');
+    answer.textContent=data.output;
+    notice.textContent='CLOUD COMPLETE · '+data.provider+' · requested '+data.requested_model+
+     ' · actual '+(data.actual_model||'not attested')+
+     ' · input/output tokens '+(data.tokens_input??'unknown')+'/'+(data.tokens_output??'unknown')+
+     ' · receipt '+data.id;
+   }catch(error){notice.textContent='Cloud request not completed: '+String(error.message||'unavailable').replaceAll('_',' ')+
+    '. No automatic retry.';}
+   finally{await inventory();}
+  };
+  inventory();
+ }
+
   function linkState(){
    const panel=document.getElementById('workloadPanel');if(!panel)return;
    let status=document.getElementById('rovor-cloud-link-state');
@@ -559,7 +612,7 @@ export function createCloudOperations(base, cloud) {
     data=snapshot;connection='connected';lastOk=Date.now();paint();
    }catch{disconnect();}finally{busy=false;}
   }
-  linkState();poll();setInterval(poll,15000);document.addEventListener('visibilitychange',poll);
+  installOwnerCloudChat();linkState();poll();setInterval(poll,15000);document.addEventListener('visibilitychange',poll);
   for(const name of ['workloadPanel','activityPanel']){const panel=document.getElementById(name);if(panel)new MutationObserver(()=>{if(!document.getElementById(name==='workloadPanel'?'rovor-cloud-live':'rovor-cloud-results'))paint();}).observe(panel,{childList:true});}
  }
  const script='<script>('+browserUI.toString()+')();</script>';
