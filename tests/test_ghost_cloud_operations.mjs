@@ -244,7 +244,9 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  let tick,mode='ok',reads=0;const snapshot=await s.ops.status(s.env);
  snapshot.providers[0].quota={status:'verified',unit:'requests',used:2,limit:10,observed_at:Date.now(),resets_at:Date.now()+60000};
  snapshot.providers[0].recorded_24h={requests:3};
- const fetch=async()=>{reads++;if(mode==='offline')throw Error('network_down');
+ const fetch=async(resource)=>{if(resource==='/api/ghost/chat/models')return {ok:true,json:async()=>({source:'private_site_cloud',mac_required:false,
+  providers:snapshot.providers.map(p=>({provider:p.provider,model:null,admission:'not_configured',ready:false}))})};
+  reads++;if(mode==='offline')throw Error('network_down');
   if(mode==='invalid')return {ok:true,json:async()=>({providers:[],attempts:[]})};
   return {ok:true,json:async()=>snapshot};
  };
@@ -482,4 +484,83 @@ test('owner review UI exposes an actionable quick queue, loads output before ena
   body:{job_id:j.id,verdict:'passed'},browser:false
  }),s.env)).status,403);
  assert.equal(s.db.prepare("SELECT human_review FROM ghost_cloud_attempts").get().human_review,'not_recorded');
+});
+
+
+test('private Site exposes nine cloud-only models, never Mac relay or secrets',async()=>{
+ const s=setup();
+ const result=await s.ops.fetch(request('/api/ghost/chat/models'),s.env);
+ assert.equal(result.status,200);
+ const data=await result.json();
+ assert.equal(data.source,'private_site_cloud');
+ assert.equal(data.mac_required,false);
+ assert.equal(data.providers.length,9);
+ assert.equal(data.providers.filter(p=>p.ready).length,0);
+ assert.equal(JSON.stringify(data).includes(s.env.GROQ_API_KEY),false);
+ const unauth=await s.ops.fetch(request('/api/ghost/chat/models',{identity:null}),s.env);
+ assert.equal(unauth.status,401);
+ const html=await (await s.ops.fetch(request('/'),s.env)).text();
+ assert.match(html,/ASK ROVOR · PRIVATE CLOUD PROVIDERS/);
+ assert.match(html,/\/api\/ghost\/chat/);
+});
+
+test('owner cloud inference shares D1 ledger, returns real model and token receipts without a Mac',async()=>{
+ const s=setup(),now=Date.now();
+ s.env.GHOST_FLEET_CONFIG=JSON.stringify({groq:{
+  enabled:true,model:'openai/gpt-oss-20b',pool:'verified-groq-pool',
+  zero_cost:true,commercial_use:true,evidence_sha256:'a'.repeat(64),
+  verified_at:now-1000,valid_until:now+3600000,canary_sha256:'b'.repeat(64),
+  canary_at:now-500,requests_per_day:2,tokens_per_day:5000,
+  min_interval_ms:1000,max_input_bytes:4000,max_output_tokens:128,
+  roles:['Saul'],kinds:['research']
+ }});
+ let calls=0;
+ s.cloud.infer=async(provider,cfg,env,prompt)=>{
+  calls++;
+  assert.equal(provider,'groq');
+  assert.equal(prompt,'Hello from private cloud');
+  assert.equal(cfg.model,'openai/gpt-oss-20b');
+  return {status:'needs_review',output:'Real mocked cloud answer',
+   actual_model:'openai/gpt-oss-20b',tokens_input:11,tokens_output:14};
+ };
+ await s.ops.control(s.env,true);
+ const response=await s.ops.fetch(request('/api/ghost/chat',{
+  body:{provider:'groq',prompt:'Hello from private cloud'},browser:true
+ }),s.env);
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.equal(data.mac_required,false);
+ assert.equal(data.status,'complete');
+ assert.equal(data.output,'Real mocked cloud answer');
+ assert.equal(data.actual_model,'openai/gpt-oss-20b');
+ assert.equal(data.tokens_input,11);
+ assert.equal(data.tokens_output,14);
+ assert.equal(calls,1);
+ assert.equal(s.db.prepare('SELECT COUNT(*) n FROM ghost_cloud_owner_chat').get().n,1);
+ const record=s.db.prepare('SELECT status,provider,pool,tokens_input,tokens_output FROM ghost_cloud_owner_chat').get();
+ assert.equal(record.status,'complete');
+ assert.equal(record.pool,'verified-groq-pool');
+ const report=await s.ops.status(s.env);
+ const groq=report.providers.find(p=>p.provider==='groq');
+ assert.equal(groq.owner_chat_24h.attempts,1);
+ assert.equal(groq.owner_chat_24h.completed,1);
+ assert.equal(groq.owner_chat_24h.tokens_output,14);
+ const repeated=await s.ops.fetch(request('/api/ghost/chat',{
+  body:{provider:'groq',prompt:'Second request within pacing window'},browser:true
+ }),s.env);
+ assert.equal(repeated.status,429);
+ assert.equal(calls,1,'pacing must deny before any extra provider call');
+});
+
+test('owner cloud chat denies anonymous, cross-origin, unverified, unsupported and paused requests',async()=>{
+ const s=setup();
+ let calls=0;s.cloud.infer=async()=>{calls++;throw Error('should never run');};
+ const body={provider:'groq',prompt:'hello'};
+ assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body,identity:null,browser:true}),s.env)).status,401);
+ assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body}),s.env)).status,403);
+ assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body,browser:true}),s.env)).status,409);
+ assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body:{provider:'unknown',prompt:'hello'},browser:true}),s.env)).status,400);
+ assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body:{provider:'groq',prompt:'hello',model:'arbitrary-paid-route'},browser:true}),s.env)).status,400);
+ assert.equal(calls,0);
+ assert.equal(s.db.prepare('SELECT COUNT(*) n FROM ghost_cloud_owner_chat').get().n,0);
 });

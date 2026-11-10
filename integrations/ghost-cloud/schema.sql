@@ -17,3 +17,16 @@ CREATE TABLE IF NOT EXISTS ghost_cloud_attempts (
 );
 CREATE INDEX IF NOT EXISTS ghost_cloud_attempts_time ON ghost_cloud_attempts(started_at);
 CREATE INDEX IF NOT EXISTS ghost_cloud_attempts_pool ON ghost_cloud_attempts(pool,started_at);
+
+-- Interactive owner chat shares the exact provider and pooled allowance as
+-- cloud workforce jobs; no local machine, browser API keys, or parallel router.
+CREATE TABLE IF NOT EXISTS ghost_cloud_owner_chat (
+ id TEXT PRIMARY KEY, actor TEXT NOT NULL, provider TEXT NOT NULL,
+ model TEXT NOT NULL, pool TEXT NOT NULL, started_at INTEGER NOT NULL,
+ finished_at INTEGER, reserved_tokens INTEGER NOT NULL,
+ status TEXT NOT NULL CHECK(status IN ('running','complete','failed','uncertain')),
+ error_code TEXT, actual_model TEXT, tokens_input INTEGER, tokens_output INTEGER,
+ output TEXT, retry_after INTEGER
+);
+CREATE INDEX IF NOT EXISTS ghost_cloud_owner_chat_pool ON ghost_cloud_owner_chat(pool,started_at);
+

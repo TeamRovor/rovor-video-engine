@@ -156,11 +156,117 @@ export function createCloudOperations(base, cloud) {
    j.employee,j.task_id,j.title FROM ghost_cloud_attempts a JOIN ghost_cloud_jobs j ON a.job_id=j.id
    WHERE a.status='needs_review' AND a.human_review='not_recorded'
    ORDER BY COALESCE(a.finished_at,a.started_at) ASC,a.id ASC LIMIT 50`).all();
-  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null),
+  // Only cloud-origin owner chats appear here; do not mix stale Mac snapshots.
+  // Missing forward-only migration is UNKNOWN, never silently zero activity.
+  let ownerChatRows=null;
+  try{
+   ownerChatRows=(await sql(env,"SELECT provider,COUNT(*) attempts,SUM(CASE WHEN status='complete' THEN 1 ELSE 0 END) completed,SUM(tokens_input) tokens_input,SUM(tokens_output) tokens_output,MAX(finished_at) last_finished_at FROM ghost_cloud_owner_chat WHERE started_at>? GROUP BY provider",now-86400000).all()).results;
+  }catch{/* Site has not yet applied the forward-only owner-chat migration. */}
+  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,
+    owner_chat_24h:ownerChatRows?ownerChatRows.find(row=>row.provider===p.provider)||
+      {provider:p.provider,attempts:0,completed:0,tokens_input:0,tokens_output:0,last_finished_at:null}:null,
+    quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null),
     ...(p.provider==='mistral'?{minute_rate_limits:mistralRates}:{})})),
    attempts:results,review_queue:{pending_count:reviewCount?.pending_count??0,
     oldest_finished_at:reviewCount?.oldest_finished_at??null,items:reviewItems}};
  }
+
+ // Browser-initiated inference on the EXISTING private Site. Nine provider
+ // secrets and the execution ledger stay in the cloud. Never call a Mac relay.
+ function ownerChatModels(env,now=Date.now()) {
+  const cfg=config(env,'GHOST_FLEET_CONFIG');
+  return {source:'private_site_cloud',mac_required:false,observed_at:now,
+   providers:Object.keys(cloud.PROVIDERS).map(provider=>{
+    const route=cfg[provider],reason=cloud.eligibility(provider,route,env,now);
+    return {provider,model:typeof route?.model==='string'?route.model:null,
+     admission:reason||'eligible',ready:!reason};
+   })};
+ }
+ async function ownerChat(request,env,actor) {
+  const origin=new URL(request.url).origin;
+  if(request.headers.get('Origin')!==origin||
+     request.headers.get('Sec-Fetch-Site')!=='same-origin')
+   return json({error:'owner_browser_required'},403);
+  if(!env.DB)return json({error:'private_store_unavailable'},503);
+  let body;
+  try{body=await bounded(request,8192);}catch{return json({error:'invalid_chat_request'},400);}
+  if(!body||Array.isArray(body)||typeof body!=='object'||
+     Object.keys(body).sort().join(',')!=='prompt,provider'||
+     typeof body.prompt!=='string'||!body.prompt.trim()||
+     body.prompt.length>4000||body.prompt.includes('\0')||
+     typeof body.provider!=='string'||!Object.hasOwn(cloud.PROVIDERS,body.provider))
+   return json({error:'invalid_chat_request'},400);
+  const now=Date.now(),provider=body.provider,prompt=body.prompt.trim();
+  const cfg=config(env,'GHOST_FLEET_CONFIG')[provider];
+  const reason=cloud.eligibility(provider,cfg,env,now);
+  if(reason)return json({error:'provider_not_admitted',provider,reason},409);
+  const bytes=new TextEncoder().encode(prompt).byteLength;
+  if(bytes>cfg.max_input_bytes)return json({error:'prompt_too_large'},400);
+  const reserved=bytes+cfg.max_output_tokens+256;
+  const uid=crypto.randomUUID();
+  // A crashed/aborted cloud request is never replayed, and cannot reserve an
+  // in-flight slot forever. It counts against the original daily budgets.
+  await sql(env,"UPDATE ghost_cloud_owner_chat SET status='uncertain',error_code='interrupted_attempt',finished_at=? WHERE status='running' AND started_at<?",
+   now,now-120000).run();
+  // D1 serializes this INSERT SELECT. Both manual owner chat and approved
+  // ghost jobs share global, pooled, token, pacing and in-flight constraints.
+  const query=[
+   "INSERT INTO ghost_cloud_owner_chat(id,actor,provider,model,pool,started_at,reserved_tokens,status)",
+   "SELECT ?,?,?,?,?,?,?,'running'",
+   "WHERE (SELECT enabled FROM ghost_cloud_control WHERE id=1)=1",
+   "AND (SELECT COUNT(*) FROM (",
+   "SELECT started_at FROM ghost_cloud_attempts WHERE started_at>?",
+   "UNION ALL SELECT started_at FROM ghost_cloud_owner_chat WHERE started_at>?))<144",
+   "AND (SELECT COUNT(*) FROM (",
+   "SELECT started_at FROM ghost_cloud_attempts WHERE pool=? AND started_at>?",
+   "UNION ALL SELECT started_at FROM ghost_cloud_owner_chat WHERE pool=? AND started_at>?))<?",
+   "AND COALESCE((SELECT SUM(reserved_tokens) FROM (",
+   "SELECT reserved_tokens FROM ghost_cloud_attempts WHERE pool=? AND started_at>?",
+   "UNION ALL SELECT reserved_tokens FROM ghost_cloud_owner_chat WHERE pool=? AND started_at>?)),0)+?<=?",
+   "AND NOT EXISTS (",
+   "SELECT 1 FROM ghost_cloud_attempts WHERE pool=? AND (status='running' OR started_at>? OR retry_after>?)",
+   "UNION ALL SELECT 1 FROM ghost_cloud_owner_chat WHERE pool=? AND (status='running' OR started_at>? OR retry_after>?))",
+   "AND (SELECT COUNT(*) FROM (",
+   "SELECT started_at FROM ghost_cloud_attempts WHERE pool=? AND status IN ('failed','uncertain') AND started_at>?",
+   "UNION ALL SELECT started_at FROM ghost_cloud_owner_chat WHERE pool=? AND status IN ('failed','uncertain') AND started_at>?))<3",
+   "RETURNING id"
+  ].join(' ');
+  const claim=await sql(env,query,
+   uid,actor,provider,cfg.model,cfg.pool,now,reserved,
+   now-86400000,now-86400000,
+   cfg.pool,now-86400000,cfg.pool,now-86400000,cfg.requests_per_day,
+   cfg.pool,now-86400000,cfg.pool,now-86400000,reserved,cfg.tokens_per_day,
+   cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,now-cfg.min_interval_ms,now,
+   cfg.pool,now-3600000,cfg.pool,now-3600000).first();
+  if(!claim)return json({error:'provider_capacity_or_stop_or_circuit_blocked',provider},429);
+  // STOP and eligibility may change between reservation and the HTTPS call.
+  if((await sql(env,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled!==1||
+     cloud.eligibility(provider,cfg,env,Date.now())){
+   await sql(env,"UPDATE ghost_cloud_owner_chat SET status='failed',error_code='stopped_before_request',finished_at=? WHERE id=? AND status='running'",
+    Date.now(),uid).run();
+   return json({error:'provider_stopped_before_request',provider},409);
+  }
+  let outcome;
+  try{outcome=await cloud.infer(provider,cfg,env,prompt);}catch{outcome={status:'uncertain',error_code:'transport_or_response_failure'};}
+  const status=outcome.status==='needs_review'?'complete':
+   outcome.status==='failed'?'failed':'uncertain';
+  const output=status==='complete'&&typeof outcome.output==='string'?outcome.output:null;
+  const end=Date.now();
+  const saved=await sql(env,[
+   "UPDATE ghost_cloud_owner_chat SET status=?,error_code=?,actual_model=?,tokens_input=?,tokens_output=?,",
+   "output=?,retry_after=?,finished_at=? WHERE id=? AND status='running'"
+  ].join(' '),status,outcome.error_code||null,outcome.actual_model||null,
+   outcome.tokens_input??null,outcome.tokens_output??null,output,
+   outcome.retry_after??null,end,uid).run();
+  if(saved?.meta?.changes!==1)return json({error:'inference_receipt_unconfirmed'},503);
+  return json({source:'private_site_cloud',mac_required:false,id:uid,provider,
+   requested_model:cfg.model,actual_model:outcome.actual_model||null,
+   status,output,tokens_input:outcome.tokens_input??null,
+   tokens_output:outcome.tokens_output??null,
+   error_code:status==='complete'?null:outcome.error_code||'inference_uncertain',
+   quota_remaining:null});
+ }
+
  async function control(env,enabled) {
   if(typeof enabled!=='boolean')throw Error('invalid_control');
   await sql(env,'INSERT INTO ghost_cloud_control(id,enabled) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled',enabled?1:0).run();
@@ -299,6 +405,59 @@ export function createCloudOperations(base, cloud) {
  function browserUI(){
   let busy=false,data=null,painted='',connection='connecting',lastOk=null;
   const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
+
+ // Same-origin cloud inference on the existing private Site. No Mac bridge.
+ function installOwnerCloudChat(){
+  const panel=document.getElementById('workloadPanel');
+  if(!panel||document.getElementById('rovor-owner-cloud-chat'))return;
+  const section=el('section');section.id='rovor-owner-cloud-chat';section.className='wl-card';
+  section.append(el('strong','ASK ROVOR · PRIVATE CLOUD PROVIDERS'));
+  section.append(el('p','Direct cloud API execution · all nine provider connections · zero Mac dependency · only verified free routes admitted'));
+  const select=el('select');select.setAttribute('aria-label','Cloud provider');select.className='wl-button';
+  const input=el('textarea');input.placeholder='Ask a selected verified free provider…';
+  input.maxLength=4000;input.rows=3;input.style.cssText='box-sizing:border-box;width:100%;max-width:100%;min-height:80px;display:block';
+  const submit=el('button','SEND TO CLOUD PROVIDER');submit.type='button';submit.className='wl-button';submit.disabled=true;
+  const notice=el('p','Checking private cloud provider admission…');notice.setAttribute('role','status');
+  const answer=el('pre');answer.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto';
+  section.append(select,input,submit,notice,answer);panel.prepend(section);
+  async function inventory(){
+   try{
+    const r=await fetch('/api/ghost/chat/models',{cache:'no-store',signal:AbortSignal.timeout(10000)});
+    if(!r.ok)throw Error('unavailable');
+    const data=await r.json();
+    if(data.source!=='private_site_cloud'||data.mac_required!==false||!Array.isArray(data.providers)||data.providers.length!==9)throw Error('invalid');
+    select.textContent='';let eligible=0;
+    for(const p of data.providers){
+     const option=el('option',p.provider.toUpperCase()+' · '+(p.model||'no pinned model')+' · '+p.admission);
+     option.value=p.provider;option.disabled=!p.ready;if(p.ready)eligible++;
+     select.append(option);
+    }
+    submit.disabled=eligible===0;
+    notice.textContent=eligible?eligible+' cloud provider route(s) admitted. Requests use the existing shared free-only limits.':
+     'All nine cloud providers are currently blocked by free-tier verification or configuration. No chargeable requests will be sent.';
+   }catch{submit.disabled=true;notice.textContent='Private cloud provider status unavailable. No request sent.';}
+  }
+  submit.onclick=async()=>{
+   if(submit.disabled||!input.value.trim())return;
+   const provider=select.value,prompt=input.value;
+   submit.disabled=true;answer.textContent='';notice.textContent='Cloud request submitted; awaiting recorded provider response…';
+   try{
+    const r=await fetch('/api/ghost/chat',{method:'POST',credentials:'same-origin',
+     headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,prompt}),signal:AbortSignal.timeout(60000)});
+    const data=await r.json();
+    if(!r.ok||data.status!=='complete'||typeof data.output!=='string')throw Error(data.reason||data.error||'cloud_request_unconfirmed');
+    answer.textContent=data.output;
+    notice.textContent='CLOUD COMPLETE · '+data.provider+' · requested '+data.requested_model+
+     ' · actual '+(data.actual_model||'not attested')+
+     ' · input/output tokens '+(data.tokens_input??'unknown')+'/'+(data.tokens_output??'unknown')+
+     ' · receipt '+data.id;
+   }catch(error){notice.textContent='Cloud request not completed: '+String(error.message||'unavailable').replaceAll('_',' ')+
+    '. No automatic retry.';}
+   finally{await inventory();}
+  };
+  inventory();
+ }
+
   function linkState(){
    const panel=document.getElementById('workloadPanel');if(!panel)return;
    let status=document.getElementById('rovor-cloud-link-state');
@@ -453,7 +612,7 @@ export function createCloudOperations(base, cloud) {
     data=snapshot;connection='connected';lastOk=Date.now();paint();
    }catch{disconnect();}finally{busy=false;}
   }
-  linkState();poll();setInterval(poll,15000);document.addEventListener('visibilitychange',poll);
+  installOwnerCloudChat();linkState();poll();setInterval(poll,15000);document.addEventListener('visibilitychange',poll);
   for(const name of ['workloadPanel','activityPanel']){const panel=document.getElementById(name);if(panel)new MutationObserver(()=>{if(!document.getElementById(name==='workloadPanel'?'rovor-cloud-live':'rovor-cloud-results'))paint();}).observe(panel,{childList:true});}
  }
  const script='<script>('+browserUI.toString()+')();</script>';
@@ -487,6 +646,8 @@ export function createCloudOperations(base, cloud) {
     if(!actor)return json({error:'site_identity_required'},401);
     try{
      if(url.pathname==='/api/ghost/status'&&request.method==='GET')return json(await status(env));
+     if(url.pathname==='/api/ghost/chat/models'&&request.method==='GET')return json(ownerChatModels(env));
+     if(url.pathname==='/api/ghost/chat'&&request.method==='POST')return ownerChat(request,env,actor);
      if(url.pathname==='/api/ghost/control'&&request.method==='POST'){
       const body=await bounded(request);if(Object.keys(body).join(',')!=='enabled')throw Error('invalid_control');return json(await control(env,body.enabled));
      }
