@@ -42,8 +42,9 @@ if [[ "$MODE" == "status" ]]; then
 fi
 
 # Never embed passwords/keys in LaunchAgent files or stdout.
-if ! /usr/bin/security find-generic-password -s rovordigital.hud.writer -w >/dev/null 2>&1; then
-  echo 'HUD writer Keychain entry missing. No changes made.' >&2
+if ! /usr/bin/security find-generic-password -s rovordigital.hud.cloudflare.writer -w >/dev/null 2>&1 &&
+   ! /usr/bin/security find-generic-password -s rovordigital.hud.writer -w >/dev/null 2>&1; then
+  echo 'Existing HUD writer Keychain credential missing (checked both supported service names). No changes made.' >&2
   exit 2
 fi
 "$NODE" --check "$ROOT/tools/hud_telemetry_publisher.mjs"
