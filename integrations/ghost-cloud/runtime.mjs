@@ -164,10 +164,11 @@ export async function claim(db,provider,cfg,now) {
       UNION ALL SELECT 1 FROM ghost_cloud_owner_chat WHERE pool=? AND (status='running' OR started_at>? OR retry_after>?))
  AND (SELECT count(*) FROM ghost_cloud_attempts WHERE pool=? AND status IN ('failed','uncertain')
       AND started_at>COALESCE((SELECT max(started_at) FROM ghost_cloud_attempts WHERE pool=? AND status='needs_review'),0))<3
+ AND (SELECT count(*) FROM ghost_cloud_owner_chat WHERE pool=? AND status IN ('failed','uncertain') AND started_at>?)<3
  ORDER BY j.created_at,j.id LIMIT 1 RETURNING *`,id,provider,cfg.model,cfg.pool,now,cfg.max_output_tokens,roles,kinds,cfg.max_input_bytes,
  now-DAY,now-DAY,cfg.pool,now-DAY,cfg.pool,now-DAY,cfg.requests_per_day,
  cfg.pool,now-DAY,cfg.pool,now-DAY,cfg.max_output_tokens,cfg.tokens_per_day,
- cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,cfg.pool).first();
+ cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,cfg.pool,cfg.pool,now-3600000).first();
 }
 
 // Read only when an otherwise eligible route has no successful atomic claim.
@@ -181,10 +182,12 @@ async function diagnoseNoClaim(db,cfg,now) {
      AND NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts a WHERE a.job_id=j.id)`,
    JSON.stringify(cfg.roles),JSON.stringify(cfg.kinds),cfg.max_input_bytes).first();
  if(!candidate?.n)return {reason:'no_matching_unattempted_job'};
- const globalCount=await run(db,'SELECT COUNT(*) n FROM ghost_cloud_attempts WHERE started_at>?',now-DAY).first();
+ const globalCount=await run(db,'SELECT COUNT(*) n FROM (SELECT started_at FROM ghost_cloud_attempts WHERE started_at>? UNION ALL SELECT started_at FROM ghost_cloud_owner_chat WHERE started_at>?)',now-DAY,now-DAY).first();
  if(globalCount.n>=144)return {reason:'global_daily_safety_cap'};
  const pool=await run(db,`SELECT COUNT(*) n,COALESCE(SUM(reserved_tokens),0) reserved
-   FROM ghost_cloud_attempts WHERE pool=? AND started_at>?`,cfg.pool,now-DAY).first();
+   FROM (SELECT reserved_tokens FROM ghost_cloud_attempts WHERE pool=? AND started_at>?
+   UNION ALL SELECT reserved_tokens FROM ghost_cloud_owner_chat WHERE pool=? AND started_at>?)`,
+   cfg.pool,now-DAY,cfg.pool,now-DAY).first();
  if(pool.n>=cfg.requests_per_day)return {reason:'account_request_cap'};
  if(pool.reserved+candidate.min_bytes+cfg.max_output_tokens+256>cfg.tokens_per_day)
    return {reason:'account_reserved_token_cap'};
@@ -192,8 +195,9 @@ async function diagnoseNoClaim(db,cfg,now) {
    COALESCE(SUM(CASE WHEN status='running' THEN 1 ELSE 0 END),0) running,
    MAX(CASE WHEN started_at>? THEN started_at ELSE NULL END) recent,
    MAX(CASE WHEN retry_after>? THEN retry_after ELSE NULL END) retry_until
-   FROM ghost_cloud_attempts WHERE pool=?`,
-   now-cfg.min_interval_ms,now,cfg.pool).first();
+   FROM (SELECT started_at,status,retry_after FROM ghost_cloud_attempts WHERE pool=?
+   UNION ALL SELECT started_at,status,retry_after FROM ghost_cloud_owner_chat WHERE pool=?)`,
+   now-cfg.min_interval_ms,now,cfg.pool,cfg.pool).first();
  if(lock.running>0)return {reason:'account_inflight_claim'};
  if(lock.recent!==null)return {reason:'account_minimum_interval',next_eligible_at:lock.recent+cfg.min_interval_ms};
  if(lock.retry_until!==null)return {reason:'account_retry_after',next_eligible_at:lock.retry_until};
@@ -202,6 +206,8 @@ async function diagnoseNoClaim(db,cfg,now) {
    AND started_at>COALESCE((SELECT MAX(started_at) FROM ghost_cloud_attempts
      WHERE pool=? AND status='needs_review'),0)`,cfg.pool,cfg.pool).first();
  if(circuit.n>=3)return {reason:'failure_circuit_requires_review'};
+ const manualCircuit=await run(db,"SELECT COUNT(*) n FROM ghost_cloud_owner_chat WHERE pool=? AND status IN ('failed','uncertain') AND started_at>?",cfg.pool,now-3600000).first();
+ if(manualCircuit.n>=3)return {reason:'manual_failure_circuit'};
  return {reason:'claim_contention_or_unclassified_gate'};
 }
 
