@@ -159,12 +159,13 @@ jobs:
     environment: rovor-hud-production
     env:
       ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
-      ROVOR_CATALOG_REPORT_OUTPUT: ${{ runner.temp }}/rovor-provider-catalog-readback.json
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - name: Read nine fixed provider catalogs and verify persisted checks
+        env:
+          ROVOR_CATALOG_REPORT_OUTPUT: ${{ runner.temp }}/rovor-provider-catalog-readback.json
         run: python3 tools/verify_rovor_provider_catalog_readback.py
       - name: Preserve only sanitized proof, without models or credentials
         if: always()
