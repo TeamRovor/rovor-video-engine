@@ -173,13 +173,25 @@ export function createCloudOperations(base, cloud) {
 
  // Browser-initiated inference on the EXISTING private Site. Nine provider
  // secrets and the execution ledger stay in the cloud. Never call a Mac relay.
- function ownerChatModels(env,now=Date.now()) {
+ async function ownerChatSchemaReady(env) {
+  if(!env.DB)return false;
+  try{await sql(env,'SELECT id FROM ghost_cloud_owner_chat LIMIT 0').all();return true;}
+  catch{return false;}
+ }
+ async function ownerChatModels(env,now=Date.now()) {
+  const storageReady=await ownerChatSchemaReady(env);
+  let dispatchEnabled=false;
+  if(storageReady)try{
+   dispatchEnabled=(await sql(env,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled===1;
+  }catch{/* Control unavailable: fail closed. */}
   const cfg=config(env,'GHOST_FLEET_CONFIG');
   return {source:'private_site_cloud',mac_required:false,observed_at:now,
+   storage_ready:storageReady,dispatch_enabled:dispatchEnabled,
    providers:Object.keys(cloud.PROVIDERS).map(provider=>{
     const route=cfg[provider],reason=cloud.eligibility(provider,route,env,now);
     return {provider,model:typeof route?.model==='string'?route.model:null,
-     admission:reason||'eligible',ready:!reason};
+     admission:!storageReady?'owner_chat_migration_required':!dispatchEnabled?'global_stop':reason||'eligible',
+     ready:storageReady&&dispatchEnabled&&!reason};
    })};
  }
  async function ownerChat(request,env,actor) {
