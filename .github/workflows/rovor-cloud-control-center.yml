@@ -9,14 +9,23 @@ on:
       - '.github/workflows/rovor-cloud-control-center.yml'
       - 'tools/rovor_cloud_control_report.py'
       - 'tests/test_rovor_cloud_control_report.py'
+      - 'tools/verify_rovor_provider_catalog_readback.py'
+      - 'tests/test_rovor_provider_catalog_readback.py'
   push:
     branches: [main]
     paths:
       - '.github/workflows/rovor-cloud-control-center.yml'
       - 'tools/rovor_cloud_control_report.py'
       - 'tests/test_rovor_cloud_control_report.py'
+      - 'tools/verify_rovor_provider_catalog_readback.py'
+      - 'tests/test_rovor_provider_catalog_readback.py'
   workflow_dispatch:
     inputs:
+      verify_provider_catalog_readback:
+        description: "Check all nine provider catalogs and confirm private Site D1 persisted the checks; no inference"
+        type: boolean
+        required: false
+        default: false
       run_mode:
         description: "Audit only, deploy existing Cloudflare HUD, or deploy and test one Google Gemini reply"
         type: choice
@@ -75,6 +84,7 @@ jobs:
           node --test tests/test_hud_cloud_gemini.mjs tests/test_hud_cloud.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_chat_mobile.mjs tests/test_ghost_cloud.mjs tests/test_ghost_cloud_canary_preflight.mjs tests/test_ghost_cloud_operations.mjs tests/test_ghost_cloud_scheduled_shift.mjs
           python3 -m unittest discover -s tests -p test_ghost_cloud_hosted_shift.py -v
           python3 -m unittest discover -s tests -p test_rovor_cloud_control_report.py -v
+          python3 -m unittest discover -s tests -p test_rovor_provider_catalog_readback.py -v
           node tests/test_hud_chat_browser.cjs
       - name: Verify one canonical owner/role/task routing queue
         run: |
@@ -138,6 +148,33 @@ jobs:
           path: ${{ runner.temp }}/rovor-cloud-readiness.json
           retention-days: 7
           if-no-files-found: error
+
+  provider-catalog-readback:
+    name: Verify nine cloud provider catalog checks persist in existing private Site
+    # On a reviewed main-branch change this audit runs unattended. PRs never
+    # receive production credentials; manual dispatch remains separately opt-in.
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.verify_provider_catalog_readback == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: rovor-hud-production
+    env:
+      ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Read nine fixed provider catalogs and verify persisted checks
+        env:
+          ROVOR_CATALOG_REPORT_OUTPUT: ${{ runner.temp }}/rovor-provider-catalog-readback.json
+        run: python3 tools/verify_rovor_provider_catalog_readback.py
+      - name: Preserve only sanitized proof, without models or credentials
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rovor-nine-provider-catalog-readback
+          path: ${{ runner.temp }}/rovor-provider-catalog-readback.json
+          retention-days: 7
+          if-no-files-found: warn
 
   missing-deployment-requirements:
     name: Fail clearly if an explicitly requested deployment lacks credentials or approval
