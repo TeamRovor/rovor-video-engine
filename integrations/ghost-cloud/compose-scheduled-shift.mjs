@@ -131,7 +131,12 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
     " return response;\n"+
     "},\n"+
     "scheduled(_event,env,ctx){\n"+
-    ' if(env.GHOST_CRON_OPT_IN==='+JSON.stringify(OPT_IN)+')ctx.waitUntil(__shift.runScheduledShift(env,{replenish:env.GHOST_FEED_COMMIT?(__feed?__feed.replenishApprovedJobs:async()=>{throw Error("approved_feed_not_bundled")}):__operations.replenish,tick:__cloud.tick}));\n'+
+    ' if(env.GHOST_CRON_OPT_IN==='+JSON.stringify(OPT_IN)+')ctx.waitUntil((async()=>{\n'+
+    '  // Existing private Site executes its own catalog health checks and D1 writes.\n'+
+    '  // No public URL, service bearer, GitHub HTTP call, or model inference.\n'+
+    '  if(typeof __operations.refreshCatalogs==="function")await __operations.refreshCatalogs(env).catch(()=>null);\n'+
+    '  return __shift.runScheduledShift(env,{replenish:env.GHOST_FEED_COMMIT?(__feed?__feed.replenishApprovedJobs:async()=>{throw Error("approved_feed_not_bundled")}):__operations.replenish,tick:__cloud.tick});\n'+
+    ' })());\n'+
     "}\n};\n";
   return v2Source.slice(0,v2Source.lastIndexOf(TAIL))+ending;
 }
