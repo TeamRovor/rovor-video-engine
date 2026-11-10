@@ -156,7 +156,16 @@ export function createCloudOperations(base, cloud) {
    j.employee,j.task_id,j.title FROM ghost_cloud_attempts a JOIN ghost_cloud_jobs j ON a.job_id=j.id
    WHERE a.status='needs_review' AND a.human_review='not_recorded'
    ORDER BY COALESCE(a.finished_at,a.started_at) ASC,a.id ASC LIMIT 50`).all();
-  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null),
+  // Only cloud-origin owner chats appear here; do not mix stale Mac snapshots.
+  // Missing forward-only migration is UNKNOWN, never silently zero activity.
+  let ownerChatRows=null;
+  try{
+   ownerChatRows=(await sql(env,"SELECT provider,COUNT(*) attempts,SUM(CASE WHEN status='complete' THEN 1 ELSE 0 END) completed,SUM(tokens_input) tokens_input,SUM(tokens_output) tokens_output,MAX(finished_at) last_finished_at FROM ghost_cloud_owner_chat WHERE started_at>? GROUP BY provider",now-86400000).all()).results;
+  }catch{/* Site has not yet applied the forward-only owner-chat migration. */}
+  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,
+    owner_chat_24h:ownerChatRows?ownerChatRows.find(row=>row.provider===p.provider)||
+      {provider:p.provider,attempts:0,completed:0,tokens_input:0,tokens_output:0,last_finished_at:null}:null,
+    quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null),
     ...(p.provider==='mistral'?{minute_rate_limits:mistralRates}:{})})),
    attempts:results,review_queue:{pending_count:reviewCount?.pending_count??0,
     oldest_finished_at:reviewCount?.oldest_finished_at??null,items:reviewItems}};
