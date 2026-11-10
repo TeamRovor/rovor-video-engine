@@ -244,7 +244,9 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  let tick,mode='ok',reads=0;const snapshot=await s.ops.status(s.env);
  snapshot.providers[0].quota={status:'verified',unit:'requests',used:2,limit:10,observed_at:Date.now(),resets_at:Date.now()+60000};
  snapshot.providers[0].recorded_24h={requests:3};
- const fetch=async()=>{reads++;if(mode==='offline')throw Error('network_down');
+ const fetch=async(resource)=>{if(resource==='/api/ghost/chat/models')return {ok:true,json:async()=>({source:'private_site_cloud',mac_required:false,
+  providers:snapshot.providers.map(p=>({provider:p.provider,model:null,admission:'not_configured',ready:false}))})};
+  reads++;if(mode==='offline')throw Error('network_down');
   if(mode==='invalid')return {ok:true,json:async()=>({providers:[],attempts:[]})};
   return {ok:true,json:async()=>snapshot};
  };
