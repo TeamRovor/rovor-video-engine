@@ -50,8 +50,15 @@ async function localReader() {
     if (!isAllowedLocalReadPath(resource)) throw Error('path_denied');
     const headers = {[CLI_TOKEN_HEADER]: cliToken, Accept: 'application/json'};
     if (endpointKey) headers.Authorization = 'Bearer ' + endpointKey;
-    const result = await fetch('http://127.0.0.1:20128' + resource, {headers, redirect: 'error', signal: AbortSignal.timeout(8000)});
-    if (!result.ok) throw Error('local_gateway_unavailable');
+    let result;
+    try {
+      result = await fetch('http://127.0.0.1:20128' + resource, {headers, redirect: 'error', signal: AbortSignal.timeout(8000)});
+    } catch { throw Error('local_gateway_transport_unavailable'); }
+    if (!result.ok) {
+      if ([401, 403, 404, 429].includes(result.status)) throw Error('local_gateway_http_' + result.status);
+      if (result.status >= 500) throw Error('local_gateway_http_5xx');
+      throw Error('local_gateway_unavailable');
+    }
     let size = 0; const chunks = [];
     for await (const chunk of result.body) {
       size += chunk.byteLength;
@@ -63,6 +70,24 @@ async function localReader() {
 }
 
 const MAX_BODY = 32768;
+// Only allow fixed error categories in logs. Never print exception text,
+// response bodies, credentials, local paths, or untrusted provider output.
+const SAFE_FAILURES = new Set([
+  'omniroute_cli_missing', 'omniroute_cli_auth_missing',
+  'local_gateway_transport_unavailable', 'local_gateway_unavailable',
+  'local_gateway_http_401', 'local_gateway_http_403', 'local_gateway_http_404',
+  'local_gateway_http_429', 'local_gateway_http_5xx', 'local_response_too_large',
+  'workforce_reader_unavailable', 'omniroute_collection_unavailable',
+  'cloud_transport_unavailable', 'cloud_http_400', 'cloud_http_401',
+  'cloud_http_403', 'cloud_http_429', 'cloud_http_5xx',
+  'cloud_report_rejected', 'cloud_report_unconfirmed',
+  'writer_token_missing', 'invalid_cloud_origin', 'service_token_invalid',
+  'snapshot_too_large'
+]);
+export function telemetryFailureCode(error) {
+  const code = error instanceof Error ? error.message : '';
+  return SAFE_FAILURES.has(code) ? code : 'telemetry_unclassified_failure';
+}
 const activity = m => [m.attempts_rolling_minute, m.attempts_rolling_hour, m.attempts_pacific_day].map(n => n || 0);
 // Per-model call-log rows can outgrow the ingest limit (e.g. after "Test all models").
 // Keep the most recently active rows and mark coverage partial rather than stop reporting.
@@ -84,16 +109,30 @@ export async function publishOnce({origin, token, serviceToken, collect, workers
   origin = validateTarget(origin);
   if (typeof token !== 'string' || token.length < 32 || token.length > 200 || /[\r\n]/.test(token)) throw Error('writer_token_missing');
   if (serviceToken !== undefined && (typeof serviceToken !== 'string' || !serviceToken || serviceToken.length > 4096 || /[\r\n]/.test(serviceToken))) throw Error('service_token_invalid');
-  const workforce = await workers();
+  let workforce;
+  try { workforce = await workers(); }
+  catch { throw Error('workforce_reader_unavailable'); }
   for (const period of ['24h', '1h', '7d', '1m']) {
-    const snapshot = fitSnapshot({...await collect(period), workforce});
+    let snapshot;
+    try { snapshot = fitSnapshot({...await collect(period), workforce}); }
+    catch (error) {
+      const code = telemetryFailureCode(error);
+      throw Error(code === 'telemetry_unclassified_failure' ? 'omniroute_collection_unavailable' : code);
+    }
     const body = JSON.stringify(snapshot);
     if (Buffer.byteLength(body) > 32768) throw Error('snapshot_too_large');
-    const result = await send(origin + '/api/hud/ingest', {method: 'POST', headers: {
-      Authorization: 'Bearer ' + token, 'Content-Type': 'application/json',
-      ...(serviceToken ? {'OAI-Sites-Authorization': 'Bearer ' + serviceToken} : {})}, body,
-      redirect: 'error', signal: AbortSignal.timeout(10000)});
-    if (!result.ok) throw Error('cloud_report_rejected');
+    let result;
+    try {
+      result = await send(origin + '/api/hud/ingest', {method: 'POST', headers: {
+        Authorization: 'Bearer ' + token, 'Content-Type': 'application/json',
+        ...(serviceToken ? {'OAI-Sites-Authorization': 'Bearer ' + serviceToken} : {})}, body,
+        redirect: 'error', signal: AbortSignal.timeout(10000)});
+    } catch { throw Error('cloud_transport_unavailable'); }
+    if (!result.ok) {
+      if ([400, 401, 403, 429].includes(result.status)) throw Error('cloud_http_' + result.status);
+      if (result.status >= 500) throw Error('cloud_http_5xx');
+      throw Error('cloud_report_rejected');
+    }
     let acknowledgment;
     try { acknowledgment = await result.json(); } catch { throw Error('cloud_report_unconfirmed'); }
     if (acknowledgment?.accepted !== true) throw Error('cloud_report_unconfirmed');
@@ -113,10 +152,10 @@ async function main() {
       await publishOnce({origin, token, serviceToken, collect, workers});
       failures = 0;
       console.log(new Date().toISOString() + ' HUD report delivered.');
-    } catch {
+    } catch (error) {
       failures++;
-      // No bodies, credentials, local paths or provider errors enter logs.
-      console.error(new Date().toISOString() + ' HUD report unavailable. Retrying with backoff.');
+      // Fixed allowlisted codes only: no response bodies, tokens, paths or prompts.
+      console.error(new Date().toISOString() + ' HUD report unavailable (' + telemetryFailureCode(error) + '). Retrying with backoff.');
       if (process.argv.includes('--once')) process.exitCode = 1;
     }
     if (process.argv.includes('--once') || stop.signal.aborted) break;
