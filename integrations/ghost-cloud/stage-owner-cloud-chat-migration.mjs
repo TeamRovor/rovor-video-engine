@@ -26,7 +26,8 @@ function safeMigration(sql) {
   return sql.replace(/;[ \t]*\n/g, ';\n--> statement-breakpoint\n');
 }
 export function stageOwnerCloudChatMigration(directory, {apply = false, sourceDirectory = rootOfSource} = {}) {
-  const root = fs.realpathSync(directory);
+  const root = path.resolve(directory);
+  if (fs.lstatSync(root).isSymbolicLink()) throw Error('redirected_site');
   const manifestPath = safe(root, '.openai/hosting.json');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   if (manifest.project_id !== PROJECT ||
