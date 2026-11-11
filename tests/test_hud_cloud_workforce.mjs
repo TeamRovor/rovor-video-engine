@@ -462,3 +462,55 @@ test('read-only private workforce admission shows exact D1 limits, reset and fre
  assert.equal(result.admission.earliest_rolling_slot_at,null);
  assert(!result.admission.observed_constraints.includes('rolling_day_attempt_limit'));
 });
+
+test('stale GitHub issue is discarded before any Gemini tokens, remains consumed after START',async()=>{
+ const s=setup();approved(s);await control(s.DB,true);
+ s.db.prepare(`INSERT INTO hud_cloud_workforce_jobs
+  (id,task_id,employee,kind,title,prompt,source_commit,revision,created_at,state,human_review)
+  VALUES(?,?,?,?,?,?,?,?,?,'queued','not_recorded')`)
+  .run('gc-rec-stale-issue','cloud-discovery-issue-2345','Mike','code_review',
+  'Old issue investigation','Only numeric issue context','a'.repeat(40),'v2',now);
+ const pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
+ Object.assign(s.env,{ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem});
+ let github=0,provider=0;
+ const send=async(url,options)=>{
+  if(url.startsWith('https://generativelanguage.googleapis.com')){provider++;throw Error('stale work must not infer');}
+  github++;
+  if(url.endsWith('/access_tokens'))return Response.json({
+   token:'mock-installation-token-safely-scoped',expires_at:new Date(now+3600000).toISOString(),
+   permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'}
+  },{status:201});
+  assert(url.endsWith('/issues/2345'));
+  assert.equal(options.method,'GET');
+  return Response.json({number:2345,title:'Closed issue',state:'closed'});
+ };
+ const checked=await tick(s.env,now+1000,send);
+ assert.equal(checked.body.state,'discovery_no_longer_actionable');assert.equal(checked.body.dispatched,0);
+ assert.equal(checked.body.inference_completed,false);
+ assert.equal(provider,0);assert.equal(github,2);
+ const receipt=s.db.prepare("SELECT state,started_at,error_code FROM hud_cloud_workforce_jobs WHERE id='gc-rec-stale-issue'").get();
+ assert.equal(receipt.state,'failed');assert.equal(receipt.started_at,null);
+ assert.equal(receipt.error_code,'discovery_no_longer_actionable');
+ assert.equal((await tick(s.env,now+2000,async()=>{throw Error('never replay');})).body.state,'idle_or_safety_limited');
+});
+test('GitHub timeout or missing App leaves the queued job and daily inference budget intact',async()=>{
+ const s=setup();approved(s);await control(s.DB,true);
+ s.db.prepare(`INSERT INTO hud_cloud_workforce_jobs
+  (id,task_id,employee,kind,title,prompt,source_commit,revision,created_at,state,human_review)
+  VALUES(?,?,?,?,?,?,?,?,?,'queued','not_recorded')`)
+  .run('gc-rec-unverified-issue','cloud-discovery-issue-2346','Mike','code_review',
+  'Issue review','Only numeric issue context','a'.repeat(40),'v2',now);
+ let network=0;
+ const missing=await tick(s.env,now+1000,async()=>{network++;throw Error('never call without app');});
+ assert.equal(missing.body.state,'discovery_source_unverified');
+ assert.equal(network,0);
+ const pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
+ Object.assign(s.env,{ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem});
+ const outage=await tick(s.env,now+2000,async(url)=>{network++;throw Error('simulated GitHub network outage');});
+ assert.equal(outage.body.state,'discovery_source_unverified');
+ assert.equal(outage.body.dispatched,0);assert.equal(outage.body.inference_completed,false);
+ assert.equal(network,1);
+ const row=s.db.prepare("SELECT state,started_at,finished_at FROM hud_cloud_workforce_jobs WHERE id='gc-rec-unverified-issue'").get();
+ assert.equal(row.state,'queued');assert.equal(row.started_at,null);assert.equal(row.finished_at,null);
+ assert.equal(s.db.prepare('SELECT COUNT(*) n FROM hud_cloud_workforce_jobs WHERE started_at IS NOT NULL').get().n,0);
+});
