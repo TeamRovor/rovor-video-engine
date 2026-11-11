@@ -1192,6 +1192,15 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "legacy-site-403-scheduler-retirement-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
