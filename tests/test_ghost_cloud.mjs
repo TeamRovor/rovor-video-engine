@@ -273,8 +273,10 @@ test('missing token receipts and pre-attestation replies cannot verify a route',
  assert.equal((await status()).online_verified,true);
  sqlite.prepare('UPDATE ghost_cloud_attempts SET tokens_input=NULL WHERE job_id=?').run('meter-missing');
  assert.equal((await status()).online_verified,false);
- sqlite.prepare('UPDATE ghost_cloud_attempts SET tokens_input=9 WHERE job_id=?').run('meter-missing');
- env.GHOST_FLEET_CONFIG=JSON.stringify({groq:cfg({verified_at:NOW+1000,valid_until:NOW+3600000,canary_at:NOW+1200})});
+ sqlite.prepare('UPDATE ghost_cloud_attempts SET tokens_input=9,finished_at=? WHERE job_id=?')
+  .run(NOW-750,'meter-missing');
+ env.GHOST_FLEET_CONFIG=JSON.stringify({groq:cfg({verified_at:NOW-500,canary_at:NOW-400})});
+ assert.equal((await status()).admission,'eligible');
  assert.equal((await status()).recent_inference_verified,false,
   'a reply before current attestation may not certify a newer approval');
 });
