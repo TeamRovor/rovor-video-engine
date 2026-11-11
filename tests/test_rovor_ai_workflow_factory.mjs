@@ -158,3 +158,22 @@ test('bridge runs continuously with no inference only on trusted main and produc
  await assert.rejects(()=>publishReviewed({env:{...env,GITHUB_REF:'refs/heads/pull/1'},
   send:http().send}),/trusted_main_credentials_required/);
 });
+
+test('Walter is a new unapproved v2 task until explicit one-click owner authorization',()=>{
+ const tasks=JSON.parse(readFileSync(new URL('../coordination/tasks.json',import.meta.url),'utf8')).tasks;
+ const candidate=tasks.find(x=>x.id==='cloud-walter-workflow-factory-20261110');
+ assert(candidate);
+ assert.equal(candidate.cloud_inference.approved_for_cloud,false);
+ assert.equal(candidate.cloud_inference.revision,'v2');
+ assert.equal(candidate.cloud_inference.employee,'Walter');
+ assert.equal(candidate.cloud_inference.kind,'plan');
+ const y=readFileSync(new URL('../.github/workflows/run-walter-workflow-once.yml',import.meta.url),'utf8');
+ assert.match(y,/name: RUN WALTER ONCE - propose GitHub workflow/);
+ assert.match(y,/workflow_dispatch:/);
+ assert.match(y,/approve_walter_workflow_draft:[\s\S]*?default: false/);
+ assert.match(y,/ROVOR_WORKFORCE_ACTION: pilot_once/);
+ assert.match(y,/ROVOR_WORKFORCE_TASK_ID: cloud-walter-workflow-factory-20261110/);
+ assert.match(y,/ROVOR_WORKFORCE_REVISION: v2/);
+ assert.match(y,/ROVOR_OWNER_CONFIRMS_NEW_TASK: \$\{\{ inputs\.approve_walter_workflow_draft \}\}/);
+ assert.doesNotMatch(y,/ROVOR_OWNER_CONFIRMS_NEW_TASK: true|type: choice/);
+});
