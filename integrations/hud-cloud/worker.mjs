@@ -547,7 +547,13 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       return response(200, {jsonrpc: '2.0', id: rpc.id ?? null, error: {code: -32601, message: 'Method not found'}});
     }
     if (request.method === 'GET' && env.ASSETS && !url.pathname.startsWith('/api/') && url.pathname !== '/mcp') {
-      const asset = await env.ASSETS.fetch(request);
+      // Cloudflare Assets canonicalizes *.html to extensionless URLs and may
+      // return a 307 redirect even after Worker reader authentication. Fetch
+      // the canonical static asset internally, then serve its bytes at the
+      // owner-private deep link with the strict review-page CSP below.
+      const assetRequest=url.pathname==='/workforce-review.html'
+        ?new Request(new URL('/workforce-review',url.origin),request):request;
+      const asset = await env.ASSETS.fetch(assetRequest);
       if ((asset.headers.get('Content-Type') || '').includes('text/html')) {
         const html = await asset.text();
         if (!html.includes('</body>')) return response(503, {error: 'hud_asset_invalid'});
