@@ -115,6 +115,18 @@ export function createCloudOperations(base, cloud) {
    quotaRows=[];
   }
   const now=Date.now();
+  // Catalog authentication is observable independently of inference admission.
+  // This is a bounded recent authenticated GET receipt, never billing, quota,
+  // model execution or permission to dispatch.
+  const catalogConnection=provider=>{
+   const check=checks.find(row=>row.provider===provider);
+   if(!check)return {state:'unknown',observed_at:null};
+   const observed=check.observed_at;
+   const valid=Number.isSafeInteger(observed)&&observed>0&&observed<=now+60000;
+   const fresh=valid&&now-observed<=75*60000;
+   return {state:!fresh?'stale':check.status==='catalog_received'?'authenticated':'failed',
+    observed_at:valid?observed:null};
+  };
   const observedQuota=provider=>{
    if(provider!=='groq')return null;
    const q=quotaRows.find(row=>row.provider===provider);
@@ -163,6 +175,7 @@ export function createCloudOperations(base, cloud) {
    ownerChatRows=(await sql(env,"SELECT provider,COUNT(*) attempts,SUM(CASE WHEN status='complete' THEN 1 ELSE 0 END) completed,SUM(tokens_input) tokens_input,SUM(tokens_output) tokens_output,MAX(finished_at) last_finished_at FROM ghost_cloud_owner_chat WHERE started_at>? GROUP BY provider",now-86400000).all()).results;
   }catch{/* Site has not yet applied the forward-only owner-chat migration. */}
   return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,
+    catalog_connection:catalogConnection(p.provider),
     owner_chat_24h:ownerChatRows?ownerChatRows.find(row=>row.provider===p.provider)||
       {provider:p.provider,attempts:0,completed:0,tokens_input:0,tokens_output:0,last_finished_at:null}:null,
     quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null),
