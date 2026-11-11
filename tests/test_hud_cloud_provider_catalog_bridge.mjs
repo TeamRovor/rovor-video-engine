@@ -78,6 +78,26 @@ test('nine exact providers rotate on independent clock and require both Site and
  assert(!body.includes(S),'service token must never reach browser');
  assert(!body.includes(R));
 });
+test('adjacent native five-minute slots advance despite cron jitter, without same-window duplicates',async()=>{
+ const s=setup();
+ const first=T+10000; // cron at 20:00:10
+ const firstReply=reply(first);
+ const initial=await refreshCatalogBridge(s.env,first,firstReply.send);
+ assert.equal(initial.provider,CATALOG_PROVIDERS[0]);
+ assert.equal(initial.site_d1_verified,true);
+ assert.equal((await refreshCatalogBridge(s.env,first+1000,firstReply.send)).state,'interval_not_due');
+ assert.equal(firstReply.calls.length,2);
+ const next=T+300000+2000; // next cron at 20:05:02; only 4m52s elapsed
+ const nextReply=reply(next);
+ const progressed=await refreshCatalogBridge(s.env,next,nextReply.send);
+ assert.equal(progressed.provider,CATALOG_PROVIDERS[1],
+  'short normal cron jitter must not delay the next provider by another five minutes');
+ assert.equal(progressed.site_d1_verified,true);
+ assert.equal(nextReply.calls.length,2);
+ assert.equal((await refreshCatalogBridge(s.env,next+1000,nextReply.send)).state,'interval_not_due');
+ assert.equal(nextReply.calls.length,2,'no second request within the same clock window');
+});
+
 test('missing/shared service credentials fail without network or pretending online',async()=>{
  for(const key of [null,R,W,'short']){
   const s=setup();if(key===null)delete s.env.GHOST_SITE_SERVICE_TOKEN;
