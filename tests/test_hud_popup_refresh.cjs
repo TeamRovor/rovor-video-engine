@@ -49,22 +49,22 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
 (async()=>{
  board.start();
  await flush();await flush();
- assert.equal(reads,3);assert.equal(dayReads,1);assert.equal(hourReads,1);assert.equal(minuteReads,1);assert.equal(writes,1);
+ assert.equal(reads,3);assert.equal(dayReads,1);assert.equal(hourReads,1);assert.equal(minuteReads,1);assert.equal(writes,2,'one immediate unknown-safe paint, one settled report');
  assert.equal(isBoard,true);
  assert.equal(intervals.length,1);
  board.start();
  assert.equal(intervals.length,1,'repeated start must not install multiple timers');
  observer();
  await flush();
- assert.equal(writes,1,'rendering itself must not trigger an observer loop');
+ assert.equal(writes,2,'rendering itself must not trigger an observer loop');
  clock+=11000;
  intervals[0]();
  await flush();await flush();
  assert.equal(reads,6,'rendered panel must refresh 24h, 1h and 1m');
- assert.equal(writes,1,'identical visible evidence must not replace the board');
+ assert.equal(writes,2,'identical visible evidence must not replace the board');
  requests=2;clock+=11000;intervals[0]();await flush();await flush();
  assert.equal(reads,9,'skipping an unchanged paint must not stop future polling');
- assert.equal(writes,2,'changed measured requests must replace the rendered board');
+ assert.equal(writes,3,'changed measured requests must replace the rendered board');
  // Once a validated 24h report is already in the main HUD, reuse it instead
  // of requesting exactly the same source from the server a second time.
  clock+=11000;
@@ -78,7 +78,7 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
  intervals[0]();await flush();await flush();
  assert.equal(reads,11,'verified shared 24h snapshot avoids duplicate 24h polling; minute and hourly still fetched');
  assert.equal(dayReads,3);assert.equal(hourReads,4);assert.equal(minuteReads,4);
- assert.equal(writes,3,'shared telemetry still refreshes the rendered popup');
+ assert.equal(writes,4,'shared telemetry still refreshes the rendered popup');
  document.hidden=true;clock+=11000;
  intervals[0]();await flush();
  assert.equal(reads,11,'hidden HUD must not poll');
