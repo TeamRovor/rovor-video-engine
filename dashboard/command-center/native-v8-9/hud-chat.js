@@ -381,6 +381,20 @@
     ideaFeedback.setAttribute('role','status');
     const ideaList=el('div',{className:'rvc-idea-list'});
     const ideaInbox=el('details',{className:'rvc-idea-inbox'},el('summary',{textContent:'Cloud ideas & automatic findings · pending owner review'}),ideaList);
+    // Separate Cloudflare pilot ledger. It does not replace or sync the
+    // original owner-private ChatGPT Site review queue.
+    const workforceList=el('div',{className:'rvc-workforce-list'});
+    const workforceDetails=el('details',{className:'rvc-workforce-review'},
+      el('summary',{textContent:'CLOUD GEMINI WORKFORCE · PRIVATE DRAFT REVIEWS'}),workforceList);
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-workforce-review{border:1px solid #3275a3;border-radius:10px;background:#061b31;padding:8px 10px;color:#badff6}
+#rvc .rvc-workforce-review summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.065em}
+#rvc .rvc-workforce-list{max-height:260px;overflow:auto;overflow-wrap:anywhere}
+#rvc .rvc-workforce-item{border-top:1px solid #234e74;padding:10px 4px;font-size:12px}
+#rvc .rvc-workforce-item small{display:block;color:#92b9d4;margin:3px 0}
+#rvc .rvc-workforce-item pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:145px;overflow:auto;font-size:12px;background:#041122;padding:8px}
+#rvc .rvc-workforce-item button{min-height:42px;margin:3px}
+`}));
     document.head.append(el('style',{textContent:`
 #rvc .rvc-queue-idea{min-height:43px;min-width:89px;background:#0b3156;border:1px solid #3e88b9;font-size:12px;font-weight:600}
 #rvc .rvc-idea-feedback{color:#96c1e2;font-size:11px;line-height:1.35;overflow-wrap:anywhere}
@@ -451,7 +465,7 @@
       el('div',{className:'rvc-main'},
         el('header',{},mobileMenu,el('strong',{textContent:'ASK ROVOR'}),sourceSelect,modelSlot,clear,close),
         connectionBar,providerDetails,log,
-        el('footer',{},teamRow,repoRow,routingNote,ideaInbox,ideaFeedback,el('div',{className:'rvc-context-note',textContent:'Send asks a model; Queue idea saves a draft for owner review only. No automatic GitHub writes or AI execution.'}),form)));
+        el('footer',{},teamRow,repoRow,routingNote,workforceDetails,ideaInbox,ideaFeedback,el('div',{className:'rvc-context-note',textContent:'Send asks a model; Queue idea saves a draft for owner review only. No automatic GitHub writes or AI execution.'}),form)));
     panel.setAttribute('aria-label','ROVOR chat');
     const sideBackdrop=el('button',{type:'button',className:'rvc-side-backdrop'});
     sideBackdrop.setAttribute('aria-label','Close conversation history');
@@ -1076,6 +1090,83 @@
         redraw();
       }finally{pendingJob=null;controller=null;setBusy(false);updatePlan();if(platform==='gemini'&&panel.dataset.open==='true'){refreshProviderInventory();load();}}
     }
+
+    async function refreshCloudWorkforce(){
+      if(!workforceDetails.open)return;
+      workforceList.textContent='Checking the private Cloudflare workforce ledger…';
+      try{
+        const response=await fetch('/api/hud/workforce/status',{credentials:'same-origin',
+          cache:'no-store',signal:AbortSignal.timeout(10000)});
+        if(!response.ok)throw Error('status_unavailable');
+        const data=await response.json();
+        if(data?.source!=='existing_cloudflare_hud_gemini_workforce'||
+           !Array.isArray(data.items))throw Error('status_invalid');
+        workforceList.textContent='';
+        workforceList.append(el('div',{className:'rvc-workforce-item',
+          textContent:'GEMINI WORKFORCE · '+(data.enabled?'SCHEDULE ENABLED':'STOPPED')+
+            ' · '+data.items.length+' recorded tasks · Cloudflare D1, not synced to the original private Site'}));
+        if(!data.items.length){
+          workforceList.append(el('div',{className:'rvc-workforce-item',
+            textContent:'No new owner-approved canonical tasks queued. Previously attempted work is not replayed.'}));
+          return;
+        }
+        for(const entry of data.items.slice(0,30)){
+          if(typeof entry.id!=='string'||typeof entry.title!=='string')continue;
+          const item=el('div',{className:'rvc-workforce-item'});
+          item.append(el('strong',{textContent:entry.employee+' · '+entry.title.slice(0,140)}));
+          item.append(el('small',{textContent:entry.state+
+            ' · '+(entry.actual_model||'no confirmed model')+
+            ' · review '+(entry.human_review||'not recorded')}));
+          if(entry.state==='needs_review'&&entry.human_review==='not_recorded'&&
+             /^[a-f0-9]{64}$/.test(entry.output_sha256||'')){
+            const inspect=el('button',{type:'button',textContent:'Inspect private draft'});
+            inspect.onclick=async()=>{
+              inspect.disabled=true;
+              try{
+                const r=await fetch('/api/hud/workforce/draft/'+encodeURIComponent(entry.id),
+                  {credentials:'same-origin',cache:'no-store'});
+                if(!r.ok)throw Error('draft_not_found');
+                const draft=await r.json();
+                if(draft.id!==entry.id||draft.state!=='needs_review'||
+                   draft.human_review!=='not_recorded'||typeof draft.output!=='string'||
+                   !draft.output.trim()||draft.output_sha256!==entry.output_sha256)
+                  throw Error('draft_receipt_invalid');
+                const raw=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(draft.output));
+                const sha=[...new Uint8Array(raw)].map(n=>n.toString(16).padStart(2,'0')).join('');
+                if(sha!==entry.output_sha256)throw Error('draft_digest_mismatch');
+                const output=el('pre',{textContent:draft.output});
+                const decision=el('div');
+                for(const verdict of ['passed','failed']){
+                  const b=el('button',{type:'button',
+                    textContent:verdict==='passed'?'PASS · approve draft':'FAIL · reject draft'});
+                  b.onclick=async()=>{
+                    b.disabled=true;
+                    try{
+                      const review=await fetch('/api/hud/workforce/review',{
+                        method:'POST',credentials:'same-origin',
+                        headers:{'Content-Type':'application/json'},
+                        body:JSON.stringify({job_id:entry.id,verdict})
+                      });
+                      if(!review.ok)throw Error('review_not_saved');
+                      const saved=await review.json();
+                      if(saved.id!==entry.id||saved.human_review!==verdict||
+                         saved.output_sha256!==sha)throw Error('review_readback_mismatch');
+                      await refreshCloudWorkforce();
+                    }catch{b.textContent='Review not confirmed · refresh and inspect again';
+                      b.disabled=false;}
+                  };
+                  decision.append(b);
+                }
+                item.append(output,decision);
+              }catch{item.append(el('small',{textContent:'Draft could not be verified. No review saved.'}));}
+            };
+            item.append(inspect);
+          }
+          workforceList.append(item);
+        }
+      }catch{workforceList.textContent='Private workforce status unavailable. No online inference is implied.';}
+    }
+    workforceDetails.addEventListener('toggle',()=>{if(workforceDetails.open)void refreshCloudWorkforce();});
 
     async function refreshIdeaInbox(){
       if(!ideaInbox.open)return;
