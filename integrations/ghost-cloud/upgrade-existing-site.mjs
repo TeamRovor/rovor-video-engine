@@ -54,7 +54,7 @@ export function upgradeSiteBundle(current,parts) {
    shift_module:occurrences(current,'const __shift = (() => {')===1,
    shift_ui:occurrences(current,'const __shiftUI = ')===1,
    hosted_runner:occurrences(current,'if(__operations.installHostedShiftRunner){')===1,
-   scheduler:occurrences(current,'scheduled(_event,env,ctx){')===1,
+   scheduler:occurrences(current,'\n},\nscheduled(_event,env,ctx){')===1,
    ending:current.trimEnd().endsWith('}\n};')
   };
   const failed=Object.entries(checks).filter(([,ok])=>!ok).map(([name])=>name);
