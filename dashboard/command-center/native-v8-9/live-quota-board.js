@@ -1160,9 +1160,46 @@ function start(){
  // cannot find the board again. Keep the replacement selectable for live sync.
  const slot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
    n=>!n.hidden&&(n.classList.contains('rvq-board')||isOriginal(n)));
+ // Never replace the inspected provider DOM during scrolling, selection, or
+ // an active touch/mouse gesture. Continue refreshing authenticated evidence;
+ // stage the most recent view and apply it after a quiet period.
+ let gestureHeld=false,lastInteractionAt=-Infinity,pendingMarkup=null,pendingAt=0,resumeTimer=null;
+ const inspecting=()=>gestureHeld||Date.now()-lastInteractionAt<1900;
+ const scheduleResume=()=>{
+   if(resumeTimer!==null&&typeof clearTimeout==='function')clearTimeout(resumeTimer);
+   if(typeof setTimeout==='function')resumeTimer=setTimeout(()=>{
+     resumeTimer=null;
+     if(!document.hidden&&slot())void sync();
+   },2100);
+ };
+ const markInteraction=(event,hold=false)=>{
+   if(!event?.target?.closest?.('#rovor-workload-popup, #screen .drawer-inner')||!slot())return;
+   if(hold)gestureHeld=true;
+   lastInteractionAt=Date.now();
+   scheduleResume();
+ };
+ const releaseGesture=()=>{
+   if(!gestureHeld)return;
+   gestureHeld=false;
+   lastInteractionAt=Date.now();
+   scheduleResume();
+ };
+ if(typeof document.addEventListener==='function'){
+   for(const name of ['wheel','scroll','touchmove','keydown','focusin'])
+     document.addEventListener(name,event=>markInteraction(event),{passive:name!=='keydown',capture:name==='scroll'});
+   for(const name of ['pointerdown','touchstart'])
+     document.addEventListener(name,event=>markInteraction(event,true),{passive:true});
+   for(const name of ['pointerup','pointercancel','touchend','touchcancel'])
+     document.addEventListener(name,releaseGesture,{passive:true});
+ }
  async function sync(){
    if(busy||document.hidden)return;
    const original=slot();if(!original)return;
+   if(pendingMarkup&&!inspecting()&&original.classList.contains('rvq-board')){
+     // An old queued view cannot be painted as live after its source expires.
+     if(Date.now()-pendingAt<=5000)updateBoard(original,pendingMarkup,slot);
+     pendingMarkup=null;
+   }
    if(Date.now()-updated<5000){
      if(!original.classList.contains('rvq-board')){
        updateBoard(original,render(last||lastInventory,!!last,lastCloud,lastHourly,lastMinute,null,lastGroqCloud),slot);
@@ -1222,7 +1259,13 @@ function start(){
    lastGeminiDirect=geminiCatalog&&geminiUsage?{catalog:geminiCatalog,usage:geminiUsage,at:updated}:null;
    lastExtras={cloud,hourly,minute,geminiProject,groqCloud,at:updated};
    const target=slot();if(target){
-     updateBoard(target,render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject,groqCloud),slot);
+     const nextMarkup=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject,groqCloud);
+     if(target.classList.contains('rvq-board')&&inspecting()){
+       pendingMarkup=nextMarkup;pendingAt=Date.now();
+     }else{
+       pendingMarkup=null;
+       updateBoard(target,nextMarkup,slot);
+     }
    }
    } finally {
      busy=false;
