@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: browser→tabs acoustic/bilabial trace reviewed
+CARTOON-EVAN-BROWSER-TABS-TRACE.md / evan-engine/reviews/browser-tabs-trace-v1.json. Existingtrace reused: original13.40–14.85sPCM/25msFFT/5mshop/697actualsamples480Hz. Olderbrowser13.50precedingmodeledF/ER; current13.60preparesB. Currenttabs13.95beforetransient/vowelcluster; oldertabs14.42–14.8overlapstrailingdecay/pause/nextonset. Retaincurrentintervals; exactwordedgesunverified. Noart/controls/retiming;18flagsopen.
+
+Fouractualoral/incomingidentity-jawarrays327/329/341/343 matchcaptureto1e-9. Bothseals1/gap.15px near13.64and14.21(-54.57/-57.83dBFS20ms); rest14.6gapalso.15butseals0. Gap/energyaloneDONOTlabelphonemes. outputs/evan-cartoon-browser-tabs-trace/Review.html:42BYTE-EXACTfullframes318..359;42/168normal/slowdecodes;28000exactPCM212000:240000.55PNGhashes/current+frozen selectedsources verified; nativeplothalves/4faces/4normal/2slow inspected. Sixteenflaggedwords deepertraced; all18unresolved. Realtime/listening/polishedFALSE; no pendingjobs;automationACTIVE. Full/defaults/protectedversions preserved.
+
+NEXT: finished/script55, Region05originalPCM/spectrum +actualFV/SHarticulation; thenfinaldigital65. Keepfullcandidate/all18flags; noautomaticretiming/newexpressionvariants. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync; localpushauthunavailable.
+
 ## Current task: version→of→your acoustic/labiodental trace reviewed
 CARTOON-EVAN-VERSION-OF-YOUR-TRACE.md / evan-engine/reviews/version-of-your-trace-v1.json. Existingtrace reused: original10.65–12.10sPCM/25msFFT/5mshop/697actualsamples480Hz. Threeflaggedwords34–36; earlier10.69/11.36/11.52overlapprecedingmodeledpassages; current11.41nearenergyreduction/11.75withinperiodicenergy/11.85laterreduction. Exactword/Vedges unverified; retaincurrentintervals. Noart/controls/retiming;18flagsopen.
 

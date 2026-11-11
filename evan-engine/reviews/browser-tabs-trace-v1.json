@@ -1,0 +1,278 @@
+{
+  "status": "browser-tabs-acoustic-bilabial-trace-reviewed",
+  "traceRange": [
+    13.4,
+    14.85
+  ],
+  "geometrySamples": 697,
+  "samplingHz": 480,
+  "fftWindowSamples": 400,
+  "fftHopSamples": 80,
+  "hypotheses": [
+    13.5,
+    13.6,
+    13.95,
+    14.42,
+    14.8
+  ],
+  "flaggedWordScriptIndices": [
+    41,
+    42
+  ],
+  "centered20msRmsAndControlProbes": [
+    {
+      "center": 13.5,
+      "sourceSamples": [
+        215840,
+        216160
+      ],
+      "rmsDbFS": -35.81267195351879,
+      "actualControlTime": 13.5,
+      "innerGap": 3.5843505859375,
+      "identitySeal": 0.0,
+      "jawSeal": 0.0,
+      "fv": 0.9578287536437979
+    },
+    {
+      "center": 13.6,
+      "sourceSamples": [
+        217440,
+        217760
+      ],
+      "rmsDbFS": -30.00324181789069,
+      "actualControlTime": 13.6,
+      "innerGap": 1.07611083984375,
+      "identitySeal": 0.9241743340933251,
+      "jawSeal": 0.9241743340933251,
+      "fv": 0.0022367148384171576
+    },
+    {
+      "center": 13.64,
+      "sourceSamples": [
+        218080,
+        218400
+      ],
+      "rmsDbFS": -54.56531431061953,
+      "actualControlTime": 13.639583333333333,
+      "innerGap": 0.149993896484375,
+      "identitySeal": 1.0,
+      "jawSeal": 1.0,
+      "fv": 0.0
+    },
+    {
+      "center": 13.95,
+      "sourceSamples": [
+        223040,
+        223360
+      ],
+      "rmsDbFS": -43.32186419381371,
+      "actualControlTime": 13.95,
+      "innerGap": 9.7955322265625,
+      "identitySeal": 0.0,
+      "jawSeal": 0.0,
+      "fv": 0.0
+    },
+    {
+      "center": 14.21,
+      "sourceSamples": [
+        227200,
+        227520
+      ],
+      "rmsDbFS": -57.827280573693514,
+      "actualControlTime": 14.210416666666667,
+      "innerGap": 0.149993896484375,
+      "identitySeal": 1.0,
+      "jawSeal": 1.0,
+      "fv": 0.0
+    },
+    {
+      "center": 14.42,
+      "sourceSamples": [
+        230560,
+        230880
+      ],
+      "rmsDbFS": -58.99512808177859,
+      "actualControlTime": 14.420833333333333,
+      "innerGap": 0.701141357421875,
+      "identitySeal": 0.0,
+      "jawSeal": 0.0,
+      "fv": 0.0
+    },
+    {
+      "center": 14.6,
+      "sourceSamples": [
+        233440,
+        233760
+      ],
+      "rmsDbFS": -73.00824503227476,
+      "actualControlTime": 14.6,
+      "innerGap": 0.149993896484375,
+      "identitySeal": 0.0,
+      "jawSeal": 0.0,
+      "fv": 0.0
+    },
+    {
+      "center": 14.8,
+      "sourceSamples": [
+        236640,
+        236960
+      ],
+      "rmsDbFS": -25.85721303276076,
+      "actualControlTime": 14.8,
+      "innerGap": 3.18798828125,
+      "identitySeal": 0.0,
+      "jawSeal": 0.0,
+      "fv": 0.0
+    }
+  ],
+  "actualRasterOralAndIncomingWeightsMatchTo1eMinus9": [
+    327,
+    329,
+    341,
+    343
+  ],
+  "actualRasterIncomingWeights": {
+    "327": {
+      "identity": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "jaw": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "329": {
+      "identity": [
+        0.5261392748446325,
+        0.16352264872974143,
+        0.310338076425626,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "jaw": [
+        0.48353485452140704,
+        0.16352264872974143,
+        0.265310308290084,
+        0.0,
+        0.08620130383824443,
+        0.0,
+        0.001430884620523125,
+        0.0,
+        0.0
+      ]
+    },
+    "341": {
+      "identity": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "jaw": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "343": {
+      "identity": [
+        0.5611734297138593,
+        0.10897014447311526,
+        0.3298564258130255,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "jaw": [
+        0.5594641324635893,
+        0.10897014447311526,
+        0.3315657230632955,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "nativeFacesInspected": [
+    327,
+    329,
+    341,
+    343
+  ],
+  "normalDecodedSourceFramesInspected": [
+    327,
+    329,
+    341,
+    343
+  ],
+  "slowDecodedVideoFramesInspected": [
+    36,
+    92
+  ],
+  "nativeResolutionTraceHalvesInspected": true,
+  "stageFramesByteExact": 42,
+  "normalDecodedFrames": 42,
+  "slowDecodedFrames": 168,
+  "contextPcmSamples": 28000,
+  "contextPcmRange": [
+    212000,
+    240000
+  ],
+  "contextPcmByteExact": true,
+  "pngHashesVerified": 55,
+  "selectedCurrentFrozenSourcesVerified": 111,
+  "findings": [
+    "Older browser13.50 falls in preceding modeled F/ER context; current13.60 prepares the B closure before release near13.67. Incoming identity and jaw seal weights both reach1 near13.64 with gap0.15px and20ms RMS -54.57dBFS. Exact onset remains unverified.",
+    "Current tabs13.95 precedes a transient and stronger following vowel cluster. The older tabs start14.42 is at the trailing decay into a pause (-59dBFS/20ms); its interval extends into the next noisy onset near14.8. The context does not support adopting that older interval.",
+    "A second B seal near14.21 has both identity/jaw weight1, gap0.15px and -57.83dBFS/20ms. At quiet rest14.6 the gap is also0.15px but both seal weights are0: a closed mouth alone does not identify a phoneme.",
+    "Four actual raster oral meshes and incoming identity/jaw arrays327/329/341/343 match capture to1e-9. This verifies contact-control construction, not exact word labels, human anatomy or polished acting."
+  ],
+  "disposition": "retain-current-intervals-older-tabs-pause-interval-unsupported",
+  "timingChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "flaggedWordsWithDeeperTraces": 16,
+  "independentListening": false,
+  "exactBoundariesVerified": false,
+  "realTimePlaybackAccepted": false,
+  "animationAccepted": false,
+  "polished": false,
+  "pendingJobs": [],
+  "next": "Review finished/script55 against Region05 original spectrum and actual FV/SH articulation; then final digital/script65. No automatic retiming/new expression variants."
+}
