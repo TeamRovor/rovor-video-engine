@@ -1141,6 +1141,12 @@
       "requires": [
         "github-read"
       ]
+    },
+    "cloud-walter-workflow-factory-20261110": {
+      "lane": "coordination",
+      "requires": [
+        "github-read"
+      ]
     }
   }
 }

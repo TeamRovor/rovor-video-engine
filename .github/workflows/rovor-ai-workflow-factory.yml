@@ -1,0 +1,65 @@
+name: ROVOR AI Workflow Factory - owner-reviewed GitHub proposals
+
+# Runs in GitHub cloud without Mac and without provider model calls.
+# A private Gemini model draft requires OWNER PASS in D1 before this bridge
+# may create a PR containing a fixed-template read-only workflow proposal.
+# Source output is never executed and the workflow never edits main.
+on:
+  schedule:
+    - cron: "11 */2 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/rovor-ai-workflow-factory.yml'
+      - 'tools/cloud_workflow_proposal_bridge.mjs'
+      - 'tools/publish_reviewed_workflow_proposals.mjs'
+      - 'tests/test_rovor_ai_workflow_factory.mjs'
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+
+permissions:
+  contents: read
+
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Verify model data cannot execute arbitrary jobs or bypass owner review
+        run: |
+          node --check tools/cloud_workflow_proposal_bridge.mjs
+          node --check tools/publish_reviewed_workflow_proposals.mjs
+          node --test tests/test_rovor_ai_workflow_factory.mjs tests/test_hud_cloud_workforce.mjs
+
+  publish-approved-proposals:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    needs: safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: rovor-hud-production
+    concurrency:
+      group: rovor-reviewed-workflow-factory
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Read approved private D1 drafts and open safe workflow proposal PRs only
+        run: node tools/publish_reviewed_workflow_proposals.mjs
