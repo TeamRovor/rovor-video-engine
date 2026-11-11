@@ -154,3 +154,18 @@ test('catch-up refresh honors STOP and never touches GitHub when disarmed',async
  assert.equal(calls.length,0);
  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM hud_native_repo_catchup').get().n,0);
 });
+
+
+test('writer catch-up refresh accepts truly empty POST streams but rejects payload data',async()=>{
+ const {env,sqlite}=setup();arm(sqlite);const url='https://hud.test/api/hud/workforce/repo-catchup/refresh';
+ const calls=[];const empty=new Request(url,{method:'POST',headers:{Authorization:'Bearer '+W},body:''});
+ assert(empty.body!==null); // Fetch may expose an empty stream.
+ const result=await handle(empty,env,NOW,upstream(calls));
+ assert.equal(result.status,200);assert.equal((await result.json()).state,'ready');
+ assert.equal(calls.length,8);
+ const bad=new Request(url,{method:'POST',headers:{Authorization:'Bearer '+W},body:'not-empty'});
+ const denied=await handle(bad,env,NOW+1,upstream(calls));
+ assert.equal(denied.status,400);
+ assert.equal((await denied.json()).error,'body_not_allowed');
+ assert.equal(calls.length,8);
+});
