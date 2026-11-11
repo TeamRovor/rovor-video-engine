@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
 import {githubAppCredentialIssue} from '../integrations/hud-cloud/github-app.mjs';
-import {verifyGithubCredentials,verifyGithubWorker} from '../integrations/hud-cloud/verify-github-app.mjs';
+import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions} from '../integrations/hud-cloud/verify-github-app.mjs';
 const NOW=Date.now(),pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
 const env={ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem,
  ROVOR_NATIVE_DISCOVERY_ENABLED:'true',ROVOR_HUD_READER_TOKEN:'r'.repeat(40)};
@@ -51,4 +51,36 @@ test('each bad credential has a precise nonsecret diagnostic; harmless surroundi
  assert.equal(githubAppCredentialIssue({...env,ROVOR_GITHUB_APP_PRIVATE_KEY:'SHA256:mock-fingerprint'}),'github_private_key_is_fingerprint_not_pem');
  assert.equal(githubAppCredentialIssue({...env,ROVOR_GITHUB_APP_PRIVATE_KEY:'partial key'}),'github_private_key_requires_complete_pem');
  assert.equal(githubAppCredentialIssue({...env,ROVOR_GITHUB_APP_ID:' 123\n',ROVOR_GITHUB_INSTALLATION_ID:'456\n',ROVOR_GITHUB_APP_PRIVATE_KEY:'\n'+pem+'\n'}),null);
+});
+
+test('patch write admission verifies the exact downscoped repo token and makes no GitHub repository write',async()=>{
+ const patch={...env,ROVOR_GITHUB_PATCH_ENABLED:'true',
+  ROVOR_GITHUB_PATCH_PATHS:JSON.stringify(['architecture/roadmap.md'])};
+ const calls=[];
+ const proof=await verifyGithubPatchPermissions(patch,async(url,init)=>{
+  calls.push({url,method:init.method});
+  assert.equal(url,'https://api.github.com/app/installations/456/access_tokens');
+  assert.equal(init.method,'POST');assert.equal(init.redirect,'manual');
+  assert.deepEqual(JSON.parse(init.body),{repositories:['rovor-video-engine'],
+   permissions:{contents:'write',pull_requests:'write'}});
+  return Response.json({token:'mock-patch-token-at-least-twenty-chars',
+   expires_at:new Date(NOW+3600000).toISOString(),
+   permissions:{contents:'write',pull_requests:'write',metadata:'read'},
+   repositories:[{full_name:'TeamRovor/rovor-video-engine'}]},{status:201});
+ },NOW);
+ assert.equal(proof.write_scope_verified,true);assert.equal(proof.repository_written,false);
+ assert.equal(proof.allowed_path_count,1);assert.equal(calls.length,1);
+ assert(!JSON.stringify(proof).includes('mock-patch-token'));
+});
+test('patch verifier distinguishes disabled, absent allowlist, rejected and under-scoped permissions',async()=>{
+ const no=async()=>{throw Error('token endpoint must not be called');};
+ assert.equal((await verifyGithubPatchPermissions(env,no,NOW)).reason,'patch_disabled');
+ const enabled={...env,ROVOR_GITHUB_PATCH_ENABLED:'true'};
+ await assert.rejects(()=>verifyGithubPatchPermissions(enabled,no,NOW),/github_patch_allowed_paths_missing_or_invalid/);
+ const allowed={...enabled,ROVOR_GITHUB_PATCH_PATHS:'["architecture/roadmap.md"]'};
+ await assert.rejects(()=>verifyGithubPatchPermissions(allowed,async()=>new Response('do not log upstream content',{status:403}),NOW),/github_patch_write_scope_unconfirmed/);
+ await assert.rejects(()=>verifyGithubPatchPermissions(allowed,async()=>Response.json({
+  token:'mock-patch-token-at-least-twenty-chars',expires_at:new Date(NOW+3600000).toISOString(),
+  permissions:{contents:'read',pull_requests:'write',metadata:'read'}},{status:201}),NOW),/github_patch_write_scope_invalid/);
+ await assert.rejects(()=>verifyGithubPatchPermissions({...enabled,ROVOR_GITHUB_APP_ID:''},no,NOW),/github_patch_app_credentials_missing/);
 });

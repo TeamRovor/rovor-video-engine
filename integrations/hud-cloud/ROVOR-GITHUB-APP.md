@@ -14,6 +14,10 @@ Only after the read-only installation succeeds, the owner may grant Contents and
 
 Proposal format: {"version":1,"base_commit":"40-character reviewed main SHA","title":"Short summary","summary":"Reason and verification","change":{"path":"owner-allowlisted existing path","blob_sha":"40-character reviewed blob SHA","before":"unique exact original text","after":"replacement text"}}.
 
+## Production permission verification before enabling writes
+
+The protected main deployment validates `ROVOR_GITHUB_PATCH_ENABLED=true` and a nonempty, safe `ROVOR_GITHUB_PATCH_PATHS` JSON allowlist by minting a **single-repository downscoped installation token** with Contents write and Pull requests write. It checks returned token permissions but never prints the token, edits code, or creates a pull request during this preflight. Denied or under-scoped permissions stop an explicitly enabled release before cloud writes. No inference or patch execution occurs during permission verification. A successful preflight is not proof that a reviewed draft PR has opened: the separate owner-approved production pilot remains required.
+
 ## Direct private HUD owner control
 
 Set a new random 32–200 character printable, non-whitespace owner secret as `ROVOR_HUD_OWNER_TOKEN` in the protected production environment; it must be distinct from the existing reader and writer keys. The existing deploy transfers it to the Worker as `HUD_OWNER_TOKEN`. Sign in to the same private HUD using this key once per 24-hour owner session. The browser receives a signed, expiring HttpOnly owner cookie, never the raw owner key. Viewing-key login revokes the owner cookie. Once configured, PASS/FAIL requires the separate owner session. The owner desk supports direct seven-day standing authorization and STOP; the source commit comes from the deployed reviewed checkout and the same D1 PASS/STOP/empty-queue guards apply. It can also queue an exact accepted patch with a separate explicit confirmation. This does not immediately call a provider or write to GitHub. The protected GitHub workflows remain fallback, not a runtime dependency.

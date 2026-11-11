@@ -32,6 +32,12 @@ function pathPolicy(env){
  }catch{return [];}
 }
 function ready(env){return env?.ROVOR_GITHUB_PATCH_ENABLED==='true'&&githubAppConfigured(env)&&pathPolicy(env).length>0;}
+// Pure configuration preflight; never infers a successful GitHub write from a flag.
+export function githubPatchConfiguration(env){
+ return {requested:env?.ROVOR_GITHUB_PATCH_ENABLED==='true',
+  credentials_configured:githubAppConfigured(env),allowed_path_count:pathPolicy(env).length,
+  configured:ready(env)};
+}
 export function parsePatch(raw,sourceCommit,env){
  if(!safeText(raw,12000)||!SHA.test(sourceCommit))throw Error('patch_proposal_invalid');
  let p;try{p=JSON.parse(raw);}catch{throw Error('patch_proposal_invalid');}
