@@ -157,7 +157,8 @@ function cloudEvidence(p,slot=null){
    '<span>Provider catalog check: '+check+'</span>',
    '<span>'+catalogConnectionLabel(p)+'</span>',
    '<span>Recorded cloud requests (24h): '+(recorded===null?'Not reported':fmt(recorded))+'</span>',
-   '<span>Verified running now: '+(p.online_verified===true?'YES':'NOT VERIFIED')+'</span>'];
+   '<span>Recent provider reply (last 60m): '+(p.recent_inference_verified===true?'VERIFIED':'NOT VERIFIED')+'</span>',
+   '<span>Route ready and recently proven: '+(p.online_verified===true?'YES':'NOT VERIFIED')+'</span>'];
  const gates={
   not_configured:'No verified cloud route configuration',
   missing_secret:'Cloud credential unavailable',
