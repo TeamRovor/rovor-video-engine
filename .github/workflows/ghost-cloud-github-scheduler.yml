@@ -47,10 +47,12 @@ jobs:
 
 
   shift:
-    # This cannot run on pull_request, push or timer; even a manual run
-    # requires an explicit owner check and never affects the Cloudflare cron.
-    if: github.event_name == 'workflow_dispatch' && inputs.confirm_legacy_site_diagnostic == true
+    # This cannot run on pull_request, push, timer or an unreviewed branch;
+    # manual main requires explicit confirmation and the protected production
+    # environment before any legacy Site service secret becomes available.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_legacy_site_diagnostic == true
     runs-on: ubuntu-latest
+    environment: rovor-hud-production
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
