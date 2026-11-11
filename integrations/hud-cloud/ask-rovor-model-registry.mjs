@@ -100,8 +100,15 @@ export function validateDispatcherIntent(input) {
   });
 }
 
-function proofFailure(admission, id, now) {
+function proofFailure(admission, id, now, provider) {
   if (!admission) return 'no_private_admission';
+  // A matching catalogue entry and a prior canary cannot freeze a moving
+  // `latest`/`auto` alias. Mirror the production executor's pinned-route gates
+  // before recommending any route, without treating this as dispatch authority.
+  if (/(^|[/:.-])(auto|latest)([/:.-]|$)/i.test(id)) return 'unpinned_model_alias';
+  if (provider === 'openrouter' && !id.endsWith(':free')) return 'openrouter_free_route_required';
+  if (provider === 'huggingface' && !/:[a-z0-9-]+$/.test(id))
+    return 'huggingface_upstream_required';
   if (admission.stop_requested !== false) return 'stop_or_state_unknown';
   if (admission.dispatch_enabled !== true) return 'dispatch_disabled';
   const b = admission.zero_cost;
@@ -179,7 +186,7 @@ export function createModelRegistry({catalogs = [], admissions = [], reviews = [
       const key = keyFor(provider, id);
       const admission = evidence.get(key);
       const blocked_reason = !catalogFresh ? 'catalog_stale_or_unavailable' :
-        conflicts.has(key) ? 'conflicting_private_admission' : proofFailure(admission, id, now_ms);
+        conflicts.has(key) ? 'conflicting_private_admission' : proofFailure(admission, id, now_ms, provider);
       const byTask = {};
       for (const task of TASK_FAMILIES) {
         const observed = feedback.get(scoreKey(provider, id, task));
