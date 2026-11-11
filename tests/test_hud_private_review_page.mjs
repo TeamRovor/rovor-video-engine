@@ -187,3 +187,20 @@ test('superseded preflight jobs are explained without claiming inference, approv
  assert.match(pageJS,/A later START will not replay this item/);
  assert.match(pageJS,/entry\.started_at==null&&entry\.actual_model==null/);
 });
+
+test('first GitHub draft PR progress uses verified scope and real D1 PR, not configuration alone',()=>{
+ assert.match(html,/First autonomous GitHub draft PR/);
+ assert.match(html,/id="first-pr-state"/);
+ assert.match(html,/No automatic merge or release/);
+ assert.match(pageJS,/write_scope_verified_at_deployment/);
+ assert.match(pageJS,/A previous GitHub write has an uncertain outcome/);
+ assert.match(pageJS,/An engineering proposal awaits PASS or FAIL/);
+ assert.match(pageJS,/An actual ROVOR draft PR is recorded/);
+ assert.match(pageJS,/rolling_day_attempt_limit/);
+ const first=html.indexOf('<section id="patch-preparation"');
+ const advanced=html.indexOf('Workforce status &amp; advanced controls');
+ assert(first>advanced);
+ const endAdvanced=html.indexOf('</details>',advanced);
+ assert(first>endAdvanced,'source builder must no longer be hidden in advanced controls');
+ assert.doesNotMatch(pageJS,/\.innerHTML\s*=|insertAdjacentHTML/);
+});

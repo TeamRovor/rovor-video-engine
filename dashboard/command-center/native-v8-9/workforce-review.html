@@ -66,6 +66,12 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 .report-claim.missing h5{color:#f7d9b9}
 .missing-report-warning{grid-column:1/-1;margin:0;color:#fad6b8;font-size:13px;line-height:1.5}
 @media(max-width:680px){.report-claims{grid-template-columns:minmax(0,1fr);padding:10px;gap:7px}.report-claims-heading,.missing-report-warning{grid-column:1}.report-claim{padding:10px}}
+.first-pr-card{border-color:#467eaa;background:linear-gradient(135deg,#103757,#081e34);margin:20px 0 10px}
+.first-pr-card h2{font-size:17px}
+#first-pr-state{margin:11px 0;font-size:14px;line-height:1.55;color:#e4f6ff}
+#first-pr-state p{margin:0 0 8px}
+#first-pr-state a{display:inline-block;margin-top:5px;font-weight:750;overflow-wrap:anywhere}
+#patch-preparation{margin-top:15px}
 </style>
 <script type="module" src="/workforce-review.js"></script>
 </head>
@@ -96,6 +102,12 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 <div id="jobs" class="grid" aria-live="off"></div>
 <p id="page-status" role="status" aria-live="polite"></p>
 <details class="technical-panel" id="history-panel"><summary>Past reviews &amp; other jobs</summary><div id="history" class="grid"></div></details>
+<section class="job first-pr-card" aria-label="First ROVOR autonomous draft pull request">
+<h2>First autonomous GitHub draft PR</h2>
+<div id="first-pr-state" role="status" aria-live="polite">Checking protected GitHub permissions and saved jobs…</div>
+<p class="metadata">The owner selects a permitted source excerpt and improvement → ROVOR generates one proposal using an admitted free model → you review and PASS or FAIL the exact proposal → you separately authorize a single <strong>draft PR</strong>. No automatic merge or release.</p>
+<p class="metadata"><a href="/login?next=%2Fworkforce-review.html">Sign in with the separate owner key</a> to prepare a source task. No keys are sent to the AI.</p>
+</section>
 <details class="technical-panel"><summary>Workforce status &amp; advanced controls</summary>
 <section class="status-grid" aria-label="Private workforce summary">
 <div class="stat"><strong id="native-clock" class="compact">—</strong><small id="native-detail">Last actual native cron event</small></div>
@@ -111,19 +123,20 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 <p class="metadata"><a href="/login?next=%2Fworkforce-review.html">Sign in with your separate owner key</a>. <a href="https://github.com/TeamRovor/rovor-video-engine/actions/workflows/start-cloud-workforce.yml" rel="noreferrer">Protected GitHub fallback</a> remains available.</p>
 <p id="owner-action-status" class="metadata" role="status"></p>
 </section>
+
+</details>
 <section id="patch-preparation" class="job" hidden aria-label="Prepare an owner-scoped engineering task" style="margin-top:15px">
-<h2>Prepare an engineering task</h2>
+<h2>Prepare the first source-change proposal</h2>
 <p class="metadata">Read a small, exact source excerpt through ROVOR’s own GitHub App. Nothing is sent to a model until you explicitly authorize the excerpt and objective.</p>
 <label>Allowed file<select id="patch-path"></select></label>
 <div class="line-range"><label>First line<input id="patch-start-line" type="number" min="1" max="10000" value="1"></label><label>Last line<input id="patch-end-line" type="number" min="1" max="10000" value="20"></label></div>
-<label>Small improvement objective<textarea id="patch-brief" maxlength="500" rows="3" placeholder="Describe one precise, safe improvement"></textarea></label>
+<label>Small improvement objective<textarea id="patch-brief" maxlength="500" rows="3" placeholder="Example: Make the mobile label more legible in this exact CSS excerpt without changing ROVOR’s design."></textarea></label>
 <div class="actions"><button id="patch-preview-button">Read exact source excerpt</button></div>
 <pre id="patch-preview-text" class="draft" hidden></pre>
 <label id="patch-consent-label" hidden><input id="patch-consent" type="checkbox"> I approve this exact excerpt and objective as public-safe for the pinned free Gemini model. They contain no credentials, client data or confidential code.</label>
 <div class="actions"><button id="patch-task-button" class="approve" disabled>Queue reviewed source task</button></div>
 <p id="patch-preparation-status" class="metadata" role="status"></p>
 </section>
-</details>
 <footer class="notice">This is the existing Cloudflare HUD review ledger, not the separate private ChatGPT Site database. A successful draft does not prove live nine-provider inference, external remaining free quota, or automatic publication. STOP prevents new claims; it cannot cancel an upstream call already sent.</footer>
 </main>
 </body>
