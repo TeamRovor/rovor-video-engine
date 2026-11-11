@@ -44,6 +44,16 @@ export function buildHudSecretPayload(env) {
   if(['true','false'].includes(env.ROVOR_GITHUB_PATCH_ENABLED))payload.ROVOR_GITHUB_PATCH_ENABLED=env.ROVOR_GITHUB_PATCH_ENABLED;
   if(['true','false'].includes(env.ROVOR_GITHUB_PATCH_OWNER_REQUESTED))
     payload.ROVOR_GITHUB_PATCH_OWNER_REQUESTED=env.ROVOR_GITHUB_PATCH_OWNER_REQUESTED;
+  // Persist the exact protected runner scope-check timestamp, including zero
+  // when permission was denied, so no old proof can survive a failed rollout.
+  if(env.ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT!==undefined){
+    const proof=env.ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT;
+    if(typeof proof!=='string'||!/^(0|[1-9][0-9]{12})$/.test(proof)||
+      (env.ROVOR_GITHUB_PATCH_ENABLED==='true'&&proof==='0')||
+      (env.ROVOR_GITHUB_PATCH_ENABLED!=='true'&&proof!=='0'))
+      throw Error('invalid_private_secret_configuration');
+    payload.ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT=proof;
+  }
   if(typeof env.ROVOR_GITHUB_PATCH_PATHS==='string'&&env.ROVOR_GITHUB_PATCH_PATHS.length<=3000&&env.ROVOR_GITHUB_PATCH_PATHS)
     payload.ROVOR_GITHUB_PATCH_PATHS=env.ROVOR_GITHUB_PATCH_PATHS;
   if(validateOneTimeGeminiActivation(env)){

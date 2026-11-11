@@ -223,3 +223,26 @@ test('deployed owner gate distinguishes missing owner secret from exposure or in
  await assert.rejects(()=>verifyDeployedOwnerSession(env,async(_url,opts)=>opts.headers.Authorization?
   Response.json({configured:true,owner_authenticated:true}):new Response(null,{status:401})),/owner_session_status_invalid/);
 });
+
+test('protected deployment forwards exact verified write scope timestamp, never a fabricated PR receipt',async()=>{
+ const enabled={...env,ROVOR_HUD_WRITER_TOKEN:'w'.repeat(40),ROVOR_GITHUB_PATCH_ENABLED:'true',
+  ROVOR_GITHUB_PATCH_OWNER_REQUESTED:'true',ROVOR_GITHUB_PATCH_PATHS:'["architecture/roadmap.md"]',
+  ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT:String(NOW)};
+ const payload=buildHudSecretPayload(enabled);
+ assert.equal(payload.ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT,String(NOW));
+ const disabled=buildHudSecretPayload({...enabled,ROVOR_GITHUB_PATCH_ENABLED:'false',
+  ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT:'0'});
+ assert.equal(disabled.ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT,'0');
+ assert.throws(()=>buildHudSecretPayload({...enabled,ROVOR_GITHUB_PATCH_ENABLED:'false'}));
+ assert.throws(()=>buildHudSecretPayload({...enabled,ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT:'false'}));
+ const source={source:'rovor_independent_github_patch',configured:true,
+  readiness:'write_scope_verified_at_deployment',write_scope_verified_at:NOW,
+  allowed_paths:['architecture/roadmap.md'],items:[],
+  mac_required:false,chatgpt_required:false,merges_allowed:false};
+ const probe=async(_url,opts)=>opts.headers.Authorization?Response.json(source):new Response(null,{status:401});
+ const verified=await verifyGithubPatchWorker(enabled,probe,{attempts:1,pause:async()=>{}});
+ assert.equal(verified.deployment_write_scope_readback_verified,true);
+ await assert.rejects(()=>verifyGithubPatchWorker(enabled,async(_url,opts)=>opts.headers.Authorization?
+  Response.json({...source,write_scope_verified_at:NOW-1}):new Response(null,{status:401}),
+  {attempts:1,pause:async()=>{}}),/github_patch_worker_config_mismatch/);
+});

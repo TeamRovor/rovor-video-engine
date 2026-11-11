@@ -81,18 +81,24 @@ export async function queueGithubPatch(env,body,now=Date.now()){
 export async function githubPatchStatus(env){
  const cfg=githubPatchConfiguration(env);
  const ownerRequested=env?.ROVOR_GITHUB_PATCH_OWNER_REQUESTED==='true';
+ const checkedAt=env?.ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT;
+ const verifiedAt=cfg.configured&&typeof checkedAt==='string'&&/^[1-9][0-9]{12}$/.test(checkedAt)&&
+  Number(checkedAt)<=Date.now()+300000?Number(checkedAt):null;
  const readiness=ownerRequested&&!cfg.requested?'write_scope_unavailable':!cfg.requested?'disabled_by_owner':
   !cfg.credentials_configured?'app_credentials_missing':
   !cfg.allowed_path_count?'allowlist_missing_or_invalid':
+  verifiedAt!==null?'write_scope_verified_at_deployment':
   'configuration_complete_write_scope_unverified';
  try{
   const rows=await env.DB.prepare(`SELECT job_id,output_sha256,base_commit,path,branch,authorized_at,
    expires_at,started_at,finished_at,state,error_code,commit_sha,pr_number
    FROM hud_github_patch_jobs ORDER BY authorized_at DESC LIMIT 30`).bind().all();
   return {source:'rovor_independent_github_patch',configured:cfg.configured,readiness,
+   write_scope_verified_at:verifiedAt,
    allowed_paths:cfg.configured?pathPolicy(env):[],items:rows.results||[],
    mac_required:false,chatgpt_required:false,merges_allowed:false};
- }catch{return {source:'rovor_independent_github_patch',configured:false,readiness:'status_unavailable',items:[],storage_unavailable:true,merges_allowed:false};}
+ }catch{return {source:'rovor_independent_github_patch',configured:false,readiness:'status_unavailable',
+    write_scope_verified_at:null,items:[],storage_unavailable:true,merges_allowed:false};}
 }
 async function bounded(response,max=500000){
  if(!response.body)throw Error('github_response_missing');
