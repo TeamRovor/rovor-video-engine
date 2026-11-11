@@ -35,11 +35,6 @@ on:
         default: audit_only
         options:
           - audit_only
-      confirm_free_tier:
-        description: "Only for Gemini canary: I verified this key/project is Free tier and authorize one small request"
-        type: boolean
-        required: false
-        default: false
       trigger_one_approved_shift:
         description: "LEGACY Site diagnostic only (may HTTP 403), NOT the native Cloudflare workforce"
         type: boolean
@@ -105,7 +100,6 @@ jobs:
       shift_ready: ${{ steps.audit.outputs.shift_ready }}
     env:
       ROVOR_CONTROL_MODE: ${{ inputs.run_mode }}
-      ROVOR_OWNER_CONFIRMS_FREE_TIER: ${{ inputs.confirm_free_tier }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       ROVOR_HUD_D1_ID: ${{ secrets.ROVOR_HUD_D1_ID }}
@@ -118,22 +112,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Reuse existing private Cloudflare Gemini key without copying it to GitHub
-        if: inputs.run_mode == 'deploy_and_test_gemini'
-        shell: bash
-        run: |
-          set -euo pipefail
-          # A GitHub Free-tier key remains supported. If absent, inspect only
-          # Cloudflare Worker secret NAMES; never download or expose values.
-          if [ -n "${ROVOR_GEMINI_API_KEY:-}" ]; then exit 0; fi
-          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then exit 0; fi
-          npm install --global wrangler@4 >/dev/null 2>&1
-          if (cd integrations/hud-cloud && wrangler secret list --config wrangler.github.jsonc) > "$RUNNER_TEMP/rovor-cloud-secret-names.json" 2>/dev/null; then
-            if node -e 'const x=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));if(!Array.isArray(x)||!["GEMINI_API_KEY","ROVOR_GEMINI_FREE_TIER_VERIFIED"].every(n=>x.some(s=>s?.name===n)))process.exit(1)' "$RUNNER_TEMP/rovor-cloud-secret-names.json"; then
-              echo "ROVOR_CLOUDFLARE_GEMINI_SECRET_PRESENT=true" >> "$GITHUB_ENV"
-              echo "Existing private Cloudflare Gemini credential names verified; no key was copied or printed."
-            fi
-          fi
       - name: Private, read-only check of two existing cloud systems
         id: audit
         shell: bash
@@ -227,7 +205,6 @@ jobs:
     environment: rovor-hud-production
     env:
       ROVOR_CONTROL_MODE: ${{ inputs.run_mode }}
-      ROVOR_OWNER_CONFIRMS_FREE_TIER: ${{ inputs.confirm_free_tier }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       ROVOR_HUD_D1_ID: ${{ secrets.ROVOR_HUD_D1_ID }}
