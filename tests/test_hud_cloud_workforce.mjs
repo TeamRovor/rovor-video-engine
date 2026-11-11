@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {intake,control,status,draft,review,tick} from '../integrations/hud-cloud/approved-workforce.mjs';
-import {handle} from '../integrations/hud-cloud/worker.mjs';
+import worker,{handle} from '../integrations/hud-cloud/worker.mjs';
 
 const now=Date.parse('2026-11-11T02:05:00.000Z');
 const model='gemini-3.5-flash-lite';
@@ -143,4 +143,26 @@ test('new workforce endpoints distinguish writer, reader and owner same-origin r
   {enabled:true}),s.env,now)).status,401);
  assert.equal((await handle(jsonRequest('/api/hud/workforce/control',writer,'POST',
   {enabled:true}),s.env,now)).status,200);
+});
+
+test('existing native Cloudflare cron honors STOP and runs at most one approved Gemini job',async t=>{
+ const s=setup();
+ const calls=[];
+ t.mock.method(globalThis,'fetch',google(calls));
+ await intake(s.DB,packet,Date.now()-2000);
+ // Cron is a no-op while STOP is closed, even with a queued job.
+ await worker.scheduled({},s.env);
+ assert.equal(calls.length,0);
+ assert.equal((await draft(s.DB,job.id)).body.state,'queued');
+ s.db.prepare('INSERT INTO hud_gemini_model_health(model,last_success_at,success_count) VALUES(?,?,1)')
+  .run(model,Date.now()-1000);
+ await control(s.DB,true);
+ await worker.scheduled({},s.env);
+ const result=(await draft(s.DB,job.id)).body;
+ assert.equal(result.state,'needs_review');
+ assert.match(result.output_sha256,/^[a-f0-9]{64}$/);
+ assert.equal(calls.filter(x=>x.method==='POST').length,1);
+ await worker.scheduled({},s.env);
+ assert.equal(calls.filter(x=>x.method==='POST').length,1,'cron never replays a completed task');
+ await control(s.DB,false);
 });
