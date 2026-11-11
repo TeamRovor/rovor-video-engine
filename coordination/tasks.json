@@ -6194,6 +6194,29 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42989320626"
         }
       ]
+    },
+    {
+      "id": "legacy-site-403-scheduler-retirement-20261111",
+      "title": "Retire failing GitHub-to-private-Site cron without weakening the existing Cloudflare native workforce",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar authenticated scheduler recovery 2026-11-11",
+      "branch": "fix/retire-403-legacy-site-timer-20261111",
+      "scopes": [
+        ".github/workflows/ghost-cloud-github-scheduler.yml",
+        "tools/ghost_cloud_hosted_shift.py",
+        "tests/test_ghost_cloud_hosted_shift.py"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T21:34:00Z",
+      "next_update": "After hosted CI and production GitHub push verification",
+      "next_action": "Validate the manual-only legacy Site shift action remains available, removes repeated scheduled 403s, then verify existing Cloudflare native clock and exact model receipts without enabling Site routes or retrying failed jobs.",
+      "acceptance": "Hosted scheduler no longer invokes the private Site every five minutes; manual requests remain main-only and private, HTTP 403 fails visibly without keys or inferred execution, and existing Cloudflare worker native clock remains unchanged. Validate Python test suite and original private Site remains gated.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/43079508339",
+        "https://github.com/TeamRovor/rovor-video-engine/actions/runs/43008276557"
+      ],
+      "blocker": "Original private ChatGPT Site service endpoint returned HTTP 403 to hosted Actions; this change intentionally does not bypass Site authentication or activate nine-provider routes."
     }
   ]
 }
