@@ -2,6 +2,8 @@
 // Trusted GitHub production environment operator for the EXISTING Cloudflare HUD.
 // No arbitrary prompt, paid model, Site auth bypass, or old v1 task replay.
 import {readFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
 import {planApprovedJobs} from '../integrations/ghost-cloud/approved-feed.mjs';
 const ORIGIN='https://rovor-hud-telemetry.rovordigital.workers.dev';
 const MODEL='gemini-3.5-flash-lite';
@@ -80,6 +82,8 @@ async function main(){
     !/^v(?:[2-9]|[1-9][0-9]+)$/.test(revision)||!/^[a-f0-9]{40}$/.test(sha||''))
   throw Error('new_owner_approved_v2_canonical_task_required');
  if(before.enabled!==false)throw Error('pause_existing_scheduled_work_before_pilot');
+ if(before.items.some(x=>['queued','running','uncertain'].includes(x.state)))
+  throw Error('resolve_existing_cloud_queue_before_pilot');
  const catalog=await api('/api/hud/gemini/models');
  if(catalog.source!=='google_gemini_cloud_direct'||
     !catalog.model_evidence?.some(x=>x.model===MODEL&&x.verification==='verified_recent_reply'))
@@ -93,14 +97,13 @@ async function main(){
   body:{approval:'trusted_canonical_owner_approval_v1',job}});
  if(receipt.id!==job.id||receipt.queued!==true||receipt.duplicate===true)
   throw Error('job_not_new_or_duplicate_replay_denied');
- let attempted=false,run;
+ let run;
  try{
   await setEnabled(true);
-  attempted=true;
   run=await api('/api/hud/workforce/tick',{method:'POST',write:true});
  }finally{
-  // Single pilot MUST NOT start 5-minute unattended work on its own.
-  if(attempted)await setEnabled(false);
+  // Always force STOP even if enabling or inference reports an ambiguous error.
+  await setEnabled(false);
  }
  if(run.id!==job.id||run.dispatched!==1||run.state!=='needs_review')
   throw Error('pilot_no_reviewable_model_receipt_'+String(run.state||'unknown').slice(0,40));
@@ -112,7 +115,7 @@ async function main(){
  reporter('PASS: one new owner-approved canonical task returned a pinned Gemini draft with exact private D1 receipt. STOP restored; owner PASS/FAIL pending in Ask ROVOR.');
 }
 
-if(import.meta.url===new URL('file://'+process.argv[1]).href)
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))
  main().catch(error=>{const message=String(error?.message||'owner_operation_failed');
   // Error messages are fixed codes; do not print untrusted provider bodies.
   const safe=/^[a-z0-9_]{3,90}$/.test(message)?message:'owner_operation_failed';
