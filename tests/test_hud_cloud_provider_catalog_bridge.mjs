@@ -5,6 +5,7 @@ import {readFileSync} from 'node:fs';
 import {catalogBridgeStatus,refreshCatalogBridge,CATALOG_PROVIDERS}
  from '../integrations/hud-cloud/cloud-provider-catalog-bridge.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
+import {verifyCatalogBridge} from '../integrations/hud-cloud/verify-cloud-provider-catalog-bridge.mjs';
 import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-secret-payload.mjs';
 
 const R='r'.repeat(40),W='w'.repeat(40),S='s'.repeat(48);
@@ -123,4 +124,25 @@ test('viewer-only catalog GET and optional secret transfer never expose keys or 
  assert(!Object.hasOwn(payload,'ROVOR_GHOST_SERVICE_TOKEN'));
  assert.throws(()=>buildHudSecretPayload({ROVOR_HUD_READER_TOKEN:R,
   ROVOR_HUD_WRITER_TOKEN:W,ROVOR_GHOST_SERVICE_TOKEN:R}));
+});
+
+
+test('release reports per-provider blockers without exposing secrets or model names',async()=>{
+ const s=setup();
+ delete s.env.GHOST_SITE_SERVICE_TOKEN;
+ await refreshCatalogBridge(s.env,T,()=>{throw Error('no network');});
+ const status=await catalogBridgeStatus(s.env,T);
+ const send=async(url,init)=>{
+  assert.equal(url,'https://rovor-hud-telemetry.rovordigital.workers.dev/api/hud/provider-catalogs');
+  return init.headers.Authorization?Response.json(status):new Response('',{status:401});
+ };
+ const report=await verifyCatalogBridge(R,send,{attempts:1});
+ assert.equal(report.checked_provider_slots,1);
+ assert.equal(report.fresh_provider_slots,1);
+ assert.equal(report.recent_site_d1_catalog_receipts,0);
+ assert.equal(report.catalog_check_states.gemini,'bridge_unconfigured');
+ assert.equal(report.catalog_check_states.groq,'never_checked');
+ assert.equal(report.verified_online_inference_providers,0);
+ assert(!JSON.stringify(report).includes(S));
+ assert(!Object.hasOwn(report,'models'));
 });

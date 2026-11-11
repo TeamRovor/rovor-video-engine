@@ -56,8 +56,14 @@ export async function verifyCatalogBridge(token,send=fetch,{attempts=5,pause=del
       row.model_count!==row.models.length)
     throw Error('catalog_bridge_readback_invalid');
   }
+  const verified=data.providers.filter(p=>p.site_d1_verified&&p.freshness==='fresh').length;
+  if(verified!==data.site_d1_verified_count)throw Error('catalog_bridge_readback_invalid');
+  // Only public-safe states. Never print keys, model IDs or private outputs.
   return {private_auth_verified:true,provider_slots:9,
-   recent_site_d1_catalog_receipts:data.site_d1_verified_count,
+   checked_provider_slots:data.providers.filter(p=>p.checked_at!==null).length,
+   fresh_provider_slots:data.providers.filter(p=>p.freshness==='fresh').length,
+   catalog_check_states:Object.fromEntries(data.providers.map(p=>[p.provider,p.status])),
+   recent_site_d1_catalog_receipts:verified,
    verified_online_inference_providers:0,
    catalog_only:true,mac_required:false};
  }
