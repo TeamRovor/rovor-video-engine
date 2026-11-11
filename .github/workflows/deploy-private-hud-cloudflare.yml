@@ -212,6 +212,9 @@ jobs:
         run: node private-worker-secret-payload.mjs --preflight
       - name: Verify independent GitHub App installation and read-only repository access
         run: node verify-github-app.mjs --credentials
+      - name: Verify optional draft-PR write permission without repository writes
+        if: env.ROVOR_GITHUB_PATCH_ENABLED == 'true'
+        run: node verify-github-app.mjs --patch
       - name: Freeze curated GitHub sources at the reviewed main SHA
         run: node build-repo-snapshot.mjs
       - name: Install Wrangler (Cloudflare-owned hosting, no ChatGPT Site publisher)

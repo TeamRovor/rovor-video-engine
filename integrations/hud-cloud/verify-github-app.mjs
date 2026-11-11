@@ -3,7 +3,8 @@
 // upstream response bodies, repository contents or private task data.
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-import {githubAppConfigured,githubAppCredentialIssue,mintGithubReadToken,readGithubDiscovery} from './github-app.mjs';
+import {githubAppConfigured,githubAppCredentialIssue,mintGithubReadToken,mintGithubPatchToken,readGithubDiscovery} from './github-app.mjs';
+import {githubPatchConfiguration} from './github-patch-gateway.mjs';
 const ORIGIN='https://rovor-hud-telemetry.rovordigital.workers.dev';
 const names=['ROVOR_GITHUB_APP_ID','ROVOR_GITHUB_INSTALLATION_ID','ROVOR_GITHUB_APP_PRIVATE_KEY'];
 export async function verifyGithubCredentials(env,send=fetch,now=Date.now()){
@@ -20,6 +21,23 @@ export async function verifyGithubCredentials(env,send=fetch,now=Date.now()){
  }
  try{await readGithubDiscovery(token,send);}catch{throw Error('github_app_repository_read_unconfirmed');}
  return {configured:true,read_verified:true,read_only:true,repository:'TeamRovor/rovor-video-engine',native_discovery_requested:requested};
+}
+// Read-only permission preflight for the optional native draft-PR executor.
+// Minting an installation token is NOT a repository write; it verifies the
+// precise one-repository Contents + Pull requests write scope without ever
+// returning the token, sending source to a model, or modifying a branch.
+export async function verifyGithubPatchPermissions(env,send=fetch,now=Date.now()){
+ const cfg=githubPatchConfiguration(env);
+ if(!cfg.requested)return {patch_requested:false,write_scope_verified:false,reason:'patch_disabled'};
+ if(!cfg.credentials_configured)throw Error('github_patch_app_credentials_missing');
+ if(!cfg.allowed_path_count)throw Error('github_patch_allowed_paths_missing_or_invalid');
+ try{await mintGithubPatchToken(env,now,send);}catch(e){
+  throw Error(e?.message==='github_installation_token_scope_invalid'
+   ?'github_patch_write_scope_invalid':'github_patch_write_scope_unconfirmed');
+ }
+ return {patch_requested:true,write_scope_verified:true,
+  repo:'TeamRovor/rovor-video-engine',scoped_permissions:'contents_write_pull_requests_write',
+  allowed_path_count:cfg.allowed_path_count,repository_written:false};
 }
 export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
  const token=env.ROVOR_HUD_READER_TOKEN;
@@ -55,7 +73,8 @@ export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const mode=process.argv[2];
  const task=mode==='--credentials'?verifyGithubCredentials(process.env):
-  mode==='--worker'?verifyGithubWorker(process.env):Promise.reject(Error('invalid_verification_mode'));
+  mode==='--worker'?verifyGithubWorker(process.env):
+  mode==='--patch'?verifyGithubPatchPermissions(process.env):Promise.reject(Error('invalid_verification_mode'));
  task.then(r=>console.log(JSON.stringify(r))).catch(e=>{
   const code=String(e?.message||'github_app_verification_unavailable');
   console.error('ROVOR independent GitHub verification: '+(/^[a-z0-9_]{3,90}$/.test(code)?code:'github_app_verification_unavailable'));
