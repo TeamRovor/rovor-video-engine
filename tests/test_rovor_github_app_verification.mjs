@@ -38,6 +38,10 @@ test('private Worker configuration is distinct from native read receipt',async()
  const a=await verifyGithubWorker(env,mock(base),NOW);assert.equal(a.native_github_read_verified,false);
  const b=await verifyGithubWorker(env,mock({...base,last_check:{started_at:NOW-2000,finished_at:NOW-1000,result_state:'no_new_evidence_backed_work'}}),NOW);
  assert.equal(b.native_github_read_verified,true);
+ const capped=await verifyGithubWorker(env,mock({...base,standing_ready:true,last_check:{started_at:NOW-2000,finished_at:NOW-1000,result_state:'daily_draft_budget_reached'}}),NOW);
+ assert.equal(capped.native_github_read_verified,true);assert.equal(capped.standing_ready,true);
+ const blocked=await verifyGithubWorker(env,mock({...base,standing_ready:false}),NOW);
+ assert.equal(blocked.native_github_read_verified,false);assert.equal(blocked.standing_ready,false);
  await assert.rejects(()=>verifyGithubWorker(env,mock({...base,enabled:false}),NOW),/not_enabled/);
 });
 

@@ -11,7 +11,8 @@ export async function nativeDiscoveryStatus(env){
  const enabled=env.ROVOR_NATIVE_DISCOVERY_ENABLED==='true';
  try{
   const row=await env.DB.prepare('SELECT started_at,finished_at,result_state,discovery_key FROM hud_native_discovery_clock WHERE id=1').bind().first();
-  return {source:'rovor_native_github_discovery',configured,enabled,last_check:row??null,
+  const standing_ready=!(await stopped(env.DB,Date.now()));
+  return {source:'rovor_native_github_discovery',configured,enabled,standing_ready,last_check:row??null,
     mac_required:false,chatgpt_required:false,github_actions_required:false};
  }catch{return {source:'rovor_native_github_discovery',configured,enabled,last_check:null,storage_unavailable:true,
     mac_required:false,chatgpt_required:false,github_actions_required:false};}
@@ -22,7 +23,8 @@ export async function nativeDiscoveryTick(env,now=Date.now(),send=fetch){
  if(await stopped(db,now))return {state:'stopped'};
  const record=await discoveryStatus(db,now);
  if(record.status!==200)throw Error('discovery_store_unavailable');
- if(record.body.submitted_today>=DAILY_AUTOMATED_LIMIT)return {state:'daily_draft_budget_reached'};
+ // The cap restricts new drafts, not an authorized hourly read-only proof.
+ const draftBudgetReached=record.body.submitted_today>=DAILY_AUTOMATED_LIMIT;
  const lease=await db.prepare(`INSERT INTO hud_native_discovery_clock(id,started_at,result_state)
   VALUES(1,?,'checking') ON CONFLICT(id) DO UPDATE SET started_at=excluded.started_at,
   finished_at=NULL,result_state='checking',discovery_key=NULL
@@ -35,8 +37,8 @@ export async function nativeDiscoveryTick(env,now=Date.now(),send=fetch){
   else{
    const data=await readGithubDiscovery(token,send);
    const seen=new Set(record.body.recent_keys);
-   const picks=discoverCandidates(data,now).filter(x=>!seen.has(x.key)).slice(0,6);
-   state='no_new_evidence_backed_work';
+   const picks=draftBudgetReached?[]:discoverCandidates(data,now).filter(x=>!seen.has(x.key)).slice(0,6);
+   state=draftBudgetReached?'daily_draft_budget_reached':'no_new_evidence_backed_work';
    for(const pick of picks){
     if(await stopped(db,Math.max(now,Date.now()))){state='stopped';break;}
     const result=await submitDiscovery(db,pick,now);
