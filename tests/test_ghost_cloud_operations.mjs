@@ -877,3 +877,37 @@ test('Cloudflare catalog exposes runnable names, never internal UUID keys or inv
  assert.equal(provider.catalog_connection.state,'authenticated');
  assert.equal(provider.online_verified,false);
 });
+
+
+test('Gemini REST catalog IDs are normalized to OpenAI-compatible names without enabling inference',async()=>{
+ const {env,ops}=setup();
+ const result=await ops.inventory(env,'gemini',async(url,options)=>{
+  assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/openai/models');
+  assert.equal(options.method,'GET');
+  return Response.json({models:[
+   {name:'models/gemini-2.5-flash'},
+   {name:'models/gemini-3.1-flash-lite'},
+   {name:'gemma-4-31b-it'},
+   {name:'models/../invalid?'},
+   {name:'models/'}
+  ]});
+ });
+ assert.equal(result.status,'catalog_received');
+ assert.deepEqual(result.models.map(m=>m.id),['gemini-2.5-flash','gemini-3.1-flash-lite','gemma-4-31b-it']);
+ assert.equal(result.billing_verified,false);
+ assert.equal(result.quota_verified,false);
+ assert.equal(result.canary_verified,false);
+ const cloud=(await ops.status(env)).providers.find(p=>p.provider==='gemini');
+ assert.equal(cloud.online_verified,false);
+ assert.equal(cloud.admission,'disabled_pending_verification');
+});
+
+test('Gemini catalog limits after validation so invalid entries cannot hide eligible-looking IDs',async()=>{
+ const {env,ops}=setup();
+ const report=await ops.inventory(env,'gemini',async()=>Response.json({models:[
+  ...Array.from({length:26},(_,i)=>({name:'models/invalid?'+i})),
+  {name:'models/gemini-2.5-flash-lite'}
+ ]}));
+ assert.deepEqual(report.models.map(m=>m.id),['gemini-2.5-flash-lite']);
+ assert.equal(report.billing_verified,false);
+});
