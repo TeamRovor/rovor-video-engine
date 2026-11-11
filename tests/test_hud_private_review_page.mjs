@@ -166,3 +166,15 @@ test('owner review page includes truthful native GitHub write readiness without 
  assert.match(pageJS,/configuration_complete_write_scope_unverified/);
  assert.match(pageJS,/write permissions must pass the protected deployment preflight/);
 });
+
+test('specific reported benefit, risks and next step are extracted as unverified employee claims',()=>{
+ assert.match(pageJS,/FROM THE EMPLOYEE REPORT · NOT INDEPENDENTLY VERIFIED/);
+ assert.match(pageJS,/Specific benefit claimed/);
+ assert.match(pageJS,/Risks or unknowns reported/);
+ assert.match(pageJS,/Employee suggests doing next/);
+ assert.match(pageJS,/No specific benefit was provided/);
+ assert.match(pageJS,/complete structured report/);
+ assert.match(pageJS,/box\.append\(reportClaims\(sections\)\)/);
+ assert.match(pageJS,/section\.append\(make\('h5','',label\),make\('p','',content\|\|missing\)\)/);
+ assert.doesNotMatch(pageJS,/\.innerHTML\s*=|insertAdjacentHTML/);
+});

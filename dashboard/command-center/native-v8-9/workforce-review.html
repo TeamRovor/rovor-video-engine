@@ -57,6 +57,15 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 .employee-report-caution{font-size:13px;line-height:1.55;color:#a9c9dd;margin:0 0 12px}
 .source-decision-note{border-top:1px solid #3a5970;padding-top:7px;margin-top:10px!important;color:#d8e8f4}
 @media(max-width:680px){.owner-brief{grid-template-columns:minmax(0,1fr);padding:11px;gap:8px}.owner-fact{grid-column:1/-1;padding:11px}.owner-brief-heading{font-size:10px}}
+.report-claims{border:1px solid #436a89;border-radius:13px;background:#091e32;padding:13px;margin:14px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.report-claims-heading{grid-column:1/-1;font-size:11px;letter-spacing:.06em;font-weight:800;color:#afd5ef;margin:0 0 2px}
+.report-claim{background:#102b42;border:1px solid #34516b;border-radius:10px;padding:11px 13px;min-width:0}
+.report-claim h5{font-size:12px;color:#acd6f0;margin:0 0 6px}
+.report-claim p{font-size:14px;line-height:1.6;overflow-wrap:anywhere;white-space:pre-wrap;margin:0}
+.report-claim.missing{border-color:#9a7757;background:#282b36}
+.report-claim.missing h5{color:#f7d9b9}
+.missing-report-warning{grid-column:1/-1;margin:0;color:#fad6b8;font-size:13px;line-height:1.5}
+@media(max-width:680px){.report-claims{grid-template-columns:minmax(0,1fr);padding:10px;gap:7px}.report-claims-heading,.missing-report-warning{grid-column:1}.report-claim{padding:10px}}
 </style>
 <script type="module" src="/workforce-review.js"></script>
 </head>
