@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
+import {generateKeyPairSync} from 'node:crypto';
 import {intake,control,status,draft,review,tick} from '../integrations/hud-cloud/approved-workforce.mjs';
 import worker,{handle} from '../integrations/hud-cloud/worker.mjs';
 import {verifyWorkforce} from '../integrations/hud-cloud/verify-cloud-workforce.mjs';
@@ -304,8 +305,28 @@ test('standing plan requires separate owner PASS, then native ticks refill fresh
   'private data must never be copied',75);
  insert.run('disc-stale','run-9999',Math.floor(now/86400000)-3,now-3*86400000,
   'stale evidence',100);
- const calls=[];
+ const calls=[],githubCalls=[];
+ const pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
+ Object.assign(s.env,{ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',
+  ROVOR_GITHUB_APP_PRIVATE_KEY:pem});
  const send=async(url,options)=>{
+   if(url.startsWith('https://api.github.com/')){
+    githubCalls.push(url);assert.equal(options.redirect,'manual');
+    if(url.endsWith('/access_tokens'))return Response.json({
+     token:'test-scoped-installation-token-123456789',
+     permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'},
+     expires_at:new Date(now+1800000).toISOString()
+    },{status:201});
+    assert.equal(options.method,'GET');
+    if(url.endsWith('/actions/runs/1234'))return Response.json({
+     id:1234,name:'Expected CI',head_branch:'main',event:'workflow_dispatch',
+     conclusion:'failure',status:'completed',created_at:new Date(now-1000).toISOString()
+    });
+    if(url.endsWith('/issues/1235'))return Response.json({
+     number:1235,state:'open',labels:[{name:'bug'}],assignees:[],title:'Bounded issue'
+    });
+    throw Error('unexpected GitHub fetch');
+   }
    if(options.method==='POST'){
     assert(!options.body.includes('NEVER SEND TO MODEL'));
     assert(!options.body.includes('private data must never be copied'));
@@ -332,6 +353,7 @@ test('standing plan requires separate owner PASS, then native ticks refill fresh
  const noMore=await tick(s.env,now+181000,send);
  assert.equal(noMore.body.dispatched,0);
  assert.equal(calls.filter(c=>c.method==='POST').length,2);
+ assert.equal(githubCalls.length,4,'each discovery uses one scoped token and one fixed metadata read');
  assert.equal(s.db.prepare("SELECT COUNT(*) n FROM hud_cloud_workforce_jobs WHERE id LIKE 'gc-rec-%'").get().n,2);
  // STOP disarms standing approval; new discoveries cannot run on a transient
  // one-shot permit. The consumed discovery keys remain immutable.

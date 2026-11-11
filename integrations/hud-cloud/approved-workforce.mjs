@@ -4,6 +4,7 @@
 // STOP starts closed; previously attempted jobs must never be re-enqueued.
 import {validateJob} from '../ghost-cloud/runtime.mjs';
 import {cloudGeminiChat,geminiModelEvidence} from './cloud-gemini-chat.mjs';
+import {verifyDiscoveryJobFreshness} from './discovery-preflight.mjs';
 
 const MODEL='gemini-3.5-flash-lite';
 const MAX_DAILY=3;
@@ -304,14 +305,39 @@ export async function tick(env,now=Date.now(),send=fetch){
   if(evidence.get(MODEL)?.verification!=='verified_recent_reply')
    return {status:200,body:{state:'model_reply_evidence_missing',dispatched:0}};
   if(plan?.active===1)await refillDiscovery(db,plan,now);
+  // Re-check a discovery against the live GitHub record before spending a
+  // single free-provider inference attempt. An already resolved issue or
+  // newer passing CI run must never become more generic owner busywork.
+  // No private GitHub content, workflow logs, issue bodies or keys go to the
+  // model. Outages retain the queued record for a later bounded recheck.
+  const next=await db.prepare(`SELECT id,task_id FROM hud_cloud_workforce_jobs
+    WHERE state='queued'
+    AND (id NOT LIKE 'gc-patch-src-%' OR EXISTS(SELECT 1 FROM hud_github_patch_task_sources s WHERE s.job_id=hud_cloud_workforce_jobs.id))
+    AND NOT EXISTS(SELECT 1 FROM hud_cloud_workforce_jobs WHERE state IN ('running','uncertain'))
+    AND (SELECT COUNT(*) FROM hud_cloud_workforce_jobs WHERE started_at>=?)<?
+    ORDER BY created_at,id LIMIT 1`).bind(now-DAY,MAX_DAILY).first();
+  if(!next)return {status:200,body:{state:'idle_or_safety_limited',dispatched:0}};
+  if(next.id.startsWith('gc-rec-')){
+   const evidence=await verifyDiscoveryJobFreshness(env,next.task_id,now,send);
+   if(evidence.state==='unavailable')return {status:200,body:{
+    state:'discovery_source_unverified',dispatched:0,inference_completed:false}};
+   if(evidence.state!=='actionable'){
+    const removed=await db.prepare(`UPDATE hud_cloud_workforce_jobs
+      SET state='failed',finished_at=?,error_code='discovery_no_longer_actionable'
+      WHERE id=? AND state='queued'`).bind(now,next.id).run();
+    if(removed.meta?.changes!==1)return {status:200,body:{
+      state:'idle_or_safety_limited',dispatched:0}};
+    return {status:200,body:{state:'discovery_no_longer_actionable',dispatched:0,
+      id:next.id,inference_completed:false}};
+   }
+  }
   const claim=await db.prepare(`UPDATE hud_cloud_workforce_jobs SET state='running',started_at=?
-    WHERE id=(SELECT id FROM hud_cloud_workforce_jobs WHERE state='queued'
-      AND (id NOT LIKE 'gc-patch-src-%' OR EXISTS(SELECT 1 FROM hud_github_patch_task_sources s WHERE s.job_id=hud_cloud_workforce_jobs.id))
-      ORDER BY created_at,id LIMIT 1)
+    WHERE id=? AND state='queued'
+    AND (id NOT LIKE 'gc-patch-src-%' OR EXISTS(SELECT 1 FROM hud_github_patch_task_sources s WHERE s.job_id=hud_cloud_workforce_jobs.id))
     AND (SELECT enabled FROM hud_cloud_workforce_control WHERE id=1)=1
     AND NOT EXISTS(SELECT 1 FROM hud_cloud_workforce_jobs WHERE state IN ('running','uncertain'))
     AND (SELECT COUNT(*) FROM hud_cloud_workforce_jobs WHERE started_at>=?)<?
-    RETURNING id,prompt`).bind(now,now-86400000,MAX_DAILY).first();
+    RETURNING id,prompt`).bind(now,next.id,now-DAY,MAX_DAILY).first();
   if(!claim)return {status:200,body:{state:'idle_or_safety_limited',dispatched:0}};
   // STOP can change while admission reads model health or D1 claims the job.
   // Re-read the persistent gate AFTER claiming, immediately before inference.

@@ -54,3 +54,22 @@ test('exact pending job cache prevents repeats, anonymous access and arbitrary l
  sqlite.exec("UPDATE hud_cloud_workforce_jobs SET human_review='passed',reviewed_at=1");
  assert.equal((await reviewEvidence(env,'gc-review-one',NOW+2000,send)).status,404);
 });
+
+test('current issue and PR readback does not treat assigned, relabeled, draft or recently active work as still eligible',async()=>{
+ const now=NOW,token=TOKEN;
+ const fixture=(path,row)=>async(url,init)=>{
+  assert.equal(init.method,'GET');assert.equal(init.redirect,'manual');
+  assert(url.endsWith(path));return Response.json(row);
+ };
+ const issue={number:9,title:'Issue',state:'open',assignees:[],labels:[{name:'bug'}]};
+ assert.equal((await readGithubReviewEvidence(token,'issue-9',fixture('/issues/9',issue),now)).state,'issue_open');
+ assert.equal((await readGithubReviewEvidence(token,'issue-9',fixture('/issues/9',{...issue,labels:[]}),now)).state,'issue_no_longer_labeled');
+ assert.equal((await readGithubReviewEvidence(token,'issue-9',fixture('/issues/9',{...issue,assignees:[{login:'maintainer'}]}),now)).state,'issue_assigned');
+ const pull={number:8,title:'PR',state:'open',draft:false,merged:false,assignees:[],
+  updated_at:new Date(now-10*86400000).toISOString()};
+ assert.equal((await readGithubReviewEvidence(token,'pr-8',fixture('/pulls/8',pull),now)).state,'pull_open');
+ assert.equal((await readGithubReviewEvidence(token,'pr-8',fixture('/pulls/8',{...pull,draft:true}),now)).state,'pull_now_draft');
+ assert.equal((await readGithubReviewEvidence(token,'pr-8',fixture('/pulls/8',{...pull,assignees:[{login:'owner'}]}),now)).state,'pull_assigned');
+ assert.equal((await readGithubReviewEvidence(token,'pr-8',fixture('/pulls/8',{...pull,updated_at:new Date(now-1000).toISOString()}),now)).state,'pull_recently_active');
+ assert.equal((await readGithubReviewEvidence(token,'pr-8',fixture('/pulls/8',{...pull,updated_at:'not-a-date'}),now)).state,'pull_freshness_unverified');
+});

@@ -99,13 +99,17 @@ export async function readGithubDiscovery(token,send=fetch){
 const validEvidenceId=n=>Number.isSafeInteger(n)&&n>0;
 const evidenceKey=/^(run|issue|pr)-([1-9][0-9]{0,11})$/;
 const titleOf=v=>typeof v==='string'?v.replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,140):'';
+const issueLabels=new Set(['security','bug','regression','accessibility','hud','reliability']);
+const hasDefectLabel=row=>Array.isArray(row?.labels)&&row.labels.some(l=>
+ issueLabels.has(String(typeof l==='string'?l:l?.name||'').toLowerCase()));
+
 async function getEvidenceJSON(token,route,send){
  const res=await send(API+'/repos/'+REPO+route,{method:'GET',redirect:'manual',
   headers:headers(token),signal:AbortSignal.timeout(10000)});
  if(res.status!==200){await res.body?.cancel();throw Error('github_evidence_unavailable');}
  return boundedJson(res);
 }
-export async function readGithubReviewEvidence(token,key,send=fetch){
+export async function readGithubReviewEvidence(token,key,send=fetch,now=Date.now()){
  const parsed=evidenceKey.exec(key||'');
  if(!parsed||typeof token!=='string'||token.length<20)throw Error('github_evidence_invalid');
  const [,kind,num]=parsed,id=Number(num);
@@ -135,6 +139,13 @@ export async function readGithubReviewEvidence(token,key,send=fetch){
   throw Error('github_evidence_invalid');
  const title=titleOf(row.title);
  if(kind==='issue')return {state:row.state==='closed'?'issue_closed':
-  Array.isArray(row.assignees)&&row.assignees.length?'issue_assigned':'issue_open',title,related_id:null};
- return {state:row.merged===true?'pull_merged':row.state==='closed'?'pull_closed':'pull_open',title,related_id:null};
+  Array.isArray(row.assignees)&&row.assignees.length?'issue_assigned':
+  !hasDefectLabel(row)?'issue_no_longer_labeled':'issue_open',title,related_id:null};
+ const updated=Date.parse(row.updated_at||'');
+ const fresh=Number.isFinite(updated)&&updated<=now&&now-updated<5*86400000;
+ return {state:row.merged===true?'pull_merged':row.state==='closed'?'pull_closed':
+   row.draft===true?'pull_now_draft':
+   Array.isArray(row.assignees)&&row.assignees.length?'pull_assigned':
+   !Number.isFinite(updated)||updated>now?'pull_freshness_unverified':
+   fresh?'pull_recently_active':'pull_open',title,related_id:null};
 }
