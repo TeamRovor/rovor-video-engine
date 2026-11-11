@@ -38,6 +38,9 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const discoveryImport = "import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';";
   const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
   const nativeDiscoveryImport = "import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';";
+  const repoCatchupImport = "import {repoCatchupStatus} from './repo-catchup.mjs';";
+  if(core.split(repoCatchupImport).length!==2)throw Error('Unexpected repo catch-up import');
+  const repoCatchupUnavailable = "const repoCatchupStatus=()=>({source:'cloudflare_only',state:'unavailable'});\n";
   const reviewEvidenceImport = "import {reviewEvidence} from './review-evidence.mjs';";
   if(core.split(reviewEvidenceImport).length!==2)throw Error('Unexpected review evidence import');
   const reviewEvidenceUnavailable = "const reviewEvidence=()=>({status:404,body:{error:'cloudflare_only'}});\n";
@@ -96,10 +99,10 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const repoSource = 'const {getRepoSource} = (() => {\n'+
     plain(sourceSrc)+'\nreturn {getRepoSource};})();\n';
   return dependency + relay + groqQuota + groqCloud + idea + discovery + repoSource + geminiCloud +
-    workforceUnavailable + nativeDiscoveryUnavailable + githubPatchUnavailable + reviewEvidenceUnavailable +
+    workforceUnavailable + nativeDiscoveryUnavailable + repoCatchupUnavailable + githubPatchUnavailable + reviewEvidenceUnavailable +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
       .replace(groqImport, '').replace(groqProbeImport, '').replace(workforceImport, '')
-      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '').replace(githubPatchImport, '').replace(reviewEvidenceImport, '')
+      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '').replace(repoCatchupImport, '').replace(githubPatchImport, '').replace(reviewEvidenceImport, '')
       .replace(coreEnd, '')) +
     '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
