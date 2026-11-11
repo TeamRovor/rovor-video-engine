@@ -76,9 +76,9 @@ test('unknown or tampered Site execution wrappers cannot be silently overwritten
   oldScheduled.replace('scheduled(_event,env,ctx){','scheduled(notApproved,env,ctx){'),
   oldScheduled.replace('if(__operations.installHostedShiftRunner){','if(true){')
  ];
- for(const bad of incorrect)
-  assert.throws(()=>upgradeSiteBundle(bad,modules),
-   'unrecognized wrapper must be rejected, not replaced');
+ for(const [index,bad] of incorrect.entries())
+  assert.throws(()=>upgradeSiteBundle(bad,modules),undefined,
+   'unrecognized wrapper must be rejected, case '+index);
 });
 
 test('on-disk Site upgrade requires pin and preserves all migration journal bytes',t=>{
