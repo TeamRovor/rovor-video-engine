@@ -43,6 +43,10 @@ function ownerButtons(data){
    !data?.items?.some(x=>x.human_review==='passed'&&x.actual_model==='gemini-3.5-flash-lite')||
    data.items.some(x=>['queued','running','uncertain'].includes(x.state));
  ownerStop.disabled=ownerBusy||!ownerActive||data?.enabled!==true;
+ byId('stop-fallback').hidden=ownerActive||data?.enabled!==true;
+ byId('quick-control-note').textContent=data?.enabled===false?'Workforce is stopped.':data?.enabled===true?
+  ownerActive?'Stop prevents new jobs from starting.':'To stop without an owner key, open GitHub, Run workflow, choose stop.':
+  'Workforce status is unavailable.';
  if(ownerStart.disabled||!ownerStartArmed)ownerStart.textContent='Start recurring workforce';
 }
 let latestWorkforce=null,sourcePreview=null;
@@ -241,14 +245,14 @@ function modelSections(output){
  const parsed={};let active=null;
  for(const line of output.split(/\r?\n/)){
   const match=/^#{1,4}\s+(.+?)\s*$/.exec(line.trim());
-  if(match){active=keys[match[1].toLowerCase()]||null;if(active){if(Object.hasOwn(parsed,active))return null;parsed[active]='';}}
+  if(match){active=Object.hasOwn(keys,match[1].toLowerCase())?keys[match[1].toLowerCase()]:null;if(active){if(Object.hasOwn(parsed,active))return null;parsed[active]='';}}
   else if(active)parsed[active]+=(parsed[active]?'\n':'')+line;
  }
  return Object.values(keys).every(k=>typeof parsed[k]==='string'&&parsed[k].trim()&&parsed[k].length<=1800)?parsed:null;
 }
 function receiptDetails(entry,hash=null){
  const details=make('details','receipt-details');
- details.append(make('summary','','Technical details (already checked)'));
+ details.append(make('summary','',hash?'Technical details (receipt verified)':'Technical details'));
  details.append(make('p','metadata','Employee: '+entry.employee+' · model: '+(entry.actual_model||'Not confirmed')));
  details.append(make('p','metadata','Requested '+formatTime(entry.created_at)+' · completed '+formatTime(entry.finished_at)));
  const exact=entry.provider==='google-gemini-cloud'&&validTokens(entry.tokens_input)&&validTokens(entry.tokens_output);
@@ -273,6 +277,7 @@ async function inspect(entry,card,inspectButton,generation=refreshGeneration){
  try{
   const {draft,hash}=await loadExactDraft(entry,entry.human_review);
   if(generation!==refreshGeneration||!card.isConnected)return;
+  const oldWarning=card.querySelector('.draft-load-error');if(oldWarning)oldWarning.remove();
   const context=reviewContext(entry),box=make('section','draft');
   box.append(make('h4','','What '+entry.employee+' delivered'));
   const sections=modelSections(draft.output);
@@ -285,6 +290,7 @@ async function inspect(entry,card,inspectButton,generation=refreshGeneration){
    const full=make('details','draft-full');
    full.append(make('summary','','Read the complete employee report'),renderOutput(draft.output));box.append(full);
   }else box.append(renderOutput(draft.output));
+  card.querySelector(':scope > .receipt-details')?.remove();
   box.append(receiptDetails(entry,hash));
   const choices=make('div','actions'),feedback=make('p','review-feedback');
   feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');
@@ -371,6 +377,7 @@ async function refresh(clearNotice=true){
  message.textContent='Loading your review inbox…';
  try{
   const data=await privateRequest('/api/hud/workforce/status');
+  if(generation!==refreshGeneration)return;
   if(data.source!=='existing_cloudflare_hud_gemini_workforce'||data.mac_required!==false||
      !Array.isArray(data.items)||data.items.length>50||
      typeof data.enabled!=='boolean'||data.site_review_ledger_synced!==false||
@@ -378,6 +385,7 @@ async function refresh(clearNotice=true){
    throw Error('invalid_workforce_readback');
   latestWorkforce=data;
   await Promise.all([refreshOwner(),refreshNativeDiscovery()]);
+  if(generation!==refreshGeneration)return;
   const rows=data.items;
   const pendingCount=rows.filter(x=>x.state==='needs_review'&&x.human_review==='not_recorded').length;
   const reviewedCount=rows.filter(x=>VERDICTS.has(x.human_review)).length;
@@ -436,9 +444,7 @@ async function refresh(clearNotice=true){
     actions.append(inspectButton);card.append(actions);
     if(awaiting)pendingLoads.push(()=>inspect(entry,card,inspectButton,generation));
     if(!awaiting)card.append(receiptDetails(entry));
-    if(awaiting){
-     // Decisions only become available after exact receipt verification.
-    }else if(ownerActive&&patchConfigured&&entry.human_review==='passed'&&entry.kind==='code_review'&&entry.id.startsWith('gc-patch-src-')){
+    if(!awaiting&&ownerActive&&patchConfigured&&entry.human_review==='passed'&&entry.kind==='code_review'&&entry.id.startsWith('gc-patch-src-')){
      const actions=make('div','actions');
      const open=actionButton('Inspect reviewed patch',async()=>{
       open.disabled=true;
@@ -479,11 +485,12 @@ async function refresh(clearNotice=true){
   if(generation!==refreshGeneration)return;
   message.textContent=pendingCount===1?'1 result needs your decision':pendingCount+' results need your decision';
  }catch(error){
+  if(generation!==refreshGeneration)return;
   message.textContent=errorMessage(error);
   pending.textContent='?';reviewed.textContent='?';stop.textContent='?';
   nativeClock.textContent='?';nativeDetail.textContent='Readback unavailable';standing.textContent='?';githubDiscoveryState.textContent='?';githubDiscoveryDetail.textContent='Readback unavailable';
   jobs.textContent='';history.textContent='';guidance.textContent='Could not load the inbox. Try Refresh inbox.';latestWorkforce=null;ownerActive=false;ownerButtons(null);patchPanel.hidden=true;clearSourcePreview();
- }finally{refreshButton.disabled=false;}
+ }finally{if(generation===refreshGeneration)refreshButton.disabled=false;}
 }
 refreshButton.addEventListener('click',()=>refresh());
 refresh();
