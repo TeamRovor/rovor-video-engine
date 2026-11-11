@@ -2,6 +2,7 @@
 // ChatGPT task, local Mac, model call, or new cron is needed for discovery.
 import {githubAppConfigured,mintGithubReadToken,readGithubDiscovery} from './github-app.mjs';
 import {discoverCandidates} from './discovery-candidates.mjs';
+import {recordRepoCatchup} from './repo-catchup.mjs';
 import {submitDiscovery,discoveryStatus,DAILY_AUTOMATED_LIMIT} from './discovery-inbox.mjs';
 const HOUR=3600000;
 const stopped=async(db,now)=>!(await db.prepare(`SELECT 1 AS ready FROM hud_cloud_workforce_control c
@@ -36,6 +37,8 @@ export async function nativeDiscoveryTick(env,now=Date.now(),send=fetch){
   if(await stopped(db,Math.max(now,Date.now())))state='stopped';
   else{
    const data=await readGithubDiscovery(token,send);
+   // The read-only catch-up is metadata-only and never blocks discovery.
+   if(!await stopped(db,Math.max(now,Date.now())))await recordRepoCatchup(db,token,data,now,send);
    const seen=new Set(record.body.recent_keys);
    const picks=draftBudgetReached?[]:discoverCandidates(data,now).filter(x=>!seen.has(x.key)).slice(0,6);
    state=draftBudgetReached?'daily_draft_budget_reached':'no_new_evidence_backed_work';
