@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
 
-let clock=Date.now(),isBoard=false,writes=0,reads=0,dayReads=0,hourReads=0,minuteReads=0,intervals=[],observer;
+let clock=Math.floor(Date.now()/60000)*60000,isBoard=false,writes=0,reads=0,dayReads=0,hourReads=0,minuteReads=0,intervals=[],observer,requests=1;
 const slot={
  hidden:false,
  classList:{contains:label=>label==='rvq-board'&&isBoard},
@@ -29,8 +29,8 @@ const fetch=async url=>{
  const minute=String(url).includes('period=1m');
  if(minute)minuteReads++;else if(hour)hourReads++;else dayReads++;
  return {ok:true,json:async()=>({
-   period:minute?'1m':hour?'1h':'24h',request_count:1,usage_coverage:'complete_aggregate',
-   models:[{provider:'groq',name:'openai/gpt-oss-120b',requests:1,tokens:10}],
+   period:minute?'1m':hour?'1h':'24h',request_count:requests,usage_coverage:'complete_aggregate',
+   models:[{provider:'groq',name:'openai/gpt-oss-120b',requests,tokens:10}],
    source:'local_omniroute_read_only_bridge',
    snapshot_at:new Date(clock).toISOString(),
    connections:[{provider:'groq',name:'groq',connection_count:1,enabled_count:1}],
@@ -61,7 +61,10 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
  intervals[0]();
  await flush();await flush();
  assert.equal(reads,6,'rendered panel must refresh 24h, 1h and 1m');
- assert.equal(writes,2,'rendered panel must be replaced with fresh evidence');
+ assert.equal(writes,1,'identical visible evidence must not replace the board');
+ requests=2;clock+=11000;intervals[0]();await flush();await flush();
+ assert.equal(reads,9,'skipping an unchanged paint must not stop future polling');
+ assert.equal(writes,2,'changed measured requests must replace the rendered board');
  // Once a validated 24h report is already in the main HUD, reuse it instead
  // of requesting exactly the same source from the server a second time.
  clock+=11000;
@@ -73,11 +76,12 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
    quota:{records:[]}
  });
  intervals[0]();await flush();await flush();
- assert.equal(reads,8,'verified shared 24h snapshot avoids duplicate 24h polling; minute and hourly still fetched');
- assert.equal(dayReads,2);assert.equal(hourReads,3);assert.equal(minuteReads,3);
+ assert.equal(reads,11,'verified shared 24h snapshot avoids duplicate 24h polling; minute and hourly still fetched');
+ assert.equal(dayReads,3);assert.equal(hourReads,4);assert.equal(minuteReads,4);
  assert.equal(writes,3,'shared telemetry still refreshes the rendered popup');
  document.hidden=true;clock+=11000;
  intervals[0]();await flush();
- assert.equal(reads,8,'hidden HUD must not poll');
+ assert.equal(reads,11,'hidden HUD must not poll');
  console.log('HUD popup live refresh after replacement: PASS');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
