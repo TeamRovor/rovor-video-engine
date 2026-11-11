@@ -243,8 +243,11 @@
       }else if(target.hasAttribute('data-wl-compact-tab')){
         compactTab=target.dataset.wlCompactTab;
         paint();
+      }else if(target.hasAttribute('data-wl-compact-employee')){
+        const index=EMPLOYEES.findIndex(role=>role[0]===target.dataset.wlCompactEmployee);
+        compactPick={view:'matrix',employee:index<0?0:index};
+        if(typeof openDetails==='function')openDetails();
       }else if(target.hasAttribute('data-wl-compact-provider')||
-        target.hasAttribute('data-wl-compact-employee')||
         target.hasAttribute('data-wl-open-report')){
         compactPick={view:'outcomes'};
         if(typeof openDetails==='function')openDetails();
