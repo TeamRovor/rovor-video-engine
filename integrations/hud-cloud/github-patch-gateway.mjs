@@ -262,14 +262,25 @@ export async function githubPatchTick(env,now=Date.now(),send=fetch){
   const token=await mintGithubPatchToken(env,now,send),api=client(token,send);
   await check();
   const main=await api('/git/ref/heads/main');
-  if(main.object?.sha!==claim.base_commit)throw Error('patch_base_stale');
-  const base=await api('/git/commits/'+claim.base_commit);
-  if(base.sha!==claim.base_commit||!SHA.test(base.tree?.sha))throw Error('github_base_invalid');
+  const pinnedParent=main.object?.sha;
+  if(!SHA.test(pinnedParent||''))throw Error('github_base_invalid');
+  const moved=pinnedParent!==claim.base_commit;
+  if(moved){
+   // Only advance an approved one-file proposal on a genuine descendant of
+   // its originally approved commit. A force-pushed or divergent main fails.
+   const diff=await api('/compare/'+claim.base_commit+'...'+pinnedParent);
+   if(diff.status!=='ahead'||diff.base_commit?.sha!==claim.base_commit||
+      diff.merge_base_commit?.sha!==claim.base_commit||diff.head_commit?.sha!==pinnedParent||
+      !Number.isSafeInteger(diff.ahead_by)||diff.ahead_by<1||diff.behind_by!==0)
+    throw Error('patch_base_stale');
+  }
+  const base=await api('/git/commits/'+pinnedParent);
+  if(base.sha!==pinnedParent||!SHA.test(base.tree?.sha))throw Error('github_base_invalid');
   const tree=await api('/git/trees/'+base.tree.sha+'?recursive=1');
   if(tree.sha!==base.tree.sha||tree.truncated!==false||!Array.isArray(tree.tree))throw Error('github_tree_invalid');
   const entry=tree.tree.find(x=>x.path===p.change.path);
   if(!entry||entry.type!=='blob'||entry.mode!=='100644'||entry.sha!==p.change.blob_sha)
-   throw Error('patch_blob_mismatch');
+   throw Error(moved?'patch_base_stale':'patch_blob_mismatch');
   const blob=await api('/git/blobs/'+entry.sha);
   if(blob.sha!==entry.sha||blob.encoding!=='base64'||typeof blob.content!=='string'||
      !Number.isSafeInteger(blob.size)||blob.size<1||blob.size>MAX_FILE)throw Error('patch_file_invalid');
@@ -279,16 +290,17 @@ export async function githubPatchTick(env,now=Date.now(),send=fetch){
   // Check current main again before the first external write, then never
   // follow a moving ref or overwrite an existing branch.
   await check();const latest=await api('/git/ref/heads/main');
-  if(latest.object?.sha!==claim.base_commit)throw Error('patch_base_stale');
+  // Never follow a ref after the exact ancestor, tree and file checks.
+  if(latest.object?.sha!==pinnedParent)throw Error('patch_base_stale');
   await check();wrote=true;
   const newTree=await api('/git/trees','POST',{base_tree:base.tree.sha,
    tree:[{path:p.change.path,mode:'100644',type:'blob',content}]});
   if(!SHA.test(newTree.sha)||newTree.sha===base.tree.sha)throw Error('github_tree_invalid');
   await event(db,job.id,'tree',newTree.sha,Date.now());
   await check();
-  const commit=await api('/git/commits','POST',{message:'ROVOR reviewed patch: '+p.title,tree:newTree.sha,parents:[claim.base_commit]});
+  const commit=await api('/git/commits','POST',{message:'ROVOR reviewed patch: '+p.title,tree:newTree.sha,parents:[pinnedParent]});
   if(!SHA.test(commit.sha)||commit.tree?.sha!==newTree.sha||commit.parents?.length!==1||
-     commit.parents[0].sha!==claim.base_commit)throw Error('github_commit_invalid');
+     commit.parents[0].sha!==pinnedParent)throw Error('github_commit_invalid');
   commitSha=commit.sha;await event(db,job.id,'commit',commitSha,Date.now());
   await check();
   const ref=await api('/git/refs','POST',{ref:'refs/heads/'+claim.branch,sha:commitSha});
@@ -297,7 +309,10 @@ export async function githubPatchTick(env,now=Date.now(),send=fetch){
   await check();
   const pr=await api('/pulls','POST',{title:'ROVOR: '+p.title,head:claim.branch,base:'main',draft:true,
    body:'Owner-reviewed ROVOR patch. Source job '+job.id+'; output SHA-256 '+job.output_sha256+
-    '.\n\n'+p.summary+'\n\nDraft only. Independent CI and human release approval required.'});
+    '.\n\n'+p.summary+
+    '\n\nOwner-approved source commit: '+claim.base_commit+
+    '\nPinned GitHub parent (descendant, unchanged file): '+pinnedParent+
+    '\n\nDraft only. Independent CI and human release approval required.'});
   if(!Number.isSafeInteger(pr.number)||pr.number<1||pr.draft!==true||pr.head?.sha!==commitSha||
      pr.head?.ref!==claim.branch||pr.base?.ref!=='main'||pr.base?.repo?.full_name!==REPO)
    throw Error('github_pull_invalid');

@@ -219,3 +219,55 @@ test('patch status distinguishes verified deployment capability from an actual d
   ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT:'0'});
  assert.equal(stopped.write_scope_verified_at,null);
 });
+
+test('later main commit can be used only with a proven descendant and byte-identical approved blob',async()=>{
+ const changedParent='f'.repeat(40),changedTree='1'.repeat(40);
+ const setupScenario=(opts={})=>{
+  const s=setup();enable(s);
+  const calls=[],send=upstream(s,calls);
+  let reads=0;
+  const request=async(url,init)=>{
+   if(url.endsWith('/git/ref/heads/main')){reads++;return Response.json({object:{sha:changedParent}});}
+   if(url.endsWith('/compare/'+base+'...'+changedParent)){
+    return Response.json({
+     status:opts.diverged?'diverged':'ahead',ahead_by:3,behind_by:opts.diverged?1:0,
+     base_commit:{sha:base},
+     merge_base_commit:{sha:opts.diverged?'2'.repeat(40):base},
+     head_commit:{sha:changedParent}
+    });
+   }
+   if(url.endsWith('/git/commits/'+changedParent))
+    return Response.json({sha:changedParent,tree:{sha:changedTree}});
+   if(url.endsWith('/git/trees/'+changedTree+'?recursive=1'))
+    return Response.json({sha:changedTree,truncated:false,
+     tree:[{path,mode:'100644',type:'blob',
+       sha:opts.changedBlob?'3'.repeat(40):blob}]});
+   if(url.endsWith('/git/trees')&&init.method==='POST'){
+    assert.deepEqual(JSON.parse(init.body),{base_tree:changedTree,
+     tree:[{path,mode:'100644',type:'blob',content:'.x { color: white; }'}]});
+    return Response.json({sha:newTree},{status:201});
+   }
+   if(url.endsWith('/git/commits')&&init.method==='POST'){
+    const body=JSON.parse(init.body);assert.deepEqual(body.parents,[changedParent]);
+    return Response.json({sha:commit,tree:{sha:newTree},parents:[{sha:changedParent}]},{status:201});
+   }
+   return send(url,init);
+  };
+  return {s,calls,request,getReads:()=>reads};
+ };
+ const accepted=setupScenario();
+ assert.equal((await queueGithubPatch(accepted.s.env,accepted.s.body,NOW)).status,202);
+ assert.equal((await githubPatchTick(accepted.s.env,NOW,accepted.request)).state,'opened');
+ assert(accepted.getReads()>=2);
+ assert(accepted.calls.some(x=>x.url.endsWith('/pulls')&&x.method==='POST'));
+ const changed=setupScenario({changedBlob:true});
+ assert.equal((await queueGithubPatch(changed.s.env,changed.s.body,NOW)).status,202);
+ assert.equal((await githubPatchTick(changed.s.env,NOW,changed.request)).state,'failed');
+ assert(!changed.calls.some(x=>x.url.endsWith('/pulls')||x.url.endsWith('/git/trees')&&x.method==='POST'));
+ assert.equal(changed.s.sqlite.prepare('SELECT error_code FROM hud_github_patch_jobs').get().error_code,'patch_base_stale');
+ const diverged=setupScenario({diverged:true});
+ assert.equal((await queueGithubPatch(diverged.s.env,diverged.s.body,NOW)).status,202);
+ assert.equal((await githubPatchTick(diverged.s.env,NOW,diverged.request)).state,'failed');
+ assert(!diverged.calls.some(x=>x.url.endsWith('/pulls')));
+ assert.equal(diverged.s.sqlite.prepare('SELECT error_code FROM hud_github_patch_jobs').get().error_code,'patch_base_stale');
+});
