@@ -74,9 +74,17 @@ async function main(){
  if(operation==='status'){
   const data=await api('/api/hud/workforce/status');
   if(data.source!=='existing_cloudflare_hud_gemini_workforce')throw Error('wrong_private_ledger');
+  const canonical=JSON.parse(readFileSync('coordination/tasks.json','utf8'));
+  const ownerCandidates=Array.isArray(canonical.tasks)?canonical.tasks.filter(t=>
+   t?.status==='active'&&t.cloud_inference?.approved_for_cloud===false&&
+   /^v(?:[2-9]|[1-9][0-9]+)$/.test(t.cloud_inference.revision||'')&&
+   t.cloud_inference.data_class==='public_repository')
+   .slice(0,5).map(t=>({task_id:t.id,revision:t.cloud_inference.revision,
+    title:t.title,requires_explicit_owner_selection:true})):[];
   reporter(JSON.stringify({enabled:data.enabled,job_count:data.items.length,
    review_pending:data.items.filter(x=>x.state==='needs_review'&&x.human_review==='not_recorded').length,
-   successful_owner_reviews:data.items.filter(x=>x.human_review==='passed').length}));
+   successful_owner_reviews:data.items.filter(x=>x.human_review==='passed').length,
+   available_unapproved_candidates:ownerCandidates}));
   return;
  }
  if(operation==='stop'){
