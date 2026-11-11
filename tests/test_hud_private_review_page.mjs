@@ -144,3 +144,9 @@ test('review is decision-first, full exact drafts remain available and defer is 
  assert.match(pageJS,/document\.createTextNode\(value\.trim\(\)\)/);
  assert.doesNotMatch(pageJS,/\.innerHTML\s*=|insertAdjacentHTML|document\.write\(/);
 });
+
+test('owner review page includes truthful native GitHub write readiness without asserting live PR delivery',()=>{
+ assert.match(html,/id="github-patch-readiness"/);
+ assert.match(pageJS,/configuration_complete_write_scope_unverified/);
+ assert.match(pageJS,/write permissions must pass the protected deployment preflight/);
+});
