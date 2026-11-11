@@ -438,8 +438,10 @@ export function createCloudOperations(base, cloud) {
    await recordInventory(env,args.provider,{...report,observed_at:observed});
    // A provider GET alone cannot prove that the Site wrote to its bound D1.
    // Verify the exact persisted row EVEN when GET failed with 401/403.
-   const stored=await sql(env,'SELECT observed_at,status FROM ghost_cloud_provider_checks WHERE provider=?',args.provider).first();
-   const saved=!!stored&&stored.status===report.status&&stored.observed_at===observed;
+   const stored=await sql(env,'SELECT observed_at,status,error_category FROM ghost_cloud_provider_checks WHERE provider=?',args.provider).first();
+   const expectedError=report.error_category??null;
+   const saved=!!stored&&stored.status===report.status&&stored.observed_at===observed&&
+    (stored.error_category??null)===expectedError;
    if(!saved)throw Error('provider_catalog_d1_readback_mismatch');
    return {...report,observed_at:observed,d1_persisted:true,d1_observed_at:observed};
   }
