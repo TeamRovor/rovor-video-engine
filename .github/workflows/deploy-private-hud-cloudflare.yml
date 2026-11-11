@@ -99,6 +99,7 @@ jobs:
           node --check integrations/hud-cloud/build-repo-snapshot.mjs
           node --check integrations/hud-cloud/worker.mjs
           node --check integrations/hud-cloud/approved-workforce.mjs
+          node --check integrations/hud-cloud/verify-cloud-workforce.mjs
           node --check integrations/hud-cloud/groq-cloud-chat.mjs
           node --check integrations/hud-cloud/groq-quota-monitor.mjs
           node --check integrations/hud-cloud/idea-inbox.mjs
@@ -204,6 +205,8 @@ jobs:
         run: node verify-github-deploy.mjs
       - name: Report authenticated Google Gemini key-listed models from deployed Cloudflare HUD (no inference)
         run: node verify-live-gemini-catalog.mjs
+      - name: Prove private Cloudflare workforce STOP, writer-only tick and durable D1 status (no inference)
+        run: node verify-cloud-workforce.mjs
       - name: Prove one real Gemini answer and an advancing private D1 receipt (owner-approved, no replay)
         if: env.GEMINI_ACTIVATE_ONCE == 'true'
         run: node verify-cloud-gemini.mjs
