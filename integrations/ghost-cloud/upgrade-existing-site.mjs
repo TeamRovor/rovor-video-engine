@@ -21,8 +21,10 @@ function safe(root,relative) {
  if(fs.lstatSync(root).isSymbolicLink())throw Error('redirected_site');
  for(const part of relative.split('/')){
   current=path.join(current,part);
-  if(fs.existsSync(current)&&fs.lstatSync(current).isSymbolicLink())
-   throw Error('redirected_site');
+  // existsSync follows links and returns false for a dangling link.
+  // lstatSync must be used to reject even a redirected missing target.
+  try{if(fs.lstatSync(current).isSymbolicLink())throw Error('redirected_site');}
+  catch(error){if(error?.code!=='ENOENT')throw error;}
  }
  return current;
 }
@@ -45,14 +47,18 @@ export function upgradeSiteBundle(current,parts) {
  const scheduled=occurrences(current,'ROVOR_CLOUD_SCHEDULED_SHIFT_V1')!==0;
  const shifted=[...current.matchAll(/^\/\/ ROVOR_CLOUD_SCHEDULED_SHIFT_V1 ([a-f0-9]{64})$/gm)];
  if(scheduled){
-  if(shifted.length!==1||occurrences(current,'ROVOR_CLOUD_SCHEDULED_SHIFT_V1')!==1||
-     shifted[0].index<offset||
-     occurrences(current,'const __shift = (() => {')!==1||
-     occurrences(current,'const __shiftUI = ')!==1||
-     occurrences(current,'if(__operations.installHostedShiftRunner){')!==1||
-     occurrences(current,'scheduled(_event,env,ctx){')!==1||
-     !current.trimEnd().endsWith('}\n};'))
-   throw Error('unexpected_existing_scheduled_bundle_shape');
+  const checks={
+   marker:shifted.length===1,
+   unique:occurrences(current,'ROVOR_CLOUD_SCHEDULED_SHIFT_V1')===1,
+   after_operations:shifted.length===1&&shifted[0].index>=offset,
+   shift_module:occurrences(current,'const __shift = (() => {')===1,
+   shift_ui:occurrences(current,'const __shiftUI = ')===1,
+   hosted_runner:occurrences(current,'if(__operations.installHostedShiftRunner){')===1,
+   scheduler:occurrences(current,'scheduled(_event,env,ctx){')===1,
+   ending:current.trimEnd().endsWith('}\n};')
+  };
+  const failed=Object.entries(checks).filter(([,ok])=>!ok).map(([name])=>name);
+  if(failed.length)throw Error('unexpected_existing_scheduled_bundle_shape_'+failed.join('_'));
  } else if(!current.trimEnd().endsWith(OPS_EXPORT)){
   throw Error('unexpected_existing_operations_export');
  }
