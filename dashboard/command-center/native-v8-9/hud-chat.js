@@ -1177,6 +1177,12 @@
       }finally{painter.cancel();pendingJob=null;controller=null;setBusy(false);updatePlan();if(platform==='gemini'&&panel.dataset.open==='true'){refreshProviderInventory();load();}}
     }
 
+    // The review API requires the separate signed owner session. A reader
+    // may inspect drafts, but must never see an apparent PASS/FAIL authority.
+    function ownerReviewCapability(session){
+      return session?.configured===true&&session?.owner_authenticated===true&&
+        Object.keys(session).sort().join(',')==='configured,owner_authenticated';
+    }
     async function refreshCloudWorkforce(){
       if(!workforceDetails.open)return;
       workforceList.textContent='Checking the private Cloudflare workforce ledger…';
@@ -1221,7 +1227,22 @@
                 const sha=[...new Uint8Array(raw)].map(n=>n.toString(16).padStart(2,'0')).join('');
                 if(sha!==entry.output_sha256)throw Error('draft_digest_mismatch');
                 const output=el('pre',{textContent:draft.output});
+                // Check the server's current owner session after draft inspection,
+                // not browser storage or the viewer credential. Unknown stays locked.
+                let ownerStatus=null;
+                try{
+                  const session=await fetch('/api/hud/owner/session',{
+                    credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
+                  if(session.ok)ownerStatus=await session.json();
+                }catch{}
                 const decision=el('div');
+                if(!ownerReviewCapability(ownerStatus)){
+                  decision.append(el('small',{textContent:ownerStatus?.configured===false?
+                    'Owner PASS/FAIL locked until a separate owner key is configured.':
+                    'Owner sign-in required to PASS/FAIL. Open the Review Desk to authenticate.'}));
+                  item.append(output,decision);
+                  return;
+                }
                 for(const verdict of ['passed','failed']){
                   const b=el('button',{type:'button',
                     textContent:verdict==='passed'?'PASS · approve draft':'FAIL · reject draft'});

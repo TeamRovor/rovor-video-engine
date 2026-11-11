@@ -305,3 +305,21 @@ test('task routing uses real, recent per-model receipt reliability only with suf
 
 
 
+
+test('Ask ROVOR draft viewer can inspect but cannot see PASS/FAIL without a signed owner session',()=>{
+  const start=src.indexOf('    function ownerReviewCapability(');
+  const end=src.indexOf('    async function refreshCloudWorkforce(',start);
+  assert(start>=0&&end>start,'owner-session guard must be present');
+  const context={};
+  vm.runInNewContext(src.slice(start,end)+'\nthis.check=ownerReviewCapability;',context);
+  const gate=context.check;
+  for(const session of [null,undefined,{},'owner',[],{configured:false,owner_authenticated:true},
+    {configured:true,owner_authenticated:false},{configured:'true',owner_authenticated:true},
+    {configured:true,owner_authenticated:true,privilege:'forged'}])
+    assert.equal(gate(session),false);
+  assert.equal(gate({configured:true,owner_authenticated:true}),true);
+  assert.match(src,/fetch\('\/api\/hud\/owner\/session'/);
+  assert.match(src,/if\(!ownerReviewCapability\(ownerStatus\)\)/);
+  assert.match(src,/item\.append\(output,decision\);\s*return;/,
+    'unverified owner must return before building any PASS or FAIL control');
+});
