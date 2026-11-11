@@ -111,6 +111,29 @@ export function summarizeGroqKeyCatalog(status){
     tokens_per_minute:metric(c.tokens_per_minute,'minute'),
     billing_verified:false, inference_verified:false};
 }
+// A secret-bulk update immediately following deploy can briefly route to a
+// previous asset version. Retry only an otherwise valid older pinned commit.
+// Auth failures, exposure, malformed responses and permanent mismatch never pass.
+export async function verifyPinnedRepoSource(read,expectedRepoCommit,{attempts=9,pause=delay,intervalMs=3000}={}){
+ if(!/^[a-f0-9]{40}$/.test(expectedRepoCommit))throw Error('expected_repo_commit_invalid');
+ if(!Number.isSafeInteger(attempts)||attempts<1||attempts>20)throw Error('invalid_repo_verification_attempts');
+ const srcPath='/api/hud/github/source?path=coordination%2FTASK-INTAKE.md';
+ for(let attempt=1;attempt<=attempts;attempt++){
+  const anon=await read(srcPath,false);
+  if(anon.status!==401)throw Error('anonymous_repo_source_exposed');
+  const live=await read(srcPath,true);
+  if(live.status!==200)throw Error('private_repo_source_unavailable');
+  let repo;try{repo=await live.json();}catch{throw Error('private_repo_source_invalid');}
+  if(repo?.source!=='reviewed_github_checkout'||repo.repo!=='TeamRovor/rovor-video-engine'||
+   repo.path!=='coordination/TASK-INTAKE.md'||!(/^[a-f0-9]{40}$/.test(repo.commit||''))||
+   repo.fetched_live!==false||repo.can_write!==false||repo.mac_required!==false||
+   typeof repo.text!=='string'||!repo.text||repo.text.length>1800||typeof repo.truncated!=='boolean')
+    throw Error('private_repo_source_invalid');
+  if(repo.commit===expectedRepoCommit)return true;
+  if(attempt<attempts)await pause(intervalMs);
+ }
+ throw Error('private_repo_source_invalid_commit_mismatch');
+}
 export async function verifyGithubHud({origin, readerToken, send = fetch, expectedQuotaAsset = null,
   expectedChatAsset = null, expectCloudGroq = false, expectGroqKeyCatalog = false,
   requireLiveTelemetry = true, expectedRepoCommit = null, pause = delay}) {
@@ -143,22 +166,7 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
   if(anonymousIdeas.status!==401)throw Error('anonymous_idea_inbox_exposed');
   // Prove this release serves the *exact reviewed Git commit* through the
   // authenticated cloud-only GitHub excerpt endpoint. Never log source text.
-  if(expectedRepoCommit!==null){
-    if(!/^[a-f0-9]{40}$/.test(expectedRepoCommit))throw Error('expected_repo_commit_invalid');
-    const srcPath='/api/hud/github/source?path=coordination%2FTASK-INTAKE.md';
-    const anon=await read(srcPath,false);
-    if(anon.status!==401)throw Error('anonymous_repo_source_exposed');
-    const live=await read(srcPath,true);
-    if(live.status!==200)throw Error('private_repo_source_unavailable');
-    let repo;
-    try{repo=await live.json();}catch{throw Error('private_repo_source_invalid');}
-    if(repo?.source!=='reviewed_github_checkout'||repo.repo!=='TeamRovor/rovor-video-engine'||
-      repo.path!=='coordination/TASK-INTAKE.md'||repo.commit!==expectedRepoCommit||
-      repo.fetched_live!==false||repo.can_write!==false||repo.mac_required!==false||
-      typeof repo.text!=='string'||!repo.text||repo.text.length>1800||
-      typeof repo.truncated!=='boolean')
-      throw Error('private_repo_source_invalid');
-  }
+  if(expectedRepoCommit!==null)await verifyPinnedRepoSource(read,expectedRepoCommit,{pause});
   const anonymousRoot = await read('/', false);
   if (anonymousRoot.status !== 303 ||
       !new URL(anonymousRoot.headers.get('Location') || '/', origin).href.startsWith(origin + '/login'))

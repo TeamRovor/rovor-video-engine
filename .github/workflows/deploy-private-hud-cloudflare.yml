@@ -222,14 +222,14 @@ jobs:
           set -euo pipefail
           node private-worker-secret-payload.mjs |
             wrangler secret bulk --config wrangler.github.jsonc
+      - name: Verify independent GitHub discovery configuration and native D1 readback
+        run: node verify-github-app.mjs --worker
       - name: Verify anonymous denial, authenticated original HUD, quota script, and D1 status
         run: node verify-github-deploy.mjs
       - name: Report authenticated Google Gemini key-listed models from deployed Cloudflare HUD (no inference)
         run: node verify-live-gemini-catalog.mjs
       - name: Prove private Cloudflare workforce STOP, writer-only tick and durable D1 status (no inference)
         run: node verify-cloud-workforce.mjs
-      - name: Verify independent GitHub discovery configuration and native D1 readback
-        run: node verify-github-app.mjs --worker
       - name: Confirm private review desk is deployed, authenticated and byte-for-byte current
         run: node verify-private-review-page.mjs
       - name: Confirm real mobile scroll fixes and CSS are deployed on private HUD
