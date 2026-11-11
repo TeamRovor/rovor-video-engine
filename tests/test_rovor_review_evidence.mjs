@@ -51,6 +51,6 @@ test('exact pending job cache prevents repeats, anonymous access and arbitrary l
  assert.equal(a.body.model_called,false);assert.equal(a.body.github_written,false);
  assert(!JSON.stringify(a).includes(TOKEN));
  assert.equal(sqlite.prepare('SELECT human_review FROM hud_cloud_workforce_jobs').get().human_review,'not_recorded');
- sqlite.exec("UPDATE hud_cloud_workforce_jobs SET human_review='passed'");
+ sqlite.exec("UPDATE hud_cloud_workforce_jobs SET human_review='passed',reviewed_at=1");
  assert.equal((await reviewEvidence(env,'gc-review-one',NOW+2000,send)).status,404);
 });
