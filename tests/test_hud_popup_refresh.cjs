@@ -17,9 +17,10 @@ const slot={
 };
 class Clock extends Date{static now(){return clock;}}
 class Observe{constructor(fn){observer=fn;}observe(){}}
+const drawer={hidden:false};
 const document={
  hidden:false,body:{},
- getElementById:()=>({}),
+ getElementById:id=>id==='screen'?drawer:({}),
  querySelectorAll:()=>[slot]
 };
 const fetch=async url=>{
@@ -82,6 +83,16 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
  document.hidden=true;clock+=11000;
  intervals[0]();await flush();
  assert.equal(reads,11,'hidden HUD must not poll');
- console.log('HUD popup live refresh after replacement: PASS');
+ document.hidden=false;
+ drawer.hidden=true;clock+=11000;
+ intervals[0]();await flush();
+ assert.equal(reads,11,'closed Workload drawer must not keep polling seven private endpoints');
+ drawer.hidden=false;clock+=11000;
+ board.refresh();board.refresh();
+ await flush();await flush();
+ assert.equal(reads,13,'reopening Workload immediately refreshes the two missing windows once');
+ assert.equal(hourReads,5);assert.equal(minuteReads,5);
+ assert.equal(dayReads,3,'reopen must reuse the valid shared 24h snapshot');
+ console.log('HUD popup refresh, hidden-drawer suspension and immediate reopen: PASS');
 })().catch(e=>{console.error(e);process.exitCode=1;});
 
