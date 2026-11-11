@@ -402,9 +402,9 @@ export function createCloudOperations(base, cloud) {
    // Site clock timestamp to BOTH the write and its exact D1 readback.
    const observed=Number.isSafeInteger(report.observed_at)?report.observed_at:Date.now();
    await recordInventory(env,provider,{...report,observed_at:observed});
-   const saved=await sql(env,'SELECT observed_at,status FROM ghost_cloud_provider_checks WHERE provider=?',provider).first();
+   const saved=await sql(env,'SELECT observed_at,status,error_category FROM ghost_cloud_provider_checks WHERE provider=?',provider).first();
    const persisted=!!saved&&saved.status===report.status&&
-    saved.observed_at===observed;
+    saved.observed_at===observed&&saved.error_category===(report.error_category||null);
    return {persisted,catalog_received:persisted&&report.status==='catalog_received'};
   }));
   // A stored 401/403/timeout is an honest monitoring receipt, not a

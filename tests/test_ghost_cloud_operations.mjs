@@ -832,3 +832,14 @@ test('native cloud catalog refresh fails safely when private D1 checks table is 
  await assert.rejects(ops.refreshCatalogs(env,async()=>{outgoing++;return Response.json({data:[]});}));
  assert.equal(outgoing,0);
 });
+
+test('native catalog refresh refuses D1 readback with substituted error category',async()=>{
+ const {env,ops,db}=setup();
+ db.exec("CREATE TRIGGER corrupt_native_catalog AFTER INSERT ON ghost_cloud_provider_checks WHEN NEW.provider='groq' BEGIN UPDATE ghost_cloud_provider_checks SET error_category='substituted' WHERE provider=NEW.provider; END;");
+ const result=await ops.refreshCatalogs(env,async()=>Response.json({data:[{id:'available'}]}));
+ assert.equal(result.checked,9);
+ assert.equal(result.persisted,8);
+ assert.equal(result.catalog_received,8);
+ assert.equal(result.inference_attempts,0);
+ assert.equal(db.prepare("SELECT error_category FROM ghost_cloud_provider_checks WHERE provider='groq'").get().error_category,'substituted');
+});
