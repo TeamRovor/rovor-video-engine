@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#061222">
+<title>ROVOR · Private Workforce Reviews</title>
+<style>
+:root{color-scheme:dark;--cyan:#71cfff;--ink:#d6eefe;--quiet:#92b5d0;--edge:#315f83;--surface:#0b2139;--back:#040d1a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 74% 0%,#113a5b 0%,#061b30 29%,var(--back) 75%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100dvh}
+a{color:var(--cyan)}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+button:disabled{opacity:.5;cursor:not-allowed}main{max-width:1130px;margin:auto;padding:26px clamp(16px,4vw,40px) 80px}
+.top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;border-bottom:1px solid var(--edge);padding:3px 0 22px}
+.brand{font-size:14px;font-weight:850;letter-spacing:.27em;color:#e8f7ff}.brand small{display:block;letter-spacing:.16em;color:var(--quiet);font-size:10px;margin-top:8px;font-weight:600}
+nav{display:flex;gap:10px;flex-wrap:wrap}nav a{text-decoration:none;border:1px solid var(--edge);background:#102a47;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700}
+h1{font-size:clamp(25px,4vw,39px);margin:29px 0 6px;letter-spacing:-.035em}
+.intro{color:var(--quiet);line-height:1.6;max-width:760px;margin:0 0 24px;font-size:14px}
+.status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0}
+.stat{border:1px solid var(--edge);background:linear-gradient(145deg,#0b2947,#08192c);padding:18px;border-radius:15px;min-width:0}
+.stat strong{display:block;font-size:28px;font-weight:800;line-height:1.2}.stat small{display:block;margin-top:7px;color:var(--quiet);font-size:12px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:30px 0 12px}
+h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea5;background:#103b60;color:#f0f8ff;border-radius:10px;padding:11px 18px;min-height:44px;font-size:13px;font-weight:700}
+#message{min-height:22px;color:#b7cfe0;font-size:13px;line-height:1.5}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:13px}
+.job{border:1px solid var(--edge);border-radius:16px;background:linear-gradient(140deg,var(--surface),#07192d);padding:19px;overflow-wrap:anywhere}
+.job-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.job h3{font-size:17px;letter-spacing:-.01em;margin:0 0 8px}.metadata{font-size:12px;color:var(--quiet);line-height:1.6;margin:5px 0}
+.state{display:inline-flex;align-items:center;border:1px solid #547ca0;background:#113955;border-radius:30px;padding:7px 11px;font-size:11px;font-weight:800;letter-spacing:.05em;white-space:nowrap}
+.state.wait{border-color:#957e4f;background:#332a1b;color:#ffe8b6}
+.state.ok{border-color:#366b85;color:#c7eafa}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.actions button{border:1px solid #477d9f;background:#153956;color:#e0f2ff;border-radius:10px;padding:11px 16px;font-size:13px;font-weight:740;min-height:44px}
+.actions .approve{background:#18405a;border-color:#56abcc}
+.actions .reject{background:#422a33;border-color:#935362;color:#ffdae0}
+.draft{border-top:1px solid #325d7a;margin-top:15px;padding-top:16px}
+.draft h4{margin:0 0 8px;font-size:13px;letter-spacing:.05em}
+.draft pre{white-space:pre-wrap;word-break:break-word;line-height:1.65;font-family:inherit;font-size:14px;border-radius:10px;background:#03101f;border:1px solid #254663;max-height:60vh;overflow:auto;margin:0;padding:17px}
+.digest{word-break:break-all;font-size:11px;color:#8bb1cc;line-height:1.55;margin-top:12px}
+.notice{border-top:1px solid var(--edge);padding-top:22px;margin-top:33px;color:#91aec4;font-size:12px;line-height:1.7;max-width:840px}
+#page-status{font-size:12px;color:#a4d8ef}
+@media(max-width:560px){main{padding-top:14px}.status-grid{gap:8px}.stat{padding:12px}.stat strong{font-size:23px}.stat small{font-size:10px}h1{font-size:27px}.job{padding:14px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+<script type="module" src="/workforce-review.js"></script>
+</head>
+<body>
+<main>
+<header class="top"><div class="brand">ROVOR DIGITAL<small>PRIVATE CLOUD WORKFORCE · OWNER DESK</small></div>
+<nav aria-label="Private navigation"><a href="/">Return to HUD</a><a href="/">Open Ask ROVOR on HUD</a></nav></header>
+<h1>Review completed cloud work</h1>
+<p class="intro">This page reads real private Cloudflare D1 receipts. Read the full generated draft, verify the model and receipt, then record a single owner PASS or FAIL. A review never publishes content or starts another model.</p>
+<section class="status-grid" aria-label="Private workforce summary">
+<div class="stat"><strong id="pending">—</strong><small>Awaiting review</small></div>
+<div class="stat"><strong id="reviewed">—</strong><small>Owner reviewed</small></div>
+<div class="stat"><strong id="stop-state">—</strong><small>Cloud job dispatch</small></div>
+</section>
+<div class="section-head"><h2>Saved job receipts</h2><button class="refresh" id="refresh" type="button">Refresh receipts</button></div>
+<p id="message" role="status" aria-live="polite">Checking private records…</p>
+<div id="jobs" class="grid" aria-live="off"></div>
+<p id="page-status" role="status" aria-live="polite"></p>
+<footer class="notice">This is the existing Cloudflare HUD review ledger, not the separate private ChatGPT Site database. A successful draft does not prove live nine-provider inference, external remaining free quota, or automatic publication. STOP prevents new claims; it cannot cancel an upstream call already sent.</footer>
+</main>
+</body>
+</html>

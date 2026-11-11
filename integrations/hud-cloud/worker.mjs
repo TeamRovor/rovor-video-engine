@@ -29,7 +29,7 @@ const LOGIN = `<!doctype html><meta name="viewport" content="width=device-width"
 <body style="background:#020916;color:#bde5ff;font:16px system-ui;padding:32px"><h1>ROVOR · HUD</h1>
 <p>Sign in to view private usage and employee reports on this device.</p>
 <form id="login"><label>HUD viewing key <input id="key" type="password" autocomplete="current-password" required></label> <button>Sign in</button></form>
-<p id="status" role="status"></p><script>document.getElementById('login').onsubmit=async e=>{e.preventDefault();const key=document.getElementById('key');try{const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:key.value})});key.value='';if(r.ok)location.replace('/');else document.getElementById('status').textContent='Sign-in failed.'}catch{document.getElementById('status').textContent='Connection unavailable.'}}</script>`;
+<p id="status" role="status"></p><script>document.getElementById('login').onsubmit=async e=>{e.preventDefault();const key=document.getElementById('key');try{const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:key.value})});key.value='';if(r.ok)location.replace(new URLSearchParams(location.search).get('next')==='/workforce-review.html'?'/workforce-review.html':'/');else document.getElementById('status').textContent='Sign-in failed.'}catch{document.getElementById('status').textContent='Connection unavailable.'}}</script>`;
 const CLOUD_START = `<script src="/hud-quota.js"></script><script src="/hud-chat.js"></script><script>document.getElementById('connectOmniRoute')?.remove();window.ROVOR_OMNIROUTE_REQUEST=(resource,opts)=>fetch(resource,{...opts,credentials:'same-origin'});window.ROVOR_START_OMNIROUTE?.();window.ROVOR_QUOTA_BOARD?.start?.();</script>`;
 const response = (status, body) => Response.json(body, {status, headers: {
   'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
@@ -365,6 +365,8 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     } catch {}
   }
   if (!await authorized(authRequest, ingest || chatWriter || discoveryWriter || workforceWriter ? env.HUD_WRITER_TOKEN : env.HUD_READER_TOKEN)) {
+    if (request.method === 'GET' && url.pathname === '/workforce-review.html')
+      return Response.redirect(url.origin+'/login?next=%2Fworkforce-review.html',303);
     if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return Response.redirect(url.origin + '/login', 303);
     return response(401, {error: 'unauthorized'});
   }
@@ -549,6 +551,18 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       if ((asset.headers.get('Content-Type') || '').includes('text/html')) {
         const html = await asset.text();
         if (!html.includes('</body>')) return response(503, {error: 'hud_asset_invalid'});
+        // A separate owner-only D1 review page is deliberately NOT injected with
+        // the full HUD chat bootstrap. Both HTML and its companion JS still
+        // pass this exact same private reader-cookie authentication above.
+        if(url.pathname==='/workforce-review.html'){
+          if(asset.status!==200)return response(404,{error:'not_found'});
+          return new Response(html,{status:200,headers:{
+            'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store',
+            'Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',
+            'X-Frame-Options':'DENY',
+            'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+          }});
+        }
         return new Response(html.replace('</body>', CLOUD_START + '</body>'), {status: asset.status,
           headers: {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer'}});
       }
