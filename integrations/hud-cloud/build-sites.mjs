@@ -30,7 +30,7 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
     'const workforceIntake=__cloudflareOnlyWorkforce, workforceControl=__cloudflareOnlyWorkforce;',
     'const workforceStatus=__cloudflareOnlyWorkforce, workforceDraft=__cloudflareOnlyWorkforce;',
     'const workforceReview=__cloudflareOnlyWorkforce, workforceTick=__cloudflareOnlyWorkforce;'
-  ].join('\\n')+'\\n';
+  ].join('\n')+'\n';
   const groqImport = "import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';";
   const groqProbeImport = "import {probeGroqCatalogue} from './groq-quota-monitor.mjs';";
   const groqCatalogImport = "import {groqCatalogEvidence} from './groq-quota-monitor.mjs';";
