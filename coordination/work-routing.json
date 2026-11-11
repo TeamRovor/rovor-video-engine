@@ -1147,6 +1147,15 @@
       "requires": [
         "github-read"
       ]
+    },
+    "workforce-owner-admission-guidance-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

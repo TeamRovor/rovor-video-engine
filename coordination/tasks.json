@@ -6027,6 +6027,23 @@
         "kind": "plan",
         "prompt": "You are Walter, designing a safe new ROVOR Digital GitHub Actions workflow for owner review. Return ONLY ONE valid JSON object with exactly the keys workflow_id, name, description, template, tests, and schedule. No markdown fences or extra prose. Set workflow_id to 'rovor-mobile-hud-regression', name to 'ROVOR Mobile HUD Regression', description to 'Check the existing ROVOR HUD phone drawer and cloud review security on demand', template to 'node-test', tests to exactly ['tests/test_hud_mobile_drawer_stability.mjs','tests/test_hud_private_review_page.mjs'], and schedule to 'manual'. Evaluate whether this task could identify regressions before answering, but never alter the identifiers, test paths, or other required fields. Do not include any shell commands, URLs, tokens, permissions, secrets, code snippets, GitHub API actions, schedules other than manual, claims of prior execution, or external calls. The workflow will be compiled from a trusted fixed template, not executed from your raw output. This proposal is untrusted until the owner inspects the generated JSON and independently records PASS or FAIL on the exact private draft digest."
       }
+    },
+    {
+      "id": "workforce-owner-admission-guidance-20261111",
+      "title": "Explain observed workforce wait conditions in the owner review desk",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar owner admission guidance 2026-11-11",
+      "branch": "fix/workforce-owner-admission-guidance-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/workforce-review.js",
+        "tests/test_workforce_admission_guidance.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T07:24:11.751229+00:00",
+      "next_update": "After focused UI tests and reviewable PR",
+      "next_action": "Render validated read-only D1 admission counts and wait conditions with earliest rolling slot; preserve review actions and avoid claims of provider eligibility.",
+      "acceptance": "Focused behavioral tests show daily/review caps, no-queue/no-discovery, stopped/unauthorized and invalid snapshots truthfully; no new endpoint, writes or inference."
     }
   ]
 }
