@@ -72,6 +72,13 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 #first-pr-state p{margin:0 0 8px}
 #first-pr-state a{display:inline-block;margin-top:5px;font-weight:750;overflow-wrap:anywhere}
 #patch-preparation{margin-top:15px}
+.catalog-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.catalog-card{border:1px solid #315b79;border-radius:10px;padding:11px;background:#0a2339;min-width:0;overflow-wrap:anywhere}
+.catalog-card strong,.catalog-card small{display:block}
+.catalog-card strong{font-size:13px;color:#d7efff;margin-bottom:5px}
+.catalog-card small{font-size:11px;color:#a9c8dd;line-height:1.5;margin-top:5px}
+@media(max-width:700px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.catalog-grid{grid-template-columns:1fr}}
 </style>
 <script type="module" src="/workforce-review.js"></script>
 </head>
@@ -92,6 +99,11 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
  <a id="stop-fallback" href="https://github.com/TeamRovor/rovor-video-engine/actions/workflows/cloud-gemini-workforce.yml" rel="noreferrer">STOP via GitHub</a>
  <span id="quick-control-note">Checking control access…</span>
 </div>
+<details class="technical-panel" id="cloud-provider-catalog">
+<summary>Nine-provider cloud checks · <span id="cloud-provider-summary">Checking…</span></summary>
+<p class="metadata">These are real catalog observations, not verified Free-tier inference or quotas. Checks run on the existing Cloudflare clock without a Mac.</p>
+<div id="cloud-provider-grid" class="catalog-grid" role="list" aria-live="off"></div>
+</details>
 <section class="decision-guide" aria-label="How to review work">
  <div><strong>Keep this work</strong><span>The actual report is specific and worth saving. PASS records acceptance, not a verified fix.</span></div>
  <div><strong>Reject this work</strong><span>The report is generic, wrong, outdated or not actionable. FAIL does not start another job.</span></div>
