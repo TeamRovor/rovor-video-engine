@@ -60,9 +60,11 @@ export async function control(db,enabled,seriesCommit=null,now=Date.now()){
   if(!enabled){
    const results=await db.batch([
     db.prepare('UPDATE hud_cloud_workforce_series SET active=0 WHERE id=1').bind(),
-    db.prepare('UPDATE hud_cloud_workforce_control SET enabled=0 WHERE id=1').bind()
+    db.prepare('UPDATE hud_cloud_workforce_control SET enabled=0 WHERE id=1').bind(),
+    db.prepare(`UPDATE hud_cloud_workforce_jobs SET state='failed',finished_at=?,
+     error_code='stopped_before_claim' WHERE state='queued' AND id LIKE 'gc-rec-%'`).bind(now)
    ]);
-   if(results.some(r=>r.meta?.changes!==1))
+   if(results.slice(0,2).some(r=>r.meta?.changes!==1))
     return {status:503,body:{error:'workforce_control_unavailable'}};
    return {status:200,body:{enabled:false,recurring_authorized:false}};
   }
