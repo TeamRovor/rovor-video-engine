@@ -166,7 +166,7 @@ test('inventory errors do not leak key or vendor body',async()=>{
 });
 test('MCP discovery adds cloud actions but no human-review writer',async()=>{
  const {env,ops}=setup();const r=await ops.fetch(request('/mcp',{body:{jsonrpc:'2.0',id:1,method:'tools/list'}}),env);const doc=await r.json();
- assert.equal(doc.result.tools.length,7);assert.ok(doc.result.tools.some(t=>t.name==='rovor_cloud_tick'));
+ assert.equal(doc.result.tools.length,8);assert.ok(doc.result.tools.some(t=>t.name==='rovor_cloud_tick'));assert.ok(doc.result.tools.some(t=>t.name==='rovor_provider_catalog_refresh'));
  assert.ok(!doc.result.tools.some(t=>/review|pass|fail/.test(t.name)));
  const legacy=await ops.fetch(request('/mcp',{body:{jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'rovor_workforce_status',arguments:{period:'24h'}}}}),env);
  assert.equal((await legacy.json()).result.content.length,2);
@@ -708,7 +708,7 @@ test('native cloud catalog refresh persists nine real GET observations without a
  };
  const first=await ops.refreshCatalogs(env,fetcher);
  assert.deepEqual(first,{source:'site_native_catalog_refresh',checked:9,
-  persisted:9,skipped_fresh:0,inference_attempts:0});
+  persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
  assert.equal(seen.length,9);
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
  const report=await ops.status(env);
@@ -719,13 +719,56 @@ test('native cloud catalog refresh persists nine real GET observations without a
  }
  const second=await ops.refreshCatalogs(env,fetcher);
  assert.deepEqual(second,{source:'site_native_catalog_refresh',checked:0,
-  persisted:0,skipped_fresh:9,inference_attempts:0});
+  persisted:0,catalog_received:0,skipped_fresh:9,inference_attempts:0});
  assert.equal(seen.length,9);
  db.prepare("UPDATE ghost_cloud_provider_checks SET observed_at=1 WHERE provider='nvidia'").run();
  const partial=await ops.refreshCatalogs(env,fetcher);
  assert.equal(partial.checked,1);
  assert.equal(partial.persisted,1);
+ assert.equal(partial.catalog_received,1);
  assert.equal(seen.length,10);
+});
+test('private MCP owner refresh checks all nine catalogs and persists D1 without inference',async t=>{
+ const {env,db,ops}=setup();
+ const seen=[];
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  seen.push(url);
+  assert.equal(options.method,'GET');
+  assert.equal(options.redirect,'manual');
+  assert.ok(!url.includes('/chat/completions'));
+  return Response.json({data:[{id:'fixture/model:free',pricing:{prompt:'0',completion:'0'}}]});
+ });
+ const anonymous=await ops.fetch(request('/mcp',{identity:null,
+  body:{jsonrpc:'2.0',id:1,method:'tools/call',
+   params:{name:'rovor_provider_catalog_refresh',arguments:{}}}}),env);
+ assert.equal(anonymous.status,401);
+ assert.equal(seen.length,0);
+ const first=await rpc(ops,env,'rovor_provider_catalog_refresh');
+ assert.deepEqual(first,{source:'site_native_catalog_refresh',checked:9,
+  persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
+ assert.equal(seen.length,9);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
+ assert.ok((await ops.status(env)).providers.every(p=>p.last_check?.status==='catalog_received'));
+ const second=await rpc(ops,env,'rovor_provider_catalog_refresh');
+ assert.equal(second.checked,0);
+ assert.equal(second.skipped_fresh,9);
+ assert.equal(seen.length,9);
+ assert.equal((await rpc(ops,env,'rovor_provider_catalog_refresh',{provider:'groq'})).isError,true);
+});
+test('native refresh distinguishes stored provider errors from successful catalogs',async()=>{
+ const {env,ops}=setup();
+ const first=await ops.refreshCatalogs(env,async(url,options)=>{
+  assert.equal(options.method,'GET');
+  return url.includes('api.groq.com')?new Response('private upstream data',{status:403}):
+   Response.json({data:[{id:'available'}]});
+ });
+ assert.equal(first.checked,9);
+ assert.equal(first.persisted,9);
+ assert.equal(first.catalog_received,8);
+ const status=await ops.status(env);
+ assert.equal(status.providers.find(p=>p.provider==='groq').last_check.status,'http_403');
+ assert.equal(status.providers.find(p=>p.provider==='groq').admission,'disabled_pending_verification');
+ assert.ok(!JSON.stringify(status).includes('private upstream data'));
 });
 test('native cloud catalog refresh fails safely when private D1 checks table is missing',async()=>{
  const {env,ops,db}=setup();
