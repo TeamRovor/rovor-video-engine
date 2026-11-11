@@ -37,6 +37,26 @@ async function setEnabled(value){
  if(out.enabled!==value)throw Error('stop_control_readback_mismatch');
 }
 
+// Owner confirmation comes from an explicit protected workflow_dispatch, not
+// a source flag or an AI-generated "approval". The candidate stays unapproved
+// in git. Only this one in-memory copy is approved for a single exact job.
+export async function planOwnerSelectedPilot(tasks,routing,commit,taskId,revision){
+ if(!Array.isArray(tasks?.tasks))throw Error('canonical_queue_invalid');
+ const candidate=tasks.tasks.find(t=>t.id===taskId);
+ if(!candidate||candidate.cloud_inference?.revision!==revision||
+    candidate.cloud_inference?.approved_for_cloud!==false||
+    candidate.cloud_inference?.data_class!=='public_repository')
+  throw Error('new_unapproved_canonical_candidate_required');
+ const selected={...candidate,cloud_inference:{
+  ...candidate.cloud_inference,approved_for_cloud:true
+ }};
+ const canonical={...tasks,tasks:tasks.tasks.map(t=>t===candidate?selected:t)};
+ const [job]=await planApprovedJobs(canonical,routing,commit,[{task_id:taskId,revision}]);
+ if(!job||job.prompt.length>4000||job.id.startsWith('gc-rec-'))
+  throw Error('new_canonical_packet_incompatible_with_pinned_gemini');
+ return job;
+}
+
 export async function checkOperatorContext(e){
  if(e.GITHUB_REPOSITORY!=='TeamRovor/rovor-video-engine'||
     e.GITHUB_REF!=='refs/heads/main'||
@@ -90,9 +110,7 @@ async function main(){
   throw Error('no_recent_pinned_gemini_model_receipt');
  const tasks=JSON.parse(readFileSync('coordination/tasks.json','utf8'));
  const routing=JSON.parse(readFileSync('coordination/work-routing.json','utf8'));
- const [job]=await planApprovedJobs(tasks,routing,sha,[{task_id:taskId,revision}]);
- if(!job||job.prompt.length>4000||job.id.startsWith('gc-rec-'))
-  throw Error('new_canonical_packet_incompatible_with_pinned_gemini');
+ const job=await planOwnerSelectedPilot(tasks,routing,sha,taskId,revision);
  const receipt=await api('/api/hud/workforce/intake',{method:'POST',write:true,
   body:{approval:'trusted_canonical_owner_approval_v1',job,revision}});
  if(receipt.id!==job.id||receipt.queued!==true||receipt.duplicate===true)
