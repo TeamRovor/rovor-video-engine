@@ -128,7 +128,12 @@ def main() -> int:
         result = send_shift(token=token)
     except urllib.error.HTTPError as error:
         # No exception body; never follow auth redirects or echo private data.
-        print(json.dumps({"state": "dispatch_failed", "http_status": error.code}))
+        # HTTP 403 is observed from the original private Site boundary, not
+        # evidence of a dispatched model or of a bad model credential.
+        result = {"state": "dispatch_failed", "http_status": error.code}
+        if error.code == 403:
+            result["reason"] = "private_site_service_forbidden"
+        print(json.dumps(result))
         return 1
     except urllib.error.URLError as error:
         # The URL, server exception, TLS details and any credential are private.
