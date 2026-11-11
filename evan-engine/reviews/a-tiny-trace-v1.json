@@ -1,0 +1,197 @@
+{
+  "status": "a-tiny-acoustic-oral-tongue-trace-reviewed",
+  "traceRange": [
+    10.2,
+    11.45
+  ],
+  "geometrySamples": 601,
+  "samplingHz": 480,
+  "fftWindowSamples": 400,
+  "fftHopSamples": 80,
+  "hypotheses": [
+    10.23,
+    10.84,
+    10.32,
+    10.93
+  ],
+  "flaggedWordScriptIndices": [
+    32,
+    33
+  ],
+  "centered20msRmsAndControlProbes": [
+    {
+      "center": 10.23,
+      "sourceSamples": [
+        163520,
+        163840
+      ],
+      "rmsDbFS": -28.231151191037682,
+      "actualControlTime": 10.229166666666666,
+      "innerGap": 8.606231689453125,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 10.32,
+      "sourceSamples": [
+        164960,
+        165280
+      ],
+      "rmsDbFS": -50.84958686669851,
+      "actualControlTime": 10.320833333333333,
+      "innerGap": 0.149993896484375,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 10.73,
+      "sourceSamples": [
+        171520,
+        171840
+      ],
+      "rmsDbFS": -23.193226897129993,
+      "actualControlTime": 10.729166666666666,
+      "innerGap": 13.433563232421875,
+      "tongueLift": 0.9408445205330516,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 10.84,
+      "sourceSamples": [
+        173280,
+        173600
+      ],
+      "rmsDbFS": -18.224209675106554,
+      "actualControlTime": 10.839583333333334,
+      "innerGap": 15.561187744140625,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 10.93,
+      "sourceSamples": [
+        174720,
+        175040
+      ],
+      "rmsDbFS": -34.5725085179102,
+      "actualControlTime": 10.929166666666667,
+      "innerGap": 11.899169921875,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 11.02,
+      "sourceSamples": [
+        176160,
+        176480
+      ],
+      "rmsDbFS": -31.59683032883178,
+      "actualControlTime": 11.020833333333334,
+      "innerGap": 3.672088623046875,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 11.16,
+      "sourceSamples": [
+        178400,
+        178720
+      ],
+      "rmsDbFS": -35.50540663979361,
+      "actualControlTime": 11.160416666666666,
+      "innerGap": 15.228485107421875,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    }
+  ],
+  "actualRasterOralAndTongueMatchesTo1eMinus9": [
+    257,
+    258,
+    260,
+    263
+  ],
+  "actualRasterTongueRecords": {
+    "257": {
+      "lift": 0.8841511408515685,
+      "sourceBladeYScale": 0.9673051238059998,
+      "bladeCoverageBeforeFloor": 246.6234130859375,
+      "bladeCoverageAfterFloor": 40.79650115966797,
+      "floorCoverage": 455.94500732421875,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    },
+    "258": {
+      "lift": 0.688640649414042,
+      "sourceBladeYScale": 0.7971910834312439,
+      "bladeCoverageBeforeFloor": 196.14894104003906,
+      "bladeCoverageAfterFloor": 23.860979080200195,
+      "floorCoverage": 416.62188720703125,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    },
+    "260": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 17.317771911621094,
+      "bladeCoverageAfterFloor": 1.891383409500122,
+      "floorCoverage": 504.65020751953125,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    },
+    "263": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 11.977535247802734,
+      "bladeCoverageAfterFloor": 1.5352975130081177,
+      "floorCoverage": 268.04351806640625,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    }
+  },
+  "nativeFacesInspected": [
+    257,
+    258,
+    260,
+    263
+  ],
+  "normalDecodedSourceFramesInspected": [
+    257,
+    258,
+    260,
+    263
+  ],
+  "slowDecodedVideoFramesInspected": [
+    24,
+    44
+  ],
+  "nativeResolutionTraceHalvesInspected": true,
+  "stageFramesByteExact": 30,
+  "normalDecodedFrames": 30,
+  "slowDecodedFrames": 120,
+  "contextPcmSamples": 20000,
+  "contextPcmRange": [
+    168000,
+    188000
+  ],
+  "contextPcmByteExact": true,
+  "pngHashesVerified": 43,
+  "selectedCurrentFrozenSourcesVerified": 100,
+  "findings": [
+    "Older10.23/10.32 anchors overlap the preceding modeled it\u2019s/B-closure transition;10.32 is near -50.85dBFS/20ms and the0.15px lip-gap floor. They are not supported as replacements for the later a/tiny intervals by this context.",
+    "The spectrum changes within continuing periodic energy near10.84, with a later reduction and transient/noisy sequence after10.93. Mixed25ms windows do not establish exact IY/AH/T or word boundaries.",
+    "Actual gap is15.56px near10.84 and11.90px near10.93; it narrows to about3.67px near11.02 and reopens. No modelled bilabial seal is imposed on this T passage.",
+    "Two actual L-region raster fixtures257/258 capture tongue lifts0.884151/0.688641 with dental partition0. All four oral/tongue comparisons match capture and material guards; the visible tongue change is subtle at full-stage scale, so control accuracy does not establish phonetic readability."
+  ],
+  "disposition": "retain-current-intervals-no-automatic-retiming",
+  "timingChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "flaggedWordsWithDeeperTraces": 11,
+  "independentListening": false,
+  "exactBoundariesVerified": false,
+  "realTimePlaybackAccepted": false,
+  "animationAccepted": false,
+  "polished": false,
+  "pendingJobs": [],
+  "next": "Review tiny\u2192version\u2192of\u2192your/script34\u201336 with Region03 original spectrum and actual labiodental lip/tooth controls; no automatic threshold retiming/new expression variants."
+}

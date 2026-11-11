@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: basically→a→tiny acoustic/oral/tongue trace reviewed
+CARTOON-EVAN-A-TINY-TRACE.md / evan-engine/reviews/a-tiny-trace-v1.json. Existingtrace reused: original10.20–11.45sPCM/25msFFT/5mshop/601actualsamples480Hz. Older10.23/10.32 anchors overlapprecedingmodeledit’s/Bclosure; current10.84continuesperiodicenergy/spectralchange, after10.93reduction/transientnoise. ExactIY/AH/T/wordedges unverified; retaincurrentintervals. Noart/controls/retiming;18flagsopen.
+
+Fouractualrasteroral/tonguefixtures257/258/260/263 matchcaptureto1e-9. L-region257/258 lift.884151/.688641,dentalpartition0,materialguardsPASS; stage-scaletonguereadabilitysubtle. Gap15.56px near10.84/11.90near10.93/3.67near11.02, noTbilabialseal. outputs/evan-cartoon-a-tiny-trace/Review.html:30BYTE-EXACTfullframes252..281;30/120normal/slowdecodes;20000exactPCM168000:188000.43PNGhashes/current+frozen selectedsources verified; nativeplothalves/4faces/4normal/2slow inspected. Elevenflaggedwords deepertraced; all18unresolved. Realtime/listening/polishedFALSE; no pendingjobs;automationACTIVE. Full/defaults/protectedversions preserved.
+
+NEXT: tiny→version→of→your/script34–36, Region03originalPCM/spectrum +actual labiodental lip/toothcontrols. Keepfullcandidate/all18flags; noautomaticretiming/newexpressionvariants. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync; localpushauthunavailable.
+
 ## Current task: it’s→basically acoustic/oral trace reviewed
 CARTOON-EVAN-ITS-BASICALLY-TRACE.md / evan-engine/reviews/its-basically-trace-v1.json. Existingtrace reused: original9–10.85sPCM/25msFFT/5mshop/889actualsamples480Hz. Older9.04start inprecedingmodeledfavicon tail;9.42edge in near-silentpause(-81.34dBFS/20ms), unsupported. Newenergyclusternearcurrent10.19;10.31leads tomodeledBseal/release10.41–10.45. Noise/pause spectralpeaks donotlabelwords. Retaincurrentintervals; noart/controls/retiming;18flagsopen.
 
