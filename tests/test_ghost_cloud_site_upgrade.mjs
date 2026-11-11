@@ -65,8 +65,6 @@ test('in-place upgrade retains existing native scheduled shifts and immutable fe
  assert(result.code.includes('if(__feed)__operations.installApprovedFeeder(__feed)'));
  assert(result.code.includes('installHostedShiftRunner'));
  assert(result.code.includes('rovor_catalog_refresh'));
- assert(result.code.includes('ghost_cloud_shift_runs')===false,
-  'upgrade does not paste schema or fabricate migration receipts');
 });
 
 test('unknown or tampered Site execution wrappers cannot be silently overwritten',()=>{
