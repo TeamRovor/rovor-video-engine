@@ -6128,6 +6128,23 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42986715688"
         }
       ]
+    },
+    {
+      "id": "hud-chat-background-catalog-20261111",
+      "title": "Keep chat responsive during bounded background model checks",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar chat background refresh 2026-11-11",
+      "branch": "fix/hud-chat-background-catalog-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/hud-chat.js",
+        "tests/test_hud_chat_mobile.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T08:31:19.680Z",
+      "next_update": "Behavior regressions and hosted HUD checks",
+      "next_action": "Keep verified same-source controls during background checks; bound catalog reads and reject obsolete completions during a request.",
+      "acceptance": "Background refresh preserves readiness; foreground/source changes remain gated; failed checks close readiness; active requests cannot be overwritten; existing checks pass."
     }
   ]
 }

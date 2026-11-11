@@ -1174,6 +1174,15 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "hud-chat-background-catalog-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
