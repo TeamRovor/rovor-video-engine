@@ -614,7 +614,7 @@
       if(preserveScroll)paintChatLog(log,paint);else paint();
     };
     let pendingJob=null,cancelConfirmed=false,multiPending=[];
-    const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;refreshButton.disabled=b;repoSelect.disabled=b;teamInput.disabled=b||sourceSelect.value!=='omniroute';
+    const setBusy=b=>{if(b)loadEpoch++;busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;refreshButton.disabled=b;repoSelect.disabled=b;teamInput.disabled=b||sourceSelect.value!=='omniroute';
       // Don't re-open the software keyboard after a delayed response on iOS.
       if(!b&&panel.dataset.open==='true'&&!window.matchMedia('(pointer:coarse)').matches)input.focus({preventScroll:true});
     };
@@ -669,7 +669,7 @@
         clearInterval(autoRefresh);
         autoRefresh=setInterval(()=>{
           if(panel.dataset.open!=='true'||busy||!modelSheet.hidden||input.value.trim())return;
-          load();refreshProviderInventory();
+          load({background:true});refreshProviderInventory();
         },30000);
       }else{
         clearInterval(autoRefresh);autoRefresh=null;
@@ -811,23 +811,29 @@
         providerList.textContent='';
       }
     }
-    let loadEpoch=0;
-    async function load(){
+    let loadEpoch=0,readySource=null;
+    async function load({background=false}={}){
       const epoch=++loadEpoch, requestedSource=sourceSelect.value;
-      ready=false;send.disabled=true;modelBrowse.disabled=true;closeModelSheet();stateLabel.textContent='Checking '+requestedSource+' model availability…';
+      const previousModel=select.value;
+      const keepReady=background&&ready&&readySource===requestedSource&&!!previousModel;
+      if(!keepReady){
+        ready=false;send.disabled=true;modelBrowse.disabled=true;closeModelSheet();
+        stateLabel.textContent='Checking '+requestedSource+' model availability…';
+      }
       try{
         const omni=requestedSource==='omniroute';
         const catalogPath=omni?'/api/hud/chat/models':requestedSource==='gemini'?'/api/hud/gemini/models':'/api/chat/models';
-        const r=await fetch(catalogPath,{credentials:'same-origin',cache:'no-store'});
+        const r=await fetch(catalogPath,{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
         if(!r.ok)throw Error('catalog_unavailable');
         const info=await r.json(),models=requestedSource==='groq'?(Array.isArray(info.models)?info.models.filter(id=>id==='groq/openai/gpt-oss-20b'):[]):info.models;
         let geminiUsage=null;
         if(requestedSource==='gemini')try{
-          const usageResp=await fetch('/api/hud/gemini/usage',{credentials:'same-origin',cache:'no-store'});
+          const usageResp=await fetch('/api/hud/gemini/usage',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
           if(usageResp.ok){const usage=await usageResp.json();if(usage.source==='cloud_gemini_direct'&&Array.isArray(usage.models))geminiUsage=usage;}
         }catch{}
-        if(epoch!==loadEpoch)return; // Ignore a slow catalog from the previous provider tab.
+        if(epoch!==loadEpoch||busy)return; // Never overwrite a provider switch or an active request.
         if(((omni||requestedSource==='gemini')&&info.online!==true)||!Array.isArray(models)||!models.length)throw Error('catalog_unavailable');
+        const currentModel=select.value;
         select.textContent='';
         if(omni){
           const smart=el('optgroup',{label:'ROVOR task routing'});
@@ -853,7 +859,8 @@
         if(!select.options.length)throw Error('catalog_unavailable');
         const preferred=sessions.find(s=>s.id===currentId)?.model;
         const saved=localStorage.getItem(KEY+'_model_'+requestedSource);
-        if(preferred&&(models.includes(preferred)||(omni&&preferred===AUTO_ROUTE)))select.value=preferred;
+        if(keepReady&&(models.includes(currentModel)||(omni&&currentModel===AUTO_ROUTE)))select.value=currentModel;
+        else if(preferred&&(models.includes(preferred)||(omni&&preferred===AUTO_ROUTE)))select.value=preferred;
         else if(saved&&(models.includes(saved)||(omni&&saved===AUTO_ROUTE)))select.value=saved;
         else if(omni)select.value=AUTO_ROUTE;
         else if(requestedSource==='gemini'&&models.includes('gemini-auto-free'))select.value='gemini-auto-free';
@@ -865,9 +872,10 @@
         modelSheetInfo.textContent=omni
           ?'Mac-advertised chat routes only. Free-tagged model routes and Owner-allowlisted model routes still need live inference and free-quota checks.'
           :requestedSource==='gemini'?'Direct Google Gemini cloud API. Smart Gemini uses only models with confirmed replies in the past seven days, choosing by task. A manually selected, key-listed route can establish a new verified model. Circular meters show this HUD\'s reserved requests, NOT Google project-wide quota. Free-tier content may be used by Google to improve services.':requestedSource==='groq'?'Direct Groq cloud API; Mac not required. Requires current owner-verified free-tier approval. Quota remaining is unknown.':'Cloudflare-hosted inference is separate from OmniRoute. Its allowance is not guaranteed.';
-        ready=true;send.disabled=false;modelBrowse.disabled=false;updatePlan();
+        ready=true;readySource=requestedSource;send.disabled=false;modelBrowse.disabled=false;updatePlan();
       }catch{
-        if(epoch!==loadEpoch)return;
+        if(epoch!==loadEpoch||busy)return;
+        ready=false;readySource=null;send.disabled=true;
         modelBrowse.disabled=true;select.textContent='';select.append(el('option',{value:'',textContent:'No models available'}));
         updatePlan();
         stateLabel.textContent=sourceSelect.value==='omniroute'?
@@ -1348,4 +1356,5 @@
   window.ROVOR_HUD_CHAT={start:()=>{if(!document.getElementById('rvc'))build();}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>window.ROVOR_HUD_CHAT.start());else window.ROVOR_HUD_CHAT.start();
 })();
+
 
