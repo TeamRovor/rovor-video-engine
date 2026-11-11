@@ -94,7 +94,7 @@ async function main(){
  if(!job||job.prompt.length>4000||job.id.startsWith('gc-rec-'))
   throw Error('new_canonical_packet_incompatible_with_pinned_gemini');
  const receipt=await api('/api/hud/workforce/intake',{method:'POST',write:true,
-  body:{approval:'trusted_canonical_owner_approval_v1',job}});
+  body:{approval:'trusted_canonical_owner_approval_v1',job,revision}});
  if(receipt.id!==job.id||receipt.queued!==true||receipt.duplicate===true)
   throw Error('job_not_new_or_duplicate_replay_denied');
  let run;
