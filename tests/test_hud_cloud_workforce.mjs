@@ -228,3 +228,14 @@ test('persistent STOP flipped after atomic claim prevents upstream Gemini reques
  const second=await tick(s.env,now+1000,never);
  assert.equal(second.body.dispatched,0,'STOP-aborted job is permanently consumed');
 });
+
+test('GitHub owner pilot form pre-fills only a new unapproved candidate and never defaults to inference',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/cloud-gemini-workforce.yml',import.meta.url),'utf8');
+ assert.match(workflow,/task_id:[\s\S]*?default: cloud-gemini-website-offer-pilot-20261110/);
+ assert.match(workflow,/revision:[\s\S]*?default: v2/);
+ assert.match(workflow,/action:[\s\S]*?default: status/);
+ assert.match(workflow,/confirm_owner_approval:[\s\S]*?default: false/);
+ const operator=readFileSync(new URL('../tools/cloud_gemini_workforce_control.mjs',import.meta.url),'utf8');
+ assert.match(operator,/available_unapproved_candidates:ownerCandidates/);
+ assert.match(operator,/requires_explicit_owner_selection:true/);
+});
