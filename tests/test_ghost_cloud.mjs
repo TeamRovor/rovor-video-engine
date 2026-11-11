@@ -21,7 +21,7 @@ function setup(config={groq:cfg()}){
 const job=(id,extra={})=>({id,employee:'Walter',task_id:'canonical-task',kind:'research',title:'Review public implementation',prompt:'Compare these two public interfaces.',source_commit:'c'.repeat(40),data_class:'public_repository',...extra});
 function enqueue(sqlite,j){validateJob(j);sqlite.prepare('INSERT INTO ghost_cloud_jobs VALUES(?,?,?,?,?,?,?,?,?)').run(j.id,j.employee,j.task_id,j.kind,j.title,j.prompt,Buffer.byteLength(j.prompt),j.source_commit,NOW);}
 function enable(sqlite){sqlite.exec('UPDATE ghost_cloud_control SET enabled=1');}
-const success=(model='upstream-pinned-1')=>new Response(JSON.stringify({model,choices:[{message:{content:'Concrete draft for independent human review.'},finish_reason:'stop'}],usage:{prompt_tokens:9,completion_tokens:8}}),{headers:{'Content-Type':'application/json'}});
+const success=(model='test-pinned-1')=>new Response(JSON.stringify({model,choices:[{message:{content:'Concrete draft for independent human review.'},finish_reason:'stop'}],usage:{prompt_tokens:9,completion_tokens:8}}),{headers:{'Content-Type':'application/json'}});
 const api=(env,path,method='GET',value,writer=false)=>worker.fetch(new Request('https://private.example'+path,{method,headers:{Authorization:'Bearer '+(writer?env.GHOST_WRITER_TOKEN:env.GHOST_READER_TOKEN),'Content-Type':'application/json'},body:value===undefined?undefined:JSON.stringify(value)}),env);
 
 test('all nine configured providers get their own fixed HTTPS endpoint and secret',()=>{
@@ -53,11 +53,11 @@ test('STOP defaults to disabled, so queued jobs cause zero inference',async()=>{
 test('all nine cloud routes invoke the mocked transport and retain distinct returned receipts',async()=>{
  const configs=Object.fromEntries(Object.keys(PROVIDERS).map(p=>[p,configFor(p)]));const {env,sqlite}=setup(configs);enable(sqlite);
  for(let i=0;i<9;i++)enqueue(sqlite,job('fleet-'+i));const seen=[];
- const result=await tick(env,async(url)=>{seen.push(url);return success();},NOW);
+ const result=await tick(env,async(url,init)=>{seen.push(url);return success(JSON.parse(init.body).model);},NOW);
  assert.equal(result.dispatched,9);assert.equal(new Set(seen).size,9);
  const rows=sqlite.prepare('SELECT * FROM ghost_cloud_attempts').all();assert.equal(rows.length,9);
  assert.equal(new Set(rows.map(r=>r.provider)).size,9);
- for(const r of rows){assert.equal(r.status,'needs_review');assert.equal(r.actual_model,'upstream-pinned-1');assert.equal(r.tokens_input,9);assert.equal(r.human_review,'not_recorded');}
+ for(const r of rows){assert.equal(r.status,'needs_review');assert.equal(r.actual_model,configs[r.provider].model);assert.equal(r.tokens_input,9);assert.equal(r.human_review,'not_recorded');}
 });
 
 test('overlapping claims cannot execute one job twice or overlap a shared account',async()=>{
@@ -168,9 +168,11 @@ test('blank, truncated, tool-call, oversized or malformed responses never count 
  for(const body of ['{', 'x'.repeat(131073)]){const out=await infer('groq',cfg(),env,'public',async()=>new Response(body),NOW);assert.equal(out.status,'uncertain');}
 });
 
-test('unknown usage and actual upstream stay unknown',async()=>{
+test('missing upstream model is failed rather than counted as review-ready work',async()=>{
  const {env}=setup();const out=await infer('groq',cfg(),env,'public',async()=>Response.json({choices:[{message:{content:'A concrete output.'},finish_reason:'stop'}]}),NOW);
- assert.equal(out.status,'needs_review');assert.equal(out.actual_model,null);assert.equal(out.tokens_input,null);assert.equal(out.tokens_output,null);
+ assert.equal(out.status,'failed');assert.equal(out.error_code,'upstream_model_unverified');
+ assert.equal(out.actual_model,null);assert.equal(out.tokens_input,null);assert.equal(out.tokens_output,null);
+ assert.equal(out.output,undefined);
 });
 
 test('job boundary rejects private classification, arbitrary operations and additional fields',()=>{
@@ -254,14 +256,21 @@ test('owner-chat completion can prove a route without leaking prompts or drafts'
  assert.equal(snapshot.providers.filter(p=>p.online_verified).length,0);
 });
 
-test('wrong or unknown upstream model never verifies the newly pinned route',async()=>{
+test('wrong upstream response is permanently failed and never certifies or replays the route',async()=>{
  const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('wrong-upstream'));
- await tick(env,async()=>success('different-upstream-model'),NOW);
+ let calls=0;
+ await tick(env,async()=>{calls++;return success('different-upstream-model');},NOW);
+ const row=sqlite.prepare("SELECT status,error_code,actual_model,output FROM ghost_cloud_attempts WHERE job_id='wrong-upstream'").get();
+ assert.equal(row.status,'failed');assert.equal(row.error_code,'upstream_model_mismatch');
+ assert.equal(row.actual_model,'different-upstream-model');assert.equal(row.output,null);
  const status=async()=>(await (await api(env,'/api/ghost/status')).json()).providers.find(p=>p.provider==='groq');
  assert.equal((await status()).online_verified,false,'different upstream identity is not exact-model proof');
  assert.equal((await status()).last_inference_at,null);
- sqlite.prepare('UPDATE ghost_cloud_attempts SET actual_model=? WHERE job_id=?').run('test-pinned-1','wrong-upstream');
- assert.equal((await status()).online_verified,true);
+ assert.equal((await tick(env,async()=>{calls++;throw Error('no replay');},NOW+2)).dispatched,0);
+ assert.equal(calls,1);
+ enqueue(sqlite,job('exact-upstream'));
+ await tick(env,async()=>success('test-pinned-1'),NOW+4);
+ assert.equal((await status()).online_verified,true,'a separate verified exact-model receipt can establish the route');
  env.GHOST_FLEET_CONFIG=JSON.stringify({groq:cfg({model:'newly-pinned-model'})});
  assert.equal((await status()).online_verified,false,'prior pinned model receipt cannot verify replacement');
 });
@@ -544,4 +553,25 @@ test('catalog-only Gemini REST IDs and Cloudflare UUIDs never enter the inferenc
  assert.equal(eligibility('cloudflare-ai',cloudflare,env,NOW),null);
  assert.equal(JSON.parse(requestFor('gemini',gemini,env,'hello')[1].body).model,'gemini-2.5-flash');
  assert.equal(JSON.parse(requestFor('cloudflare-ai',cloudflare,env,'hello')[1].body).model,'@cf/meta/llama-3.1-8b-instruct');
+});
+
+test('nine configured providers reject wrong or missing upstream model without saving drafts',async()=>{
+ for(const provider of Object.keys(PROVIDERS)){
+  const chosen=configFor(provider),{env,sqlite}=setup({[provider]:chosen});
+  enable(sqlite);enqueue(sqlite,job('mismatch-'+provider.replace(/[^a-z]/g,'')));
+  let sent=0;
+  const call=await tick(env,async(_url,init)=>{
+   sent++;assert.equal(JSON.parse(init.body).model,chosen.model);
+   return success('unexpected-upstream-model');
+  },NOW);
+  assert.equal(call.dispatched,1);
+  assert.equal(sent,1);
+  const record=sqlite.prepare('SELECT status,error_code,actual_model,output FROM ghost_cloud_attempts').get();
+  assert.equal(record.status,'failed',provider);
+  assert.equal(record.error_code,'upstream_model_mismatch',provider);
+  assert.equal(record.actual_model,'unexpected-upstream-model');
+  assert.equal(record.output,null);
+  const data=await (await api(env,'/api/ghost/status')).json();
+  assert.equal(data.providers.find(p=>p.provider===provider).online_verified,false);
+ }
 });
