@@ -140,10 +140,25 @@ test('review is decision-first, full exact drafts remain available and defer is 
  assert.match(pageJS,/loadExactDraft\(entry,entry\.human_review\)/);
  assert.match(pageJS,/pendingLoads\.slice\(0,3\)/);
  assert.match(pageJS,/No PASS or FAIL was recorded/);
- assert.match(pageJS,/No code was changed and no technical fix was verified/);
+ assert.match(pageJS,/No code, fix, independent test run, deployment or pull request was produced/);
  assert.match(pageJS,/Read the complete employee report/);
- assert.match(pageJS,/document\.createTextNode\(value\.trim\(\)\)/);
+ assert.match(pageJS,/document\.createTextNode\(content\)/);
  assert.doesNotMatch(pageJS,/\.innerHTML\s*=|insertAdjacentHTML|document\.write\(/);
+});
+
+test('plain-language owner brief makes provenance, value, concerns and approval limits explicit',()=>{
+ assert.match(pageJS,/What ROVOR investigated/);
+ assert.match(pageJS,/What it actually produced/);
+ assert.match(pageJS,/How it might benefit ROVOR/);
+ assert.match(pageJS,/Concerns and missing proof/);
+ assert.match(pageJS,/What your PASS will do/);
+ assert.match(pageJS,/not the actual code, error logs, issue text or pull request diff/);
+ assert.match(pageJS,/This benefit has not been demonstrated/);
+ assert.match(pageJS,/potentially outdated|Potentially outdated/);
+ assert.match(pageJS,/employee’s exact AI-generated report/);
+ assert.match(html,/PASS never certifies a fix or deploys code/);
+ assert.match(pageJS,/const group=\[current,earlier\]/);
+ assert.match(read('integrations/hud-cloud/approved-workforce.mjs'),/## Concerns and uncertainties/);
 });
 
 test('owner review page includes truthful native GitHub write readiness without asserting live PR delivery',()=>{
