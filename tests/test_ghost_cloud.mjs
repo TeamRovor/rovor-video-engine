@@ -7,7 +7,7 @@ import worker from '../integrations/ghost-cloud/worker.mjs';
 
 const NOW=Date.now();
 const cfg=(extra={})=>({enabled:true,model:'test-pinned-1',pool:'account-one',zero_cost:true,commercial_use:true,evidence_sha256:'a'.repeat(64),verified_at:NOW-1000,valid_until:NOW+3600000,canary_at:NOW-500,canary_sha256:'b'.repeat(64),requests_per_day:100,tokens_per_day:1000000,min_interval_ms:1,max_input_bytes:5000,max_output_tokens:512,roles:['Walter'],kinds:['research'],...extra});
-const configFor=(p,extra={})=>cfg({pool:p,model:p==='openrouter'?'test/model:free':p==='huggingface'?'test/model:explicit-provider':'test-pinned-1',...extra});
+const configFor=(p,extra={})=>cfg({pool:p,model:p==='openrouter'?'test/model:free':p==='huggingface'?'test/model:explicit-provider':p==='cloudflare-ai'?'@cf/meta/llama-3.1-8b-instruct':'test-pinned-1',...extra});
 function database(){
  const sqlite=new DatabaseSync(':memory:');sqlite.exec(readFileSync(new URL('../integrations/ghost-cloud/schema.sql',import.meta.url),'utf8'));
  const db={prepare(sql){let args=[];const stmt=sqlite.prepare(sql);const result={bind(...a){args=a;return result;},async first(){return stmt.get(...args)??null;},async all(){return {results:stmt.all(...args)};},async run(){const r=stmt.run(...args);return {meta:{changes:Number(r.changes)}};}};return result;}};
@@ -519,4 +519,29 @@ test('pre-claim blocked preferred provider allows eligible fallback; a claimed f
  assert.match(seen[1],/api\.groq\.com/);
  assert.equal(sqlite.prepare("SELECT provider FROM ghost_cloud_attempts WHERE job_id='b-next'").get().provider,'groq');
  assert.equal((await tick(env,async()=>{throw Error('no replay');},NOW+400)).dispatched,0);
+});
+
+test('catalog-only Gemini REST IDs and Cloudflare UUIDs never enter the inference executor',async()=>{
+ const {env,sqlite}=setup();
+ for(const [provider,model] of [
+  ['gemini','models/gemini-2.5-flash'],
+  ['cloudflare-ai','fe8904cf-e20e-4884-b829-ed7cec0a01cb'],
+  ['cloudflare-ai','@cf/'],
+ ]) {
+  const chosen=configFor(provider,{model});
+  assert.equal(eligibility(provider,chosen,env,NOW),'provider_model_id_mismatch');
+  const {env:live,sqlite:db}=setup({[provider]:chosen});enable(db);
+  enqueue(db,job('invalid-catalog-'+provider.replace(/[^a-z]+/g,'')+'-'+(model.startsWith('@cf/')?'empty':'record')));
+  let sent=0;
+  const response=await tick(live,async()=>{sent++;throw Error('not_called');},NOW);
+  assert.equal(response.dispatched,0);
+  assert.equal(sent,0);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,0);
+ }
+ const gemini=configFor('gemini',{model:'gemini-2.5-flash'});
+ const cloudflare=configFor('cloudflare-ai');
+ assert.equal(eligibility('gemini',gemini,env,NOW),null);
+ assert.equal(eligibility('cloudflare-ai',cloudflare,env,NOW),null);
+ assert.equal(JSON.parse(requestFor('gemini',gemini,env,'hello')[1].body).model,'gemini-2.5-flash');
+ assert.equal(JSON.parse(requestFor('cloudflare-ai',cloudflare,env,'hello')[1].body).model,'@cf/meta/llama-3.1-8b-instruct');
 });
