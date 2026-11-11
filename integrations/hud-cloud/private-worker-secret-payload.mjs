@@ -5,6 +5,7 @@
 // trusted-main merge. No key is read on pull_request or another provider's job.
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {githubAppCredentialIssue} from './github-app.mjs';
 
 const validSecret=s=>typeof s==='string'&&s.length>=24&&s.length<=512&&!/[\s\x00-\x1f\x7f]/.test(s);
 export function validateOneTimeGeminiActivation(env) {
@@ -35,11 +36,8 @@ export function buildHudSecretPayload(env) {
   // Worker secrets with missing values or partially configured credentials.
   const app=['ROVOR_GITHUB_APP_ID','ROVOR_GITHUB_INSTALLATION_ID','ROVOR_GITHUB_APP_PRIVATE_KEY'];
   if(app.some(k=>env[k])){
-    if(!app.every(k=>typeof env[k]==='string'&&env[k].trim())||
-       !/^[1-9][0-9]{0,17}$/.test(env[app[0]])||!/^[1-9][0-9]{0,17}$/.test(env[app[1]])||
-       !/^-----BEGIN (RSA PRIVATE KEY|PRIVATE KEY)-----/.test(env[app[2]])||env[app[2]].length>10000)
-      throw Error('invalid_private_secret_configuration');
-    for(const k of app)payload[k]=env[k];
+    if(githubAppCredentialIssue(env))throw Error('invalid_private_secret_configuration');
+    for(const k of app)payload[k]=env[k].trim();
   }
   if(['true','false'].includes(env.ROVOR_NATIVE_DISCOVERY_ENABLED))
     payload.ROVOR_NATIVE_DISCOVERY_ENABLED=env.ROVOR_NATIVE_DISCOVERY_ENABLED;
