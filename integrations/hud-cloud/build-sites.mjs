@@ -38,6 +38,9 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const discoveryImport = "import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';";
   const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
   const nativeDiscoveryImport = "import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';";
+  const reviewEvidenceImport = "import {reviewEvidence} from './review-evidence.mjs';";
+  if(core.split(reviewEvidenceImport).length!==2)throw Error('Unexpected review evidence import');
+  const reviewEvidenceUnavailable = "const reviewEvidence=()=>({status:404,body:{error:'cloudflare_only'}});\n";
   const githubPatchImport = "import {queueGithubPatch,githubPatchStatus,githubPatchTick,previewGithubPatchSource,queueGithubPatchTask} from './github-patch-gateway.mjs';";
   if(core.split(githubPatchImport).length!==2)throw Error('Unexpected GitHub patch import');
   const githubPatchUnavailable = "const queueGithubPatch=()=>({status:404,body:{error:'cloudflare_only'}}),githubPatchStatus=()=>({source:'cloudflare_only',configured:false,items:[]}),previewGithubPatchSource=queueGithubPatch,queueGithubPatchTask=queueGithubPatch;\n";
@@ -93,10 +96,10 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const repoSource = 'const {getRepoSource} = (() => {\n'+
     plain(sourceSrc)+'\nreturn {getRepoSource};})();\n';
   return dependency + relay + groqQuota + groqCloud + idea + discovery + repoSource + geminiCloud +
-    workforceUnavailable + nativeDiscoveryUnavailable + githubPatchUnavailable +
+    workforceUnavailable + nativeDiscoveryUnavailable + githubPatchUnavailable + reviewEvidenceUnavailable +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
       .replace(groqImport, '').replace(groqProbeImport, '').replace(workforceImport, '')
-      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '').replace(githubPatchImport, '')
+      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '').replace(githubPatchImport, '').replace(reviewEvidenceImport, '')
       .replace(coreEnd, '')) +
     '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
