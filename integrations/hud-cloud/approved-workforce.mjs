@@ -19,7 +19,8 @@ export async function intake(db,body,now=Date.now()){
   if(!body||Object.keys(body).sort().join(',')!=='approval,job'||
      body.approval!=='trusted_canonical_owner_approval_v1')throw Error('invalid');
   job=validateJob(body.job);
-  if(!job.id.startsWith('gc-')||!Number.isSafeInteger(now)||now<=0)throw Error('invalid');
+  if(!job.id.startsWith('gc-')||job.prompt.length>4000||
+     !Number.isSafeInteger(now)||now<=0)throw Error('invalid');
  }catch{return {status:400,body:{error:'canonical_approval_required'}};}
  try{
   const old=await db.prepare('SELECT * FROM hud_cloud_workforce_jobs WHERE id=?').bind(job.id).first();
