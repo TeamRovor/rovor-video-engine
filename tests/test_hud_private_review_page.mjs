@@ -164,7 +164,7 @@ test('plain-language owner brief makes provenance, value, concerns and approval 
 test('owner review page includes truthful native GitHub write readiness without asserting live PR delivery',()=>{
  assert.match(html,/id="github-patch-readiness"/);
  assert.match(pageJS,/configuration_complete_write_scope_unverified/);
- assert.match(pageJS,/write permissions must pass the protected deployment preflight/);
+ assert.match(pageJS,/protected deployment proof is not available in the Worker/);
 });
 
 test('specific reported benefit, risks and next step are extracted as unverified employee claims',()=>{
