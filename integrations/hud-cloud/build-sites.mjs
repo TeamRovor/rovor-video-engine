@@ -20,6 +20,17 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const plain = code => code.replace(/^export (?=(?:(?:async )?function|(?:const|let|class))\b)/gm, '');
   const monitorImport = "import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';";
   const cloudGeminiImport = "import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';";
+  const workforceImport = "import {intake as workforceIntake,control as workforceControl,status as workforceStatus,\n  draft as workforceDraft,review as workforceReview,tick as workforceTick}\n  from './approved-workforce.mjs';";
+  if(core.split(workforceImport).length!==2)throw Error('Unexpected Cloudflare workforce import');
+  // The original legacy Site is a separate private D1 and has no Cloudflare
+  // workforce tables. Fail its new routes CLOSED rather than bundling a
+  // second execution/review ledger into the old Site by accident.
+  const workforceUnavailable = [
+    'const __cloudflareOnlyWorkforce=()=>({status:404,body:{error:"cloudflare_workforce_not_on_site"}});',
+    'const workforceIntake=__cloudflareOnlyWorkforce, workforceControl=__cloudflareOnlyWorkforce;',
+    'const workforceStatus=__cloudflareOnlyWorkforce, workforceDraft=__cloudflareOnlyWorkforce;',
+    'const workforceReview=__cloudflareOnlyWorkforce, workforceTick=__cloudflareOnlyWorkforce;'
+  ].join('\\n')+'\\n';
   const groqImport = "import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';";
   const groqProbeImport = "import {probeGroqCatalogue} from './groq-quota-monitor.mjs';";
   const groqCatalogImport = "import {groqCatalogEvidence} from './groq-quota-monitor.mjs';";
@@ -76,8 +87,9 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const repoSource = 'const {getRepoSource} = (() => {\n'+
     plain(sourceSrc)+'\nreturn {getRepoSource};})();\n';
   return dependency + relay + groqQuota + groqCloud + idea + discovery + repoSource + geminiCloud +
+    workforceUnavailable +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
-      .replace(groqImport, '').replace(groqProbeImport, '')
+      .replace(groqImport, '').replace(groqProbeImport, '').replace(workforceImport, '')
       .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '')
       .replace(coreEnd, '')) +
     '\n' + plain(adapter.replace(adapterImport, '')) +
