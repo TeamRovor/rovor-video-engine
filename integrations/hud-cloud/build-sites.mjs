@@ -19,6 +19,10 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   if (!html.includes('window.ROVOR_START_OMNIROUTE') || !html.includes('</body>')) throw Error('Original HUD live adapter missing');
   const plain = code => code.replace(/^export (?=(?:(?:async )?function|(?:const|let|class))\b)/gm, '');
   const monitorImport = "import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';";
+  const catalogBridgeImport = "import {catalogBridgeStatus,refreshCatalogBridge} from './cloud-provider-catalog-bridge.mjs';";
+  if(core.split(catalogBridgeImport).length!==2)throw Error('Unexpected cloud catalog bridge import');
+  // The old Site has a distinct D1 and never gets Cloudflare-only catalog tables.
+  const cloudCatalogUnavailable = "const catalogBridgeStatus=()=>({source:'cloudflare_only',provider_count:0,providers:[]}),refreshCatalogBridge=()=>({state:'cloudflare_only'});\n";
   const cloudGeminiImport = "import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';";
   const workforceImport = "import {intake as workforceIntake,control as workforceControl,status as workforceStatus,\n  draft as workforceDraft,review as workforceReview,tick as workforceTick,recordNativeTick}\n  from './approved-workforce.mjs';";
   if(core.split(workforceImport).length!==2)throw Error('Unexpected Cloudflare workforce import');
@@ -99,9 +103,9 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const repoSource = 'const {getRepoSource} = (() => {\n'+
     plain(sourceSrc)+'\nreturn {getRepoSource};})();\n';
   return dependency + relay + groqQuota + groqCloud + idea + discovery + repoSource + geminiCloud +
-    workforceUnavailable + nativeDiscoveryUnavailable + repoCatchupUnavailable + githubPatchUnavailable + reviewEvidenceUnavailable +
+    workforceUnavailable + nativeDiscoveryUnavailable + repoCatchupUnavailable + githubPatchUnavailable + reviewEvidenceUnavailable + cloudCatalogUnavailable +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
-      .replace(groqImport, '').replace(groqProbeImport, '').replace(workforceImport, '')
+      .replace(groqImport, '').replace(groqProbeImport, '').replace(workforceImport, '').replace(catalogBridgeImport, '')
       .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '').replace(repoCatchupImport, '').replace(githubPatchImport, '').replace(reviewEvidenceImport, '')
       .replace(coreEnd, '')) +
     '\n' + plain(adapter.replace(adapterImport, '')) +
