@@ -421,14 +421,53 @@ test('production verifier distinguishes actual scheduled inference from historic
  const body={source:'existing_cloudflare_hud_gemini_workforce',mac_required:false,enabled:true,configured_model:model,
   site_review_ledger_synced:false,recurring_execution_authorized:true,
   standing_plan:{max_attempts_per_rolling_day:3,max_pending_reviews:2},items:[native,manual,missing],
+  admission:{source:'read_only_private_D1',observed_at:now,provider_admission_verified_by_this_read:false,
+   queued_jobs:0,running_or_uncertain:0,pending_reviews:2,rolling_day_attempts:3,
+   rolling_day_limit:3,pending_review_limit:2,fresh_unattempted_discoveries:0,
+   earliest_rolling_slot_at:now-3000+86400000,
+   observed_constraints:['rolling_day_attempt_limit','pending_review_limit','no_queued_job','no_fresh_unattempted_discovery']},
   native_schedule:{source:'cloudflare_scheduled_event',last_tick:idle,recent_ticks:[idle,event,{...event,job_id:missing.id}]}};
  const mock=async(url,init)=>init.method==='POST'||!init.headers.Authorization?new Response(null,{status:401}):Response.json(body);
  const proof=await verifyWorkforce({token:reader,send:mock,now});
  assert.equal(proof.exact_job_token_receipts,2);assert.equal(proof.native_inference_receipts_matched,1);
  assert.equal(proof.last_native_inference_completed,false);assert.equal(proof.inference_proven_by_this_read,false);
- assert.deepEqual(proof.admission_snapshot.observed_constraints,['rolling_day_attempt_limit','pending_review_limit','no_queued_job']);
+ assert.deepEqual(proof.admission_snapshot.observed_constraints,['rolling_day_attempt_limit','pending_review_limit','no_queued_job','no_fresh_unattempted_discovery']);
+ assert.equal(proof.admission_snapshot.fresh_unattempted_discoveries_observed,0);
  assert.equal(proof.admission_snapshot.oldest_observed_attempt_expires_at,new Date(now-3000+86400000).toISOString());
  assert(!JSON.stringify(proof).includes(native.id));
+});
+
+test('workforce verifier reads full D1 admission despite 50-item truncation and rejects contradictory receipts',async()=>{
+ const recent=Array.from({length:50},(_,i)=>({
+  id:'gc-historical-'+i,state:'needs_review',human_review:'passed',
+  provider:'google-gemini-cloud',requested_model:model,actual_model:model,
+  output_sha256:'a'.repeat(64),tokens_input:12,tokens_output:8,
+  started_at:now-9000-i*10,finished_at:now-8900-i*10
+ }));
+ const base={source:'existing_cloudflare_hud_gemini_workforce',mac_required:false,enabled:true,
+  configured_model:model,site_review_ledger_synced:false,recurring_execution_authorized:true,
+  items:recent,standing_plan:{max_attempts_per_rolling_day:80,max_pending_reviews:3},
+  native_schedule:{source:'cloudflare_scheduled_event',last_tick:null,recent_ticks:[]},
+  admission:{source:'read_only_private_D1',observed_at:now,provider_admission_verified_by_this_read:false,
+   queued_jobs:0,running_or_uncertain:0,pending_reviews:0,rolling_day_attempts:61,
+   rolling_day_limit:80,pending_review_limit:3,fresh_unattempted_discoveries:2,
+   earliest_rolling_slot_at:null,observed_constraints:['no_queued_job']}};
+ const verify=body=>verifyWorkforce({token:reader,now,
+  send:async(url,init)=>init.method==='POST'||!init.headers.Authorization?
+   new Response(null,{status:401}):Response.json(body)});
+ const proof=await verify(base);
+ assert.equal(proof.admission_snapshot.items_truncated,true);
+ assert.equal(proof.admission_snapshot.rolling_day_attempts_observed,61);
+ assert.equal(proof.admission_snapshot.fresh_unattempted_discoveries_observed,2);
+ assert.equal(proof.admission_snapshot.oldest_observed_attempt_expires_at,null);
+ assert.deepEqual(proof.admission_snapshot.observed_constraints,['no_queued_job']);
+ await assert.rejects(()=>verify({...base,admission:null}),/workforce_admission_readback_invalid/);
+ await assert.rejects(()=>verify({...base,admission:{...base.admission,
+  observed_at:now-300001}}),/workforce_admission_readback_invalid/);
+ await assert.rejects(()=>verify({...base,admission:{...base.admission,
+  observed_constraints:[]}}),/workforce_admission_readback_inconsistent/);
+ await assert.rejects(()=>verify({...base,admission:{...base.admission,
+  earliest_rolling_slot_at:now+1000}}),/workforce_admission_readback_inconsistent/);
 });
 
 
