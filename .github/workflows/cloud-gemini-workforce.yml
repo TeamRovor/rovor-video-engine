@@ -1,7 +1,9 @@
 name: ROVOR Cloudflare Gemini workforce - approved pilot and STOP
 # Native Cloudflare 5-minute cron remains registered in the EXISTING Worker.
-# This workflow only submits a NEW, exact immutable canonical task on explicit
-# owner dispatch. No historical v1 replay, automatic approval or paid route.
+# This workflow only submits a NEW, exact immutable canonical candidate upon
+# explicit owner task-ID selection and true approval. The Git source keeps its
+# approved_for_cloud=false flag; only the owner dispatch can opt in that one
+# task in memory. No historical v1 replay, automatic approval or paid route.
 on:
   pull_request:
     paths:
@@ -35,7 +37,7 @@ on:
           - enable_schedule
           - stop
       task_id:
-        description: "For pilot_once only: ID from coordination/tasks.json with approved_for_cloud=true"
+        description: "For pilot_once: exact unapproved NEW v2 candidate ID from coordination/tasks.json"
         type: string
         required: false
         default: ''
@@ -45,7 +47,7 @@ on:
         required: false
         default: ''
       confirm_owner_approval:
-        description: "I authorize the new canonical pilot, or scheduling after my own PASS review"
+        description: "I explicitly approve the selected NEW v2 pilot task or recurring schedule after my PASS"
         type: boolean
         required: true
         default: false

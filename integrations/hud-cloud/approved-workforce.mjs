@@ -115,6 +115,18 @@ export async function tick(env,now=Date.now(),send=fetch){
     AND (SELECT COUNT(*) FROM hud_cloud_workforce_jobs WHERE started_at>=?)<?
     RETURNING id,prompt`).bind(now,now-86400000,MAX_DAILY).first();
   if(!claim)return {status:200,body:{state:'idle_or_safety_limited',dispatched:0}};
+  // STOP can change while admission reads model health or D1 claims the job.
+  // Re-read the persistent gate AFTER claiming, immediately before inference.
+  // A stopped claim is permanently consumed, never replayed or sent upstream.
+  const lastGate=await db.prepare('SELECT enabled FROM hud_cloud_workforce_control WHERE id=1').first();
+  if(lastGate?.enabled!==1){
+   const aborted=await db.prepare(`UPDATE hud_cloud_workforce_jobs
+    SET state='failed',finished_at=?,error_code='stopped_after_claim'
+    WHERE id=? AND state='running'`).bind(Date.now(),claim.id).run();
+   if(aborted.meta.changes!==1)return {status:503,body:{state:'stop_receipt_unconfirmed',dispatched:0}};
+   return {status:200,body:{state:'stopped_after_claim',dispatched:0,
+    id:claim.id,model:null,inference_completed:false}};
+  }
   // After the durable claim, NO retry even if upstream response is uncertain.
   let state='uncertain',error_code='no_verified_response',output=null,actual_model=null,output_sha256=null;
   try{
