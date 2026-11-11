@@ -5,6 +5,57 @@ import vm from 'node:vm';
 
 const src=readFileSync(new URL('../dashboard/command-center/native-v8-9/hud-chat.js',import.meta.url),'utf8');
 
+function catalogHarness(){
+  const requests=[];
+  const send={disabled:false},modelBrowse={disabled:false},stateLabel={textContent:'Last confirmed reply'};
+  const sourceSelect={value:'cloudflare'},select={value:'model-a',children:[],
+    get options(){return this.children.flatMap(group=>group.options?.length?group.options:[group]);},
+    set textContent(value){this.children=[];},append(group){this.children.push(group);}};
+  const context={ready:true,busy:false,send,modelBrowse,stateLabel,sourceSelect,select,
+    closeModelSheet(){},modelSheetInfo:{textContent:''},sessions:[],currentId:'chat',
+    localStorage:{getItem:()=>null},KEY:'test',AUTO_ROUTE:'auto',updatePlan(){},
+    el:(tag,props)=>({...props,options:[],append(option){this.options.push(option);}}),
+    AbortSignal:{timeout:ms=>({timeout:ms})},
+    fetch:(url,options)=>new Promise((resolve,reject)=>requests.push({url,options,resolve,reject}))};
+  const start=src.indexOf('    let loadEpoch=');
+  const end=src.indexOf('    function currentPlan(',start);
+  vm.runInNewContext(src.slice(start,end)+"\nreadySource='cloudflare';this.load=load;this.invalidate=()=>{loadEpoch++;};",context);
+  return {context,requests,send,modelBrowse,stateLabel,sourceSelect,select,
+    reply(index,models=['model-a','model-b']){requests[index].resolve({ok:true,json:async()=>({models})});}};
+}
+test('background catalog refresh preserves controls and the selection made while it is pending',async()=>{
+  const s=catalogHarness(),pending=s.context.load({background:true});
+  assert.equal(s.send.disabled,false);assert.equal(s.modelBrowse.disabled,false);
+  assert.equal(s.stateLabel.textContent,'Last confirmed reply');
+  assert.equal(s.requests[0].options.signal.timeout,8000);
+  s.select.value='model-b';s.reply(0);await pending;
+  assert.equal(s.select.value,'model-b');assert.equal(s.send.disabled,false);
+});
+test('foreground and different-provider checks remain gated',async()=>{
+  for(const different of [false,true]){
+    const s=catalogHarness();if(different)s.sourceSelect.value='groq';
+    const pending=s.context.load({background:different});
+    assert.equal(s.send.disabled,true);assert.equal(s.modelBrowse.disabled,true);
+    s.requests[0].reject(Error('unavailable'));await pending;
+    assert.equal(s.context.ready,false);
+  }
+});
+test('failed background checks close readiness instead of retaining an unverified route',async()=>{
+  const s=catalogHarness(),pending=s.context.load({background:true});
+  s.requests[0].reject(Error('timeout'));await pending;
+  assert.equal(s.context.ready,false);assert.equal(s.send.disabled,true);
+});
+test('catalog completion cannot overwrite an active request or a later provider change',async()=>{
+  for(const invalidate of [false,true]){
+    const s=catalogHarness(),pending=s.context.load({background:true});
+    if(invalidate)s.context.invalidate();else s.context.busy=true;
+    s.stateLabel.textContent='Request in progress';s.reply(0);await pending;
+    assert.equal(s.stateLabel.textContent,'Request in progress');
+  }
+  assert.match(src,/const setBusy=b=>\{if\(b\)loadEpoch\+\+/);
+  assert.match(src,/load\(\{background:true\}\);refreshProviderInventory\(\)/);
+});
+
 function streamHarness(){
   const callbacks=new Map(),renders=[];let next=0;
   const code=src.slice(src.indexOf('  function paintChatLog('),src.indexOf('  function renderText('));
@@ -221,4 +272,5 @@ test('task routing uses real, recent per-model receipt reliability only with suf
   assert.equal(taskPlanner(evidence)(question,catalog).routes[0],'groq/fast:free',
     'stale performance observations must not influence choices');
 });
+
 
