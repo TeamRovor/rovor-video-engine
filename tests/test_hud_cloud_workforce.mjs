@@ -4,6 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {intake,control,status,draft,review,tick} from '../integrations/hud-cloud/approved-workforce.mjs';
 import worker,{handle} from '../integrations/hud-cloud/worker.mjs';
+import {planOwnerSelectedPilot,checkOperatorContext} from '../tools/cloud_gemini_workforce_control.mjs';
 
 const now=Date.parse('2026-11-11T02:05:00.000Z');
 const model='gemini-3.5-flash-lite';
@@ -166,4 +167,64 @@ test('existing native Cloudflare cron honors STOP and runs at most one approved 
  await worker.scheduled({},s.env);
  assert.equal(calls.filter(x=>x.method==='POST').length,1,'cron never replays a completed task');
  await control(s.DB,false);
+});
+
+test('new v2 business candidate remains unapproved in git, but an owner-selected dispatch scopes just its exact job',async()=>{
+ const tasks=JSON.parse(readFileSync(new URL('../coordination/tasks.json',import.meta.url),'utf8'));
+ const routing=JSON.parse(readFileSync(new URL('../coordination/work-routing.json',import.meta.url),'utf8'));
+ const id='cloud-gemini-website-offer-pilot-20261110';
+ const source=tasks.tasks.find(t=>t.id===id);
+ assert.equal(source.cloud_inference.revision,'v2');
+ assert.equal(source.cloud_inference.approved_for_cloud,false);
+ const commit='c'.repeat(40);
+ const selected=await planOwnerSelectedPilot(tasks,routing,commit,id,'v2');
+ assert.equal(selected.employee,'Gus');
+ assert.equal(selected.kind,'plan');
+ assert.equal(selected.task_id,id);
+ assert.equal(selected.source_commit,commit);
+ assert.match(selected.id,/^gc-[a-f0-9]{48}$/);
+ assert.equal(source.cloud_inference.approved_for_cloud,false,'no source-side approval mutation');
+ await assert.rejects(()=>planOwnerSelectedPilot(tasks,routing,commit,id,'v1'),
+   /new_unapproved_canonical_candidate_required/);
+ await assert.rejects(()=>planOwnerSelectedPilot(tasks,routing,commit,'saul-cloud-inquiry-copy-20261025','v1'),
+   /new_unapproved_canonical_candidate_required/);
+ assert.equal(await checkOperatorContext({GITHUB_REPOSITORY:'TeamRovor/rovor-video-engine',
+  GITHUB_REF:'refs/heads/main',GITHUB_EVENT_NAME:'workflow_dispatch',
+  ROVOR_HUD_READER_TOKEN:reader,ROVOR_HUD_WRITER_TOKEN:writer}),true);
+ await assert.rejects(()=>checkOperatorContext({GITHUB_REPOSITORY:'TeamRovor/rovor-video-engine',
+  GITHUB_REF:'refs/heads/main',GITHUB_EVENT_NAME:'push',
+  ROVOR_HUD_READER_TOKEN:reader,ROVOR_HUD_WRITER_TOKEN:writer}),
+  /owner_workflow_requires_trusted_main_dispatch/);
+});
+
+test('persistent STOP flipped after atomic claim prevents upstream Gemini request and never replays',async()=>{
+ const s=setup();
+ approved(s);await intake(s.DB,packet,now);await control(s.DB,true);
+ const original=s.DB.prepare.bind(s.DB);
+ let stoppedAfterClaim=false;
+ s.DB.prepare=sql=>{
+  const statement=original(sql);
+  if(!sql.startsWith("UPDATE hud_cloud_workforce_jobs SET state='running'"))return statement;
+  return {bind(...values){
+   const bound=statement.bind(...values);
+   return {...bound,async first(){
+    const row=await bound.first();
+    if(row){s.db.prepare('UPDATE hud_cloud_workforce_control SET enabled=0 WHERE id=1').run();
+      stoppedAfterClaim=true;}
+    return row;
+   }};
+  }};
+ };
+ const never=()=>{throw Error('STOP must prevent upstream inference');};
+ const attempt=await tick(s.env,now,never);
+ assert.equal(stoppedAfterClaim,true);
+ assert.equal(attempt.status,200);
+ assert.equal(attempt.body.state,'stopped_after_claim');
+ assert.equal(attempt.body.dispatched,0);
+ assert.equal(s.db.prepare('SELECT state FROM hud_cloud_workforce_jobs WHERE id=?').get(job.id).state,'failed');
+ assert.equal(s.db.prepare('SELECT error_code FROM hud_cloud_workforce_jobs WHERE id=?').get(job.id).error_code,'stopped_after_claim');
+ assert.equal(s.db.prepare('SELECT COUNT(*) n FROM hud_gemini_chat_model_usage').get().n,0);
+ await control(s.DB,true);
+ const second=await tick(s.env,now+1000,never);
+ assert.equal(second.body.dispatched,0,'STOP-aborted job is permanently consumed');
 });
