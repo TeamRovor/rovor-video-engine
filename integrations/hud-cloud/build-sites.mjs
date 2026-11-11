@@ -37,6 +37,9 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const ideaImport = "import {submitIdea,listIdeas} from './idea-inbox.mjs';";
   const discoveryImport = "import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';";
   const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
+  const nativeDiscoveryImport = "import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';";
+  if(core.split(nativeDiscoveryImport).length!==2)throw Error('Unexpected native discovery import');
+  const nativeDiscoveryUnavailable = "const nativeDiscoveryStatus=()=>({source:'cloudflare_only',configured:false,enabled:false});\\n";
   const discoveryValidatorImport = "import {validateIdea} from './idea-inbox.mjs';";
   const relayImport = "import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';";
   const chatParserImport = "import {parseChatRequest} from '../../tools/hud_chat.mjs';";
@@ -87,10 +90,10 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const repoSource = 'const {getRepoSource} = (() => {\n'+
     plain(sourceSrc)+'\nreturn {getRepoSource};})();\n';
   return dependency + relay + groqQuota + groqCloud + idea + discovery + repoSource + geminiCloud +
-    workforceUnavailable +
+    workforceUnavailable + nativeDiscoveryUnavailable +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
       .replace(groqImport, '').replace(groqProbeImport, '').replace(workforceImport, '')
-      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '')
+      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '')
       .replace(coreEnd, '')) +
     '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';

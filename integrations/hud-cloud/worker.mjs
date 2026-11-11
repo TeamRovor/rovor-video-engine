@@ -4,6 +4,7 @@ import {probeGroqCatalogue} from './groq-quota-monitor.mjs';
 import {submitIdea,listIdeas} from './idea-inbox.mjs';
 import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
 import {getRepoSource} from './repo-source.mjs';
+import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
 import {intake as workforceIntake,control as workforceControl,status as workforceStatus,
   draft as workforceDraft,review as workforceReview,tick as workforceTick,recordNativeTick}
@@ -427,6 +428,8 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       const result = await chatStatus(env.DB, url.pathname.slice('/api/hud/chat/status/'.length), now);
       return response(result.status, result.status === 200 ? result : {error:result.error});
     }
+    if (request.method === 'GET' && url.pathname === '/api/hud/workforce/native-discovery')
+      return response(200,await nativeDiscoveryStatus(env));
     if (request.method === 'GET' && url.pathname === '/api/hud/workforce/status') {
       const result=await workforceStatus(env.DB);return response(result.status,result.body);
     }
@@ -594,10 +597,13 @@ export default {
     // running. Still report the maintenance failure to Cloudflare.
     let maintenanceFailed=false;
     try{await expireChat(env.DB,Date.now());}catch{maintenanceFailed=true;}
+    let discoveryFailed=false;
+    try{await nativeDiscoveryTick(env,Date.now());}catch{discoveryFailed=true;}
     const startedAt=Date.now();
     const result=await workforceTick(env,startedAt);
     if(Number.isSafeInteger(event?.scheduledTime)&&event.scheduledTime>0)
       await recordNativeTick(env.DB,event.scheduledTime,startedAt,Math.max(startedAt,Date.now()),result);
     if(maintenanceFailed)throw Error('scheduled_chat_maintenance_failed');
+    if(discoveryFailed)throw Error('scheduled_native_discovery_failed');
   }
 };

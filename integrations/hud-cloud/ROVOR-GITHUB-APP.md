@@ -1,0 +1,9 @@
+# ROVOR-owned GitHub App: independent native discovery
+
+This is the first read-only tool gateway in the existing Cloudflare HUD. The existing five-minute native clock uses a one-hour D1 lease and queues only verified, deduplicated numeric GitHub evidence in the existing inbox. It does not infer, modify repositories, approve jobs, or require ChatGPT, the Mac, or scheduled GitHub Actions. Existing STOP and standing authorization must be active. The prior GitHub discovery workflow remains a compatibility fallback until native execution is verified; both share D1 deduplication and a six-record daily cap.
+
+## Owner setup (one time)
+
+Create an organization-owned GitHub App in TeamRovor settings. Disable webhooks for this initial polling implementation. Grant **read** Contents, Issues, Pull requests, Actions (and automatic Metadata read). Install only on TeamRovor/rovor-video-engine. Generate an app private key. Store the App ID, installation ID, and original RSA PEM as production Actions secrets named `ROVOR_GITHUB_APP_ID`, `ROVOR_GITHUB_INSTALLATION_ID`, and `ROVOR_GITHUB_APP_PRIVATE_KEY`. Set production variable `ROVOR_NATIVE_DISCOVERY_ENABLED=true`. Do not put private key material in chat, logs, the repository, or browser code. The existing protected HUD deployment transfers these settings to its existing Worker. The runtime requests a short-lived single-repository read token and rejects extra write permissions. No personal access token is required.
+
+After the real owner review and standing authorization, verify authenticated `GET /api/hud/workforce/native-discovery` shows a native D1 receipt and the existing discovery inbox advances. A configured flag alone is not proof. Only then retire the GitHub Actions discovery schedule with a separate reviewed change. GitHub write tools require a separate bounded policy and are not included in this read-only milestone.
