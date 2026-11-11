@@ -523,7 +523,23 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     if (request.method === 'GET' && url.pathname === '/api/hud/workforce/repo-catchup')
       return response(200,await repoCatchupStatus(env));
     if (request.method === 'POST' && url.pathname === '/api/hud/workforce/repo-catchup/refresh'){
-      if(request.body)return response(400,{error:'body_not_allowed'});
+      // An empty POST may still expose an empty stream in Workers, despite
+      // the caller explicitly sending no payload. Reject actual bytes,
+      // never infer request authorization or parameters from a body.
+      const declared=request.headers.get('Content-Length');
+      if(declared!==null&&declared!=='0')return response(400,{error:'body_not_allowed'});
+      if(request.body){
+        const reader=request.body.getReader();let hasBytes=false,ended=false;
+        try{
+          for(let i=0;i<4;i++){
+            const packet=await reader.read();
+            if(packet.done){ended=true;break;}
+            if(packet.value?.byteLength>0){hasBytes=true;break;}
+          }
+        }catch{hasBytes=true;}
+        finally{await reader.cancel().catch(()=>{});}
+        if(hasBytes||!ended)return response(400,{error:'body_not_allowed'});
+      }
       const result=await refreshRepoCatchup(env,now,fetcher);
       return response(result.status,result.body);
     }
