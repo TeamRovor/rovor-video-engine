@@ -398,10 +398,13 @@ export function createCloudOperations(base, cloud) {
    persisted:0,catalog_received:0,skipped_fresh:names.length,inference_attempts:0};
   const outcomes=await Promise.allSettled(stale.map(async provider=>{
    const report=await inventory(env,provider,fetcher);
-   await recordInventory(env,provider,report);
+   // Failed HTTP/catalog checks have no provider timestamp. Assign a stable
+   // Site clock timestamp to BOTH the write and its exact D1 readback.
+   const observed=Number.isSafeInteger(report.observed_at)?report.observed_at:Date.now();
+   await recordInventory(env,provider,{...report,observed_at:observed});
    const saved=await sql(env,'SELECT observed_at,status FROM ghost_cloud_provider_checks WHERE provider=?',provider).first();
    const persisted=!!saved&&saved.status===report.status&&
-    saved.observed_at===(Number.isSafeInteger(report.observed_at)?report.observed_at:now);
+    saved.observed_at===observed;
    return {persisted,catalog_received:persisted&&report.status==='catalog_received'};
   }));
   // A stored 401/403/timeout is an honest monitoring receipt, not a
@@ -431,15 +434,14 @@ export function createCloudOperations(base, cloud) {
    // Persist its bounded public status so the existing HUD can report when
    // this exact provider was last checked rather than a stale historical row.
    const report=await inventory(env,args.provider);
-   await recordInventory(env,args.provider,report);
+   const observed=Number.isSafeInteger(report.observed_at)?report.observed_at:Date.now();
+   await recordInventory(env,args.provider,{...report,observed_at:observed});
    // A provider GET alone cannot prove that the Site wrote to its bound D1.
-   // Verify the exact persisted row before reporting durable monitoring.
+   // Verify the exact persisted row EVEN when GET failed with 401/403.
    const stored=await sql(env,'SELECT observed_at,status FROM ghost_cloud_provider_checks WHERE provider=?',args.provider).first();
-   const observed=Number.isSafeInteger(report.observed_at)?report.observed_at:null;
-   const saved=!!stored&&stored.status===report.status&&
-    (observed===null||stored.observed_at===observed);
+   const saved=!!stored&&stored.status===report.status&&stored.observed_at===observed;
    if(!saved)throw Error('provider_catalog_d1_readback_mismatch');
-   return {...report,d1_persisted:true,d1_observed_at:stored.observed_at};
+   return {...report,observed_at:observed,d1_persisted:true,d1_observed_at:observed};
   }
   if(name==='rovor_provider_catalog_refresh')return refreshCatalogs(env);
   if(name==='rovor_cloud_control')return control(env,args.enabled);
@@ -723,6 +725,10 @@ export function createCloudOperations(base, cloud) {
      return json({error:'unsupported_operation'},404);
     }catch{return json({error:'cloud_operation_failed'},503);}
    }
+   // Do not fall through to a legacy MCP handler when owner identity is
+   // absent. The new catalog refresh writes private D1 and must stay owner-only.
+   if(url.pathname==='/mcp'&&request.method==='POST'&&!actor)
+    return json({error:'site_identity_required'},401);
    if(url.pathname==='/mcp'&&request.method==='POST'&&actor){
     let rpc;try{rpc=await bounded(request.clone());}catch{return json({error:'invalid_rpc'},400);}
     if(rpc.method==='tools/list'){
