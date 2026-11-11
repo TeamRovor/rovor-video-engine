@@ -5,6 +5,52 @@ import vm from 'node:vm';
 
 const src=readFileSync(new URL('../dashboard/command-center/native-v8-9/hud-chat.js',import.meta.url),'utf8');
 
+function streamHarness(){
+  const callbacks=new Map(),renders=[];let next=0;
+  const code=src.slice(src.indexOf('  function paintChatLog('),src.indexOf('  function renderText('));
+  const {createStreamPainter,paintChatLog}=vm.runInNewContext(code+'\n({createStreamPainter,paintChatLog})',{
+    requestAnimationFrame:fn=>{callbacks.set(++next,fn);return next;},
+    cancelAnimationFrame:id=>callbacks.delete(id)
+  });
+  const log={scrollHeight:1000,clientHeight:400,scrollTop:600},node={};
+  const painter=createStreamPainter(log,node,(target,text)=>{
+    assert.equal(target,node);renders.push(text);log.scrollHeight+=100;
+  });
+  return {log,painter,renders,callbacks,paintChatLog,frame(){
+    for(const [id,fn] of [...callbacks]){callbacks.delete(id);fn();}
+  }};
+}
+test('stream bursts paint once per animation frame and use the latest accumulated reply',()=>{
+  const s=streamHarness();
+  for(let i=1;i<=100;i++)s.painter.queue('x'.repeat(i));
+  assert.equal(s.callbacks.size,1);assert.equal(s.renders.length,0);
+  s.frame();assert.deepEqual(s.renders,['x'.repeat(100)]);
+  assert.equal(s.log.scrollTop,s.log.scrollHeight);
+  s.painter.queue('next frame');assert.equal(s.callbacks.size,1);
+  s.frame();assert.equal(s.renders.length,2);
+});
+test('scrolling away before the next paint is respected through streaming and completion',()=>{
+  const s=streamHarness();s.painter.queue('partial');
+  s.log.scrollTop=120;s.frame();assert.equal(s.log.scrollTop,120);
+  s.painter.queue('more');s.frame();assert.equal(s.log.scrollTop,120);
+  s.painter.finish('complete');assert.equal(s.log.scrollTop,120);
+  s.paintChatLog(s.log,()=>{s.log.scrollHeight+=100;s.log.scrollTop=9999;});
+  assert.equal(s.log.scrollTop,120,'history rebuild preserves the reading position');
+  assert.match(src,/painter\.finish\(reply\);[\s\S]*?redraw\(true\)/);
+  assert.match(src,/painter\.cancel\(\);\s*paintChatLog\(log,\(\)=>renderText\(bubble,message\)\)/);
+});
+test('finishing flushes the latest full reply even without a frame and cancels the pending callback',()=>{
+  const s=streamHarness();s.painter.queue('partial');
+  s.painter.finish('final formatted reply');
+  assert.equal(s.callbacks.size,0);assert.deepEqual(s.renders,['final formatted reply']);
+  s.frame();assert.equal(s.renders.length,1);
+});
+test('cancelling a pending stream prevents obsolete content from painting over an error',()=>{
+  const s=streamHarness();s.painter.queue('obsolete reply');s.painter.cancel();s.painter.cancel();
+  s.frame();assert.equal(s.callbacks.size,0);assert.equal(s.renders.length,0);
+  assert.match(src,/finally\{painter\.cancel\(\)/);
+});
+
 test('Ask ROVOR keeps iOS focus controls at Safari-safe 16px and preserves pinch zoom',()=>{
   assert.match(src, /iosTypeAndKeyboardCSS/);
   assert.match(src, /#rvc select, #rvc textarea, #rvc input[^{]*\{\s*font-size:16px!important;/);
@@ -175,3 +221,4 @@ test('task routing uses real, recent per-model receipt reliability only with suf
   assert.equal(taskPlanner(evidence)(question,catalog).routes[0],'groq/fast:free',
     'stale performance observations must not influence choices');
 });
+
