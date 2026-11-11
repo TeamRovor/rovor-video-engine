@@ -6094,6 +6094,23 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42985560728"
         }
       ]
+    },
+    {
+      "id": "hud-workload-refresh-stability-20261111",
+      "title": "Keep Workload refresh stable and preserve keyboard inspection",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar Workload stability 2026-11-11",
+      "branch": "fix/hud-workload-refresh-stability-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/live-quota-board.js",
+        "tests/test_hud_ios_quota_rings.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T08:18:42.428Z",
+      "next_update": "Focused refresh tests and hosted HUD checks",
+      "next_action": "Skip identical board replacements and preserve overview/jump focus through changed telemetry.",
+      "acceptance": "Identical markup retains existing nodes; changed telemetry still renders; overview and jump focus restore without scrolling; existing HUD checks pass."
     }
   ]
 }

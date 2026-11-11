@@ -1165,6 +1165,15 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "hud-workload-refresh-stability-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
