@@ -6066,7 +6066,7 @@
       "id": "hud-chat-stream-stability-20261111",
       "title": "Smooth streamed chat and preserve owner reading position",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar chat stability 2026-11-11",
       "branch": "fix/hud-chat-stream-stability-20261111",
       "scopes": [
@@ -6074,10 +6074,19 @@
         "tests/test_hud_chat_mobile.mjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-11-11T08:11:39.516Z",
-      "next_update": "After stream/scroll regressions and hosted HUD checks",
-      "next_action": "Batch streamed reply rendering and preserve reading position through streaming and completion; no inference or model policy changes.",
-      "acceptance": "Deterministic frame tests show chunk coalescing, following only at bottom, preserved reading position and cancelled pending frames; existing HUD checks pass."
+      "updated_at": "2026-11-11T08:15:23.934Z",
+      "next_update": "Protected production deployment readback",
+      "next_action": "PR #379 merged at 268b137d3311ea8e123372410cef1022773563f8. All 284 HUD safety tests and responsive browser checks passed. Verify production deployment and byte-for-byte chat asset readback. No live provider call was run.",
+      "acceptance": "Deterministic frame tests show chunk coalescing, following only at bottom, preserved reading position and cancelled pending frames; existing HUD checks pass.",
+      "evidence": [
+        {
+          "commit": "268b137d3311ea8e123372410cef1022773563f8",
+          "platform": "Local macOS Node 24.22.0 and GitHub-hosted HUD safety/browser checks",
+          "check": "18 mobile-chat tests including four new frame/scroll regressions; 284 full HUD safety tests; responsive/browser-budget/data checks",
+          "result": "PASS; merged source. Production rollout pending readback. No model routing or provider execution changes.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/379"
+        }
+      ]
     }
   ]
 }
