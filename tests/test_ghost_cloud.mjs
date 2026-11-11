@@ -193,9 +193,64 @@ test('HUD status exposes factual provider receipts without prompts, drafts or se
  const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('tracked'));await tick(env,async()=>success(),NOW);
  const response=await api(env,'/api/ghost/status'),text=await response.text(),data=JSON.parse(text);
  assert.equal(response.status,200);assert.equal(data.providers.length,9);assert.equal(data.attempts.length,1);assert.equal(data.attempts[0].tokens_input,9);
- for(const p of data.providers)assert.equal(p.online_verified,false);
+ assert.equal(data.providers.find(p=>p.provider==='groq').online_verified,true);
+ assert.equal(data.providers.find(p=>p.provider==='groq').recent_inference_verified,true);
+ assert(Number.isSafeInteger(data.providers.find(p=>p.provider==='groq').last_inference_at));
+ for(const p of data.providers.filter(p=>p.provider!=='groq'))assert.equal(p.online_verified,false);
  for(const privateValue of [job('tracked').prompt,'Concrete draft for independent human review.','secret-value-never-returned',env.GHOST_READER_TOKEN])assert.ok(!text.includes(privateValue));
  assert.equal((await (await api(env,'/api/ghost/jobs/tracked')).json()).output,'Concrete draft for independent human review.');
+});
+
+test('all nine routes become recently verified only after successful durable replies',async()=>{
+ const configs=Object.fromEntries(Object.keys(PROVIDERS).map(p=>[p,configFor(p)]));
+ const {env,sqlite}=setup(configs);enable(sqlite);
+ for(let i=0;i<9;i++)enqueue(sqlite,job('proof-'+i));
+ const before=await (await api(env,'/api/ghost/status')).json();
+ assert.equal(before.providers.filter(p=>p.online_verified).length,0);
+ await tick(env,async()=>success(),NOW);
+ const after=await (await api(env,'/api/ghost/status')).json();
+ assert.equal(after.providers.filter(p=>p.online_verified).length,9);
+ assert.equal(after.providers.filter(p=>p.recent_inference_verified).length,9);
+ assert.equal(after.providers.filter(p=>Number.isSafeInteger(p.last_inference_at)).length,9);
+ sqlite.exec('UPDATE ghost_cloud_control SET enabled=0');
+ const stopped=await (await api(env,'/api/ghost/status')).json();
+ assert.equal(stopped.providers.filter(p=>p.online_verified).length,0);
+ assert.equal(stopped.providers.filter(p=>p.recent_inference_verified).length,9,
+  'STOP does not erase independently recorded successful replies');
+});
+
+test('failed, blank, stale or expired provider evidence never establishes route online',async()=>{
+ const {env,sqlite}=setup();enable(sqlite);
+ enqueue(sqlite,job('draft'));await tick(env,async()=>success(),NOW);
+ const status=async()=>(await (await api(env,'/api/ghost/status')).json()).providers.find(p=>p.provider==='groq');
+ assert.equal((await status()).online_verified,true);
+ sqlite.prepare("UPDATE ghost_cloud_attempts SET finished_at=? WHERE job_id='draft'").run(Date.now()-3600001);
+ assert.equal((await status()).online_verified,false);
+ sqlite.prepare("UPDATE ghost_cloud_attempts SET finished_at=?,output='   ' WHERE job_id='draft'").run(Date.now());
+ assert.equal((await status()).online_verified,false);
+ sqlite.prepare("UPDATE ghost_cloud_attempts SET output='Valid earlier response.' WHERE job_id='draft'").run();
+ env.GHOST_FLEET_CONFIG=JSON.stringify({groq:cfg({valid_until:NOW-1})});
+ const expired=await status();
+ assert.equal(expired.recent_inference_verified,true);
+ assert.equal(expired.online_verified,false);
+ assert.equal(expired.admission,'eligibility_expired');
+});
+
+test('owner-chat completion can prove a route without leaking prompts or drafts',async()=>{
+ const {env,sqlite}=setup();enable(sqlite);
+ sqlite.prepare(`INSERT INTO ghost_cloud_owner_chat
+  (id,actor,provider,model,pool,started_at,finished_at,reserved_tokens,status,actual_model,output)
+  VALUES ('proof-chat','owner','groq','test-pinned-1','account-one',?,?,50,'complete','actual-1','Secret private answer')`)
+  .run(NOW-1000,Date.now());
+ const res=await api(env,'/api/ghost/status'),raw=await res.text(),data=JSON.parse(raw);
+ assert.equal(data.providers.find(p=>p.provider==='groq').online_verified,true);
+ assert.equal(data.attempts.length,0);
+ assert(!raw.includes('Secret private answer'));
+ const missing=setup();enable(missing.sqlite);
+ missing.sqlite.exec('DROP TABLE ghost_cloud_owner_chat');
+ const snapshot=await (await api(missing.env,'/api/ghost/status')).json();
+ assert.equal(snapshot.providers.length,9);
+ assert.equal(snapshot.providers.filter(p=>p.online_verified).length,0);
 });
 
 test('conflicting shared pool policy is rejected before inference',async()=>{
