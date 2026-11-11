@@ -15,7 +15,7 @@ on:
       - .github/workflows/walter-soak-evidence-gate.yml
 jobs:
   offline:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
