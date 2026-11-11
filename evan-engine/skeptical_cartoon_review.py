@@ -13,12 +13,13 @@ def skeptical_event(plan):
   return dict(zip(['anticipate','arrive','hold','settle'],times),scriptIndices=[w['scriptIndex'] for w in part])
  return None
 
-def skeptical_brows(t,plan,baseline):
+def skeptical_brows(t,plan,baseline,*,strong=False):
  if not np.isfinite(t):raise ValueError('Expected finite review time')
  c=baseline.copy();event=skeptical_event(plan)
  if event is None:return c
  weight=flowing_track(t,[(event['anticipate'],0.),(event['arrive'],1.),(event['hold'],1.),(event['settle'],0.)])
- # shortcut: sunglasses hide the eyes; registered eyelids need separate artwork.
- for key,accent in [('leftRaise',-2.),('rightRaise',7.),('leftTilt',-4.),('rightTilt',-3.)]:
+ # Opt-in upper-face review: deepen one furrow while holding the other arch.
+ accents=(-6.,8.,-7.,-1.) if strong else (-2.,7.,-4.,-3.)
+ for key,accent in zip(('leftRaise','rightRaise','leftTilt','rightTilt'),accents):
   c[key]+=weight*accent
  return c
