@@ -5,6 +5,7 @@ const vm=require('node:vm');
 const path=require('node:path');
 
 let clock=Math.floor(Date.now()/60000)*60000,isBoard=false,writes=0,reads=0,dayReads=0,hourReads=0,minuteReads=0,intervals=[],observer,requests=1;
+const events=new Map(),delayed=[];
 const slot={
  hidden:false,
  classList:{contains:label=>label==='rvq-board'&&isBoard},
@@ -20,7 +21,8 @@ class Observe{constructor(fn){observer=fn;}observe(){}}
 const document={
  hidden:false,body:{},
  getElementById:()=>({}),
- querySelectorAll:()=>[slot]
+ querySelectorAll:()=>[slot],
+ addEventListener:(name,fn)=>events.set(name,[...(events.get(name)||[]),fn])
 };
 const fetch=async url=>{
  if(!String(url).includes('/api/hud/omniroute'))return {ok:false};
@@ -40,6 +42,8 @@ const fetch=async url=>{
 };
 const context={window:{},document,fetch,MutationObserver:Observe,
  setInterval:(fn,ms)=>{assert.equal(ms,10000);intervals.push(fn);},
+ setTimeout:(fn,ms)=>{assert.equal(ms,2100);delayed.push(fn);return delayed.length;},
+ clearTimeout:()=>{},
  AbortSignal,Date:Clock};
 const source=fs.readFileSync(path.join(__dirname,'../dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8');
 vm.runInNewContext(source,context);
@@ -82,6 +86,25 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
  document.hidden=true;clock+=11000;
  intervals[0]();await flush();
  assert.equal(reads,11,'hidden HUD must not poll');
+ // Active touch must hold the visible DOM stable even when D1 changes.
+ // The latest settled sample is painted immediately after quiet-time release.
+ document.hidden=false;
+ context.window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT=null;
+ requests=3;clock+=11000;
+ const event={target:{closest:()=>({})}};
+ assert.equal(events.has('pointerdown'),true);
+ events.get('pointerdown')[0](event);
+ intervals[0]();await flush();await flush();
+ assert.equal(reads,14,'telemetry still refreshes while the owner is touching');
+ assert.equal(writes,4,'fresh evidence must not replace the touched provider controls');
+ events.get('pointerup')[0](event);
+ clock+=2200;
+ delayed.at(-1)();await flush();await flush();
+ assert.equal(writes,5,'latest queued evidence paints when gesture ends');
+ // Return to a hidden tab: neither readings nor paints should resume.
+ document.hidden=true;clock+=11000;
+ intervals[0]();await flush();
+ assert.equal(writes,5);
  console.log('HUD popup live refresh after replacement: PASS');
 })().catch(e=>{console.error(e);process.exitCode=1;});
 
