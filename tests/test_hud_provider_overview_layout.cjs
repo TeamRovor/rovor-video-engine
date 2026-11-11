@@ -45,6 +45,26 @@ test('all nine original provider reports stay present and accessible in collapsi
  assert.match(html,/NO FRESH REPORT|CLOUD LEDGER ONLY/);
 });
 
+test('Cloudflare HUD renders nine monitored provider identities without inventing cloud or Mac connections',()=>{
+ const html=render(null,false,null);
+ assert.equal((html.match(/class="rvq-overview-tile"/g)||[]).length,9);
+ assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
+ for(const provider of providers)assert.match(html,new RegExp('data-rvq-slot="'+provider+':1"'));
+ assert.match(html,/NO FRESH REPORT · IDENTITIES ONLY/);
+ assert.match(html,/nine provider identities shown as UNVERIFIED placeholders/);
+ assert.match(html,/REPORTED CONNECTION SLOTS<\/span><strong class="rvq-stat-value">—<\/strong>/);
+ assert.match(html,/NOT verified connections, credentials, online models/);
+ assert.equal((html.match(/role="img" aria-label="Provider quota unknown"/g)||[]).length,18);
+ assert.doesNotMatch(html,/SETUP \/ REVIEW 9/);
+ assert.doesNotMatch(html,/CLOUD LEDGER ONLY|FRESH OMNIROUTE INVENTORY/);
+});
+test('fresh observed empty Mac connections never turn into fake live connection slots',()=>{
+ const now=new Date().toISOString();
+ const html=render({snapshot_at:now,connections:[],quota:{records:[]}},true,null);
+ assert.equal((html.match(/class="rvq-provider"/g)||[]).length,0);
+ assert.doesNotMatch(html,/IDENTITIES ONLY/);
+});
+
 test('one provider with actual Mac limit receipts is not nine verified providers',()=>{
  const now=new Date();
  const data={
