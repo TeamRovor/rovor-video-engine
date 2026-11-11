@@ -41,6 +41,28 @@ test('status describes nine configured but unverified providers without fake usa
  assert.equal(data.providers.length,9);assert.equal(data.enabled,false);assert.deepEqual(data.attempts,[]);
  for(const p of data.providers){assert.equal(p.credentials_configured,true);assert.equal(p.admission,'disabled_pending_verification');assert.equal(p.online_verified,false);}
 });
+test('cloud STOP/RESUME requires a same-origin owner browser; trusted MCP control remains independent',async()=>{
+ const s=setup();
+ const enabled=()=>s.db.prepare('SELECT enabled FROM ghost_cloud_control WHERE id=1').get()?.enabled;
+ const body={enabled:true};
+ assert.equal(enabled(),0);
+ assert.equal((await s.ops.fetch(request('/api/ghost/control',{body,browser:true,identity:null}),s.env)).status,401);
+ assert.equal((await s.ops.fetch(request('/api/ghost/control',{body}),s.env)).status,403,
+  'a signed-in identity without a browser origin is not sufficient');
+ assert.equal((await s.ops.fetch(new Request('https://private.example/api/ghost/control',{
+  method:'POST',headers:{'oai-authenticated-user-id':'owner','Origin':'https://external.example',
+   'Sec-Fetch-Site':'cross-site','Content-Type':'application/json'},
+  body:JSON.stringify(body)
+ }),s.env)).status,403);
+ assert.equal(enabled(),0,'denied requests never change STOP state');
+ assert.equal((await s.ops.fetch(request('/api/ghost/control',{body,browser:true}),s.env)).status,200);
+ assert.equal(enabled(),1);
+ assert.equal((await s.ops.fetch(request('/api/ghost/control',{body:{enabled:false}}),s.env)).status,403);
+ assert.equal(enabled(),1,'cross-origin STOP also has no side effects');
+ assert.deepEqual(await rpc(s.ops,s.env,'rovor_cloud_control',{enabled:false}),{enabled:false},
+  'authenticated MCP STOP remains available without browser headers');
+ assert.equal(enabled(),0);
+});
 test('control can initialize schema-only singleton and private packets deduplicate',async()=>{
  const {env,db,ops}=setup();db.exec('DELETE FROM ghost_cloud_control');
  env.GHOST_APPROVED_JOBS=JSON.stringify([j]);assert.equal((await ops.replenish(env)).status,'stopped');
