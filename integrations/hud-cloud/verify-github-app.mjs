@@ -3,6 +3,7 @@
 // upstream response bodies, repository contents or private task data.
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {appendFileSync} from 'node:fs';
 import {githubAppConfigured,githubAppCredentialIssue,mintGithubReadToken,mintGithubPatchToken,readGithubDiscovery} from './github-app.mjs';
 import {githubPatchConfiguration} from './github-patch-gateway.mjs';
 const ORIGIN='https://rovor-hud-telemetry.rovordigital.workers.dev';
@@ -38,6 +39,23 @@ export async function verifyGithubPatchPermissions(env,send=fetch,now=Date.now()
  return {patch_requested:true,write_scope_verified:true,
   repo:'TeamRovor/rovor-video-engine',scoped_permissions:'contents_write_pull_requests_write',
   allowed_path_count:cfg.allowed_path_count,repository_written:false};
+}
+// Optional write scope is independently verified for every deployment.
+ // If permissions are unavailable, deploy the read-only HUD and force the
+ // actual Worker PATCH_ENABLED=false. This never grants or assumes write
+ // permission; the owner request remains distinguishable in private status.
+export async function resolveOptionalPatchDeployment(env,send=fetch,now=Date.now()){
+ const requested=env.ROVOR_GITHUB_PATCH_ENABLED==='true';
+ if(!requested)return {requested:false,effective_enabled:false,write_scope_verified:false,
+  reason:'owner_disabled',repository_written:false};
+ try{
+  await verifyGithubPatchPermissions(env,send,now);
+  return {requested:true,effective_enabled:true,write_scope_verified:true,
+   reason:'scoped_token_verified',repository_written:false};
+ }catch{
+  return {requested:true,effective_enabled:false,write_scope_verified:false,
+   reason:'write_scope_unavailable',repository_written:false};
+ }
 }
 // Informational, credential-safe capability check: a short-lived downscoped
 // installation token is minted and discarded without GitHub repository writes.
@@ -87,7 +105,16 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
  const task=mode==='--credentials'?verifyGithubCredentials(process.env):
   mode==='--worker'?verifyGithubWorker(process.env):
   mode==='--patch'?verifyGithubPatchPermissions(process.env):
-  mode==='--patch-capability'?inspectGithubPatchCapability(process.env):Promise.reject(Error('invalid_verification_mode'));
+  mode==='--patch-capability'?inspectGithubPatchCapability(process.env):
+  mode==='--patch-effective'?(async()=>{
+   const effective=await resolveOptionalPatchDeployment(process.env);
+   const destination=process.env.GITHUB_ENV;
+   if(typeof destination!=='string'||!path.isAbsolute(destination)||/[\r\n]/.test(destination))
+    throw Error('github_actions_environment_missing');
+   appendFileSync(destination,'ROVOR_GITHUB_PATCH_ENABLED='+String(effective.effective_enabled)+'\n'+
+    'ROVOR_GITHUB_PATCH_OWNER_REQUESTED='+String(effective.requested)+'\n');
+   return effective;
+  })():Promise.reject(Error('invalid_verification_mode'));
  task.then(r=>console.log(JSON.stringify(r))).catch(e=>{
   const code=String(e?.message||'github_app_verification_unavailable');
   console.error('ROVOR independent GitHub verification: '+(/^[a-z0-9_]{3,90}$/.test(code)?code:'github_app_verification_unavailable'));

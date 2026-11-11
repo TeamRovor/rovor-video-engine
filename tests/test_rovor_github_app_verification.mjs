@@ -2,7 +2,8 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
 import {githubAppCredentialIssue} from '../integrations/hud-cloud/github-app.mjs';
-import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability} from '../integrations/hud-cloud/verify-github-app.mjs';
+import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability,resolveOptionalPatchDeployment} from '../integrations/hud-cloud/verify-github-app.mjs';
+import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-secret-payload.mjs';
 const NOW=Date.now(),pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
 const env={ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem,
  ROVOR_NATIVE_DISCOVERY_ENABLED:'true',ROVOR_HUD_READER_TOKEN:'r'.repeat(40)};
@@ -109,4 +110,38 @@ test('informational GitHub patch capability probe fails closed without secrets o
  const denied=await inspectGithubPatchCapability(env,async()=>new Response('private upstream error', {status:403}),NOW);
  assert.deepEqual(denied,{write_scope_available:false,reason:'write_scope_unavailable',repository_written:false});
  assert(!JSON.stringify(denied).includes('private upstream'));
+});
+
+test('optional release mode fails closed on denied write token without blocking read-only work',async()=>{
+ const requested={...env,ROVOR_GITHUB_PATCH_ENABLED:'true',
+  ROVOR_GITHUB_PATCH_PATHS:'["architecture/roadmap.md"]'};
+ const denied=await resolveOptionalPatchDeployment(requested,
+  async()=>new Response('upstream private error',{status:403}),NOW);
+ assert.deepEqual(denied,{requested:true,effective_enabled:false,write_scope_verified:false,
+  reason:'write_scope_unavailable',repository_written:false});
+ assert(!JSON.stringify(denied).includes('upstream private'));
+ const effective={...requested,ROVOR_GITHUB_PATCH_ENABLED:String(denied.effective_enabled),
+  ROVOR_GITHUB_PATCH_OWNER_REQUESTED:String(denied.requested),
+  ROVOR_HUD_WRITER_TOKEN:'w'.repeat(40)};
+ const payload=buildHudSecretPayload(effective);
+ assert.equal(payload.ROVOR_GITHUB_PATCH_ENABLED,'false');
+ assert.equal(payload.ROVOR_GITHUB_PATCH_OWNER_REQUESTED,'true');
+ assert.equal((await resolveOptionalPatchDeployment(env,async()=>{throw Error('unexpected token call')},NOW)).reason,'owner_disabled');
+});
+test('optional release mode enables writes only after exact downscoped token proof',async()=>{
+ const requested={...env,ROVOR_GITHUB_PATCH_ENABLED:'true',
+  ROVOR_GITHUB_PATCH_PATHS:'["architecture/roadmap.md"]'};
+ let requests=0;
+ const result=await resolveOptionalPatchDeployment(requested,async(url,options)=>{
+  requests++;assert.equal(options.method,'POST');
+  assert.deepEqual(JSON.parse(options.body).permissions,{contents:'write',pull_requests:'write'});
+  return Response.json({token:'safe-mock-temp-token-very-long-1234567890',
+   expires_at:new Date(NOW+3600000).toISOString(),
+   permissions:{contents:'write',pull_requests:'write',metadata:'read'},
+   repositories:[{full_name:'TeamRovor/rovor-video-engine'}]},{status:201});
+ },NOW);
+ assert.equal(result.effective_enabled,true);
+ assert.equal(result.write_scope_verified,true);
+ assert.equal(result.repository_written,false);
+ assert.equal(requests,1);
 });
