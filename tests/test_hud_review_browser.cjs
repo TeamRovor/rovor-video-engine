@@ -113,6 +113,17 @@ async function main(){
   assert(info.buttons.every(h=>h>=44),name+' tap targets too small');
   assert.equal(info.history,false);assert.equal(info.details,false);assert.equal(info.images,0);
   assert(info.summary.includes('The cause is not verified.'));
+  const reviewClaims=await evaluate('return Array.from(document.querySelectorAll("#jobs .report-claims")).map(e=>e.textContent)');
+  assert.equal(reviewClaims.length,2,name+' missing employee report detail');
+  assert(reviewClaims[0].includes('A plan only, no repair.')&&reviewClaims[0].includes('The cause is not verified.'),
+    name+' historical report excerpts were lost');
+  assert(reviewClaims[0].includes('No specific benefit was provided.'),
+    name+' missing historical benefit not clearly disclosed');
+  assert(reviewClaims[1].includes('This result lacks a complete structured report.'),
+    name+' unstructured report not flagged');
+  const safeClaims=await evaluate('return {images:document.querySelectorAll("#jobs img").length,untrusted:document.querySelector("#jobs .report-claims").textContent.includes("<img src=x") }');
+  assert.equal(safeClaims.images,0);
+  assert.equal(safeClaims.untrusted,true,'hostile text is shown literally, not executed');
   const briefing=await evaluate('return document.querySelector("#jobs .owner-brief").textContent');
   for(const label of ['What ROVOR investigated','What it actually produced','How it might benefit ROVOR','Concerns and missing proof','What your PASS will do'])
    assert(briefing.includes(label),name+' missing '+label);

@@ -367,6 +367,34 @@ function modelSections(output){
   parsed[k].trim().length>0&&parsed[k].length<=1800));
  return group?group.map(label=>({label,content:parsed[label].trim()})):null;
 }
+// The review brief is verified job metadata; these are literal excerpts
+// supplied by the employee. Never present unverified model claims as fact.
+function reportClaims(sections){
+ const panel=make('section','report-claims');
+ panel.setAttribute('aria-label','Employee proposed value, limitations and next steps');
+ panel.append(make('p','report-claims-heading','FROM THE EMPLOYEE REPORT · NOT INDEPENDENTLY VERIFIED'));
+ const lookup=new Map((sections||[]).map(({label,content})=>[label,content]));
+ const current=lookup.has('Deliverable created');
+ const fields=[
+  ['Employee says it produced',current?lookup.get('Deliverable created'):lookup.get('What was done'),
+    'No concrete deliverable was separately described.'],
+  ['Specific benefit claimed',lookup.get('Potential benefit'),
+    'No specific benefit was provided. The saved report does not establish business value.'],
+  ['Risks or unknowns reported',current?lookup.get('Concerns and uncertainties'):lookup.get('What is still unknown'),
+    'The employee did not provide a distinct concerns section. Missing risk discussion is itself a reason to review carefully.'],
+  ['Employee suggests doing next',lookup.get('Recommended next step'),
+    'The employee did not identify a specific next action.']
+ ];
+ for(const [label,content,missing] of fields){
+  const section=make('div','report-claim'+(content?'':' missing'));
+  section.append(make('h5','',label),make('p','',content||missing));
+  panel.append(section);
+ }
+ if(!sections){
+  panel.append(make('p','missing-report-warning','This result lacks a complete structured report. Its deliverable, potential benefit or concerns may be unclear. Review the original text before approving.'));
+ }
+ return panel;
+}
 function receiptDetails(entry,hash=null){
  const details=make('details','receipt-details');
  details.append(make('summary','',hash?'Technical details (receipt verified)':'Technical details'));
@@ -399,6 +427,7 @@ async function inspect(entry,card,inspectButton,generation=refreshGeneration){
   box.append(make('h4','','What '+entry.employee+' delivered'));
   box.append(make('p','employee-report-caution','This is the employee’s exact AI-generated report. Its proposed benefits, diagnoses and conclusions have not been independently verified.'));
   const sections=modelSections(draft.output);
+  box.append(reportClaims(sections));
   if(sections){
    const summary=make('div','draft-summary');
    for(const {label,content} of sections){
