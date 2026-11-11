@@ -132,6 +132,34 @@ test('duplicate private admissions block rather than take an arbitrary first or 
   assert.equal(entry(r, GROQ.provider, GROQ.id).blocked_reason, 'conflicting_private_admission');
 });
 
+test('moving model aliases never pass an otherwise complete private admission', () => {
+  for (const m of [
+    model('mistral','codestral-latest'),
+    model('gemini','models/gemini-flash-latest'),
+    model('groq','openai/gpt-oss-auto'),
+    model('huggingface','Qwen/Qwen3.8-27B:auto'),
+  ]) {
+    const r = snapshot([catalog(m)], [admission(m)]);
+    assert.equal(entry(r,m.provider,m.id).blocked_reason,'unpinned_model_alias');
+    assert.equal(selectModelRoutes(r,{task_family:'code',
+      manual:{provider:m.provider,model_id:m.id}}).status,'blocked');
+  }
+});
+
+test('OpenRouter must use the exact :free identity and Hugging Face needs a pinned upstream', () => {
+  const paid = model('openrouter','cohere/north-mini-code');
+  const free = model('openrouter','cohere/north-mini-code:free');
+  const automatic = model('huggingface','Qwen/Qwen3.8-27B');
+  const pinned = model('huggingface','Qwen/Qwen3.8-27B:provider-a');
+  const r = snapshot([catalog(paid),catalog(automatic)],
+    [admission(paid),admission(automatic)]);
+  assert.equal(entry(r,paid.provider,paid.id).blocked_reason,'openrouter_free_route_required');
+  assert.equal(entry(r,automatic.provider,automatic.id).blocked_reason,'huggingface_upstream_required');
+  const allowed=snapshot([catalog(free),catalog(pinned)],[admission(free),admission(pinned)]);
+  assert.equal(entry(allowed,free.provider,free.id).selectable,true);
+  assert.equal(entry(allowed,pinned.provider,pinned.id).selectable,true);
+});
+
 test('manual exact model selection never silently substitutes a different model', () => {
   const r = snapshot([catalog(GROQ), catalog(OPENROUTER)], [admission(GROQ)]);
   const picked = selectModelRoutes(r, {task_family:'code', manual:{provider:OPENROUTER.provider,model_id:OPENROUTER.id}});
