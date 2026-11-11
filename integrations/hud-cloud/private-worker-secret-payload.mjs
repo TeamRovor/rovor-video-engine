@@ -25,6 +25,18 @@ export function buildHudSecretPayload(env) {
     'GROQ_HUD_EVIDENCE_SHA256','GROQ_HUD_VERIFIED_AT','GROQ_HUD_VALID_UNTIL','GROQ_HUD_DAILY_BUDGET']) {
     if(env[key])payload[key]=env[key];
   }
+  // Optional independent GitHub App credentials. Do not overwrite existing
+  // Worker secrets with missing values or partially configured credentials.
+  const app=['ROVOR_GITHUB_APP_ID','ROVOR_GITHUB_INSTALLATION_ID','ROVOR_GITHUB_APP_PRIVATE_KEY'];
+  if(app.some(k=>env[k])){
+    if(!app.every(k=>typeof env[k]==='string'&&env[k].trim())||
+       !/^[1-9][0-9]{0,17}$/.test(env[app[0]])||!/^[1-9][0-9]{0,17}$/.test(env[app[1]])||
+       !/^-----BEGIN (RSA PRIVATE KEY|PRIVATE KEY)-----/.test(env[app[2]])||env[app[2]].length>10000)
+      throw Error('invalid_private_secret_configuration');
+    for(const k of app)payload[k]=env[k];
+  }
+  if(['true','false'].includes(env.ROVOR_NATIVE_DISCOVERY_ENABLED))
+    payload.ROVOR_NATIVE_DISCOVERY_ENABLED=env.ROVOR_NATIVE_DISCOVERY_ENABLED;
   if(validateOneTimeGeminiActivation(env)){
     // Owner expressly said this is their free Gemini project and authorized
     // exactly one benign cloud canary. This is not an independent billing attestation.

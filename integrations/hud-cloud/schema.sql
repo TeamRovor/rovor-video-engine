@@ -226,3 +226,12 @@ CREATE TABLE IF NOT EXISTS hud_groq_completion_quota (
  rpd_limit INTEGER, rpd_remaining INTEGER, rpd_reset_at TEXT,
  tpm_limit INTEGER, tpm_remaining INTEGER, tpm_reset_at TEXT
 );
+
+-- One durable lease and bounded readback for native GitHub discovery.
+CREATE TABLE IF NOT EXISTS hud_native_discovery_clock (
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ started_at INTEGER NOT NULL,
+ finished_at INTEGER,
+ result_state TEXT NOT NULL,
+ discovery_key TEXT
+);
