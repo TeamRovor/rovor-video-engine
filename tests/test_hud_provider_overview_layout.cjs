@@ -27,6 +27,18 @@ test('compact nine-provider rings remain readable at desktop, tablet and phone w
  assert.match(boardSource,/\.rvq-overview-tile:hover,.*\.rvq-overview-tile:focus-visible/);
 });
 
+test('cloud Workload paints nine unknown-safe provider tiles immediately before async refresh',()=>{
+ const source=boardSource.slice(boardSource.indexOf(' async function sync(){'));
+ const immediate=source.indexOf('updateBoard(original,render(null,false,null),slot)');
+ const network=source.indexOf("read('/api/hud/omniroute?period=24h'");
+ assert(immediate>=0,'must paint placeholder using the same read-only nine-provider renderer');
+ assert(network>immediate,'unknown-safe UI must appear before waiting for network reads');
+ const html=render(null,false,null);
+ assert.equal((html.match(/class="rvq-overview-tile"/g)||[]).length,9);
+ assert.match(html,/NO FRESH REPORT · IDENTITIES ONLY/);
+ assert.doesNotMatch(html,/FRESH OMNIROUTE INVENTORY/);
+});
+
 test('all nine original provider reports stay present and accessible in collapsible sections',()=>{
  const cloud={execution_source:'cloud_provider',observed_at:Date.now(),
   providers:providers.map(provider=>({provider,credentials_configured:true,admission:'disabled_pending_verification',online_verified:false}))};
