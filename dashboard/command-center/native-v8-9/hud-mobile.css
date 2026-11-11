@@ -229,3 +229,114 @@
 @media (prefers-reduced-motion:reduce){
   #screen .drawer,#screen .drawer *{scroll-behavior:auto!important}
 }
+
+/* Private operations deck. The application owns the content and actions. */
+#hud .rail > .panel {
+  border: 1px solid #2c5879;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #0e2238, #061220 72%);
+  clip-path: none;
+  filter: none;
+  box-shadow: inset 0 1px #70b7db28;
+}
+#hud .rail > .panel::before, #hud .rail > .panel::after,
+#hud .rail .panel-content::before { display: none; }
+#hud .rail .panel-content {
+  background: transparent;
+  clip-path: none;
+  border-radius: inherit;
+}
+#hud .panel-header { color: #ccefff; letter-spacing: .07em; }
+#hud .panel-expand, #hud .mini-scope {
+  border-radius: 8px;
+  background: #102c44;
+  color: #c6efff;
+}
+#hud :focus-visible, #screen :focus-visible {
+  outline: 2px solid #7fe5ff;
+  outline-offset: -2px;
+}
+#hud .glance {
+  border-radius: 12px;
+  border-color: #356787;
+  background: #091a2c;
+}
+#hud .gl-tile {
+  background: #102940;
+  border-radius: 8px;
+  color: #e7f7ff;
+}
+#hud .gl-tile b, #hud .gl-links button { color: #8be6ff; }
+@media (max-width: 780px), (pointer: coarse) and (max-width: 1100px) and (max-height: 560px) {
+  html, body { height: auto !important; overflow-y: auto; }
+  #hud {
+    display: flex !important;
+    flex-direction: column;
+    height: auto !important;
+    min-height: 100svh;
+    overflow: visible !important;
+    gap: 10px;
+    padding: 0 max(10px, env(safe-area-inset-right)) calc(78px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  }
+  #hud .hud-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #071626;
+    clip-path: none;
+    min-height: 54px;
+    padding: max(6px, env(safe-area-inset-top)) 8px 6px;
+  }
+  #hud .deck { display: flex !important; flex-direction: column; gap: 10px !important; }
+  #hud .rail, #hud .rail.right { display: contents; }
+  #hud .glance { order: -3; }
+  #hud .core {
+    order: -2;
+    min-height: 140px !important;
+    height: 140px !important;
+    max-height: none !important;
+  }
+  #hud .core .reactor { width: min(32%, 120px) !important; }
+  #hud .core:has(.glance) {
+    display: grid;
+    grid-template-rows: auto 140px;
+    height: auto !important;
+  }
+  #hud .core .glance {
+    position: relative;
+    inset: auto;
+    transform: none;
+    width: 100%;
+    grid-row: 1;
+  }
+  #hud .core:has(.glance) .reactor { top: auto !important; bottom: 12px; transform: translateX(-50%); }
+  #hud .gl-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 5px; }
+  #hud .gl-links { display: flex; flex-wrap: wrap; gap: 5px; }
+  #hud .gl-links button { flex: 1 1 90px; min-width: 0; white-space: normal; }
+  #hud .gl-tile, #hud .gl-links button, #hud .panel-expand, #hud .mini-scope {
+    min-height: 44px;
+  }
+  #hud .panel-expand { min-width: 44px; }
+  #hud .rail .panel { min-width: 0; width: 100%; box-sizing: border-box; }
+  #hud .panel-content { padding: 10px 12px !important; }
+  #hud .panel-header { font-size: 12px !important; }
+  #hud .nav {
+    display: grid !important;
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    box-sizing: border-box;
+    height: auto !important;
+    width: 100% !important;
+    gap: 2px;
+    padding: 4px max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));
+    background: #071626;
+  }
+  #hud .nav-item { width: 100%; max-width: none; min-height: 48px; }
+}
+@media (pointer: coarse) {
+  #hud input, #screen input, #screen select, #screen textarea { font-size: max(16px,1rem) !important; }
+  #screen.screen:not([hidden]), #screen .drawer-inner { touch-action: pan-x pan-y pinch-zoom; }
+  #rovor-workload-popup .wl-matrix-scroll { touch-action: pan-x pan-y pinch-zoom; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #hud .reactor *, #hud .hud-chrome *, #hud .earth-horizon { animation: none !important; transition: none !important; }
+}
