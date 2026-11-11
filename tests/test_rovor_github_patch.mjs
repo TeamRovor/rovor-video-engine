@@ -14,10 +14,7 @@ const proposal={version:1,base_commit:base,title:'Improve mobile contrast',summa
 const digest=s=>createHash('sha256').update(s).digest('hex');
 function setup(p=proposal){
  const sqlite=new DatabaseSync(':memory:');sqlite.exec(readFileSync(new URL('../integrations/hud-cloud/schema.sql',import.meta.url),'utf8'));
- const DB={prepare(sql){return{bind(...a){return{
- first:async()=>sqlite.prepare(sql).get(...a)??null,all:async()=>({results:sqlite.prepare(sql).all(...a)}),
- run:async()=>({meta:{changes:sqlite.prepare(sql).run(...a).changes}})
- }}}},async batch(statements){sqlite.exec('BEGIN');try{const rows=[];for(const stmt of statements)rows.push(await stmt.run());sqlite.exec('COMMIT');return rows;}catch(e){sqlite.exec('ROLLBACK');throw e;}}};
+ const DB={prepare(sql){const stmt=sqlite.prepare(sql);let args=[];const handle={bind(...values){args=values;return handle;},first:async()=>stmt.get(...args)??null,all:async()=>({results:stmt.all(...args)}),run:async()=>({meta:{changes:stmt.run(...args).changes}})};return handle;},async batch(statements){sqlite.exec('BEGIN');try{const rows=[];for(const stmt of statements)rows.push(await stmt.run());sqlite.exec('COMMIT');return rows;}catch(e){sqlite.exec('ROLLBACK');throw e;}}};
  const env={DB,HUD_READER_TOKEN:R,HUD_WRITER_TOKEN:W,ROVOR_GITHUB_APP_ID:'123',
  ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem,
  ROVOR_GITHUB_PATCH_ENABLED:'true',ROVOR_GITHUB_PATCH_PATHS:JSON.stringify([path])};
@@ -120,6 +117,7 @@ test('owner-approved exact source becomes one real workforce job, mocked inferen
  s.sqlite.prepare('INSERT INTO hud_gemini_model_health(model,last_success_at,success_count) VALUES(?,?,1)').run('gemini-3.5-flash-lite',NOW-1000);
  const result=await tick(s.env,NOW+2,async(url,options)=>{
   assert(url.includes('generativelanguage.googleapis.com'));
+  if((options.method||'GET')==='GET')return Response.json({models:[{name:'models/gemini-3.5-flash-lite',supportedGenerationMethods:['generateContent']}]});
   const raw=JSON.stringify(JSON.parse(options.body));assert(raw.includes('source_excerpt'));assert(raw.includes(original));
   return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(proposal)}]}}],usageMetadata:{promptTokenCount:44,candidatesTokenCount:50}});
  });
