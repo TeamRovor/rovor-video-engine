@@ -369,11 +369,17 @@ export function createCloudOperations(base, cloud) {
     typeof m.id==='string'&&m.id.endsWith(':free')&&
     m.pricing?.prompt!=null&&m.pricing?.completion!=null&&
     Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0
-   )).slice(0,20).map(m=>({
-    id:String(provider==='cloudflare-ai'?m.name:(m.id||m.name)).slice(0,200),
-    context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
-    catalog_zero_price:provider==='openrouter'?true:null
-   }));
+   )).map(m=>{
+    const raw=String(provider==='cloudflare-ai'?m.name:(m.id||m.name));
+    // Gemini REST catalogs use "models/<name>"; the OpenAI-compatible
+    // chat-completions API accepts the bare model name. This is display
+    // metadata only and never authorizes a provider/model for dispatch.
+    const id=provider==='gemini'&&raw.startsWith('models/')?raw.slice(7):raw;
+    if(provider==='gemini'&&!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,179}$/.test(id))return null;
+    return {id:id.slice(0,200),
+     context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
+     catalog_zero_price:provider==='openrouter'?true:null};
+   }).filter(Boolean).slice(0,20);
    return {provider,status:'catalog_received',observed_at:Date.now(),models,
     ...(quotaObservation?{quota_observation:quotaObservation}:{}),
     billing_verified:false,quota_verified:quotaObservation!==null,canary_verified:false};
