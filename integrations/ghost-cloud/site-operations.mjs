@@ -785,6 +785,12 @@ export function createCloudOperations(base, cloud) {
      if(url.pathname==='/api/ghost/chat/models'&&request.method==='GET')return json(await ownerChatModels(env));
      if(url.pathname==='/api/ghost/chat'&&request.method==='POST')return ownerChat(request,env,actor);
      if(url.pathname==='/api/ghost/control'&&request.method==='POST'){
+      // Site identity is not a CSRF defense. Require a same-origin browser
+      // request for STOP/RESUME, just like the private chat/review operations.
+      // The separately authenticated service and MCP paths are unchanged.
+      if(request.headers.get('Origin')!==url.origin||
+         request.headers.get('Sec-Fetch-Site')!=='same-origin')
+       return json({error:'owner_browser_required'},403);
       const body=await bounded(request);if(Object.keys(body).join(',')!=='enabled')throw Error('invalid_control');return json(await control(env,body.enabled));
      }
      if(url.pathname==='/api/ghost/review'&&request.method==='POST')return review(request,env,actor);
