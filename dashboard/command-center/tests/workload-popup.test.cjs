@@ -57,7 +57,7 @@ test('Archived full-popup remains explicit; home preview now reads current authe
   assert.match(popup,/EMPLOYEES\.map/);
   assert.match(popup,/VIEW SAMPLE LAYOUT/);
   assert.match(popup,/function mountPreview\(container,openDetails\)/);
-  assert.match(popup,/LAST REPORT · HISTORICAL/);
+  assert.match(popup,/historical owner-shared report, not current activity/);
   assert.match(popup,/timeZoneName:'short'/);
   assert.match(popup,/fetch\('\/api\/hud\/omniroute\?period=24h'/);
   assert.match(popup,/credentials:'same-origin',cache:'no-store'/);
@@ -186,8 +186,8 @@ test('Observed outcomes are historical job attempts, never fabricated model usag
   assert.doesNotMatch(rendered,/data-active="yes"/);
   // The home preview is no longer a three-model archive. The full drawer
   // preserves historical report evidence, while home uses the private D1 log.
-  assert.match(rendered,/North Mini Code/);
-  assert.match(rendered,/Nemotron 3 Ultra/);
-  assert.match(rendered,/Nemotron 3.5 Super VL/);
+  assert.match(popup,/North Mini Code/);
+  assert.match(popup,/Nemotron 3 Ultra/);
+  assert.match(popup,/Nemotron 3.5 Super VL/);
   assert.doesNotMatch(rendered,/>M0[1-9]</);
 });
