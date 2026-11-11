@@ -215,7 +215,8 @@ test('existing journaled owner review index is not restaged or reordered',t=>{
   const dir=existing(t),jpath=path.join(dir,'drizzle/meta/_journal.json');
   const journal=JSON.parse(fs.readFileSync(jpath,'utf8'));
   const tag='0002_owner_review_one_decision';
-  fs.writeFileSync(path.join(dir,'drizzle',tag+'.sql'),'CREATE UNIQUE INDEX IF NOT EXISTS ghost_cloud_reviews_one_decision_per_attempt ON ghost_cloud_reviews(attempt_id);');
+  const reviewed=fs.readFileSync(new URL('migrations/owner-review-one-decision.sql',sourceDir),'utf8').replace(/;[ \t]*\n/g,';\n--> statement-breakpoint\n');
+  fs.writeFileSync(path.join(dir,'drizzle',tag+'.sql'),reviewed);
   journal.entries.push({idx:2,version:'6',tag,breakpoints:true});
   fs.writeFileSync(jpath,JSON.stringify(journal));
   const r=composeScheduledShift(dir,{apply:true});
@@ -223,6 +224,18 @@ test('existing journaled owner review index is not restaged or reordered',t=>{
   assert.deepEqual(r.migrations,['0003_cloud_scheduled_shift.sql']);
   assert.equal(fs.existsSync(path.join(dir,'drizzle/0002_cloud_review_one_decision.sql')),false);
   assert.equal(JSON.parse(fs.readFileSync(jpath)).entries.length,4);
+});
+test('journaled review index must exactly match approved SQL before scheduler staging',t=>{
+  const dir=existing(t),jpath=path.join(dir,'drizzle/meta/_journal.json');
+  const journal=JSON.parse(fs.readFileSync(jpath,'utf8'));
+  const tag='0002_owner_review_one_decision';
+  const location=path.join(dir,'drizzle',tag+'.sql');
+  fs.writeFileSync(location,'CREATE INDEX unrelated ON ghost_cloud_reviews(attempt_id);');
+  journal.entries.push({idx:2,version:'6',tag,breakpoints:true});
+  fs.writeFileSync(jpath,JSON.stringify(journal));
+  assert.throws(()=>composeScheduledShift(dir,{apply:true}),/journaled_review_index_mismatch/);
+  assert.equal(fs.readFileSync(path.join(dir,'worker/index.js'),'utf8'),v2);
+  assert.equal(fs.existsSync(path.join(dir,'drizzle/0003_cloud_scheduled_shift.sql')),false);
 });
 test('mismatched existing dist bundle fails without modifying staged v2',t=>{
   const dir=existing(t);
