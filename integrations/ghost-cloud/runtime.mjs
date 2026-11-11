@@ -12,6 +12,15 @@ export const PROVIDERS = Object.freeze({
 });
 const ROLES = new Set(['Walter','Mike','Jane','Jesse','Gale','Gus','Saul','Hank']);
 const KINDS = new Set(['checklist','plan','code_review','research']);
+// Defaults are task affinities, not claims about live model quality. A trusted
+// operator can override priorities per pinned route. No round robin, random
+// selection, paid fallback, or job-controlled provider/model ID.
+const KIND_PROVIDER_PRIORITY=Object.freeze({
+ plan:['gemini','mistral','openrouter','groq','nvidia','cohere','sambanova','cloudflare-ai','huggingface'],
+ research:['gemini','mistral','cohere','openrouter','nvidia','groq','sambanova','huggingface','cloudflare-ai'],
+ code_review:['mistral','groq','nvidia','openrouter','gemini','cloudflare-ai','sambanova','huggingface','cohere'],
+ checklist:['cloudflare-ai','groq','gemini','sambanova','mistral','nvidia','cohere','openrouter','huggingface']
+});
 const DAY = 86400000;
 const validId = s => typeof s === 'string' && /^[a-z0-9][a-z0-9-]{0,149}$/.test(s);
 const bytes = s => new TextEncoder().encode(s).byteLength;
@@ -40,11 +49,28 @@ export function eligibility(provider, cfg, env, now) {
      !positive(cfg.min_interval_ms,DAY) || !positive(cfg.max_input_bytes,14500) || !positive(cfg.max_output_tokens,2400) ||
      !Array.isArray(cfg.roles) || !cfg.roles.length || cfg.roles.some(r => !ROLES.has(r)) ||
      !Array.isArray(cfg.kinds) || !cfg.kinds.length || cfg.kinds.some(k => !KINDS.has(k))) return 'invalid_limits';
+ if (cfg.routing_priority!==undefined&&(!cfg.routing_priority||typeof cfg.routing_priority!=='object'||
+     Array.isArray(cfg.routing_priority)||Object.entries(cfg.routing_priority).some(([kind,score])=>
+       !KINDS.has(kind)||!Number.isInteger(score)||score<0||score>100))) return 'invalid_routing_priority';
  if (provider === 'cloudflare-ai' && !/^[a-f0-9]{32}$/.test(env.CLOUDFLARE_ACCOUNT_ID || '')) return 'missing_account';
  if (provider === 'openrouter' && !cfg.model.endsWith(':free')) return 'paid_route_denied';
  // Pin an HF upstream too: its default router can silently change provider.
  if (provider === 'huggingface' && !/:[a-z0-9-]+$/.test(cfg.model)) return 'unpinned_upstream';
  return null;
+}
+
+export function rankProvidersForJob(job,config,env,now,used=new Set()){
+ if(!job||!ROLES.has(job.employee)||!KINDS.has(job.kind)||
+    !Number.isSafeInteger(job.input_bytes)||job.input_bytes<1)return [];
+ const preferences=KIND_PROVIDER_PRIORITY[job.kind];
+ return Object.keys(PROVIDERS).filter(provider=>{
+  const cfg=config[provider];
+  return !used.has(provider)&&!eligibility(provider,cfg,env,now)&&
+    cfg.roles.includes(job.employee)&&cfg.kinds.includes(job.kind)&&job.input_bytes<=cfg.max_input_bytes;
+ }).sort((a,b)=>{
+  const rank=provider=>config[provider].routing_priority?.[job.kind]??90-preferences.indexOf(provider)*10;
+  return rank(b)-rank(a)||preferences.indexOf(a)-preferences.indexOf(b)||a.localeCompare(b);
+ });
 }
 
 export function requestFor(provider, cfg, env, prompt) {
@@ -144,7 +170,8 @@ export async function infer(provider,cfg,env,prompt,fetcher=(...args)=>globalThi
  } catch { return {status:'uncertain',error_code:'transport_or_response_failure',retry_after:null}; }
 }
 
-export async function claim(db,provider,cfg,now) {
+export async function claim(db,provider,cfg,now,jobId=null) {
+ if(jobId!==null&&!validId(jobId))throw Error('invalid_claim_job_id');
  // One SQL write is the lock: UNIQUE(job_id) prevents replay; subqueries enforce
  // global, shared-account and provider admission even during overlapping ticks.
  const roles=JSON.stringify(cfg.roles), kinds=JSON.stringify(cfg.kinds), id=crypto.randomUUID();
@@ -152,6 +179,7 @@ export async function claim(db,provider,cfg,now) {
  SELECT ?,j.id,?,?,?,?,j.input_bytes+?+256,'running' FROM ghost_cloud_jobs j
  WHERE (SELECT enabled FROM ghost_cloud_control WHERE id=1)=1
  AND j.employee IN (SELECT value FROM json_each(?)) AND j.kind IN (SELECT value FROM json_each(?)) AND j.input_bytes<=?
+ AND (? IS NULL OR j.id=?)
  AND NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts WHERE job_id=j.id)
  AND (SELECT count(*) FROM (SELECT started_at FROM ghost_cloud_attempts WHERE started_at>?
       UNION ALL SELECT started_at FROM ghost_cloud_owner_chat WHERE started_at>?))<144
@@ -165,7 +193,7 @@ export async function claim(db,provider,cfg,now) {
  AND (SELECT count(*) FROM ghost_cloud_attempts WHERE pool=? AND status IN ('failed','uncertain')
       AND started_at>COALESCE((SELECT max(started_at) FROM ghost_cloud_attempts WHERE pool=? AND status='needs_review'),0))<3
  AND (SELECT count(*) FROM ghost_cloud_owner_chat WHERE pool=? AND status IN ('failed','uncertain') AND started_at>?)<3
- ORDER BY j.created_at,j.id LIMIT 1 RETURNING *`,id,provider,cfg.model,cfg.pool,now,cfg.max_output_tokens,roles,kinds,cfg.max_input_bytes,
+ ORDER BY j.created_at,j.id LIMIT 1 RETURNING *`,id,provider,cfg.model,cfg.pool,now,cfg.max_output_tokens,roles,kinds,cfg.max_input_bytes,jobId,jobId,
  now-DAY,now-DAY,cfg.pool,now-DAY,cfg.pool,now-DAY,cfg.requests_per_day,
  cfg.pool,now-DAY,cfg.pool,now-DAY,cfg.max_output_tokens,cfg.tokens_per_day,
  cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,cfg.pool,cfg.pool,now-3600000).first();
@@ -252,17 +280,34 @@ export async function tick(env,fetcher=(...args)=>globalThis.fetch(...args),now=
   if(pools.has(cfg.pool)&&pools.get(cfg.pool)!==limits)throw Error('conflicting_pool_limits');pools.set(cfg.pool,limits);
  }
  let dispatched=0;
- const blocked={};
- for(const provider of Object.keys(PROVIDERS)){
-  if(denied[provider])continue;const cfg=config[provider];
-  // Recheck STOP and evidence clocks immediately before each external call.
-  const clock=now+(Date.now()-startedClock);
-  if(eligibility(provider,cfg,env,clock))continue;
-  const attempt=await claim(db,provider,cfg,clock);
-  if(!attempt){blocked[provider]=await diagnoseNoClaim(db,cfg,clock);continue;}
-  if(!(await run(db,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled){
-   await run(db,"UPDATE ghost_cloud_attempts SET status='failed',error_code='stopped_before_request',finished_at=? WHERE id=? AND status='running'",clock,attempt.id).run();break;
-  }
+ const blocked={},used=new Set();
+ const eligible=Object.keys(PROVIDERS).filter(p=>!denied[p]);
+ // Filter out unrelated jobs in SQL before bounding the scan. This prevents
+ // a backlog of incompatible roles from hiding actionable work.
+ const candidates=eligible.length?(await run(db,`SELECT j.id,j.employee,j.kind,j.input_bytes
+   FROM ghost_cloud_jobs j WHERE NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts a WHERE a.job_id=j.id)
+   AND EXISTS(SELECT 1 FROM json_each(?) r
+     WHERE j.employee IN (SELECT value FROM json_each(r.value,'$.roles'))
+       AND j.kind IN (SELECT value FROM json_each(r.value,'$.kinds'))
+       AND j.input_bytes<=json_extract(r.value,'$.max_input_bytes'))
+   ORDER BY j.created_at,j.id LIMIT 144`,
+   JSON.stringify(eligible.map(p=>({roles:config[p].roles,kinds:config[p].kinds,max_input_bytes:config[p].max_input_bytes})))).all()).results:[];
+ dispatchLoop: for(const candidate of candidates){
+  if(used.size>=eligible.length)break;
+  const ranked=rankProvidersForJob(candidate,config,env,now+(Date.now()-startedClock),used);
+  for(const provider of ranked){
+   const cfg=config[provider];
+   // A blocked claim may select a different approved route BEFORE any model
+   // call. Once a job has a durable claim, success or failure is final.
+   const clock=now+(Date.now()-startedClock);
+   if(eligibility(provider,cfg,env,clock))continue;
+   if(!(await run(db,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled)break dispatchLoop;
+   const attempt=await claim(db,provider,cfg,clock,candidate.id);
+   if(!attempt)continue;
+   used.add(provider);
+   if(!(await run(db,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled){
+    await run(db,"UPDATE ghost_cloud_attempts SET status='failed',error_code='stopped_before_request',finished_at=? WHERE id=? AND status='running'",clock,attempt.id).run();break dispatchLoop;
+   }
   const job=await run(db,'SELECT prompt FROM ghost_cloud_jobs WHERE id=?',attempt.job_id).first();
   const outcome=await infer(provider,cfg,env,job.prompt,fetcher,clock);dispatched++;
   await run(db,`UPDATE ghost_cloud_attempts SET status=?,error_code=?,actual_model=?,tokens_input=?,tokens_output=?,output=?,retry_after=?,finished_at=? WHERE id=? AND status='running'`,outcome.status,outcome.error_code,outcome.actual_model??null,outcome.tokens_input??null,outcome.tokens_output??null,outcome.output??null,outcome.retry_after??null,now+(Date.now()-startedClock),attempt.id).run();
@@ -308,6 +353,14 @@ export async function tick(env,fetcher=(...args)=>globalThis.fetch(...args),now=
     }catch{/* Optional forward migration unavailable: leave rate limits unknown. */}
    }
   }
+   // Never retry this claimed job on another provider after an upstream call.
+   break;
+  }
+ }
+ const stopped=!(await run(db,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled;
+ for(const provider of eligible){
+  if(!used.has(provider)&&!stopped)
+   blocked[provider]=await diagnoseNoClaim(db,config[provider],now+(Date.now()-startedClock));
  }
  return {enabled:true,dispatched,denied,blocked};
 }

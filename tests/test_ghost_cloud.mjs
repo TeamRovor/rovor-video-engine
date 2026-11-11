@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {PROVIDERS,eligibility,requestFor,infer,claim,tick,validateJob,diagnosePending,readMistralMinuteLimits} from '../integrations/ghost-cloud/runtime.mjs';
+import {PROVIDERS,eligibility,requestFor,infer,claim,tick,validateJob,diagnosePending,readMistralMinuteLimits,rankProvidersForJob} from '../integrations/ghost-cloud/runtime.mjs';
 import worker from '../integrations/ghost-cloud/worker.mjs';
 
 const NOW=Date.now();
@@ -393,4 +393,47 @@ test('missing optional Mistral rate table does not erase immutable private recei
  }),{headers:{'x-ratelimit-limit-req-minute':'125','x-ratelimit-remaining-req-minute':'124'}}),NOW);
  assert.equal(result.dispatched,1);
  assert.equal(sqlite.prepare("SELECT status FROM ghost_cloud_attempts WHERE job_id='mistral-no-schema'").get().status,'needs_review');
+});
+
+test('task-first provider affinity prefers Gemini planning and Mistral coding over fixed provider order',async()=>{
+ const c={
+  groq:configFor('groq',{kinds:['research','plan','code_review']}),
+  gemini:configFor('gemini',{kinds:['research','plan','code_review']}),
+  mistral:configFor('mistral',{kinds:['research','plan','code_review']})
+ };
+ const {env,sqlite}=setup(c);enable(sqlite);
+ enqueue(sqlite,job('a-planning',{kind:'plan'}));
+ enqueue(sqlite,job('b-coding',{kind:'code_review'}));
+ const calls=[];
+ const out=await tick(env,async(url)=>{calls.push(url);return success();},NOW);
+ assert.equal(out.dispatched,2);
+ const rows=sqlite.prepare('SELECT job_id,provider FROM ghost_cloud_attempts ORDER BY job_id').all();
+ assert.deepEqual(rows.map(x=>[x.job_id,x.provider]),[['a-planning','gemini'],['b-coding','mistral']]);
+ assert.match(calls[0],/generativelanguage\.googleapis\.com/);
+ assert.match(calls[1],/api\.mistral\.ai/);
+});
+test('trusted per-model priority overrides defaults, but expiry and role constraints still dominate',()=>{
+ const c={gemini:configFor('gemini',{routing_priority:{research:5}}),
+  groq:configFor('groq',{routing_priority:{research:100}}),
+  mistral:configFor('mistral',{routing_priority:{research:100},valid_until:NOW})};
+ const {env}=setup(c);
+ const candidate={employee:'Walter',kind:'research',input_bytes:100};
+ assert.deepEqual(rankProvidersForJob(candidate,c,env,NOW),['groq','gemini']);
+ assert.deepEqual(rankProvidersForJob({...candidate,employee:'Gus'},c,env,NOW),[]);
+ assert.equal(eligibility('groq',cfg({routing_priority:{research:101}}),env,NOW),'invalid_routing_priority');
+ assert.equal(eligibility('groq',cfg({routing_priority:{shell:100}}),env,NOW),'invalid_routing_priority');
+});
+test('pre-claim blocked preferred provider allows eligible fallback; a claimed failure never replays',async()=>{
+ const c={gemini:configFor('gemini',{requests_per_day:1}),groq:configFor('groq')};
+ const {env,sqlite}=setup(c);enable(sqlite);
+ enqueue(sqlite,job('a-first'));
+ const seen=[];
+ await tick(env,async(url)=>{seen.push(url);return success();},NOW);
+ enqueue(sqlite,job('b-next'));
+ const result=await tick(env,async(url)=>{seen.push(url);return new Response('',{status:503});},NOW+200);
+ assert.equal(result.dispatched,1);
+ assert.match(seen[0],/generativelanguage\.googleapis\.com/);
+ assert.match(seen[1],/api\.groq\.com/);
+ assert.equal(sqlite.prepare("SELECT provider FROM ghost_cloud_attempts WHERE job_id='b-next'").get().provider,'groq');
+ assert.equal((await tick(env,async()=>{throw Error('no replay');},NOW+400)).dispatched,0);
 });
