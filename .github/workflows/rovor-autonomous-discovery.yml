@@ -10,6 +10,20 @@ on:
       - 'tests/test_rovor_auto_discovery.mjs'
   schedule:
     - cron: '17 * * * *'
+  # Scheduled GitHub runs can be delayed for hours. Trusted-main failures
+  # trigger the same read-only discovery path without waiting for the clock.
+  workflow_run:
+    workflows:
+      - 'OmniRoute reasoning admission offline regression'
+      - 'OmniRoute free dispatch permit offline regression'
+      - 'ROVOR work routing and queue consistency'
+      - 'Walter task identity replay guard'
+      - 'Walter public task grounding offline regression'
+      - 'Nine-provider cloud runtime checks'
+      - 'Private HUD cloud operations checks'
+      - 'GitHub-owned PRIVATE ROVOR HUD (Cloudflare Worker)'
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -27,6 +41,7 @@ concurrency:
 
 jobs:
   verify:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == 'TeamRovor/rovor-video-engine')
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
@@ -44,7 +59,7 @@ jobs:
 
   discover:
     needs: verify
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == 'TeamRovor/rovor-video-engine'))
     runs-on: ubuntu-latest
     timeout-minutes: 6
     environment: rovor-hud-production
@@ -60,4 +75,6 @@ jobs:
         with:
           node-version: '24'
       - name: Find verified GitHub defects and store one review-only HUD draft
+        # Never download triggering artifacts or checkout its head SHA.
+        # workflow_run uses the reviewed default branch's own github.sha.
         run: node tools/rovor_auto_discovery.mjs

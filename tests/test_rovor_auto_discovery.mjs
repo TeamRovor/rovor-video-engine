@@ -118,3 +118,19 @@ test('GitHub list requests remain below parser capacity even when real 40/50-ite
  assert.equal(f.calls.filter(v=>v.url.startsWith('https://api.github.com')).length,3);
  assert.equal(f.posts.length,1);
 });
+
+test('trusted-main failure discovery does not wait for delayed scheduled runs or accept PR artifacts',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/rovor-autonomous-discovery.yml',import.meta.url),'utf8');
+ assert.match(workflow,/workflow_run:[\s\S]*?types: \[completed\][\s\S]*?branches: \[main\]/);
+ const gates=workflow.split('\n').filter(line=>line.trim().startsWith('if:')&&line.includes('workflow_run'));
+ assert.equal(gates.length,2);
+ for(const gate of gates){
+  assert.match(gate,/github\.event\.workflow_run\.conclusion == 'failure'/);
+  assert.match(gate,/github\.event\.workflow_run\.event == 'push'/);
+  assert.match(gate,/github\.event\.workflow_run\.head_branch == 'main'/);
+  assert.match(gate,/github\.event\.workflow_run\.head_repository\.full_name == 'TeamRovor\/rovor-video-engine'/);
+ }
+ assert(!workflow.includes('actions/download-artifact'));
+ assert(!workflow.includes('github.event.workflow_run.head_sha'));
+ assert.match(workflow,/cron: '17 \* \* \* \*'/);
+});
