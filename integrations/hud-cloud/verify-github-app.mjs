@@ -103,16 +103,29 @@ export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
 }
 // This operation is restricted to the protected release's existing server-side
 // writer token. It neither authorizes jobs nor calls a provider.
-export async function verifyDeployedRepoCatchupRefresh(env,send=fetch){
+export async function verifyDeployedRepoCatchupRefresh(env,send=fetch,{attempts=5,pause=delay,intervalMs=1800}={}){
+ if(!Number.isInteger(attempts)||attempts<1||attempts>8)throw Error('invalid_refresh_attempts');
  const token=env?.ROVOR_HUD_WRITER_TOKEN;
  if(typeof token!=='string'||token.length<32||/[\r\n]/.test(token))throw Error('private_writer_secret_missing');
  const url=ORIGIN+'/api/hud/workforce/repo-catchup/refresh';
  const run=authorized=>send(url,{method:'POST',redirect:'manual',cache:'no-store',
   headers:authorized?{Authorization:'Bearer '+token}:{},
   signal:AbortSignal.timeout(25000)});
- if((await run(false)).status!==401)throw Error('repo_catchup_refresh_anonymous_exposure');
- const res=await run(true);
- if(![200,409,503].includes(res.status))throw Error('repo_catchup_refresh_unavailable');
+ let res=null;
+ for(let attempt=0;attempt<attempts;attempt++){
+  const anonymous=await run(false);
+  if(anonymous.status!==401)throw Error('repo_catchup_refresh_anonymous_exposure');
+  res=await run(true);
+  if([200,409,503].includes(res.status))break;
+  // During a Cloudflare deployment the new path can briefly return 404.
+  // Any auth denial (401/403), bad request (400) or unexpected method
+  // (405) fails immediately, never downgrades to a success claim.
+  const transient=res.status===404||res.status===429||res.status>=500;
+  await res.body?.cancel();
+  if(!transient||attempt===attempts-1)
+   throw Error('repo_catchup_refresh_http_'+res.status);
+  await pause(intervalMs);
+ }
  const raw=await res.text();
  if(raw.length>1000)throw Error('repo_catchup_refresh_invalid');
  let data;try{data=JSON.parse(raw);}catch{throw Error('repo_catchup_refresh_invalid');}
