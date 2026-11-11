@@ -26,7 +26,8 @@ The module discards unknown catalog fields, including anything that looks like a
 3. Current zero-cost evidence has a server-validated private evidence reference, verification age at most 24 hours and a short expiry. These fields are private operator inputs, **not** cryptographic verification performed by this module.
 4. A real successful canary receipt identifies that exact resolved upstream model and is no older than 24 hours.
 5. Provider/account-scoped quota evidence was observed within five minutes, has an explicit scope, a positive **request** allowance, and a future reset time. The production integration must additionally account for shared limits, RPM/TPM and atomic reservations before each inference call.
-6. Any active/unknown cooldown or duplicate/conflicting admission blocks the route. Fail closed on unknown values; no paid fallback.
+6. A moving `auto` or `latest` model alias is never selectable, even if an older canary and admission record use that alias. OpenRouter requires an exact `:free` model ID **plus** independent current zero-cost account evidence; the suffix alone is not proof. Hugging Face requires an explicit `:upstream` suffix, not automatic provider selection. These are selection-side guardrails that mirror production executor policy, not permission to execute.
+7. Any active/unknown cooldown or duplicate/conflicting admission blocks the route. Fail closed on unknown values; no paid fallback.
 
 **Important:** This is a selection preview, not a dispatch authorization. The actual executor must re-check and atomically reserve quota immediately before each call; otherwise a previously eligible model could exceed allowance after the snapshot. The server must also verify the provider account's applicable commercial, training/data-use and free-tier conditions.
 
