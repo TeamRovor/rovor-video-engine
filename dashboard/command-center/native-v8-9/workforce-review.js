@@ -9,7 +9,9 @@ const make=(tag,className,text)=>{
  if(text!==undefined)node.textContent=String(text);
  return node;
 };
-const jobs=byId('jobs'),message=byId('message'),state=byId('page-status');
+const jobs=byId('jobs'),history=byId('history'),message=byId('message'),state=byId('page-status'),guidance=byId('inbox-guidance');
+const deferred=new Set();
+let refreshGeneration=0;
 const pending=byId('pending'),reviewed=byId('reviewed'),stop=byId('stop-state');
 const refreshButton=byId('refresh');
 const nativeClock=byId('native-clock'),nativeDetail=byId('native-detail'),standing=byId('standing-state');
@@ -185,76 +187,188 @@ function safeJob(entry){
 function actionButton(label,handler,extra=''){
  const b=make('button',extra,label);b.type='button';b.addEventListener('click',handler);return b;
 }
-async function inspect(entry,card,inspectButton){
- inspectButton.disabled=true;inspectButton.textContent='Verifying private draft…';
+// All labels are derived from the saved task kind/ID, not model claims.
+// The source link is generated from the validated numeric discovery key.
+function reviewContext(entry){
+ const evidence=/^cloud-discovery-(run|issue|pr)-([1-9][0-9]{0,11})$/.exec(entry.task_id||'');
+ if(evidence){
+  const [,kind,num]=evidence;
+  const title=kind==='run'?'Investigate a failed automated check':kind==='issue'?'Review a reported project issue':'Review an inactive code change';
+  const why=kind==='run'?'An automated GitHub check failed. ROVOR prepared an investigation plan.':
+   kind==='issue'?'GitHub recorded an open issue that may need attention. ROVOR prepared a review plan.':
+   'An open pull request has been inactive. ROVOR prepared a review plan.';
+  return {type:'Investigation plan',title,why,
+   completed:'A written plan only. No code was changed and no technical fix was verified.',
+   decision:'Is this investigation useful enough to keep? You are not approving a fix or certifying that its suggested causes are correct.',
+   next:'Keeping this saves your acceptance of the plan. No investigation, code change or publication is authorized by this decision.',
+   url:'https://github.com/TeamRovor/rovor-video-engine/'+(kind==='run'?'actions/runs/':kind==='issue'?'issues/':'pull/')+num,
+   evidenceLabel:(kind==='run'?'GitHub check ':kind==='issue'?'GitHub issue #':'Pull request #')+num,
+   criteria:'Keep a plan that gives a sensible next action and is clear about what is still unknown. Reject generic advice, invented findings or work that no longer matters.'};
+ }
+ if(entry.id.startsWith('gc-patch-src-'))return {type:'Proposed code change',title:entry.title,
+  why:'You approved a small source excerpt for the employee to propose an improvement.',
+  completed:'A proposed replacement, not an applied change. Independent tests have not run.',
+  decision:'Is the proposed change worth retaining for technical review? Do not keep it just because it has a verified receipt.',
+  next:'Keeping the proposal does not change GitHub. Draft pull-request creation needs a separate owner authorization; a merge is not authorized.',
+  criteria:'Reject if the proposal does not address your requested improvement. If the code is unclear, review later and ask for a technical explanation.'};
+ const names={plan:'Work plan',checklist:'Checklist',research:'Research draft',code_review:'Engineering draft'};
+ return {type:names[entry.kind]||'Employee draft',title:entry.title,
+  why:'ROVOR completed the requested written task for your review.',
+  completed:'A saved written result. External work, implementation or publication has not been verified.',
+  decision:'Would you keep this result and use it for the task described?',
+  next:'Keeping the draft records your approval of its usefulness. It does not publish it, execute a tool or start another model.',
+  criteria:'Keep if it answers the request and is specific enough to use. Reject inaccurate, incomplete or irrelevant work.'};
+}
+// Plain text only. No generated HTML, links or script execution. Preserve
+// the full exact receipt, even when a future employee provides a short summary.
+function renderOutput(output){
+ const content=make('div','draft-output');
+ let list=null;
+ for(const line of output.split(/\r?\n/)){
+  const clean=line.trim();
+  const heading=/^#{1,4}\s+(.+)$/.exec(clean);
+  const bullet=/^[-*]\s+(.+)$/.exec(clean);
+  if(heading){list=null;content.append(make('h4','',heading[1]));}
+  else if(bullet){if(!list){list=make('ul');content.append(list);}list.append(make('li','',bullet[1]));}
+  else{list=null;content.append(make('p','',line||' '));}
+ }
+ return content;
+}
+function modelSections(output){
+ // Optional exact headings in new triage drafts. No generated summary of
+ // historical drafts, no trimming away contradictory or missing information.
+ const keys={'bottom line':'Bottom line','what was done':'What was done','what is still unknown':'What is still unknown','recommended next step':'Recommended next step'};
+ const parsed={};let active=null;
+ for(const line of output.split(/\r?\n/)){
+  const match=/^#{1,4}\s+(.+?)\s*$/.exec(line.trim());
+  if(match){active=keys[match[1].toLowerCase()]||null;if(active){if(Object.hasOwn(parsed,active))return null;parsed[active]='';}}
+  else if(active)parsed[active]+=(parsed[active]?'\n':'')+line;
+ }
+ return Object.values(keys).every(k=>typeof parsed[k]==='string'&&parsed[k].trim()&&parsed[k].length<=1800)?parsed:null;
+}
+function receiptDetails(entry,hash=null){
+ const details=make('details','receipt-details');
+ details.append(make('summary','','Technical details (already checked)'));
+ details.append(make('p','metadata','Employee: '+entry.employee+' · model: '+(entry.actual_model||'Not confirmed')));
+ details.append(make('p','metadata','Requested '+formatTime(entry.created_at)+' · completed '+formatTime(entry.finished_at)));
+ const exact=entry.provider==='google-gemini-cloud'&&validTokens(entry.tokens_input)&&validTokens(entry.tokens_output);
+ details.append(make('p','metadata',exact?'Exact provider usage: '+entry.tokens_input.toLocaleString()+' input · '+entry.tokens_output.toLocaleString()+' output tokens':'Exact job token usage: not recorded'));
+ details.append(make('p','metadata','Immutable job ID: '+entry.id));
+ if(entry.error_code)details.append(make('p','metadata','Execution outcome: '+entry.error_code));
+ if(hash)details.append(make('p','digest','SHA-256 VERIFIED · '+hash));
+ else if(SHA.test(entry.output_sha256||''))details.append(make('p','digest','Saved output receipt: '+entry.output_sha256));
+ return details;
+}
+async function loadExactDraft(entry,expectedReview){
+ const draft=await privateRequest('/api/hud/workforce/draft/'+encodeURIComponent(entry.id));
+ if(draft.id!==entry.id||draft.state!=='needs_review'||draft.human_review!==expectedReview||
+    typeof draft.output!=='string'||!draft.output.trim()||draft.output.length>30000||
+    draft.output_sha256!==entry.output_sha256||!SHA.test(draft.output_sha256))throw Error('invalid_draft_receipt');
+ const hash=await digest(draft.output);
+ if(hash!==entry.output_sha256)throw Error('private_digest_mismatch');
+ return {draft,hash};
+}
+async function inspect(entry,card,inspectButton,generation=refreshGeneration){
+ inspectButton.disabled=true;inspectButton.textContent='Checking the saved work…';
  try{
-  const draft=await privateRequest('/api/hud/workforce/draft/'+encodeURIComponent(entry.id));
-  if(draft.id!==entry.id||draft.state!=='needs_review'||
-     draft.human_review!=='not_recorded'||typeof draft.output!=='string'||
-     !draft.output.trim()||draft.output.length>30000||
-     draft.output_sha256!==entry.output_sha256||!SHA.test(draft.output_sha256))
-   throw Error('invalid_draft_receipt');
-  const hash=await digest(draft.output);
-  if(hash!==entry.output_sha256)throw Error('private_digest_mismatch');
-  const box=make('section','draft');
-  box.append(make('h4','', 'VERIFIED PRIVATE DRAFT · '+entry.employee));
-  const content=make('pre','',draft.output);
-  box.append(content);
-  box.append(make('div','digest','SHA-256 VERIFIED · '+hash));
-  const choices=make('div','actions');
-  const copy=actionButton('Copy draft',async()=>{
+  const {draft,hash}=await loadExactDraft(entry,entry.human_review);
+  if(generation!==refreshGeneration||!card.isConnected)return;
+  const context=reviewContext(entry),box=make('section','draft');
+  box.append(make('h4','','What '+entry.employee+' delivered'));
+  const sections=modelSections(draft.output);
+  if(sections){
+   const summary=make('div','draft-summary');
+   for(const [label,value] of Object.entries(sections)){
+    const p=make('p');p.append(make('strong','',label),document.createTextNode(value.trim()));summary.append(p);
+   }
+   box.append(summary);
+   const full=make('details','draft-full');
+   full.append(make('summary','','Read the complete employee report'),renderOutput(draft.output));box.append(full);
+  }else box.append(renderOutput(draft.output));
+  box.append(receiptDetails(entry,hash));
+  const choices=make('div','actions'),feedback=make('p','review-feedback');
+  feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');
+  const copy=actionButton('Copy full result',async()=>{
    try{await navigator.clipboard.writeText(draft.output);copy.textContent='Copied';}
    catch{copy.textContent='Copy unavailable';}
   });
-  choices.append(copy);
-  for(const verdict of ['passed','failed']){
-   let armed=false,submitting=false;
-   const human=verdict==='passed'?'PASS':'FAIL';
-   const button=actionButton('Record '+human,async()=>{
+  const awaiting=entry.human_review==='not_recorded';
+  if(awaiting){
+   box.append(make('div','review-note',context.criteria+' '+context.next));
+   let armedVerdict=null,submitting=false;
+   const decisionButtons=[];
+   const resetDecision=()=>{
+    armedVerdict=null;
+    for(const {button,label} of decisionButtons)button.textContent=label;
+   };
+   for(const verdict of ['passed','failed']){
+    const human=verdict==='passed'?'PASS':'FAIL';
+    const label=verdict==='passed'?'Keep this work (PASS)':'Reject this work (FAIL)';
+    const button=actionButton(label,async()=>{
+     if(submitting)return;
+     if(armedVerdict!==verdict){
+      resetDecision();armedVerdict=verdict;button.textContent='Confirm '+human+' decision';
+      feedback.textContent=(verdict==='passed'?'Keep this exact result. ':'Reject this exact result. ')+'Your decision is permanent. Confirm or choose Review later.';
+      return;
+     }
+     submitting=true;
+     for(const control of choices.querySelectorAll('button'))control.disabled=true;
+     feedback.textContent='Saving your decision…';
+     try{
+      const saved=await privateRequest('/api/hud/workforce/review',{
+       method:'POST',body:{job_id:entry.id,verdict,output_sha256:hash}
+      });
+      if(saved.id!==entry.id||saved.human_review!==verdict||saved.output_sha256!==hash)
+       throw Error('private_review_readback_mismatch');
+      const check=await privateRequest('/api/hud/workforce/draft/'+encodeURIComponent(entry.id));
+      if(check.human_review!==verdict||check.output_sha256!==hash)
+       throw Error('private_review_readback_mismatch');
+      deferred.delete(entry.id);
+      announce(verdict==='passed'?'Work kept. Your PASS is saved. Nothing was published or executed.':'Work rejected. Your FAIL is saved. No retry was started.');
+      await refresh(false);
+     }catch(error){
+      feedback.textContent=errorMessage(error);submitting=false;resetDecision();
+      for(const control of choices.querySelectorAll('button'))control.disabled=false;
+     }
+    },verdict==='passed'?'approve':'reject');
+    decisionButtons.push({button,label});choices.append(button);
+   }
+   const later=actionButton('Review later',()=>{
     if(submitting)return;
-    if(!armed){
-     armed=true;
-     button.textContent='Confirm '+human+' decision';
-     announce('Confirm '+human+' on this exact verified draft. This decision is permanent.');
-     return;
-    }
-    submitting=true;
-    for(const control of choices.querySelectorAll('button'))control.disabled=true;
-    announce('Saving your '+human+' decision to the existing private D1 ledger…');
-    try{
-     const saved=await privateRequest('/api/hud/workforce/review',{
-      method:'POST',body:{job_id:entry.id,verdict,output_sha256:hash}
-     });
-     if(saved.id!==entry.id||saved.human_review!==verdict||saved.output_sha256!==hash)
-      throw Error('private_review_readback_mismatch');
-     // Re-read the authoritative D1 row, not just the HTTP 200 response.
-     const check=await privateRequest('/api/hud/workforce/draft/'+encodeURIComponent(entry.id));
-     if(check.human_review!==verdict||check.output_sha256!==hash)
-      throw Error('private_review_readback_mismatch');
-     announce('D1 CONFIRMED · '+entry.employee+' '+human+' saved · '+entry.id+
-      '. No second model call or publication occurred.');
-     await refresh(false);
-    }catch(error){
-     announce(errorMessage(error));
-     submitting=false;armed=false;
-     button.textContent='Record '+human;
-     for(const control of choices.querySelectorAll('button'))control.disabled=false;
-    }
-   },verdict==='passed'?'approve':'reject');
-   choices.append(button);
-  }
-  box.append(choices);card.append(box);
-  inspectButton.remove();
-  announce('Private model output and SHA-256 verified. Review the entire draft before deciding.');
+    resetDecision();deferred.add(entry.id);card.dataset.deferred='true';
+    feedback.textContent='Left undecided. This work stays in your inbox. No PASS or FAIL was recorded.';
+    choices.hidden=true;
+    const resume=actionButton('Resume review',()=>{
+     deferred.delete(entry.id);delete card.dataset.deferred;choices.hidden=false;resume.remove();feedback.textContent='';
+     decisionButtons[0].button.focus();
+    },'defer');
+    box.append(resume);resume.focus();
+   },'defer');
+   choices.append(later,copy);
+   if(deferred.has(entry.id)){
+    card.dataset.deferred='true';choices.hidden=true;
+    const resume=actionButton('Resume review',()=>{
+     deferred.delete(entry.id);delete card.dataset.deferred;choices.hidden=false;resume.remove();feedback.textContent='';
+     decisionButtons[0].button.focus();
+    },'defer');
+    box.append(resume);
+    feedback.textContent='Left undecided. No PASS or FAIL recorded.';
+   }
+  }else choices.append(copy);
+  box.append(choices,feedback);card.append(box);inspectButton.remove();
  }catch(error){
-  inspectButton.disabled=false;inspectButton.textContent='Retry private draft inspection';
-  announce(errorMessage(error));
+  if(generation!==refreshGeneration||!card.isConnected)return;
+  inspectButton.disabled=false;inspectButton.textContent='Retry loading work';
+  const warning=make('p','review-feedback',errorMessage(error));warning.setAttribute('role','status');
+  const previous=card.querySelector('.draft-load-error');if(previous)previous.remove();
+  warning.classList.add('draft-load-error');card.append(warning);
  }
 }
 async function refresh(clearNotice=true){
+ const generation=++refreshGeneration;
  refreshButton.disabled=true;
  if(clearNotice)announce('');
- message.textContent='Checking actual private D1 receipts…';
+ message.textContent='Loading your review inbox…';
  try{
   const data=await privateRequest('/api/hud/workforce/status');
   if(data.source!=='existing_cloudflare_hud_gemini_workforce'||data.mac_required!==false||
@@ -281,42 +395,50 @@ async function refresh(clearNotice=true){
   standing.textContent=data.recurring_execution_authorized===true?'ARMED':'NOT ARMED';
   standing.title=data.recurring_execution_authorized===true?'Expires '+formatTime(data.standing_plan?.expires_at):
    'Recurring execution requires a reviewed PASS and standing owner authorization';
-  jobs.textContent='';
+  const max=data.standing_plan?.max_pending_reviews;
+  guidance.textContent=Number.isSafeInteger(max)&&max>0&&pendingCount>=max?
+   'Your review queue is full. ROVOR pauses new recurring jobs until you review a result. You can leave any uncertain result undecided.':
+   pendingCount>0?'Read the result and decide whether it is useful. Your decision does not run code or publish anything.':
+   'You have no outstanding decisions. New work will appear here as it is completed.';
+  jobs.textContent='';history.textContent='';
+  const pendingLoads=[];
   const ordered=rows.slice().sort((a,b)=>{
    const ap=a.state==='needs_review'&&a.human_review==='not_recorded'?1:0;
    const bp=b.state==='needs_review'&&b.human_review==='not_recorded'?1:0;
    return bp-ap||((b.created_at||0)-(a.created_at||0));
   });
-  if(!rows.length){
-   jobs.append(make('div','job','No jobs recorded in this private Cloudflare D1 ledger yet.'));
-  }
+  if(!pendingCount)jobs.append(make('div','job','You’re all caught up. No work needs a decision right now.'));
+  if(!rows.some(x=>!(x.state==='needs_review'&&x.human_review==='not_recorded')))
+   history.append(make('p','history-summary','No past reviews or other jobs yet.'));
   for(const entry of ordered){
    const card=make('article','job');
    const header=make('div','job-header');
-   const heading=make('div');
-   heading.append(make('h3','',entry.employee+' · '+entry.title));
-   heading.append(make('p','metadata','Requested at '+formatTime(entry.created_at)+
-    ' · completed '+formatTime(entry.finished_at)));
-   heading.append(make('p','metadata','Actual model: '+(entry.actual_model||'Not confirmed')));
-   const exact=entry.provider==='google-gemini-cloud'&&validTokens(entry.tokens_input)&&validTokens(entry.tokens_output);
-   heading.append(make('p','metadata',exact?
-    'Exact provider usage: '+entry.tokens_input.toLocaleString()+' input · '+entry.tokens_output.toLocaleString()+' output tokens':
-    'Exact job token usage: not recorded'));
+   const heading=make('div'),context=reviewContext(entry);
    const awaiting=entry.state==='needs_review'&&entry.human_review==='not_recorded';
-   const tag=make('span','state '+(awaiting?'wait':VERDICTS.has(entry.human_review)?'ok':''),
-    awaiting?'AWAITING YOUR REVIEW':VERDICTS.has(entry.human_review)?
-    'OWNER '+entry.human_review.toUpperCase():entry.state.toUpperCase());
+   heading.append(make('p','task-type',context.type+' · '+entry.employee));
+   heading.append(make('h3','',context.title));
+   if(context.evidenceLabel){
+    const link=make('a','metadata',context.evidenceLabel);link.href=context.url;link.rel='noreferrer';link.target='_blank';heading.append(link);
+   }
+   const humanState=awaiting?'NEEDS DECISION':entry.human_review==='passed'?'KEPT · PASS':
+    entry.human_review==='failed'?'REJECTED · FAIL':entry.state==='running'?'IN PROGRESS':
+    entry.state==='queued'?'WAITING TO START':entry.state==='uncertain'?'NEEDS TECHNICAL CHECK':'NOT COMPLETED';
+   const tag=make('span','state '+(awaiting?'wait':VERDICTS.has(entry.human_review)?'ok':''),humanState);
    header.append(heading,tag);card.append(header);
-   card.append(make('p','metadata','Immutable job ID: '+entry.id));
-   if(entry.error_code)card.append(make('p','metadata','Execution outcome: '+entry.error_code));
+   if(awaiting){
+    card.append(make('p','explanation',context.why));
+    card.append(make('p','explanation',context.completed));
+    card.append(make('div','review-note','Your decision: '+context.decision));
+   }
    if(entry.state==='needs_review'&&SHA.test(entry.output_sha256||'')){
-    card.append(make('p','digest','Private output receipt: '+entry.output_sha256));
+    const actions=make('div','actions');
+    const inspectButton=actionButton(awaiting?'Load saved work':'View saved result',()=>inspect(entry,card,inspectButton,generation));
+    actions.append(inspectButton);card.append(actions);
+    if(awaiting)pendingLoads.push(()=>inspect(entry,card,inspectButton,generation));
+    if(!awaiting)card.append(receiptDetails(entry));
     if(awaiting){
-     const actions=make('div','actions');
-     const inspectButton=actionButton('Open full draft and verify SHA-256',
-      ()=>inspect(entry,card,inspectButton));
-     actions.append(inspectButton);card.append(actions);
-    }else if(ownerActive&&patchConfigured&&entry.human_review==='passed'&&entry.kind==='code_review'){
+     // Decisions only become available after exact receipt verification.
+    }else if(ownerActive&&patchConfigured&&entry.human_review==='passed'&&entry.kind==='code_review'&&entry.id.startsWith('gc-patch-src-')){
      const actions=make('div','actions');
      const open=actionButton('Inspect reviewed patch',async()=>{
       open.disabled=true;
@@ -348,17 +470,19 @@ async function refresh(clearNotice=true){
      });
      actions.append(open);card.append(actions);
     }
-   }
-   jobs.append(card);
+   }else card.append(receiptDetails(entry));
+   (awaiting?jobs:history).append(card);
   }
-  message.textContent='D1 readback confirmed · '+pendingCount+' awaiting owner review · '+
-   reviewedCount+' reviewed · cloud dispatch '+(data.enabled?'ENABLED':'STOPPED')+
-   '. Models are not assumed online merely from their saved receipts.';
+  // At most the three pending recurring drafts are loaded automatically;
+  // manual review remains available for any additional historical job.
+  await Promise.all(pendingLoads.slice(0,3).map(load=>load()));
+  if(generation!==refreshGeneration)return;
+  message.textContent=pendingCount===1?'1 result needs your decision':pendingCount+' results need your decision';
  }catch(error){
   message.textContent=errorMessage(error);
   pending.textContent='?';reviewed.textContent='?';stop.textContent='?';
   nativeClock.textContent='?';nativeDetail.textContent='Readback unavailable';standing.textContent='?';githubDiscoveryState.textContent='?';githubDiscoveryDetail.textContent='Readback unavailable';
-  jobs.textContent='';latestWorkforce=null;ownerActive=false;ownerButtons(null);patchPanel.hidden=true;clearSourcePreview();
+  jobs.textContent='';history.textContent='';guidance.textContent='Could not load the inbox. Try Refresh inbox.';latestWorkforce=null;ownerActive=false;ownerButtons(null);patchPanel.hidden=true;clearSourcePreview();
  }finally{refreshButton.disabled=false;}
 }
 refreshButton.addEventListener('click',()=>refresh());
