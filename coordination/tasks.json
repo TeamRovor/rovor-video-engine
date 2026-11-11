@@ -424,20 +424,29 @@
       "id": "remote-render-job-loop",
       "title": "Bounded Mac render job intake, status and artifact transport",
       "priority": 1,
-      "status": "done",
+      "status": "active",
       "owner": "Codex / Amar MP3 remote loop session",
       "branch": "feature/remote-render-job-loop",
       "scopes": [
         "tools/render_jobs.py",
+        "tools/chatgpt_moho_mcp.py",
+        "tools/media_probe.swift",
+        "plugin.json",
+        "mcp.json",
+        "skills/moho-mp3/SKILL.md",
+        "tests/test_chatgpt_moho_mcp.py",
         "tests/test_render_jobs.py",
         "REMOTE-RENDER-LOOP.md",
         ".github/workflows/render-job-loop.yml"
       ],
       "depends_on": [],
-      "updated_at": "2026-10-20T04:41:15.398Z",
-      "next_update": "After offline transport tests and documented Mac adapter gates",
-      "next_action": "Review draft PR #13 transport foundation. Separately claim verified native Moho adapter and authenticated upload connector work after current sandbox/rig evidence. No real Moho render, remote trigger or visual approval verified.",
-      "acceptance": "Offline job round trip and failure gates tested; no unverified Moho renderer or Mac access claim.",
+      "updated_at": "2026-10-21T00:42:07Z",
+      "next_update": "After resolving the coordination merge conflict and checking hosted workflow results.",
+      "next_action": "Complete the native Evan rig and trusted adapter integration before production intake. The local bridge is protocol-tested; production render and playable ChatGPT artifact delivery remain unverified. Public-fixture acoustic alignment is tested in an isolated environment; the existing Evan plan still requires word-anchor review. Resolve the branch's coordination conflict and verify hosted checks without accessing personal Macs or Windows desktops.",
+      "acceptance": "A real user MP3 traverses ChatGPT file input to a headless Moho Pro 14 render of a disposable Evan project, passes forced-acoustic and render quality gates, then returns as a playable downloadable ChatGPT artifact. Until that run succeeds, record the task as active and report exact blockers.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/13"
+      ],
       "evidence": [
         {
           "commit": "2b0dd6f31f2eee2d7d344986102cbb1a1509a6ed",
@@ -445,6 +454,27 @@
           "check": "7 synthetic/mocked transport tests and project_loop.py check",
           "result": "PASS; real media/Moho/remote runtime unverified",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/13"
+        },
+        {
+          "commit": "84fadaa7ffa6c1e8b18040567d7a34c84d7e374e",
+          "platform": "local macOS",
+          "check": "25 Python tests and coordination queue validation",
+          "result": "PASS; native probe passed synthetic WAV, MCP transport uses mocked MP3 boundary; no personal Mac production render",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39360421222"
+        },
+        {
+          "commit": "84fadaa7ffa6c1e8b18040567d7a34c84d7e374e",
+          "platform": "GitHub-hosted Windows/macOS/Linux",
+          "check": "Render job transport checks",
+          "result": "PASS; hosted test runner only, no access to the personal Mac",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39372962538"
+        },
+        {
+          "commit": "84fadaa7ffa6c1e8b18040567d7a34c84d7e374e",
+          "platform": "GitHub-hosted Windows/macOS/Linux",
+          "check": "Native compiler, shared project loop and GitHub-only handoff workflows",
+          "result": "PASS; generic tutorial native rendering separately validated on the Mac, not Evan",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/39372962573"
         }
       ]
     },

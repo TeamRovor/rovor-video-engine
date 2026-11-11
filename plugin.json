@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "rovor-moho-local",
+  "version": "0.1.0",
+  "description": "Desktop-local ChatGPT bridge for private MP3-to-Moho render jobs.",
+  "author": {
+    "name": "TeamRovor"
+  },
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "interface": {
+        "displayName": "Rovor Moho Local",
+        "shortDescription": "Queue MP3s for Moho Pro",
+        "longDescription": "A desktop-local bridge that receives one ChatGPT MP3 attachment, places it in a private Mac job spool, starts only a trusted local adapter, reports status, and exposes a verified MP4 resource. It never falls back to the Evan sprite engine.",
+        "developerName": "TeamRovor",
+        "category": "Productivity",
+        "capabilities": ["Media processing"],
+        "defaultPrompt": "Send the attached MP3 to the local Moho render queue and report any setup blockers."
+      }
+    }
+  }
+}
