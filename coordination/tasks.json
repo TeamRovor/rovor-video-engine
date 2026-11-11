@@ -6133,7 +6133,7 @@
       "id": "hud-chat-background-catalog-20261111",
       "title": "Keep chat responsive during bounded background model checks",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar chat background refresh 2026-11-11",
       "branch": "fix/hud-chat-background-catalog-20261111",
       "scopes": [
@@ -6141,10 +6141,19 @@
         "tests/test_hud_chat_mobile.mjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-11-11T08:31:19.680Z",
-      "next_update": "Behavior regressions and hosted HUD checks",
-      "next_action": "Keep verified same-source controls during background checks; bound catalog reads and reject obsolete completions during a request.",
-      "acceptance": "Background refresh preserves readiness; foreground/source changes remain gated; failed checks close readiness; active requests cannot be overwritten; existing checks pass."
+      "updated_at": "2026-11-11T08:34:48.748Z",
+      "next_update": "Protected production deployment readback",
+      "next_action": "PR #381 merged at 99456311d8310a20d278f8688bcddd57b3683070. Local 22 mobile-chat tests and all applicable hosted HUD/browser checks passed; verify deployed chat asset. No provider inference or admission change.",
+      "acceptance": "Background refresh preserves readiness; foreground/source changes remain gated; failed checks close readiness; active requests cannot be overwritten; existing checks pass.",
+      "evidence": [
+        {
+          "commit": "99456311d8310a20d278f8688bcddd57b3683070",
+          "platform": "macOS Node 24.22.0 and GitHub-hosted HUD/browser checks",
+          "check": "22 mobile-chat tests including background refresh, failure closure, provider change and request invalidation; full HUD safety/browser checks",
+          "result": "PASS; merged source; production readback pending.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/381"
+        }
+      ]
     }
   ]
 }
