@@ -6074,9 +6074,9 @@
         "tests/test_hud_chat_mobile.mjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-11-11T08:15:23.934Z",
-      "next_update": "Protected production deployment readback",
-      "next_action": "PR #379 merged at 268b137d3311ea8e123372410cef1022773563f8. All 284 HUD safety tests and responsive browser checks passed. Verify production deployment and byte-for-byte chat asset readback. No live provider call was run.",
+      "updated_at": "2026-11-11T08:16:44.764Z",
+      "next_update": "Complete; deployed chat asset verified",
+      "next_action": "PR #379 deployed in protected run 42985560728. Authenticated production verifier confirms chat_asset_matches_checkout=true; phone/tablet/desktop Chromium and 284 HUD safety tests passed. No live inference run.",
       "acceptance": "Deterministic frame tests show chunk coalescing, following only at bottom, preserved reading position and cancelled pending frames; existing HUD checks pass.",
       "evidence": [
         {
@@ -6085,6 +6085,13 @@
           "check": "18 mobile-chat tests including four new frame/scroll regressions; 284 full HUD safety tests; responsive/browser-budget/data checks",
           "result": "PASS; merged source. Production rollout pending readback. No model routing or provider execution changes.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/379"
+        },
+        {
+          "commit": "268b137d3311ea8e123372410cef1022773563f8",
+          "platform": "Protected production deploy to existing Cloudflare HUD",
+          "check": "Authenticated chat asset matches reviewed checkout; private auth, interactive Ask ROVOR and owner review device checks",
+          "result": "PASS. Live source verified; no claim of a measured device frame rate or new provider inference.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42985560728"
         }
       ]
     }
