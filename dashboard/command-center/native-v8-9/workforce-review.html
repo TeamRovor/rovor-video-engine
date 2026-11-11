@@ -42,6 +42,8 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 #page-status{font-size:12px;color:#a4d8ef}
 @media(max-width:560px){main{padding-top:14px}.status-grid{gap:8px}.stat{padding:12px}.stat strong{font-size:23px}.stat small{font-size:10px}h1{font-size:27px}.job{padding:14px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+.inbox-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0 10px}.inbox-overview div{border:1px solid var(--edge);border-radius:13px;background:linear-gradient(145deg,#0d304e,#08192c);padding:16px;min-width:0}.inbox-overview strong{display:block;font-size:clamp(20px,4vw,30px);overflow-wrap:anywhere;line-height:1.2;color:#e5f6ff}.inbox-overview span{display:block;color:var(--quiet);font-size:12px;margin-top:6px}.inbox-guidance{font-size:14px;line-height:1.5;color:var(--quiet);margin:0 0 15px}.decision-guide{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0 24px}.decision-guide div{background:#0b2139;border:1px solid var(--edge);border-radius:12px;padding:14px}.decision-guide strong{display:block;color:#e8f7ff;font-size:14px;margin-bottom:5px}.decision-guide span{font-size:13px;color:var(--quiet);line-height:1.5;display:block}.technical-panel{border:1px solid var(--edge);border-radius:14px;padding:14px;margin:20px 0;background:#07192d}.technical-panel>summary,.receipt-details>summary{cursor:pointer;color:var(--cyan);font-weight:700;font-size:14px;padding:5px 0;min-height:30px}.technical-panel[open]>summary{margin-bottom:12px}.receipt-details{margin-top:12px;border-top:1px solid #254663;padding-top:8px}.receipt-details>summary{font-size:12px;font-weight:600}.job .explanation{color:var(--ink);line-height:1.6;font-size:14px;margin:10px 0}.review-note{border-left:3px solid var(--cyan);padding:10px 14px;background:#0a2a43;border-radius:0 9px 9px 0;line-height:1.6;font-size:14px;margin:14px 0}.draft-output{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:15px;margin:10px 0;background:#061526;padding:16px;border-radius:10px;border:1px solid #254663}.draft-output h4{font-size:15px;line-height:1.4;margin:16px 0 5px;letter-spacing:0}.draft-output p{margin:7px 0}.draft-output ul{margin:5px 0;padding-left:22px}.draft-output code{white-space:pre-wrap}.review-feedback{min-height:22px;color:#d0e9f9;font-size:13px;line-height:1.5;margin:12px 0 0}.actions .defer{background:transparent}.actions .approve{background:#18516d;border-color:#72cfff}.draft .actions button{font-size:14px}.history-summary{font-size:13px;color:var(--quiet);margin:0 0 12px}.task-type{font-size:11px;font-weight:750;letter-spacing:.08em;color:var(--cyan);margin:0 0 7px;text-transform:uppercase}.draft-summary{border:1px solid #315f83;border-radius:10px;padding:12px 15px;margin:10px 0;background:#0b2942}.draft-summary p{font-size:14px;line-height:1.6;margin:8px 0;white-space:pre-wrap}.draft-summary strong{display:block;font-size:12px;color:var(--cyan);margin:0 0 4px}.draft-full{margin-top:10px}.draft-full>summary{cursor:pointer;color:var(--cyan);font-size:13px;font-weight:700;min-height:36px;padding:8px 0}.job[data-deferred="true"]{opacity:.82}.review-feedback:empty{display:none}@media(max-width:560px){.inbox-overview{gap:7px}.inbox-overview div{padding:11px 9px}.inbox-overview span{font-size:11px}.decision-guide{grid-template-columns:1fr;gap:6px}.decision-guide div{padding:10px 12px}.decision-guide strong,.decision-guide span{display:inline;font-size:13px}.decision-guide strong{margin-right:6px}.draft-output{font-size:15px;padding:12px}.draft .actions button{flex:1 1 100%}.technical-panel{padding:12px}}
+[hidden]{display:none!important}.quick-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0 20px}.quick-stop{border:1px solid #a75c72;border-radius:10px;min-height:44px;padding:10px 15px;background:#422a33;color:#ffdae0;font-size:14px;font-weight:750}.quick-controls a{font-size:13px;font-weight:650}.quick-controls span{font-size:12px;color:var(--quiet);line-height:1.4}.draft>button.defer{font:inherit;color:var(--cyan);border:1px solid #477d9f;background:#102a47;border-radius:9px;min-height:44px;padding:10px 16px}.receipt-details summary,.draft-full summary{overflow-wrap:anywhere}.review-feedback{overflow-wrap:anywhere}
 </style>
 <script type="module" src="/workforce-review.js"></script>
 </head>
@@ -49,12 +51,31 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 <main>
 <header class="top"><div class="brand">ROVOR DIGITAL<small>PRIVATE CLOUD WORKFORCE · OWNER DESK</small></div>
 <nav aria-label="Private navigation"><a href="/">Return to HUD</a><a href="/">Open Ask ROVOR on HUD</a></nav></header>
-<h1>Review completed cloud work</h1>
-<p class="intro">This page reads real private Cloudflare D1 receipts. Read the full generated draft, verify the model and receipt, then record a single owner PASS or FAIL. A review never publishes content or starts another model.</p>
+<h1>Review inbox</h1>
+<p class="intro">Your employees bring you their work. Decide whether the result is useful to ROVOR. Technical receipts are checked automatically.</p>
+<section class="inbox-overview" aria-label="Review overview">
+ <div><strong id="pending">—</strong><span>Need your decision</span></div>
+ <div><strong id="reviewed">—</strong><span>Reviewed</span></div>
+ <div><strong id="stop-state">—</strong><span>Workforce</span></div>
+</section>
+<p id="inbox-guidance" class="inbox-guidance">Loading your review queue…</p>
+<div class="quick-controls" aria-label="Workforce quick controls">
+ <button id="owner-stop" class="quick-stop" disabled>STOP workforce</button>
+ <a id="stop-fallback" href="https://github.com/TeamRovor/rovor-video-engine/actions/workflows/cloud-gemini-workforce.yml" rel="noreferrer">STOP via GitHub</a>
+ <span id="quick-control-note">Checking control access…</span>
+</div>
+<section class="decision-guide" aria-label="How to review work">
+ <div><strong>Keep this work</strong><span>The result is relevant and useful. Saves PASS.</span></div>
+ <div><strong>Reject this work</strong><span>The result is wrong, irrelevant or unusable. Saves FAIL.</span></div>
+ <div><strong>Not sure?</strong><span>Review later. No decision is recorded.</span></div>
+</section>
+<div class="section-head"><h2>Needs your attention</h2><button class="refresh" id="refresh" type="button">Refresh inbox</button></div>
+<p id="message" role="status" aria-live="polite">Loading your work…</p>
+<div id="jobs" class="grid" aria-live="off"></div>
+<p id="page-status" role="status" aria-live="polite"></p>
+<details class="technical-panel" id="history-panel"><summary>Past reviews &amp; other jobs</summary><div id="history" class="grid"></div></details>
+<details class="technical-panel"><summary>Workforce status &amp; advanced controls</summary>
 <section class="status-grid" aria-label="Private workforce summary">
-<div class="stat"><strong id="pending">—</strong><small>Awaiting review</small></div>
-<div class="stat"><strong id="reviewed">—</strong><small>Owner reviewed</small></div>
-<div class="stat"><strong id="stop-state">—</strong><small>Cloud job dispatch</small></div>
 <div class="stat"><strong id="native-clock" class="compact">—</strong><small id="native-detail">Last actual native cron event</small></div>
 <div class="stat"><strong id="standing-state" class="compact">—</strong><small>Seven-day recurring approval</small></div>
 <div class="stat"><strong id="github-discovery-state" class="compact">—</strong><small id="github-discovery-detail">Independent GitHub App · native clock</small></div>
@@ -62,8 +83,8 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 <section class="job" aria-label="Private owner controls">
 <h2>Owner controls</h2>
 <p id="owner-session" class="metadata" role="status">Checking owner session…</p>
-<p class="metadata">A PASS alone never starts the scheduler. Start explicitly authorizes seven days of fresh discovery triage, at most three attempts per rolling day and three pending reviews. STOP prevents new claims.</p>
-<div class="actions"><button id="owner-start" class="approve" disabled>Start recurring workforce</button><button id="owner-stop" class="reject" disabled>STOP workforce</button></div>
+<p class="metadata">Start lets ROVOR look for new work for seven days. It can attempt three jobs per rolling day and pauses when three drafts are awaiting review. STOP prevents new jobs from starting.</p>
+<div class="actions"><button id="owner-start" class="approve" disabled>Start recurring workforce</button></div>
 <p class="metadata"><a href="/login?next=%2Fworkforce-review.html">Sign in with your separate owner key</a>. <a href="https://github.com/TeamRovor/rovor-video-engine/actions/workflows/start-cloud-workforce.yml" rel="noreferrer">Protected GitHub fallback</a> remains available.</p>
 <p id="owner-action-status" class="metadata" role="status"></p>
 </section>
@@ -79,10 +100,7 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 <div class="actions"><button id="patch-task-button" class="approve" disabled>Queue reviewed source task</button></div>
 <p id="patch-preparation-status" class="metadata" role="status"></p>
 </section>
-<div class="section-head"><h2>Saved job receipts</h2><button class="refresh" id="refresh" type="button">Refresh receipts</button></div>
-<p id="message" role="status" aria-live="polite">Checking private records…</p>
-<div id="jobs" class="grid" aria-live="off"></div>
-<p id="page-status" role="status" aria-live="polite"></p>
+</details>
 <footer class="notice">This is the existing Cloudflare HUD review ledger, not the separate private ChatGPT Site database. A successful draft does not prove live nine-provider inference, external remaining free quota, or automatic publication. STOP prevents new claims; it cannot cancel an upstream call already sent.</footer>
 </main>
 </body>

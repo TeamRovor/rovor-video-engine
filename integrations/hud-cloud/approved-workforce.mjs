@@ -113,9 +113,13 @@ export function discoveryPrompt(key,priority){
  // pass raw discovery content, issue bodies, private code, logs or credentials.
  return 'ROVOR verified GitHub discovery: '+type+' (#'+num+'), priority '+priority+
   '/100, source '+link+'. You cannot browse this URL and have no source code or log contents. '+
-  'Write an owner-reviewable engineering triage brief under 350 words. Separate verified facts from unknowns. '+
-  'Give a precise read-only inspection checklist and 2-4 concrete tests to confirm or rule out likely causes. '+
-  'Recommend the smallest safe next action, including when to stop or request more evidence. '+
+  'Write a business-owner-friendly triage report under 250 words. Use exactly these Markdown section headings: '+
+  '## Bottom line, ## What was done, ## What is still unknown, ## Recommended next step. '+
+  'Under Bottom line explain in one plain-English sentence why this matters to ROVOR. '+
+  'Under What was done say that you produced an investigation plan, not a repair; describe only confirmed evidence. '+
+  'Under What is still unknown explain what you cannot verify, without guessing a cause. '+
+  'Under Recommended next step give one practical action in plain language, followed by 2-3 concise read-only checks for an engineer. '+
+  'Tell the owner what makes this investigation worth keeping; avoid acronyms or define them. '+
   'Do not invent a diagnosis, command results, files or a completed fix; do not execute, publish, merge, '+ 
   'or request credentials. This is a draft only, pending human PASS/FAIL.';
 }

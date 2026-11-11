@@ -128,3 +128,19 @@ test('review desk exposes native scheduler evidence and exact per-job usage with
  assert.match(html,/start-cloud-workforce\.yml/);
  assert.doesNotMatch(pageJS,/\/api\/hud\/workforce\/(tick|intake|control)/);
 });
+
+test('review is decision-first, full exact drafts remain available and defer is not a verdict',()=>{
+ assert.match(html,/Review inbox/);
+ assert.match(html,/Keep this work/);
+ assert.match(html,/Reject this work/);
+ assert.match(html,/Past reviews/);
+ assert.match(html,/Workforce status &amp; advanced controls/);
+ assert(html.indexOf('id="jobs"')<html.indexOf('id="history"'));
+ assert.match(pageJS,/loadExactDraft\(entry,entry\.human_review\)/);
+ assert.match(pageJS,/pendingLoads\.slice\(0,3\)/);
+ assert.match(pageJS,/No PASS or FAIL was recorded/);
+ assert.match(pageJS,/No code was changed and no technical fix was verified/);
+ assert.match(pageJS,/Read the complete employee report/);
+ assert.match(pageJS,/document\.createTextNode\(value\.trim\(\)\)/);
+ assert.doesNotMatch(pageJS,/\.innerHTML\s*=|insertAdjacentHTML|document\.write\(/);
+});
