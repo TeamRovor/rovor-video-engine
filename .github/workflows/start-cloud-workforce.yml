@@ -1,0 +1,68 @@
+name: START CLOUD WORKFORCE - seven-day discovery plan
+# Standing authorization is separate from a one-shot job. No model call
+# from a PR, or unchecked dispatch. The D1 server independently checks PASS.
+on:
+  workflow_dispatch:
+    inputs:
+      authorize_seven_day_discovery:
+        description: "Authorize seven days of fresh GitHub discovery triage, max 3 attempts per day, owner review required"
+        type: boolean
+        required: true
+        default: false
+  pull_request:
+    paths:
+      - '.github/workflows/start-cloud-workforce.yml'
+      - 'integrations/hud-cloud/approved-workforce.mjs'
+      - 'integrations/hud-cloud/schema.sql'
+      - 'tools/cloud_gemini_workforce_control.mjs'
+      - 'tests/test_hud_cloud_workforce.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify standing authorization, STOP and fresh discovery safety
+        run: |
+          node --check tools/cloud_gemini_workforce_control.mjs
+          node --check integrations/hud-cloud/approved-workforce.mjs
+          node --test tests/test_hud_cloud_workforce.mjs
+
+  activate-reviewed-standing-plan:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    environment: rovor-hud-production
+    concurrency:
+      group: rovor-gemini-workforce-owner-control
+      cancel-in-progress: false
+    env:
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+      ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
+      ROVOR_WORKFORCE_ACTION: enable_schedule
+      ROVOR_OWNER_CONFIRMS_NEW_TASK: ${{ inputs.authorize_seven_day_discovery }}
+    steps:
+      - name: Require explicit standing consent before arming cloud cron
+        run: |
+          if [ "${ROVOR_OWNER_CONFIRMS_NEW_TASK}" != "true" ]; then
+            echo "::error title=Owner authorization required::Check the single authorization box."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Activate reviewed standing discovery plan and verify private D1 readback
+        run: node tools/cloud_gemini_workforce_control.mjs
