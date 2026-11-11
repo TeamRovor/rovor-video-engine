@@ -137,7 +137,7 @@ async function refresh(clearNotice=true){
   const reviewedCount=rows.filter(x=>VERDICTS.has(x.human_review)).length;
   pending.textContent=String(pendingCount);
   reviewed.textContent=String(reviewedCount);
-  stop.textContent=data.enabled?'ON':'OFF';
+  stop.textContent=data.enabled?'ENABLED':'STOPPED';
   stop.title=data.enabled?'New job claims permitted by STOP only (all provider and review gates still apply)':
    'New model job claims stopped; saved drafts remain available for review';
   jobs.textContent='';
