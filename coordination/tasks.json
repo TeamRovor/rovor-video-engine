@@ -5979,6 +5979,30 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/105"
         }
       ]
+    },
+    {
+      "id": "cloud-gemini-website-offer-pilot-20261110",
+      "title": "Draft an owner-reviewed ROVOR Digital website offer and discovery call script",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor / owner decision required before one-time Gemini pilot",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-gemini-website-offer-pilot-20261110"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-10T20:33:00-06:00",
+      "next_update": "After an explicit owner-selected pilot_once workflow and a real private D1 draft receipt",
+      "next_action": "Ask the owner to inspect this new public-only candidate, then explicitly select pilot_once with its exact task ID and revision v2. Keep STOP disabled before/after one bounded request; record owner PASS/FAIL before enabling a schedule.",
+      "acceptance": "Exactly one new Gemini 3.5 Flash Lite cloud draft, authenticated model/D1 receipt, output digest and owner PASS/FAIL. No repeated v1 attempt, no publication, no external messages, no paid route and no unapproved scheduling.",
+      "cloud_inference": {
+        "revision": "v2",
+        "approved_for_cloud": false,
+        "data_class": "public_repository",
+        "employee": "Gus",
+        "kind": "plan",
+        "prompt": "You are producing a review-only business development asset for ROVOR Digital, a human-led creative and digital production business. Publicly described services include small-business websites, landing pages, logo/branding, social content, booking/inquiry setup, domain connection, business email, and online stores. Draft ONE concise one-page website service offer that speaks to a local small-business owner without claiming any existing clients, testimonials, published projects, prices, guarantees, delivery deadlines, or work already performed. Include: (1) a plain-English value proposition of at most 45 words, (2) three clear service scope options with differences described but no prices, (3) an eight-question discovery call script that asks about business goals, current domain/site, customer conversion action, content/assets, approvals, timeline preferences, accessibility, and handoff, (4) a neutral follow-up message of at most 80 words that invites the prospect to discuss the project but makes no false promises, and (5) a factual owner-review checklist that flags anything requiring verification before use. Keep the overall draft under 600 words. This is for owner PASS/FAIL review only: do not send, publish, modify files, invent contacts, or represent any work as completed."
+      }
     }
   ]
 }
