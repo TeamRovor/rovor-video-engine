@@ -38,9 +38,9 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const discoveryImport = "import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';";
   const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
   const nativeDiscoveryImport = "import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';";
-  const githubPatchImport = "import {queueGithubPatch,githubPatchStatus,githubPatchTick} from './github-patch-gateway.mjs';";
+  const githubPatchImport = "import {queueGithubPatch,githubPatchStatus,githubPatchTick,previewGithubPatchSource,queueGithubPatchTask} from './github-patch-gateway.mjs';";
   if(core.split(githubPatchImport).length!==2)throw Error('Unexpected GitHub patch import');
-  const githubPatchUnavailable = "const queueGithubPatch=()=>({status:404,body:{error:'cloudflare_only'}}),githubPatchStatus=()=>({source:'cloudflare_only',configured:false,items:[]});\n";
+  const githubPatchUnavailable = "const queueGithubPatch=()=>({status:404,body:{error:'cloudflare_only'}}),githubPatchStatus=()=>({source:'cloudflare_only',configured:false,items:[]}),previewGithubPatchSource=queueGithubPatch,queueGithubPatchTask=queueGithubPatch;\n";
   if(core.split(nativeDiscoveryImport).length!==2)throw Error('Unexpected native discovery import');
   const nativeDiscoveryUnavailable = "const nativeDiscoveryStatus=()=>({source:'cloudflare_only',configured:false,enabled:false});\n";
   const discoveryValidatorImport = "import {validateIdea} from './idea-inbox.mjs';";

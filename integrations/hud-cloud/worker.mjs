@@ -5,7 +5,7 @@ import {submitIdea,listIdeas} from './idea-inbox.mjs';
 import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
 import {getRepoSource} from './repo-source.mjs';
 import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';
-import {queueGithubPatch,githubPatchStatus,githubPatchTick} from './github-patch-gateway.mjs';
+import {queueGithubPatch,githubPatchStatus,githubPatchTick,previewGithubPatchSource,queueGithubPatchTask} from './github-patch-gateway.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
 import {intake as workforceIntake,control as workforceControl,status as workforceStatus,
   draft as workforceDraft,review as workforceReview,tick as workforceTick,recordNativeTick}
@@ -407,7 +407,7 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     (url.pathname === '/api/hud/chat/bridge' || url.pathname === '/api/hud/chat/claim' ||
       /^\/api\/hud\/chat\/result\/[a-f0-9-]{36}$/i.test(url.pathname));
   let authRequest = request;
-  if (!ingest && !chatWriter && !discoveryWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/workforce/review' || url.pathname === '/api/hud/owner/workforce' || url.pathname === '/api/hud/owner/github-patch' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
+  if (!ingest && !chatWriter && !discoveryWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/workforce/review' || url.pathname === '/api/hud/owner/workforce' || url.pathname === '/api/hud/owner/github-patch' || url.pathname === '/api/hud/owner/patch-source' || url.pathname === '/api/hud/owner/patch-task' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
     try {
       const cookie = String(request.headers.get('Cookie') || '').split(';').map(c => c.trim()).find(c => c.startsWith('rovor_hud_reader='));
       if (cookie) authRequest = {headers: new Headers({Authorization: 'Bearer ' + decodeURIComponent(cookie.slice(17))})};
@@ -478,11 +478,19 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     }
     if(request.method==='GET'&&url.pathname==='/api/hud/owner/session')
       return response(200,{configured:ownerConfigured(env),owner_authenticated:await ownerSession(request,env,now)});
-    if(request.method==='POST'&&['/api/hud/owner/workforce','/api/hud/owner/github-patch'].includes(url.pathname)){
+    if(request.method==='POST'&&['/api/hud/owner/workforce','/api/hud/owner/github-patch','/api/hud/owner/patch-source','/api/hud/owner/patch-task'].includes(url.pathname)){
       if(request.headers.get('Origin')!==url.origin)return response(403,{error:'origin_denied'});
       if(!await ownerSession(request,env,now))return response(403,{error:'owner_session_required'});
       let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_owner_operation'});}
       if(!body||typeof body!=='object'||Array.isArray(body))return response(400,{error:'invalid_owner_operation'});
+      if(url.pathname==='/api/hud/owner/patch-source'){
+        const preview=await previewGithubPatchSource(env,body,now,fetcher);
+        return response(preview.status,preview.body);
+      }
+      if(url.pathname==='/api/hud/owner/patch-task'){
+        const queued=await queueGithubPatchTask(env,body,now,fetcher);
+        return response(queued.status,queued.body);
+      }
       if(url.pathname==='/api/hud/owner/github-patch'){
         if(Object.keys(body).sort().join(',')!=='confirm,job_id,output_sha256'||body.confirm!=='authorize_draft_pr')
           return response(400,{error:'explicit_patch_authorization_required'});

@@ -28,7 +28,7 @@ export async function intake(db,body,now=Date.now()){
      typeof body.revision!=='string'||!/^v(?:[2-9]|[1-9][0-9]+)$/.test(body.revision))
      throw Error('invalid');
   job=validateJob(body.job);
-  if(!job.id.startsWith('gc-')||job.prompt.length>4000||
+  if(!job.id.startsWith('gc-')||job.id.startsWith('gc-patch-src-')||job.prompt.length>4000||
      !Number.isSafeInteger(now)||now<=0)throw Error('invalid');
  }catch{return {status:400,body:{error:'canonical_approval_required'}};}
  try{
@@ -63,7 +63,7 @@ export async function control(db,enabled,seriesCommit=null,now=Date.now()){
     db.prepare('UPDATE hud_cloud_workforce_series SET active=0 WHERE id=1').bind(),
     db.prepare('UPDATE hud_cloud_workforce_control SET enabled=0 WHERE id=1').bind(),
     db.prepare(`UPDATE hud_cloud_workforce_jobs SET state='failed',finished_at=?,
-     error_code='stopped_before_claim' WHERE state='queued' AND id LIKE 'gc-rec-%'`).bind(now)
+     error_code='stopped_before_claim' WHERE state='queued' AND (id LIKE 'gc-rec-%' OR id LIKE 'gc-patch-src-%')`).bind(now)
    ]);
    if(results.slice(0,2).some(r=>r.meta?.changes!==1))
     return {status:503,body:{error:'workforce_control_unavailable'}};
@@ -262,6 +262,7 @@ export async function tick(env,now=Date.now(),send=fetch){
   if(plan?.active===1)await refillDiscovery(db,plan,now);
   const claim=await db.prepare(`UPDATE hud_cloud_workforce_jobs SET state='running',started_at=?
     WHERE id=(SELECT id FROM hud_cloud_workforce_jobs WHERE state='queued'
+      AND (id NOT LIKE 'gc-patch-src-%' OR EXISTS(SELECT 1 FROM hud_github_patch_task_sources s WHERE s.job_id=hud_cloud_workforce_jobs.id))
       ORDER BY created_at,id LIMIT 1)
     AND (SELECT enabled FROM hud_cloud_workforce_control WHERE id=1)=1
     AND NOT EXISTS(SELECT 1 FROM hud_cloud_workforce_jobs WHERE state IN ('running','uncertain'))

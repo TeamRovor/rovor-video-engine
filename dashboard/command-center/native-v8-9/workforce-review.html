@@ -11,7 +11,7 @@
 :root{color-scheme:dark;--cyan:#71cfff;--ink:#d6eefe;--quiet:#92b5d0;--edge:#315f83;--surface:#0b2139;--back:#040d1a}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 74% 0%,#113a5b 0%,#061b30 29%,var(--back) 75%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100dvh}
 a{color:var(--cyan)}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
-button:disabled{opacity:.5;cursor:not-allowed}main{max-width:1130px;margin:auto;padding:26px clamp(16px,4vw,40px) 80px}
+button:disabled{opacity:.5;cursor:not-allowed}#patch-preparation input,#patch-preparation select,#patch-preparation textarea{font:16px system-ui;width:100%;color:var(--ink);background:#07192d;border:1px solid var(--edge);border-radius:8px;padding:9px}#patch-preparation label{display:block;margin:10px 0;font-size:13px}#patch-preparation input[type=checkbox]{width:auto}#patch-preparation pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:320px;overflow:auto}#patch-preparation .line-range{display:flex;gap:12px}#patch-preparation .line-range label{flex:1}main{max-width:1130px;margin:auto;padding:26px clamp(16px,4vw,40px) 80px}
 .top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;border-bottom:1px solid var(--edge);padding:3px 0 22px}
 .brand{font-size:14px;font-weight:850;letter-spacing:.27em;color:#e8f7ff}.brand small{display:block;letter-spacing:.16em;color:var(--quiet);font-size:10px;margin-top:8px;font-weight:600}
 nav{display:flex;gap:10px;flex-wrap:wrap}nav a{text-decoration:none;border:1px solid var(--edge);background:#102a47;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700}
@@ -65,6 +65,18 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 <div class="actions"><button id="owner-start" class="approve" disabled>Start recurring workforce</button><button id="owner-stop" class="reject" disabled>STOP workforce</button></div>
 <p class="metadata"><a href="/login?next=%2Fworkforce-review.html">Sign in with your separate owner key</a>. <a href="https://github.com/TeamRovor/rovor-video-engine/actions/workflows/start-cloud-workforce.yml" rel="noreferrer">Protected GitHub fallback</a> remains available.</p>
 <p id="owner-action-status" class="metadata" role="status"></p>
+</section>
+<section id="patch-preparation" class="job" hidden aria-label="Prepare an owner-scoped engineering task" style="margin-top:15px">
+<h2>Prepare an engineering task</h2>
+<p class="metadata">Read a small, exact source excerpt through ROVOR’s own GitHub App. Nothing is sent to a model until you explicitly authorize the excerpt and objective.</p>
+<label>Allowed file<select id="patch-path"></select></label>
+<div class="line-range"><label>First line<input id="patch-start-line" type="number" min="1" max="10000" value="1"></label><label>Last line<input id="patch-end-line" type="number" min="1" max="10000" value="20"></label></div>
+<label>Small improvement objective<textarea id="patch-brief" maxlength="500" rows="3" placeholder="Describe one precise, safe improvement"></textarea></label>
+<div class="actions"><button id="patch-preview-button">Read exact source excerpt</button></div>
+<pre id="patch-preview-text" class="draft" hidden></pre>
+<label id="patch-consent-label" hidden><input id="patch-consent" type="checkbox"> I approve this exact excerpt and objective as public-safe for the pinned free Gemini model. They contain no credentials, client data or confidential code.</label>
+<div class="actions"><button id="patch-task-button" class="approve" disabled>Queue reviewed source task</button></div>
+<p id="patch-preparation-status" class="metadata" role="status"></p>
 </section>
 <div class="section-head"><h2>Saved job receipts</h2><button class="refresh" id="refresh" type="button">Refresh receipts</button></div>
 <p id="message" role="status" aria-live="polite">Checking private records…</p>
