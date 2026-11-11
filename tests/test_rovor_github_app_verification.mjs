@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
 import {githubAppCredentialIssue} from '../integrations/hud-cloud/github-app.mjs';
-import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability,resolveOptionalPatchDeployment,verifyGithubPatchWorker,verifyDeployedOwnerSession} from '../integrations/hud-cloud/verify-github-app.mjs';
+import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability,resolveOptionalPatchDeployment,verifyGithubPatchWorker,verifyDeployedOwnerSession,verifyDeployedRepoCatchup} from '../integrations/hud-cloud/verify-github-app.mjs';
 import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-secret-payload.mjs';
 const NOW=Date.now(),pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
 const env={ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem,
@@ -245,4 +245,33 @@ test('protected deployment forwards exact verified write scope timestamp, never 
  await assert.rejects(()=>verifyGithubPatchWorker(enabled,async(_url,opts)=>opts.headers.Authorization?
   Response.json({...source,write_scope_verified_at:NOW-1}):new Response(null,{status:401}),
   {attempts:1,pause:async()=>{}}),/github_patch_worker_config_mismatch/);
+});
+
+
+test('deployed repo catch-up is private and distinguishes installed route from real snapshot',async()=>{
+ const value={source:'rovor_private_repo_catchup',state:'not_checked',
+  checked_at:null,observed_at:null,snapshot:null,private_reader_required:true,
+  model_called:false,repository_written:false,mac_required:false,chatgpt_required:false};
+ const calls=[];const mock=async(url,init)=>{
+  assert.equal(url,'https://rovor-hud-telemetry.rovordigital.workers.dev/api/hud/workforce/repo-catchup');
+  calls.push(init.headers.Authorization?'reader':'anonymous');
+  return init.headers.Authorization?Response.json(value):new Response(null,{status:401});
+ };
+ const first=await verifyDeployedRepoCatchup(env,mock);
+ assert.deepEqual(calls,['anonymous','reader']);assert.equal(first.checkpoint_present,false);
+ assert.equal(first.state,'not_checked');
+ const snapshot={head_sha:'a'.repeat(40),recent_commit_shas:['a'.repeat(40)],
+  changed_paths:['architecture/ROVOR-AUTONOMOUS-DISCOVERY.md'],changed_paths_truncated:false,
+  failed_run_ids:[123],recent_success_run_ids:[234],open_issue_numbers:[],open_pr_numbers:[4]};
+ const proof=await verifyDeployedRepoCatchup(env,async(_url,init)=>init.headers.Authorization?
+  Response.json({...value,state:'ready',snapshot}):new Response(null,{status:401}));
+ assert.equal(proof.checkpoint_present,true);assert.equal(proof.head_sha,'a'.repeat(40));
+ assert.equal(proof.repository_written,false);assert.equal(proof.changed_path_count,1);
+});
+test('deployed repo catch-up refuses public exposure and fabricated checkpoint',async()=>{
+ await assert.rejects(()=>verifyDeployedRepoCatchup(env,async()=>Response.json({})),/repo_catchup_anonymous_exposure/);
+ await assert.rejects(()=>verifyDeployedRepoCatchup(env,async(_url,init)=>init.headers.Authorization?
+  Response.json({source:'rovor_private_repo_catchup',state:'ready',snapshot:null,
+   private_reader_required:true,model_called:false,repository_written:false,
+   mac_required:false,chatgpt_required:false}):new Response(null,{status:401})),/repo_catchup_status_invalid/);
 });
