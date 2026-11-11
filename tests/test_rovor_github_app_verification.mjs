@@ -294,3 +294,22 @@ test('protected writer-only catch-up refresh verifies responses without disclosi
  assert.equal(proof.repository_written,false);
  assert(!JSON.stringify(proof).includes(config.ROVOR_HUD_WRITER_TOKEN));
 });
+
+
+test('writer catch-up refresh retries transient Cloudflare propagation but fails immediately on denied writer',async()=>{
+ const config={...env,ROVOR_HUD_WRITER_TOKEN:'w'.repeat(40)};
+ let sends=0,retries=0;
+ const proof=await verifyDeployedRepoCatchupRefresh(config,async(_url,init)=>{
+  if(!init.headers.Authorization)return new Response(null,{status:401});
+  sends++;
+  return sends===1?new Response(null,{status:404}):
+   Response.json({state:'ready',model_called:false,repository_written:false});
+ },{attempts:3,pause:async()=>{retries++},intervalMs:1});
+ assert.equal(proof.refresh_state,'ready');assert.equal(sends,2);assert.equal(retries,1);
+ let denials=0;
+ await assert.rejects(()=>verifyDeployedRepoCatchupRefresh(config,async(_url,init)=>{
+  if(!init.headers.Authorization)return new Response(null,{status:401});
+  denials++;return new Response(null,{status:401});
+ },{attempts:3,pause:async()=>{throw Error('should not retry')} }),/repo_catchup_refresh_http_401/);
+ assert.equal(denials,1);
+});
