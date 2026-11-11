@@ -6037,7 +6037,8 @@
       "branch": "fix/workforce-owner-admission-guidance-20261111",
       "scopes": [
         "dashboard/command-center/native-v8-9/workforce-review.js",
-        "tests/test_workforce_admission_guidance.mjs"
+        "tests/test_workforce_admission_guidance.mjs",
+        "tests/test_hud_private_review_page.mjs"
       ],
       "depends_on": [],
       "updated_at": "2026-11-11T07:24:11.751229+00:00",
