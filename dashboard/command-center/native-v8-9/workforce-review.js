@@ -581,11 +581,18 @@ async function refresh(clearNotice=true){
    if(context.evidenceLabel){
     const link=make('a','metadata',context.evidenceLabel);link.href=context.url;link.rel='noreferrer';link.target='_blank';heading.append(link);
    }
+   const superseded=entry.state==='failed'&&entry.error_code==='discovery_no_longer_actionable'&&
+    entry.started_at==null&&entry.actual_model==null;
    const humanState=awaiting?'NEEDS DECISION':entry.human_review==='passed'?'KEPT · PASS':
-    entry.human_review==='failed'?'REJECTED · FAIL':entry.state==='running'?'IN PROGRESS':
+    entry.human_review==='failed'?'REJECTED · FAIL':superseded?'SKIPPED · OUTDATED':
+    entry.state==='running'?'IN PROGRESS':
     entry.state==='queued'?'WAITING TO START':entry.state==='uncertain'?'NEEDS TECHNICAL CHECK':'NOT COMPLETED';
    const tag=make('span','state '+(awaiting?'wait':VERDICTS.has(entry.human_review)?'ok':''),humanState);
    header.append(heading,tag);card.append(header);
+   if(superseded){
+    card.append(make('p','explanation','ROVOR checked this discovery against current GitHub metadata and found it was no longer eligible. The job was skipped before any AI inference. No provider tokens were spent on this job, no code was changed, and no owner decision is needed.'));
+    card.append(make('p','metadata','Recorded outcome: discovery_no_longer_actionable. A later START will not replay this item.'));
+   }
    if(awaiting){
     card.append(ownerBrief(entry,context));
     card.append(make('div','review-note','Your decision: '+context.decision));

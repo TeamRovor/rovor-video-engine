@@ -34,7 +34,11 @@ const now=Date.now(),output='## Bottom line\nA failed check may block a release.
 const records=[
  {id:'gc-rec-one',task_id:'cloud-discovery-run-1234',employee:'Mike',kind:'code_review',title:'Investigate verified GitHub discovery run-1234',state:'needs_review',human_review:'not_recorded',created_at:now-10,finished_at:now,actual_model:'gemini-3.5-flash-lite',output_sha256:hash(output),provider:'google-gemini-cloud',tokens_input:34,tokens_output:51},
  {id:'gc-rec-two',task_id:'cloud-discovery-issue-88',employee:'Mike',kind:'code_review',title:'Review issue 88',state:'needs_review',human_review:'not_recorded',created_at:now-20,finished_at:now,actual_model:'gemini-3.5-flash-lite',output_sha256:hash(legacy)},
- {id:'gc-old',task_id:'old',employee:'Gus',kind:'plan',title:'Old approved result',state:'needs_review',human_review:'passed',created_at:now-30,finished_at:now,actual_model:'gemini-3.5-flash-lite',output_sha256:hash(legacy)}
+ {id:'gc-old',task_id:'old',employee:'Gus',kind:'plan',title:'Old approved result',state:'needs_review',human_review:'passed',created_at:now-30,finished_at:now,actual_model:'gemini-3.5-flash-lite',output_sha256:hash(legacy)},
+ {id:'gc-rec-skipped',task_id:'cloud-discovery-run-5678',employee:'Mike',kind:'code_review',
+  title:'Outdated check 5678',state:'failed',human_review:'not_recorded',
+  error_code:'discovery_no_longer_actionable',started_at:null,created_at:now-45,finished_at:now,
+  actual_model:null,output_sha256:null}
 ];
 const writes=[];let corrupt=false;
 async function main(){
@@ -112,6 +116,11 @@ async function main(){
   assert(!info.overflow,name+' horizontal overflow');
   assert(info.buttons.every(h=>h>=44),name+' tap targets too small');
   assert.equal(info.history,false);assert.equal(info.details,false);assert.equal(info.images,0);
+  const skipped=await evaluate('return document.querySelector("#history").textContent');
+  assert(skipped.includes('SKIPPED · OUTDATED')&&skipped.includes('No provider tokens were spent'),
+    name+' skipped work is not explained to the owner');
+  assert(!await evaluate('return !!document.querySelector("#history button.approve,#history button.reject")'),
+    'skipped job cannot be accidentally reviewed');
   assert(info.summary.includes('The cause is not verified.'));
   const reviewClaims=await evaluate('return Array.from(document.querySelectorAll("#jobs .report-claims")).map(e=>e.textContent)');
   assert.equal(reviewClaims.length,2,name+' missing employee report detail');

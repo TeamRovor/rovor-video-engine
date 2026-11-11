@@ -178,3 +178,12 @@ test('specific reported benefit, risks and next step are extracted as unverified
  assert.match(pageJS,/section\.append\(make\('h5','',label\),make\('p','',content\|\|missing\)\)/);
  assert.doesNotMatch(pageJS,/\.innerHTML\s*=|insertAdjacentHTML/);
 });
+
+test('superseded preflight jobs are explained without claiming inference, approval or changed code',()=>{
+ assert.match(pageJS,/SKIPPED · OUTDATED/);
+ assert.match(pageJS,/discovery_no_longer_actionable/);
+ assert.match(pageJS,/No provider tokens were spent on this job/);
+ assert.match(pageJS,/no owner decision is needed/);
+ assert.match(pageJS,/A later START will not replay this item/);
+ assert.match(pageJS,/entry\.started_at==null&&entry\.actual_model==null/);
+});
