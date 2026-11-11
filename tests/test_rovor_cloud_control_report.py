@@ -135,5 +135,29 @@ class ControlReportTests(unittest.TestCase):
         self.assertFalse(ops.deployment_secrets(e)["private_hud_writer"])
 
 
+    def test_legacy_control_center_cannot_replace_production_worker(self):
+        source = (ROOT / ".github/workflows/rovor-cloud-control-center.yml").read_text()
+        protected = (ROOT / ".github/workflows/deploy-private-hud-cloudflare.yml").read_text()
+        self.assertIn("workflow_dispatch:", source)
+        self.assertIn("audit_only", source)
+        self.assertNotIn("deploy_existing_hud", source)
+        self.assertNotIn("deploy_and_test_gemini", source)
+        self.assertNotIn("  deploy-hud:", source)
+        self.assertNotIn("  gemini-canary:", source)
+        self.assertNotIn("wrangler deploy", source)
+        self.assertNotIn("wrangler secret bulk", source)
+        self.assertNotIn("wrangler d1 execute DB --remote", source)
+        self.assertNotIn("  schedule:", source)
+        self.assertIn("inputs.verify_provider_catalog_readback == true", source)
+        self.assertNotIn("github.event_name == 'push' ||", source)
+        self.assertIn("deploy-private-hud-cloudflare.yml", source)
+        self.assertIn("workflow_dispatch:", protected)
+        self.assertIn("branches: [main]", protected)
+        self.assertIn("wrangler deploy --config wrangler.github.jsonc", protected)
+        self.assertIn("wrangler secret bulk --config wrangler.github.jsonc", protected)
+        self.assertIn("Verify independent GitHub", protected)
+
+
+
 if __name__=="__main__":
     unittest.main()
