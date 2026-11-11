@@ -123,6 +123,10 @@ export async function runCanary({provider,cfg,env,approval,fetcher=(...args)=>gl
        if(actual_model!==cfg.model){status='failed';error_code='model_mismatch';}
        else if(choice?.finish_reason!=='stop'||choice?.message?.content!==marker){
          status='failed';error_code='canary_mismatch';
+       }else if(tokens_input===null||tokens_output===null||tokens_input<1||tokens_output<1){
+         // A canary without exact positive provider token receipts cannot
+         // authorize a free-only model route, even with an exact text marker.
+         status='failed';error_code='usage_unverified';
        }else{
          status='needs_review';error_code=null;
          canary_sha256=await sha256(JSON.stringify({provider,model:cfg.model,canary_id:approval.canary_id,marker,observed_at:now}));

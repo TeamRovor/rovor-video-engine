@@ -194,3 +194,32 @@ test('invalid Gemini REST and Cloudflare catalog IDs are denied before canary re
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,0);
  }
 });
+
+test('exact marker without positive provider usage is not verified, and canary ID remains consumed',async()=>{
+ for(const usage of [
+  undefined,{prompt_tokens:17},{completion_tokens:9},
+  {prompt_tokens:0,completion_tokens:9},{prompt_tokens:17,completion_tokens:0},
+  {prompt_tokens:-1,completion_tokens:9},{prompt_tokens:17,completion_tokens:'9'},
+  {prompt_tokens:1.5,completion_tokens:9}
+ ]) {
+  const {sqlite,env}=setup(),cfg=config('groq'),a=approval('groq',cfg);
+  let sent=0;
+  const reply=()=>Response.json({model:cfg.model,
+   choices:[{message:{content:marker(a)},finish_reason:'stop'}],...(usage?{usage}:{})});
+  const first=await runCanary({provider:'groq',cfg,env,approval:a,now:NOW,
+   fetcher:async()=>{sent++;return reply();}});
+  assert.equal(first.status,'failed');
+  assert.equal(first.reason,'usage_unverified');
+  assert.equal(first.canary_sha256,null);
+  assert.equal(first.canary_at,null);
+  assert.equal(first.human_review,'not_recorded');
+  const row=sqlite.prepare('SELECT status,error_code,output FROM ghost_cloud_attempts').get();
+  assert.equal(row.status,'failed');assert.equal(row.error_code,'usage_unverified');
+  assert.equal(row.output,null);
+  const repeat=await runCanary({provider:'groq',cfg,env,approval:a,now:NOW+1,
+   fetcher:async()=>{sent++;throw Error('must never repeat unverified canary');}});
+  assert.equal(repeat.status,'denied');
+  assert.equal(repeat.reason,'canary_id_used');
+  assert.equal(sent,1);
+ }
+});

@@ -1151,25 +1151,28 @@ function updateBoard(target,markup,findBoard){
  return true;
 }
 let started=false;
+let requestImmediateRefresh=null;
 function start(){
  if(started)return;
  started=true;
  let busy=false,last=null,lastInventory=null,lastCloud=null,lastHourly=null,lastMinute=null,lastGroqCloud=null,updated=0;
  const isOriginal=n=>n.querySelector('h3')?.textContent?.trim()==='YOUR OMNIROUTE CONNECTIONS';
+ // The Workload drawer stays mounted when closed. Never run seven private
+ // network reads every ten seconds just because its hidden DOM still exists.
+ const drawerVisible=()=>!document.hidden&&document.getElementById?.('screen')?.hidden!==true;
  // After first render the heading changes, so the old placeholder selector
  // cannot find the board again. Keep the replacement selectable for live sync.
  const slot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
    n=>!n.hidden&&(n.classList.contains('rvq-board')||isOriginal(n)));
- // Never replace the inspected provider DOM during scrolling, selection, or
- // an active touch/mouse gesture. Continue refreshing authenticated evidence;
- // stage the most recent view and apply it after a quiet period.
+ // Preserve active touch, scroll, text selection and keyboard inspection.
+ // Network receipts continue updating, but replacing the DOM waits for idle.
  let gestureHeld=false,lastInteractionAt=-Infinity,pendingMarkup=null,pendingAt=0,resumeTimer=null;
  const inspecting=()=>gestureHeld||Date.now()-lastInteractionAt<1900;
  const scheduleResume=()=>{
    if(resumeTimer!==null&&typeof clearTimeout==='function')clearTimeout(resumeTimer);
    if(typeof setTimeout==='function')resumeTimer=setTimeout(()=>{
      resumeTimer=null;
-     if(!document.hidden&&slot())void sync();
+     if(drawerVisible()&&slot())void sync();
    },2100);
  };
  const markInteraction=(event,hold=false)=>{
@@ -1193,10 +1196,10 @@ function start(){
      document.addEventListener(name,releaseGesture,{passive:true});
  }
  async function sync(){
-   if(busy||document.hidden)return;
+   if(busy||!drawerVisible())return;
    const original=slot();if(!original)return;
    if(pendingMarkup&&!inspecting()&&original.classList.contains('rvq-board')){
-     // An old queued view cannot be painted as live after its source expires.
+     // Discard outdated pending evidence; never mark it live after expiry.
      if(Date.now()-pendingAt<=5000)updateBoard(original,pendingMarkup,slot);
      pendingMarkup=null;
    }
@@ -1259,18 +1262,22 @@ function start(){
    lastGeminiDirect=geminiCatalog&&geminiUsage?{catalog:geminiCatalog,usage:geminiUsage,at:updated}:null;
    lastExtras={cloud,hourly,minute,geminiProject,groqCloud,at:updated};
    const target=slot();if(target){
-     const nextMarkup=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject,groqCloud);
+     const markup=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject,groqCloud);
      if(target.classList.contains('rvq-board')&&inspecting()){
-       pendingMarkup=nextMarkup;pendingAt=Date.now();
+       pendingMarkup=markup;pendingAt=Date.now();
      }else{
        pendingMarkup=null;
-       updateBoard(target,nextMarkup,slot);
+       updateBoard(target,markup,slot);
      }
    }
    } finally {
      busy=false;
    }
  }
+ // The original HUD calls this after mounting the Workload drawer, so opening
+ // it updates immediately instead of waiting for a ten-second background tick.
+ // No duplicate requests occur while a previous authenticated read is active.
+ requestImmediateRefresh=()=>{void sync();};
  // Deliberate user action: copy a non-secret Mac diagnostic command.
  // This cannot start remote work or imply a service is running.
  if(typeof document.addEventListener==='function')document.addEventListener('click',async event=>{
@@ -1291,16 +1298,16 @@ function start(){
    observePending=true;
    Promise.resolve().then(()=>{
      observePending=false;
-     if([...document.querySelectorAll('#rovor-workload-popup .wl-card')].some(
+     if(drawerVisible()&&[...document.querySelectorAll('#rovor-workload-popup .wl-card')].some(
          n=>!n.hidden&&isOriginal(n)))void sync();
    });
  });
  observer.observe(document.body,{childList:true,subtree:true});
  // Refresh the EXISTING popup even after its original heading was replaced.
  // Do not poll or render when the document is hidden or popup is absent.
- setInterval(()=>{if(slot())void sync();},10000);
+ setInterval(()=>{if(drawerVisible()&&slot())void sync();},10000);
  void sync();
 }
-return {render,start,captureState,restoreState,updateBoard};
+return {render,start,refresh:()=>requestImmediateRefresh?.(),captureState,restoreState,updateBoard};
 })();
 

@@ -18,9 +18,10 @@ const slot={
 };
 class Clock extends Date{static now(){return clock;}}
 class Observe{constructor(fn){observer=fn;}observe(){}}
+const drawer={hidden:false};
 const document={
  hidden:false,body:{},
- getElementById:()=>({}),
+ getElementById:id=>id==='screen'?drawer:({}),
  querySelectorAll:()=>[slot],
  addEventListener:(name,fn)=>events.set(name,[...(events.get(name)||[]),fn])
 };
@@ -86,25 +87,32 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
  document.hidden=true;clock+=11000;
  intervals[0]();await flush();
  assert.equal(reads,11,'hidden HUD must not poll');
- // Active touch must hold the visible DOM stable even when D1 changes.
- // The latest settled sample is painted immediately after quiet-time release.
  document.hidden=false;
+ drawer.hidden=true;clock+=11000;
+ intervals[0]();await flush();
+ assert.equal(reads,11,'closed Workload drawer must not keep polling seven private endpoints');
+ drawer.hidden=false;clock+=11000;
+ board.refresh();board.refresh();
+ await flush();await flush();
+ assert.equal(reads,13,'reopening Workload immediately refreshes the two missing windows once');
+ assert.equal(hourReads,5);assert.equal(minuteReads,5);
+ assert.equal(dayReads,3,'reopen must reuse the valid shared 24h snapshot');
+ // A touched provider must not get replaced mid-gesture, even as verified
+ // counters move. The newest queued report paints once idle; hidden stays idle.
  context.window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT=null;
  requests=3;clock+=11000;
- const event={target:{closest:()=>({})}};
- assert.equal(events.has('pointerdown'),true);
- events.get('pointerdown')[0](event);
+ const touched={target:{closest:()=>({})}},beforeWrites=writes;
+ events.get('pointerdown')[0](touched);
  intervals[0]();await flush();await flush();
- assert.equal(reads,14,'telemetry still refreshes while the owner is touching');
- assert.equal(writes,4,'fresh evidence must not replace the touched provider controls');
- events.get('pointerup')[0](event);
+ assert.equal(reads,16,'authenticated polling continues during pointer gesture');
+ assert.equal(writes,beforeWrites,'DOM must not be replaced during a held touch');
+ events.get('pointerup')[0](touched);
  clock+=2200;
  delayed.at(-1)();await flush();await flush();
- assert.equal(writes,5,'latest queued evidence paints when gesture ends');
- // Return to a hidden tab: neither readings nor paints should resume.
- document.hidden=true;clock+=11000;
+ assert.equal(writes,beforeWrites+1,'latest buffered view paints once the touch ends');
+ drawer.hidden=true;clock+=11000;
  intervals[0]();await flush();
- assert.equal(writes,5);
- console.log('HUD popup live refresh after replacement: PASS');
+ assert.equal(writes,beforeWrites+1,'closed drawer must stay undisturbed');
+ console.log('HUD popup refresh, hidden-drawer suspension, immediate reopen and touch-safe paint: PASS');
 })().catch(e=>{console.error(e);process.exitCode=1;});
 
