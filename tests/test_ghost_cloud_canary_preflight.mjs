@@ -8,7 +8,7 @@ import {preflight,runCanary} from '../integrations/ghost-cloud/canary-preflight.
 const NOW=Date.now();
 const hash='a'.repeat(64);
 const config=(provider='groq',more={})=>({
- enabled:true,model:provider==='openrouter'?'vendor/model:free':provider==='huggingface'?'vendor/model:pinned':'vendor-model-1',
+ enabled:true,model:provider==='openrouter'?'vendor/model:free':provider==='huggingface'?'vendor/model:pinned':provider==='cloudflare-ai'?'@cf/meta/llama-3.1-8b-instruct':'vendor-model-1',
  pool:'pool-'+provider,zero_cost:true,commercial_use:true,evidence_sha256:hash,
  verified_at:NOW-1000,valid_until:NOW+3600000,requests_per_day:9,tokens_per_day:10000,
  min_interval_ms:1000,max_input_bytes:500,max_output_tokens:64,roles:['Walter'],kinds:['checklist'],...more
@@ -174,4 +174,23 @@ test('denied canary cannot become ordinary work after its one-time approval expi
  const result=await tick(env,async()=>{calls++;return success(marker(deniedApproval),cfg.model);},NOW+120000);
  assert.equal(result.dispatched,0);assert.equal(calls,0);
  assert.equal(sqlite.prepare('SELECT count(*) n FROM ghost_cloud_attempts WHERE job_id=?').get(deniedApproval.canary_id).n,0);
+});
+
+test('invalid Gemini REST and Cloudflare catalog IDs are denied before canary reservation or HTTPS',async()=>{
+ for(const [provider,model] of [
+  ['gemini','models/gemini-2.5-flash'],
+  ['cloudflare-ai','fe8904cf-e20e-4884-b829-ed7cec0a01cb'],
+  ['cloudflare-ai','@cf/'],
+ ]) {
+  const {env,sqlite}=setup(),cfg=config(provider,{model}),a=approval(provider,cfg);
+  assert.equal(preflight(provider,cfg,env,a,NOW),'provider_model_id_mismatch');
+  let sent=0;
+  const result=await runCanary({provider,cfg,env,approval:a,now:NOW,
+   fetcher:async()=>{sent++;throw Error('must not reach provider');}});
+  assert.equal(result.status,'denied');
+  assert.equal(result.reason,'provider_model_id_mismatch');
+  assert.equal(sent,0);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_jobs').get().n,0);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ghost_cloud_attempts').get().n,0);
+ }
 });
