@@ -212,6 +212,8 @@ jobs:
         run: node private-worker-secret-payload.mjs --preflight
       - name: Verify independent GitHub App installation and read-only repository access
         run: node verify-github-app.mjs --credentials
+      - name: Inspect GitHub draft-PR capability without enabling writes (informational)
+        run: node verify-github-app.mjs --patch-capability
       - name: Verify optional draft-PR write permission without repository writes
         if: env.ROVOR_GITHUB_PATCH_ENABLED == 'true'
         run: node verify-github-app.mjs --patch
