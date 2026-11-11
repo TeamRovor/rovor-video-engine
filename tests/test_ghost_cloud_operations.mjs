@@ -849,3 +849,31 @@ test('native catalog refresh refuses D1 readback with substituted error category
  assert.equal(result.inference_attempts,0);
  assert.equal(db.prepare("SELECT error_category FROM ghost_cloud_provider_checks WHERE provider='groq'").get().error_category,'substituted');
 });
+
+
+test('Cloudflare catalog exposes runnable names, never internal UUID keys or invented free quota',async t=>{
+ const {env,ops}=setup();
+ const endpoint='https://api.cloudflare.com/client/v4/accounts/'+env.CLOUDFLARE_ACCOUNT_ID+'/ai/models/search';
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  assert.equal(url,endpoint);assert.equal(options.method,'GET');
+  return Response.json({result:[
+   {id:'fe8904cf-e20e-4884-b829-ed7cec0a01cb',name:'@cf/meta/llama-3.1-8b-instruct',context_length:8192},
+   {id:'f9f2250b-1048-4a52-9910-d0bf976616a1',name:'@cf/qwen/qwen2.5-coder-32b-instruct'},
+   {id:'eed32bc1-8775-4985-89ce-dd1405508ad8'},
+   {id:'eaf31752-a074-441f-8b70-d593255d2811',name:'third-party/paid-model'}
+  ]});
+ });
+ const result=await rpc(ops,env,'rovor_provider_inventory',{provider:'cloudflare-ai'});
+ assert.equal(result.status,'catalog_received');
+ assert.deepEqual(result.models.map(m=>m.id),[
+  '@cf/meta/llama-3.1-8b-instruct','@cf/qwen/qwen2.5-coder-32b-instruct'
+ ]);
+ assert.equal(result.models[0].context_length,8192);
+ assert.equal(result.billing_verified,false);
+ assert.equal(result.quota_verified,false);
+ assert.equal(result.canary_verified,false);
+ assert.equal(result.models[0].catalog_zero_price,null);
+ const provider=(await ops.status(env)).providers.find(p=>p.provider==='cloudflare-ai');
+ assert.equal(provider.catalog_connection.state,'authenticated');
+ assert.equal(provider.online_verified,false);
+});
