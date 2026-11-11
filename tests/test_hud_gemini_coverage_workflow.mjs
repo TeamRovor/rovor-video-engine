@@ -28,7 +28,11 @@ test('no model discovery or quota code may hardcode an external remaining estima
 test('D1 forward-only health evidence schema contains no prompts or keys',()=>{
   const schema=read('integrations/hud-cloud/schema.sql');
   assert.match(schema,/CREATE TABLE IF NOT EXISTS hud_gemini_model_health/);
-  const block=schema.slice(schema.indexOf('CREATE TABLE IF NOT EXISTS hud_gemini_model_health'));
+  const start=schema.indexOf('CREATE TABLE IF NOT EXISTS hud_gemini_model_health');
+  const end=schema.indexOf(');',start);
+  // Scope the no-prompt/no-output assertion to the health table itself.
+  // A separate owner-private workforce table intentionally stores drafts.
+  const block=schema.slice(start,end+2);
   assert.match(block,/last_success_at INTEGER/);
   assert.match(block,/cooldown_until INTEGER/);
   assert.doesNotMatch(block,/prompt TEXT|api_key|private_key|output TEXT|billing_spent/);
