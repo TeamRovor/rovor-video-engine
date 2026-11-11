@@ -100,8 +100,20 @@ async function main(){
    throw Error('first_reviewed_pilot_pass_required');
   if(before.items.some(x=>x.state==='uncertain'||x.state==='running'))
    throw Error('unresolved_provider_attempt_requires_review');
-  await setEnabled(true);
-  reporter('Cloudflare native 5-minute cron enabled. Existing STOP and model admission remain in force.');
+  if(!/^[a-f0-9]{40}$/.test(sha||''))throw Error('trusted_source_commit_required');
+  const result=await api('/api/hud/workforce/control',{
+   method:'POST',write:true,body:{enabled:true,recurring_source_commit:sha}
+  });
+  if(result.enabled!==true||result.recurring_authorized!==true||
+     !Number.isSafeInteger(result.expires_at)||result.expires_at<=Date.now())
+   throw Error('standing_authorization_readback_mismatch');
+  const status=await api('/api/hud/workforce/status');
+  if(status.enabled!==true||status.recurring_execution_authorized!==true||
+     status.standing_plan?.active!==true||status.standing_plan.expires_at!==result.expires_at)
+   throw Error('standing_authorization_readback_mismatch');
+  reporter('Cloudflare five-minute native cron armed for seven days of fresh evidence-backed GitHub triage. '+
+   'At most 3 inference attempts per rolling day and 3 pending owner reviews; STOP cancels standing approval. '+
+   'Expires '+new Date(result.expires_at).toISOString()+'. No immediate inference implied.');
   return;
  }
  // Initial pilot: one newly approved revision; all previously attempted v1
