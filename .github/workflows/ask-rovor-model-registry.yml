@@ -1,0 +1,32 @@
+name: Ask ROVOR model intelligence offline safety
+on:
+  push:
+    paths:
+      - 'integrations/hud-cloud/ask-rovor-model-registry.mjs'
+      - 'integrations/hud-cloud/ASK-ROVOR-MODEL-REGISTRY.md'
+      - 'tests/test_ask_rovor_model_registry.mjs'
+      - '.github/workflows/ask-rovor-model-registry.yml'
+  pull_request:
+    paths:
+      - 'integrations/hud-cloud/ask-rovor-model-registry.mjs'
+      - 'integrations/hud-cloud/ASK-ROVOR-MODEL-REGISTRY.md'
+      - 'tests/test_ask_rovor_model_registry.mjs'
+      - '.github/workflows/ask-rovor-model-registry.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-registry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify nine-provider fail-closed model intelligence registry
+        run: |
+          node --check integrations/hud-cloud/ask-rovor-model-registry.mjs
+          node --test tests/test_ask_rovor_model_registry.mjs
