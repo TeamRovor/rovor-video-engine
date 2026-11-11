@@ -1,10 +1,16 @@
-name: ROVOR cloud workforce (hosted shift)
+name: ROVOR legacy Site shift (owner diagnostic only)
 
+# This obsolete GitHub-to-private-Site dispatcher returned 403 while the
+# existing Cloudflare Worker already owns the live five-minute autonomous
+# scheduler. Never keep a second unapproved cron making private HTTP calls.
 on:
-  schedule:
-    # GitHub-hosted dispatcher; schedule can be delayed by GitHub load.
-    - cron: '*/5 * * * *'
   workflow_dispatch:
+    inputs:
+      confirm_legacy_site_shift:
+        description: "I explicitly authorize ONE old private-Site shift (not the Cloudflare workforce)"
+        type: boolean
+        required: true
+        default: false
   pull_request:
     paths:
       - '.github/workflows/ghost-cloud-github-scheduler.yml'
@@ -39,10 +45,11 @@ jobs:
 
 
   service-credential-preflight:
-    # Run on trusted main pushes ONLY. Never expose Actions secrets to PR code
-    # or shell arguments. No checkout, network request, or model invocation.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # The old Site path is an opt-in, owner-protected diagnostic only.
+    # No scheduled calls; never reveal secrets on PRs or on ordinary pushes.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_legacy_site_shift == true
     runs-on: ubuntu-latest
+    environment: rovor-hud-production
     timeout-minutes: 1
     steps:
       - name: Verify hosted service secret shape without revealing value
@@ -72,8 +79,12 @@ jobs:
           PY
 
   shift:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    # One explicit owner opt-in, AFTER credential shape preflight. This cannot
+    # be accidentally invoked by a pull request, push or automated schedule.
+    needs: service-credential-preflight
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_legacy_site_shift == true
     runs-on: ubuntu-latest
+    environment: rovor-hud-production
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4

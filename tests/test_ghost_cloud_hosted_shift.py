@@ -199,13 +199,20 @@ class HostedShiftTests(unittest.TestCase):
 
     def test_workflow_does_not_run_models_on_untrusted_pull_requests(self):
         workflow = (ROOT / ".github/workflows/ghost-cloud-github-scheduler.yml").read_text()
-        self.assertIn("cron: '*/5 * * * *'", workflow)
-        self.assertIn("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'", workflow)
+        self.assertNotIn("schedule:", workflow)
+        self.assertNotIn("cron:", workflow)
+        self.assertIn("confirm_legacy_site_shift:", workflow)
+        self.assertIn("type: boolean", workflow)
+        self.assertIn("default: false", workflow)
+        gate = "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_legacy_site_shift == true"
+        self.assertEqual(workflow.count(gate), 2)
+        self.assertIn("needs: service-credential-preflight", workflow)
+        self.assertEqual(workflow.count("environment: rovor-hud-production"), 2)
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn("ROVOR_GHOST_SERVICE_TOKEN: " + chr(36) + "{{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}", workflow)
         self.assertNotIn("pull_request_target", workflow)
-        # Secret shape check may run on main pushes, but never on PRs.
-        self.assertIn("if: github.event_name == 'push' && github.ref == 'refs/heads/main'", workflow)
+        # Neither ordinary pushes nor untrusted PRs can run the old Site shift.
+        self.assertNotIn("if: github.event_name == 'push' && github.ref == 'refs/heads/main'", workflow)
         self.assertIn("service-credential-preflight:", workflow)
         preflight = workflow.split("  service-credential-preflight:", 1)[1].split("\n  shift:", 1)[0]
         self.assertNotIn("actions/checkout", preflight)
@@ -213,6 +220,20 @@ class HostedShiftTests(unittest.TestCase):
         self.assertIn("repository_service_secret_too_short", preflight)
         self.assertIn("repository_service_secret_invalid_bearer_format", preflight)
         self.assertIn("repository_service_secret_shape_ok", preflight)
+
+    def test_obsolete_site_403_is_a_failure_not_dispatched_work(self):
+        error = urllib.error.HTTPError(
+            runner.TARGET, 403, "Denied", hdrs=None, fp=None)
+        output = io.StringIO()
+        with patch.dict(os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": TOKEN}):
+            with patch.object(runner, "send_shift", side_effect=error) as send:
+                with contextlib.redirect_stdout(output):
+                    code = runner.main()
+        self.assertEqual(code, 1)
+        send.assert_called_once_with(token=TOKEN)
+        self.assertEqual(json.loads(output.getvalue()),
+                         {"state": "dispatch_failed", "http_status": 403})
+        self.assertNotIn(TOKEN, output.getvalue())
 
 
 if __name__ == "__main__":

@@ -1,8 +1,9 @@
-"""GitHub-hosted, fail-closed trigger for the EXISTING ROVOR private cloud dispatcher.
+"""Owner-triggered diagnostic for the obsolete private Site cloud dispatcher.
 
-This is a scheduler, not an AI worker or an inference proxy. The private Site
-alone decides STOP, owner-approved jobs, verified free eligibility, account
-limits, pacing, durable claims and model responses. Never persist its secret.
+The autonomous workforce is scheduled by the existing Cloudflare Worker,
+not this GitHub-to-Site HTTP path. This manual legacy tool does not bypass
+STOP, owner approval, free-model admission or durable receipts. Never persist
+its secret or treat HTTP 403 as successful model dispatch.
 """
 from __future__ import annotations
 

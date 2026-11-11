@@ -2,6 +2,18 @@
 
 This is the first read-only tool gateway in the existing Cloudflare HUD. The existing five-minute native clock uses a one-hour D1 lease and queues only verified, deduplicated numeric GitHub evidence in the existing inbox. It does not infer, modify repositories, approve jobs, or require ChatGPT, the Mac, or scheduled GitHub Actions. Existing STOP and standing authorization must be active. The prior GitHub discovery workflow remains a compatibility fallback until native execution is verified; both share D1 deduplication and a six-record daily cap.
 
+## Legacy Site dispatcher retired from automatic scheduling
+
+The old `ghost-cloud-github-scheduler.yml` posted to the separate ChatGPT-hosted
+Site and was repeatedly denied with HTTP 403. The native Cloudflare Worker's
+existing five-minute scheduled event now owns discovery, free-model admission,
+and approved workforce/patch ticks. The old GitHub-to-Site cron is disabled;
+only an explicit owner-confirmed `workflow_dispatch` on protected `main`
+can run one legacy diagnostic, and its service credential preflight must pass.
+Neither that old Site response nor an Actions success is evidence of an
+independent employee-created PR. This retirement does **not** remove native
+Cloudflare scheduling, owner STOP, human PASS/FAIL or D1 receipts.
+
 ## Owner setup (one time)
 
 Create an organization-owned GitHub App in TeamRovor settings. Disable webhooks for this initial polling implementation. Grant **read** Contents, Issues, Pull requests, Actions (and automatic Metadata read). Install only on TeamRovor/rovor-video-engine. Generate an app private key. Store the App ID, installation ID, and original RSA PEM as production Actions secrets named `ROVOR_GITHUB_APP_ID`, `ROVOR_GITHUB_INSTALLATION_ID`, and `ROVOR_GITHUB_APP_PRIVATE_KEY`. Set production variable `ROVOR_NATIVE_DISCOVERY_ENABLED=true`. Do not put private key material in chat, logs, the repository, or browser code. The existing protected HUD deployment transfers these settings to its existing Worker. The runtime requests a short-lived single-repository read token and rejects extra write permissions. No personal access token is required.
