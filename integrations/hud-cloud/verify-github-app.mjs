@@ -3,14 +3,15 @@
 // upstream response bodies, repository contents or private task data.
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-import {githubAppConfigured,mintGithubReadToken,readGithubDiscovery} from './github-app.mjs';
+import {githubAppConfigured,githubAppCredentialIssue,mintGithubReadToken,readGithubDiscovery} from './github-app.mjs';
 const ORIGIN='https://rovor-hud-telemetry.rovordigital.workers.dev';
 const names=['ROVOR_GITHUB_APP_ID','ROVOR_GITHUB_INSTALLATION_ID','ROVOR_GITHUB_APP_PRIVATE_KEY'];
 export async function verifyGithubCredentials(env,send=fetch,now=Date.now()){
  const supplied=names.filter(k=>!!env[k]).length;
  const requested=env.ROVOR_NATIVE_DISCOVERY_ENABLED==='true';
  if(!supplied&&!requested)return {configured:false,read_verified:false,reason:'not_configured'};
- if(!githubAppConfigured(env))throw Error('github_app_credentials_incomplete_or_invalid');
+ const issue=githubAppCredentialIssue(env);
+ if(issue)throw Error(issue);
  let token;
  try{token=await mintGithubReadToken(env,now,send);}catch(e){
   const code=String(e?.message||'');

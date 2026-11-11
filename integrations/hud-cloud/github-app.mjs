@@ -6,11 +6,23 @@ const numeric=v=>typeof v==='string'&&/^[1-9][0-9]{0,17}$/.test(v);
 const enc=new TextEncoder();
 const b64url=bytes=>btoa(String.fromCharCode(...new Uint8Array(bytes))).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');
 const jwtPart=v=>b64url(enc.encode(JSON.stringify(v)));
-export function githubAppConfigured(env){
- return numeric(env?.ROVOR_GITHUB_APP_ID)&&numeric(env?.ROVOR_GITHUB_INSTALLATION_ID)&&
-   typeof env?.ROVOR_GITHUB_APP_PRIVATE_KEY==='string'&&
-   env.ROVOR_GITHUB_APP_PRIVATE_KEY.length>=500&&env.ROVOR_GITHUB_APP_PRIVATE_KEY.length<=10000;
+// Diagnose only the credential category, never its value or exact length.
+export function githubAppCredentialIssue(env){
+ const id=env?.ROVOR_GITHUB_APP_ID,installation=env?.ROVOR_GITHUB_INSTALLATION_ID,
+  key=env?.ROVOR_GITHUB_APP_PRIVATE_KEY;
+ if(typeof id!=='string'||!id.trim())return 'github_app_id_missing';
+ if(!numeric(id.trim()))return 'github_app_id_must_be_numeric_not_client_id';
+ if(typeof installation!=='string'||!installation.trim())return 'github_installation_id_missing';
+ if(!numeric(installation.trim()))return 'github_installation_id_must_be_numeric';
+ if(typeof key!=='string'||!key.trim())return 'github_private_key_missing';
+ const pem=key.trim();
+ if(/^SHA256:/i.test(pem)||/^([a-f0-9]{2}:){15,}[a-f0-9]{2}$/i.test(pem))return 'github_private_key_is_fingerprint_not_pem';
+ if(pem.length<500||pem.length>10000||
+    !/^-----BEGIN (RSA PRIVATE KEY|PRIVATE KEY)-----\s+[A-Za-z0-9+/=\r\n]+\s+-----END \1-----$/.test(pem))
+  return 'github_private_key_requires_complete_pem';
+ return null;
 }
+export function githubAppConfigured(env){return githubAppCredentialIssue(env)===null;}
 function derLength(n){
  if(n<128)return [n];
  const out=[];while(n){out.unshift(n&255);n>>>=8;}
@@ -32,7 +44,7 @@ async function appJwt(env,now){
  const key=await crypto.subtle.importKey('pkcs8',pkcs8(env.ROVOR_GITHUB_APP_PRIVATE_KEY),
   {name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']);
  const iat=Math.floor(now/1000)-30;
- const payload=jwtPart({alg:'RS256',typ:'JWT'})+'.'+jwtPart({iat,exp:iat+540,iss:env.ROVOR_GITHUB_APP_ID});
+ const payload=jwtPart({alg:'RS256',typ:'JWT'})+'.'+jwtPart({iat,exp:iat+540,iss:env.ROVOR_GITHUB_APP_ID.trim()});
  return payload+'.'+b64url(await crypto.subtle.sign('RSASSA-PKCS1-v1_5',key,enc.encode(payload)));
 }
 async function boundedJson(response,max=400000){
@@ -50,7 +62,7 @@ function headers(token){
 }
 async function mintInstallationToken(env,permissions,now,send){
  const jwt=await appJwt(env,now);
- const res=await send(API+'/app/installations/'+env.ROVOR_GITHUB_INSTALLATION_ID+'/access_tokens',{
+ const res=await send(API+'/app/installations/'+env.ROVOR_GITHUB_INSTALLATION_ID.trim()+'/access_tokens',{
   method:'POST',redirect:'manual',headers:{...headers(jwt),'Content-Type':'application/json'},
   body:JSON.stringify({repositories:['rovor-video-engine'],permissions}),
   signal:AbortSignal.timeout(10000)});

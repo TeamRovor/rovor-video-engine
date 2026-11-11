@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
+import {githubAppCredentialIssue} from '../integrations/hud-cloud/github-app.mjs';
 import {verifyGithubCredentials,verifyGithubWorker} from '../integrations/hud-cloud/verify-github-app.mjs';
 const NOW=Date.now(),pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
 const env={ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem,
@@ -23,7 +24,7 @@ test('credentials verification only mints scoped token and reads fixed repo, nev
 test('missing, incomplete and denied credentials fail closed with no raw error',async()=>{
  const no=async()=>{throw Error('no request');};
  assert.equal((await verifyGithubCredentials({},no,NOW)).configured,false);
- await assert.rejects(()=>verifyGithubCredentials({ROVOR_NATIVE_DISCOVERY_ENABLED:'true'},no,NOW),/credentials_incomplete/);
+ await assert.rejects(()=>verifyGithubCredentials({ROVOR_NATIVE_DISCOVERY_ENABLED:'true'},no,NOW),/github_app_id_missing/);
  await assert.rejects(()=>verifyGithubCredentials(env,async()=>new Response('private upstream content',{status:401}),NOW),/github_installation_token_denied/);
 });
 test('private Worker configuration is distinct from native read receipt',async()=>{
@@ -38,4 +39,12 @@ test('private Worker configuration is distinct from native read receipt',async()
  const b=await verifyGithubWorker(env,mock({...base,last_check:{started_at:NOW-2000,finished_at:NOW-1000,result_state:'no_new_evidence_backed_work'}}),NOW);
  assert.equal(b.native_github_read_verified,true);
  await assert.rejects(()=>verifyGithubWorker(env,mock({...base,enabled:false}),NOW),/not_enabled/);
+});
+
+test('each bad credential has a precise nonsecret diagnostic; harmless surrounding whitespace is normalized',()=>{
+ assert.equal(githubAppCredentialIssue({...env,ROVOR_GITHUB_APP_ID:'Iv1.example'}),'github_app_id_must_be_numeric_not_client_id');
+ assert.equal(githubAppCredentialIssue({...env,ROVOR_GITHUB_INSTALLATION_ID:'https://github.com/settings/installations/456'}),'github_installation_id_must_be_numeric');
+ assert.equal(githubAppCredentialIssue({...env,ROVOR_GITHUB_APP_PRIVATE_KEY:'SHA256:mock-fingerprint'}),'github_private_key_is_fingerprint_not_pem');
+ assert.equal(githubAppCredentialIssue({...env,ROVOR_GITHUB_APP_PRIVATE_KEY:'partial key'}),'github_private_key_requires_complete_pem');
+ assert.equal(githubAppCredentialIssue({...env,ROVOR_GITHUB_APP_ID:' 123\n',ROVOR_GITHUB_INSTALLATION_ID:'456\n',ROVOR_GITHUB_APP_PRIVATE_KEY:'\n'+pem+'\n'}),null);
 });
