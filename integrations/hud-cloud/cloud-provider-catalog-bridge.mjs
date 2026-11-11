@@ -81,14 +81,17 @@ async function inspect(env,provider,now,send){
 export async function refreshCatalogBridge(env,now=Date.now(),send=fetch){
  if(!env?.DB||!validTime(now))throw Error('catalog_bridge_unavailable');
  const db=env.DB;
- // Atomic D1 clock rotates exactly one of nine fixed providers each five
- // minutes. Overlapping Cloudflare cron isolates cannot fan out 9 calls.
+ // Atomic D1 clock rotates at most one provider per native five-minute
+ // window. A rolling 300-second lock can skip a clock tick when scheduling
+ // jitter makes adjacent invocations less than 300 seconds apart.
+ // The D1 row condition remains atomic, so concurrent isolates cannot fan out.
+ const windowStart=Math.floor(now/INTERVAL)*INTERVAL;
  const lease=await db.prepare(`INSERT INTO hud_site_catalog_clock(id,next_index,last_started_at)
   VALUES(1,0,?) ON CONFLICT(id) DO UPDATE SET
   next_index=(hud_site_catalog_clock.next_index+1)%9,
   last_started_at=excluded.last_started_at
-  WHERE hud_site_catalog_clock.last_started_at<=?
-  RETURNING next_index`).bind(now,now-INTERVAL).first();
+  WHERE hud_site_catalog_clock.last_started_at<?
+  RETURNING next_index`).bind(now,windowStart).first();
  if(!lease)return {state:'interval_not_due',network_calls:0};
  const provider=CATALOG_PROVIDERS[lease.next_index];
  if(!provider)throw Error('catalog_clock_invalid');
