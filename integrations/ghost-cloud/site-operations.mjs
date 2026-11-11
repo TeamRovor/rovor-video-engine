@@ -395,29 +395,34 @@ export function createCloudOperations(base, cloud) {
     row.observed_at>now+60000||now-row.observed_at>=3600000;
   });
   if(!stale.length)return {source:'site_native_catalog_refresh',checked:0,
-   persisted:0,skipped_fresh:names.length,inference_attempts:0};
+   persisted:0,catalog_received:0,skipped_fresh:names.length,inference_attempts:0};
   const outcomes=await Promise.allSettled(stale.map(async provider=>{
    const report=await inventory(env,provider,fetcher);
    await recordInventory(env,provider,report);
    const saved=await sql(env,'SELECT observed_at,status FROM ghost_cloud_provider_checks WHERE provider=?',provider).first();
-   return !!saved&&saved.status===report.status&&
+   const persisted=!!saved&&saved.status===report.status&&
     saved.observed_at===(Number.isSafeInteger(report.observed_at)?report.observed_at:now);
+   return {persisted,catalog_received:persisted&&report.status==='catalog_received'};
   }));
+  // A stored 401/403/timeout is an honest monitoring receipt, not a
+  // successful model catalog. Count confirmed catalogs separately.
   return {source:'site_native_catalog_refresh',checked:stale.length,
-   persisted:outcomes.filter(r=>r.status==='fulfilled'&&r.value===true).length,
+   persisted:outcomes.filter(r=>r.status==='fulfilled'&&r.value.persisted===true).length,
+   catalog_received:outcomes.filter(r=>r.status==='fulfilled'&&r.value.catalog_received===true).length,
    skipped_fresh:names.length-stale.length,inference_attempts:0};
  }
 
  const tools=[
   {name:'rovor_cloud_workforce_status',description:'Read actual private cloud job/model/token receipts. Missing or disabled providers are explicit.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true}},
   {name:'rovor_provider_inventory',description:'Read a fixed provider models endpoint without inference. Does not establish account billing, remaining quota or successful inference.',inputSchema:{type:'object',properties:{provider:{type:'string',enum:Object.keys(cloud.PROVIDERS)}},required:['provider'],additionalProperties:false},annotations:{readOnlyHint:true}},
+  {name:'rovor_provider_catalog_refresh',description:'Refresh stale authenticated provider catalogs inside the existing private Site and verify D1 readback. No chat inference, billing authorization, or task dispatch.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:false,destructiveHint:false}},
   {name:'rovor_cloud_control',description:'Pause or resume the existing cloud job ledger. Provider eligibility and private approvals still apply.',inputSchema:{type:'object',properties:{enabled:{type:'boolean'}},required:['enabled'],additionalProperties:false},annotations:{readOnlyHint:false,destructiveHint:false}},
   {name:'rovor_cloud_replenish',description:'Enqueue at most nine privately approved public packets copied from the canonical task queue; unchanged jobs deduplicate.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:false,destructiveHint:false}},
   {name:'rovor_cloud_tick',description:'Execute a bounded existing cloud shift only through current verified zero-cost routes, quotas, STOP and immutable claims. No automatic replay.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:false,destructiveHint:false}},
   {name:'rovor_cloud_canary',description:'Run one pre-approved private canary ID. Exact billing/quota/model evidence and short-lived approval must already be configured server-side.',inputSchema:{type:'object',properties:{canary_id:{type:'string'}},required:['canary_id'],additionalProperties:false},annotations:{readOnlyHint:false,destructiveHint:false}}
  ];
  async function call(name,args,env) {
-  const allowed={rovor_cloud_workforce_status:[],rovor_provider_inventory:['provider'],rovor_cloud_control:['enabled'],rovor_cloud_replenish:[],rovor_cloud_tick:[],rovor_cloud_canary:['canary_id']};
+  const allowed={rovor_cloud_workforce_status:[],rovor_provider_inventory:['provider'],rovor_provider_catalog_refresh:[],rovor_cloud_control:['enabled'],rovor_cloud_replenish:[],rovor_cloud_tick:[],rovor_cloud_canary:['canary_id']};
   if(!args||typeof args!=='object'||Array.isArray(args)||Object.keys(args).some(k=>!allowed[name].includes(k)))throw Error('invalid_arguments');
   if(name==='rovor_cloud_workforce_status')return status(env);
   if(name==='rovor_provider_inventory'){
@@ -436,6 +441,7 @@ export function createCloudOperations(base, cloud) {
    if(!saved)throw Error('provider_catalog_d1_readback_mismatch');
    return {...report,d1_persisted:true,d1_observed_at:stored.observed_at};
   }
+  if(name==='rovor_provider_catalog_refresh')return refreshCatalogs(env);
   if(name==='rovor_cloud_control')return control(env,args.enabled);
   if(name==='rovor_cloud_replenish')return replenish(env);
   if(name==='rovor_cloud_tick')return cloud.tick(env);
