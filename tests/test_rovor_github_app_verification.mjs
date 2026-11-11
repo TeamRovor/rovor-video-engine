@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
 import {githubAppCredentialIssue} from '../integrations/hud-cloud/github-app.mjs';
-import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability,resolveOptionalPatchDeployment,verifyGithubPatchWorker,verifyDeployedOwnerSession,verifyDeployedRepoCatchup} from '../integrations/hud-cloud/verify-github-app.mjs';
+import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability,resolveOptionalPatchDeployment,verifyGithubPatchWorker,verifyDeployedOwnerSession,verifyDeployedRepoCatchup,verifyDeployedRepoCatchupRefresh} from '../integrations/hud-cloud/verify-github-app.mjs';
 import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-secret-payload.mjs';
 const NOW=Date.now(),pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
 const env={ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem,
@@ -277,4 +277,20 @@ test('deployed repo catch-up refuses public exposure and fabricated checkpoint',
   Response.json({source:'rovor_private_repo_catchup',state:'ready',snapshot:null,
    private_reader_required:true,model_called:false,repository_written:false,
    mac_required:false,chatgpt_required:false}):new Response(null,{status:401})),/repo_catchup_status_invalid/);
+});
+
+
+test('protected writer-only catch-up refresh verifies responses without disclosing writer token',async()=>{
+ const config={...env,ROVOR_HUD_WRITER_TOKEN:'w'.repeat(40)};
+ const seen=[];
+ const run=async(_url,init)=>{
+  assert.equal(init.method,'POST');assert.equal(init.redirect,'manual');
+  seen.push(init.headers.Authorization?'writer':'anonymous');
+  return init.headers.Authorization?Response.json({state:'ready',model_called:false,repository_written:false}):
+   new Response(null,{status:401});
+ };
+ const proof=await verifyDeployedRepoCatchupRefresh(config,run);
+ assert.equal(proof.refresh_state,'ready');assert.deepEqual(seen,['anonymous','writer']);
+ assert.equal(proof.repository_written,false);
+ assert(!JSON.stringify(proof).includes(config.ROVOR_HUD_WRITER_TOKEN));
 });

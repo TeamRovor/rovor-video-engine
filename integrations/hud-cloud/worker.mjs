@@ -5,7 +5,7 @@ import {submitIdea,listIdeas} from './idea-inbox.mjs';
 import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
 import {getRepoSource} from './repo-source.mjs';
 import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';
-import {repoCatchupStatus} from './repo-catchup.mjs';
+import {repoCatchupStatus,refreshRepoCatchup} from './repo-catchup.mjs';
 import {reviewEvidence} from './review-evidence.mjs';
 import {queueGithubPatch,githubPatchStatus,githubPatchTick,previewGithubPatchSource,queueGithubPatchTask} from './github-patch-gateway.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
@@ -402,7 +402,7 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
   // Only the existing distinct server-held writer token can enqueue/dispatch
   // immutable canonical jobs or change STOP. Browser readers cannot.
   const workforceWriter = request.method === 'POST' &&
-    ['/api/hud/workforce/intake','/api/hud/workforce/tick','/api/hud/workforce/control','/api/hud/workforce/github-patch'].includes(url.pathname);
+    ['/api/hud/workforce/intake','/api/hud/workforce/tick','/api/hud/workforce/control','/api/hud/workforce/github-patch','/api/hud/workforce/repo-catchup/refresh'].includes(url.pathname);
   // A separate writer-only channel allows the Mac to report its available
   // routes and execute explicitly submitted chat requests via outbound polling.
   const chatWriter = request.method === 'POST' &&
@@ -522,6 +522,11 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       return response(200,await nativeDiscoveryStatus(env));
     if (request.method === 'GET' && url.pathname === '/api/hud/workforce/repo-catchup')
       return response(200,await repoCatchupStatus(env));
+    if (request.method === 'POST' && url.pathname === '/api/hud/workforce/repo-catchup/refresh'){
+      if(request.body)return response(400,{error:'body_not_allowed'});
+      const result=await refreshRepoCatchup(env,now,fetcher);
+      return response(result.status,result.body);
+    }
     if (request.method === 'GET' && url.pathname.startsWith('/api/hud/workforce/evidence/')) {
       const result=await reviewEvidence(env,url.pathname.slice('/api/hud/workforce/evidence/'.length),now,fetcher);
       return response(result.status,result.body);

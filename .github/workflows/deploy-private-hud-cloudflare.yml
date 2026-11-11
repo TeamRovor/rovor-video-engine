@@ -234,6 +234,8 @@ jobs:
             wrangler secret bulk --config wrangler.github.jsonc
       - name: Verify independent GitHub discovery configuration and native D1 readback
         run: node verify-github-app.mjs --worker
+      - name: Refresh bounded private GitHub catch-up metadata with writer authentication (no inference)
+        run: node verify-github-app.mjs --repo-catchup-refresh
       - name: Verify private GitHub catch-up route and distinguish installed from completed checkpoint
         run: node verify-github-app.mjs --repo-catchup
       - name: Verify deployed GitHub draft-PR executor and exact private path allowlist
