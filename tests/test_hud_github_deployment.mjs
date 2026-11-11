@@ -364,3 +364,14 @@ test('pinned release tolerates old valid asset during rollout but never relaxes 
   {pause:async()=>{}}),/anonymous_repo_source_exposed/);
  assert.equal(exposed,1);
 });
+
+
+test('protected Worker deployment passes the existing Site catalog service key without adding a public variable',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/deploy-private-hud-cloudflare.yml',import.meta.url),'utf8');
+ assert.match(workflow,/^\s{6}ROVOR_GHOST_SERVICE_TOKEN: \$\{\{ secrets\.ROVOR_GHOST_SERVICE_TOKEN \}\}$/m);
+ assert.match(workflow,/node private-worker-secret-payload\.mjs \|/);
+ assert.match(workflow,/wrangler secret bulk --config wrangler\.github\.jsonc/);
+ const payload=readFileSync(new URL('../integrations/hud-cloud/private-worker-secret-payload.mjs',import.meta.url),'utf8');
+ assert.match(payload,/payload\.GHOST_SITE_SERVICE_TOKEN=key/);
+ assert.match(payload,/key===env\.ROVOR_HUD_READER_TOKEN\|\|key===env\.ROVOR_HUD_WRITER_TOKEN/);
+});
