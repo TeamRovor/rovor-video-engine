@@ -38,9 +38,9 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const discoveryImport = "import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';";
   const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
   const nativeDiscoveryImport = "import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';";
-  const repoCatchupImport = "import {repoCatchupStatus} from './repo-catchup.mjs';";
+  const repoCatchupImport = "import {repoCatchupStatus,refreshRepoCatchup} from './repo-catchup.mjs';";
   if(core.split(repoCatchupImport).length!==2)throw Error('Unexpected repo catch-up import');
-  const repoCatchupUnavailable = "const repoCatchupStatus=()=>({source:'cloudflare_only',state:'unavailable'});\n";
+  const repoCatchupUnavailable = "const repoCatchupStatus=()=>({source:'cloudflare_only',state:'unavailable'}),refreshRepoCatchup=()=>({status:404,body:{error:'cloudflare_only'}});\n";
   const reviewEvidenceImport = "import {reviewEvidence} from './review-evidence.mjs';";
   if(core.split(reviewEvidenceImport).length!==2)throw Error('Unexpected review evidence import');
   const reviewEvidenceUnavailable = "const reviewEvidence=()=>({status:404,body:{error:'cloudflare_only'}});\n";

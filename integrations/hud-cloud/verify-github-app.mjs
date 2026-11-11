@@ -101,6 +101,30 @@ export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
   native_github_read_verified:verified,last_native_check_at:last?new Date(last.started_at).toISOString():null,
   last_native_result:last?.result_state??null,mac_required:false,chatgpt_required:false,github_actions_required:false};
 }
+// This operation is restricted to the protected release's existing server-side
+// writer token. It neither authorizes jobs nor calls a provider.
+export async function verifyDeployedRepoCatchupRefresh(env,send=fetch){
+ const token=env?.ROVOR_HUD_WRITER_TOKEN;
+ if(typeof token!=='string'||token.length<32||/[\r\n]/.test(token))throw Error('private_writer_secret_missing');
+ const url=ORIGIN+'/api/hud/workforce/repo-catchup/refresh';
+ const run=authorized=>send(url,{method:'POST',redirect:'manual',cache:'no-store',
+  headers:authorized?{Authorization:'Bearer '+token}:{},
+  signal:AbortSignal.timeout(25000)});
+ if((await run(false)).status!==401)throw Error('repo_catchup_refresh_anonymous_exposure');
+ const res=await run(true);
+ if(![200,409,503].includes(res.status))throw Error('repo_catchup_refresh_unavailable');
+ const raw=await res.text();
+ if(raw.length>1000)throw Error('repo_catchup_refresh_invalid');
+ let data;try{data=JSON.parse(raw);}catch{throw Error('repo_catchup_refresh_invalid');}
+ if(!['ready','read_unavailable','interval_not_due','stopped','not_configured','storage_unavailable'].includes(data?.state)||
+  data.model_called!==false||data.repository_written!==false||
+  (res.status===409&&data.state!=='stopped')||
+  (res.status===200&&!['ready','read_unavailable','interval_not_due'].includes(data.state)))
+  throw Error('repo_catchup_refresh_invalid');
+ return {private_writer_verified:true,refresh_state:data.state,
+  model_called:false,repository_written:false};
+}
+
 // Live readback only. A deployed endpoint without a completed hourly checkpoint
 // must never be presented as proof that an employee caught up on GitHub.
 export async function verifyDeployedRepoCatchup(env,send=fetch){
@@ -230,6 +254,7 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
   mode==='--patch-worker'?verifyGithubPatchWorker(process.env):
   mode==='--owner-session'?verifyDeployedOwnerSession(process.env):
   mode==='--repo-catchup'?verifyDeployedRepoCatchup(process.env):
+  mode==='--repo-catchup-refresh'?verifyDeployedRepoCatchupRefresh(process.env):
   mode==='--patch-capability'?inspectGithubPatchCapability(process.env):
   mode==='--patch-effective'?(async()=>{
    const effective=await resolveOptionalPatchDeployment(process.env);
