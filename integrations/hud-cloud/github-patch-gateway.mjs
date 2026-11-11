@@ -74,7 +74,7 @@ export async function githubPatchStatus(env){
  try{
   const rows=await env.DB.prepare(`SELECT job_id,output_sha256,base_commit,path,branch,authorized_at,
    expires_at,started_at,finished_at,state,error_code,commit_sha,pr_number
-   FROM hud_github_patch_jobs ORDER BY authorized_at DESC LIMIT 30`).all();
+   FROM hud_github_patch_jobs ORDER BY authorized_at DESC LIMIT 30`).bind().all();
   return {source:'rovor_independent_github_patch',configured:ready(env),items:rows.results||[],
    mac_required:false,chatgpt_required:false,merges_allowed:false};
  }catch{return {source:'rovor_independent_github_patch',configured:false,items:[],storage_unavailable:true,merges_allowed:false};}
