@@ -154,6 +154,28 @@ test('owner inventory checks refresh the exact provider HUD health row without c
  assert.equal(JSON.stringify(stored).includes('private upstream error body'),false);
 });
 
+test('catalog D1 readback rejects substituted error category even with matching timestamp and status',async t=>{
+ const {env,db,ops}=setup();
+ t.mock.method(globalThis,'fetch',async()=>new Response('denied',{status:403}));
+ const original=env.DB.prepare.bind(env.DB);
+ env.DB.prepare=query=>{
+  const stmt=original(query);
+  if(!query.startsWith('SELECT observed_at,status,error_category FROM ghost_cloud_provider_checks'))return stmt;
+  const bind=stmt.bind.bind(stmt);
+  stmt.bind=(...args)=>{
+   const result=bind(...args);
+   result.first=async()=>({...db.prepare('SELECT observed_at,status,error_category FROM ghost_cloud_provider_checks WHERE provider=?').get(...args),error_category:'wrong_error'});
+   return result;
+  };
+  return stmt;
+ };
+ const result=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
+ assert.equal(result.isError,true);
+ const row=db.prepare('SELECT status,error_category FROM ghost_cloud_provider_checks WHERE provider=?').get('gemini');
+ assert.equal(row.status,'http_403');
+ assert.notEqual(row.error_category,'wrong_error');
+});
+
 test('fixed-endpoint GET inventory returns bounded public model metadata only',async()=>{
  const {env,ops}=setup();let calls=0;
  const result=await ops.inventory(env,'openrouter',async(url,opts)=>{calls++;assert.equal(url,'https://openrouter.ai/api/v1/models');assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');return Response.json({data:[{id:'known/free:free',pricing:{prompt:'0',completion:'0'}},{id:'paid/model',pricing:{prompt:'1',completion:'1'}},{id:'unknown:free',pricing:{prompt:null,completion:null}}],secret:'must not return'});});
