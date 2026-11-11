@@ -79,13 +79,19 @@ export async function queueGithubPatch(env,body,now=Date.now()){
  }catch(e){return result(409,{error:['reviewed_patch_required','patch_proposal_invalid','patch_source_scope_mismatch'].includes(e.message)?e.message:'patch_queue_unavailable'});}
 }
 export async function githubPatchStatus(env){
+ const cfg=githubPatchConfiguration(env);
+ const readiness=!cfg.requested?'disabled_by_owner':
+  !cfg.credentials_configured?'app_credentials_missing':
+  !cfg.allowed_path_count?'allowlist_missing_or_invalid':
+  'configuration_complete_write_scope_unverified';
  try{
   const rows=await env.DB.prepare(`SELECT job_id,output_sha256,base_commit,path,branch,authorized_at,
    expires_at,started_at,finished_at,state,error_code,commit_sha,pr_number
    FROM hud_github_patch_jobs ORDER BY authorized_at DESC LIMIT 30`).bind().all();
-  return {source:'rovor_independent_github_patch',configured:ready(env),allowed_paths:ready(env)?pathPolicy(env):[],items:rows.results||[],
+  return {source:'rovor_independent_github_patch',configured:cfg.configured,readiness,
+   allowed_paths:cfg.configured?pathPolicy(env):[],items:rows.results||[],
    mac_required:false,chatgpt_required:false,merges_allowed:false};
- }catch{return {source:'rovor_independent_github_patch',configured:false,items:[],storage_unavailable:true,merges_allowed:false};}
+ }catch{return {source:'rovor_independent_github_patch',configured:false,readiness:'status_unavailable',items:[],storage_unavailable:true,merges_allowed:false};}
 }
 async function bounded(response,max=500000){
  if(!response.body)throw Error('github_response_missing');

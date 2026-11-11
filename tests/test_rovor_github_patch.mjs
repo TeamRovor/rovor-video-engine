@@ -142,3 +142,18 @@ test('source scope cannot expand and STOP cancels queued source inference',async
  assert.equal((await control(s.env.DB,false,null,NOW+2)).status,200);
  assert.equal(s.sqlite.prepare('SELECT state FROM hud_cloud_workforce_jobs WHERE id=?').get(other.body.job_id).state,'failed');
 });
+
+test('GitHub patch status distinguishes owner-disabled, missing app and allowlist from unverified write permission',async()=>{
+ const s=setup();
+ const full=await githubPatchStatus(s.env);
+ assert.equal(full.configured,true);
+ assert.equal(full.readiness,'configuration_complete_write_scope_unverified');
+ assert.equal(full.allowed_paths[0],path);
+ const off=await githubPatchStatus({...s.env,ROVOR_GITHUB_PATCH_ENABLED:'false'});
+ assert.equal(off.configured,false);assert.equal(off.readiness,'disabled_by_owner');assert.deepEqual(off.allowed_paths,[]);
+ const noApp=await githubPatchStatus({...s.env,ROVOR_GITHUB_APP_ID:''});
+ assert.equal(noApp.readiness,'app_credentials_missing');
+ const noPaths=await githubPatchStatus({...s.env,ROVOR_GITHUB_PATCH_PATHS:'[]'});
+ assert.equal(noPaths.readiness,'allowlist_missing_or_invalid');
+ assert(!JSON.stringify(full).includes('PRIVATE KEY'));
+});

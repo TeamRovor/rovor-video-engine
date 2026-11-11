@@ -37,6 +37,7 @@ async function refreshNativeDiscovery(){
  }catch{githubDiscoveryState.textContent='UNAVAILABLE';githubDiscoveryDetail.textContent='Private D1 readback unavailable';}
 }
 const ownerSessionLabel=byId('owner-session'),ownerStart=byId('owner-start'),ownerStop=byId('owner-stop'),ownerActionStatus=byId('owner-action-status');
+const githubPatchReadiness=byId('github-patch-readiness');
 let ownerActive=false,ownerConfigured=false,ownerBusy=false,ownerStartArmed=false,patchConfigured=false;
 function ownerButtons(data){
  ownerStart.disabled=ownerBusy||!ownerActive||data?.enabled!==false||
@@ -111,13 +112,22 @@ async function refreshOwner(){
    'Owner key not configured · protected GitHub fallback remains available';
   const patch=await privateRequest('/api/hud/workforce/github-patch');
   patchConfigured=patch.configured===true&&Array.isArray(patch.allowed_paths)&&patch.allowed_paths.length>0;
+  const messages={
+   disabled_by_owner:'GitHub draft PRs: disabled. Owner must enable ROVOR_GITHUB_PATCH_ENABLED in protected repository variables.',
+   app_credentials_missing:'GitHub draft PRs: GitHub App credentials are not configured.',
+   allowlist_missing_or_invalid:'GitHub draft PRs: the owner must set an exact safe ROVOR_GITHUB_PATCH_PATHS allowlist.',
+   configuration_complete_write_scope_unverified:'GitHub draft PRs: configured. Real write permissions must pass the protected deployment preflight; no live PR claimed.',
+   status_unavailable:'GitHub draft PRs: private status unavailable.'
+  };
+  githubPatchReadiness.textContent=messages[patch.readiness]||'GitHub draft PRs: configuration has not been verified.';
   const current=patchPath.value;patchPath.textContent='';
   if(patchConfigured)for(const path of patch.allowed_paths){
    if(typeof path!=='string')continue;
    const option=make('option','',path);option.value=path;patchPath.append(option);
   }
   if([...patchPath.options].some(x=>x.value===current))patchPath.value=current;
- }catch{ownerSessionLabel.textContent='Owner session could not be verified';}
+ }catch{ownerSessionLabel.textContent='Owner session could not be verified';
+  githubPatchReadiness.textContent='GitHub draft PRs: private configuration could not be verified.';}
  patchPanel.hidden=!(ownerActive&&patchConfigured);
  clearSourcePreview();ownerButtons(latestWorkforce);updatePatchButtons();
 }
