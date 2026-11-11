@@ -40,7 +40,7 @@ test('eligibility rejects missing, expired, costly, unpinned or unverified route
  const {env}=setup();
  for(const change of [{enabled:false},{zero_cost:false},{commercial_use:false},{model:'auto'},{valid_until:NOW},{verified_at:NOW-86400001},{canary_at:null},{evidence_sha256:''},{requests_per_day:0},{max_output_tokens:2401},{roles:['Admin']},{kinds:['execute_command']}])assert.ok(eligibility('groq',cfg(change),env,NOW));
  assert.equal(eligibility('groq',cfg(),{...env,GROQ_API_KEY:''},NOW),'missing_secret');
- assert.equal(eligibility('cloudflare-ai',cfg(),{...env,CLOUDFLARE_ACCOUNT_ID:'bad'},NOW),'missing_account');
+ assert.equal(eligibility('cloudflare-ai',configFor('cloudflare-ai'),{...env,CLOUDFLARE_ACCOUNT_ID:'bad'},NOW),'missing_account');
  assert.equal(eligibility('openrouter',cfg(),env,NOW),'paid_route_denied');
  assert.equal(eligibility('huggingface',cfg(),env,NOW),'unpinned_upstream');
 });
