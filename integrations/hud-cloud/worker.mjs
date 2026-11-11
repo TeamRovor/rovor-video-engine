@@ -29,8 +29,8 @@ const ROLES = new Set(['walter', 'mike', 'jane', 'jesse', 'gale', 'gus', 'saul',
 const LIMIT = 32768;
 const LOGIN = `<!doctype html><meta name="viewport" content="width=device-width"><title>ROVOR HUD sign in</title>
 <body style="background:#020916;color:#bde5ff;font:16px system-ui;padding:32px"><h1>ROVOR · HUD</h1>
-<p>Sign in to view private usage and employee reports on this device.</p>
-<form id="login"><label>HUD viewing key <input id="key" type="password" autocomplete="current-password" required></label> <button>Sign in</button></form>
+<p>Sign in with your private viewing key, or your separate owner key to control workforce execution.</p>
+<form id="login"><label>HUD access key <input id="key" type="password" autocomplete="current-password" required></label> <button>Sign in</button></form>
 <p id="status" role="status"></p><script>document.getElementById('login').onsubmit=async e=>{e.preventDefault();const key=document.getElementById('key');try{const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:key.value})});key.value='';if(r.ok)location.replace(new URLSearchParams(location.search).get('next')==='/workforce-review.html'?'/workforce-review.html':'/');else document.getElementById('status').textContent='Sign-in failed.'}catch{document.getElementById('status').textContent='Connection unavailable.'}}</script>`;
 const CLOUD_START = `<link rel="stylesheet" href="/hud-mobile.css"><script src="/hud-quota.js"></script><script src="/hud-chat.js"></script><script>document.getElementById('connectOmniRoute')?.remove();window.ROVOR_OMNIROUTE_REQUEST=(resource,opts)=>fetch(resource,{...opts,credentials:'same-origin'});window.ROVOR_START_OMNIROUTE?.();window.ROVOR_QUOTA_BOARD?.start?.();</script>`;
 const response = (status, body) => Response.json(body, {status, headers: {
@@ -261,6 +261,41 @@ async function authorized(request, secret) {
   return different === 0;
 }
 
+// Owner sessions are distinct from viewer and server-writer credentials.
+const OWNER_COOKIE='rovor_hud_owner',OWNER_SESSION_MS=24*3600000;
+function ownerConfigured(env){
+  const key=env?.HUD_OWNER_TOKEN;
+  return typeof key==='string'&&/^[!-~]{32,200}$/.test(key)&&
+    key!==env.HUD_READER_TOKEN&&key!==env.HUD_WRITER_TOKEN;
+}
+function cookieValue(request,name){
+  const matches=String(request.headers.get('Cookie')||'').split(';').map(x=>x.trim())
+    .filter(x=>x.startsWith(name+'='));
+  if(matches.length!==1)return null;
+  try{return decodeURIComponent(matches[0].slice(name.length+1));}catch{return null;}
+}
+async function ownerSignature(env,payload){
+  const enc=new TextEncoder();
+  const key=await crypto.subtle.importKey('raw',enc.encode(env.HUD_OWNER_TOKEN),
+    {name:'HMAC',hash:'SHA-256'},false,['sign']);
+  return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,enc.encode(payload))),
+    b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function newOwnerSession(env,now){
+  const payload='v1.'+(now+OWNER_SESSION_MS)+'.'+crypto.randomUUID();
+  return payload+'.'+await ownerSignature(env,payload);
+}
+async function ownerSession(request,env,now){
+  if(!ownerConfigured(env))return false;
+  const raw=cookieValue(request,OWNER_COOKIE);
+  if(typeof raw!=='string'||raw.length>160)return false;
+  const match=/^(v1\.([0-9]{13})\.[a-f0-9-]{36})\.([a-f0-9]{64})$/.exec(raw);
+  if(!match||Number(match[2])<=now||Number(match[2])>now+OWNER_SESSION_MS)return false;
+  const expected=await ownerSignature(env,match[1]);let difference=0;
+  for(let i=0;i<64;i++)difference|=expected.charCodeAt(i)^match[3].charCodeAt(i);
+  return difference===0;
+}
+
 async function boundedJSON(request) {
   if (Number(request.headers.get('Content-Length') || 0) > LIMIT) fail();
   if (!request.body) fail();
@@ -343,10 +378,22 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     if (request.headers.get('Origin') !== url.origin) return response(403, {error: 'origin_denied'});
     let token;
     try { token = (await boundedJSON(request)).token; } catch { return response(400, {error: 'invalid_login'}); }
-    if (typeof token !== 'string' || !await authorized({headers: new Headers({Authorization: 'Bearer ' + token})}, env.HUD_READER_TOKEN)) return response(401, {error: 'unauthorized'});
-    if (env.HUD_WRITER_TOKEN === env.HUD_READER_TOKEN) return response(503, {error: 'service_not_configured'});
-    return new Response(null, {status: 204, headers: {'Cache-Control': 'no-store',
-      'Set-Cookie': 'rovor_hud_reader=' + encodeURIComponent(token) + '; Path=/; Max-Age=604800; Secure; HttpOnly; SameSite=Strict'}});
+    if(typeof token!=='string')return response(401,{error:'unauthorized'});
+    const presented={headers:new Headers({Authorization:'Bearer '+token})};
+    const owner=ownerConfigured(env)&&await authorized(presented,env.HUD_OWNER_TOKEN);
+    if(!owner&&!await authorized(presented,env.HUD_READER_TOKEN))return response(401,{error:'unauthorized'});
+    if(env.HUD_WRITER_TOKEN===env.HUD_READER_TOKEN||typeof env.HUD_READER_TOKEN!=='string'||
+       env.HUD_READER_TOKEN.length<32)return response(503,{error:'service_not_configured'});
+    const headers=new Headers({'Cache-Control':'no-store'});
+    headers.append('Set-Cookie','rovor_hud_reader='+encodeURIComponent(env.HUD_READER_TOKEN)+
+      '; Path=/; Max-Age=604800; Secure; HttpOnly; SameSite=Strict');
+    // A viewer login explicitly revokes the browser's prior owner session.
+    // Only a signed, expiring session reaches the cookie, never the owner key.
+    if(owner)headers.append('Set-Cookie',OWNER_COOKIE+'='+encodeURIComponent(await newOwnerSession(env,now))+
+      '; Path=/api/hud/; Max-Age=86400; Secure; HttpOnly; SameSite=Strict');
+    else if(env.HUD_OWNER_TOKEN)headers.append('Set-Cookie',OWNER_COOKIE+
+      '=; Path=/api/hud/; Max-Age=0; Secure; HttpOnly; SameSite=Strict');
+    return new Response(null,{status:204,headers});
   }
   const ingest = url.pathname === '/api/hud/ingest';
   const discoveryWriter = url.pathname === '/api/hud/discovery' || url.pathname === '/api/hud/discovery/status';
@@ -360,7 +407,7 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     (url.pathname === '/api/hud/chat/bridge' || url.pathname === '/api/hud/chat/claim' ||
       /^\/api\/hud\/chat\/result\/[a-f0-9-]{36}$/i.test(url.pathname));
   let authRequest = request;
-  if (!ingest && !chatWriter && !discoveryWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/workforce/review' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
+  if (!ingest && !chatWriter && !discoveryWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/workforce/review' || url.pathname === '/api/hud/owner/workforce' || url.pathname === '/api/hud/owner/github-patch' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
     try {
       const cookie = String(request.headers.get('Cookie') || '').split(';').map(c => c.trim()).find(c => c.startsWith('rovor_hud_reader='));
       if (cookie) authRequest = {headers: new Headers({Authorization: 'Bearer ' + decodeURIComponent(cookie.slice(17))})};
@@ -429,6 +476,32 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       const result = await chatStatus(env.DB, url.pathname.slice('/api/hud/chat/status/'.length), now);
       return response(result.status, result.status === 200 ? result : {error:result.error});
     }
+    if(request.method==='GET'&&url.pathname==='/api/hud/owner/session')
+      return response(200,{configured:ownerConfigured(env),owner_authenticated:await ownerSession(request,env,now)});
+    if(request.method==='POST'&&['/api/hud/owner/workforce','/api/hud/owner/github-patch'].includes(url.pathname)){
+      if(request.headers.get('Origin')!==url.origin)return response(403,{error:'origin_denied'});
+      if(!await ownerSession(request,env,now))return response(403,{error:'owner_session_required'});
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_owner_operation'});}
+      if(!body||typeof body!=='object'||Array.isArray(body))return response(400,{error:'invalid_owner_operation'});
+      if(url.pathname==='/api/hud/owner/github-patch'){
+        if(Object.keys(body).sort().join(',')!=='confirm,job_id,output_sha256'||body.confirm!=='authorize_draft_pr')
+          return response(400,{error:'explicit_patch_authorization_required'});
+        const queued=await queueGithubPatch(env,{job_id:body.job_id,output_sha256:body.output_sha256},now);
+        return response(queued.status,queued.body);
+      }
+      if(Object.keys(body).sort().join(',')==='action'&&body.action==='stop'){
+        const out=await workforceControl(env.DB,false,null,now);return response(out.status,out.body);
+      }
+      if(Object.keys(body).sort().join(',')!=='action,confirm'||body.action!=='start'||
+         body.confirm!=='authorize_7_day_discovery')return response(400,{error:'explicit_standing_authorization_required'});
+      // Derive the pinned commit from the reviewed deployed checkout, never
+      // from a browser field or an AI response. Same D1 PASS/STOP/queue gate.
+      const source=await getRepoSource(env,request,'coordination/TASK-INTAKE.md');
+      if(source.status!==200||source.body?.source!=='reviewed_github_checkout'||
+         !/^[a-f0-9]{40}$/.test(source.body?.commit||''))return response(503,{error:'reviewed_source_unavailable'});
+      const out=await workforceControl(env.DB,true,source.body.commit,now);
+      return response(out.status,out.body);
+    }
     if(request.method==='GET'&&url.pathname==='/api/hud/workforce/github-patch')
       return response(200,await githubPatchStatus(env));
     if(request.method==='POST'&&url.pathname==='/api/hud/workforce/github-patch'){
@@ -460,6 +533,11 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     }
     if (request.method === 'POST' && url.pathname === '/api/hud/workforce/review') {
       if(request.headers.get('Origin')!==url.origin)return response(403,{error:'origin_denied'});
+      // Existing legacy owner-private review stays compatible until the
+      // independent owner key is installed. A configured but invalid key
+      // never silently downgrades review authority to viewer credentials.
+      if(env.HUD_OWNER_TOKEN&&!await ownerSession(request,env,now))
+        return response(403,{error:'owner_session_required'});
       let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_review'});}
       const result=await workforceReview(env.DB,body,now);return response(result.status,result.body);
     }

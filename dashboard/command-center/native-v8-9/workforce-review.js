@@ -14,6 +14,55 @@ const pending=byId('pending'),reviewed=byId('reviewed'),stop=byId('stop-state');
 const refreshButton=byId('refresh');
 const nativeClock=byId('native-clock'),nativeDetail=byId('native-detail'),standing=byId('standing-state');
 const validTokens=n=>Number.isSafeInteger(n)&&n>=0;
+const ownerSessionLabel=byId('owner-session'),ownerStart=byId('owner-start'),ownerStop=byId('owner-stop'),ownerActionStatus=byId('owner-action-status');
+let ownerActive=false,ownerConfigured=false,ownerBusy=false,ownerStartArmed=false,patchConfigured=false;
+function ownerButtons(data){
+ ownerStart.disabled=ownerBusy||!ownerActive||data?.enabled!==false||
+   !data?.items?.some(x=>x.human_review==='passed'&&x.actual_model==='gemini-3.5-flash-lite')||
+   data.items.some(x=>['queued','running','uncertain'].includes(x.state));
+ ownerStop.disabled=ownerBusy||!ownerActive||data?.enabled!==true;
+ if(ownerStart.disabled||!ownerStartArmed)ownerStart.textContent='Start recurring workforce';
+}
+let latestWorkforce=null;
+async function refreshOwner(){
+ ownerActive=false;ownerConfigured=false;patchConfigured=false;
+ try{
+  const session=await privateRequest('/api/hud/owner/session');
+  ownerConfigured=session.configured===true;
+  ownerActive=ownerConfigured&&session.owner_authenticated===true;
+  ownerSessionLabel.textContent=ownerActive?'OWNER SESSION ACTIVE · private controls unlocked':
+   ownerConfigured?'Viewing session only · sign in with owner key for decisions and controls':
+   'Owner key not configured · protected GitHub fallback remains available';
+  const patch=await privateRequest('/api/hud/workforce/github-patch');
+  patchConfigured=patch.configured===true;
+ }catch{ownerSessionLabel.textContent='Owner session could not be verified';}
+ ownerButtons(latestWorkforce);
+}
+async function ownerControl(action){
+ if(!ownerActive||ownerBusy)return;
+ if(action==='start'&&!ownerStartArmed){
+  ownerStartArmed=true;ownerStart.textContent='Confirm seven-day authorization';
+  ownerActionStatus.textContent='Confirm to authorize future bounded triage, not an immediate inference.';
+  return;
+ }
+ ownerBusy=true;ownerStartArmed=false;ownerButtons(latestWorkforce);
+ ownerActionStatus.textContent='Saving private owner control…';
+ try{
+  const body=action==='start'?{action,confirm:'authorize_7_day_discovery'}:{action};
+  const saved=await privateRequest('/api/hud/owner/workforce',{method:'POST',body});
+  const check=await privateRequest('/api/hud/workforce/status');
+  if(action==='start'&&(saved.enabled!==true||saved.recurring_authorized!==true||
+     check.enabled!==true||check.recurring_execution_authorized!==true||
+     check.standing_plan?.expires_at!==saved.expires_at))throw Error('owner_control_readback_mismatch');
+  if(action==='stop'&&(saved.enabled!==false||check.enabled!==false||
+     check.recurring_execution_authorized!==false))throw Error('owner_control_readback_mismatch');
+  ownerActionStatus.textContent=action==='start'?'D1 CONFIRMED · recurring discovery authorized through '+formatTime(saved.expires_at):
+   'D1 CONFIRMED · STOPPED · no new job claims';
+ }catch{ownerActionStatus.textContent='Owner control not confirmed. Check current D1 state; do not assume it changed.';}
+ finally{ownerBusy=false;await refresh(false);}
+}
+ownerStart.addEventListener('click',()=>ownerControl('start'));
+ownerStop.addEventListener('click',()=>ownerControl('stop'));
 const SHA=/^[a-f0-9]{64}$/;
 const ID=/^[a-z0-9][a-z0-9-]{0,149}$/;
 const VERDICTS=new Set(['passed','failed']);
@@ -26,6 +75,7 @@ async function privateRequest(path,{method='GET',body=null}={}){
   signal:AbortSignal.timeout(12000)
  });
  if(result.status===401)throw Error('private_login_required');
+ if(result.status===403)throw Error('owner_session_required');
  if(!result.ok){
   if(result.status===409)throw Error('review_conflict_refresh_required');
   throw Error('private_request_http_'+result.status);
@@ -35,6 +85,7 @@ async function privateRequest(path,{method='GET',body=null}={}){
  return value;
 }
 function errorMessage(error){
+ if(error.message==='owner_session_required')return 'Owner authorization required. Sign in with the separate owner key; no decision was confirmed.';
  if(error.message==='private_login_required')return 'Private sign-in required. Return to HUD and sign in; no review was changed.';
  if(error.message==='review_conflict_refresh_required')return 'Already reviewed or draft changed. Refresh private receipts before another decision.';
  return 'Private D1 could not confirm this operation. No new review is being claimed.';
@@ -134,6 +185,8 @@ async function refresh(clearNotice=true){
      typeof data.enabled!=='boolean'||data.site_review_ledger_synced!==false||
      data.items.some(entry=>!safeJob(entry)||Object.hasOwn(entry,'output')||Object.hasOwn(entry,'prompt')))
    throw Error('invalid_workforce_readback');
+  latestWorkforce=data;
+  await refreshOwner();
   const rows=data.items;
   const pendingCount=rows.filter(x=>x.state==='needs_review'&&x.human_review==='not_recorded').length;
   const reviewedCount=rows.filter(x=>VERDICTS.has(x.human_review)).length;
@@ -186,6 +239,37 @@ async function refresh(clearNotice=true){
      const inspectButton=actionButton('Open full draft and verify SHA-256',
       ()=>inspect(entry,card,inspectButton));
      actions.append(inspectButton);card.append(actions);
+    }else if(ownerActive&&patchConfigured&&entry.human_review==='passed'&&entry.kind==='code_review'){
+     const actions=make('div','actions');
+     const open=actionButton('Inspect reviewed patch',async()=>{
+      open.disabled=true;
+      try{
+       const saved=await privateRequest('/api/hud/workforce/draft/'+encodeURIComponent(entry.id));
+       if(saved.human_review!=='passed'||saved.output_sha256!==entry.output_sha256||
+          typeof saved.output!=='string'||await digest(saved.output)!==entry.output_sha256)
+        throw Error('private_digest_mismatch');
+       const proposal=JSON.parse(saved.output);
+       if(proposal.version!==1||!proposal.change||typeof proposal.change.path!=='string')
+        throw Error('not_patch_proposal');
+       const panel=make('section','draft');
+       panel.append(make('h4','','EXACT REVIEWED PATCH · '+proposal.change.path));
+       panel.append(make('pre','',saved.output));
+       let armed=false;
+       const authorize=actionButton('Authorize draft pull request',async()=>{
+        if(!armed){armed=true;authorize.textContent='Confirm draft PR authorization';return;}
+        authorize.disabled=true;
+        try{
+         const out=await privateRequest('/api/hud/owner/github-patch',{method:'POST',
+          body:{job_id:entry.id,output_sha256:entry.output_sha256,confirm:'authorize_draft_pr'}});
+         if(out.job_id!==entry.id||out.state!=='queued')throw Error('patch_queue_unconfirmed');
+         announce('D1 CONFIRMED · reviewed patch queued for a native tick. No pull request has been opened yet.');
+         authorize.textContent='Queued';
+        }catch{announce('Patch queue not confirmed. Check the private receipt before authorizing again.');}
+       },'approve');
+       panel.append(authorize);card.append(panel);open.remove();
+      }catch{announce('This accepted draft is not a valid reviewed patch proposal, or its exact receipt could not be verified.');open.disabled=false;}
+     });
+     actions.append(open);card.append(actions);
     }
    }
    jobs.append(card);
@@ -197,7 +281,7 @@ async function refresh(clearNotice=true){
   message.textContent=errorMessage(error);
   pending.textContent='?';reviewed.textContent='?';stop.textContent='?';
   nativeClock.textContent='?';nativeDetail.textContent='Readback unavailable';standing.textContent='?';
-  jobs.textContent='';
+  jobs.textContent='';latestWorkforce=null;ownerActive=false;ownerButtons(null);
  }finally{refreshButton.disabled=false;}
 }
 refreshButton.addEventListener('click',()=>refresh());

@@ -58,7 +58,14 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 <div class="stat"><strong id="native-clock" class="compact">—</strong><small id="native-detail">Last actual native cron event</small></div>
 <div class="stat"><strong id="standing-state" class="compact">—</strong><small>Seven-day recurring approval</small></div>
 </section>
-<p class="intro">After reviewing a satisfactory Gemini draft and recording PASS, use the <a href="https://github.com/TeamRovor/rovor-video-engine/actions/workflows/start-cloud-workforce.yml" rel="noreferrer">protected standing authorization workflow</a> to enable recurring discovery. A PASS alone never starts the scheduler.</p>
+<section class="job" aria-label="Private owner controls">
+<h2>Owner controls</h2>
+<p id="owner-session" class="metadata" role="status">Checking owner session…</p>
+<p class="metadata">A PASS alone never starts the scheduler. Start explicitly authorizes seven days of fresh discovery triage, at most three attempts per rolling day and three pending reviews. STOP prevents new claims.</p>
+<div class="actions"><button id="owner-start" class="approve" disabled>Start recurring workforce</button><button id="owner-stop" class="reject" disabled>STOP workforce</button></div>
+<p class="metadata"><a href="/login?next=%2Fworkforce-review.html">Sign in with your separate owner key</a>. <a href="https://github.com/TeamRovor/rovor-video-engine/actions/workflows/start-cloud-workforce.yml" rel="noreferrer">Protected GitHub fallback</a> remains available.</p>
+<p id="owner-action-status" class="metadata" role="status"></p>
+</section>
 <div class="section-head"><h2>Saved job receipts</h2><button class="refresh" id="refresh" type="button">Refresh receipts</button></div>
 <p id="message" role="status" aria-live="polite">Checking private records…</p>
 <div id="jobs" class="grid" aria-live="off"></div>

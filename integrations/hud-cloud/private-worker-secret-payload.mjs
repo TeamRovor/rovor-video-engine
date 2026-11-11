@@ -25,6 +25,12 @@ export function buildHudSecretPayload(env) {
     'GROQ_HUD_EVIDENCE_SHA256','GROQ_HUD_VERIFIED_AT','GROQ_HUD_VALID_UNTIL','GROQ_HUD_DAILY_BUDGET']) {
     if(env[key])payload[key]=env[key];
   }
+  if(env.ROVOR_HUD_OWNER_TOKEN){
+    const owner=env.ROVOR_HUD_OWNER_TOKEN;
+    if(typeof owner!=='string'||!/^[!-~]{32,200}$/.test(owner)||owner===env.ROVOR_HUD_READER_TOKEN||owner===env.ROVOR_HUD_WRITER_TOKEN)
+      throw Error('invalid_private_secret_configuration');
+    payload.HUD_OWNER_TOKEN=owner;
+  }
   // Optional independent GitHub App credentials. Do not overwrite existing
   // Worker secrets with missing values or partially configured credentials.
   const app=['ROVOR_GITHUB_APP_ID','ROVOR_GITHUB_INSTALLATION_ID','ROVOR_GITHUB_APP_PRIVATE_KEY'];
