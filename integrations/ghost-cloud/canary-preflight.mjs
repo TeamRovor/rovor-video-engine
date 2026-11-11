@@ -1,7 +1,7 @@
 // One-shot operator-only provider canary. Not a public endpoint, scheduler, or dispatch fallback.
 // The caller must supply private, independently checked billing/quota evidence and a unique approval.
 // A successful probe is NOT human approval or proof of future free-tier availability.
-import {PROVIDERS,requestFor} from './runtime.mjs';
+import {PROVIDERS,requestFor,modelEndpointCompatibility} from './runtime.mjs';
 
 const DAY=86400000, WINDOW=900000;
 const id=s=>typeof s==='string'&&/^[a-z0-9][a-z0-9-]{0,149}$/.test(s);
@@ -17,6 +17,8 @@ export function preflight(provider,cfg,env,approval,now) {
  if(!Object.hasOwn(PROVIDERS,provider))return 'unknown_provider';
  if(!cfg||cfg.enabled!==true||typeof env?.[PROVIDERS[provider][1]]!=='string'||env[PROVIDERS[provider][1]].length<16)return 'not_configured';
  if(typeof cfg.model!=='string'||!/^[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}$/.test(cfg.model)||/(^|[/:-])(auto|latest)([/:-]|$)/i.test(cfg.model))return 'unpinned_model';
+ const modelMismatch=modelEndpointCompatibility(provider,cfg.model);
+ if(modelMismatch)return modelMismatch;
  if(provider==='openrouter'&&!cfg.model.endsWith(':free'))return 'paid_route_denied';
  if(provider==='huggingface'&&!/:[a-z0-9-]+$/.test(cfg.model))return 'unpinned_upstream';
  if(provider==='cloudflare-ai'&&!/^[a-f0-9]{32}$/.test(env.CLOUDFLARE_ACCOUNT_ID||''))return 'missing_account';
