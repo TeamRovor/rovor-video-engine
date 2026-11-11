@@ -77,16 +77,17 @@ export async function draft(db,id){
 }
 
 export async function review(db,body,now=Date.now()){
- if(!body||Object.keys(body).sort().join(',')!=='job_id,verdict'||
-    !validId(body.job_id)||!['passed','failed'].includes(body.verdict))
+ if(!body||Object.keys(body).sort().join(',')!=='job_id,output_sha256,verdict'||
+    !validId(body.job_id)||!['passed','failed'].includes(body.verdict)||
+    typeof body.output_sha256!=='string'||!/^[a-f0-9]{64}$/.test(body.output_sha256))
   return {status:400,body:{error:'invalid_review'}};
  try{
   const result=await db.prepare(`UPDATE hud_cloud_workforce_jobs
     SET human_review=?,reviewed_at=?
     WHERE id=? AND state='needs_review' AND human_review='not_recorded'
-      AND output_sha256 IS NOT NULL AND LENGTH(output_sha256)=64
+      AND output_sha256=? AND LENGTH(output_sha256)=64
     RETURNING id,human_review,output_sha256,reviewed_at`)
-   .bind(body.verdict,now,body.job_id).first();
+   .bind(body.verdict,now,body.job_id,body.output_sha256).first();
   if(!result)return {status:409,body:{error:'already_reviewed_or_not_reviewable'}};
   return {status:200,body:{id:result.id,human_review:result.human_review,
    output_sha256:result.output_sha256,reviewed_at:result.reviewed_at}};
