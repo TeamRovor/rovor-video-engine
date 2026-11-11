@@ -47,27 +47,24 @@ test('Popup JavaScript and existing inline HUD script compile',()=>{
   for(const m of scripts) assert.doesNotThrow(()=>new vm.Script(m[1]));
 });
 
-test('Popup defaults to unverified without network, keys or made-up model names',()=>{
+test('Archived full-popup remains explicit; home preview now reads current authenticated call logs',()=>{
   assert.ok(!html.includes('src="./workload-popup.js"'));
   assert.ok(!html.includes('href="./workload-popup.css"'));
   assert.match(popup,/NO VERIFIED LIVE MODEL TELEMETRY/);
   assert.match(popup,/demo:false,employee:/);
   assert.match(popup,/const MODEL_IDS=/);
   assert.match(popup,/north-mini-code:free/);
-  assert.doesNotMatch(popup,/String\(j\+1\)\.padStart/);
   assert.match(popup,/EMPLOYEES\.map/);
   assert.match(popup,/VIEW SAMPLE LAYOUT/);
   assert.match(popup,/function mountPreview\(container,openDetails\)/);
-  assert.match(popup,/LAST REPORT/);
   assert.match(popup,/LAST REPORT · HISTORICAL/);
-  assert.match(popup,/31 PAST CLAIMS/);
-  assert.match(popup,/OCT 24 ARCHIVE/);
   assert.match(popup,/timeZoneName:'short'/);
-  assert.doesNotMatch(popup,/\+' CDT'/);
-  assert.match(popup,/3 ROUTED \/ 9 CONNECTIONS/);
-  assert.match(css,/#workloadPanel \.wl-compact-row/);
-  assert.doesNotMatch(popup,/(fetch\(|XMLHttpRequest|localStorage|sessionStorage|Authorization|Bearer)/);
-  assert.match(css,/#rovor-workload-popup/);
+  assert.match(popup,/fetch\('\/api\/hud\/omniroute\?period=24h'/);
+  assert.match(popup,/credentials:'same-origin',cache:'no-store'/);
+  assert.match(popup,/REQUEST LOG ≠ QUOTA OR VERIFIED MODEL ADMISSION/);
+  assert.match(popup,/data-wl-compact-provider/);
+  assert.match(css,/#workloadPanel \.wl-home-provider-grid/);
+  assert.doesNotMatch(popup,/(XMLHttpRequest|localStorage|sessionStorage|Authorization|Bearer)/);
   assert.doesNotMatch(css,/(^|\n)\s*(html|body|\.hud|\.nav)\s*\{/);
 });
 
@@ -103,34 +100,44 @@ test('Popup interaction switches between heatmap, model list, routing and sample
   assert.match(host.child.innerHTML,/NO VERIFIED LIVE MODEL TELEMETRY/);
 });
 
-test('Compact preview contains three reported models, eight named employees, no invented values',()=>{
+test('Compact preview shows nine provider choices, eight employees, refresh and full Workload drilldown',()=>{
   const nodes=[];
-  const sandbox={window:{},document:{createElement(){const n={
-    innerHTML:'',handlers:{},contains(){return true},
-    addEventListener(type,fn){this.handlers[type]=fn}
-  };nodes.push(n);return n;}},Number,Math,Array,Object,String};
+  const sandbox={
+    window:{},fetch:async()=>({ok:false}),setInterval:()=>1,
+    document:{hidden:false,activeElement:null,addEventListener(){},
+      createElement(){const n={innerHTML:'',handlers:{},contains(){return true},
+        addEventListener(type,fn){this.handlers[type]=fn}
+      };nodes.push(n);return n;}},
+    Number,Math,Array,Object,String,Date,Set,Map
+  };
   vm.runInNewContext(popup,sandbox);
   let opened=0;
   const host={replaceChildren(){},append(node){this.child=node}};
   sandbox.window.ROVOR_WORKLOAD.mountPreview(host,()=>opened++);
-  assert.equal((host.child.innerHTML.match(/data-wl-compact-row="/g)||[]).length,3);
-  assert.match(host.child.innerHTML,/AI MODELS/);
-  assert.match(host.child.innerHTML,/LAST REPORT/);
+  assert.equal((host.child.innerHTML.match(/data-wl-compact-provider="/g)||[]).length,9);
+  assert.match(host.child.innerHTML,/PROVIDERS/);
+  assert.match(host.child.innerHTML,/CHECKING PRIVATE TELEMETRY/);
+  assert.match(host.child.innerHTML,/REFRESH/);
+  assert.match(host.child.innerHTML,/NO FRESH RECEIPT/);
+  assert.doesNotMatch(host.child.innerHTML,/03 OLD|OCT 24 ARCHIVE/);
   const click=dataset=>host.child.handlers.click({target:{closest(){return{
     dataset,hasAttribute(attr){
       if(attr==='data-wl-compact-tab')return dataset.wlCompactTab!==undefined;
-      if(attr==='data-wl-compact-row')return dataset.wlCompactRow!==undefined;
+      if(attr==='data-wl-compact-provider')return dataset.wlCompactProvider!==undefined;
+      if(attr==='data-wl-compact-employee')return dataset.wlCompactEmployee!==undefined;
+      if(attr==='data-wl-open-report')return dataset.wlOpenReport!==undefined;
+      if(attr==='data-wl-refresh')return dataset.wlRefresh!==undefined;
       return false;
     }
   }}}});
   click({wlCompactTab:'employees'});
-  assert.equal((host.child.innerHTML.match(/data-wl-compact-row="/g)||[]).length,8);
+  assert.equal((host.child.innerHTML.match(/data-wl-compact-employee="/g)||[]).length,8);
   assert.match(host.child.innerHTML,/Walter/);
   assert.match(host.child.innerHTML,/Hank/);
-  click({wlCompactRow:'2'});
+  click({wlCompactEmployee:'jane'});
   assert.equal(opened,1);
   sandbox.window.ROVOR_WORKLOAD.mount(host);
-  assert.match(host.child.innerHTML,/JANE × North Mini Code/);
+  assert.match(host.child.innerHTML,/LAST MAC REPORT/);
 });
 
 test('Workload selection survives unrelated refresh remount, resets after popup close',()=>{
@@ -177,10 +184,10 @@ test('Observed outcomes are historical job attempts, never fabricated model usag
   assert.match(rendered,/Live link missing/);
   assert.match(rendered,/issuecomment-6382848776/);
   assert.doesNotMatch(rendered,/data-active="yes"/);
-  context.window.ROVOR_WORKLOAD.mountPreview(host);
-  assert.match(host.child.innerHTML,/North Mini Code/);
-  assert.match(host.child.innerHTML,/Nemotron 3 Ultra/);
-  assert.match(host.child.innerHTML,/Nemotron 3.5 Super VL/);
-  assert.doesNotMatch(host.child.innerHTML,/>M0[1-9]</);
-  assert.doesNotMatch(host.child.innerHTML,/wl-compact-track/);
+  // The home preview is no longer a three-model archive. The full drawer
+  // preserves historical report evidence, while home uses the private D1 log.
+  assert.match(rendered,/North Mini Code/);
+  assert.match(rendered,/Nemotron 3 Ultra/);
+  assert.match(rendered,/Nemotron 3.5 Super VL/);
+  assert.doesNotMatch(rendered,/>M0[1-9]</);
 });
