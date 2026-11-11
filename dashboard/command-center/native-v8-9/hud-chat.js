@@ -194,6 +194,30 @@
     localStorage.setItem(SESSIONS_KEY,JSON.stringify(sessions.slice(0,16)));
   }catch{}};
 
+  function paintChatLog(log,paint){
+    const top=log.scrollTop;
+    const following=log.scrollHeight-log.clientHeight-top<=80;
+    paint();
+    log.scrollTop=following?log.scrollHeight:top;
+  }
+  function createStreamPainter(log,node,render){
+    let frame=null,pending=null;
+    const flush=()=>{
+      if(frame!==null)cancelAnimationFrame(frame);
+      frame=null;
+      if(pending===null)return;
+      const text=pending;pending=null;
+      paintChatLog(log,()=>render(node,text));
+    };
+    return {
+      queue(text){
+        pending=text;
+        if(frame===null)frame=requestAnimationFrame(flush);
+      },
+      finish(text){pending=text;flush();},
+      cancel(){if(frame!==null)cancelAnimationFrame(frame);frame=null;pending=null;}
+    };
+  }
   function renderText(node,text){
     node.textContent='';
     text.split(/(```[\s\S]*?(?:```|$))/g).forEach(part=>{
@@ -585,7 +609,10 @@
       const n=el('div',{className:'rvc-welcome'},el('h2',{},'Intelligence, your way.'),
         el('p',{},'Choose a model and receive a real answer. Chat alone does not start employee jobs.'),chips);log.append(n);
     };
-    const redraw=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':m.outcome==='failed'?'rvc-err':'rvc-bot',m.content,m));};
+    const redraw=(preserveScroll=false)=>{
+      const paint=()=>{log.textContent='';if(!history.length)welcome();history.forEach(m=>add(m.role==='user'?'rvc-user':m.outcome==='failed'?'rvc-err':'rvc-bot',m.content,m));};
+      if(preserveScroll)paintChatLog(log,paint);else paint();
+    };
     let pendingJob=null,cancelConfirmed=false,multiPending=[];
     const setBusy=b=>{busy=b;send.disabled=b||!ready;stop.hidden=!b;input.disabled=b;select.disabled=b;sourceSelect.disabled=b;modelBrowse.disabled=b||!ready;refreshButton.disabled=b;repoSelect.disabled=b;teamInput.disabled=b||sourceSelect.value!=='omniroute';
       // Don't re-open the software keyboard after a delayed response on iOS.
@@ -1011,6 +1038,7 @@
       if(active?.title==='New conversation')active.title=text.replace(/\s+/g,' ').slice(0,55);
       save();drawSessions();
       const bubble=add('rvc-bot','Preparing request · no model call confirmed');
+      const painter=createStreamPainter(log,bubble,renderText);
       const singleStarted=Date.now();
       let reply='',sourceCommit=null;pendingJob=null;cancelConfirmed=false;setBusy(true);stop.textContent='Stop waiting';controller=new AbortController();
       const signal=controller.signal;
@@ -1088,16 +1116,16 @@
               if(line==='data: [DONE]'){completed=true;continue;}
               if(!line.startsWith('data:'))continue;
               try{const piece=JSON.parse(line.slice(5).trim()).choices?.[0]?.delta?.content;
-                if(typeof piece==='string'){reply+=piece;renderText(bubble,reply);log.scrollTop=log.scrollHeight;}}
+                if(typeof piece==='string'){reply+=piece;painter.queue(reply);}}
               catch{}
             }
           }
           if(!reply)throw Error('empty_response');
           if(!completed)throw Error('incomplete_stream');
         }
-        renderText(bubble,reply);
+        painter.finish(reply);
         history.push({role:'assistant',content:reply,platform,model:resolvedModel,repo_file:attachedSource||null,repo_snapshot_commit:sourceCommit,receipt:pendingJob?.id||null,outcome:'complete',recordedAt:Date.now()});save();
-        redraw();
+        redraw(true);
         stateLabel.textContent=platform==='omniroute'?
           'RESPONSE CONFIRMED · requested route '+target+' · actual upstream identity not separately attested':
           platform==='gemini'?'GOOGLE GEMINI CLOUD REPLY · '+resolvedModel+' · no Mac · per-model receipt recorded':'CLOUD MODEL RESPONSE RECEIVED · not an employee or Mac action';
@@ -1113,13 +1141,14 @@
           chat_rate_limited:'The request limit has been reached.',
         };
         const message=cancelConfirmed?messages.user_cancelled:(messages[e.message]|| (e.name==='AbortError'?messages.stopped_waiting:('No confirmed model reply: '+(e.message||'unknown'))));
-        renderText(bubble,message);bubble.parentElement.className='rvc-msg rvc-err';
+        painter.cancel();
+        paintChatLog(log,()=>renderText(bubble,message));bubble.parentElement.className='rvc-msg rvc-err';
         stateLabel.textContent='NO COMPLETION CONFIRMED · '+message;
         // Keep failures in local conversation history, but never send their
         // text to the next model as if it were an assistant answer.
         history.push({role:'assistant',content:message,platform,model:target,receipt:pendingJob?.id||null,outcome:'failed',recordedAt:Date.now()});save();
-        redraw();
-      }finally{pendingJob=null;controller=null;setBusy(false);updatePlan();if(platform==='gemini'&&panel.dataset.open==='true'){refreshProviderInventory();load();}}
+        redraw(true);
+      }finally{painter.cancel();pendingJob=null;controller=null;setBusy(false);updatePlan();if(platform==='gemini'&&panel.dataset.open==='true'){refreshProviderInventory();load();}}
     }
 
     async function refreshCloudWorkforce(){
@@ -1319,3 +1348,4 @@
   window.ROVOR_HUD_CHAT={start:()=>{if(!document.getElementById('rvc'))build();}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>window.ROVOR_HUD_CHAT.start());else window.ROVOR_HUD_CHAT.start();
 })();
+
