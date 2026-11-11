@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: final digital trace and all18 evidence index complete
+CARTOON-EVAN-DIGITAL-TRACE.md / reviews/digital-trace-v1.json + CARTOON-EVAN-ALL18-ACOUSTIC-REVIEW.md / reviews/all18-acoustic-review-v1.json. outputs/evan-cartoon-timing-review/Review.html indexes10cases coveringALL18flaggedwords withoriginalPCM/spectra +actualrigtraces. Alltraceaudio/plan/reference/PNG/film/historicalFROZENsourcehashes verified; historicalcurrentfilesmaydiffer. CoverageisNOTaccuracy;0cleared/0retimed/18exactedgesunverified. Independentlistening/realtime/polishedFALSE;automationACTIVE.
+
+Digitaloriginal21.10–22.047375s/455actualsamples480Hz/25msFFT/5mshop; older21.65start lateAH/L, older22.4endOUTSIDEoriginal352758samples. Fouroral/tonguefixtures513/518/521/528 matchto1e-9; L521lift.844306, rest21.85gap.15/tongue0. outputs/evan-cartoon-digital-trace/Review.html:30BYTE-EXACTfullframes504..533incl2protectedclosingcutframes;30/120normal/slowdecodes. Context20kfullPCM=16758ORIGINAL+3242EXPLICITpostrollzeros; plotONLYoriginalrecording.45PNGhashes verified; nativehalves/4faces/5normal/3slow inspected. Noart/controls/default/fullchange;no pendingjobs. Protectedversions/updater/nativeprojects preserved.
+
+NEXT: ONEopt-inSHarticulation/silhouette improvement usingEXISTINGregisteredplanes onfinished18.88–19.01 (roundMaterial0/genericteethslit). Preservecontacts/timing/currentfull/defaults/all18flags. Shortnormal/slowcomparison +criticalnative/stagescalereview; no newexpressionvariants/art/Moho/merge/deploy. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync.
+
 ## Current task: finished acoustic/FV/SH trace reviewed
 CARTOON-EVAN-FINISHED-TRACE.md / evan-engine/reviews/finished-trace-v1.json. Existingtrace reused: original18.40–19.55sPCM/25msFFT/5mshop/553actualsamples480Hz. Starts18.57/18.60only30msapart inweakmodeledF; exactonsetunresolved. Current19.11afterlasttransient/decay; older19.44includeslowlevelbroadband(-42.12dBFS20ms), NOTblanksilence; identityunverified. Retaincurrentintervals; noart/controls/retiming;18flagsopen.
 
