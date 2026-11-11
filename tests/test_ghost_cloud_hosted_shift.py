@@ -192,6 +192,22 @@ class HostedShiftTests(unittest.TestCase):
                 self.assertNotIn("sensitive-token", output.getvalue())
                 self.assertNotIn(TOKEN, output.getvalue())
 
+    def test_403_private_site_service_denial_is_not_claimed_as_worker_execution(self):
+        failure = urllib.error.HTTPError(
+            runner.TARGET, 403, "sensitive vendor error", {}, None)
+        output = io.StringIO()
+        with patch.dict(os.environ, {"ROVOR_GHOST_SERVICE_TOKEN": TOKEN}):
+            with patch.object(runner, "send_shift", side_effect=failure) as send:
+                with contextlib.redirect_stdout(output):
+                    code = runner.main()
+        self.assertEqual(code, 1)
+        send.assert_called_once_with(token=TOKEN)
+        self.assertEqual(json.loads(output.getvalue()), {
+            "state": "dispatch_failed", "http_status": 403,
+            "reason": "private_site_service_forbidden"})
+        self.assertNotIn(TOKEN, output.getvalue())
+        self.assertNotIn("sensitive vendor error", output.getvalue())
+
     def test_no_redirects_to_untrusted_origin(self):
         handler = runner.NoRedirect()
         self.assertIsNone(handler.redirect_request(None, None, 302, "move", {},
@@ -199,8 +215,11 @@ class HostedShiftTests(unittest.TestCase):
 
     def test_workflow_does_not_run_models_on_untrusted_pull_requests(self):
         workflow = (ROOT / ".github/workflows/ghost-cloud-github-scheduler.yml").read_text()
-        self.assertIn("cron: '*/5 * * * *'", workflow)
-        self.assertIn("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'", workflow)
+        self.assertNotIn("  schedule:", workflow)
+        self.assertNotIn("cron: '*/5 * * * *'", workflow)
+        self.assertIn("github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'", workflow)
+        self.assertIn("Cloudflare", workflow)
+        self.assertIn("manual owner recovery operation only", workflow)
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn("ROVOR_GHOST_SERVICE_TOKEN: " + chr(36) + "{{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}", workflow)
         self.assertNotIn("pull_request_target", workflow)
