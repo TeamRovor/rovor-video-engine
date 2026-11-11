@@ -668,7 +668,14 @@ test('owner cloud chat migration stages only a new journal entry, preserving pri
  const rerun=stageOwnerCloudChatMigration(dir,{apply:true});
  assert.equal(rerun.already_journaled,true);
  assert.equal(rerun.prepared,false);
+ assert.equal(rerun.runtime_bundle_contains_owner_chat,false);
  assert.equal(JSON.parse(fs.readFileSync(journalPath,'utf8')).entries.length,4);
+ const recordedPath=path.join(dir,'drizzle/0003_owner_cloud_chat.sql');
+ const recordedSql=fs.readFileSync(recordedPath,'utf8');
+ fs.writeFileSync(recordedPath,'CREATE TABLE IF NOT EXISTS unrelated(id TEXT);');
+ assert.throws(()=>stageOwnerCloudChatMigration(dir),/journaled_owner_chat_schema_mismatch/);
+ fs.writeFileSync(recordedPath,recordedSql);
+ assert.equal(stageOwnerCloudChatMigration(dir).already_journaled,true);
 });
 
 test('owner cloud chat migration rejects wrong project, altered build and redirected Site',t=>{
