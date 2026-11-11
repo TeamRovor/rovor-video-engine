@@ -1,9 +1,13 @@
 name: ROVOR cloud workforce (hosted shift)
 
 on:
-  schedule:
-    # GitHub-hosted dispatcher; schedule can be delayed by GitHub load.
-    - cron: '*/5 * * * *'
+  # The old GitHub -> private ChatGPT Site 5-minute trigger repeatedly
+  # received HTTP 403 (GitHub runs 43008276557 and 43079508339).
+  # Do not run a second failing scheduler: the separate existing Cloudflare
+  # HUD already has a native 5-minute clock. Its single Gemini route is
+  # independently guarded by STOP, quotas and owner approvals.
+  # This legacy *Site* shift remains a manual owner recovery operation only.
+  # It is NOT proof that the original nine-provider Site is activated.
   workflow_dispatch:
   pull_request:
     paths:
@@ -72,7 +76,7 @@ jobs:
           PY
 
   shift:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
