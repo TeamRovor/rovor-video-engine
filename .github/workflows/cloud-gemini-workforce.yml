@@ -37,15 +37,15 @@ on:
           - enable_schedule
           - stop
       task_id:
-        description: "For pilot_once: exact unapproved NEW v2 candidate ID from coordination/tasks.json"
+        description: "For pilot_once: selected new unapproved v2 candidate (Gus website offer prefilled)"
         type: string
         required: false
-        default: ''
+        default: cloud-gemini-website-offer-pilot-20261110
       revision:
-        description: "For pilot_once only: newly approved v2+ packet revision (old v1 tasks never replayed)"
+        description: "For pilot_once only: selected v2+ packet revision (old v1 tasks never replayed)"
         type: string
         required: false
-        default: ''
+        default: v2
       confirm_owner_approval:
         description: "I explicitly approve the selected NEW v2 pilot task or recurring schedule after my PASS"
         type: boolean
