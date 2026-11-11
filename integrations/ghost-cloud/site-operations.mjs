@@ -358,8 +358,20 @@ export function createCloudOperations(base, cloud) {
    const quotaObservation=provider==='groq'?readGroqRpd(response.headers,Date.now()):null;
    const data=await bounded(response,4194304),rows=data.data||data.models||data.result;
    if(!Array.isArray(rows))return {provider,status:'unrecognized_catalog'};
-   const models=rows.filter(m=>m&&typeof(m.id||m.name)==='string').filter(m=>provider!=='openrouter'||(m.id.endsWith(':free')&&m.pricing?.prompt!=null&&m.pricing?.completion!=null&&Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0)).slice(0,20).map(m=>({
-    id:String(m.id||m.name).slice(0,200),context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
+   // Cloudflare catalog objects contain UUID database keys in `id`;
+   // only `name` is a usable @cf/... inference model identifier.
+   // An authenticated catalog is still NOT proof of free inference eligibility.
+   const models=rows.filter(m=>m&&typeof m==='object').filter(m=>
+    provider==='cloudflare-ai'?
+     typeof m.name==='string'&&/^@cf\/[a-z0-9][a-z0-9_./-]*$/i.test(m.name):
+     typeof(m.id||m.name)==='string'
+   ).filter(m=>provider!=='openrouter'||(
+    typeof m.id==='string'&&m.id.endsWith(':free')&&
+    m.pricing?.prompt!=null&&m.pricing?.completion!=null&&
+    Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0
+   )).slice(0,20).map(m=>({
+    id:String(provider==='cloudflare-ai'?m.name:(m.id||m.name)).slice(0,200),
+    context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
     catalog_zero_price:provider==='openrouter'?true:null
    }));
    return {provider,status:'catalog_received',observed_at:Date.now(),models,
