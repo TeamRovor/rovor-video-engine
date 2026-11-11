@@ -145,6 +145,7 @@ async function refreshOwner(){
   patchConfigured=patch.configured===true&&Array.isArray(patch.allowed_paths)&&patch.allowed_paths.length>0;
   const messages={
    disabled_by_owner:'GitHub draft PRs: disabled. Owner must enable ROVOR_GITHUB_PATCH_ENABLED in protected repository variables.',
+   write_scope_unavailable:'GitHub draft PRs: requested, but the App lacks confirmed Contents + Pull requests write permission. The code-writing tool is locked; review and read-only discovery remain available.',
    app_credentials_missing:'GitHub draft PRs: GitHub App credentials are not configured.',
    allowlist_missing_or_invalid:'GitHub draft PRs: the owner must set an exact safe ROVOR_GITHUB_PATCH_PATHS allowlist.',
    configuration_complete_write_scope_unverified:'GitHub draft PRs: configured. Real write permissions must pass the protected deployment preflight; no live PR claimed.',

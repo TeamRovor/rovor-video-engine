@@ -42,6 +42,8 @@ export function buildHudSecretPayload(env) {
   if(['true','false'].includes(env.ROVOR_NATIVE_DISCOVERY_ENABLED))
     payload.ROVOR_NATIVE_DISCOVERY_ENABLED=env.ROVOR_NATIVE_DISCOVERY_ENABLED;
   if(['true','false'].includes(env.ROVOR_GITHUB_PATCH_ENABLED))payload.ROVOR_GITHUB_PATCH_ENABLED=env.ROVOR_GITHUB_PATCH_ENABLED;
+  if(['true','false'].includes(env.ROVOR_GITHUB_PATCH_OWNER_REQUESTED))
+    payload.ROVOR_GITHUB_PATCH_OWNER_REQUESTED=env.ROVOR_GITHUB_PATCH_OWNER_REQUESTED;
   if(typeof env.ROVOR_GITHUB_PATCH_PATHS==='string'&&env.ROVOR_GITHUB_PATCH_PATHS.length<=3000&&env.ROVOR_GITHUB_PATCH_PATHS)
     payload.ROVOR_GITHUB_PATCH_PATHS=env.ROVOR_GITHUB_PATCH_PATHS;
   if(validateOneTimeGeminiActivation(env)){

@@ -80,7 +80,8 @@ export async function queueGithubPatch(env,body,now=Date.now()){
 }
 export async function githubPatchStatus(env){
  const cfg=githubPatchConfiguration(env);
- const readiness=!cfg.requested?'disabled_by_owner':
+ const ownerRequested=env?.ROVOR_GITHUB_PATCH_OWNER_REQUESTED==='true';
+ const readiness=ownerRequested&&!cfg.requested?'write_scope_unavailable':!cfg.requested?'disabled_by_owner':
   !cfg.credentials_configured?'app_credentials_missing':
   !cfg.allowed_path_count?'allowlist_missing_or_invalid':
   'configuration_complete_write_scope_unverified';

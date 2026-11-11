@@ -157,3 +157,10 @@ test('GitHub patch status distinguishes owner-disabled, missing app and allowlis
  assert.equal(noPaths.readiness,'allowlist_missing_or_invalid');
  assert(!JSON.stringify(full).includes('PRIVATE KEY'));
 });
+
+test('owner-requested draft PRs remain explicitly blocked when deployment downscopes unavailable writes',async()=>{
+ const s=setup();
+ const status=await githubPatchStatus({...s.env,ROVOR_GITHUB_PATCH_ENABLED:'false',ROVOR_GITHUB_PATCH_OWNER_REQUESTED:'true'});
+ assert.equal(status.configured,false);
+ assert.equal(status.readiness,'write_scope_unavailable');
+});
