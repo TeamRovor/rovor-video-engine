@@ -187,3 +187,20 @@ CREATE TABLE IF NOT EXISTS hud_cloud_workforce_series (
  CHECK(active=0 OR (source_commit IS NOT NULL AND LENGTH(source_commit)=40 AND approved_at IS NOT NULL AND expires_at>approved_at))
 );
 INSERT OR IGNORE INTO hud_cloud_workforce_series(id,active) VALUES(1,0);
+
+-- Append-only native Cloudflare scheduler observations; independent of manual
+-- API ticks and of the private Site ledger. No prompt, output or credential.
+CREATE TABLE IF NOT EXISTS hud_cloud_workforce_native_ticks (
+ id TEXT PRIMARY KEY,
+ scheduled_at INTEGER NOT NULL,
+ started_at INTEGER NOT NULL,
+ finished_at INTEGER NOT NULL CHECK(finished_at>=started_at),
+ result_state TEXT NOT NULL,
+ http_status INTEGER NOT NULL,
+ dispatch_reported INTEGER NOT NULL CHECK(dispatch_reported IN (0,1)),
+ job_id TEXT,
+ inference_completed INTEGER NOT NULL CHECK(inference_completed IN (0,1)),
+ CHECK(inference_completed=0 OR (dispatch_reported=1 AND job_id IS NOT NULL))
+);
+CREATE INDEX IF NOT EXISTS hud_cloud_workforce_native_ticks_recent
+ ON hud_cloud_workforce_native_ticks(started_at DESC);

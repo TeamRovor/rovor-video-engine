@@ -161,11 +161,35 @@ export async function refillDiscovery(db,series,now){
  return {queued:saved.meta.changes===1,reason:saved.meta.changes===1?'fresh_discovery_queued':'queue_or_review_limit'};
 }
 
+// Record actual scheduled events only, not HTTP/manual ticks. A tick's
+// dispatch report is not a separate proof of provider inference.
+export async function recordNativeTick(db,scheduledAt,startedAt,finishedAt,result){
+ if(!Number.isSafeInteger(scheduledAt)||scheduledAt<=0||
+    !Number.isSafeInteger(startedAt)||startedAt<=0||
+    !Number.isSafeInteger(finishedAt)||finishedAt<startedAt)
+  throw Error('native_tick_timestamp_invalid');
+ const state=result?.body?.state||result?.body?.error;
+ const safeState=typeof state==='string'&&/^[a-z0-9_]{1,80}$/.test(state)?state:'unconfirmed';
+ const dispatch=result?.body?.dispatched===1?1:0;
+ const job=validId(result?.body?.id)?result.body.id:null;
+ const completed=dispatch===1&&job!==null&&safeState==='needs_review'&&
+  result?.status===200&&result?.body?.inference_completed===true?1:0;
+ const code=Number.isInteger(result?.status)&&result.status>=100&&result.status<=599?result.status:503;
+ const row=await db.prepare(`INSERT INTO hud_cloud_workforce_native_ticks
+  (id,scheduled_at,started_at,finished_at,result_state,http_status,dispatch_reported,job_id,inference_completed)
+  VALUES (?,?,?,?,?,?,?,?,?)`).bind(crypto.randomUUID(),scheduledAt,startedAt,finishedAt,
+   safeState,code,dispatch,job,completed).run();
+ if(row.meta?.changes!==1)throw Error('native_tick_receipt_unconfirmed');
+}
+
 export async function status(db){
  try{
   const gate=await db.prepare('SELECT enabled FROM hud_cloud_workforce_control WHERE id=1').first();
   if(!gate)return {status:503,body:{error:'workforce_control_unavailable'}};
   const plan=await seriesState(db);
+  const ticks=await db.prepare(`SELECT scheduled_at,started_at,finished_at,result_state,
+   http_status,dispatch_reported,job_id,inference_completed
+   FROM hud_cloud_workforce_native_ticks ORDER BY started_at DESC,id DESC LIMIT 12`).all();
   const rows=await db.prepare(`SELECT id,task_id,employee,kind,title,source_commit,created_at,
     started_at,finished_at,state,actual_model,output_sha256,human_review,reviewed_at,error_code
     FROM hud_cloud_workforce_jobs ORDER BY created_at DESC LIMIT 50`).all();
@@ -176,6 +200,8 @@ export async function status(db){
       expires_at:plan?.active===1?plan.expires_at:null,
       source:'fresh_github_discovery',max_attempts_per_rolling_day:MAX_DAILY,
       max_pending_reviews:MAX_PENDING_REVIEWS},items:rows.results||[],
+    native_schedule:{source:'cloudflare_scheduled_event',recent_ticks:ticks.results||[],
+      last_tick:(ticks.results||[])[0]||null},
     task_source:'trusted_approved_canonical_queue',
     site_review_ledger_synced:false}};
  }catch{return {status:503,body:{error:'private_workforce_store_unavailable'}};}
