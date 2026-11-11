@@ -243,7 +243,11 @@ function reviewContext(entry){
    kind==='issue'?'GitHub recorded an open issue that may need attention. ROVOR prepared a review plan.':
    'An open pull request has been inactive. ROVOR prepared a review plan.';
   return {type:'Investigation plan',title,why,
-   completed:'A written plan only. No code was changed and no technical fix was verified.',
+   completed:'A saved investigation brief describing checks and recommended next steps. No code, fix, independent test run, deployment or pull request was produced by this job.',
+   benefit:kind==='run'?'If the checks are specific and relevant, the plan could guide debugging and make deployments more reliable. This benefit has not been demonstrated.':
+    kind==='issue'?'A useful plan could help prioritize and address a reported problem. No improvement has been demonstrated.':
+    'A useful plan could help move a stuck code review forward. No change has been merged or measured.',
+   concerns:'The model received a GitHub record category, number, priority and URL, not the actual code, error logs, issue text or pull request diff. It cannot verify a root cause. The problem might already be resolved.',
    decision:'Is this investigation useful enough to keep? You are not approving a fix or certifying that its suggested causes are correct.',
    next:'Keeping this saves your acceptance of the plan. No investigation, code change or publication is authorized by this decision.',
    url:'https://github.com/TeamRovor/rovor-video-engine/'+(kind==='run'?'actions/runs/':kind==='issue'?'issues/':'pull/')+num,
@@ -252,17 +256,39 @@ function reviewContext(entry){
  }
  if(entry.id.startsWith('gc-patch-src-'))return {type:'Proposed code change',title:entry.title,
   why:'You approved a small source excerpt for the employee to propose an improvement.',
-  completed:'A proposed replacement, not an applied change. Independent tests have not run.',
+  completed:'A saved proposed replacement for one owner-selected code excerpt. No code was changed and no independent test or pull request was produced by this inference.',
+  benefit:'If the proposed replacement is correct, it could improve the selected file. No performance, security or reliability improvement has been demonstrated.',
+  concerns:'The model saw only a small excerpt, not the full application. The proposal may break surrounding code or introduce regressions and requires separate technical tests and approval.',
   decision:'Is the proposed change worth retaining for technical review? Do not keep it just because it has a verified receipt.',
   next:'Keeping the proposal does not change GitHub. Draft pull-request creation needs a separate owner authorization; a merge is not authorized.',
   criteria:'Reject if the proposal does not address your requested improvement. If the code is unclear, review later and ask for a technical explanation.'};
  const names={plan:'Work plan',checklist:'Checklist',research:'Research draft',code_review:'Engineering draft'};
  return {type:names[entry.kind]||'Employee draft',title:entry.title,
   why:'ROVOR completed the requested written task for your review.',
-  completed:'A saved written result. External work, implementation or publication has not been verified.',
+  completed:'A saved written draft for this task. External execution, implementation, publication and actual results have not been verified.',
+  benefit:'If the draft is accurate and useful, it could help the team take the next step. No business impact has been demonstrated.',
+  concerns:'The model-generated text may be incomplete, inaccurate, generic or outdated. Its claims and recommendations have not been independently validated.',
   decision:'Would you keep this result and use it for the task described?',
   next:'Keeping the draft records your approval of its usefulness. It does not publish it, execute a tool or start another model.',
   criteria:'Keep if it answers the request and is specific enough to use. Reject inaccurate, incomplete or irrelevant work.'};
+}
+// Explain verified job scope independently of model assertions. Do not
+// infer a fix, return on investment, saved time or completed deployment.
+function ownerFact(panel,label,value,kind=''){
+ const item=make('section','owner-fact '+kind);
+ item.append(make('h4','',label),make('p','',value));
+ panel.append(item);
+}
+function ownerBrief(entry,context){
+ const panel=make('section','owner-brief');
+ panel.setAttribute('aria-label','What ROVOR did and why this review matters');
+ panel.append(make('p','owner-brief-heading','YOUR REVIEW BRIEF · Based on the recorded job, not AI claims'));
+ ownerFact(panel,'1. What ROVOR investigated',context.why);
+ ownerFact(panel,'2. What it actually produced',context.completed);
+ ownerFact(panel,'3. How it might benefit ROVOR',context.benefit,'benefit');
+ ownerFact(panel,'4. Concerns and missing proof',context.concerns,'concern');
+ ownerFact(panel,'5. What your PASS will do',context.next);
+ return panel;
 }
 // Independent current source read, not an AI claim.
 const evidenceMessages=Object.freeze({
@@ -296,6 +322,9 @@ async function displayEvidence(entry,context,card,generation){
    throw Error('invalid_evidence');
   if(typeof data.title==='string'&&data.title&&data.title.length<=140)panel.querySelector('strong').textContent=data.title+' · Current GitHub status';
   detail.textContent=evidenceMessages[data.state];panel.dataset.evidenceState=data.state;
+  if(['newer_check_passed','check_passed_now','issue_closed','pull_merged','pull_closed'].includes(data.state)){
+   panel.append(make('p','source-decision-note','Potentially outdated: the original work may no longer need action. Review the current GitHub record before keeping this plan.'));
+  }else panel.append(make('p','source-decision-note','This GitHub status is evidence of the record, not proof that the employee diagnosis or recommendation is correct.'));
   if(Number.isSafeInteger(data.related_id)&&data.related_id>0&&['newer_check_passed','newer_check_failed'].includes(data.state)){
    const link=make('a','','View newer check');link.href='https://github.com/TeamRovor/rovor-video-engine/actions/runs/'+data.related_id;
    link.target='_blank';link.rel='noreferrer';panel.append(link);
@@ -319,16 +348,23 @@ function renderOutput(output){
  return content;
 }
 function modelSections(output){
- // Optional exact headings in new triage drafts. No generated summary of
- // historical drafts, no trimming away contradictory or missing information.
- const keys={'bottom line':'Bottom line','what was done':'What was done','what is still unknown':'What is still unknown','recommended next step':'Recommended next step'};
- const parsed={};let active=null;
+ // These are excerpts of an AI-written report, not verified facts. Support
+ // earlier four-section drafts without attempting to invent missing sections.
+ const current=['Task and available evidence','Deliverable created','Potential benefit',
+  'Concerns and uncertainties','Recommended next step'];
+ const earlier=['Bottom line','What was done','What is still unknown','Recommended next step'];
+ const aliases=new Map([...current,...earlier].map(v=>[v.toLowerCase(),v]));
+ const parsed=Object.create(null);let active=null;
  for(const line of output.split(/\r?\n/)){
   const match=/^#{1,4}\s+(.+?)\s*$/.exec(line.trim());
-  if(match){active=Object.hasOwn(keys,match[1].toLowerCase())?keys[match[1].toLowerCase()]:null;if(active){if(Object.hasOwn(parsed,active))return null;parsed[active]='';}}
-  else if(active)parsed[active]+=(parsed[active]?'\n':'')+line;
+  if(match){
+   active=aliases.get(match[1].toLowerCase())||null;
+   if(active){if(Object.hasOwn(parsed,active))return null;parsed[active]='';}
+  }else if(active)parsed[active]+=(parsed[active]?'\n':'')+line;
  }
- return Object.values(keys).every(k=>typeof parsed[k]==='string'&&parsed[k].trim()&&parsed[k].length<=1800)?parsed:null;
+ const group=[current,earlier].find(names=>names.every(k=>typeof parsed[k]==='string'&&
+  parsed[k].trim().length>0&&parsed[k].length<=1800));
+ return group?group.map(label=>({label,content:parsed[label].trim()})):null;
 }
 function receiptDetails(entry,hash=null){
  const details=make('details','receipt-details');
@@ -360,11 +396,12 @@ async function inspect(entry,card,inspectButton,generation=refreshGeneration){
   const oldWarning=card.querySelector('.draft-load-error');if(oldWarning)oldWarning.remove();
   const context=reviewContext(entry),box=make('section','draft');
   box.append(make('h4','','What '+entry.employee+' delivered'));
+  box.append(make('p','employee-report-caution','This is the employee’s exact AI-generated report. Its proposed benefits, diagnoses and conclusions have not been independently verified.'));
   const sections=modelSections(draft.output);
   if(sections){
    const summary=make('div','draft-summary');
-   for(const [label,value] of Object.entries(sections)){
-    const p=make('p');p.append(make('strong','',label),document.createTextNode(value.trim()));summary.append(p);
+   for(const {label,content} of sections){
+    const p=make('p');p.append(make('strong','',label),document.createTextNode(content));summary.append(p);
    }
    box.append(summary);
    const full=make('details','draft-full');
@@ -515,8 +552,7 @@ async function refresh(clearNotice=true){
    const tag=make('span','state '+(awaiting?'wait':VERDICTS.has(entry.human_review)?'ok':''),humanState);
    header.append(heading,tag);card.append(header);
    if(awaiting){
-    card.append(make('p','explanation',context.why));
-    card.append(make('p','explanation',context.completed));
+    card.append(ownerBrief(entry,context));
     card.append(make('div','review-note','Your decision: '+context.decision));
     if(context.evidenceKey)evidenceLoads.push(()=>displayEvidence(entry,context,card,generation));
    }

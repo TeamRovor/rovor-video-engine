@@ -113,13 +113,18 @@ export function discoveryPrompt(key,priority){
  // pass raw discovery content, issue bodies, private code, logs or credentials.
  return 'ROVOR verified GitHub discovery: '+type+' (#'+num+'), priority '+priority+
   '/100, source '+link+'. You cannot browse this URL and have no source code or log contents. '+
-  'Write a business-owner-friendly triage report under 250 words. Use exactly these Markdown section headings: '+
-  '## Bottom line, ## What was done, ## What is still unknown, ## Recommended next step. '+
-  'Under Bottom line explain in one plain-English sentence why this matters to ROVOR. '+
-  'Under What was done say that you produced an investigation plan, not a repair; describe only confirmed evidence. '+
-  'Under What is still unknown explain what you cannot verify, without guessing a cause. '+
-  'Under Recommended next step give one practical action in plain language, followed by 2-3 concise read-only checks for an engineer. '+
-  'Tell the owner what makes this investigation worth keeping; avoid acronyms or define them. '+
+  'Write a plain-English engineering report under 300 words with EXACTLY these five Markdown headings: '+
+  '## Task and available evidence, ## Deliverable created, ## Potential benefit, '+
+  '## Concerns and uncertainties, ## Recommended next step. '+
+  'Task and available evidence: name the exact GitHub record and why it could matter to ROVOR. '+
+  'Deliverable created: state you produced ONLY a written investigation plan. No code, tests, diagnosis, '+
+  'merge or deployment were completed. Describe the concrete checks your plan proposes. '+
+  'Potential benefit: explain a specific possible operational value, using conditional language; '+
+  'never invent measured savings or claim the issue was fixed. '+
+  'Concerns and uncertainties: explain two concrete limitations, especially that you could not read the '+
+  'GitHub record contents, source files or logs and cannot verify the cause. Mention possible obsolescence. '+
+  'Recommended next step: give one bounded read-only action and 2-3 specific checks for an engineer, '+
+  'including the evidence needed before anyone attempts a fix. Define jargon and do not invent results. '+
   'Do not invent a diagnosis, command results, files or a completed fix; do not execute, publish, merge, '+ 
   'or request credentials. This is a draft only, pending human PASS/FAIL.';
 }

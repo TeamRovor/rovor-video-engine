@@ -113,6 +113,11 @@ async function main(){
   assert(info.buttons.every(h=>h>=44),name+' tap targets too small');
   assert.equal(info.history,false);assert.equal(info.details,false);assert.equal(info.images,0);
   assert(info.summary.includes('The cause is not verified.'));
+  const briefing=await evaluate('return document.querySelector("#jobs .owner-brief").textContent');
+  for(const label of ['What ROVOR investigated','What it actually produced','How it might benefit ROVOR','Concerns and missing proof','What your PASS will do'])
+   assert(briefing.includes(label),name+' missing '+label);
+  assert(briefing.includes('No code, fix, independent test run')&&briefing.includes('not the actual code'),'honest no-fix limitations missing');
+  assert(briefing.includes('No improvement has been demonstrated')||briefing.includes('This benefit has not been demonstrated'),'unmeasured benefit not disclosed');
   await waitFor(()=>evaluate('return !!document.querySelector(".source-status[data-evidence-state=newer_check_passed]")'),name+' current evidence');
   assert(await evaluate('return document.querySelector(".source-status[data-evidence-state=newer_check_passed]").textContent.includes("may already be addressed")'));
   assert.equal(writes.length,0,'current GitHub evidence never makes a review decision');
