@@ -1164,9 +1164,45 @@ function start(){
  // cannot find the board again. Keep the replacement selectable for live sync.
  const slot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
    n=>!n.hidden&&(n.classList.contains('rvq-board')||isOriginal(n)));
+ // Preserve active touch, scroll, text selection and keyboard inspection.
+ // Network receipts continue updating, but replacing the DOM waits for idle.
+ let gestureHeld=false,lastInteractionAt=-Infinity,pendingMarkup=null,pendingAt=0,resumeTimer=null;
+ const inspecting=()=>gestureHeld||Date.now()-lastInteractionAt<1900;
+ const scheduleResume=()=>{
+   if(resumeTimer!==null&&typeof clearTimeout==='function')clearTimeout(resumeTimer);
+   if(typeof setTimeout==='function')resumeTimer=setTimeout(()=>{
+     resumeTimer=null;
+     if(drawerVisible()&&slot())void sync();
+   },2100);
+ };
+ const markInteraction=(event,hold=false)=>{
+   if(!event?.target?.closest?.('#rovor-workload-popup, #screen .drawer-inner')||!slot())return;
+   if(hold)gestureHeld=true;
+   lastInteractionAt=Date.now();
+   scheduleResume();
+ };
+ const releaseGesture=()=>{
+   if(!gestureHeld)return;
+   gestureHeld=false;
+   lastInteractionAt=Date.now();
+   scheduleResume();
+ };
+ if(typeof document.addEventListener==='function'){
+   for(const name of ['wheel','scroll','touchmove','keydown','focusin'])
+     document.addEventListener(name,event=>markInteraction(event),{passive:name!=='keydown',capture:name==='scroll'});
+   for(const name of ['pointerdown','touchstart'])
+     document.addEventListener(name,event=>markInteraction(event,true),{passive:true});
+   for(const name of ['pointerup','pointercancel','touchend','touchcancel'])
+     document.addEventListener(name,releaseGesture,{passive:true});
+ }
  async function sync(){
    if(busy||!drawerVisible())return;
    const original=slot();if(!original)return;
+   if(pendingMarkup&&!inspecting()&&original.classList.contains('rvq-board')){
+     // Discard outdated pending evidence; never mark it live after expiry.
+     if(Date.now()-pendingAt<=5000)updateBoard(original,pendingMarkup,slot);
+     pendingMarkup=null;
+   }
    if(Date.now()-updated<5000){
      if(!original.classList.contains('rvq-board')){
        updateBoard(original,render(last||lastInventory,!!last,lastCloud,lastHourly,lastMinute,null,lastGroqCloud),slot);
@@ -1226,7 +1262,13 @@ function start(){
    lastGeminiDirect=geminiCatalog&&geminiUsage?{catalog:geminiCatalog,usage:geminiUsage,at:updated}:null;
    lastExtras={cloud,hourly,minute,geminiProject,groqCloud,at:updated};
    const target=slot();if(target){
-     updateBoard(target,render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject,groqCloud),slot);
+     const markup=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject,groqCloud);
+     if(target.classList.contains('rvq-board')&&inspecting()){
+       pendingMarkup=markup;pendingAt=Date.now();
+     }else{
+       pendingMarkup=null;
+       updateBoard(target,markup,slot);
+     }
    }
    } finally {
      busy=false;

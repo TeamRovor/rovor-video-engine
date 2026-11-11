@@ -5,6 +5,7 @@ const vm=require('node:vm');
 const path=require('node:path');
 
 let clock=Math.floor(Date.now()/60000)*60000,isBoard=false,writes=0,reads=0,dayReads=0,hourReads=0,minuteReads=0,intervals=[],observer,requests=1;
+const events=new Map(),delayed=[];
 const slot={
  hidden:false,
  classList:{contains:label=>label==='rvq-board'&&isBoard},
@@ -21,7 +22,8 @@ const drawer={hidden:false};
 const document={
  hidden:false,body:{},
  getElementById:id=>id==='screen'?drawer:({}),
- querySelectorAll:()=>[slot]
+ querySelectorAll:()=>[slot],
+ addEventListener:(name,fn)=>events.set(name,[...(events.get(name)||[]),fn])
 };
 const fetch=async url=>{
  if(!String(url).includes('/api/hud/omniroute'))return {ok:false};
@@ -41,6 +43,8 @@ const fetch=async url=>{
 };
 const context={window:{},document,fetch,MutationObserver:Observe,
  setInterval:(fn,ms)=>{assert.equal(ms,10000);intervals.push(fn);},
+ setTimeout:(fn,ms)=>{assert.equal(ms,2100);delayed.push(fn);return delayed.length;},
+ clearTimeout:()=>{},
  AbortSignal,Date:Clock};
 const source=fs.readFileSync(path.join(__dirname,'../dashboard/command-center/native-v8-9/live-quota-board.js'),'utf8');
 vm.runInNewContext(source,context);
@@ -93,6 +97,22 @@ const flush=()=>new Promise(resolve=>setImmediate(resolve));
  assert.equal(reads,13,'reopening Workload immediately refreshes the two missing windows once');
  assert.equal(hourReads,5);assert.equal(minuteReads,5);
  assert.equal(dayReads,3,'reopen must reuse the valid shared 24h snapshot');
- console.log('HUD popup refresh, hidden-drawer suspension and immediate reopen: PASS');
+ // A touched provider must not get replaced mid-gesture, even as verified
+ // counters move. The newest queued report paints once idle; hidden stays idle.
+ context.window.ROVOR_LIVE_OMNIROUTE_SNAPSHOT=null;
+ requests=3;clock+=11000;
+ const touched={target:{closest:()=>({})}},beforeWrites=writes;
+ events.get('pointerdown')[0](touched);
+ intervals[0]();await flush();await flush();
+ assert.equal(reads,16,'authenticated polling continues during pointer gesture');
+ assert.equal(writes,beforeWrites,'DOM must not be replaced during a held touch');
+ events.get('pointerup')[0](touched);
+ clock+=2200;
+ delayed.at(-1)();await flush();await flush();
+ assert.equal(writes,beforeWrites+1,'latest buffered view paints once the touch ends');
+ drawer.hidden=true;clock+=11000;
+ intervals[0]();await flush();
+ assert.equal(writes,beforeWrites+1,'closed drawer must stay undisturbed');
+ console.log('HUD popup refresh, hidden-drawer suspension, immediate reopen and touch-safe paint: PASS');
 })().catch(e=>{console.error(e);process.exitCode=1;});
 
