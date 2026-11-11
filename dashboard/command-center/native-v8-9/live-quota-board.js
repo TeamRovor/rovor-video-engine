@@ -1088,6 +1088,8 @@ function captureState(root){
  const active=document.activeElement;
  if(active&&board.contains(active)){
   if(active.matches?.('button[data-rvq-filter]'))state.focusedFilter=active.getAttribute('data-rvq-filter');
+  if(active.matches?.('a[data-rvq-open-slot]'))state.focusedSlot=active.getAttribute('data-rvq-open-slot');
+  if(active.matches?.('.rvq-jump-nav a'))state.focusedJump=active.getAttribute('href');
   const card=active.closest('[data-rvq-slot]');
   if(card&&active.tagName==='SUMMARY'){
    const details=[...card.querySelectorAll('details')];
@@ -1115,10 +1117,27 @@ function restoreState(root,state){
   const button=[...board.querySelectorAll('button[data-rvq-filter]')].find(b=>b.getAttribute('data-rvq-filter')===state.focusedFilter);
   button?.focus({preventScroll:true});
  }
+ if(state.focusedSlot){
+  const tile=[...board.querySelectorAll('a[data-rvq-open-slot]')].find(a=>a.getAttribute('data-rvq-open-slot')===state.focusedSlot);
+  tile?.focus({preventScroll:true});
+ }
+ if(state.focusedJump){
+  const link=[...board.querySelectorAll('.rvq-jump-nav a')].find(a=>a.getAttribute('href')===state.focusedJump);
+  link?.focus({preventScroll:true});
+ }
  if(state.focused){
   const d=getCard(state.focused.key)?.querySelectorAll('details')[state.focused.index];
   d?.querySelector('summary')?.focus({preventScroll:true});
  }
+}
+const renderedMarkup=new WeakMap();
+function updateBoard(target,markup,findBoard){
+ if(renderedMarkup.get(target)===markup)return false;
+ const state=captureState(target);
+ target.outerHTML=markup;
+ const next=findBoard();
+ if(next){renderedMarkup.set(next,markup);restoreState(next,state);}
+ return true;
 }
 let started=false;
 function start(){
@@ -1135,9 +1154,7 @@ function start(){
    const original=slot();if(!original)return;
    if(Date.now()-updated<5000){
      if(!original.classList.contains('rvq-board')){
-       const state=captureState(original);
-       original.outerHTML=render(last||lastInventory,!!last,lastCloud,lastHourly,lastMinute,null,lastGroqCloud);
-       restoreState(slot(),state);
+       updateBoard(original,render(last||lastInventory,!!last,lastCloud,lastHourly,lastMinute,null,lastGroqCloud),slot);
      }
      return;
    }
@@ -1188,9 +1205,7 @@ function start(){
    lastGeminiDirect=geminiCatalog&&geminiUsage?{catalog:geminiCatalog,usage:geminiUsage,at:updated}:null;
    lastExtras={cloud,hourly,minute,geminiProject,groqCloud,at:updated};
    const target=slot();if(target){
-     const state=captureState(target);
-     target.outerHTML=render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject,groqCloud);
-     restoreState(slot(),state);
+     updateBoard(target,render(fresh||lastInventory,!!fresh,cloud,hourly,minute,geminiProject,groqCloud),slot);
    }
    } finally {
      busy=false;
@@ -1226,5 +1241,6 @@ function start(){
  setInterval(()=>{if(slot())void sync();},10000);
  void sync();
 }
-return {render,start,captureState,restoreState};
+return {render,start,captureState,restoreState,updateBoard};
 })();
+
