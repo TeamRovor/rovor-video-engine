@@ -1,0 +1,211 @@
+{
+  "status": "version-of-your-acoustic-labiodental-trace-reviewed",
+  "traceRange": [
+    10.65,
+    12.1
+  ],
+  "geometrySamples": 697,
+  "samplingHz": 480,
+  "fftWindowSamples": 400,
+  "fftHopSamples": 80,
+  "hypotheses": [
+    10.69,
+    11.41,
+    11.36,
+    11.75,
+    11.52,
+    11.85
+  ],
+  "flaggedWordScriptIndices": [
+    34,
+    35,
+    36
+  ],
+  "centered20msRmsAndControlProbes": [
+    {
+      "center": 10.69,
+      "sourceSamples": [
+        170880,
+        171200
+      ],
+      "rmsDbFS": -49.37639104911439,
+      "actualControlTime": 10.689583333333333,
+      "innerGap": 12.448089599609375,
+      "fv": 0.0,
+      "lowerLipThicknessScale": 1.0
+    },
+    {
+      "center": 11.36,
+      "sourceSamples": [
+        181600,
+        181920
+      ],
+      "rmsDbFS": -20.049825099485208,
+      "actualControlTime": 11.360416666666667,
+      "innerGap": 8.667938232421875,
+      "fv": 0.08179595636152408,
+      "lowerLipThicknessScale": 0.9672816174553903
+    },
+    {
+      "center": 11.41,
+      "sourceSamples": [
+        182400,
+        182720
+      ],
+      "rmsDbFS": -19.967757654605084,
+      "actualControlTime": 11.410416666666666,
+      "innerGap": 4.414459228515625,
+      "fv": 0.869011990402345,
+      "lowerLipThicknessScale": 0.6523952038390619
+    },
+    {
+      "center": 11.52,
+      "sourceSamples": [
+        184160,
+        184480
+      ],
+      "rmsDbFS": -18.975585894413513,
+      "actualControlTime": 11.520833333333334,
+      "innerGap": 18.473602294921875,
+      "fv": 0.10352922335170928,
+      "lowerLipThicknessScale": 0.9585883106593163
+    },
+    {
+      "center": 11.75,
+      "sourceSamples": [
+        187840,
+        188160
+      ],
+      "rmsDbFS": -23.743431274948584,
+      "actualControlTime": 11.75,
+      "innerGap": 15.80718994140625,
+      "fv": 0.008131984174224687,
+      "lowerLipThicknessScale": 0.9967472063303101
+    },
+    {
+      "center": 11.83,
+      "sourceSamples": [
+        189120,
+        189440
+      ],
+      "rmsDbFS": -30.65054915978407,
+      "actualControlTime": 11.829166666666667,
+      "innerGap": 4.27557373046875,
+      "fv": 0.9345606476060091,
+      "lowerLipThicknessScale": 0.6261757409575963
+    },
+    {
+      "center": 11.85,
+      "sourceSamples": [
+        189440,
+        189760
+      ],
+      "rmsDbFS": -41.55521723382235,
+      "actualControlTime": 11.85,
+      "innerGap": 3.683502197265625,
+      "fv": 0.884291649163277,
+      "lowerLipThicknessScale": 0.6462833403346893
+    },
+    {
+      "center": 11.92,
+      "sourceSamples": [
+        190560,
+        190880
+      ],
+      "rmsDbFS": -22.16551707027041,
+      "actualControlTime": 11.920833333333333,
+      "innerGap": 6.822235107421875,
+      "fv": 0.0,
+      "lowerLipThicknessScale": 1.0
+    }
+  ],
+  "actualRasterOralAndFVMatchesTo1eMinus9": [
+    275,
+    278,
+    284,
+    286
+  ],
+  "actualRasterFVRecords": {
+    "275": {
+      "fv": 0.957509028501155,
+      "lowerLipFloatSha256": "6e3b17c4ce3e3f9c913bb01a65dd00898d240156faf87b90e6a890253031dcb9",
+      "incisorsFloatSha256": "c8f0982e46f39c37fa0f83b9513177138c4cfc57dabc0e3872aa47af20a56a17",
+      "lowerLipAlphaCoverage": 184.32791137695312,
+      "incisorAlphaCoverage": 119.27196502685547
+    },
+    "278": {
+      "fv": 0.0,
+      "lowerLipFloatSha256": "75abab03f49e8e10cccd97ca7f5a42f83856708733309a553bb3c9ab97b12d69",
+      "incisorsFloatSha256": "47a55aaf45093966a462e6da59e625017f68296bda16a3ab5a24dc7b49b7c9b4",
+      "lowerLipAlphaCoverage": 336.061767578125,
+      "incisorAlphaCoverage": 164.36009216308594
+    },
+    "284": {
+      "fv": 0.9348738266007721,
+      "lowerLipFloatSha256": "e5e9b0997bf5bfbe71a4b7019a9166194250672f1cf3d5af830a1ca89d2a4b1b",
+      "incisorsFloatSha256": "7b91aa8e3b59fb6ffc32e38bdcbf5529934611cb80902c7d615138973c8df41b",
+      "lowerLipAlphaCoverage": 187.22842407226562,
+      "incisorAlphaCoverage": 115.75863647460938
+    },
+    "286": {
+      "fv": 0.0,
+      "lowerLipFloatSha256": "6863ad872a424a4978165481859a886311131c0db1e658fe59da71817de7ea90",
+      "incisorsFloatSha256": "bb9f8df61474d25e71fa00722318cd387396ca1736605e1248821cc0de3d3af8",
+      "lowerLipAlphaCoverage": 232.46128845214844,
+      "incisorAlphaCoverage": 0.0
+    }
+  },
+  "actualLowerLipPlanesMatchTo1eMinus6": true,
+  "actualIncisorConsumedPlanesExact": true,
+  "lipThicknessIsAuthoredProxy": true,
+  "nativeFacesInspected": [
+    275,
+    278,
+    284,
+    286
+  ],
+  "isolatedContactPlanesInspected": [
+    275,
+    284
+  ],
+  "normalDecodedSourceFramesInspected": [
+    275,
+    278,
+    284,
+    286
+  ],
+  "slowDecodedVideoFramesInspected": [
+    44,
+    80
+  ],
+  "nativeResolutionTraceHalvesInspected": true,
+  "stageFramesByteExact": 30,
+  "normalDecodedFrames": 30,
+  "slowDecodedFrames": 120,
+  "contextPcmSamples": 20000,
+  "contextPcmRange": [
+    176000,
+    196000
+  ],
+  "contextPcmByteExact": true,
+  "pngHashesVerified": 51,
+  "selectedCurrentFrozenSourcesVerified": 106,
+  "findings": [
+    "The earlier version10.69 anchor overlaps the preceding modeled K/L passage, while older of11.36 and your11.52 lie in the earlier periodic/tiny-to-version/ER sequence. The context does not support adopting the whole earlier anchor group.",
+    "Near current version11.41 periodic/formant energy falls toward a weaker interval before the later ER cluster. Current of11.75 is within continuing periodic energy; near your11.85 energy drops before the next voiced cluster. Mixed spectral windows cannot establish exact word or V onset/release boundaries.",
+    "Two continuous FV pulses occur near11.44 and11.83 in the existing controls. Four raster FV strengths match capture to1e-9; actual independent lower-lip planes reconstruct to1e-6 and actual rigid-incisor planes match consumed materials. This validates construction, not physical contact pressure or recorded anatomy.",
+    "The authored lower-lip thickness proxy is1\u22120.4FV; native FV poses show a narrow incisor/lip slit. Its full-stage contact readability remains limited. Neither matching meshes nor spectral coverage establishes polished phonetic acting."
+  ],
+  "disposition": "retain-current-intervals-no-automatic-retiming",
+  "timingChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "flaggedWordsWithDeeperTraces": 14,
+  "independentListening": false,
+  "exactBoundariesVerified": false,
+  "realTimePlaybackAccepted": false,
+  "animationAccepted": false,
+  "polished": false,
+  "pendingJobs": [],
+  "next": "Review browser\u2192tabs/script41\u201342 against original Region04 spectrum and actual articulation; no automatic threshold retiming/new expression variants."
+}

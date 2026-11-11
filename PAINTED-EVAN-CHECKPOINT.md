@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: version→of→your acoustic/labiodental trace reviewed
+CARTOON-EVAN-VERSION-OF-YOUR-TRACE.md / evan-engine/reviews/version-of-your-trace-v1.json. Existingtrace reused: original10.65–12.10sPCM/25msFFT/5mshop/697actualsamples480Hz. Threeflaggedwords34–36; earlier10.69/11.36/11.52overlapprecedingmodeledpassages; current11.41nearenergyreduction/11.75withinperiodicenergy/11.85laterreduction. Exactword/Vedges unverified; retaincurrentintervals. Noart/controls/retiming;18flagsopen.
+
+Fouractualoral/FVfixtures275/278/284/286 matchcaptureto1e-9; actualindependentlowerlipplanes reconstructto1e-6/consumedincisorplanesexact, floatmaterialhashesretained. ContactFV.957509/.934874, releases0; thickness1−.4FVisauthoredproxy. Nativeincisor/lipslit subtleatstagescale; rounding286incisorcoverage0recorded. outputs/evan-cartoon-version-of-your-trace/Review.html:30BYTE-EXACTfullframes264..293;30/120normal/slowdecodes;20000exactPCM176000:196000.51PNGhashes/current+frozen selectedsources verified; nativeplothalves/4faces/4contactplanes/4normal/2slow inspected. Fourteenflaggedwords deepertraced; all18unresolved. Realtime/listening/polishedFALSE; no pendingjobs;automationACTIVE. Full/defaults/protectedversions preserved.
+
+NEXT: browser→tabs/script41–42, Region04originalPCM/spectrum +actualarticulation. Keepfullcandidate/all18flags; noautomaticretiming/newexpressionvariants. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync; localpushauthunavailable.
+
 ## Current task: basically→a→tiny acoustic/oral/tongue trace reviewed
 CARTOON-EVAN-A-TINY-TRACE.md / evan-engine/reviews/a-tiny-trace-v1.json. Existingtrace reused: original10.20–11.45sPCM/25msFFT/5mshop/601actualsamples480Hz. Older10.23/10.32 anchors overlapprecedingmodeledit’s/Bclosure; current10.84continuesperiodicenergy/spectralchange, after10.93reduction/transientnoise. ExactIY/AH/T/wordedges unverified; retaincurrentintervals. Noart/controls/retiming;18flagsopen.
 
