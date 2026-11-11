@@ -121,8 +121,8 @@ test('authenticated catalog receipt is shown separately from cloud model permiss
  assert.match(html,/API CATALOG AUTHENTICATED · inference separate/);
  assert.match(html,/LAST CATALOG CHECK STALE/);
  assert.match(html,/CLOUD VERIFICATION PENDING/);
- assert.equal((html.match(/API CATALOG AUTHENTICATED · inference separate/g)||[]).length,1);
- assert.equal((html.match(/LAST CATALOG CHECK STALE/g)||[]).length,8);
+ assert.equal((html.match(/class="rvq-overview-source">API CATALOG AUTHENTICATED · inference separate/g)||[]).length,1);
+ assert.equal((html.match(/class="rvq-overview-source">LAST CATALOG CHECK STALE/g)||[]).length,8);
  const missing=render(null,false,{...cloud,observed_at:now-3600000});
  assert.doesNotMatch(missing,/API CATALOG AUTHENTICATED · inference separate/);
 });
