@@ -4,6 +4,7 @@ import {cloudGeminiChat,cloudGeminiModels,googleGeminiCatalog,
   validateGeminiChat,cloudGeminiUsage,selectGeminiForTask,FREE_GEMINI_MODELS,
   AUTO_GEMINI_MODEL,ownerApprovedModels} from '../integrations/hud-cloud/cloud-gemini-chat.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
+import {selectCanaryModel} from '../integrations/hud-cloud/verify-cloud-gemini.mjs';
 
 const key='g'.repeat(38),reader='r'.repeat(40),writer='w'.repeat(40);
 const day='2026-11-09',now=Date.parse('2026-11-09T06:00:00Z');
@@ -14,7 +15,7 @@ const googleReply=()=>Response.json({
   candidates:[{content:{parts:[{text:'Hello via real model mock'}]},finishReason:'STOP'}],
   usageMetadata:{promptTokenCount:8,candidatesTokenCount:4}
 });
-function mockGoogle(ids=[model,fast,strong],replyStatus=200){
+function mockGoogle(ids=[model,fast,strong],replyStatus=200,expectedOutput=null){
   const calls=[];
   const send=async(url,options)=>{
     calls.push({url,options});
@@ -32,7 +33,8 @@ function mockGoogle(ids=[model,fast,strong],replyStatus=200){
     assert.equal(options.method,'POST');
     assert.match(url,/^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/models\/gemini-/);
     const selected=url.split('/models/')[1]?.split(':')[0];
-    assert.equal(JSON.parse(options.body).generationConfig.maxOutputTokens,selected?.endsWith('-lite')?1024:2048);
+    assert.equal(JSON.parse(options.body).generationConfig.maxOutputTokens,
+      expectedOutput??(selected?.endsWith('-lite')?1024:2048));
     assert(!JSON.stringify(JSON.parse(options.body)).includes('tools'));
     return replyStatus===429?new Response('',{status:429}):googleReply();
   };
@@ -357,4 +359,32 @@ test('Non-429 Google HTTP denials are precise, redacted per-model D1 failures wi
     assert.equal(u.models.find(x=>x.model===model)?.last_error_code,code);
     assert.doesNotMatch(JSON.stringify(u),/PRIVATE UPSTREAM BODY/);
   }
+});
+
+
+test('canary prefers previously successful free-model replies, never unapproved models',()=>{
+ const catalog={models:[AUTO_GEMINI_MODEL,strong,fast],
+  model_evidence:[{model:fast,verification:'verified_recent_reply'},
+   {model:strong,verification:'listed_unverified'}]};
+ assert.equal(selectCanaryModel(catalog),fast);
+ assert.equal(selectCanaryModel(catalog,strong),strong);
+ assert.equal(selectCanaryModel(catalog,'gemini-3.5-pro'),null);
+ assert.equal(selectCanaryModel({models:[AUTO_GEMINI_MODEL,strong]}),strong);
+ assert.equal(selectCanaryModel({models:[AUTO_GEMINI_MODEL]}),null);
+});
+
+test('a short canary can bound output below default without raising free model caps',async()=>{
+ const e={GEMINI_API_KEY:key,ROVOR_GEMINI_FREE_TIER_VERIFIED:'confirmed',DB:db()};
+ const g=mockGoogle([fast],200,384);
+ const answer=await cloudGeminiChat({model:fast,max_output_tokens:384,
+  messages:[{role:'user',content:'Return one short confirmation.'}]},e,now,g.send);
+ assert.equal(answer.status,200);
+ assert.equal(g.calls.filter(c=>c.options.method==='POST').length,1);
+ assert.throws(()=>validateGeminiChat({model:fast,max_output_tokens:63,messages:contents.messages}),/invalid_gemini_chat/);
+ assert.throws(()=>validateGeminiChat({model:fast,max_output_tokens:2049,messages:contents.messages}),/invalid_gemini_chat/);
+ const none=mockGoogle([fast]);
+ const denied=await cloudGeminiChat({model:fast,max_output_tokens:1500,messages:contents.messages},
+  {...e,DB:db()},now,none.send);
+ assert.equal(denied.status,400);
+ assert.equal(none.calls.filter(c=>c.options.method==='POST').length,0);
 });

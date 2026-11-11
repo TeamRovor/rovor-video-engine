@@ -4,10 +4,21 @@
 // text models; does not depend on Mac, trust catalog-only results, or change
 // other providers, tasks, approvals or scheduling.
 import {randomBytes} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
 const ORIGIN='https://rovor-hud-telemetry.rovordigital.workers.dev';
 const PREFERENCE=['gemini-3.5-flash-lite','gemini-3.1-flash-lite',
   'gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-2.5-flash-lite','gemini-3.5-flash','gemini-2.5-flash'];
 
+export function selectCanaryModel(catalog,selected=null){
+ const available=PREFERENCE.filter(m=>catalog?.models?.includes(m));
+ if(selected!==null)return available.includes(selected)?selected:null;
+ // Prefer a model with a successful private D1 reply in the prior 7 days.
+ // Catalog listing alone is not evidence that Google will complete a call.
+ const verified=new Set((Array.isArray(catalog?.model_evidence)?catalog.model_evidence:[])
+  .filter(r=>r?.verification==='verified_recent_reply').map(r=>r.model));
+ return available.find(m=>verified.has(m))||available[0]||null;
+}
 async function read(path,token) {
   return fetch(ORIGIN+path,{method:'GET',redirect:'manual',cache:'no-store',
     headers:token?{Authorization:'Bearer '+token}:{},
@@ -25,9 +36,8 @@ async function main(){
      catalog.mac_required!==false||!Array.isArray(catalog.models)||catalog.models.length<2||
      !catalog.models.includes('gemini-auto-free'))
     throw Error('gemini_cloud_not_armed_or_live_catalog_unavailable');
-  const selected=process.env.ROVOR_GEMINI_TEST_MODEL;
-  const model=selected ? (PREFERENCE.includes(selected)&&catalog.models.includes(selected)?selected:null) :
-    PREFERENCE.find(id=>catalog.models.includes(id));
+  const selected=process.env.ROVOR_GEMINI_TEST_MODEL||null;
+  const model=selectCanaryModel(catalog,selected);
   if(!model)throw Error('no_approved_key_listed_free_text_model_for_canary');
   const before=await read('/api/hud/gemini/usage',token);
   if(!before.ok)throw Error('private_gemini_usage_unavailable');
@@ -50,7 +60,7 @@ async function main(){
   const r=await fetch(ORIGIN+'/api/hud/gemini/chat',{
     method:'POST',redirect:'manual',
     headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Origin:ORIGIN},
-    body:JSON.stringify({model,messages:[{role:'user',
+    body:JSON.stringify({model,max_output_tokens:384,messages:[{role:'user',
       content:'Confirm this Gemini connection test in one short sentence, including this exact token: '+challenge}]}),
     signal:AbortSignal.timeout(40000)
   });
@@ -80,7 +90,7 @@ async function main(){
     '; HUD-wide and per-model private D1 counters advanced. No Mac.');
   console.log('No proof of remaining external quota or billing tier beyond owner attestation.');
 }
-main().catch(error=>{
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(error=>{
   console.error('Google Gemini cloud reply NOT VERIFIED: '+
     String(error?.message||'verification_error').replace(/[^a-z0-9_-]/gi,'_').slice(0,125));
   process.exitCode=1;
