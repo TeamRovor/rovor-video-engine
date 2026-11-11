@@ -153,19 +153,36 @@ test('existing native Cloudflare cron honors STOP and runs at most one approved 
  t.mock.method(globalThis,'fetch',google(calls));
  await intake(s.DB,packet,Date.now()-2000);
  // Cron is a no-op while STOP is closed, even with a queued job.
- await worker.scheduled({},s.env);
+ const scheduledAt=Date.now()-1000;
+ await worker.scheduled({scheduledTime:scheduledAt},s.env);
+ const first=(await status(s.DB)).body.native_schedule.last_tick;
+ assert.equal(first.scheduled_at,scheduledAt);
+ assert.equal(first.result_state,'stopped');
+ assert.equal(first.dispatch_reported,0);
+ assert.equal(first.inference_completed,0);
  assert.equal(calls.length,0);
  assert.equal((await draft(s.DB,job.id)).body.state,'queued');
  s.db.prepare('INSERT INTO hud_gemini_model_health(model,last_success_at,success_count) VALUES(?,?,1)')
   .run(model,Date.now()-1000);
  await control(s.DB,true);
- await worker.scheduled({},s.env);
+ await worker.scheduled({scheduledTime:scheduledAt+1},s.env);
  const result=(await draft(s.DB,job.id)).body;
  assert.equal(result.state,'needs_review');
  assert.match(result.output_sha256,/^[a-f0-9]{64}$/);
  assert.equal(calls.filter(x=>x.method==='POST').length,1);
- await worker.scheduled({},s.env);
+ await worker.scheduled({scheduledTime:scheduledAt+2},s.env);
  assert.equal(calls.filter(x=>x.method==='POST').length,1,'cron never replays a completed task');
+ const observed=(await status(s.DB)).body.native_schedule.recent_ticks;
+ assert.equal(observed.length,3);
+ const completion=observed.find(x=>x.inference_completed===1);
+ assert.equal(completion.job_id,job.id);
+ assert.equal(completion.result_state,'needs_review');
+ assert.equal(completion.dispatch_reported,1);
+ assert.equal(observed.filter(x=>x.dispatch_reported===1).length,1);
+ assert(!JSON.stringify(observed).includes(job.prompt));
+ assert(!JSON.stringify(observed).includes(result.output));
+ await handle(jsonRequest('/api/hud/workforce/tick',writer,'POST'),s.env,Date.now(),google(calls));
+ assert.equal((await status(s.DB)).body.native_schedule.recent_ticks.length,3,'manual tick never impersonates native clock');
  await control(s.DB,false);
 });
 

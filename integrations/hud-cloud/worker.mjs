@@ -6,7 +6,7 @@ import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
 import {getRepoSource} from './repo-source.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
 import {intake as workforceIntake,control as workforceControl,status as workforceStatus,
-  draft as workforceDraft,review as workforceReview,tick as workforceTick}
+  draft as workforceDraft,review as workforceReview,tick as workforceTick,recordNativeTick}
   from './approved-workforce.mjs';
 import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';
 // Private telemetry only: no inference, job dispatch, or Mac control.
@@ -588,9 +588,16 @@ export default {
   // Reuse the EXISTING Cloudflare 5-minute cron. Workforce STOP starts
   // disabled in D1, and only fresh independently verified Gemini replies
   // can admit one owner-approved job. No GitHub-to-private-Site HTTP needed.
-  async scheduled(_event, env) {
+  async scheduled(event, env) {
     if(!env.DB)return;
-    await expireChat(env.DB,Date.now());
-    await workforceTick(env,Date.now());
+    // Chat maintenance must not prevent the separate workforce clock from
+    // running. Still report the maintenance failure to Cloudflare.
+    let maintenanceFailed=false;
+    try{await expireChat(env.DB,Date.now());}catch{maintenanceFailed=true;}
+    const startedAt=Date.now();
+    const result=await workforceTick(env,startedAt);
+    if(Number.isSafeInteger(event?.scheduledTime)&&event.scheduledTime>0)
+      await recordNativeTick(env.DB,event.scheduledTime,startedAt,Math.max(startedAt,Date.now()),result);
+    if(maintenanceFailed)throw Error('scheduled_chat_maintenance_failed');
   }
 };

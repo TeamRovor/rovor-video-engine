@@ -20,7 +20,7 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const plain = code => code.replace(/^export (?=(?:(?:async )?function|(?:const|let|class))\b)/gm, '');
   const monitorImport = "import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';";
   const cloudGeminiImport = "import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';";
-  const workforceImport = "import {intake as workforceIntake,control as workforceControl,status as workforceStatus,\n  draft as workforceDraft,review as workforceReview,tick as workforceTick}\n  from './approved-workforce.mjs';";
+  const workforceImport = "import {intake as workforceIntake,control as workforceControl,status as workforceStatus,\n  draft as workforceDraft,review as workforceReview,tick as workforceTick,recordNativeTick}\n  from './approved-workforce.mjs';";
   if(core.split(workforceImport).length!==2)throw Error('Unexpected Cloudflare workforce import');
   // The original legacy Site is a separate private D1 and has no Cloudflare
   // workforce tables. Fail its new routes CLOSED rather than bundling a
