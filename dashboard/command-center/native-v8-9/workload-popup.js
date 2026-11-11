@@ -124,43 +124,148 @@
 
   // Workload Distribution card content only. The parent panel dimensions and
   // existing ROVOR HUD frame are untouched.
-  let compactTab='models';
   let compactPick=null;
   let retainedPopup=null;
+  // Real, authenticated nine-provider request-log preview. This never claims
+  // provider quota, a valid free-model entitlement or live inference admission.
+  // The local gateway is optional; the fixed identities remain readable with
+  // the Mac powered off, while all unsupported counters become UNKNOWN.
+  const HOME_PROVIDERS=[
+    ['gemini','Gemini'],['groq','Groq'],['nvidia','NVIDIA'],
+    ['mistral','Mistral'],['cloudflare','Cloudflare'],['openrouter','OpenRouter'],
+    ['cohere','Cohere'],['sambanova','SambaNova'],['huggingface','Hugging Face']
+  ];
+  let previewRoot=null,previewPaint=null,previewTimer=null;
+  let previewBusy=false,previewSnapshot=null,previewCheckedAt=0;
+  let compactTab='providers';
+  const homeCount=n=>Number.isSafeInteger(n)&&n>=0&&n<=1000000000?n:null;
+  function readHomeUsage(doc,now=Date.now()){
+    const usage=doc?.request_usage;
+    const observed=Date.parse(usage?.observed_at||'');
+    const snapshotAt=Date.parse(doc?.snapshot_at||'');
+    if(doc?.source!=='local_omniroute_read_only_bridge'||doc.period!=='24h'||
+       doc?.transport?.connection!=='fresh'||
+       usage?.source!=='omniroute_durable_call_logs'||usage.freshness!=='fresh'||
+       !['complete','partial'].includes(usage.coverage)||
+       !Number.isFinite(observed)||observed>now+5000||now-observed>30000||
+       !Number.isFinite(snapshotAt)||snapshotAt>now+5000||now-snapshotAt>30000||
+       !Array.isArray(usage.providers)||usage.providers.length!==HOME_PROVIDERS.length)
+      return null;
+    const valid=new Set(HOME_PROVIDERS.map(x=>x[0])),seen=new Set(),providers=[];
+    for(const item of usage.providers){
+      if(!item||!valid.has(item.provider)||seen.has(item.provider)||
+         typeof item.configured!=='boolean')return null;
+      const attempts=homeCount(item.attempts_pacific_day);
+      const successes=homeCount(item.successes_pacific_day);
+      if(attempts===null||successes===null||successes>attempts)return null;
+      seen.add(item.provider);
+      providers.push({id:item.provider,attempts,successes,configured:item.configured});
+    }
+    if(seen.size!==HOME_PROVIDERS.length)return null;
+    return {observed_at:observed,coverage:usage.coverage,providers,
+      active:providers.filter(x=>x.attempts>0).length,
+      attempts:providers.reduce((n,x)=>n+x.attempts,0),
+      successes:providers.reduce((n,x)=>n+x.successes,0)};
+  }
+  async function refreshHomeUsage(){
+    if(previewBusy||document.hidden===true||!previewRoot||previewRoot.isConnected===false)return;
+    previewBusy=true;
+    try{
+      const response=await fetch('/api/hud/omniroute?period=24h',{
+        credentials:'same-origin',cache:'no-store',
+        signal:typeof AbortSignal!=='undefined'&&typeof AbortSignal.timeout==='function'
+          ?AbortSignal.timeout(8000):undefined
+      });
+      previewSnapshot=response.ok?readHomeUsage(await response.json()):null;
+    }catch{previewSnapshot=null;}
+    finally{
+      previewCheckedAt=Date.now();
+      previewBusy=false;
+      if(previewRoot&&previewRoot.isConnected!==false)previewPaint?.();
+    }
+  }
   function mountPreview(container,openDetails){
     if(!container)return;
     container.replaceChildren();
     const root=document.createElement('div');
-    root.className='wl-compact';
+    root.className='wl-compact wl-live-home';
+    previewRoot=root;
     const paint=()=>{
-      const models=compactTab==='models';
-      root.innerHTML=`<div class="wl-compact-tabs" role="group" aria-label="Workload preview type">
-        <button type="button" data-wl-compact-tab="models" aria-pressed="${models}">AI MODELS <small>03 OLD</small></button>
-        <button type="button" data-wl-compact-tab="employees" aria-pressed="${!models}">EMPLOYEES <small>08</small></button>
-      </div>
-      <div class="wl-compact-meta" aria-label="OmniRoute live telemetry unavailable"><span class="wl-compact-dot"></span> LAST REPORT · HISTORICAL · ${observedTime()} <span>LIVE USAGE UNKNOWN</span></div>
-      <div class="wl-compact-items">${(models?MODELS:EMPLOYEES.map(e=>e[1])).map((label,i)=>`
-        <button type="button" class="wl-compact-row" data-wl-compact-row="${i}" aria-label="${label}, usage unknown, open workload details">
-          <span class="wl-compact-name">${htmlEscape(label)}</span>
-          <span class="wl-compact-status">${models?'Archived model':'No live link'}</span>
-          <span class="wl-compact-value">—</span>
-        </button>`).join('')}</div>
-      <div class="wl-compact-foot">3 ROUTED / 9 CONNECTIONS · OCT 24 ARCHIVE <button type="button" data-wl-outcomes>31 PAST CLAIMS ↗</button></div>`;
+      if(previewRoot!==root||root.isConnected===false)return;
+      const recent=previewSnapshot&&Date.now()-previewCheckedAt<=90000?previewSnapshot:null;
+      const providers=new Map(recent?.providers?.map(x=>[x.id,x])||[]);
+      const header=recent?'LIVE LOG · '+(recent.coverage==='partial'?'PARTIAL COVERAGE':'9 PROVIDERS'):
+        previewCheckedAt?'TELEMETRY UNAVAILABLE · NOT ZERO':'CHECKING PRIVATE TELEMETRY';
+      const summary=recent?'<span>'+recent.active+' / 9 WITH CALLS</span><span>'+recent.attempts.toLocaleString()+' ATTEMPTS</span><span>'+recent.successes.toLocaleString()+' LOGGED SUCCESSES</span>':
+        '<span>9 PROVIDERS TRACKED</span><span>USAGE UNKNOWN</span>';
+      const entries=compactTab==='providers'?HOME_PROVIDERS.map(([id,label])=>{
+        const item=providers.get(id);
+        const amount=item?item.attempts.toLocaleString()+' CALLS':'UNKNOWN';
+        const result=item?(item.attempts?item.successes.toLocaleString()+' LOGGED SUCCESSES':'NO LOGGED CALLS'):'NO FRESH RECEIPT';
+        return '<button type="button" class="wl-home-provider" data-wl-compact-provider="'+id+
+          '" aria-label="'+label+', '+amount+', open complete workload reports">'+
+          '<strong>'+label+'</strong><span>'+amount+'</span><small>'+result+'</small></button>';
+      }).join(''):EMPLOYEES.map(role=>'<button type="button" class="wl-compact-row" data-wl-compact-employee="'+role[0]+
+        '" aria-label="'+role[1]+', open workforce reports">'+
+        '<span class="wl-compact-name">'+role[1]+'</span><span class="wl-compact-status">INSPECT IN WORKLOAD</span>'+
+        '<span class="wl-compact-value">›</span></button>').join('');
+      const markup='<div class="wl-compact-tabs" role="group" aria-label="Workload preview type">'+
+        '<button type="button" data-wl-compact-tab="providers" aria-pressed="'+(compactTab==='providers')+
+        '">PROVIDERS <small>09</small></button><button type="button" data-wl-compact-tab="employees" aria-pressed="'+(compactTab==='employees')+
+        '">EMPLOYEES <small>08</small></button></div>'+
+        '<div class="wl-home-meta"><span class="wl-compact-dot" aria-hidden="true"></span><span>'+header+
+        '</span><button type="button" data-wl-refresh aria-label="Refresh private provider activity">REFRESH</button></div>'+
+        '<div class="wl-home-summary" aria-label="Logged activity, not provider quota">'+summary+'</div>'+
+        '<div class="'+(compactTab==='providers'?'wl-home-provider-grid':'wl-compact-items wl-home-employee-list')+'">'+entries+'</div>'+
+        '<div class="wl-home-foot"><span>REQUEST LOG ≠ QUOTA OR VERIFIED MODEL ADMISSION</span>'+
+        '<button type="button" data-wl-open-report>OPEN FULL WORKLOAD ›</button></div>';
+      if(root.innerHTML!==markup){
+        const focused=document.activeElement&&root.contains(document.activeElement)
+          ?document.activeElement.getAttribute('data-wl-compact-tab')||
+            document.activeElement.getAttribute('data-wl-compact-provider')||
+            document.activeElement.getAttribute('data-wl-refresh'):null;
+        root.innerHTML=markup;
+        if(focused){
+          const buttons=[...root.querySelectorAll('button')];
+          buttons.find(x=>x.getAttribute('data-wl-compact-tab')===focused||
+            x.getAttribute('data-wl-compact-provider')===focused||
+            (focused===''&&x.hasAttribute('data-wl-refresh')))?.focus({preventScroll:true});
+        }
+      }
     };
+    previewPaint=paint;
     root.addEventListener('click',event=>{
       const target=event.target.closest('button');
       if(!target||!root.contains(target))return;
-      if(target.hasAttribute('data-wl-outcomes')){compactPick={view:'outcomes'};if(typeof openDetails==='function')openDetails();}else if(target.hasAttribute('data-wl-compact-tab')){
+      if(target.hasAttribute('data-wl-refresh')){
+        previewCheckedAt=0;
+        void refreshHomeUsage();
+      }else if(target.hasAttribute('data-wl-compact-tab')){
         compactTab=target.dataset.wlCompactTab;
         paint();
-      }else if(target.hasAttribute('data-wl-compact-row')){
-        const index=Number(target.dataset.wlCompactRow);
-        compactPick=compactTab==='models'?{view:'models',model:index}:{view:'matrix',employee:index};
+      }else if(target.hasAttribute('data-wl-compact-employee')){
+        const index=EMPLOYEES.findIndex(role=>role[0]===target.dataset.wlCompactEmployee);
+        compactPick={view:'matrix',employee:index<0?0:index};
+        if(typeof openDetails==='function')openDetails();
+      }else if(target.hasAttribute('data-wl-compact-provider')||
+        target.hasAttribute('data-wl-open-report')){
+        compactPick={view:'outcomes'};
         if(typeof openDetails==='function')openDetails();
       }
     });
     container.append(root);
     paint();
+    if(!previewTimer){
+      previewTimer=setInterval(()=>{
+        if(previewRoot&&previewRoot.isConnected!==false&&document.hidden!==true)
+          void refreshHomeUsage();
+      },60000);
+      document.addEventListener('visibilitychange',()=>{
+        if(document.hidden!==true&&previewRoot?.isConnected!==false&&
+          Date.now()-previewCheckedAt>15000)void refreshHomeUsage();
+      });
+    }
+    if(!previewSnapshot||Date.now()-previewCheckedAt>15000)void refreshHomeUsage();
   }
   function mount(container) {
     if(!container)return;
@@ -200,5 +305,5 @@
     if(matrix)matrix.scrollLeft=carriedLeft;
   }
   function resetPopup(){retainedPopup=null;}
-  window.ROVOR_WORKLOAD={mount,mountPreview,resetPopup};
+  window.ROVOR_WORKLOAD={mount,mountPreview,resetPopup,readHomeUsage};
 })();

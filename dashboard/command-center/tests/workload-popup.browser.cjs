@@ -37,9 +37,9 @@ async function main(){
  for(const [width,height,name,mobile] of sizes){
   await cmd('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile});
   await cmd('Page.navigate',{url});
-  await poll(()=>evalJS('return !!window.ROVOR_NATIVE && document.querySelectorAll("#workloadPanel .wl-compact-row").length===3'));
-  const home=await evalJS('return {models:document.querySelectorAll("#workloadPanel .wl-compact-row").length,nav:document.querySelectorAll(".nav-item").length,panels:document.querySelectorAll(".rail .panel").length,hidden:document.querySelector("#screen").hidden,pageWidth:document.documentElement.scrollWidth,viewport:innerWidth}');
-  assert.equal(home.models,3,name+': 3 observed model rows');
+  await poll(()=>evalJS('return !!window.ROVOR_NATIVE && document.querySelectorAll("#workloadPanel .wl-home-provider").length===9'));
+  const home=await evalJS('return {providers:document.querySelectorAll("#workloadPanel .wl-home-provider").length,nav:document.querySelectorAll(".nav-item").length,panels:document.querySelectorAll(".rail .panel").length,hidden:document.querySelector("#screen").hidden,pageWidth:document.documentElement.scrollWidth,viewport:innerWidth}');
+  assert.equal(home.providers,9,name+': nine provider tiles');
   assert.equal(home.nav,5,name+': dock preserved');
   assert.equal(home.panels,6,name+': HUD panels preserved');
   assert(home.hidden,name+': popup should start hidden');

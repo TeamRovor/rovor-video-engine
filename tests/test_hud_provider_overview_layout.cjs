@@ -143,14 +143,62 @@ test('attention filter covers fresh actionable gates without treating idle or st
  assert.doesNotMatch(old,/data-rvq-attention="true"/);
 });
 
-test('the original bundled workload preview remains explicitly unverified rather than live',()=>{
+test('home Workload preview uses authenticated same-origin nine-provider call receipts, not archived model samples',()=>{
  const js=fs.readFileSync(path.join(__dirname,'../dashboard/command-center/native-v8-9/workload-popup.js'),'utf8');
+ assert.match(js,/fetch\('\/api\/hud\/omniroute\?period=24h'/);
+ assert.match(js,/credentials:'same-origin',cache:'no-store'/);
+ assert.match(js,/data-wl-compact-provider/);
+ assert.match(js,/LOGGED SUCCESSES/);
+ assert.match(js,/REQUEST LOG ≠ QUOTA OR VERIFIED MODEL ADMISSION/);
+ assert.match(js,/NOT ZERO/);
  assert.match(js,/Owner-published Mac observation, not a live connection or inference proof/);
- assert.match(js,/LAST REPORT/);
- assert.match(js,/USAGE UNKNOWN/);
- assert.match(js,/No live link/);
- assert.match(js,/Live link missing/);
  assert.match(js,/NO VERIFIED LIVE MODEL TELEMETRY/);
+ assert.match(workload,/#workloadPanel \.wl-home-provider-grid\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+ assert.match(workload,/#workloadPanel \.wl-home-provider\{[^\n]*min-height:55px/);
+});
+
+const homeSource=fs.readFileSync(path.join(__dirname,'../dashboard/command-center/native-v8-9/workload-popup.js'),'utf8');
+function readHome(doc,now){
+ const window={};
+ vm.runInNewContext(homeSource,{window,Date,Math,Number,Array,Set,Map});
+ return window.ROVOR_WORKLOAD.readHomeUsage(doc,now);
+}
+function homeFixture(now){
+ return {
+  source:'local_omniroute_read_only_bridge',period:'24h',
+  snapshot_at:new Date(now).toISOString(),transport:{connection:'fresh'},
+  request_usage:{
+   source:'omniroute_durable_call_logs',freshness:'fresh',coverage:'complete',
+   observed_at:new Date(now).toISOString(),
+   providers:['gemini','groq','mistral','nvidia','cloudflare','openrouter','cohere','sambanova','huggingface']
+    .map((provider,i)=>({provider,configured:true,attempts_pacific_day:i<2?i+2:0,
+      successes_pacific_day:i<2?i+1:0}))
+  }
+ };
+}
+test('home provider snapshot shows nine observed slots but only actual logged activity',()=>{
+ const now=Date.now(),output=readHome(homeFixture(now),now);
+ assert.equal(output.providers.length,9);
+ assert.equal(output.active,2);
+ assert.equal(output.attempts,5);
+ assert.equal(output.successes,3);
+ assert.equal(output.providers.find(p=>p.id==='cloudflare').attempts,0);
+ assert.equal(output.coverage,'complete');
+});
+test('home provider readback never uses stale, incomplete, missing or inflated provider counters',()=>{
+ const now=Date.now();
+ const base=homeFixture(now);
+ const cases=[
+  {...base,transport:{connection:'stale'}},
+  {...base,request_usage:{...base.request_usage,freshness:'stale'}},
+  {...base,request_usage:{...base.request_usage,providers:base.request_usage.providers.slice(0,8)}},
+  {...base,request_usage:{...base.request_usage,providers:[...base.request_usage.providers.slice(0,8),base.request_usage.providers[0]]}},
+  {...base,request_usage:{...base.request_usage,providers:base.request_usage.providers.map((p,i)=>i===0?{...p,successes_pacific_day:40}:p)}},
+  {...base,request_usage:{...base.request_usage,observed_at:new Date(now-3600000).toISOString()}},
+  {...base,request_usage:{...base.request_usage,coverage:'unavailable'}},
+  {...base,source:'unknown'},
+ ];
+ for(const x of cases)assert.equal(readHome(x,now),null);
 });
 
 test('different model allowances are never conflated into one provider-wide ring',()=>{
