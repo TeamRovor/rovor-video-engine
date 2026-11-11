@@ -262,7 +262,11 @@ export async function githubPatchTick(env,now=Date.now(),send=fetch){
   const token=await mintGithubPatchToken(env,now,send),api=client(token,send);
   await check();
   const main=await api('/git/ref/heads/main');
-  if(main.object?.sha!==claim.base_commit)throw Error('patch_base_stale');
+  const currentMain=main.object?.sha;
+  if(!SHA.test(currentMain||''))throw Error('github_base_invalid');
+  // Always validate that the originally approved blob really existed in
+  // the pinned source commit. A newer main is acceptable only when it is a
+  // descendant of that commit AND contains the exact same Git blob.
   const base=await api('/git/commits/'+claim.base_commit);
   if(base.sha!==claim.base_commit||!SHA.test(base.tree?.sha))throw Error('github_base_invalid');
   const tree=await api('/git/trees/'+base.tree.sha+'?recursive=1');
@@ -270,6 +274,22 @@ export async function githubPatchTick(env,now=Date.now(),send=fetch){
   const entry=tree.tree.find(x=>x.path===p.change.path);
   if(!entry||entry.type!=='blob'||entry.mode!=='100644'||entry.sha!==p.change.blob_sha)
    throw Error('patch_blob_mismatch');
+  let targetCommit=currentMain,targetTree=base.tree.sha;
+  if(currentMain!==claim.base_commit){
+   const compare=await api('/compare/'+claim.base_commit+'...'+currentMain+'?per_page=1');
+   if(compare.status!=='ahead'||compare.base_commit?.sha!==claim.base_commit||
+      compare.merge_base_commit?.sha!==claim.base_commit)
+    throw Error('patch_base_stale');
+   const newer=await api('/git/commits/'+currentMain);
+   if(newer.sha!==currentMain||!SHA.test(newer.tree?.sha))throw Error('github_base_invalid');
+   const snapshot=await api('/git/trees/'+newer.tree.sha+'?recursive=1');
+   if(snapshot.sha!==newer.tree.sha||snapshot.truncated!==false||
+      !Array.isArray(snapshot.tree))throw Error('github_tree_invalid');
+   const target=snapshot.tree.find(x=>x.path===p.change.path);
+   if(!target||target.type!=='blob'||target.mode!=='100644'||target.sha!==entry.sha)
+    throw Error('patch_blob_mismatch');
+   targetTree=newer.tree.sha;
+  }
   const blob=await api('/git/blobs/'+entry.sha);
   if(blob.sha!==entry.sha||blob.encoding!=='base64'||typeof blob.content!=='string'||
      !Number.isSafeInteger(blob.size)||blob.size<1||blob.size>MAX_FILE)throw Error('patch_file_invalid');
@@ -279,16 +299,16 @@ export async function githubPatchTick(env,now=Date.now(),send=fetch){
   // Check current main again before the first external write, then never
   // follow a moving ref or overwrite an existing branch.
   await check();const latest=await api('/git/ref/heads/main');
-  if(latest.object?.sha!==claim.base_commit)throw Error('patch_base_stale');
+  if(latest.object?.sha!==targetCommit)throw Error('patch_base_stale');
   await check();wrote=true;
-  const newTree=await api('/git/trees','POST',{base_tree:base.tree.sha,
+  const newTree=await api('/git/trees','POST',{base_tree:targetTree,
    tree:[{path:p.change.path,mode:'100644',type:'blob',content}]});
-  if(!SHA.test(newTree.sha)||newTree.sha===base.tree.sha)throw Error('github_tree_invalid');
+  if(!SHA.test(newTree.sha)||newTree.sha===targetTree)throw Error('github_tree_invalid');
   await event(db,job.id,'tree',newTree.sha,Date.now());
   await check();
-  const commit=await api('/git/commits','POST',{message:'ROVOR reviewed patch: '+p.title,tree:newTree.sha,parents:[claim.base_commit]});
+  const commit=await api('/git/commits','POST',{message:'ROVOR reviewed patch: '+p.title,tree:newTree.sha,parents:[targetCommit]});
   if(!SHA.test(commit.sha)||commit.tree?.sha!==newTree.sha||commit.parents?.length!==1||
-     commit.parents[0].sha!==claim.base_commit)throw Error('github_commit_invalid');
+     commit.parents[0].sha!==targetCommit)throw Error('github_commit_invalid');
   commitSha=commit.sha;await event(db,job.id,'commit',commitSha,Date.now());
   await check();
   const ref=await api('/git/refs','POST',{ref:'refs/heads/'+claim.branch,sha:commitSha});
@@ -297,6 +317,7 @@ export async function githubPatchTick(env,now=Date.now(),send=fetch){
   await check();
   const pr=await api('/pulls','POST',{title:'ROVOR: '+p.title,head:claim.branch,base:'main',draft:true,
    body:'Owner-reviewed ROVOR patch. Source job '+job.id+'; output SHA-256 '+job.output_sha256+
+    '.\nApproved source commit: '+claim.base_commit+'\nPatch parent: '+targetCommit+
     '.\n\n'+p.summary+'\n\nDraft only. Independent CI and human release approval required.'});
   if(!Number.isSafeInteger(pr.number)||pr.number<1||pr.draft!==true||pr.head?.sha!==commitSha||
      pr.head?.ref!==claim.branch||pr.base?.ref!=='main'||pr.base?.repo?.full_name!==REPO)

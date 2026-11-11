@@ -8,6 +8,7 @@ import {handle} from '../integrations/hud-cloud/worker.mjs';
 import {tick,review,control} from '../integrations/hud-cloud/approved-workforce.mjs';
 const NOW=Date.now(),R='r'.repeat(40),W='w'.repeat(40);
 const base='a'.repeat(40),tree='b'.repeat(40),blob='c'.repeat(40),newTree='d'.repeat(40),commit='e'.repeat(40);
+const ahead='f'.repeat(40),aheadTree='1'.repeat(40),changedBlob='2'.repeat(40),movedAgain='3'.repeat(40);
 const pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs8',format:'pem'});
 const path='dashboard/command-center/native-v8-9/hud-mobile.css',original='.x { color: blue; }';
 const proposal={version:1,base_commit:base,title:'Improve mobile contrast',summary:'Use brighter contrast.',change:{path,blob_sha:blob,before:'color: blue',after:'color: white'}};
@@ -26,8 +27,9 @@ function setup(p=proposal){
  return {env,sqlite,body:{job_id:job,output_sha256:hash}};
 }
 function enable(s){s.sqlite.exec('UPDATE hud_cloud_workforce_control SET enabled=1');}
-function upstream(s,calls,{stale=false,stopOnBranch=false,failPr=false}={}){
- let branch=null;
+function upstream(s,calls,{stale=false,rebase=false,divergent=false,shiftBeforeWrite=false,stopOnBranch=false,failPr=false}={}){
+ let branch=null,mainReads=0;
+ const moved=stale||rebase||divergent||shiftBeforeWrite;
  return async(url,init)=>{
  calls.push({url,method:init.method,body:init.body?JSON.parse(init.body):null});
  assert.equal(init.redirect,'manual');
@@ -39,12 +41,29 @@ function upstream(s,calls,{stale=false,stopOnBranch=false,failPr=false}={}){
  assert.equal(init.headers.Authorization,'Bearer mock-write-token-123456789');
  assert(url.startsWith('https://api.github.com/repos/TeamRovor/rovor-video-engine/'));
  const route=url.split('/rovor-video-engine')[1];
- if(route==='/git/ref/heads/main')return Response.json({object:{sha:stale?'f'.repeat(40):base}});
+ if(route==='/git/ref/heads/main'){
+  mainReads++;
+  return Response.json({object:{sha:shiftBeforeWrite&&mainReads>1?movedAgain:moved?ahead:base}});
+ }
  if(route==='/git/commits/'+base)return Response.json({sha:base,tree:{sha:tree}});
  if(route==='/git/trees/'+tree+'?recursive=1')return Response.json({sha:tree,truncated:false,tree:[{path,mode:'100644',type:'blob',sha:blob}]});
+ if(route==='/compare/'+base+'...'+ahead+'?per_page=1')return Response.json({
+  status:'ahead',base_commit:{sha:base},merge_base_commit:{sha:divergent?changedBlob:base}
+ });
+ if(route==='/git/commits/'+ahead)return Response.json({sha:ahead,tree:{sha:aheadTree}});
+ if(route==='/git/trees/'+aheadTree+'?recursive=1')return Response.json({
+  sha:aheadTree,truncated:false,tree:[{path,mode:'100644',type:'blob',sha:stale?changedBlob:blob}]
+ });
  if(route==='/git/blobs/'+blob)return Response.json({sha:blob,encoding:'base64',size:Buffer.byteLength(original),content:Buffer.from(original).toString('base64')});
- if(route==='/git/trees'){assert.deepEqual(JSON.parse(init.body),{base_tree:tree,tree:[{path,mode:'100644',type:'blob',content:'.x { color: white; }'}]});return Response.json({sha:newTree},{status:201});}
- if(route==='/git/commits'){assert.deepEqual(JSON.parse(init.body).parents,[base]);return Response.json({sha:commit,tree:{sha:newTree},parents:[{sha:base}]},{status:201});}
+ if(route==='/git/trees'){
+  assert.deepEqual(JSON.parse(init.body),{base_tree:moved?aheadTree:tree,
+   tree:[{path,mode:'100644',type:'blob',content:'.x { color: white; }'}]});
+  return Response.json({sha:newTree},{status:201});
+ }
+ if(route==='/git/commits'){
+  assert.deepEqual(JSON.parse(init.body).parents,[moved?ahead:base]);
+  return Response.json({sha:commit,tree:{sha:newTree},parents:[{sha:moved?ahead:base}]},{status:201});
+ }
  if(route==='/git/refs'){const doc=JSON.parse(init.body);branch=doc.ref.slice('refs/heads/'.length);if(stopOnBranch)s.sqlite.exec('UPDATE hud_cloud_workforce_control SET enabled=0');return Response.json({ref:doc.ref,object:{sha:commit}},{status:201});}
  if(route==='/pulls'){const doc=JSON.parse(init.body);assert.equal(doc.draft,true);assert.equal(doc.base,'main');assert.equal(doc.head,branch);if(failPr)throw Error('transport interrupted');return Response.json({number:99,draft:true,head:{sha:commit,ref:branch},base:{ref:'main',repo:{full_name:'TeamRovor/rovor-video-engine'}}},{status:201});}
  throw Error('unexpected route');
@@ -71,6 +90,28 @@ test('deny nonreviewed output, wrong digest, protected paths and nonunique ancho
  assert.throws(()=>parsePatch(JSON.stringify({...proposal,change:{...proposal.change,path:protectedPath}}),base,{...s.env,ROVOR_GITHUB_PATCH_PATHS:JSON.stringify([protectedPath])}));
  assert.throws(()=>replaceExact('blue blue','blue','white'));
  assert.throws(()=>parsePatch(JSON.stringify({...proposal,base_commit:'f'.repeat(40)}),base,s.env));
+});
+test('new main with unchanged Git blob and direct ancestry creates the same approved one-file draft PR',async()=>{
+ const s=setup();enable(s);assert.equal((await queueGithubPatch(s.env,s.body,NOW)).status,202);
+ const calls=[],result=await githubPatchTick(s.env,NOW,upstream(s,calls,{rebase:true}));
+ assert.equal(result.state,'opened');assert.equal(result.pr_number,99);
+ assert(calls.some(c=>c.url.endsWith('/compare/'+base+'...'+ahead+'?per_page=1')));
+ const writes=calls.filter(c=>c.method==='POST'&&!c.url.endsWith('/access_tokens'));
+ assert.equal(writes.length,4,'unchanged file permits exactly tree, commit, branch, draft PR');
+ assert.equal(writes[0].body.base_tree,aheadTree);
+ assert.deepEqual(writes[1].body.parents,[ahead]);
+ assert.equal(writes[3].body.draft,true);
+ assert(writes[3].body.body.includes('Approved source commit: '+base));
+ assert(writes[3].body.body.includes('Patch parent: '+ahead));
+});
+test('changed approved blob, divergent ancestry, and moving main cause zero GitHub repository writes',async()=>{
+ for(const params of [{stale:true},{divergent:true},{shiftBeforeWrite:true}]){
+  const s=setup();enable(s);assert.equal((await queueGithubPatch(s.env,s.body,NOW)).status,202);
+  const calls=[],out=await githubPatchTick(s.env,NOW,upstream(s,calls,params));
+  assert.equal(out.state,'failed',JSON.stringify(params));
+  assert.equal(calls.filter(c=>c.method==='POST'&&!c.url.endsWith('/access_tokens')).length,0);
+  assert.equal(s.sqlite.prepare('SELECT COUNT(*) n FROM hud_github_patch_events').get().n,0);
+ }
 });
 test('stale base causes zero repository writes; STOP after branch prevents PR and never retries',async()=>{
  const s=setup();enable(s);await queueGithubPatch(s.env,s.body,NOW);
