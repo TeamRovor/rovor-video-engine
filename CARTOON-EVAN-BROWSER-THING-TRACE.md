@@ -1,0 +1,13 @@
+# Browser → thing: acoustic, oral and tongue review
+
+The existing local trace recipe now covers original6.10–7.10s, pairing centered25ms/5ms spectral windows with481actual geometry/control samples at480Hz. Browser/script22 is flagged; thing/script23 is unflagged context. Compare older/current browser starts6.13/6.39 and end/thing edges6.66/6.75. No timing, production controls or artwork changed.
+
+The6.13 anchor lies inside a strong periodic segment; the current6.39 estimate is in the lower-energy modeled M/B seal before release near6.43. The trace cannot identify the exact word split within shared bilabial closure. Around the older6.66 edge the spectrum changes strongly but periodic energy persists afterward. Around6.75–6.8 much of that energy falls away before a later energetic segment. Selecting the largest spectral change would conflate internal sound changes with word boundaries. Similar20ms RMS at6.66/6.75 also cannot choose an edge. Retain current timing; independent listening/exact boundaries remain unverified and all18flags stay open.
+
+Four actual raster oral meshes and authored tongue-lift/dental-partition controls154/160/162/163 match capture to1e-9; actual tongue records retain premultiplied material guards. Gap near6.39 is0.1499939nativepx; at6.75 it is14.4843px with tongue lift0.510638 and dental partition1. The lift rises toward0.916near6.79 while the recording becomes quieter. This is compatible with retaining a tongue gesture during a quiet consonant; it does not measure tongue shape or prove TH timing. The dental partition curve is not a continuous anatomical measurement.
+
+Local review: `outputs/evan-cartoon-browser-thing-trace/Review.html`. Thirty byte-exact current full-stage frames144..173 retain the reviewed brow/lid/blink and official branding. Normal/slow films decode all30/120frames; WAV is exactly20,000originalPCM samples96,000:116,000. AAC is lossy. Native plot halves, four native faces and four normal/two slow decoded stills were inspected. Same fixed gaze, brow/ink edges and modest acting limitations as the full candidate remain; no real-time/listening/polished acceptance.
+
+Source/plan hashes, centered windows,481sample bounds, four raster/capture comparisons, native right-eye/speech preservation, premultiplied tongue records, copied frames and exact PCM are checked. Seven flagged words now have deeper geometry traces; all18 retain unresolved exact boundaries. Full films, defaults, main/V3/V4, approved updater/symlinks and native Moho projects are preserved. No Moho operation, merge or deployment.
+
+Next: flagged it’s→basically/script30–31 using Region03 original PCM/spectrum and actual oral transitions. No automatic threshold retiming or new expression variants.

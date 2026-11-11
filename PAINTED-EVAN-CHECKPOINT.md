@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: browser→thing acoustic/oral/tongue trace reviewed
+CARTOON-EVAN-BROWSER-THING-TRACE.md / evan-engine/reviews/browser-thing-trace-v1.json. Existinglocaltrace reused: original6.10–7.10sPCM/25msFFT/5mshop/481actualsamples480Hz. Browser22flagged; thing23UNFLAGGEDcontext. Older6.13start insideperiodicstretch; current6.39 inside modeledM/Bseal before6.43release; exactwordsplitunverified. Older6.66edge catchesinternalspectralchange; near6.75–6.8energyfalls beforelaterenergeticsegment. RMS/strongestdelta doNOTlabelboundary. NOretiming/controls/artchange;18flagsopen.
+
+Fouractualrasteroral/tonguecontrols154/160/162/163 matchcaptureto1e-9; tonguematerialguardsPASS. Gap~.15px near6.39;14.4843px/lift.510638/dentalpartition1 at6.75; lift~.916near6.79. Authoredcontrols NOTmeasuredtongueshape. outputs/evan-cartoon-browser-thing-trace/Review.html:30BYTE-EXACTcurrentfullframes144..173;30/120normal/slowdecodes;20000exactPCM96000:116000.43PNGhashes/current+frozen selectedsources verified; nativeplothalves/4faces/4normal/2slow inspected. Sevenflaggedwords deepertraced; all18unresolved. Realtime/listening/polishedFALSE; no pendingjobs;automationACTIVE. Full/defaults/protectedversions preserved.
+
+NEXT: flagged it’s→basically/script30–31, Region03originalPCM/spectrum +actualoraltransitions. Keepfullcandidate/all18flags; noautomaticretiming/newexpressionvariants. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync; localpushauthunavailable.
+
 ## Current task: full brow/lid cartoon construction candidate assembled
 CARTOON-EVAN-EXPRESSION-CONTINUOUS.md / evan-engine/reviews/expression-continuous-v1.json. outputs/evan-cartoon-expression-continuous/Review.html: separate23snormal/92sslow.552PNGs=499BYTE-EXACT priorfullv4 +14reviewedbrow124..137 +39reviewedlid138..176;20closingexact. No newrasterposes/art/retiming/defaultpromotion. Real layeredconstruction/guards inheritedfromcomponents; NOTfreshfullrig evaluation. Prior383recovered-speakingframes missing historicalindividualguardrecords limitation remains.
 
