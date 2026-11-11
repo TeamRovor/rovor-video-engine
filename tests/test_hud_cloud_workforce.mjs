@@ -156,7 +156,7 @@ test('new workforce endpoints distinguish writer, reader and owner same-origin r
  assert.equal((await handle(jsonRequest('/api/hud/workforce/review',writer,'POST',
   {job_id:job.id,verdict:'passed',output_sha256:'0'.repeat(64)}),s.env,now)).status,401);
  assert.equal((await handle(jsonRequest('/api/hud/workforce/review',reader,'POST',
-  {job_id:job.id,verdict:'passed',output_sha256:'0'.repeat(64)}),s.env,now)).status,409);
+  {job_id:job.id,verdict:'passed',output_sha256:'0'.repeat(64)}),s.env,now)).status,403);
  assert.equal((await handle(jsonRequest('/api/hud/workforce/control',reader,'POST',
   {enabled:true}),s.env,now)).status,401);
  assert.equal((await handle(jsonRequest('/api/hud/workforce/control',writer,'POST',

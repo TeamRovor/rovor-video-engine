@@ -67,3 +67,30 @@ test('reader/writer credentials cannot promote themselves to owner and configure
  assert.throws(()=>buildHudSecretPayload({ROVOR_HUD_READER_TOKEN:R,ROVOR_HUD_WRITER_TOKEN:W,ROVOR_HUD_OWNER_TOKEN:R}));
  assert.equal(buildHudSecretPayload({ROVOR_HUD_READER_TOKEN:R,ROVOR_HUD_WRITER_TOKEN:W,ROVOR_HUD_OWNER_TOKEN:O}).HUD_OWNER_TOKEN,O);
 });
+
+test('an absent or invalid owner key never grants PASS/FAIL to the private viewer',async()=>{
+ const s=setup();
+ passed(s);
+ // Simulate a real completed, undecided draft; authorization must be checked
+ // before the immutable owner review helper sees this request.
+ s.sql.prepare("UPDATE hud_cloud_workforce_jobs SET human_review='not_recorded',reviewed_at=NULL WHERE id='gc-owner-pilot'").run();
+ const review={job_id:'gc-owner-pilot',verdict:'passed',output_sha256:DIGEST};
+ const decision=(cookie='',token=null)=>handle(s.req('/api/hud/workforce/review',{
+  method:'POST',cookie,token,body:review}),s.env,now);
+ const state=()=>s.sql.prepare("SELECT human_review,reviewed_at FROM hud_cloud_workforce_jobs WHERE id='gc-owner-pilot'").get();
+ delete s.env.HUD_OWNER_TOKEN;
+ const viewer=await login(s,R);
+ assert.equal((await (await handle(s.req('/api/hud/owner/session',{cookie:viewer.cookie}),s.env,now)).json()).configured,false);
+ assert.equal((await decision(viewer.cookie)).status,403,'viewer session is not an owner session');
+ assert.equal((await decision('',R)).status,403,'reader bearer is not an owner key');
+ assert.deepEqual(state(),{human_review:'not_recorded',reviewed_at:null});
+ s.env.HUD_OWNER_TOKEN=R; // A key mistakenly reused from viewer must also fail closed.
+ assert.equal((await decision(viewer.cookie)).status,403);
+ assert.deepEqual(state(),{human_review:'not_recorded',reviewed_at:null});
+ s.env.HUD_OWNER_TOKEN=O;
+ assert.equal((await decision(viewer.cookie)).status,403,'restoring owner key cannot upgrade an old viewer session');
+ const owner=await login(s,O);
+ assert.equal((await decision(owner.cookie)).status,200,'genuine signed owner session can still review');
+ assert.deepEqual(state(),{human_review:'passed',reviewed_at:now});
+ assert.equal((await decision(owner.cookie)).status,409,'owner decisions remain first-write-only');
+});
