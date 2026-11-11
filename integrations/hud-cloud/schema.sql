@@ -278,3 +278,21 @@ CREATE TABLE IF NOT EXISTS hud_native_repo_catchup (
  state TEXT NOT NULL CHECK(state IN ('ready','read_unavailable')),
  snapshot TEXT
 );
+
+
+-- Fixed nine-provider read-only Site catalog relay. Separate from the Site D1.
+-- Presence/model listings cannot authorize inference or claim Free billing.
+CREATE TABLE IF NOT EXISTS hud_site_catalog_clock (
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ next_index INTEGER NOT NULL CHECK(next_index>=0 AND next_index<9),
+ last_started_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS hud_site_catalog_rows (
+ provider TEXT PRIMARY KEY,
+ checked_at INTEGER NOT NULL,
+ status TEXT NOT NULL CHECK(status IN (
+  'never_checked','bridge_unconfigured','site_auth_denied','upstream_unavailable',
+  'invalid_contract','site_receipt_missing','site_readback_mismatch','catalog_received')),
+ site_d1_verified INTEGER NOT NULL CHECK(site_d1_verified IN (0,1)),
+ models_json TEXT NOT NULL
+);
