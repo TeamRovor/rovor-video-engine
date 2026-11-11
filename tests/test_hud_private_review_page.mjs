@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
+import {verifyPrivateReviewPage} from '../integrations/hud-cloud/verify-private-review-page.mjs';
 
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const html=read('dashboard/command-center/native-v8-9/workforce-review.html');
@@ -79,4 +80,39 @@ test('Existing Ask ROVOR shows real D1 pending count and an obvious review link 
  assert.match(chat,/data\.items\.filter\(x=>x\.state==='needs_review'/);
  assert.match(chat,/REVIEW '\+count\+' CLOUD DRAFT'/);
  assert.match(chat,/if\(open\)\{load\(\);refreshProviderInventory\(\);void refreshReviewShortcut\(\);/);
+});
+
+test('Post-deploy verifier refuses stale review assets and proves anonymous auth denial',async()=>{
+ const headers={ContentType:'text/html'};
+ const send=async(url,options)=>{
+  const path=new URL(url).pathname;
+  const auth=!!options.headers.Authorization;
+  if(path==='/workforce-review.html'&&!auth)
+   return new Response(null,{status:303,headers:{
+    Location:origin+'/login?next=%2Fworkforce-review.html'}});
+  if(path==='/workforce-review.js'&&!auth)
+   return Response.json({error:'unauthorized'},{status:401});
+  if(path==='/workforce-review.html')
+   return new Response(html,{status:200,headers:{
+    'Cache-Control':'no-store',
+    'Content-Security-Policy':"default-src 'none'; script-src 'self'"
+   }});
+  if(path==='/workforce-review.js')
+   return new Response(pageJS,{status:200,headers:{'Content-Type':'application/javascript'}});
+  throw Error('unsupported_test_path');
+ };
+ const proof=await verifyPrivateReviewPage({origin,readerToken:token,
+  send,expectedHtml:html,expectedScript:pageJS});
+ assert.deepEqual(proof,{private_auth_verified:true,
+  anonymous_review_denied:true,deployed_html_matches_checkout:true,
+  deployed_review_logic_matches_checkout:true,model_calls:0,review_decisions:0});
+ await assert.rejects(()=>verifyPrivateReviewPage({
+  origin,readerToken:token,send,expectedHtml:html+' stale',expectedScript:pageJS}),
+  /review_page_source_mismatch/);
+ await assert.rejects(()=>verifyPrivateReviewPage({
+  origin,readerToken:token,send,expectedHtml:html,expectedScript:pageJS+' stale'}),
+  /review_script_source_mismatch/);
+ await assert.rejects(()=>verifyPrivateReviewPage({
+  origin,readerToken:'wrong',send,expectedHtml:html,expectedScript:pageJS}),
+  /private_review_deploy_credentials_invalid/);
 });
