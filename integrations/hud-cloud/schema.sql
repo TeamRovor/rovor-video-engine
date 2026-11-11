@@ -268,3 +268,13 @@ CREATE TABLE IF NOT EXISTS hud_workforce_review_evidence (
  source_key TEXT NOT NULL,checked_at INTEGER NOT NULL,finished_at INTEGER,
  result_state TEXT NOT NULL,source_title TEXT,related_id INTEGER
 );
+
+
+-- Bounded current-main metadata only, retained privately after failed polls.
+CREATE TABLE IF NOT EXISTS hud_native_repo_catchup (
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ checked_at INTEGER NOT NULL,
+ observed_at INTEGER,
+ state TEXT NOT NULL CHECK(state IN ('ready','read_unavailable')),
+ snapshot TEXT
+);

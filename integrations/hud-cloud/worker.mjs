@@ -5,6 +5,7 @@ import {submitIdea,listIdeas} from './idea-inbox.mjs';
 import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
 import {getRepoSource} from './repo-source.mjs';
 import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';
+import {repoCatchupStatus} from './repo-catchup.mjs';
 import {reviewEvidence} from './review-evidence.mjs';
 import {queueGithubPatch,githubPatchStatus,githubPatchTick,previewGithubPatchSource,queueGithubPatchTask} from './github-patch-gateway.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
@@ -519,6 +520,8 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     }
     if (request.method === 'GET' && url.pathname === '/api/hud/workforce/native-discovery')
       return response(200,await nativeDiscoveryStatus(env));
+    if (request.method === 'GET' && url.pathname === '/api/hud/workforce/repo-catchup')
+      return response(200,await repoCatchupStatus(env));
     if (request.method === 'GET' && url.pathname.startsWith('/api/hud/workforce/evidence/')) {
       const result=await reviewEvidence(env,url.pathname.slice('/api/hud/workforce/evidence/'.length),now,fetcher);
       return response(result.status,result.body);

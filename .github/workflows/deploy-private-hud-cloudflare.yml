@@ -105,6 +105,7 @@ jobs:
           node --check integrations/hud-cloud/review-evidence.mjs
           node --check integrations/hud-cloud/github-patch-gateway.mjs
           node --check integrations/hud-cloud/native-github-discovery.mjs
+          node --check integrations/hud-cloud/repo-catchup.mjs
           node --check integrations/hud-cloud/repo-source.mjs
           node --check integrations/hud-cloud/build-repo-snapshot.mjs
           node --check integrations/hud-cloud/worker.mjs

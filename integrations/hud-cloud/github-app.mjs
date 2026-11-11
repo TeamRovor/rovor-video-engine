@@ -95,6 +95,32 @@ export async function readGithubDiscovery(token,send=fetch){
  return Object.fromEntries(result);
 }
 
+// Bounded current-main catch-up: never return commit messages, issue bodies,
+// private source, patch contents, credentials or arbitrary repository URLs.
+export async function readGithubCommitCatchup(token,send=fetch){
+ if(typeof token!=='string'||token.length<20)throw Error('github_catchup_token_invalid');
+ const read=async route=>{
+  const res=await send(API+'/repos/'+REPO+route,{method:'GET',redirect:'manual',
+   headers:headers(token),signal:AbortSignal.timeout(12000)});
+  if(res.status!==200){await res.body?.cancel();throw Error('github_catchup_read_unavailable');}
+  return boundedJson(res,200000);
+ };
+ const commits=await read('/commits?sha=main&per_page=4');
+ const validSha=x=>typeof x==='string'&&/^[a-f0-9]{40}$/.test(x);
+ if(!Array.isArray(commits)||commits.length<1||commits.length>4||
+    commits.some(c=>!validSha(c?.sha)))throw Error('github_catchup_invalid');
+ const shas=commits.map(c=>c.sha);
+ if(new Set(shas).size!==shas.length)throw Error('github_catchup_invalid');
+ const detail=await read('/commits/'+shas[0]);
+ if(detail?.sha!==shas[0]||!Array.isArray(detail.files)||detail.files.length>100)
+  throw Error('github_catchup_invalid');
+ const changed=detail.files.slice(0,24).map(f=>f?.filename);
+ if(changed.some(p=>typeof p!=='string'||p.length<1||p.length>200||
+    /[\r\n\u0000-\u001f]/.test(p)))throw Error('github_catchup_invalid');
+ return {head_sha:shas[0],recent_commit_shas:shas,changed_paths:changed,
+  changed_paths_truncated:detail.files.length>24||detail.files.length===100};
+}
+
 // Fixed, read-only current metadata for an already recorded review job.
 const validEvidenceId=n=>Number.isSafeInteger(n)&&n>0;
 const evidenceKey=/^(run|issue|pr)-([1-9][0-9]{0,11})$/;
