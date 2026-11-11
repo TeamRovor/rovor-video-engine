@@ -55,37 +55,63 @@ export async function verifyWorkforce({token,send=fetch,now=Date.now()}={}){
     exactItems.some(j=>j.id===t.job_id&&j.state==='needs_review'&&
       Number.isSafeInteger(j.started_at)&&Number.isSafeInteger(j.finished_at)&&
       t.started_at<=j.started_at&&j.started_at<=j.finished_at&&j.finished_at<=t.finished_at));
- const pending=data.items.filter(x=>x.state==='needs_review'&&x.human_review==='not_recorded').length;
- const attempts=data.items.filter(x=>Number.isSafeInteger(x.started_at)&&x.started_at>=now-86400000&&x.started_at<=now);
- const dailyLimit=data.standing_plan?.max_attempts_per_rolling_day;
- const reviewLimit=data.standing_plan?.max_pending_reviews;
- const running=data.items.filter(x=>x.state==='running'||x.state==='uncertain').length;
- const queued=data.items.filter(x=>x.state==='queued').length;
- const possible=[];
- if(!data.enabled)possible.push('stop_closed');
- if(!data.recurring_execution_authorized)possible.push('standing_authorization_inactive');
- if(running)possible.push('running_or_uncertain_claim');
- if(Number.isSafeInteger(dailyLimit)&&dailyLimit>0&&attempts.length>=dailyLimit)possible.push('rolling_day_attempt_limit');
- if(Number.isSafeInteger(reviewLimit)&&reviewLimit>0&&pending>=reviewLimit)possible.push('pending_review_limit');
- if(!queued)possible.push('no_queued_job');
- const earliest=attempts.reduce((min,x)=>Math.min(min,x.started_at),Infinity);
+ // The latest 50 visible jobs are NOT a complete rolling-day ledger. Trust only
+ // the server-computed admission snapshot after validating its exact contract.
+ // Never infer capacity, reset time, or recurring readiness from recent rows.
+ const admission=data.admission;
+ const nonnegative=n=>Number.isSafeInteger(n)&&n>=0;
+ const counters=['queued_jobs','running_or_uncertain','pending_reviews','rolling_day_attempts',
+  'rolling_day_limit','pending_review_limit','fresh_unattempted_discoveries'];
+ if(!admission||admission.source!=='read_only_private_D1'||
+    admission.provider_admission_verified_by_this_read!==false||
+    typeof data.recurring_execution_authorized!=='boolean'||
+    !Number.isSafeInteger(admission.observed_at)||admission.observed_at>now+120000||
+    now-admission.observed_at>300000||
+    counters.some(k=>!nonnegative(admission[k]))||
+    admission.rolling_day_limit<1||admission.pending_review_limit<1||
+    !Array.isArray(admission.observed_constraints)||
+    admission.observed_constraints.some(x=>typeof x!=='string')||
+    new Set(admission.observed_constraints).size!==admission.observed_constraints.length)
+  throw Error('workforce_admission_readback_invalid');
+ const reasons=[
+  !data.enabled?'stop_closed':null,
+  !data.recurring_execution_authorized?'standing_authorization_inactive':null,
+  admission.running_or_uncertain>0?'running_or_uncertain_claim':null,
+  admission.rolling_day_attempts>=admission.rolling_day_limit?'rolling_day_attempt_limit':null,
+  admission.pending_reviews>=admission.pending_review_limit?'pending_review_limit':null,
+  admission.queued_jobs===0?'no_queued_job':null,
+  admission.fresh_unattempted_discoveries===0?'no_fresh_unattempted_discovery':null
+ ].filter(Boolean);
+ if(admission.observed_constraints.length!==reasons.length||
+    reasons.some(x=>!admission.observed_constraints.includes(x)))
+  throw Error('workforce_admission_readback_inconsistent');
+ const slot=admission.earliest_rolling_slot_at;
+ if(reasons.includes('rolling_day_attempt_limit')?
+    !Number.isSafeInteger(slot)||slot<=admission.observed_at||
+     slot>admission.observed_at+86400000:
+    slot!==null)
+  throw Error('workforce_admission_readback_inconsistent');
  const exact=exactItems.length;
  return {source:'existing_cloudflare_hud',private_auth_verified:true,
   writer_only_tick_verified:true,model:data.configured_model,
   enabled:data.enabled,recorded_jobs:data.items.length,
-  pending_reviews:data.items.filter(x=>x.state==='needs_review'&&x.human_review==='not_recorded').length,
+  pending_reviews:admission.pending_reviews,
   passed_reviews:data.items.filter(x=>x.human_review==='passed').length,
   recurring_authorized:data.recurring_execution_authorized===true,
   native_tick_observed:tick!==null,last_native_tick_at:tick?new Date(tick.scheduled_at).toISOString():null,
   last_native_tick_state:tick?.result_state??null,last_native_inference_completed:tick?.inference_completed===1,
   exact_job_token_receipts:exact,
   native_inference_receipts_matched:new Set(nativeMatches.map(t=>t.job_id)).size,
-  admission_snapshot:{items_truncated:data.items.length===50,queued_jobs_observed:queued,
-    running_or_uncertain_observed:running,pending_reviews_observed:pending,
-    rolling_day_attempts_observed:attempts.length,rolling_day_attempt_limit:Number.isSafeInteger(dailyLimit)?dailyLimit:null,
-    pending_review_limit:Number.isSafeInteger(reviewLimit)?reviewLimit:null,
-    oldest_observed_attempt_expires_at:Number.isFinite(earliest)?new Date(earliest+86400000).toISOString():null,
-    observed_constraints:possible},
+  admission_snapshot:{source:admission.source,observed_at:new Date(admission.observed_at).toISOString(),
+    items_truncated:data.items.length===50,queued_jobs_observed:admission.queued_jobs,
+    running_or_uncertain_observed:admission.running_or_uncertain,
+    pending_reviews_observed:admission.pending_reviews,
+    rolling_day_attempts_observed:admission.rolling_day_attempts,
+    rolling_day_attempt_limit:admission.rolling_day_limit,
+    pending_review_limit:admission.pending_review_limit,
+    fresh_unattempted_discoveries_observed:admission.fresh_unattempted_discoveries,
+    oldest_observed_attempt_expires_at:slot===null?null:new Date(slot).toISOString(),
+    observed_constraints:admission.observed_constraints},
   inference_proven_by_this_read:false,site_review_ledger_synced:false};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
