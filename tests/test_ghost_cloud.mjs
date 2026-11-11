@@ -190,7 +190,7 @@ test('reader/writer separation, STOP control and immutable enqueue',async()=>{
 });
 
 test('HUD status exposes factual provider receipts without prompts, drafts or secrets',async()=>{
- const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('tracked'));await tick(env,async()=>success(),NOW);
+ const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('tracked'));await tick(env,async()=>success('test-pinned-1'),NOW);
  const response=await api(env,'/api/ghost/status'),text=await response.text(),data=JSON.parse(text);
  assert.equal(response.status,200);assert.equal(data.providers.length,9);assert.equal(data.attempts.length,1);assert.equal(data.attempts[0].tokens_input,9);
  assert.equal(data.providers.find(p=>p.provider==='groq').online_verified,true);
@@ -207,7 +207,7 @@ test('all nine routes become recently verified only after successful durable rep
  for(let i=0;i<9;i++)enqueue(sqlite,job('proof-'+i));
  const before=await (await api(env,'/api/ghost/status')).json();
  assert.equal(before.providers.filter(p=>p.online_verified).length,0);
- await tick(env,async()=>success(),NOW);
+ await tick(env,async(_url,init)=>success(JSON.parse(init.body).model),NOW);
  const after=await (await api(env,'/api/ghost/status')).json();
  assert.equal(after.providers.filter(p=>p.online_verified).length,9);
  assert.equal(after.providers.filter(p=>p.recent_inference_verified).length,9);
@@ -221,7 +221,7 @@ test('all nine routes become recently verified only after successful durable rep
 
 test('failed, blank, stale or expired provider evidence never establishes route online',async()=>{
  const {env,sqlite}=setup();enable(sqlite);
- enqueue(sqlite,job('draft'));await tick(env,async()=>success(),NOW);
+ enqueue(sqlite,job('draft'));await tick(env,async()=>success('test-pinned-1'),NOW);
  const status=async()=>(await (await api(env,'/api/ghost/status')).json()).providers.find(p=>p.provider==='groq');
  assert.equal((await status()).online_verified,true);
  sqlite.prepare("UPDATE ghost_cloud_attempts SET finished_at=? WHERE job_id='draft'").run(Date.now()-3600001);
@@ -240,8 +240,9 @@ test('owner-chat completion can prove a route without leaking prompts or drafts'
  const {env,sqlite}=setup();enable(sqlite);
  sqlite.prepare(`INSERT INTO ghost_cloud_owner_chat
   (id,actor,provider,model,pool,started_at,finished_at,reserved_tokens,status,actual_model,output)
-  VALUES ('proof-chat','owner','groq','test-pinned-1','account-one',?,?,50,'complete','actual-1','Secret private answer')`)
+  VALUES ('proof-chat','owner','groq','test-pinned-1','account-one',?,?,50,'complete','test-pinned-1','Secret private answer')`)
   .run(NOW-1000,Date.now());
+ sqlite.prepare('UPDATE ghost_cloud_owner_chat SET tokens_input=5,tokens_output=5 WHERE id=?').run('proof-chat');
  const res=await api(env,'/api/ghost/status'),raw=await res.text(),data=JSON.parse(raw);
  assert.equal(data.providers.find(p=>p.provider==='groq').online_verified,true);
  assert.equal(data.attempts.length,0);
@@ -251,6 +252,31 @@ test('owner-chat completion can prove a route without leaking prompts or drafts'
  const snapshot=await (await api(missing.env,'/api/ghost/status')).json();
  assert.equal(snapshot.providers.length,9);
  assert.equal(snapshot.providers.filter(p=>p.online_verified).length,0);
+});
+
+test('wrong or unknown upstream model never verifies the newly pinned route',async()=>{
+ const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('wrong-upstream'));
+ await tick(env,async()=>success('different-upstream-model'),NOW);
+ const status=async()=>(await (await api(env,'/api/ghost/status')).json()).providers.find(p=>p.provider==='groq');
+ assert.equal((await status()).online_verified,false,'different upstream identity is not exact-model proof');
+ assert.equal((await status()).last_inference_at,null);
+ sqlite.prepare('UPDATE ghost_cloud_attempts SET actual_model=? WHERE job_id=?').run('test-pinned-1','wrong-upstream');
+ assert.equal((await status()).online_verified,true);
+ env.GHOST_FLEET_CONFIG=JSON.stringify({groq:cfg({model:'newly-pinned-model'})});
+ assert.equal((await status()).online_verified,false,'prior pinned model receipt cannot verify replacement');
+});
+
+test('missing token receipts and pre-attestation replies cannot verify a route',async()=>{
+ const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('meter-missing'));
+ await tick(env,async()=>success('test-pinned-1'),NOW);
+ const status=async()=>(await (await api(env,'/api/ghost/status')).json()).providers.find(p=>p.provider==='groq');
+ assert.equal((await status()).online_verified,true);
+ sqlite.prepare('UPDATE ghost_cloud_attempts SET tokens_input=NULL WHERE job_id=?').run('meter-missing');
+ assert.equal((await status()).online_verified,false);
+ sqlite.prepare('UPDATE ghost_cloud_attempts SET tokens_input=9 WHERE job_id=?').run('meter-missing');
+ env.GHOST_FLEET_CONFIG=JSON.stringify({groq:cfg({verified_at:NOW+1000,valid_until:NOW+3600000,canary_at:NOW+1200})});
+ assert.equal((await status()).recent_inference_verified,false,
+  'a reply before current attestation may not certify a newer approval');
 });
 
 test('conflicting shared pool policy is rejected before inference',async()=>{
