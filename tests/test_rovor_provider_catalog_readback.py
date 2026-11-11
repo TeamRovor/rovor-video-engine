@@ -12,9 +12,10 @@ TOKEN = "s" * 48
 
 
 class FakeSite:
-    def __init__(self, stale=None, malformed=None):
+    def __init__(self, stale=None, malformed=None, missing_receipts=None):
         self.stale = stale
         self.malformed = malformed
+        self.missing_receipts = set(missing_receipts or ())
         self.rows = {}
         self.calls = []
 
@@ -34,11 +35,14 @@ class FakeSite:
                 "provider": provider, "observed_at": observed_at - (1 if provider == self.stale else 0),
                 "status": "catalog_received", "error_category": None
             }
-            return 200, {
+            payload = {
                 "provider": provider, "status": "catalog_received",
                 "observed_at": observed_at, "models": [{"id": "redacted-model"}],
                 "billing_verified": False, "quota_verified": False, "canary_verified": False,
-            }, None
+            }
+            if provider not in self.missing_receipts:
+                payload.update({"d1_persisted": True, "d1_observed_at": observed_at})
+            return 200, payload, None
         assert document == {"operation": "status"}
         return 200, {
             "execution_source": "cloud_provider",
@@ -57,6 +61,7 @@ class CatalogReadbackTests(unittest.TestCase):
         self.assertEqual(report["state"], "catalog_persistence_verified")
         self.assertEqual(report["catalog_received"], 9)
         self.assertEqual(report["persisted"], 9)
+        self.assertEqual(report["site_d1_receipts"], 9)
         self.assertFalse(report["inference_verified"])
         self.assertFalse(report["free_billing_verified"])
         self.assertEqual(len(client.calls), 11)
@@ -73,6 +78,29 @@ class CatalogReadbackTests(unittest.TestCase):
         self.assertEqual(report["state"], "catalog_or_persistence_incomplete")
         self.assertFalse(next(r for r in report["providers"] if r["provider"] == "gemini")["persisted"])
         self.assertIn("not confirmed", check.markdown(report))
+
+    def test_live_old_site_cannot_fake_d1_persistence_from_status_only(self):
+        # Matches the actual observed production symptom: all nine catalogs
+        # respond, but the service emits no D1 readback attestations.
+        report = check.audit_catalog_persistence(
+            TOKEN, request=FakeSite(missing_receipts=check.PROVIDERS)
+        )
+        self.assertEqual(report["catalog_received"], 9)
+        self.assertEqual(report["site_d1_receipts"], 0)
+        self.assertEqual(report["persisted"], 0)
+        self.assertEqual(report["state"], "site_readback_contract_missing")
+        self.assertIn("EXISTING private Site", check.markdown(report))
+        self.assertFalse(report["inference_verified"])
+        self.assertFalse(report["free_billing_verified"])
+
+    def test_one_missing_d1_receipt_does_not_pass(self):
+        report = check.audit_catalog_persistence(
+            TOKEN, request=FakeSite(missing_receipts={"openrouter"})
+        )
+        self.assertEqual(report["catalog_received"], 9)
+        self.assertEqual(report["site_d1_receipts"], 8)
+        self.assertEqual(report["persisted"], 8)
+        self.assertEqual(report["state"], "catalog_or_persistence_incomplete")
 
     def test_mismatched_provider_is_not_accepted_as_success(self):
         report = check.audit_catalog_persistence(
