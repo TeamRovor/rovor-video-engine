@@ -235,3 +235,41 @@ test('Gemini OpenAI-compatible bare model IDs match exact advisory hints', () =>
   assert.deepEqual(selectModelRoutes(r,{task_family:'reasoning'}).routes,[{provider:m.provider,model_id:m.id}]);
   assert.equal(entry(r,m.provider,'models/gemini-2.5-flash'),undefined);
 });
+
+test('moving aliases are never selectable even with apparently complete proof', () => {
+  const aliases = [
+    model('mistral','codestral-latest'),
+    model('gemini','gemini-flash-latest'),
+    model('groq','auto'),
+  ];
+  for (const m of aliases) {
+    const r = snapshot([catalog(m)], [admission(m)]);
+    assert.equal(entry(r,m.provider,m.id).blocked_reason,'unpinned_model');
+    assert.equal(selectModelRoutes(r,{task_family:'code',manual:{provider:m.provider,model_id:m.id}}).status,'blocked');
+  }
+});
+
+test('provider-specific model identities must match the actual pinned executor contract', () => {
+  const invalid = [
+    [model('gemini','models/gemini-2.5-flash'),'provider_model_id_mismatch'],
+    [model('cloudflare-ai','meta/llama-3.1-8b-instruct'),'provider_model_id_mismatch'],
+    [model('openrouter','paid/provider-model'),'paid_route_denied'],
+    [model('huggingface','Qwen/Qwen3.8-27B'),'unpinned_upstream'],
+    [model('groq','vendor/model+alias'),'unpinned_model'],
+  ];
+  for (const [m,reason] of invalid) {
+    const r = snapshot([catalog(m)],[admission(m)]);
+    assert.equal(entry(r,m.provider,m.id).blocked_reason,reason);
+    assert.equal(r.counts.eligible_models,0);
+  }
+  const valid = [
+    model('gemini','gemini-2.5-flash'),
+    model('cloudflare-ai','@cf/meta/llama-3.1-8b-instruct'),
+    model('openrouter','cohere/north-mini-code:free'),
+    model('huggingface','Qwen/Qwen3.8-27B:provider-name'),
+  ];
+  for (const m of valid) {
+    const r=snapshot([catalog(m)],[admission(m)]);
+    assert.equal(entry(r,m.provider,m.id).selectable,true);
+  }
+});
