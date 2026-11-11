@@ -6032,7 +6032,7 @@
       "id": "workforce-owner-admission-guidance-20261111",
       "title": "Explain observed workforce wait conditions in the owner review desk",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar owner admission guidance 2026-11-11",
       "branch": "fix/workforce-owner-admission-guidance-20261111",
       "scopes": [
@@ -6041,10 +6041,19 @@
         "tests/test_hud_private_review_page.mjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-11-11T07:24:11.751229+00:00",
-      "next_update": "After focused UI tests and reviewable PR",
-      "next_action": "Render validated read-only D1 admission counts and wait conditions with earliest rolling slot; preserve review actions and avoid claims of provider eligibility.",
-      "acceptance": "Focused behavioral tests show daily/review caps, no-queue/no-discovery, stopped/unauthorized and invalid snapshots truthfully; no new endpoint, writes or inference."
+      "updated_at": "2026-11-11T07:28:48.336Z",
+      "next_update": "Production rollout verification",
+      "next_action": "PR #372 merged at 8c528dc6bf9e7e4e9ffb5fa9dd1a172db5de2855. All 267 HUD safety tests and PR browser checks passed; verify protected production deploy and exact private review script readback. UI reports observed capacity, not successful provider admission.",
+      "acceptance": "Focused behavioral tests show daily/review caps, no-queue/no-discovery, stopped/unauthorized and invalid snapshots truthfully; no new endpoint, writes or inference.",
+      "evidence": [
+        {
+          "commit": "8c528dc6bf9e7e4e9ffb5fa9dd1a172db5de2855",
+          "platform": "GitHub-hosted Node HUD safety/browser checks; local macOS Node 24.22.0",
+          "check": "267 HUD safety tests including four admission guidance tests; all 12 PR checks passed; local syntax and task/routing validation",
+          "result": "PASS; merged source. Production rollout pending verification, no new model call.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/372"
+        }
+      ]
     }
   ]
 }
