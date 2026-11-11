@@ -570,10 +570,10 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     }
     if (request.method === 'POST' && url.pathname === '/api/hud/workforce/review') {
       if(request.headers.get('Origin')!==url.origin)return response(403,{error:'origin_denied'});
-      // Existing legacy owner-private review stays compatible until the
-      // independent owner key is installed. A configured but invalid key
-      // never silently downgrades review authority to viewer credentials.
-      if(env.HUD_OWNER_TOKEN&&!await ownerSession(request,env,now))
+      // PASS/FAIL is always an owner-only write. An absent, malformed or
+      // mismatched owner secret MUST NOT silently authorize a viewer; keep
+      // ordinary reader access to status/drafts and writer-only STOP intact.
+      if(!await ownerSession(request,env,now))
         return response(403,{error:'owner_session_required'});
       let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_review'});}
       const result=await workforceReview(env.DB,body,now);return response(result.status,result.body);
