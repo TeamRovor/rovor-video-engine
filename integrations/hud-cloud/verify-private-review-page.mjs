@@ -24,9 +24,11 @@ export async function verifyPrivateReviewPage({
  const anonScript=await get('/workforce-review.js',false);
  if(anonScript.status!==401)throw Error('anonymous_review_script_exposed');
  const page=await get('/workforce-review.html',true);
- if(page.status!==200||page.headers.get('cache-control')!=='no-store'||
-    !page.headers.get('content-security-policy')?.includes("script-src 'self'"))
-  throw Error('review_page_private_headers_invalid');
+ if(page.status!==200)throw Error('review_page_live_http_'+page.status);
+ if(page.headers.get('cache-control')!=='no-store')
+  throw Error('review_page_no_store_header_missing');
+ if(!page.headers.get('content-security-policy')?.includes("script-src 'self'"))
+  throw Error('review_page_csp_missing');
  const html=await page.text();
  if(html!==expectedHtml||html.includes('window.ROVOR_START_OMNIROUTE'))
   throw Error('review_page_source_mismatch');
