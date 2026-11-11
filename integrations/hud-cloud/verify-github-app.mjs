@@ -106,7 +106,7 @@ export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
 // cookie, verdict, model request, or repository mutation occurs here.
 export async function verifyDeployedOwnerSession(env,send=fetch){
  const token=env?.ROVOR_HUD_READER_TOKEN;
- if(typeof token!=='string'||token.length<32||/[\\r\\n]/.test(token))throw Error('private_reader_secret_missing');
+ if(typeof token!=='string'||token.length<32||/[\r\n]/.test(token))throw Error('private_reader_secret_missing');
  const url=ORIGIN+'/api/hud/owner/session';
  const get=auth=>send(url,{method:'GET',redirect:'manual',cache:'no-store',
   signal:AbortSignal.timeout(12000),headers:auth?{Authorization:'Bearer '+token}:{}});
