@@ -109,7 +109,15 @@ test('native read-only catch-up records bounded GitHub metadata, not source or m
 test('catch-up GitHub failure does not block evidence discovery or erase last successful snapshot',async()=>{
  const {env,sqlite}=setup();arm(sqlite);
  await nativeDiscoveryTick(env,NOW,upstream([]));
- const send=async(url,init)=>url.includes('/commits?')?new Response('denied',{status:403}):upstream([])(url,init);
+ const send=async(url,init)=>{
+  if(url.includes('/commits?'))return new Response('denied',{status:403});
+  const response=await upstream([])(url,init);
+  if(url.endsWith('/access_tokens')){
+   const token=await response.json();
+   return Response.json({...token,expires_at:new Date(NOW+7200000).toISOString()},{status:201});
+  }
+  return response;
+ };
  const later=await nativeDiscoveryTick(env,NOW+3600001,send);
  assert(['no_new_evidence_backed_work','owner_review_draft_queued'].includes(later.state));
  const out=await repoCatchupStatus(env);
