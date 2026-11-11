@@ -143,12 +143,18 @@ test('owner inventory checks refresh the exact provider HUD health row without c
  const after=await ops.status(env),provider=after.providers.find(p=>p.provider==='gemini');
  assert.equal(provider.last_check.status,'catalog_received');
  assert.equal(provider.last_check.observed_at,fresh.observed_at);
+ assert.deepEqual(provider.catalog_connection,{state:'authenticated',observed_at:fresh.observed_at});
+ assert.equal(provider.online_verified,false);
  assert.equal(provider.admission,'disabled_pending_verification');
  deny=true;
  const unavailable=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
  assert.equal(unavailable.status,'http_403');assert.equal(unavailable.d1_persisted,true);
  const stored=await ops.status(env);
  assert.equal(stored.providers.find(p=>p.provider==='gemini').last_check.status,'http_403');
+ assert.equal(stored.providers.find(p=>p.provider==='gemini').catalog_connection.state,'failed');
+ db.prepare('UPDATE ghost_cloud_provider_checks SET observed_at=? WHERE provider=?')
+  .run(Date.now()-76*60000,'gemini');
+ assert.equal((await ops.status(env)).providers.find(p=>p.provider==='gemini').catalog_connection.state,'stale');
  assert.equal(db.prepare('SELECT count(*) AS n FROM ghost_cloud_provider_checks').get().n,1);
  assert.equal(seen,2);
  assert.equal(JSON.stringify(stored).includes('private upstream error body'),false);

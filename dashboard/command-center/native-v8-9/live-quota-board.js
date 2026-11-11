@@ -139,6 +139,14 @@ function unknownModel(m){
 // Public telemetry has only safe per-provider account ordinals; no keys or IDs.
 // Separate authenticated cloud-ledger evidence; do NOT mix with local OmniRoute cache.
 // Cloud provider admission/verification may be disabled even when the local gateway has a key.
+function catalogConnectionLabel(p){
+ switch(p?.catalog_connection?.state){
+  case 'authenticated':return 'API CATALOG AUTHENTICATED · inference separate';
+  case 'failed':return 'API CATALOG CHECK FAILED';
+  case 'stale':return 'LAST CATALOG CHECK STALE';
+  default:return 'API CATALOG NOT VERIFIED';
+ }
+}
 function cloudEvidence(p,slot=null){
  if(!p)return '<div class="rvq-cloud">CLOUD EXECUTION · not connected to private ledger</div>';
  const eligible=p.admission==='eligible';
@@ -147,6 +155,7 @@ function cloudEvidence(p,slot=null){
  const check=p.last_check?.status?esc(String(p.last_check.status).replaceAll('_',' ')):'Not checked';
  const result=['<div class="rvq-cloud"><strong>CLOUD WORKFORCE / SEPARATE SOURCE</strong><span>'+state+'</span>',
    '<span>Provider catalog check: '+check+'</span>',
+   '<span>'+catalogConnectionLabel(p)+'</span>',
    '<span>Recorded cloud requests (24h): '+(recorded===null?'Not reported':fmt(recorded))+'</span>',
    '<span>Verified running now: '+(p.online_verified===true?'YES':'NOT VERIFIED')+'</span>'];
  const gates={
@@ -578,7 +587,8 @@ function overviewSlot(slot,quota,live,cloud,index,activity,hourly,minute){
    // Unknown account quota remains a separate visible ring; never present traffic as quota.
    '<div class="rvq-overview-rings">'+(activity?'<span class="rvq-overview-ring-group">'+traffic+'<span class="rvq-ring-label">MAC TRAFFIC</span></span>':'')+'<span class="rvq-overview-ring-group">'+usageRing(pct,evidence+' for '+name)+'<span class="rvq-ring-label">QUOTA USED</span></span></div>'+
    (attention?'<span class="rvq-overview-alert">'+esc(alertLabel)+'</span>':'')+
-   '<span class="rvq-overview-source">'+evidence+(localLimits.length>1&&!verified?' · '+fmt(localLimits.length)+' separate limits':'')+'</span>'+ (local&&typeof local.model_id==='string'?'<span class="rvq-overview-model" title="'+esc(local.model_id)+'">MODEL · '+esc(local.model_id)+'</span>':'')+
+   '<span class="rvq-overview-source">'+evidence+(localLimits.length>1&&!verified?' · '+fmt(localLimits.length)+' separate limits':'')+'</span>'+
+   '<span class="rvq-overview-source">'+esc(catalogConnectionLabel(cloud))+'</span>'+ (local&&typeof local.model_id==='string'?'<span class="rvq-overview-model" title="'+esc(local.model_id)+'">MODEL · '+esc(local.model_id)+'</span>':'')+
    '<span class="rvq-overview-requests">'+(activity?fmt(activity.requests)+' Mac request'+(activity.requests===1?'':'s')+' / 24h':'Mac requests unverified')+'</span>'+
    '<span class="rvq-overview-intervals"><span class="rvq-overview-hourly">'+(hourly?fmt(hourly.requests)+' / 1h':'1h unverified')+'</span>'+
    '<span class="rvq-overview-minute">'+(minute?fmt(minute.requests)+' / 1m':'1m unverified')+'</span></span><span class="rvq-overview-drill">VIEW DETAILS</span></a>';

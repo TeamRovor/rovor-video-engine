@@ -112,6 +112,21 @@ test('traffic and allowance instruments use different visual hierarchy',()=>{
  assert.match(boardSource,/\.rvq-overview \.rvq-ring-traffic\{width:48px;height:48px/);
 });
 
+test('authenticated catalog receipt is shown separately from cloud model permission',()=>{
+ const now=Date.now(), cloud={execution_source:'cloud_provider',observed_at:now,
+  providers:providers.map(provider=>({provider,credentials_configured:true,
+   admission:'disabled_pending_verification',
+   catalog_connection:{state:provider==='groq'?'authenticated':'stale',observed_at:now}}))};
+ const html=render(null,false,cloud);
+ assert.match(html,/API CATALOG AUTHENTICATED · inference separate/);
+ assert.match(html,/LAST CATALOG CHECK STALE/);
+ assert.match(html,/CLOUD VERIFICATION PENDING/);
+ assert.equal((html.match(/class="rvq-overview-source">API CATALOG AUTHENTICATED · inference separate/g)||[]).length,1);
+ assert.equal((html.match(/class="rvq-overview-source">LAST CATALOG CHECK STALE/g)||[]).length,8);
+ const missing=render(null,false,{...cloud,observed_at:now-3600000});
+ assert.doesNotMatch(missing,/API CATALOG AUTHENTICATED · inference separate/);
+});
+
 test('attention filter covers fresh actionable gates without treating idle or stale as blocked',()=>{
  const now=Date.now();
  const cloud={execution_source:'cloud_provider',observed_at:now,providers:providers.map(provider=>({
