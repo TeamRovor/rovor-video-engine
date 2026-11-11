@@ -13,8 +13,8 @@ function labelsOf(issue){
    .map(l=>typeof l==='string'?l:l?.name)
    .filter(l=>typeof l==='string').map(l=>l.toLowerCase());
 }
-export function discoverCandidates({runs=[],issues=[],pulls=[]},now=Date.now()){
- if(!Array.isArray(runs)||!Array.isArray(issues)||!Array.isArray(pulls))
+export function discoverCandidates({runs=[],successes=[],issues=[],pulls=[]},now=Date.now()){
+ if(!Array.isArray(runs)||!Array.isArray(successes)||!Array.isArray(issues)||!Array.isArray(pulls))
    throw Error('discovery_input_invalid');
  const choices=[];
  for(const r of runs.slice(0,50)){
@@ -22,6 +22,12 @@ export function discoverCandidates({runs=[],issues=[],pulls=[]},now=Date.now()){
      !['push','workflow_dispatch'].includes(r.event)||
      !within(r.created_at,now,36*HOUR)||
      typeof r.name!=='string'||/autonomous work discovery/i.test(r.name))continue;
+   // Skip an old automatic check only when a later comparable success is known.
+   const rAt=Date.parse(r.created_at);
+   if(r.event==='push'&&safeInteger(r.workflow_id)&&successes.slice(0,50).some(x=>
+    x?.conclusion==='success'&&x.head_branch==='main'&&x.event==='push'&&
+    x.workflow_id===r.workflow_id&&safeInteger(x.id)&&within(x.created_at,now,36*HOUR)&&
+    (Date.parse(x.created_at)>rAt||x.id===r.id)))continue;
    choices.push(candidate('run-'+r.id,95,
      '[ROVOR-DISCOVERY:run-'+r.id+'] Investigate failed main-branch CI run #'+r.id+
      ' at https://github.com/'+REPO+'/actions/runs/'+r.id+

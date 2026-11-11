@@ -206,7 +206,7 @@ function reviewContext(entry){
    decision:'Is this investigation useful enough to keep? You are not approving a fix or certifying that its suggested causes are correct.',
    next:'Keeping this saves your acceptance of the plan. No investigation, code change or publication is authorized by this decision.',
    url:'https://github.com/TeamRovor/rovor-video-engine/'+(kind==='run'?'actions/runs/':kind==='issue'?'issues/':'pull/')+num,
-   evidenceLabel:(kind==='run'?'GitHub check ':kind==='issue'?'GitHub issue #':'Pull request #')+num,
+   evidenceKey:kind+'-'+num,evidenceLabel:(kind==='run'?'GitHub check ':kind==='issue'?'GitHub issue #':'Pull request #')+num,
    criteria:'Keep a plan that gives a sensible next action and is clear about what is still unknown. Reject generic advice, invented findings or work that no longer matters.'};
  }
  if(entry.id.startsWith('gc-patch-src-'))return {type:'Proposed code change',title:entry.title,
@@ -222,6 +222,45 @@ function reviewContext(entry){
   decision:'Would you keep this result and use it for the task described?',
   next:'Keeping the draft records your approval of its usefulness. It does not publish it, execute a tool or start another model.',
   criteria:'Keep if it answers the request and is specific enough to use. Reject inaccurate, incomplete or irrelevant work.'};
+}
+// Independent current source read, not an AI claim.
+const evidenceMessages=Object.freeze({
+ check_passed_now:'This original check now passes. The earlier failure may no longer need investigation.',
+ newer_check_passed:'A newer run of the same automated check passed. The original problem may already be addressed; this does not prove its root cause was fixed.',
+ check_failed:'The original check still records a failure. No later successful run was verified.',
+ newer_check_failed:'A newer run of the same automated check failed too. This may still need attention.',
+ check_in_progress:'GitHub reports the original check is in progress. Its outcome is not known yet.',
+ check_other_outcome:'The check has a different outcome now. A successful fix is not verified.',
+ issue_closed:'GitHub now reports this issue closed. It may no longer need attention.',
+ issue_assigned:'This issue now has an assignee. Avoid duplicating someone else’s work.',
+ issue_open:'GitHub still lists this issue as open.',
+ pull_merged:'GitHub reports this pull request merged. This review may be obsolete.',
+ pull_closed:'GitHub reports this pull request closed. This review may no longer be useful.',
+ pull_open:'GitHub still lists this pull request as open.',
+ checking:'Checking the current GitHub record…',
+ unavailable:'Could not verify the latest GitHub state. Do not assume this problem is fixed or still active.',
+ not_configured:'Independent GitHub evidence is not available.'
+});
+async function displayEvidence(entry,context,card,generation){
+ if(!context.evidenceKey)return;
+ const panel=make('div','source-status');
+ panel.append(make('strong','','Current GitHub status'));
+ const detail=make('p','','Checking whether this work is still relevant…');panel.append(detail);
+ card.append(panel);
+ try{
+  const data=await privateRequest('/api/hud/workforce/evidence/'+encodeURIComponent(entry.id));
+  if(generation!==refreshGeneration||!card.isConnected)return;
+  if(data.source!=='rovor_private_review_evidence'||data.job_id!==entry.id||data.source_key!==context.evidenceKey||
+    !Object.hasOwn(evidenceMessages,data.state)||data.model_called!==false||data.github_written!==false)
+   throw Error('invalid_evidence');
+  if(typeof data.title==='string'&&data.title&&data.title.length<=140)panel.querySelector('strong').textContent=data.title+' · Current GitHub status';
+  detail.textContent=evidenceMessages[data.state];panel.dataset.evidenceState=data.state;
+  if(Number.isSafeInteger(data.related_id)&&data.related_id>0&&['newer_check_passed','newer_check_failed'].includes(data.state)){
+   const link=make('a','','View newer check');link.href='https://github.com/TeamRovor/rovor-video-engine/actions/runs/'+data.related_id;
+   link.target='_blank';link.rel='noreferrer';panel.append(link);
+  }
+  if(Number.isSafeInteger(data.finished_at)&&data.finished_at>0)panel.append(make('small','','Checked '+formatTime(data.finished_at)));
+ }catch{if(generation===refreshGeneration&&card.isConnected)detail.textContent=evidenceMessages.unavailable;}
 }
 // Plain text only. No generated HTML, links or script execution. Preserve
 // the full exact receipt, even when a future employee provides a short summary.
@@ -409,7 +448,7 @@ async function refresh(clearNotice=true){
    pendingCount>0?'Read the result and decide whether it is useful. Your decision does not run code or publish anything.':
    'You have no outstanding decisions. New work will appear here as it is completed.';
   jobs.textContent='';history.textContent='';
-  const pendingLoads=[];
+  const pendingLoads=[],evidenceLoads=[];
   const ordered=rows.slice().sort((a,b)=>{
    const ap=a.state==='needs_review'&&a.human_review==='not_recorded'?1:0;
    const bp=b.state==='needs_review'&&b.human_review==='not_recorded'?1:0;
@@ -437,6 +476,7 @@ async function refresh(clearNotice=true){
     card.append(make('p','explanation',context.why));
     card.append(make('p','explanation',context.completed));
     card.append(make('div','review-note','Your decision: '+context.decision));
+    if(context.evidenceKey)evidenceLoads.push(()=>displayEvidence(entry,context,card,generation));
    }
    if(entry.state==='needs_review'&&SHA.test(entry.output_sha256||'')){
     const actions=make('div','actions');
@@ -481,6 +521,7 @@ async function refresh(clearNotice=true){
   }
   // At most the three pending recurring drafts are loaded automatically;
   // manual review remains available for any additional historical job.
+  for(const load of evidenceLoads.slice(0,3))void load();
   await Promise.all(pendingLoads.slice(0,3).map(load=>load()));
   if(generation!==refreshGeneration)return;
   message.textContent=pendingCount===1?'1 result needs your decision':pendingCount+' results need your decision';

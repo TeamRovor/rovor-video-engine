@@ -15,7 +15,7 @@ function fake({keys=[],today=0,runSet=runs,issueSet=issues,pullSet=pulls,duplica
    if(url.startsWith('https://api.github.com')){
      assert.equal(options.headers.Authorization,'Bearer '+env.GITHUB_TOKEN);
      assert.equal(options.method,'GET');
-     if(url.includes('/actions/runs'))return Response.json({workflow_runs:runSet});
+     if(url.includes('/actions/runs'))return Response.json({workflow_runs:url.includes('status=success')?[]:runSet});
      if(url.includes('/issues'))return Response.json(issueSet);
      if(url.includes('/pulls'))return Response.json(pullSet);
      throw Error('Unexpected GitHub request');
@@ -48,7 +48,7 @@ test('read-only GitHub evidence saves one owner-review-only D1 draft, not infere
  assert.deepEqual(r,{state:'owner_review_draft_queued',queued:true,kind:'run',priority:95,
    model_call_started:false,execution_authorized:false,mac_required:false});
  assert.equal(f.posts.length,1);assert.equal(f.posts[0].key,'run-987654');
- assert.equal(f.calls.filter(x=>x.url.startsWith('https://api.github.com')).length,3);
+ assert.equal(f.calls.filter(x=>x.url.startsWith('https://api.github.com')).length,4);
  assert.equal(f.calls.filter(x=>x.options.method==='POST').length,1);
  assert(f.calls.every(x=>!x.url.includes('/chat')&&!x.url.includes('/models')));
 });
@@ -115,7 +115,7 @@ test('GitHub list requests remain below parser capacity even when real 40/50-ite
  const result=await runDiscovery({env,send,now:NOW});
  assert.equal(result.state,'owner_review_draft_queued');
  assert.equal(result.queued,true);
- assert.equal(f.calls.filter(v=>v.url.startsWith('https://api.github.com')).length,3);
+ assert.equal(f.calls.filter(v=>v.url.startsWith('https://api.github.com')).length,4);
  assert.equal(f.posts.length,1);
 });
 
@@ -133,4 +133,13 @@ test('trusted-main failure discovery does not wait for delayed scheduled runs or
  assert(!workflow.includes('actions/download-artifact'));
  assert(!workflow.includes('github.event.workflow_run.head_sha'));
  assert.match(workflow,/cron: '17 \* \* \* \*'/);
+});
+
+test('only later automatic success on the same workflow suppresses old failure work',()=>{
+ const failed={...runs[0],workflow_id:123};
+ const later={...failed,id:987655,conclusion:'success',created_at:new Date(NOW-1000).toISOString()};
+ assert.deepEqual(discoverCandidates({runs:[failed],successes:[later]},NOW),[]);
+ assert.equal(discoverCandidates({runs:[failed],successes:[{...later,workflow_id:124}]},NOW).length,1);
+ assert.equal(discoverCandidates({runs:[{...failed,event:'workflow_dispatch'}],successes:[later]},NOW).length,1);
+ assert.equal(discoverCandidates({runs:[failed],successes:[{...later,created_at:old}]},NOW).length,1);
 });
