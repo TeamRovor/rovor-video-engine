@@ -14,6 +14,25 @@ const pending=byId('pending'),reviewed=byId('reviewed'),stop=byId('stop-state');
 const refreshButton=byId('refresh');
 const nativeClock=byId('native-clock'),nativeDetail=byId('native-detail'),standing=byId('standing-state');
 const validTokens=n=>Number.isSafeInteger(n)&&n>=0;
+const githubDiscoveryState=byId('github-discovery-state'),githubDiscoveryDetail=byId('github-discovery-detail');
+async function refreshNativeDiscovery(){
+ try{
+  const data=await privateRequest('/api/hud/workforce/native-discovery');
+  if(data.source!=='rovor_native_github_discovery'||typeof data.configured!=='boolean'||
+     typeof data.enabled!=='boolean'||data.mac_required!==false||data.chatgpt_required!==false||
+     data.github_actions_required!==false||data.storage_unavailable)throw Error('native_discovery_unavailable');
+  const receipt=data.last_check;
+  const verified=receipt&&['no_new_evidence_backed_work','owner_review_draft_queued'].includes(receipt.result_state)&&
+   Number.isSafeInteger(receipt.finished_at)&&receipt.finished_at>0;
+  const fresh=verified&&Date.now()-receipt.finished_at<7200000&&Date.now()>=receipt.finished_at;
+  githubDiscoveryState.textContent=!data.configured?'NOT CONFIGURED':!data.enabled?'DISABLED':
+   fresh?'READ VERIFIED':receipt?.result_state==='github_read_unavailable'?'READ FAILED':
+   verified?'STALE RECEIPT':'AWAITING NATIVE CHECK';
+  githubDiscoveryDetail.textContent=receipt&&Number.isSafeInteger(receipt.started_at)?
+   'Native check '+formatTime(receipt.started_at)+' · '+String(receipt.result_state).slice(0,80).replaceAll('_',' '):
+   'No native GitHub discovery receipt yet. No connection inferred from configuration alone.';
+ }catch{githubDiscoveryState.textContent='UNAVAILABLE';githubDiscoveryDetail.textContent='Private D1 readback unavailable';}
+}
 const ownerSessionLabel=byId('owner-session'),ownerStart=byId('owner-start'),ownerStop=byId('owner-stop'),ownerActionStatus=byId('owner-action-status');
 let ownerActive=false,ownerConfigured=false,ownerBusy=false,ownerStartArmed=false,patchConfigured=false;
 function ownerButtons(data){
@@ -243,7 +262,7 @@ async function refresh(clearNotice=true){
      data.items.some(entry=>!safeJob(entry)||Object.hasOwn(entry,'output')||Object.hasOwn(entry,'prompt')))
    throw Error('invalid_workforce_readback');
   latestWorkforce=data;
-  await refreshOwner();
+  await Promise.all([refreshOwner(),refreshNativeDiscovery()]);
   const rows=data.items;
   const pendingCount=rows.filter(x=>x.state==='needs_review'&&x.human_review==='not_recorded').length;
   const reviewedCount=rows.filter(x=>VERDICTS.has(x.human_review)).length;
@@ -337,7 +356,7 @@ async function refresh(clearNotice=true){
  }catch(error){
   message.textContent=errorMessage(error);
   pending.textContent='?';reviewed.textContent='?';stop.textContent='?';
-  nativeClock.textContent='?';nativeDetail.textContent='Readback unavailable';standing.textContent='?';
+  nativeClock.textContent='?';nativeDetail.textContent='Readback unavailable';standing.textContent='?';githubDiscoveryState.textContent='?';githubDiscoveryDetail.textContent='Readback unavailable';
   jobs.textContent='';latestWorkforce=null;ownerActive=false;ownerButtons(null);patchPanel.hidden=true;clearSourcePreview();
  }finally{refreshButton.disabled=false;}
 }
