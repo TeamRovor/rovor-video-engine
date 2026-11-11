@@ -179,6 +179,8 @@ jobs:
       ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
       ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
       ROVOR_HUD_OWNER_TOKEN: ${{ secrets.ROVOR_HUD_OWNER_TOKEN }}
+      # Existing Site service key, optionally bridged to Worker; never echoed.
+      ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
       ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
       ROVOR_GEMINI_CLOUD_API_KEY: ${{ secrets.ROVOR_GEMINI_API_KEY || secrets.GEMINI_API_KEY }}
       GEMINI_ACTIVATE_ONCE: ${{ github.event_name == 'push' && (contains(github.event.head_commit.message, '[gemini-activate-once]') || contains(github.event.head_commit.message, '[gemini-verify-3.8-flash]')) }}
