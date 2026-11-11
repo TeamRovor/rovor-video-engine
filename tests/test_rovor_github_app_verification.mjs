@@ -260,13 +260,16 @@ test('deployed repo catch-up is private and distinguishes installed route from r
  const first=await verifyDeployedRepoCatchup(env,mock);
  assert.deepEqual(calls,['anonymous','reader']);assert.equal(first.checkpoint_present,false);
  assert.equal(first.state,'not_checked');
+ assert.equal(first.snapshot_freshness,'unavailable');
  const snapshot={head_sha:'a'.repeat(40),recent_commit_shas:['a'.repeat(40)],
   changed_paths:['architecture/ROVOR-AUTONOMOUS-DISCOVERY.md'],changed_paths_truncated:false,
-  failed_run_ids:[123],recent_success_run_ids:[234],open_issue_numbers:[],open_pr_numbers:[4]};
+  failed_run_ids:[123],recent_success_run_ids:[234],open_issue_numbers:[],open_pr_numbers:[4],
+  scanned_commit_count:1,commit_file_counts:[{sha:'a'.repeat(40),files_observed:1,paths_truncated:false}]};
  const proof=await verifyDeployedRepoCatchup(env,async(_url,init)=>init.headers.Authorization?
   Response.json({...value,state:'ready',snapshot}):new Response(null,{status:401}));
  assert.equal(proof.checkpoint_present,true);assert.equal(proof.head_sha,'a'.repeat(40));
  assert.equal(proof.repository_written,false);assert.equal(proof.changed_path_count,1);
+ assert.equal(proof.scanned_commit_count,1);
 });
 test('deployed repo catch-up refuses public exposure and fabricated checkpoint',async()=>{
  await assert.rejects(()=>verifyDeployedRepoCatchup(env,async()=>Response.json({})),/repo_catchup_anonymous_exposure/);

@@ -23,16 +23,19 @@ export async function recordRepoCatchup(db,token,discovery,now=Date.now(),send=f
  }catch{return {state:'storage_unavailable'};}
  return {state,head_sha:body?.head_sha??null};
 }
-export async function repoCatchupStatus(env){
+export async function repoCatchupStatus(env,now=Date.now()){
  try{
   const row=await env.DB.prepare('SELECT checked_at,observed_at,state,snapshot FROM hud_native_repo_catchup WHERE id=1').bind().first();
   let snapshot=null;
   if(typeof row?.snapshot==='string')snapshot=JSON.parse(row.snapshot);
+  const recorded=row?.observed_at;
+  const snapshot_freshness=!snapshot||!Number.isSafeInteger(recorded)||recorded>now?'unavailable':
+    now-recorded<=7200000?'fresh':'stale';
   return {source:'rovor_private_repo_catchup',state:row?.state??'not_checked',
    checked_at:row?.checked_at??null,observed_at:row?.observed_at??null,
-   snapshot,private_reader_required:true,model_called:false,repository_written:false,
+   snapshot,snapshot_freshness,private_reader_required:true,model_called:false,repository_written:false,
    mac_required:false,chatgpt_required:false};
  }catch{return {source:'rovor_private_repo_catchup',state:'storage_unavailable',
-   private_reader_required:true,model_called:false,repository_written:false,
+   snapshot_freshness:'unavailable',private_reader_required:true,model_called:false,repository_written:false,
    mac_required:false,chatgpt_required:false};}
 }
