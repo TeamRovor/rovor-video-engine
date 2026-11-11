@@ -5,6 +5,13 @@ window.ROVOR_QUOTA_BOARD=(()=>{
 'use strict';
 // OmniRoute re-syncs provider limits about every 70 minutes; allow ~2.5 cycles so one slow sync does not blank the board.
 const QUOTA_MAX_AGE_MS=175*60000;
+// Monitored identities are NOT connection records or verified credentials.
+// The fallback keeps the nine-provider panel accessible while both telemetry
+// feeds are unavailable, without fabricating a reported slot or filled quota.
+const MONITORED_PROVIDER_IDS=Object.freeze([
+ 'groq','gemini','cloudflare-ai','mistral','nvidia',
+ 'openrouter','sambanova','cohere','huggingface'
+]);
 const expandedSlots=new Set();
 const expandedProviders=new Set();
 let overviewFilter='all'; // Retain user choice while telemetry refreshes.
@@ -969,9 +976,13 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
  const review=reviewSample(cloudAttempts,cloudFresh&&Array.isArray(cloud?.attempts)&&cloud.attempts.length<=500);
  // When the Mac is off, cloud provider credentials and past gateway inventory
  // remain distinguishable: this is NOT a live Mac connection.
- const connections=Array.isArray(data?.connections)?data.connections:
+ const inventoryObserved=Array.isArray(data?.connections);
+ const identityFallback=!inventoryObserved&&!cloudFresh;
+ const connections=inventoryObserved?data.connections:
    cloudFresh?cloud.providers.filter(p=>p?.credentials_configured===true&&typeof p.provider==='string')
-     .map(p=>({provider:p.provider,name:p.provider,connection_count:1,enabled_count:0})) : [];
+     .map(p=>({provider:p.provider,name:p.provider,connection_count:1,enabled_count:0})) :
+     MONITORED_PROVIDER_IDS.map(provider=>({provider,name:provider,connection_count:1,
+       enabled_count:0,monitor_only:true}));
  const activity=macActivity(data,live);
  const requestUsage=live?data?.request_usage:null;
  // The one-hour aggregate has its own signed report and completeness gate.
@@ -997,14 +1008,16 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
  const next=resets.length?new Date(Math.min(...resets)).toISOString():null;
  const enabled=live&&observedSlots?slots.filter(s=>s.enabled===true).length:null;
  const coverage=live?new Set(slotQuota.map(q=>q.provider+':'+q.account_slot)).size:null;
- const attentionCount=slots.filter(slot=>needsSetupReview(cloudProviders.get(slot.group.provider))).length;
+ const attentionCount=identityFallback?0:slots.filter(slot=>needsSetupReview(cloudProviders.get(slot.group.provider))).length;
  if(!attentionCount||attentionCount===slots.length)overviewFilter='all';
- const summary='<div class="rvq-stats"><div class="rvq-stat"><span class="rvq-stat-label">REPORTED CONNECTION SLOTS</span><strong class="rvq-stat-value">'+fmt(slots.length)+'</strong></div>'+
+ const summary='<div class="rvq-stats"><div class="rvq-stat"><span class="rvq-stat-label">REPORTED CONNECTION SLOTS</span><strong class="rvq-stat-value">'+(identityFallback?'—':fmt(slots.length))+'</strong></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">CONNECTION SLOTS WITH MAC LIMIT DATA</span><strong class="rvq-stat-value">'+(coverage===null?'—':fmt(coverage)+' / '+fmt(slots.length))+'</strong><span class="rvq-stat-secondary">Limit records: '+(live?fmt(slotQuota.length):'—')+'</span></div>'+
  '<div class="rvq-stat"><span class="rvq-stat-label">NEXT REPORTED RESET</span><strong class="rvq-stat-value rvq-small">'+esc(prettyTime(next))+'</strong></div></div>';
  const checked=data?.snapshot_at&&Number.isFinite(Date.parse(data.snapshot_at))?' · gateway inventory observed '+esc(prettyTime(data.snapshot_at)):'';
  const macAge=reportAgeLabel(data?.snapshot_at);
- const macFreshness='<p class="rvq-last-report" role="status">'+esc(macAge)+(live?' · Mac telemetry accepted':' · cached inventory only; do not infer current traffic or quota')+'</p>';
+ const macFreshness='<p class="rvq-last-report" role="status">'+esc(macAge)+(live?' · Mac telemetry accepted':
+   identityFallback?' · no observed connections; nine provider identities shown as UNVERIFIED placeholders':
+   ' · cached inventory only; do not infer current traffic or quota')+'</p>';
  // Stale telemetry should have a user action rather than a false live badge.
  const macRecovery=live?'':('<details class="rvq-recovery"><summary>Optional local OmniRoute telemetry is stale · cloud Groq works separately</summary>'+
   '<p>This is historical telemetry. On your Mac, open the current ROVOR checkout and run:</p>'+
@@ -1034,7 +1047,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
      ' · input/output tokens '+(Number.isSafeInteger(groqCloud.last_prompt_tokens)?fmt(groqCloud.last_prompt_tokens):'—')+
      ' / '+(Number.isSafeInteger(groqCloud.last_completion_tokens)?fmt(groqCloud.last_completion_tokens):'—')+'</span>':
      '<span>Independent cloud Groq status unavailable. This does NOT mean the Mac must be online.</span>')+quotaInfo+'</section>';
- return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
+ return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':identityFallback?'NO FRESH REPORT · IDENTITIES ONLY':'MAC REPORT STALE')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
  cloudGroqPanel+cloudGeminiPanel()+summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
  workerBanner(data?.workforce,live)+ (slots.length?quotaGlance(slots,quota,live,cloudProviders)+(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
@@ -1043,8 +1056,8 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
  '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
  '<div id="rvq-team">'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+'</div>'+
  '<h4 class="rvq-details-heading">PROVIDER REPORTS · EXPAND ANY PROVIDER</h4>'+
- '<div id="rvq-reports" class="rvq-grid">'+(slots.length?slots.map((slot,i)=>card(slot.group,quota,live,i,slot,cloudProviders.get(slot.group.provider),cloudAttempts,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider),geminiProject,requestUsage)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+
- '<details class="rvq-source-notes"><summary>DATA SOURCES & VERIFICATION RULES</summary><p>Connection slots are anonymous positions in the latest OmniRoute inventory, not stable identities across reordering. Mac traffic percentages are shares of recorded provider requests, NOT quota usage. Local quota rings are cached gateway limits; separate cloud quota rings require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></details></section>';
+ '<div id="rvq-reports" class="rvq-grid">'+slots.map((slot,i)=>card(slot.group,quota,live,i,slot,cloudProviders.get(slot.group.provider),cloudAttempts,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider),geminiProject,requestUsage)).join('')+'</div>'+
+ '<details class="rvq-source-notes"><summary>DATA SOURCES & VERIFICATION RULES</summary><p>When both feeds are absent, nine provider identities are placeholder categories only: NOT verified connections, credentials, online models, remaining quota or successful inference. Connection slots from a real OmniRoute inventory are anonymous positions, not stable identities across reordering. Mac traffic percentages are shares of recorded provider requests, NOT quota usage. Local quota rings are cached gateway limits; separate cloud quota rings require recent verified ledger evidence. Cloud admission can be disabled even if a local connection is enabled. No inference is initiated here. Unknown or expired resets are never guessed.</p></details></section>';
 }
 // Preserve owner inspection context even when live evidence must be refreshed.
 function captureState(root){
