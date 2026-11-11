@@ -6061,6 +6061,23 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42979736409"
         }
       ]
+    },
+    {
+      "id": "hud-chat-stream-stability-20261111",
+      "title": "Smooth streamed chat and preserve owner reading position",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar chat stability 2026-11-11",
+      "branch": "fix/hud-chat-stream-stability-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/hud-chat.js",
+        "tests/test_hud_chat_mobile.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T08:11:39.516Z",
+      "next_update": "After stream/scroll regressions and hosted HUD checks",
+      "next_action": "Batch streamed reply rendering and preserve reading position through streaming and completion; no inference or model policy changes.",
+      "acceptance": "Deterministic frame tests show chunk coalescing, following only at bottom, preserved reading position and cancelled pending frames; existing HUD checks pass."
     }
   ]
 }
