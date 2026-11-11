@@ -68,6 +68,26 @@ test('Archived full-popup remains explicit; home preview now reads current authe
   assert.doesNotMatch(css,/(^|\n)\s*(html|body|\.hud|\.nav)\s*\{/);
 });
 
+test('Cloudflare Workload drawer hands off to real private nine-provider report, not static Mac archive',()=>{
+  const liveBoard=fs.readFileSync(path.join(root,'native-v8-9','live-quota-board.js'),'utf8');
+  assert.match(liveBoard,/const isOriginal=n=>n\.querySelector\('h3'\)\?\.textContent\?\.trim\(\)==='YOUR OMNIROUTE CONNECTIONS'/);
+  assert.match(html,/PRIVATE CLOUD WORKLOAD \/ LIVE REQUEST ACTIVITY/);
+  const context={
+    window:{ROVOR_QUOTA_BOARD:{start(){}}},
+    document:{createElement(){return{
+      id:'',innerHTML:'',addEventListener(){},querySelector(){return null}
+    }}},
+    Number,Math,Array,Object,String
+  };
+  vm.runInNewContext(popup,context,{filename:'workload-popup.js'});
+  const host={replaceChildren(){},append(node){this.child=node}};
+  context.window.ROVOR_WORKLOAD.mount(host);
+  assert.match(host.child.innerHTML,/<h3>YOUR OMNIROUTE CONNECTIONS<\/h3>/);
+  assert.match(host.child.innerHTML,/Unknown quotas remain unknown/);
+  assert.doesNotMatch(host.child.innerHTML,/LAST MAC REPORT|VIEW SAMPLE LAYOUT|31 JOB CLAIMS/);
+  assert.ok(html.includes(popup.trim()),'original shipped HUD must contain the cloud handoff exactly');
+});
+
 test('Popup interaction switches between heatmap, model list, routing and sample mode',()=>{
   let root;
   const context={

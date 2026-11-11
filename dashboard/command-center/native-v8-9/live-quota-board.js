@@ -1169,6 +1169,12 @@ function start(){
      }
      return;
    }
+   // Render truthful nine-provider UNKNOWN placeholders immediately when a
+   // drawer first opens. Slow provider/network reads must never hold the
+   // whole screen on an obsolete Mac archive or a perpetual spinner.
+   // The settled, authenticated result will replace these placeholders.
+   if(!original.classList.contains('rvq-board'))
+     updateBoard(original,render(null,false,null),slot);
    busy=true;
    // Serialize the complete two-source refresh, not just the local gateway fetch.
    // A slow cloud ledger read must not overlap another scheduled refresh.

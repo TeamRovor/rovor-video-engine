@@ -278,9 +278,20 @@
       : {view:'outcomes',period:'24H',demo:false,employee:0,model:0};
     if(compactPick)Object.assign(state,compactPick);
     compactPick=null;
+    // Cloudflare serves the authenticated nine-provider board, not this
+    // old three-model Mac archive. Mount the exact live-board placeholder so
+    // the already-running same-origin quota renderer can replace it promptly.
+    const cloudBoard=!!(window.ROVOR_QUOTA_BOARD&&
+      typeof window.ROVOR_QUOTA_BOARD.start==='function');
     const paint=()=>{
-      const previousLeft=root.querySelector?.('.wl-matrix-scroll')?.scrollLeft??0;
       retainedPopup={...state};
+      if(cloudBoard){
+        root.innerHTML='<section class="wl-card"><h3>YOUR OMNIROUTE CONNECTIONS</h3>'+
+          '<p class="wl-empty">Reading authenticated cloud provider reports. '+
+          'Unknown quotas remain unknown. No Mac connection or inference is required to view this page.</p></section>';
+        return;
+      }
+      const previousLeft=root.querySelector?.('.wl-matrix-scroll')?.scrollLeft??0;
       root.innerHTML=makeUI(state);
       const nextScroll=root.querySelector?.('.wl-matrix-scroll');
       if(nextScroll)nextScroll.scrollLeft=previousLeft;
