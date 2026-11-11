@@ -187,7 +187,7 @@ export async function recordNativeTick(db,scheduledAt,startedAt,finishedAt,resul
  if(row.meta?.changes!==1)throw Error('native_tick_receipt_unconfirmed');
 }
 
-export async function status(db){
+export async function status(db,now=Date.now()){
  try{
   const gate=await db.prepare('SELECT enabled FROM hud_cloud_workforce_control WHERE id=1').first();
   if(!gate)return {status:503,body:{error:'workforce_control_unavailable'}};
@@ -195,6 +195,28 @@ export async function status(db){
   const ticks=await db.prepare(`SELECT scheduled_at,started_at,finished_at,result_state,
    http_status,dispatch_reported,job_id,inference_completed
    FROM hud_cloud_workforce_native_ticks ORDER BY started_at DESC,id DESC LIMIT 12`).all();
+  const counts=await db.prepare(`SELECT
+    COALESCE(SUM(CASE WHEN state='queued' THEN 1 ELSE 0 END),0) queued,
+    COALESCE(SUM(CASE WHEN state IN ('running','uncertain') THEN 1 ELSE 0 END),0) in_flight,
+    COALESCE(SUM(CASE WHEN state='needs_review' AND human_review='not_recorded' THEN 1 ELSE 0 END),0) pending_review,
+    COALESCE(SUM(CASE WHEN started_at>=? THEN 1 ELSE 0 END),0) rolling_attempts,
+    MIN(CASE WHEN started_at>=? THEN started_at ELSE NULL END) oldest_attempt
+    FROM hud_cloud_workforce_jobs`).bind(now-DAY,now-DAY).first();
+  const fresh=await db.prepare(`SELECT COUNT(*) n FROM hud_auto_discovery_inbox d
+    WHERE d.created_at>=? AND d.created_at<=?
+    AND NOT EXISTS(SELECT 1 FROM hud_cloud_workforce_jobs j
+      WHERE j.task_id='cloud-discovery-'||d.discovery_key)`).bind(now-DISCOVERY_MAX_AGE,now).first();
+  const recurring=gate.enabled===1&&plan?.active===1&&plan.expires_at>now;
+  const observed=[];
+  if(gate.enabled!==1)observed.push('stop_closed');
+  if(!recurring)observed.push('standing_authorization_inactive');
+  if(counts.in_flight>0)observed.push('running_or_uncertain_claim');
+  if(counts.rolling_attempts>=MAX_DAILY)observed.push('rolling_day_attempt_limit');
+  if(counts.pending_review>=MAX_PENDING_REVIEWS)observed.push('pending_review_limit');
+  if(counts.queued===0)observed.push('no_queued_job');
+  if(fresh.n===0)observed.push('no_fresh_unattempted_discovery');
+  const nextSlot=counts.rolling_attempts>=MAX_DAILY&&Number.isSafeInteger(counts.oldest_attempt)
+    ?counts.oldest_attempt+DAY:null;
   const rows=await db.prepare(`SELECT j.id,j.task_id,j.employee,j.kind,j.title,j.source_commit,j.created_at,
     j.started_at,j.finished_at,j.state,j.actual_model,j.output_sha256,j.human_review,j.reviewed_at,j.error_code,
     u.provider,u.requested_model,u.tokens_input,u.tokens_output
@@ -203,8 +225,15 @@ export async function status(db){
     ORDER BY j.created_at DESC LIMIT 50`).all();
   return {status:200,body:{source:'existing_cloudflare_hud_gemini_workforce',
     mac_required:false,enabled:gate.enabled===1,configured_model:MODEL,
-    recurring_execution_authorized:gate.enabled===1&&plan?.active===1&&plan.expires_at>Date.now(),
-    standing_plan:{active:plan?.active===1&&plan.expires_at>Date.now(),
+    recurring_execution_authorized:recurring,
+    admission:{source:'read_only_private_D1',observed_at:now,
+      queued_jobs:counts.queued,running_or_uncertain:counts.in_flight,
+      pending_reviews:counts.pending_review,rolling_day_attempts:counts.rolling_attempts,
+      rolling_day_limit:MAX_DAILY,pending_review_limit:MAX_PENDING_REVIEWS,
+      fresh_unattempted_discoveries:fresh.n,
+      earliest_rolling_slot_at:nextSlot,
+      observed_constraints:observed,provider_admission_verified_by_this_read:false},
+    standing_plan:{active:plan?.active===1&&plan.expires_at>now,
       expires_at:plan?.active===1?plan.expires_at:null,
       source:'fresh_github_discovery',max_attempts_per_rolling_day:MAX_DAILY,
       max_pending_reviews:MAX_PENDING_REVIEWS},items:rows.results||[],

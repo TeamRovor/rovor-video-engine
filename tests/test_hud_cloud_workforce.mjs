@@ -408,3 +408,35 @@ test('production verifier distinguishes actual scheduled inference from historic
  assert.equal(proof.admission_snapshot.oldest_observed_attempt_expires_at,new Date(now-3000+86400000).toISOString());
  assert(!JSON.stringify(proof).includes(native.id));
 });
+
+
+test('read-only private workforce admission shows exact D1 limits, reset and fresh discovery without claiming model eligibility',async()=>{
+ const s=setup();
+ await control(s.DB,true);
+ for(let i=0;i<3;i++){
+  const item={...job,id:'gc-admission-'+i,task_id:'admission-'+i};
+  assert.equal((await intake(s.DB,{...packet,job:item},now)).status,201);
+  s.db.prepare("UPDATE hud_cloud_workforce_jobs SET state='failed',started_at=?,finished_at=?,error_code='test_only' WHERE id=?")
+   .run(now-5000+i*1000,now-4900+i*1000,item.id);
+ }
+ let result=(await status(s.DB,now)).body;
+ assert.equal(result.admission.rolling_day_attempts,3);
+ assert.equal(result.admission.queued_jobs,0);
+ assert.equal(result.admission.fresh_unattempted_discoveries,0);
+ assert.equal(result.admission.earliest_rolling_slot_at,now-5000+86400000);
+ assert.deepEqual(result.admission.observed_constraints,[
+  'standing_authorization_inactive','rolling_day_attempt_limit','no_queued_job','no_fresh_unattempted_discovery']);
+ assert.equal(result.admission.provider_admission_verified_by_this_read,false);
+ const discovery='run-999991';
+ s.db.prepare("INSERT INTO hud_auto_discovery_inbox(id,discovery_key,day_id,created_at,content,priority,state) VALUES(?,?,?,?,?,?,'pending_review')")
+  .run('00000000-0000-4000-8000-000000000001',discovery,Math.floor(now/86400000),now,
+    '[ROVOR-DISCOVERY:'+discovery+'] verified main failure',90);
+ result=(await status(s.DB,now)).body;
+ assert.equal(result.admission.fresh_unattempted_discoveries,1);
+ assert(!result.admission.observed_constraints.includes('no_fresh_unattempted_discovery'));
+ assert(!JSON.stringify(result).includes('GEMINI_API_KEY'));
+ result=(await status(s.DB,now+86400001)).body;
+ assert.equal(result.admission.rolling_day_attempts,0);
+ assert.equal(result.admission.earliest_rolling_slot_at,null);
+ assert(!result.admission.observed_constraints.includes('rolling_day_attempt_limit'));
+});
