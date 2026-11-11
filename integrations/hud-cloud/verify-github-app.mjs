@@ -131,6 +131,11 @@ export async function verifyGithubPatchWorker(env,send=fetch,{attempts=5,pause=d
  if(typeof token!=='string'||token.length<32||/[\r\n]/.test(token))throw Error('private_reader_secret_missing');
  if(!Number.isInteger(attempts)||attempts<1||attempts>8)throw Error('invalid_patch_readback_attempts');
  const expectedEnabled=env.ROVOR_GITHUB_PATCH_ENABLED==='true';
+ const expectedProof=env.ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT;
+ const enforceProof=expectedProof!==undefined;
+ if(enforceProof&&(!/^(0|[1-9][0-9]{12})$/.test(expectedProof)||
+    (expectedEnabled&&expectedProof==='0')||(!expectedEnabled&&expectedProof!=='0')))
+  throw Error('expected_patch_scope_attestation_invalid');
  let expectedPaths=[];
  if(expectedEnabled){
   try{expectedPaths=JSON.parse(env.ROVOR_GITHUB_PATCH_PATHS||'[]');}catch{}
@@ -157,9 +162,14 @@ export async function verifyGithubPatchWorker(env,send=fetch,{attempts=5,pause=d
      !Array.isArray(data.allowed_paths)||data.allowed_paths.length>12||
      !Array.isArray(data.items)||data.items.length>30||data.storage_unavailable)
     throw Error('github_patch_worker_readback_invalid');
-  if(data.configured===expectedEnabled&&
+  const proofMatches=!enforceProof||(expectedEnabled?
+   data.readiness==='write_scope_verified_at_deployment'&&
+   data.write_scope_verified_at===Number(expectedProof):
+   data.write_scope_verified_at===null);
+  if(data.configured===expectedEnabled&&proofMatches&&
      JSON.stringify(data.allowed_paths)===JSON.stringify(expectedPaths))
    return {private_auth_verified:true,configured:data.configured,
+    deployment_write_scope_readback_verified:enforceProof&&expectedEnabled,
     allowed_path_count:data.allowed_paths.length,allowlist_matches_deployment:true,
     permitted_action:'owner_approved_draft_pr_only',merges_allowed:false,
     repository_written_by_verifier:false};
@@ -182,7 +192,10 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
    if(typeof destination!=='string'||!path.isAbsolute(destination)||/[\r\n]/.test(destination))
     throw Error('github_actions_environment_missing');
    appendFileSync(destination,'ROVOR_GITHUB_PATCH_ENABLED='+String(effective.effective_enabled)+'\n'+
-    'ROVOR_GITHUB_PATCH_OWNER_REQUESTED='+String(effective.requested)+'\n');
+    'ROVOR_GITHUB_PATCH_OWNER_REQUESTED='+String(effective.requested)+'\n'+
+    // Evidence that this deployment obtained a single-repository write token.
+    // This is NOT evidence of a successful draft PR or indefinite permissions.
+    'ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT='+(effective.effective_enabled?Date.now():0)+'\n');
    return effective;
   })():Promise.reject(Error('invalid_verification_mode'));
  task.then(r=>console.log(JSON.stringify(r))).catch(e=>{

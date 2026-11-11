@@ -205,3 +205,17 @@ test('STOP preserves uncertain write receipts instead of falsely calling them ca
   throw Error('uncertain job must block new external writes');
  })).state,'idle_or_safety_limited');
 });
+
+test('patch status distinguishes verified deployment capability from an actual draft PR',async()=>{
+ const s=setup();
+ const confirmed=await githubPatchStatus({...s.env,ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT:String(NOW)});
+ assert.equal(confirmed.readiness,'write_scope_verified_at_deployment');
+ assert.equal(confirmed.write_scope_verified_at,NOW);
+ assert.equal(confirmed.items.length,0);
+ const onlyConfigured=await githubPatchStatus(s.env);
+ assert.equal(onlyConfigured.readiness,'configuration_complete_write_scope_unverified');
+ assert.equal(onlyConfigured.write_scope_verified_at,null);
+ const stopped=await githubPatchStatus({...s.env,ROVOR_GITHUB_PATCH_ENABLED:'false',
+  ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT:'0'});
+ assert.equal(stopped.write_scope_verified_at,null);
+});
