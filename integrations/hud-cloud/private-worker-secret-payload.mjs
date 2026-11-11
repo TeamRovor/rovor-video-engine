@@ -26,6 +26,15 @@ export function buildHudSecretPayload(env) {
     'GROQ_HUD_EVIDENCE_SHA256','GROQ_HUD_VERIFIED_AT','GROQ_HUD_VALID_UNTIL','GROQ_HUD_DAILY_BUDGET']) {
     if(env[key])payload[key]=env[key];
   }
+  // Bridge credential is server-to-server, never exposed to the HUD browser.
+  // An absent credential leaves existing Site state and Worker secrets alone.
+  if(env.ROVOR_GHOST_SERVICE_TOKEN){
+    const key=env.ROVOR_GHOST_SERVICE_TOKEN;
+    if(typeof key!=='string'||!/^[!-~]{32,1024}$/.test(key)||
+       key===env.ROVOR_HUD_READER_TOKEN||key===env.ROVOR_HUD_WRITER_TOKEN)
+      throw Error('invalid_private_secret_configuration');
+    payload.GHOST_SITE_SERVICE_TOKEN=key;
+  }
   if(env.ROVOR_HUD_OWNER_TOKEN){
     const owner=env.ROVOR_HUD_OWNER_TOKEN;
     if(typeof owner!=='string'||!/^[!-~]{32,200}$/.test(owner)||owner===env.ROVOR_HUD_READER_TOKEN||owner===env.ROVOR_HUD_WRITER_TOKEN)

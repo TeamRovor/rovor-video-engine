@@ -1,4 +1,5 @@
 import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';
+import {catalogBridgeStatus,refreshCatalogBridge} from './cloud-provider-catalog-bridge.mjs';
 import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';
 import {probeGroqCatalogue} from './groq-quota-monitor.mjs';
 import {submitIdea,listIdeas} from './idea-inbox.mjs';
@@ -657,6 +658,9 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       return result.snapshot ? response(200, {...result.snapshot, transport: {connection: result.connection, received_at: result.received_at}})
         : response(503, {error: 'no_report_received'});
     }
+    if (request.method === 'GET' && url.pathname === '/api/hud/provider-catalogs') {
+      return response(200,await catalogBridgeStatus(env,now));
+    }
     if (request.method === 'GET' && url.pathname === '/api/hud/history') {
       const rows = await env.DB.prepare('SELECT observed_at, received_at, body FROM hud_history WHERE minute >= ? ORDER BY minute DESC LIMIT 120')
         .bind(Math.floor((now - 86400000) / 60000)).all();
@@ -725,6 +729,10 @@ export default {
     const result=await workforceTick(env,startedAt);
     if(Number.isSafeInteger(event?.scheduledTime)&&event.scheduledTime>0)
       await recordNativeTick(env.DB,event.scheduledTime,startedAt,Math.max(startedAt,Date.now()),result);
+    // One bounded read-only Site catalog per existing five-minute tick.
+    // This bridge cannot dispatch models, mutate approvals or interrupt
+    // the independent workforce on a Site/API outage.
+    try{await refreshCatalogBridge(env,Date.now());}catch{/* optional catalog telemetry */}
     let patchFailed=false;
     try{await githubPatchTick(env,Date.now());}catch{patchFailed=true;}
     if(maintenanceFailed)throw Error('scheduled_chat_maintenance_failed');
