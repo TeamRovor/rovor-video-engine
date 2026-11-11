@@ -341,12 +341,22 @@
     stateLabel.setAttribute('aria-live','polite');
     const refreshButton=el('button',{type:'button',className:'rvc-refresh',textContent:'↻ Check',title:'Refresh model availability and provider telemetry'});
     refreshButton.setAttribute('aria-label','Refresh model availability and provider status');
-    const connectionBar=el('div',{className:'rvc-connection-bar'},stateLabel,refreshButton);
+    const reviewHost=window.location.hostname==='rovor-hud-telemetry.rovordigital.workers.dev';
+    const reviewLink=el('a',{className:'rvc-review-link',href:'/workforce-review.html',
+      textContent:'REVIEW CLOUD DRAFTS',hidden:!reviewHost,
+      title:'Open private D1 review desk for completed cloud worker drafts'});
+    const connectionBar=el('div',{className:'rvc-connection-bar'},stateLabel,reviewLink,refreshButton);
     document.head.append(el('style',{textContent:`
 #rvc .rvc-connection-bar{display:flex;align-items:center;gap:8px;background:#071b30;border-bottom:1px solid #1b4467;min-width:0}
 #rvc .rvc-connection-bar .rvc-state{flex:1;min-width:0;border:0;overflow-wrap:anywhere}
 #rvc .rvc-connection-bar .rvc-refresh{flex-shrink:0;margin-right:12px;background:#0b3151;border:1px solid #3a7fad;border-radius:9px;color:#c1e5ff;font-size:12px;min-height:38px;padding:6px 11px}
 #rvc .rvc-connection-bar .rvc-refresh:focus-visible{outline:2px solid #90d6ff}
+#rvc .rvc-review-link:not([hidden]){display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;min-height:40px;border:1px solid #447da2;border-radius:9px;
+  background:#10354f;color:#d6f1ff;text-decoration:none;padding:7px 10px;
+  font:800 10px/1.3 system-ui;letter-spacing:.02em;max-width:155px;text-align:center}
+#rvc .rvc-review-link[data-pending=true]{border-color:#73cafa;background:#184866;color:#fff}
+@media(max-width:760px){#rvc .rvc-review-link:not([hidden]){max-width:125px;font-size:9px;min-height:44px}}
 @media(max-width:760px){#rvc .rvc-connection-bar .rvc-refresh{margin-right:10px;font-size:12px;min-width:72px}}
 `}));
 
@@ -599,6 +609,26 @@
     window.visualViewport?.addEventListener('resize',syncVisualViewport);
     window.visualViewport?.addEventListener('scroll',syncVisualViewport);
     window.addEventListener('orientationchange',syncVisualViewport);
+    async function refreshReviewShortcut(){
+      if(!reviewHost)return;
+      try{
+        const reply=await fetch('/api/hud/workforce/status',{
+          credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(8000)});
+        if(!reply.ok)throw Error('review_status_unavailable');
+        const data=await reply.json();
+        if(data?.source!=='existing_cloudflare_hud_gemini_workforce'||
+           !Array.isArray(data.items)||data.items.length>50)throw Error('review_status_invalid');
+        const count=data.items.filter(x=>x.state==='needs_review'&&
+          x.human_review==='not_recorded').length;
+        reviewLink.textContent=count?'REVIEW '+count+' CLOUD DRAFT'+(count===1?'':'S'):'REVIEW CLOUD DRAFTS';
+        reviewLink.dataset.pending=String(count>0);
+        reviewLink.title=count?count+' saved D1 model output(s) need owner PASS/FAIL':
+          'Open private D1 review desk';
+      }catch{
+        reviewLink.textContent='REVIEW CLOUD DRAFTS';
+        reviewLink.dataset.pending='false';
+      }
+    }
     let priorOverflow=null,autoRefresh=null;
     const toggle=open=>{
       panel.dataset.open=String(open);
@@ -623,7 +653,8 @@
       syncVisualViewport();
       // Avoid opening the iOS keyboard the moment the app launches.
       // Desktop typing remains one-step with autofocus.
-      if(open){load();refreshProviderInventory();if(!window.matchMedia('(max-width:760px)').matches)input.focus({preventScroll:true});}
+      if(open){load();refreshProviderInventory();void refreshReviewShortcut();
+        if(!window.matchMedia('(max-width:760px)').matches)input.focus({preventScroll:true});}
     };
 
     async function refreshProviderInventory(){
