@@ -2,6 +2,7 @@ import './test_workforce_admission_guidance.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 import {verifyPrivateReviewPage} from '../integrations/hud-cloud/verify-private-review-page.mjs';
 
@@ -203,4 +204,32 @@ test('first GitHub draft PR progress uses verified scope and real D1 PR, not con
  const endAdvanced=html.indexOf('</details>',advanced);
  assert(first>endAdvanced,'source builder must no longer be hidden in advanced controls');
  assert.doesNotMatch(pageJS,/\.innerHTML\s*=|insertAdjacentHTML/);
+});
+
+
+test('nine cloud catalog statuses are visible without claiming paid/free inference or delaying reviews',()=>{
+ assert.match(html,/id="cloud-provider-catalog"/);
+ assert.match(html,/id="cloud-provider-summary"/);
+ assert.match(html,/id="cloud-provider-grid"/);
+ assert.match(html,/@media\(max-width:420px\)\{\.catalog-grid\{grid-template-columns:1fr\}\}/);
+ assert.match(pageJS,/privateRequest\('\/api\/hud\/provider-catalogs'\)/);
+ assert.match(pageJS,/void refreshProviderCatalog\(generation\)/);
+ assert.match(pageJS,/if\(generation!==refreshGeneration\)return/);
+ assert.match(pageJS,/inference_online_verified_count!==0/);
+ assert.match(pageJS,/Free inference and remaining provider quota: unverified/);
+ assert.doesNotMatch(pageJS,/\.innerHTML\s*=|setInterval\(refreshProviderCatalog/);
+ const start=pageJS.indexOf('function catalogReadable(');
+ const end=pageJS.indexOf('async function refreshProviderCatalog(',start);
+ assert(start>=0&&end>start);
+ const context={};
+ vm.runInNewContext(pageJS.slice(start,end)+'\nthis.label=catalogReadable;',context);
+ const label=context.label;
+ assert.equal(label({freshness:'fresh',status:'catalog_received',site_d1_verified:true}),
+  'Catalog and Site D1 confirmed');
+ assert.equal(label({freshness:'fresh',status:'site_receipt_missing',site_d1_verified:false}),
+  'Catalog found; Site D1 proof missing');
+ assert.equal(label({freshness:'stale_or_unavailable',status:'catalog_received',site_d1_verified:true}),
+  'No recent catalog verification');
+ assert.equal(label({freshness:'fresh',status:'bridge_unconfigured',site_d1_verified:false}),
+  'Private service credential unavailable');
 });
