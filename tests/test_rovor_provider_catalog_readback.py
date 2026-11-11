@@ -9,6 +9,7 @@ from tools import verify_rovor_provider_catalog_readback as check
 from tools import rovor_cloud_control_report as control
 
 TOKEN = "s" * 48
+NOW_MS = 1794294800000
 
 
 class FakeSite:
@@ -57,7 +58,7 @@ class FakeSite:
 class CatalogReadbackTests(unittest.TestCase):
     def test_nine_catalogs_must_match_exact_private_d1_timestamps(self):
         client = FakeSite()
-        report = check.audit_catalog_persistence(TOKEN, request=client)
+        report = check.audit_catalog_persistence(TOKEN, request=client, now_ms=NOW_MS)
         self.assertEqual(report["state"], "catalog_persistence_verified")
         self.assertEqual(report["catalog_received"], 9)
         self.assertEqual(report["persisted"], 9)
@@ -71,7 +72,7 @@ class CatalogReadbackTests(unittest.TestCase):
 
     def test_stale_site_timestamp_fails_even_with_successful_live_catalogs(self):
         report = check.audit_catalog_persistence(
-            TOKEN, request=FakeSite(stale="gemini")
+            TOKEN, request=FakeSite(stale="gemini"), now_ms=NOW_MS
         )
         self.assertEqual(report["catalog_received"], 9)
         self.assertEqual(report["persisted"], 8)
@@ -83,7 +84,7 @@ class CatalogReadbackTests(unittest.TestCase):
         # Matches the actual observed production symptom: all nine catalogs
         # respond, but the service emits no D1 readback attestations.
         report = check.audit_catalog_persistence(
-            TOKEN, request=FakeSite(missing_receipts=check.PROVIDERS)
+            TOKEN, request=FakeSite(missing_receipts=check.PROVIDERS), now_ms=NOW_MS
         )
         self.assertEqual(report["catalog_received"], 9)
         self.assertEqual(report["site_d1_receipts"], 0)
@@ -95,7 +96,7 @@ class CatalogReadbackTests(unittest.TestCase):
 
     def test_one_missing_d1_receipt_does_not_pass(self):
         report = check.audit_catalog_persistence(
-            TOKEN, request=FakeSite(missing_receipts={"openrouter"})
+            TOKEN, request=FakeSite(missing_receipts={"openrouter"}), now_ms=NOW_MS
         )
         self.assertEqual(report["catalog_received"], 9)
         self.assertEqual(report["site_d1_receipts"], 8)
@@ -104,15 +105,32 @@ class CatalogReadbackTests(unittest.TestCase):
 
     def test_mismatched_provider_is_not_accepted_as_success(self):
         report = check.audit_catalog_persistence(
-            TOKEN, request=FakeSite(malformed="groq")
+            TOKEN, request=FakeSite(malformed="groq"), now_ms=NOW_MS
         )
         self.assertEqual(report["catalog_received"], 8)
         self.assertEqual(report["persisted"], 8)
         self.assertEqual(report["state"], "catalog_or_persistence_incomplete")
 
+    def test_old_exact_d1_timestamp_is_not_fresh_catalog_proof(self):
+        client = FakeSite()
+        report = check.audit_catalog_persistence(
+            TOKEN, request=client, now_ms=NOW_MS + 3600000)
+        self.assertEqual(report["catalog_received"], 0)
+        self.assertEqual(report["persisted"], 0)
+        self.assertEqual(report["site_d1_receipts"], 0)
+        self.assertEqual(len(client.calls), 11)
+
+    def test_future_exact_d1_timestamp_is_not_fresh_catalog_proof(self):
+        client = FakeSite()
+        report = check.audit_catalog_persistence(
+            TOKEN, request=client, now_ms=NOW_MS - 120000)
+        self.assertEqual(report["catalog_received"], 0)
+        self.assertEqual(report["persisted"], 0)
+        self.assertEqual(report["site_d1_receipts"], 0)
+
     def test_missing_secret_makes_zero_requests(self):
         client = FakeSite()
-        report = check.audit_catalog_persistence("short", request=client)
+        report = check.audit_catalog_persistence("short", request=client, now_ms=NOW_MS)
         self.assertEqual(report["state"], "service_secret_missing")
         self.assertEqual(client.calls, [])
         self.assertEqual(report["providers"], [])
