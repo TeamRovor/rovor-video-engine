@@ -12,7 +12,7 @@ const job={id:'gc-new-reviewable-job-v2',task_id:'new-owner-approved-pilot',
  employee:'Saul',kind:'research',title:'Draft a small website service brief',
  prompt:'Write one short, specific public small-business website brief for owner review.',
  source_commit:'a'.repeat(40),data_class:'public_repository'};
-const packet={approval:'trusted_canonical_owner_approval_v1',job};
+const packet={approval:'trusted_canonical_owner_approval_v1',revision:'v2',job};
 const origin='https://rovor.example';
 function setup(){
  const db=new DatabaseSync(':memory:');
@@ -65,10 +65,12 @@ test('STOP starts disabled, immutable canonical intake deduplicates, and public 
  assert.equal((await status(s.DB)).body.enabled,false);
  assert.equal((await tick(s.env,now,()=>{throw Error('never call');})).body.state,'stopped');
  assert.equal((await intake(s.DB,{...packet,unknown:1},now)).status,400);
+ assert.equal((await intake(s.DB,{...packet,revision:'v1'},now)).status,400,'already attempted v1 cannot be submitted');
  assert.equal((await intake(s.DB,{...packet,job:{...job,prompt:'A'.repeat(4001)}},now)).status,400);
  assert.equal((await intake(s.DB,packet,now)).status,201);
  assert.equal((await intake(s.DB,packet,now)).body.duplicate,true);
  assert.equal((await intake(s.DB,{...packet,job:{...job,title:'tampered'}},now)).status,409);
+ assert.equal((await intake(s.DB,{...packet,revision:'v3'},now)).status,409);
  const overview=(await status(s.DB)).body;
  assert.equal(overview.items[0].state,'queued');
  assert.equal(overview.items[0].human_review,'not_recorded');
