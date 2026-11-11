@@ -1192,6 +1192,15 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "hud-command-deck-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
