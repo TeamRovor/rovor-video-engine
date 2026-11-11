@@ -45,9 +45,10 @@ export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
   typeof last.result_state!=='string'||!/^[a-z0-9_]{1,80}$/.test(last.result_state)||
   (last.finished_at!==null&&(!Number.isSafeInteger(last.finished_at)||last.finished_at<last.started_at))))
   throw Error('native_discovery_receipt_invalid');
- const verified=!!last&&['owner_review_draft_queued','no_new_evidence_backed_work'].includes(last.result_state)&&
+ const verified=!!last&&['owner_review_draft_queued','no_new_evidence_backed_work','daily_draft_budget_reached'].includes(last.result_state)&&
   Number.isSafeInteger(last.finished_at)&&last.finished_at<=now&&now-last.finished_at<7200000;
  return {private_auth_verified:true,configured:data.configured,enabled:data.enabled,
+  standing_ready:typeof data.standing_ready==='boolean'?data.standing_ready:null,
   native_github_read_verified:verified,last_native_check_at:last?new Date(last.started_at).toISOString():null,
   last_native_result:last?.result_state??null,mac_required:false,chatgpt_required:false,github_actions_required:false};
 }

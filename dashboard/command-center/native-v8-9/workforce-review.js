@@ -22,11 +22,12 @@ async function refreshNativeDiscovery(){
      typeof data.enabled!=='boolean'||data.mac_required!==false||data.chatgpt_required!==false||
      data.github_actions_required!==false||data.storage_unavailable)throw Error('native_discovery_unavailable');
   const receipt=data.last_check;
-  const verified=receipt&&['no_new_evidence_backed_work','owner_review_draft_queued'].includes(receipt.result_state)&&
+  const verified=receipt&&['no_new_evidence_backed_work','owner_review_draft_queued','daily_draft_budget_reached'].includes(receipt.result_state)&&
    Number.isSafeInteger(receipt.finished_at)&&receipt.finished_at>0;
   const fresh=verified&&Date.now()-receipt.finished_at<7200000&&Date.now()>=receipt.finished_at;
   githubDiscoveryState.textContent=!data.configured?'NOT CONFIGURED':!data.enabled?'DISABLED':
    fresh?'READ VERIFIED':receipt?.result_state==='github_read_unavailable'?'READ FAILED':
+   data.standing_ready===false?'STOP / OWNER AUTHORIZATION REQUIRED':
    verified?'STALE RECEIPT':'AWAITING NATIVE CHECK';
   githubDiscoveryDetail.textContent=receipt&&Number.isSafeInteger(receipt.started_at)?
    'Native check '+formatTime(receipt.started_at)+' · '+String(receipt.result_state).slice(0,80).replaceAll('_',' '):
