@@ -150,7 +150,7 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
 export function composeScheduledShift(directory,{apply=false,sourceDirectory=here}={}) {
   const root=path.resolve(directory),manifestPath=safe(root,'.openai/hosting.json');
   const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
-  if(manifest.project_id!==SITE||manifest.d1!=='DB')throw Error('wrong_site_or_database');
+  if(manifest.project_id!==SITE||!(manifest.d1==='DB'||manifest.d1?.binding==='DB'))throw Error('wrong_site_or_database');
   const worker=safe(root,'worker/index.js'),built=safe(root,'dist/server/index.js');
   const initial=fs.readFileSync(worker,'utf8');
   if(initial!==fs.readFileSync(built,'utf8'))throw Error('site_bundle_mismatch');
