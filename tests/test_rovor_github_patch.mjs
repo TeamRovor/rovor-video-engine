@@ -174,7 +174,7 @@ test('STOP permanently revokes all queued draft-PR authorizations, even after ST
  const stopped=await control(s.env.DB,false,null,NOW+7);
  assert.equal(stopped.status,200);
  const revoked=s.sqlite.prepare('SELECT state,error_code,finished_at FROM hud_github_patch_jobs WHERE job_id=?').get(s.body.job_id);
- assert.deepEqual(revoked,{state:'failed',error_code:'stopped_before_github_write',finished_at:NOW+7});
+ assert.deepEqual({...revoked},{state:'failed',error_code:'stopped_before_github_write',finished_at:NOW+7});
  // A later START must not replay the previously approved patch; no API
  // request, token mint or repository write may occur.
  enable(s);
@@ -189,7 +189,7 @@ test('STOP permanently revokes all queued draft-PR authorizations, even after ST
  assert.equal(receipt.state,'failed');
  // Repeated STOP does not rewrite immutable terminal evidence.
  assert.equal((await control(s.env.DB,false,null,NOW+10)).status,200);
- assert.deepEqual(s.sqlite.prepare('SELECT state,error_code,finished_at FROM hud_github_patch_jobs WHERE job_id=?').get(s.body.job_id),revoked);
+ assert.deepEqual({...s.sqlite.prepare('SELECT state,error_code,finished_at FROM hud_github_patch_jobs WHERE job_id=?').get(s.body.job_id)},{...revoked});
 });
 test('STOP preserves uncertain write receipts instead of falsely calling them cancelled',async()=>{
  const s=setup();enable(s);
