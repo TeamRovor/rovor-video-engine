@@ -6161,6 +6161,23 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42988132713"
         }
       ]
+    },
+    {
+      "id": "hud-chat-jump-latest-20261111",
+      "title": "Add an accessible chat return-to-latest control",
+      "priority": 1,
+      "status": "active",
+      "owner": "Codex / Amar chat return-to-latest 2026-11-11",
+      "branch": "fix/hud-chat-jump-latest-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/hud-chat.js",
+        "tests/test_hud_chat_mobile.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T08:40:51.892Z",
+      "next_update": "Scroll-state regressions and hosted HUD/browser checks",
+      "next_action": "Expose a touch/keyboard Jump to latest control when reading older messages; update it after streaming, redraw and viewport changes.",
+      "acceptance": "Control visibility follows distance from bottom, explicit click jumps to latest, stream paints update state, and existing tests pass without provider or backend changes."
     }
   ]
 }

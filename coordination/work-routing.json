@@ -1183,6 +1183,15 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "hud-chat-jump-latest-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
