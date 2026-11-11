@@ -5,6 +5,7 @@ import {submitIdea,listIdeas} from './idea-inbox.mjs';
 import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
 import {getRepoSource} from './repo-source.mjs';
 import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';
+import {queueGithubPatch,githubPatchStatus,githubPatchTick} from './github-patch-gateway.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
 import {intake as workforceIntake,control as workforceControl,status as workforceStatus,
   draft as workforceDraft,review as workforceReview,tick as workforceTick,recordNativeTick}
@@ -352,7 +353,7 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
   // Only the existing distinct server-held writer token can enqueue/dispatch
   // immutable canonical jobs or change STOP. Browser readers cannot.
   const workforceWriter = request.method === 'POST' &&
-    ['/api/hud/workforce/intake','/api/hud/workforce/tick','/api/hud/workforce/control'].includes(url.pathname);
+    ['/api/hud/workforce/intake','/api/hud/workforce/tick','/api/hud/workforce/control','/api/hud/workforce/github-patch'].includes(url.pathname);
   // A separate writer-only channel allows the Mac to report its available
   // routes and execute explicitly submitted chat requests via outbound polling.
   const chatWriter = request.method === 'POST' &&
@@ -427,6 +428,12 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     if (request.method === 'GET' && url.pathname.startsWith('/api/hud/chat/status/')) {
       const result = await chatStatus(env.DB, url.pathname.slice('/api/hud/chat/status/'.length), now);
       return response(result.status, result.status === 200 ? result : {error:result.error});
+    }
+    if(request.method==='GET'&&url.pathname==='/api/hud/workforce/github-patch')
+      return response(200,await githubPatchStatus(env));
+    if(request.method==='POST'&&url.pathname==='/api/hud/workforce/github-patch'){
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'patch_authorization_invalid'});}
+      const result=await queueGithubPatch(env,body,now);return response(result.status,result.body);
     }
     if (request.method === 'GET' && url.pathname === '/api/hud/workforce/native-discovery')
       return response(200,await nativeDiscoveryStatus(env));
@@ -603,7 +610,10 @@ export default {
     const result=await workforceTick(env,startedAt);
     if(Number.isSafeInteger(event?.scheduledTime)&&event.scheduledTime>0)
       await recordNativeTick(env.DB,event.scheduledTime,startedAt,Math.max(startedAt,Date.now()),result);
+    let patchFailed=false;
+    try{await githubPatchTick(env,Date.now());}catch{patchFailed=true;}
     if(maintenanceFailed)throw Error('scheduled_chat_maintenance_failed');
+    if(patchFailed)throw Error('scheduled_github_patch_failed');
     if(discoveryFailed)throw Error('scheduled_native_discovery_failed');
   }
 };

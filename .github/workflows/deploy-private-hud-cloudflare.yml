@@ -100,6 +100,7 @@ jobs:
       - name: Test private auth, nine-provider meters and GitHub release preflight
         run: |
           node --check integrations/hud-cloud/github-app.mjs
+          node --check integrations/hud-cloud/github-patch-gateway.mjs
           node --check integrations/hud-cloud/native-github-discovery.mjs
           node --check integrations/hud-cloud/repo-source.mjs
           node --check integrations/hud-cloud/build-repo-snapshot.mjs
@@ -130,7 +131,7 @@ jobs:
           node --check integrations/hud-cloud/verify-github-deploy.mjs
           bash -n tools/manage_hud_telemetry_agent.sh
           bash -n tools/install_hud_chat_relay.sh
-          node --test tests/test_hud_cloud.mjs tests/test_hud_cloud_gemini.mjs tests/test_hud_gemini_coverage_workflow.mjs tests/test_hud_gemini_key_activation.mjs tests/test_hud_live_gemini_catalog.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_provider_overview_layout.cjs tests/test_hud_gemini_project_quota.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_cloud_workforce.mjs tests/test_hud_mobile_drawer_stability.mjs tests/test_hud_private_review_page.mjs tests/test_hud_omniroute_relay.mjs tests/test_hud_chat_mobile.mjs tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_gemini_activation_workflow.mjs tests/test_hud_repo_context.mjs tests/test_hud_groq_cloud.mjs tests/test_hud_groq_quota.mjs tests/test_hud_groq_key_probe.mjs tests/test_hud_idea_inbox.mjs tests/test_hud_discovery_inbox.mjs tests/test_hud_repo_source_cloud.mjs tests/test_rovor_native_discovery.mjs
+          node --test tests/test_hud_cloud.mjs tests/test_hud_cloud_gemini.mjs tests/test_hud_gemini_coverage_workflow.mjs tests/test_hud_gemini_key_activation.mjs tests/test_hud_live_gemini_catalog.mjs tests/test_hud_github_deployment.mjs tests/test_hud_ios_quota_rings.mjs tests/test_hud_provider_overview_layout.cjs tests/test_hud_gemini_project_quota.mjs tests/test_hud_cloud_chat.mjs tests/test_hud_cloud_workforce.mjs tests/test_hud_mobile_drawer_stability.mjs tests/test_hud_private_review_page.mjs tests/test_hud_omniroute_relay.mjs tests/test_hud_chat_mobile.mjs tests/test_hud_omniroute_chat_relay.mjs tests/test_hud_gemini_activation_workflow.mjs tests/test_hud_repo_context.mjs tests/test_hud_groq_cloud.mjs tests/test_hud_groq_quota.mjs tests/test_hud_groq_key_probe.mjs tests/test_hud_idea_inbox.mjs tests/test_hud_discovery_inbox.mjs tests/test_hud_repo_source_cloud.mjs tests/test_rovor_native_discovery.mjs tests/test_rovor_github_patch.mjs
 
       - name: Verify interactive Ask ROVOR on phone, tablet and desktop Chromium viewports
         run: node tests/test_hud_chat_browser.cjs
@@ -177,6 +178,8 @@ jobs:
       ROVOR_GITHUB_INSTALLATION_ID: ${{ secrets.ROVOR_GITHUB_INSTALLATION_ID }}
       ROVOR_GITHUB_APP_PRIVATE_KEY: ${{ secrets.ROVOR_GITHUB_APP_PRIVATE_KEY }}
       ROVOR_NATIVE_DISCOVERY_ENABLED: ${{ vars.ROVOR_NATIVE_DISCOVERY_ENABLED }}
+      ROVOR_GITHUB_PATCH_ENABLED: ${{ vars.ROVOR_GITHUB_PATCH_ENABLED }}
+      ROVOR_GITHUB_PATCH_PATHS: ${{ vars.ROVOR_GITHUB_PATCH_PATHS }}
       GROQ_HUD_API_KEY: ${{ secrets.ROVOR_HUD_GROQ_API_KEY }}
       GROQ_HUD_CHAT_ENABLED: ${{ vars.ROVOR_HUD_GROQ_CHAT_ENABLED }}
       GROQ_HUD_FREE_TIER_VERIFIED: ${{ vars.ROVOR_HUD_GROQ_FREE_TIER_VERIFIED }}

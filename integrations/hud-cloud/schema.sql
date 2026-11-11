@@ -235,3 +235,19 @@ CREATE TABLE IF NOT EXISTS hud_native_discovery_clock (
  result_state TEXT NOT NULL,
  discovery_key TEXT
 );
+
+-- Separate owner-authorized tool attempts. One immutable model output may
+-- become one draft PR; a failed/uncertain write never automatically replays.
+CREATE TABLE IF NOT EXISTS hud_github_patch_jobs (
+ job_id TEXT PRIMARY KEY REFERENCES hud_cloud_workforce_jobs(id),
+ output_sha256 TEXT NOT NULL,base_commit TEXT NOT NULL,path TEXT NOT NULL,branch TEXT NOT NULL UNIQUE,
+ authorized_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,started_at INTEGER,finished_at INTEGER,
+ state TEXT NOT NULL CHECK(state IN ('queued','running','opened','failed','uncertain')),
+ error_code TEXT,commit_sha TEXT,pr_number INTEGER
+);
+CREATE INDEX IF NOT EXISTS hud_github_patch_queue ON hud_github_patch_jobs(state,authorized_at);
+CREATE TABLE IF NOT EXISTS hud_github_patch_events (
+ job_id TEXT NOT NULL REFERENCES hud_github_patch_jobs(job_id),
+ step TEXT NOT NULL CHECK(step IN ('tree','commit','branch','draft_pr')),
+ reference TEXT NOT NULL,recorded_at INTEGER NOT NULL,PRIMARY KEY(job_id,step)
+);

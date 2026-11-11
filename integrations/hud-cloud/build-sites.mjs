@@ -38,6 +38,9 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const discoveryImport = "import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';";
   const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
   const nativeDiscoveryImport = "import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';";
+  const githubPatchImport = "import {queueGithubPatch,githubPatchStatus,githubPatchTick} from './github-patch-gateway.mjs';";
+  if(core.split(githubPatchImport).length!==2)throw Error('Unexpected GitHub patch import');
+  const githubPatchUnavailable = "const queueGithubPatch=()=>({status:404,body:{error:'cloudflare_only'}}),githubPatchStatus=()=>({source:'cloudflare_only',configured:false,items:[]});\n";
   if(core.split(nativeDiscoveryImport).length!==2)throw Error('Unexpected native discovery import');
   const nativeDiscoveryUnavailable = "const nativeDiscoveryStatus=()=>({source:'cloudflare_only',configured:false,enabled:false});\n";
   const discoveryValidatorImport = "import {validateIdea} from './idea-inbox.mjs';";
@@ -90,10 +93,10 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const repoSource = 'const {getRepoSource} = (() => {\n'+
     plain(sourceSrc)+'\nreturn {getRepoSource};})();\n';
   return dependency + relay + groqQuota + groqCloud + idea + discovery + repoSource + geminiCloud +
-    workforceUnavailable + nativeDiscoveryUnavailable +
+    workforceUnavailable + nativeDiscoveryUnavailable + githubPatchUnavailable +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
       .replace(groqImport, '').replace(groqProbeImport, '').replace(workforceImport, '')
-      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '')
+      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '').replace(githubPatchImport, '')
       .replace(coreEnd, '')) +
     '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
