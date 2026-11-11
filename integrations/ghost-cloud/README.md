@@ -198,13 +198,38 @@ feed configuration are present:
   `active`, public data class, assigned owner, passing dependencies, and matching
   revision. There is no inferred authorization from a GitHub task alone.
 
-When `GHOST_FEED_COMMIT` is present but allowlist data are missing or invalid,
-the shift fails closed with a sanitized receipt; it must **not** fall back to
-stale packets. If the feed is not selected, legacy fixed packets remain the
-existing guarded behavior. Identical tasks deduplicate by stable job IDs; an
-explicitly reviewed new revision requires new owner approval. The zero-cost
-provider gate, token permits, global STOP, human PASS/FAIL, and real model
-receipts remain separate.
+A separate, explicitly owner-approved **recurring series** can supply fresh
+bounded work windows after one-shot packets have been used. This is OFF
+unless the existing private Site has `GHOST_APPROVED_SERIES` configured
+with JSON objects containing exactly:
+
+`{"approval":"owner_approved_recurring_cloud_inference_v1","task_id":"...",
+"revision":"v1","cadence_minutes":60,"max_runs":24,
+"starts_at":"2026-11-10T00:00:00.000Z",
+"expires_at":"2026-11-11T00:00:00.000Z"}`
+
+The sample is expired and illustrative; do not activate it as written.
+Set real task/revision and UTC dates privately with owner authorization.
+`cadence_minutes` must be 60 (hourly) or 1440 (daily). Approvals cannot
+exceed 168 slots or seven days, and the expiration must fit the slot count.
+Starts align to the corresponding UTC hour or day. The canonical public
+task prompt must contain `{{RUN_WINDOW_UTC}}` and independently pass
+active-task ownership, dependencies, route, public-data, revision and worker
+validation. An existing one-shot approval never implies recurring permission.
+
+The source is always a pinned `GHOST_FEED_COMMIT`, never a prompt supplied
+by a cloud model or browser. The combined one-shot and recurring approvals
+cannot exceed nine per shift. Every task/window has a stable immutable job
+ID even across unrelated Git changes. Missed windows are not created
+retroactively. A pending unattempted window blocks newer ones for the
+same task, limiting backlog to one. That older pending job could still
+execute after provider recovery; draft output always requires human review.
+
+When neither approval list is configured, replenishment is empty. Invalid
+approvals, source or revisions fail closed; no fallback to stale fixed
+packets. Existing zero-cost eligibility, canary/quotas, shared limits, STOP,
+review and receipts are unchanged. Recurring work does not renew provider
+eligibility or prove Site publication.
 
 The same `compose-scheduled-shift.mjs EXISTING_SITE --apply` command now
 stages **both** forward-only D1 migrations in the original Site's journal:

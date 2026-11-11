@@ -45,6 +45,26 @@ test('all nine original provider reports stay present and accessible in collapsi
  assert.match(html,/NO FRESH REPORT|CLOUD LEDGER ONLY/);
 });
 
+test('Cloudflare HUD renders nine monitored provider identities without inventing cloud or Mac connections',()=>{
+ const html=render(null,false,null);
+ assert.equal((html.match(/class="rvq-overview-tile"/g)||[]).length,9);
+ assert.equal((html.match(/class="rvq-provider"/g)||[]).length,9);
+ for(const provider of providers)assert.match(html,new RegExp('data-rvq-slot="'+provider+':1"'));
+ assert.match(html,/NO FRESH REPORT · IDENTITIES ONLY/);
+ assert.match(html,/nine provider identities shown as UNVERIFIED placeholders/);
+ assert.match(html,/REPORTED CONNECTION SLOTS<\/span><strong class="rvq-stat-value">—<\/strong>/);
+ assert.match(html,/NOT verified connections, credentials, online models/);
+ assert.equal((html.match(/role="img" aria-label="Provider quota unknown"/g)||[]).length,18);
+ assert.doesNotMatch(html,/SETUP \/ REVIEW 9/);
+ assert.doesNotMatch(html,/CLOUD LEDGER ONLY|FRESH OMNIROUTE INVENTORY/);
+});
+test('fresh observed empty Mac connections never turn into fake live connection slots',()=>{
+ const now=new Date().toISOString();
+ const html=render({snapshot_at:now,connections:[],quota:{records:[]}},true,null);
+ assert.equal((html.match(/class="rvq-provider"/g)||[]).length,0);
+ assert.doesNotMatch(html,/IDENTITIES ONLY/);
+});
+
 test('one provider with actual Mac limit receipts is not nine verified providers',()=>{
  const now=new Date();
  const data={
@@ -90,6 +110,21 @@ test('traffic and allowance instruments use different visual hierarchy',()=>{
  assert.match(html,/class="rvq-ring rvq-ring-traffic"/);
  assert.match(html,/Provider quota unknown/);
  assert.match(boardSource,/\.rvq-overview \.rvq-ring-traffic\{width:48px;height:48px/);
+});
+
+test('authenticated catalog receipt is shown separately from cloud model permission',()=>{
+ const now=Date.now(), cloud={execution_source:'cloud_provider',observed_at:now,
+  providers:providers.map(provider=>({provider,credentials_configured:true,
+   admission:'disabled_pending_verification',
+   catalog_connection:{state:provider==='groq'?'authenticated':'stale',observed_at:now}}))};
+ const html=render(null,false,cloud);
+ assert.match(html,/API CATALOG AUTHENTICATED · inference separate/);
+ assert.match(html,/LAST CATALOG CHECK STALE/);
+ assert.match(html,/CLOUD VERIFICATION PENDING/);
+ assert.equal((html.match(/class="rvq-overview-source">API CATALOG AUTHENTICATED · inference separate/g)||[]).length,1);
+ assert.equal((html.match(/class="rvq-overview-source">LAST CATALOG CHECK STALE/g)||[]).length,8);
+ const missing=render(null,false,{...cloud,observed_at:now-3600000});
+ assert.doesNotMatch(missing,/API CATALOG AUTHENTICATED · inference separate/);
 });
 
 test('attention filter covers fresh actionable gates without treating idle or stale as blocked',()=>{

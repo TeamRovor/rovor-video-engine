@@ -162,7 +162,10 @@ export async function cloudGeminiModels(env,send=fetch,now=Date.now()){
 export function validateGeminiChat(body){
   if(!body||typeof body!=='object'||Array.isArray(body)||
      ![AUTO_GEMINI_MODEL,...FREE_GEMINI_MODELS].includes(body.model)||
-     !Array.isArray(body.messages)||body.messages.length<1||body.messages.length>8)
+     !Array.isArray(body.messages)||body.messages.length<1||body.messages.length>8||
+     (Object.hasOwn(body,'max_output_tokens')&&
+      (!Number.isSafeInteger(body.max_output_tokens)||body.max_output_tokens<64||
+       body.max_output_tokens>2048)))
     throw Error('invalid_gemini_chat');
   let chars=0;
   const contents=body.messages.map(row=>{
@@ -259,6 +262,11 @@ export async function cloudGeminiChat(body,env,now=Date.now(),send=fetch){
     'gemini_auto_requires_recent_verified_model':'gemini_model_not_listed_for_project');
   if(evidence.get(model)?.verification==='provider_cooldown')
     return fixedError(429,'gemini_model_cooldown_active');
+  // A short, owner-authorized connectivity check needs only a short answer.
+  // Ordinary chats retain their previous caps, and callers cannot raise them.
+  const outputCap=model.endsWith('-lite')?1024:2048;
+  const maxOutputTokens=body.max_output_tokens??outputCap;
+  if(maxOutputTokens>outputCap)return fixedError(400,'invalid_gemini_chat');
   const stamp=new Date(now).toISOString(),day=dayAt(now);
   try{
     if(!await reserve(env.DB,'d:'+day,DAY_CAP))return fixedError(429,'gemini_daily_local_cap_reached');
@@ -273,7 +281,7 @@ export async function cloudGeminiChat(body,env,now=Date.now(),send=fetch){
     upstream=await send(ENDPOINT+'/'+model+':generateContent',{
       method:'POST',redirect:'manual',signal:AbortSignal.timeout(26000),
       headers:{'x-goog-api-key':env.GEMINI_API_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({contents,generationConfig:{maxOutputTokens:model.endsWith('-lite')?1024:2048,temperature:0.25}})
+      body:JSON.stringify({contents,generationConfig:{maxOutputTokens,temperature:0.25}})
     });
   }catch{
     await modelFailed(env.DB,day,model,'transport_error');
@@ -339,6 +347,7 @@ export async function cloudGeminiChat(body,env,now=Date.now(),send=fetch){
   return new Response(payload,{status:200,headers:{
     'Content-Type':'text/event-stream','Cache-Control':'no-store',
     'X-Content-Type-Options':'nosniff','X-ROVOR-Provider':'google-gemini-cloud',
-    'X-ROVOR-Requested-Model':body.model,'X-ROVOR-Resolved-Model':model
+    'X-ROVOR-Requested-Model':body.model,'X-ROVOR-Resolved-Model':model,
+    'X-ROVOR-Input-Tokens':String(inTok),'X-ROVOR-Output-Tokens':String(outTok)
   }});
 }

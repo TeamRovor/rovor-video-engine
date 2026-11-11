@@ -5,6 +5,133 @@ import vm from 'node:vm';
 
 const src=readFileSync(new URL('../dashboard/command-center/native-v8-9/hud-chat.js',import.meta.url),'utf8');
 
+function latestControl(){
+  const events={},observers=[],buttonEvents={};
+  const log={scrollTop:0,scrollHeight:1000,clientHeight:400,
+    addEventListener(name,fn,opts){events[name]=fn;assert.equal(opts.passive,true);}};
+  const button={hidden:true,addEventListener(name,fn){buttonEvents[name]=fn;}};
+  class Observer{constructor(fn){observers.push(fn);}observe(target){assert.equal(target,log);}}
+  const code=src.slice(src.indexOf('  function bindLatestControl('),src.indexOf('  function paintChatLog('));
+  vm.runInNewContext(code+'\nbindLatestControl(log,button)',{log,button,MutationObserver:Observer,ResizeObserver:Observer});
+  return {log,button,events,observers,click:buttonEvents.click};
+}
+test('Jump to latest appears away from the bottom and an explicit click returns to the reply',()=>{
+  const s=latestControl();assert.equal(s.button.hidden,false);
+  s.click();assert.equal(s.log.scrollTop,s.log.scrollHeight);assert.equal(s.button.hidden,true);
+  s.log.scrollTop=100;s.events.scroll();assert.equal(s.button.hidden,false);
+});
+test('streaming, conversation redraw and viewport changes keep the latest control accurate',()=>{
+  const s=latestControl();s.log.scrollTop=600;s.events.scroll();assert.equal(s.button.hidden,true);
+  s.log.scrollHeight=1300;s.observers[0]();assert.equal(s.button.hidden,false);
+  s.log.scrollHeight=100;s.log.scrollTop=0;s.observers[0]();assert.equal(s.button.hidden,true);
+  s.log.scrollHeight=600;s.log.clientHeight=200;s.observers[1]();assert.equal(s.button.hidden,false);
+  s.log.clientHeight=600;s.observers[1]();assert.equal(s.button.hidden,true);
+});
+test('return-to-latest is a keyboard-native button with a touch target and reserved log space',()=>{
+  assert.match(src,/type:'button',className:'rvc-jump-latest'/);
+  assert.match(src,/jumpLatest\.setAttribute\('aria-controls','rvc-log'\)/);
+  assert.match(src,/\.rvc-jump-latest\{[^}]*min-height:44px/);
+  assert.match(src,/connectionBar,providerDetails,logShell,/);
+  assert.match(src,/bindLatestControl\(log,jumpLatest\)/);
+});
+
+function catalogHarness(){
+  const requests=[];
+  const send={disabled:false},modelBrowse={disabled:false},stateLabel={textContent:'Last confirmed reply'};
+  const sourceSelect={value:'cloudflare'},select={value:'model-a',children:[],
+    get options(){return this.children.flatMap(group=>group.options?.length?group.options:[group]);},
+    set textContent(value){this.children=[];},append(group){this.children.push(group);}};
+  const context={ready:true,busy:false,send,modelBrowse,stateLabel,sourceSelect,select,
+    closeModelSheet(){},modelSheetInfo:{textContent:''},sessions:[],currentId:'chat',
+    localStorage:{getItem:()=>null},KEY:'test',AUTO_ROUTE:'auto',updatePlan(){},
+    el:(tag,props)=>({...props,options:[],append(option){this.options.push(option);}}),
+    AbortSignal:{timeout:ms=>({timeout:ms})},
+    fetch:(url,options)=>new Promise((resolve,reject)=>requests.push({url,options,resolve,reject}))};
+  const start=src.indexOf('    let loadEpoch=');
+  const end=src.indexOf('    function currentPlan(',start);
+  vm.runInNewContext(src.slice(start,end)+"\nreadySource='cloudflare';this.load=load;this.invalidate=()=>{loadEpoch++;};",context);
+  return {context,requests,send,modelBrowse,stateLabel,sourceSelect,select,
+    reply(index,models=['model-a','model-b']){requests[index].resolve({ok:true,json:async()=>({models})});}};
+}
+test('background catalog refresh preserves controls and the selection made while it is pending',async()=>{
+  const s=catalogHarness(),pending=s.context.load({background:true});
+  assert.equal(s.send.disabled,false);assert.equal(s.modelBrowse.disabled,false);
+  assert.equal(s.stateLabel.textContent,'Last confirmed reply');
+  assert.equal(s.requests[0].options.signal.timeout,8000);
+  s.select.value='model-b';s.reply(0);await pending;
+  assert.equal(s.select.value,'model-b');assert.equal(s.send.disabled,false);
+});
+test('foreground and different-provider checks remain gated',async()=>{
+  for(const different of [false,true]){
+    const s=catalogHarness();if(different)s.sourceSelect.value='groq';
+    const pending=s.context.load({background:different});
+    assert.equal(s.send.disabled,true);assert.equal(s.modelBrowse.disabled,true);
+    s.requests[0].reject(Error('unavailable'));await pending;
+    assert.equal(s.context.ready,false);
+  }
+});
+test('failed background checks close readiness instead of retaining an unverified route',async()=>{
+  const s=catalogHarness(),pending=s.context.load({background:true});
+  s.requests[0].reject(Error('timeout'));await pending;
+  assert.equal(s.context.ready,false);assert.equal(s.send.disabled,true);
+});
+test('catalog completion cannot overwrite an active request or a later provider change',async()=>{
+  for(const invalidate of [false,true]){
+    const s=catalogHarness(),pending=s.context.load({background:true});
+    if(invalidate)s.context.invalidate();else s.context.busy=true;
+    s.stateLabel.textContent='Request in progress';s.reply(0);await pending;
+    assert.equal(s.stateLabel.textContent,'Request in progress');
+  }
+  assert.match(src,/const setBusy=b=>\{if\(b\)loadEpoch\+\+/);
+  assert.match(src,/load\(\{background:true\}\);refreshProviderInventory\(\)/);
+});
+
+function streamHarness(){
+  const callbacks=new Map(),renders=[];let next=0;
+  const code=src.slice(src.indexOf('  function paintChatLog('),src.indexOf('  function renderText('));
+  const {createStreamPainter,paintChatLog}=vm.runInNewContext(code+'\n({createStreamPainter,paintChatLog})',{
+    requestAnimationFrame:fn=>{callbacks.set(++next,fn);return next;},
+    cancelAnimationFrame:id=>callbacks.delete(id)
+  });
+  const log={scrollHeight:1000,clientHeight:400,scrollTop:600},node={};
+  const painter=createStreamPainter(log,node,(target,text)=>{
+    assert.equal(target,node);renders.push(text);log.scrollHeight+=100;
+  });
+  return {log,painter,renders,callbacks,paintChatLog,frame(){
+    for(const [id,fn] of [...callbacks]){callbacks.delete(id);fn();}
+  }};
+}
+test('stream bursts paint once per animation frame and use the latest accumulated reply',()=>{
+  const s=streamHarness();
+  for(let i=1;i<=100;i++)s.painter.queue('x'.repeat(i));
+  assert.equal(s.callbacks.size,1);assert.equal(s.renders.length,0);
+  s.frame();assert.deepEqual(s.renders,['x'.repeat(100)]);
+  assert.equal(s.log.scrollTop,s.log.scrollHeight);
+  s.painter.queue('next frame');assert.equal(s.callbacks.size,1);
+  s.frame();assert.equal(s.renders.length,2);
+});
+test('scrolling away before the next paint is respected through streaming and completion',()=>{
+  const s=streamHarness();s.painter.queue('partial');
+  s.log.scrollTop=120;s.frame();assert.equal(s.log.scrollTop,120);
+  s.painter.queue('more');s.frame();assert.equal(s.log.scrollTop,120);
+  s.painter.finish('complete');assert.equal(s.log.scrollTop,120);
+  s.paintChatLog(s.log,()=>{s.log.scrollHeight+=100;s.log.scrollTop=9999;});
+  assert.equal(s.log.scrollTop,120,'history rebuild preserves the reading position');
+  assert.match(src,/painter\.finish\(reply\);[\s\S]*?redraw\(true\)/);
+  assert.match(src,/painter\.cancel\(\);\s*paintChatLog\(log,\(\)=>renderText\(bubble,message\)\)/);
+});
+test('finishing flushes the latest full reply even without a frame and cancels the pending callback',()=>{
+  const s=streamHarness();s.painter.queue('partial');
+  s.painter.finish('final formatted reply');
+  assert.equal(s.callbacks.size,0);assert.deepEqual(s.renders,['final formatted reply']);
+  s.frame();assert.equal(s.renders.length,1);
+});
+test('cancelling a pending stream prevents obsolete content from painting over an error',()=>{
+  const s=streamHarness();s.painter.queue('obsolete reply');s.painter.cancel();s.painter.cancel();
+  s.frame();assert.equal(s.callbacks.size,0);assert.equal(s.renders.length,0);
+  assert.match(src,/finally\{painter\.cancel\(\)/);
+});
+
 test('Ask ROVOR keeps iOS focus controls at Safari-safe 16px and preserves pinch zoom',()=>{
   assert.match(src, /iosTypeAndKeyboardCSS/);
   assert.match(src, /#rvc select, #rvc textarea, #rvc input[^{]*\{\s*font-size:16px!important;/);
@@ -78,8 +205,8 @@ test('Ask ROVOR GitHub source is explicit, read-only, and touch-safe on phone, i
   assert.match(src,/if\(attachedSource\)payload\.repo_file=attachedSource/);
   assert.match(src,/no repository write access/i);
   assert.match(src,/rvc-repo-file\{[^}]*font-size:16px!important/);
-  assert.match(src,/repoRow\.hidden=sourceSelect\.value!=='omniroute'/);
-  assert.match(src,/repoSelect\.disabled=b\|\|sourceSelect\.value!=='omniroute'/);
+  assert.match(src,/repoRow\.hidden=false/); // cloud models can explicitly attach one source
+  assert.match(src,/repoSelect\.disabled=b/);
 });
 
 function taskPlanner(seed=null){
@@ -175,3 +302,6 @@ test('task routing uses real, recent per-model receipt reliability only with suf
   assert.equal(taskPlanner(evidence)(question,catalog).routes[0],'groq/fast:free',
     'stale performance observations must not influence choices');
 });
+
+
+

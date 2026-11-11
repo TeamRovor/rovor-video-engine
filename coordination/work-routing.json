@@ -1136,11 +1136,69 @@
         "github-write"
       ]
     },
-    "ask-rovor-model-intelligence-20261109": {
-      "lane": "integration",
+    "cloud-gemini-website-offer-pilot-20261110": {
+      "lane": "coordination",
+      "requires": [
+        "github-read"
+      ]
+    },
+    "cloud-walter-workflow-factory-20261110": {
+      "lane": "coordination",
+      "requires": [
+        "github-read"
+      ]
+    },
+    "workforce-owner-admission-guidance-20261111": {
+      "lane": "operations",
       "requires": [
         "github-read",
-        "github-write"
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "hud-chat-stream-stability-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "hud-workload-refresh-stability-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "hud-chat-background-catalog-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "hud-chat-jump-latest-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
+    },
+    "hud-command-deck-20261111": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
       ],
       "objective": "reduce-repeat-work"
     }

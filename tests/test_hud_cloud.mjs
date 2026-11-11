@@ -4,8 +4,27 @@ import fs from 'node:fs';
 import {spawnSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import worker, {handle, latest, sanitize} from '../integrations/hud-cloud/worker.mjs';
-import {publishOnce, fitSnapshot, validateTarget, isAllowedLocalReadPath} from '../tools/hud_telemetry_publisher.mjs';
+import {publishOnce, fitSnapshot, validateTarget, isAllowedLocalReadPath, hudWriterCredential} from '../tools/hud_telemetry_publisher.mjs';
 import {HUD_PROVIDERS, reduceCallLogs} from '../tools/hud_provider_usage.mjs';
+
+test('telemetry publisher uses the existing Cloudflare writer Keychain entry, with legacy fallback', async () => {
+  const calls = [];
+  const read = async service => {
+    calls.push(service);
+    return service === 'rovordigital.hud.cloudflare.writer' ? 'existing-private-token' : null;
+  };
+  assert.equal(await hudWriterCredential(read), 'existing-private-token');
+  assert.deepEqual(calls, ['rovordigital.hud.cloudflare.writer']);
+
+  const fallbackCalls = [];
+  const fallback = async service => {
+    fallbackCalls.push(service);
+    return service === 'rovordigital.hud.writer' ? 'legacy-private-token' : null;
+  };
+  assert.equal(await hudWriterCredential(fallback), 'legacy-private-token');
+  assert.deepEqual(fallbackCalls, ['rovordigital.hud.cloudflare.writer', 'rovordigital.hud.writer']);
+  assert.equal(await hudWriterCredential(async () => null), null);
+});
 
 const NOW = Date.parse('2026-10-24T20:00:00Z');
 const WRITER = 'w'.repeat(48), READER = 'r'.repeat(48);

@@ -10,6 +10,7 @@ import worker from '../integrations/ghost-cloud/worker.mjs';
 import {runCanary} from '../integrations/ghost-cloud/canary-preflight.mjs';
 import {createCloudOperations} from '../integrations/ghost-cloud/site-operations.mjs';
 import {compileOperations,composeOperations} from '../integrations/ghost-cloud/compose-operations.mjs';
+import {stageOwnerCloudChatMigration} from '../integrations/ghost-cloud/stage-owner-cloud-chat-migration.mjs';
 
 const root=new URL('../integrations/ghost-cloud/',import.meta.url);
 const read=name=>fs.readFileSync(new URL(name,root),'utf8');
@@ -138,18 +139,47 @@ test('owner inventory checks refresh the exact provider HUD health row without c
  const fresh=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
  assert.equal(fresh.status,'catalog_received');assert.equal(fresh.models.length,1);
  assert.equal(fresh.quota_verified,false);assert.equal(fresh.billing_verified,false);
+ assert.equal(fresh.d1_persisted,true);assert.equal(fresh.d1_observed_at,fresh.observed_at);
  const after=await ops.status(env),provider=after.providers.find(p=>p.provider==='gemini');
  assert.equal(provider.last_check.status,'catalog_received');
  assert.equal(provider.last_check.observed_at,fresh.observed_at);
+ assert.deepEqual(provider.catalog_connection,{state:'authenticated',observed_at:fresh.observed_at});
+ assert.equal(provider.online_verified,false);
  assert.equal(provider.admission,'disabled_pending_verification');
  deny=true;
  const unavailable=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
- assert.equal(unavailable.status,'http_403');
+ assert.equal(unavailable.status,'http_403');assert.equal(unavailable.d1_persisted,true);
  const stored=await ops.status(env);
  assert.equal(stored.providers.find(p=>p.provider==='gemini').last_check.status,'http_403');
+ assert.equal(stored.providers.find(p=>p.provider==='gemini').catalog_connection.state,'failed');
+ db.prepare('UPDATE ghost_cloud_provider_checks SET observed_at=? WHERE provider=?')
+  .run(Date.now()-76*60000,'gemini');
+ assert.equal((await ops.status(env)).providers.find(p=>p.provider==='gemini').catalog_connection.state,'stale');
  assert.equal(db.prepare('SELECT count(*) AS n FROM ghost_cloud_provider_checks').get().n,1);
  assert.equal(seen,2);
  assert.equal(JSON.stringify(stored).includes('private upstream error body'),false);
+});
+
+test('catalog D1 readback rejects substituted error category even with matching timestamp and status',async t=>{
+ const {env,db,ops}=setup();
+ t.mock.method(globalThis,'fetch',async()=>new Response('denied',{status:403}));
+ const original=env.DB.prepare.bind(env.DB);
+ env.DB.prepare=query=>{
+  const stmt=original(query);
+  if(!query.startsWith('SELECT observed_at,status,error_category FROM ghost_cloud_provider_checks'))return stmt;
+  const bind=stmt.bind.bind(stmt);
+  stmt.bind=(...args)=>{
+   const result=bind(...args);
+   result.first=async()=>({...db.prepare('SELECT observed_at,status,error_category FROM ghost_cloud_provider_checks WHERE provider=?').get(...args),error_category:'wrong_error'});
+   return result;
+  };
+  return stmt;
+ };
+ const result=await rpc(ops,env,'rovor_provider_inventory',{provider:'gemini'});
+ assert.equal(result.isError,true);
+ const row=db.prepare('SELECT status,error_category FROM ghost_cloud_provider_checks WHERE provider=?').get('gemini');
+ assert.equal(row.status,'http_403');
+ assert.notEqual(row.error_category,'wrong_error');
 });
 
 test('fixed-endpoint GET inventory returns bounded public model metadata only',async()=>{
@@ -164,7 +194,7 @@ test('inventory errors do not leak key or vendor body',async()=>{
 });
 test('MCP discovery adds cloud actions but no human-review writer',async()=>{
  const {env,ops}=setup();const r=await ops.fetch(request('/mcp',{body:{jsonrpc:'2.0',id:1,method:'tools/list'}}),env);const doc=await r.json();
- assert.equal(doc.result.tools.length,7);assert.ok(doc.result.tools.some(t=>t.name==='rovor_cloud_tick'));
+ assert.equal(doc.result.tools.length,8);assert.ok(doc.result.tools.some(t=>t.name==='rovor_cloud_tick'));assert.ok(doc.result.tools.some(t=>t.name==='rovor_provider_catalog_refresh'));
  assert.ok(!doc.result.tools.some(t=>/review|pass|fail/.test(t.name)));
  const legacy=await ops.fetch(request('/mcp',{body:{jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'rovor_workforce_status',arguments:{period:'24h'}}}}),env);
  assert.equal((await legacy.json()).result.content.length,2);
@@ -244,7 +274,9 @@ test('embedded HUD client hides stale agent cards after a failed or invalid live
  let tick,mode='ok',reads=0;const snapshot=await s.ops.status(s.env);
  snapshot.providers[0].quota={status:'verified',unit:'requests',used:2,limit:10,observed_at:Date.now(),resets_at:Date.now()+60000};
  snapshot.providers[0].recorded_24h={requests:3};
- const fetch=async()=>{reads++;if(mode==='offline')throw Error('network_down');
+ const fetch=async(resource)=>{if(resource==='/api/ghost/chat/models')return {ok:true,json:async()=>({source:'private_site_cloud',mac_required:false,
+  providers:snapshot.providers.map(p=>({provider:p.provider,model:null,admission:'not_configured',ready:false}))})};
+  reads++;if(mode==='offline')throw Error('network_down');
   if(mode==='invalid')return {ok:true,json:async()=>({providers:[],attempts:[]})};
   return {ok:true,json:async()=>snapshot};
  };
@@ -482,4 +514,400 @@ test('owner review UI exposes an actionable quick queue, loads output before ena
   body:{job_id:j.id,verdict:'passed'},browser:false
  }),s.env)).status,403);
  assert.equal(s.db.prepare("SELECT human_review FROM ghost_cloud_attempts").get().human_review,'not_recorded');
+});
+
+
+test('private Site exposes nine cloud-only models, never Mac relay or secrets',async()=>{
+ const s=setup();
+ const result=await s.ops.fetch(request('/api/ghost/chat/models'),s.env);
+ assert.equal(result.status,200);
+ const data=await result.json();
+ assert.equal(data.source,'private_site_cloud');
+ assert.equal(data.mac_required,false);
+ assert.equal(data.providers.length,9);
+ assert.equal(data.providers.filter(p=>p.ready).length,0);
+ assert.equal(JSON.stringify(data).includes(s.env.GROQ_API_KEY),false);
+ const unauth=await s.ops.fetch(request('/api/ghost/chat/models',{identity:null}),s.env);
+ assert.equal(unauth.status,401);
+ const html=await (await s.ops.fetch(request('/'),s.env)).text();
+ assert.match(html,/ASK ROVOR · PRIVATE CLOUD PROVIDERS/);
+ assert.match(html,/\/api\/ghost\/chat/);
+});
+
+test('owner cloud inference shares D1 ledger, returns real model and token receipts without a Mac',async()=>{
+ const s=setup(),now=Date.now();
+ s.env.GHOST_FLEET_CONFIG=JSON.stringify({groq:{
+  enabled:true,model:'openai/gpt-oss-20b',pool:'verified-groq-pool',
+  zero_cost:true,commercial_use:true,evidence_sha256:'a'.repeat(64),
+  verified_at:now-1000,valid_until:now+3600000,canary_sha256:'b'.repeat(64),
+  canary_at:now-500,requests_per_day:2,tokens_per_day:5000,
+  min_interval_ms:1000,max_input_bytes:4000,max_output_tokens:128,
+  roles:['Saul'],kinds:['research']
+ }});
+ let calls=0;
+ s.cloud.infer=async(provider,cfg,env,prompt)=>{
+  calls++;
+  assert.equal(provider,'groq');
+  assert.equal(prompt,'Hello from private cloud');
+  assert.equal(cfg.model,'openai/gpt-oss-20b');
+  return {status:'needs_review',output:'Real mocked cloud answer',
+   actual_model:'openai/gpt-oss-20b',tokens_input:11,tokens_output:14};
+ };
+ await s.ops.control(s.env,true);
+ const response=await s.ops.fetch(request('/api/ghost/chat',{
+  body:{provider:'groq',prompt:'Hello from private cloud'},browser:true
+ }),s.env);
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.equal(data.mac_required,false);
+ assert.equal(data.status,'complete');
+ assert.equal(data.output,'Real mocked cloud answer');
+ assert.equal(data.actual_model,'openai/gpt-oss-20b');
+ assert.equal(data.tokens_input,11);
+ assert.equal(data.tokens_output,14);
+ assert.equal(calls,1);
+ assert.equal(s.db.prepare('SELECT COUNT(*) n FROM ghost_cloud_owner_chat').get().n,1);
+ const record=s.db.prepare('SELECT status,provider,pool,tokens_input,tokens_output FROM ghost_cloud_owner_chat').get();
+ assert.equal(record.status,'complete');
+ assert.equal(record.pool,'verified-groq-pool');
+ assert.equal(record.tokens_input,11);
+ assert.equal(record.tokens_output,14);
+ const report=await s.ops.status(s.env);
+ const groq=report.providers.find(p=>p.provider==='groq');
+ assert.equal(groq.owner_chat_24h.attempts,1);
+ assert.equal(groq.owner_chat_24h.completed,1);
+ assert.equal(groq.owner_chat_24h.tokens_output,14);
+ const repeated=await s.ops.fetch(request('/api/ghost/chat',{
+  body:{provider:'groq',prompt:'Second request within pacing window'},browser:true
+ }),s.env);
+ assert.equal(repeated.status,429);
+ assert.equal(calls,1,'pacing must deny before any extra provider call');
+});
+
+test('owner cloud inference refuses success when exact private D1 receipt readback is absent',async()=>{
+ const s=setup(),now=Date.now();
+ s.env.GHOST_FLEET_CONFIG=JSON.stringify({groq:{
+  enabled:true,model:'openai/gpt-oss-20b',pool:'verified-groq-pool',
+  zero_cost:true,commercial_use:true,evidence_sha256:'a'.repeat(64),
+  verified_at:now-1000,valid_until:now+3600000,canary_sha256:'b'.repeat(64),
+  canary_at:now-500,requests_per_day:2,tokens_per_day:5000,
+  min_interval_ms:1000,max_input_bytes:4000,max_output_tokens:128,
+  roles:['Saul'],kinds:['research']
+ }});
+ await s.ops.control(s.env,true);
+ s.cloud.infer=async()=>({status:'needs_review',output:'Unconfirmed answer',
+   actual_model:'openai/gpt-oss-20b',tokens_input:11,tokens_output:14});
+ const original=s.env.DB;
+ s.env.DB={...original,prepare(query){
+  if(query.includes('SELECT provider,model,status,actual_model,tokens_input,tokens_output,output,error_code,finished_at FROM ghost_cloud_owner_chat WHERE id=?'))
+   return {bind(){return {first:async()=>null};}};
+  return original.prepare(query);
+ }};
+ const response=await s.ops.fetch(request('/api/ghost/chat',{
+  body:{provider:'groq',prompt:'Prove readback'},browser:true
+ }),s.env);
+ assert.equal(response.status,503);
+ assert.deepEqual(await response.json(),{error:'inference_receipt_unconfirmed'});
+ assert.equal(s.db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_owner_chat').get().n,1);
+});
+
+test('owner cloud chat denies anonymous, cross-origin, unverified, unsupported and paused requests',async()=>{
+ const s=setup();
+ let calls=0;s.cloud.infer=async()=>{calls++;throw Error('should never run');};
+ const body={provider:'groq',prompt:'hello'};
+ assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body,identity:null,browser:true}),s.env)).status,401);
+ assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body}),s.env)).status,403);
+ assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body,browser:true}),s.env)).status,409);
+ assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body:{provider:'unknown',prompt:'hello'},browser:true}),s.env)).status,400);
+ assert.equal((await s.ops.fetch(request('/api/ghost/chat',{body:{provider:'groq',prompt:'hello',model:'arbitrary-paid-route'},browser:true}),s.env)).status,400);
+ assert.equal(calls,0);
+ assert.equal(s.db.prepare('SELECT COUNT(*) n FROM ghost_cloud_owner_chat').get().n,0);
+});
+
+
+test('owner cloud chat refuses any inference before forward-only D1 migration exists',async()=>{
+ const s=setup();
+ s.db.exec('DROP TABLE ghost_cloud_owner_chat');
+ const list=await s.ops.fetch(request('/api/ghost/chat/models'),s.env);
+ assert.equal(list.status,200);
+ const catalog=await list.json();
+ assert.equal(catalog.storage_ready,false);
+ assert.equal(catalog.mac_required,false);
+ assert.equal(catalog.providers.length,9);
+ assert(catalog.providers.every(p=>p.ready===false&&p.admission==='owner_chat_migration_required'));
+ let calls=0;
+ s.cloud.infer=async()=>{calls++;throw Error('must_not_call_provider');};
+ const reply=await s.ops.fetch(request('/api/ghost/chat',{
+  body:{provider:'groq',prompt:'Do not make an upstream call'},browser:true
+ }),s.env);
+ assert.equal(reply.status,503);
+ assert.equal((await reply.json()).error,'owner_chat_migration_required');
+ assert.equal(calls,0);
+});
+
+test('owner cloud chat migration stages only a new journal entry, preserving prior Site source and migration bytes',t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'rovor-cloud-chat-migrate-'));
+ t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
+ for(const p of ['.openai','worker','dist/server','drizzle/meta'])fs.mkdirSync(path.join(dir,p),{recursive:true});
+ fs.writeFileSync(path.join(dir,'.openai/hosting.json'),JSON.stringify({
+  project_id:'appgprj_6add1e2cc8c08191839344b34d7dbf50',d1:'DB'
+ }));
+ const bundle="// ROVOR_CLOUD_OPERATIONS_V1\n// ROVOR_CLOUD_SCHEDULED_SHIFT_V1\nexport default {};\n";
+ fs.writeFileSync(path.join(dir,'worker/index.js'),bundle);
+ fs.writeFileSync(path.join(dir,'dist/server/index.js'),bundle);
+ const priorEntries=[{idx:0,tag:'0000_hud_telemetry',version:'6',breakpoints:true},
+  {idx:1,tag:'0001_cloud_operations',version:'6',breakpoints:true},
+  {idx:2,tag:'0002_cloud_scheduled_shift',version:'6',breakpoints:true}];
+ const priorSql='CREATE TABLE IF NOT EXISTS already_existing(id TEXT);\n';
+ for(const e of priorEntries)fs.writeFileSync(path.join(dir,'drizzle',e.tag+'.sql'),priorSql);
+ const journalPath=path.join(dir,'drizzle/meta/_journal.json');
+ const originalJournal=JSON.stringify({version:'7',dialect:'sqlite',entries:priorEntries});
+ fs.writeFileSync(journalPath,originalJournal);
+ const dry=stageOwnerCloudChatMigration(dir);
+ assert.equal(dry.prepared,false);
+ assert.equal(dry.deployment_performed,false);
+ assert.equal(dry.d1_applied,false);
+ assert.equal(fs.readFileSync(journalPath,'utf8'),originalJournal);
+ assert.equal(fs.existsSync(path.join(dir,'drizzle/0003_owner_cloud_chat.sql')),false);
+ const prepared=stageOwnerCloudChatMigration(dir,{apply:true});
+ assert.equal(prepared.prepared,true);
+ assert.equal(prepared.runtime_bundle_contains_owner_chat,false,
+  'staging schema is not proof the Site source bundle has been deployed');
+ assert.equal(prepared.migration,'0003_owner_cloud_chat.sql');
+ const after=JSON.parse(fs.readFileSync(journalPath,'utf8'));
+ assert.equal(after.entries.length,4);
+ assert.equal(after.entries[3].tag,'0003_owner_cloud_chat');
+ assert.equal(after.entries[3].idx,3);
+ assert.equal(fs.readFileSync(path.join(dir,'drizzle/0000_hud_telemetry.sql'),'utf8'),priorSql);
+ assert.equal(fs.readFileSync(path.join(dir,'worker/index.js'),'utf8'),bundle);
+ assert.equal(fs.readFileSync(path.join(dir,'dist/server/index.js'),'utf8'),bundle);
+ const sql=fs.readFileSync(path.join(dir,'drizzle/0003_owner_cloud_chat.sql'),'utf8')
+  .replaceAll('--> statement-breakpoint','');
+ const db=new DatabaseSync(':memory:');
+ try{
+  db.exec(sql);
+  db.exec(sql);
+  const row=db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='ghost_cloud_owner_chat'").get();
+  assert.equal(row.name,'ghost_cloud_owner_chat');
+  db.prepare("INSERT INTO ghost_cloud_owner_chat(id,actor,provider,model,pool,started_at,reserved_tokens,status) VALUES(?,?,?,?,?,?,?,?)")
+   .run('receipt-1','owner','groq','pinned','pool',1,12,'running');
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM ghost_cloud_owner_chat').get().n,1);
+ }finally{db.close();}
+ const rerun=stageOwnerCloudChatMigration(dir,{apply:true});
+ assert.equal(rerun.already_journaled,true);
+ assert.equal(rerun.prepared,false);
+ assert.equal(rerun.runtime_bundle_contains_owner_chat,false);
+ assert.equal(JSON.parse(fs.readFileSync(journalPath,'utf8')).entries.length,4);
+ const recordedPath=path.join(dir,'drizzle/0003_owner_cloud_chat.sql');
+ const recordedSql=fs.readFileSync(recordedPath,'utf8');
+ fs.writeFileSync(recordedPath,'CREATE TABLE IF NOT EXISTS unrelated(id TEXT);');
+ assert.throws(()=>stageOwnerCloudChatMigration(dir),/journaled_owner_chat_schema_mismatch/);
+ fs.writeFileSync(recordedPath,recordedSql);
+ assert.equal(stageOwnerCloudChatMigration(dir).already_journaled,true);
+});
+
+test('owner cloud chat migration rejects wrong project, altered build and redirected Site',t=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'rovor-cloud-migration-guard-'));
+ t.after(()=>fs.rmSync(dir,{force:true,recursive:true}));
+ for(const p of ['.openai','worker','dist/server','drizzle/meta'])fs.mkdirSync(path.join(dir,p),{recursive:true});
+ const manifest=path.join(dir,'.openai/hosting.json');
+ fs.writeFileSync(manifest,JSON.stringify({project_id:'wrong-private-site',d1:'DB'}));
+ assert.throws(()=>stageOwnerCloudChatMigration(dir),/wrong_private_site_or_database/);
+ fs.writeFileSync(manifest,JSON.stringify({project_id:'appgprj_6add1e2cc8c08191839344b34d7dbf50',d1:'DB'}));
+ fs.writeFileSync(path.join(dir,'worker/index.js'),'stale deployed source');
+ fs.writeFileSync(path.join(dir,'dist/server/index.js'),'different generated source');
+ assert.throws(()=>stageOwnerCloudChatMigration(dir),/site_bundle_mismatch/);
+ const alias=path.join(os.tmpdir(),'rovor-cloud-chat-site-alias-'+path.basename(dir));
+ fs.symlinkSync(dir,alias,'dir');
+ t.after(()=>fs.rmSync(alias,{force:true}));
+ assert.throws(()=>stageOwnerCloudChatMigration(alias),/redirected_site/);
+});
+
+
+test('owner-only same-origin catalog button checks nine D1 rows without inference',async t=>{
+ const {env,db,ops}=setup();const urls=[];
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  urls.push(url);assert.equal(options.method,'GET');
+  assert.equal(options.redirect,'manual');
+  assert.ok(!url.includes('/chat/completions'));
+  return Response.json({data:[{id:'read-only-model'}]});
+ });
+ const anonymous=await ops.fetch(request('/api/ghost/catalog-refresh',
+  {body:{},identity:null,browser:true}),env);
+ assert.equal(anonymous.status,401);
+ const crossSite=await ops.fetch(request('/api/ghost/catalog-refresh',{body:{}}),env);
+ assert.equal(crossSite.status,403);
+ const wrongMethod=await ops.fetch(request('/api/ghost/catalog-refresh',{browser:true}),env);
+ assert.equal(wrongMethod.status,404);
+ assert.equal(urls.length,0);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,0);
+ const first=await ops.fetch(request('/api/ghost/catalog-refresh',{body:{},browser:true}),env);
+ assert.equal(first.status,200);
+ assert.deepEqual(await first.json(),{source:'site_native_catalog_refresh',
+  checked:9,persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
+ assert.equal(urls.length,9);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
+ const second=await ops.fetch(request('/api/ghost/catalog-refresh',{body:{},browser:true}),env);
+ assert.deepEqual(await second.json(),{source:'site_native_catalog_refresh',
+  checked:0,persisted:0,catalog_received:0,skipped_fresh:9,inference_attempts:0});
+ assert.equal(urls.length,9,'fresh catalogs cannot cause duplicate upstream calls');
+ const page=await (await ops.fetch(request('/'),env)).text();
+ assert.match(page,/REFRESH STALE CATALOGS/);
+ assert.match(page,/FREE INFERENCE NOT VERIFIED/);
+ assert.ok(!page.includes(env.GHOST_SERVICE_TOKEN));
+});
+
+test('native cloud catalog refresh persists nine real GET observations without a model call and skips fresh checks',async()=>{
+ const {env,db,ops}=setup();
+ const seen=[];
+ const fetcher=async(url,options)=>{
+  seen.push({url,method:options.method});
+  assert.equal(options.method,'GET');
+  assert.equal(options.redirect,'manual');
+  assert.ok(!url.includes('/chat/completions'));
+  return Response.json({data:[{id:'catalogued-model'}]});
+ };
+ const first=await ops.refreshCatalogs(env,fetcher);
+ assert.deepEqual(first,{source:'site_native_catalog_refresh',checked:9,
+  persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
+ assert.equal(seen.length,9);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
+ const report=await ops.status(env);
+ for(const item of report.providers){
+  assert.equal(item.last_check.status,'catalog_received');
+  assert.equal(item.admission,'disabled_pending_verification',
+   'catalog alone must never authorize paid or unverified inference');
+ }
+ const second=await ops.refreshCatalogs(env,fetcher);
+ assert.deepEqual(second,{source:'site_native_catalog_refresh',checked:0,
+  persisted:0,catalog_received:0,skipped_fresh:9,inference_attempts:0});
+ assert.equal(seen.length,9);
+ db.prepare("UPDATE ghost_cloud_provider_checks SET observed_at=1 WHERE provider='nvidia'").run();
+ const partial=await ops.refreshCatalogs(env,fetcher);
+ assert.equal(partial.checked,1);
+ assert.equal(partial.persisted,1);
+ assert.equal(partial.catalog_received,1);
+ assert.equal(seen.length,10);
+});
+test('private MCP owner refresh checks all nine catalogs and persists D1 without inference',async t=>{
+ const {env,db,ops}=setup();
+ const seen=[];
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  seen.push(url);
+  assert.equal(options.method,'GET');
+  assert.equal(options.redirect,'manual');
+  assert.ok(!url.includes('/chat/completions'));
+  return Response.json({data:[{id:'fixture/model:free',pricing:{prompt:'0',completion:'0'}}]});
+ });
+ const anonymous=await ops.fetch(request('/mcp',{identity:null,
+  body:{jsonrpc:'2.0',id:1,method:'tools/call',
+   params:{name:'rovor_provider_catalog_refresh',arguments:{}}}}),env);
+ assert.equal(anonymous.status,401);
+ assert.equal(seen.length,0);
+ const first=await rpc(ops,env,'rovor_provider_catalog_refresh');
+ assert.deepEqual(first,{source:'site_native_catalog_refresh',checked:9,
+  persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
+ assert.equal(seen.length,9);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
+ assert.ok((await ops.status(env)).providers.every(p=>p.last_check?.status==='catalog_received'));
+ const second=await rpc(ops,env,'rovor_provider_catalog_refresh');
+ assert.equal(second.checked,0);
+ assert.equal(second.skipped_fresh,9);
+ assert.equal(seen.length,9);
+ assert.equal((await rpc(ops,env,'rovor_provider_catalog_refresh',{provider:'groq'})).isError,true);
+});
+test('native refresh distinguishes stored provider errors from successful catalogs',async()=>{
+ const {env,ops}=setup();
+ const first=await ops.refreshCatalogs(env,async(url,options)=>{
+  assert.equal(options.method,'GET');
+  return url.includes('api.groq.com')?new Response('private upstream data',{status:403}):
+   Response.json({data:[{id:'available'}]});
+ });
+ assert.equal(first.checked,9);
+ assert.equal(first.persisted,9);
+ assert.equal(first.catalog_received,8);
+ const status=await ops.status(env);
+ assert.equal(status.providers.find(p=>p.provider==='groq').last_check.status,'http_403');
+ assert.equal(status.providers.find(p=>p.provider==='groq').admission,'disabled_pending_verification');
+ assert.ok(!JSON.stringify(status).includes('private upstream data'));
+});
+test('native cloud catalog refresh fails safely when private D1 checks table is missing',async()=>{
+ const {env,ops,db}=setup();
+ db.exec('DROP TABLE ghost_cloud_provider_checks');
+ let outgoing=0;
+ await assert.rejects(ops.refreshCatalogs(env,async()=>{outgoing++;return Response.json({data:[]});}));
+ assert.equal(outgoing,0);
+});
+
+test('native catalog refresh refuses D1 readback with substituted error category',async()=>{
+ const {env,ops,db}=setup();
+ db.exec("CREATE TRIGGER corrupt_native_catalog AFTER INSERT ON ghost_cloud_provider_checks WHEN NEW.provider='groq' BEGIN UPDATE ghost_cloud_provider_checks SET error_category='substituted' WHERE provider=NEW.provider; END;");
+ const result=await ops.refreshCatalogs(env,async()=>Response.json({data:[{id:'available'}]}));
+ assert.equal(result.checked,9);
+ assert.equal(result.persisted,8);
+ assert.equal(result.catalog_received,8);
+ assert.equal(result.inference_attempts,0);
+ assert.equal(db.prepare("SELECT error_category FROM ghost_cloud_provider_checks WHERE provider='groq'").get().error_category,'substituted');
+});
+
+
+test('Cloudflare catalog exposes runnable names, never internal UUID keys or invented free quota',async t=>{
+ const {env,ops}=setup();
+ const endpoint='https://api.cloudflare.com/client/v4/accounts/'+env.CLOUDFLARE_ACCOUNT_ID+'/ai/models/search';
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  assert.equal(url,endpoint);assert.equal(options.method,'GET');
+  return Response.json({result:[
+   {id:'fe8904cf-e20e-4884-b829-ed7cec0a01cb',name:'@cf/meta/llama-3.1-8b-instruct',context_length:8192},
+   {id:'f9f2250b-1048-4a52-9910-d0bf976616a1',name:'@cf/qwen/qwen2.5-coder-32b-instruct'},
+   {id:'eed32bc1-8775-4985-89ce-dd1405508ad8'},
+   {id:'eaf31752-a074-441f-8b70-d593255d2811',name:'third-party/paid-model'}
+  ]});
+ });
+ const result=await rpc(ops,env,'rovor_provider_inventory',{provider:'cloudflare-ai'});
+ assert.equal(result.status,'catalog_received');
+ assert.deepEqual(result.models.map(m=>m.id),[
+  '@cf/meta/llama-3.1-8b-instruct','@cf/qwen/qwen2.5-coder-32b-instruct'
+ ]);
+ assert.equal(result.models[0].context_length,8192);
+ assert.equal(result.billing_verified,false);
+ assert.equal(result.quota_verified,false);
+ assert.equal(result.canary_verified,false);
+ assert.equal(result.models[0].catalog_zero_price,null);
+ const provider=(await ops.status(env)).providers.find(p=>p.provider==='cloudflare-ai');
+ assert.equal(provider.catalog_connection.state,'authenticated');
+ assert.equal(provider.online_verified,false);
+});
+
+
+test('Gemini REST catalog IDs are normalized to OpenAI-compatible names without enabling inference',async()=>{
+ const {env,ops}=setup();
+ const result=await ops.inventory(env,'gemini',async(url,options)=>{
+  assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/openai/models');
+  assert.equal(options.method,'GET');
+  return Response.json({models:[
+   {name:'models/gemini-2.5-flash'},
+   {name:'models/gemini-3.1-flash-lite'},
+   {name:'gemma-4-31b-it'},
+   {name:'models/../invalid?'},
+   {name:'models/'}
+  ]});
+ });
+ assert.equal(result.status,'catalog_received');
+ assert.deepEqual(result.models.map(m=>m.id),['gemini-2.5-flash','gemini-3.1-flash-lite','gemma-4-31b-it']);
+ assert.equal(result.billing_verified,false);
+ assert.equal(result.quota_verified,false);
+ assert.equal(result.canary_verified,false);
+ const cloud=(await ops.status(env)).providers.find(p=>p.provider==='gemini');
+ assert.equal(cloud.online_verified,false);
+ assert.equal(cloud.admission,'disabled_pending_verification');
+});
+
+test('Gemini catalog limits after validation so invalid entries cannot hide eligible-looking IDs',async()=>{
+ const {env,ops}=setup();
+ const report=await ops.inventory(env,'gemini',async()=>Response.json({models:[
+  ...Array.from({length:26},(_,i)=>({name:'models/invalid?'+i})),
+  {name:'models/gemini-2.5-flash-lite'}
+ ]}));
+ assert.deepEqual(report.models.map(m=>m.id),['gemini-2.5-flash-lite']);
+ assert.equal(report.billing_verified,false);
 });

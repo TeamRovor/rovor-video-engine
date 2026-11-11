@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {PROVIDERS,eligibility,requestFor,infer,claim,tick,validateJob,diagnosePending,readMistralMinuteLimits} from '../integrations/ghost-cloud/runtime.mjs';
+import {PROVIDERS,eligibility,requestFor,infer,claim,tick,validateJob,diagnosePending,readMistralMinuteLimits,rankProvidersForJob} from '../integrations/ghost-cloud/runtime.mjs';
 import worker from '../integrations/ghost-cloud/worker.mjs';
 
 const NOW=Date.now();
@@ -190,12 +190,95 @@ test('reader/writer separation, STOP control and immutable enqueue',async()=>{
 });
 
 test('HUD status exposes factual provider receipts without prompts, drafts or secrets',async()=>{
- const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('tracked'));await tick(env,async()=>success(),NOW);
+ const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('tracked'));await tick(env,async()=>success('test-pinned-1'),NOW);
  const response=await api(env,'/api/ghost/status'),text=await response.text(),data=JSON.parse(text);
  assert.equal(response.status,200);assert.equal(data.providers.length,9);assert.equal(data.attempts.length,1);assert.equal(data.attempts[0].tokens_input,9);
- for(const p of data.providers)assert.equal(p.online_verified,false);
+ assert.equal(data.providers.find(p=>p.provider==='groq').online_verified,true);
+ assert.equal(data.providers.find(p=>p.provider==='groq').recent_inference_verified,true);
+ assert(Number.isSafeInteger(data.providers.find(p=>p.provider==='groq').last_inference_at));
+ for(const p of data.providers.filter(p=>p.provider!=='groq'))assert.equal(p.online_verified,false);
  for(const privateValue of [job('tracked').prompt,'Concrete draft for independent human review.','secret-value-never-returned',env.GHOST_READER_TOKEN])assert.ok(!text.includes(privateValue));
  assert.equal((await (await api(env,'/api/ghost/jobs/tracked')).json()).output,'Concrete draft for independent human review.');
+});
+
+test('all nine routes become recently verified only after successful durable replies',async()=>{
+ const configs=Object.fromEntries(Object.keys(PROVIDERS).map(p=>[p,configFor(p)]));
+ const {env,sqlite}=setup(configs);enable(sqlite);
+ for(let i=0;i<9;i++)enqueue(sqlite,job('proof-'+i));
+ const before=await (await api(env,'/api/ghost/status')).json();
+ assert.equal(before.providers.filter(p=>p.online_verified).length,0);
+ await tick(env,async(_url,init)=>success(JSON.parse(init.body).model),NOW);
+ const after=await (await api(env,'/api/ghost/status')).json();
+ assert.equal(after.providers.filter(p=>p.online_verified).length,9);
+ assert.equal(after.providers.filter(p=>p.recent_inference_verified).length,9);
+ assert.equal(after.providers.filter(p=>Number.isSafeInteger(p.last_inference_at)).length,9);
+ sqlite.exec('UPDATE ghost_cloud_control SET enabled=0');
+ const stopped=await (await api(env,'/api/ghost/status')).json();
+ assert.equal(stopped.providers.filter(p=>p.online_verified).length,0);
+ assert.equal(stopped.providers.filter(p=>p.recent_inference_verified).length,9,
+  'STOP does not erase independently recorded successful replies');
+});
+
+test('failed, blank, stale or expired provider evidence never establishes route online',async()=>{
+ const {env,sqlite}=setup();enable(sqlite);
+ enqueue(sqlite,job('draft'));await tick(env,async()=>success('test-pinned-1'),NOW);
+ const status=async()=>(await (await api(env,'/api/ghost/status')).json()).providers.find(p=>p.provider==='groq');
+ assert.equal((await status()).online_verified,true);
+ sqlite.prepare("UPDATE ghost_cloud_attempts SET finished_at=? WHERE job_id='draft'").run(Date.now()-3600001);
+ assert.equal((await status()).online_verified,false);
+ sqlite.prepare("UPDATE ghost_cloud_attempts SET finished_at=?,output='   ' WHERE job_id='draft'").run(Date.now());
+ assert.equal((await status()).online_verified,false);
+ sqlite.prepare("UPDATE ghost_cloud_attempts SET output='Valid earlier response.' WHERE job_id='draft'").run();
+ env.GHOST_FLEET_CONFIG=JSON.stringify({groq:cfg({valid_until:NOW-1})});
+ const expired=await status();
+ assert.equal(expired.recent_inference_verified,true);
+ assert.equal(expired.online_verified,false);
+ assert.equal(expired.admission,'eligibility_expired');
+});
+
+test('owner-chat completion can prove a route without leaking prompts or drafts',async()=>{
+ const {env,sqlite}=setup();enable(sqlite);
+ sqlite.prepare(`INSERT INTO ghost_cloud_owner_chat
+  (id,actor,provider,model,pool,started_at,finished_at,reserved_tokens,status,actual_model,output)
+  VALUES ('proof-chat','owner','groq','test-pinned-1','account-one',?,?,50,'complete','test-pinned-1','Secret private answer')`)
+  .run(NOW-1000,Date.now());
+ sqlite.prepare('UPDATE ghost_cloud_owner_chat SET tokens_input=5,tokens_output=5 WHERE id=?').run('proof-chat');
+ const res=await api(env,'/api/ghost/status'),raw=await res.text(),data=JSON.parse(raw);
+ assert.equal(data.providers.find(p=>p.provider==='groq').online_verified,true);
+ assert.equal(data.attempts.length,0);
+ assert(!raw.includes('Secret private answer'));
+ const missing=setup();enable(missing.sqlite);
+ missing.sqlite.exec('DROP TABLE ghost_cloud_owner_chat');
+ const snapshot=await (await api(missing.env,'/api/ghost/status')).json();
+ assert.equal(snapshot.providers.length,9);
+ assert.equal(snapshot.providers.filter(p=>p.online_verified).length,0);
+});
+
+test('wrong or unknown upstream model never verifies the newly pinned route',async()=>{
+ const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('wrong-upstream'));
+ await tick(env,async()=>success('different-upstream-model'),NOW);
+ const status=async()=>(await (await api(env,'/api/ghost/status')).json()).providers.find(p=>p.provider==='groq');
+ assert.equal((await status()).online_verified,false,'different upstream identity is not exact-model proof');
+ assert.equal((await status()).last_inference_at,null);
+ sqlite.prepare('UPDATE ghost_cloud_attempts SET actual_model=? WHERE job_id=?').run('test-pinned-1','wrong-upstream');
+ assert.equal((await status()).online_verified,true);
+ env.GHOST_FLEET_CONFIG=JSON.stringify({groq:cfg({model:'newly-pinned-model'})});
+ assert.equal((await status()).online_verified,false,'prior pinned model receipt cannot verify replacement');
+});
+
+test('missing token receipts and pre-attestation replies cannot verify a route',async()=>{
+ const {env,sqlite}=setup();enable(sqlite);enqueue(sqlite,job('meter-missing'));
+ await tick(env,async()=>success('test-pinned-1'),NOW);
+ const status=async()=>(await (await api(env,'/api/ghost/status')).json()).providers.find(p=>p.provider==='groq');
+ assert.equal((await status()).online_verified,true);
+ sqlite.prepare('UPDATE ghost_cloud_attempts SET tokens_input=NULL WHERE job_id=?').run('meter-missing');
+ assert.equal((await status()).online_verified,false);
+ sqlite.prepare('UPDATE ghost_cloud_attempts SET tokens_input=9,finished_at=? WHERE job_id=?')
+  .run(NOW-750,'meter-missing');
+ env.GHOST_FLEET_CONFIG=JSON.stringify({groq:cfg({verified_at:NOW-500,canary_at:NOW-400})});
+ assert.equal((await status()).admission,'eligible');
+ assert.equal((await status()).recent_inference_verified,false,
+  'a reply before current attestation may not certify a newer approval');
 });
 
 test('conflicting shared pool policy is rejected before inference',async()=>{
@@ -393,4 +476,47 @@ test('missing optional Mistral rate table does not erase immutable private recei
  }),{headers:{'x-ratelimit-limit-req-minute':'125','x-ratelimit-remaining-req-minute':'124'}}),NOW);
  assert.equal(result.dispatched,1);
  assert.equal(sqlite.prepare("SELECT status FROM ghost_cloud_attempts WHERE job_id='mistral-no-schema'").get().status,'needs_review');
+});
+
+test('task-first provider affinity prefers Gemini planning and Mistral coding over fixed provider order',async()=>{
+ const c={
+  groq:configFor('groq',{kinds:['research','plan','code_review']}),
+  gemini:configFor('gemini',{kinds:['research','plan','code_review']}),
+  mistral:configFor('mistral',{kinds:['research','plan','code_review']})
+ };
+ const {env,sqlite}=setup(c);enable(sqlite);
+ enqueue(sqlite,job('a-planning',{kind:'plan'}));
+ enqueue(sqlite,job('b-coding',{kind:'code_review'}));
+ const calls=[];
+ const out=await tick(env,async(url)=>{calls.push(url);return success();},NOW);
+ assert.equal(out.dispatched,2);
+ const rows=sqlite.prepare('SELECT job_id,provider FROM ghost_cloud_attempts ORDER BY job_id').all();
+ assert.deepEqual(rows.map(x=>[x.job_id,x.provider]),[['a-planning','gemini'],['b-coding','mistral']]);
+ assert.match(calls[0],/generativelanguage\.googleapis\.com/);
+ assert.match(calls[1],/api\.mistral\.ai/);
+});
+test('trusted per-model priority overrides defaults, but expiry and role constraints still dominate',()=>{
+ const c={gemini:configFor('gemini',{routing_priority:{research:5}}),
+  groq:configFor('groq',{routing_priority:{research:100}}),
+  mistral:configFor('mistral',{routing_priority:{research:100},valid_until:NOW})};
+ const {env}=setup(c);
+ const candidate={employee:'Walter',kind:'research',input_bytes:100};
+ assert.deepEqual(rankProvidersForJob(candidate,c,env,NOW),['groq','gemini']);
+ assert.deepEqual(rankProvidersForJob({...candidate,employee:'Gus'},c,env,NOW),[]);
+ assert.equal(eligibility('groq',cfg({routing_priority:{research:101}}),env,NOW),'invalid_routing_priority');
+ assert.equal(eligibility('groq',cfg({routing_priority:{shell:100}}),env,NOW),'invalid_routing_priority');
+});
+test('pre-claim blocked preferred provider allows eligible fallback; a claimed failure never replays',async()=>{
+ const c={gemini:configFor('gemini',{requests_per_day:1}),groq:configFor('groq')};
+ const {env,sqlite}=setup(c);enable(sqlite);
+ enqueue(sqlite,job('a-first'));
+ const seen=[];
+ await tick(env,async(url)=>{seen.push(url);return success();},NOW);
+ enqueue(sqlite,job('b-next'));
+ const result=await tick(env,async(url)=>{seen.push(url);return new Response('',{status:503});},NOW+200);
+ assert.equal(result.dispatched,1);
+ assert.match(seen[0],/generativelanguage\.googleapis\.com/);
+ assert.match(seen[1],/api\.groq\.com/);
+ assert.equal(sqlite.prepare("SELECT provider FROM ghost_cloud_attempts WHERE job_id='b-next'").get().provider,'groq');
+ assert.equal((await tick(env,async()=>{throw Error('no replay');},NOW+400)).dispatched,0);
 });

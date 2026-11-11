@@ -220,3 +220,36 @@ This is **phase one of cloud job intake**, not a claim that unattended GitHub
 coding agents or 24/7 inference are already active. Existing hourly approved
 cloud shifts are separately observed via the owner-private cloud workforce
 status/receipts. The Mac is only an optional future compute booster.
+
+## GitHub source context for cloud Ask ROVOR (Mac-independent)
+
+The private Cloudflare HUD's reviewed deployment builds a static source bundle
+from **exact Git objects in the checked-out commit**, not an arbitrary GitHub
+URL, current working tree or a Mac-hosted source reader. For each explicit
+user-selected GitHub file, `GET /api/hud/github/source?path=...` requires
+the existing private reader login, checks a fixed source allowlist, and returns
+at most 1,800 characters plus the **exact reviewed deploy commit SHA**.
+Cloudflare static assets remain behind the same HUD authentication.
+
+- The build requires `GITHUB_SHA === git rev-parse HEAD`, reads with
+  `git show SHA:<fixed path>`, and refuses unexpected files or an invalid
+  checkout. The private GitHub deployment job regenerates the bundle directly
+  before Wrangler deploy; no new GitHub App, OAuth token, Mac or API request.
+- Ask ROVOR never automatically shares repository content. The owner chooses
+  a source file; a read-only excerpt is attached to **only that one cloud
+  model request**. It is explicitly marked untrusted reference data so
+  instructions in source cannot grant additional model privileges. No source
+  text is added to local conversation history.
+- The optional Mac OmniRoute route retains its existing local Git snapshot.
+  Cloud Groq, Gemini and Cloudflare routes use this independent cloud source
+  bundle, subject to their separate verified-free provider admission checks.
+- The snapshot is **not live GitHub HEAD**, a full repo index, a coding agent,
+  a GitHub write integration or an inference receipt. The server cannot commit
+  files, open PRs, schedule jobs, approve itself or spend on a rejected model.
+- Authenticated release readback checks the SHA matches the deployed commit,
+  verifies anonymous access is denied and never logs source contents.
+  A stale or missing bundle fails closed, rather than silently falling back
+  to the Mac or inventing a current GitHub read.
+
+A future owner-approved job runner may use a scoped GitHub App installation
+token to create review branches/PRs, but model text alone never authorizes it.

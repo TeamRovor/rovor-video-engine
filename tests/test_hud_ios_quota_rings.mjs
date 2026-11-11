@@ -4,11 +4,45 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
-function board() {
- const window={},document={getElementById:()=>({})};
+function board(document={getElementById:()=>({})}) {
+ const window={};
  vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map});
  return window.ROVOR_QUOTA_BOARD;
 }
+
+function refreshFixture(kind='tile'){
+ let writes=0,current;
+ const document={getElementById:()=>({}),activeElement:null};
+ const make=()=>{
+  const link={focused:false,matches:s=>s===(kind==='tile'?'a[data-rvq-open-slot]':'.rvq-jump-nav a'),
+   getAttribute:k=>k==='data-rvq-open-slot'?'groq:1':k==='href'?'#rvq-reports':null,
+   closest:()=>null,focus(options){assert.equal(options.preventScroll,true);this.focused=true;}};
+  return {link,classList:{contains:()=>true},contains:n=>n===link,
+   querySelectorAll:s=>s===(kind==='tile'?'a[data-rvq-open-slot]':'.rvq-jump-nav a')?[link]:[],
+   set outerHTML(value){writes++;current=make();}};
+ };
+ current=make();document.activeElement=current.link;
+ return {api:board(document),document,get root(){return current;},get writes(){return writes;},find:()=>current,make};
+}
+test('identical refresh retains the existing board; changed evidence still replaces it',()=>{
+ const s=refreshFixture();
+ assert.equal(s.api.updateBoard(s.root,'first',s.find),true);
+ const stable=s.root;
+ assert.equal(s.api.updateBoard(s.root,'first',s.find),false);
+ assert.equal(s.root,stable);assert.equal(s.writes,1);
+ assert.equal(s.api.updateBoard(s.root,'changed',s.find),true);assert.equal(s.writes,2);
+});
+test('a new drawer mount renders even when its markup matches a previous board',()=>{
+ const s=refreshFixture();s.api.updateBoard(s.root,'first',s.find);
+ assert.equal(s.api.updateBoard(s.make(),'first',s.find),true);assert.equal(s.writes,2);
+});
+test('changed telemetry restores provider tile and section shortcut focus without scrolling',()=>{
+ for(const kind of ['tile','jump']){
+  const s=refreshFixture(kind);
+  s.api.updateBoard(s.root,'changed',s.find);
+  assert.equal(s.root.link.focused,true,kind);
+ }
+});
 const providers=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
 function cloud(){
  return {execution_source:'cloud_provider',observed_at:Date.now(),
@@ -479,3 +513,20 @@ test('Groq catalogue does not invent an allowance when provider omits rate limit
  assert.match(html,/INFERENCE NOT APPROVED/);
  assert.doesNotMatch(html,/Daily requests \(RPD\): 0/);
 });
+
+test('Groq completion headers supersede older catalogue observations without inventing missing limits',()=>{
+ const at=new Date().toISOString(),old=new Date(Date.now()-5000).toISOString();
+ const data={source:'cloud_direct_groq',mac_required:false,observed_at:at,ready:true,
+ catalog:{source:'groq_api_models_catalog',state:'catalog_received',observed_at:old,model_present:true,
+ requests_per_day:{limit:1000,remaining:975},tokens_per_minute:{limit:8000,remaining:7470}},
+ completion_quota:{source:'groq_api_completion_headers',state:'response_received',observed_at:at,
+ response_status:429,requests_per_day:{limit:1000,remaining:0},tokens_per_minute:null}};
+ const html=board().render(null,false,null,null,null,null,data);
+ assert.match(html,/authenticated completion response 429/);
+ assert.match(html,/Daily requests \(RPD\): 0 \/ 1,000 remaining/);
+ assert.match(html,/tokens\/min \(TPM\): UNKNOWN/);
+ assert.doesNotMatch(html,/975 \/ 1,000 remaining/);
+ data.completion_quota.requests_per_day=null;
+ assert.match(board().render(null,false,null,null,null,null,data),/Daily requests \(RPD\): UNKNOWN/);
+});
+

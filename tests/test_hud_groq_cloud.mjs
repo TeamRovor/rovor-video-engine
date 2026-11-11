@@ -145,3 +145,35 @@ test('Groq status redacts private evidence and explains admission blocks without
    assert(!JSON.stringify(status).includes(e.GROQ_HUD_EVIDENCE_SHA256));
  }
 });
+
+test('authorized Groq responses persist real allowance headers without additional calls or stale fallback',async()=>{
+ const e=env();let calls=0;
+ const headers={'x-ratelimit-limit-requests':'1000','x-ratelimit-remaining-requests':'975',
+ 'x-ratelimit-reset-requests':'2m','x-ratelimit-limit-tokens':'8000',
+ 'x-ratelimit-remaining-tokens':'7470','x-ratelimit-reset-tokens':'10s'};
+ const first=await handle(req('/api/chat','POST',prompt),e,NOW,async()=>{
+  calls++;return Response.json({model:'openai/gpt-oss-20b',choices:[{finish_reason:'stop',
+   message:{content:'ok'}}],usage:{prompt_tokens:2,completion_tokens:1}},{headers});
+ });
+ assert.equal(first.status,200);
+ let s=await(await handle(req('/api/chat/groq/status'),e,NOW)).json();
+ assert.equal(s.completion_quota.requests_per_day.remaining,975);
+ assert.equal(s.completion_quota.tokens_per_minute.remaining,7470);
+ assert.equal(s.completion_quota.response_status,200);
+ s=await(await handle(req('/api/chat/groq/status'),e,NOW+11000)).json();
+ assert.equal(s.completion_quota.tokens_per_minute,null);
+ const second=await handle(req('/api/chat','POST',prompt),e,NOW+4000,async()=>{
+  calls++;return new Response(null,{status:429,headers:{'x-ratelimit-limit-requests':'1000',
+   'x-ratelimit-remaining-requests':'0','x-ratelimit-reset-requests':'2m'}});
+ });
+ assert.equal(second.status,429);
+ s=await(await handle(req('/api/chat/groq/status'),e,NOW+4000)).json();
+ assert.equal(s.completion_quota.response_status,429);
+ assert.equal(s.completion_quota.requests_per_day.remaining,0);
+ assert.equal(s.completion_quota.tokens_per_minute,null);
+ assert.equal(s.last_prompt_tokens,2);
+ s=await(await handle(req('/api/chat/groq/status'),e,NOW+125000)).json();
+ assert.equal(s.completion_quota.state,'stale');
+ assert.equal(s.completion_quota.requests_per_day,null);
+ assert.equal(calls,2);
+});

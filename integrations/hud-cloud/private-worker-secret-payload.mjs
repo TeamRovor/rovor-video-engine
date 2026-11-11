@@ -5,6 +5,7 @@
 // trusted-main merge. No key is read on pull_request or another provider's job.
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {githubAppCredentialIssue} from './github-app.mjs';
 
 const validSecret=s=>typeof s==='string'&&s.length>=24&&s.length<=512&&!/[\s\x00-\x1f\x7f]/.test(s);
 export function validateOneTimeGeminiActivation(env) {
@@ -25,6 +26,36 @@ export function buildHudSecretPayload(env) {
     'GROQ_HUD_EVIDENCE_SHA256','GROQ_HUD_VERIFIED_AT','GROQ_HUD_VALID_UNTIL','GROQ_HUD_DAILY_BUDGET']) {
     if(env[key])payload[key]=env[key];
   }
+  if(env.ROVOR_HUD_OWNER_TOKEN){
+    const owner=env.ROVOR_HUD_OWNER_TOKEN;
+    if(typeof owner!=='string'||!/^[!-~]{32,200}$/.test(owner)||owner===env.ROVOR_HUD_READER_TOKEN||owner===env.ROVOR_HUD_WRITER_TOKEN)
+      throw Error('invalid_private_secret_configuration');
+    payload.HUD_OWNER_TOKEN=owner;
+  }
+  // Optional independent GitHub App credentials. Do not overwrite existing
+  // Worker secrets with missing values or partially configured credentials.
+  const app=['ROVOR_GITHUB_APP_ID','ROVOR_GITHUB_INSTALLATION_ID','ROVOR_GITHUB_APP_PRIVATE_KEY'];
+  if(app.some(k=>env[k])){
+    if(githubAppCredentialIssue(env))throw Error('invalid_private_secret_configuration');
+    for(const k of app)payload[k]=env[k].trim();
+  }
+  if(['true','false'].includes(env.ROVOR_NATIVE_DISCOVERY_ENABLED))
+    payload.ROVOR_NATIVE_DISCOVERY_ENABLED=env.ROVOR_NATIVE_DISCOVERY_ENABLED;
+  if(['true','false'].includes(env.ROVOR_GITHUB_PATCH_ENABLED))payload.ROVOR_GITHUB_PATCH_ENABLED=env.ROVOR_GITHUB_PATCH_ENABLED;
+  if(['true','false'].includes(env.ROVOR_GITHUB_PATCH_OWNER_REQUESTED))
+    payload.ROVOR_GITHUB_PATCH_OWNER_REQUESTED=env.ROVOR_GITHUB_PATCH_OWNER_REQUESTED;
+  // Persist the exact protected runner scope-check timestamp, including zero
+  // when permission was denied, so no old proof can survive a failed rollout.
+  if(env.ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT!==undefined){
+    const proof=env.ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT;
+    if(typeof proof!=='string'||!/^(0|[1-9][0-9]{12})$/.test(proof)||
+      (env.ROVOR_GITHUB_PATCH_ENABLED==='true'&&proof==='0')||
+      (env.ROVOR_GITHUB_PATCH_ENABLED!=='true'&&proof!=='0'))
+      throw Error('invalid_private_secret_configuration');
+    payload.ROVOR_GITHUB_PATCH_SCOPE_VERIFIED_AT=proof;
+  }
+  if(typeof env.ROVOR_GITHUB_PATCH_PATHS==='string'&&env.ROVOR_GITHUB_PATCH_PATHS.length<=3000&&env.ROVOR_GITHUB_PATCH_PATHS)
+    payload.ROVOR_GITHUB_PATCH_PATHS=env.ROVOR_GITHUB_PATCH_PATHS;
   if(validateOneTimeGeminiActivation(env)){
     // Owner expressly said this is their free Gemini project and authorized
     // exactly one benign cloud canary. This is not an independent billing attestation.

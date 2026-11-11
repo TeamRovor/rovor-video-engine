@@ -95,9 +95,18 @@ def safe_request(origin: str, route: str, token: str | None = None,
         headers["Authorization"] = "Bearer " + token
     payload = None
     if document is not None:
-        if method != "POST" or document != {"operation": "status"}:
+        inventory = (
+            isinstance(document, dict)
+            and set(document) == {"operation", "provider"}
+            and document.get("operation") == "inventory"
+            and document.get("provider") in PROVIDERS
+        )
+        if method != "POST" or not (document == {"operation": "status"} or inventory):
             raise ValueError("unapproved_status_body")
-        payload = b'{"operation":"status"}'
+        # The only added operation is the private, fixed-provider catalog GET
+        # proxied by the existing Site. No model inference, shift, or write
+        # operation can be selected by an Actions input.
+        payload = json.dumps(document, sort_keys=True, separators=(",", ":")).encode("utf-8")
         headers["Content-Type"] = "application/json"
     req = urllib.request.Request(origin + route, method=method, headers=headers, data=payload)
     client = opener or urllib.request.build_opener(NoRedirect())

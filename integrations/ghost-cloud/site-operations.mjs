@@ -115,6 +115,18 @@ export function createCloudOperations(base, cloud) {
    quotaRows=[];
   }
   const now=Date.now();
+  // Catalog authentication is observable independently of inference admission.
+  // This is a bounded recent authenticated GET receipt, never billing, quota,
+  // model execution or permission to dispatch.
+  const catalogConnection=provider=>{
+   const check=checks.find(row=>row.provider===provider);
+   if(!check)return {state:'unknown',observed_at:null};
+   const observed=check.observed_at;
+   const valid=Number.isSafeInteger(observed)&&observed>0&&observed<=now+60000;
+   const fresh=valid&&now-observed<=75*60000;
+   return {state:!fresh?'stale':check.status==='catalog_received'?'authenticated':'failed',
+    observed_at:valid?observed:null};
+  };
   const observedQuota=provider=>{
    if(provider!=='groq')return null;
    const q=quotaRows.find(row=>row.provider===provider);
@@ -156,11 +168,145 @@ export function createCloudOperations(base, cloud) {
    j.employee,j.task_id,j.title FROM ghost_cloud_attempts a JOIN ghost_cloud_jobs j ON a.job_id=j.id
    WHERE a.status='needs_review' AND a.human_review='not_recorded'
    ORDER BY COALESCE(a.finished_at,a.started_at) ASC,a.id ASC LIMIT 50`).all();
-  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null),
+  // Only cloud-origin owner chats appear here; do not mix stale Mac snapshots.
+  // Missing forward-only migration is UNKNOWN, never silently zero activity.
+  let ownerChatRows=null;
+  try{
+   ownerChatRows=(await sql(env,"SELECT provider,COUNT(*) attempts,SUM(CASE WHEN status='complete' THEN 1 ELSE 0 END) completed,SUM(tokens_input) tokens_input,SUM(tokens_output) tokens_output,MAX(finished_at) last_finished_at FROM ghost_cloud_owner_chat WHERE started_at>? GROUP BY provider",now-86400000).all()).results;
+  }catch{/* Site has not yet applied the forward-only owner-chat migration. */}
+  return {...data,providers:providers.map(p=>({...p,last_check:checks.find(c=>c.provider===p.provider)||null,
+    catalog_connection:catalogConnection(p.provider),
+    owner_chat_24h:ownerChatRows?ownerChatRows.find(row=>row.provider===p.provider)||
+      {provider:p.provider,attempts:0,completed:0,tokens_input:0,tokens_output:0,last_finished_at:null}:null,
+    quota:p.provider==='groq'?observedQuota(p.provider):(p.quota??null),
     ...(p.provider==='mistral'?{minute_rate_limits:mistralRates}:{})})),
    attempts:results,review_queue:{pending_count:reviewCount?.pending_count??0,
     oldest_finished_at:reviewCount?.oldest_finished_at??null,items:reviewItems}};
  }
+
+ // Browser-initiated inference on the EXISTING private Site. Nine provider
+ // secrets and the execution ledger stay in the cloud. Never call a Mac relay.
+ async function ownerChatSchemaReady(env) {
+  if(!env.DB)return false;
+  try{await sql(env,'SELECT id FROM ghost_cloud_owner_chat LIMIT 0').all();return true;}
+  catch{return false;}
+ }
+ async function ownerChatModels(env,now=Date.now()) {
+  const storageReady=await ownerChatSchemaReady(env);
+  let dispatchEnabled=false;
+  if(storageReady)try{
+   dispatchEnabled=(await sql(env,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled===1;
+  }catch{/* Control unavailable: fail closed. */}
+  const cfg=config(env,'GHOST_FLEET_CONFIG');
+  return {source:'private_site_cloud',mac_required:false,observed_at:now,
+   storage_ready:storageReady,dispatch_enabled:dispatchEnabled,
+   providers:Object.keys(cloud.PROVIDERS).map(provider=>{
+    const route=cfg[provider],reason=cloud.eligibility(provider,route,env,now);
+    return {provider,model:typeof route?.model==='string'?route.model:null,
+     admission:!storageReady?'owner_chat_migration_required':!dispatchEnabled?'global_stop':reason||'eligible',
+     ready:storageReady&&dispatchEnabled&&!reason};
+   })};
+ }
+ async function ownerChat(request,env,actor) {
+  const origin=new URL(request.url).origin;
+  if(request.headers.get('Origin')!==origin||
+     request.headers.get('Sec-Fetch-Site')!=='same-origin')
+   return json({error:'owner_browser_required'},403);
+  if(!env.DB)return json({error:'private_store_unavailable'},503);
+  if(!await ownerChatSchemaReady(env))return json({error:'owner_chat_migration_required'},503);
+  let body;
+  try{body=await bounded(request,8192);}catch{return json({error:'invalid_chat_request'},400);}
+  if(!body||Array.isArray(body)||typeof body!=='object'||
+     Object.keys(body).sort().join(',')!=='prompt,provider'||
+     typeof body.prompt!=='string'||!body.prompt.trim()||
+     body.prompt.length>4000||body.prompt.includes('\0')||
+     typeof body.provider!=='string'||!Object.hasOwn(cloud.PROVIDERS,body.provider))
+   return json({error:'invalid_chat_request'},400);
+  const now=Date.now(),provider=body.provider,prompt=body.prompt.trim();
+  const cfg=config(env,'GHOST_FLEET_CONFIG')[provider];
+  const reason=cloud.eligibility(provider,cfg,env,now);
+  if(reason)return json({error:'provider_not_admitted',provider,reason},409);
+  const bytes=new TextEncoder().encode(prompt).byteLength;
+  if(bytes>cfg.max_input_bytes)return json({error:'prompt_too_large'},400);
+  const reserved=bytes+cfg.max_output_tokens+256;
+  const uid=crypto.randomUUID();
+  // A crashed/aborted cloud request is never replayed, and cannot reserve an
+  // in-flight slot forever. It counts against the original daily budgets.
+  await sql(env,"UPDATE ghost_cloud_owner_chat SET status='uncertain',error_code='interrupted_attempt',finished_at=? WHERE status='running' AND started_at<?",
+   now,now-120000).run();
+  // D1 serializes this INSERT SELECT. Both manual owner chat and approved
+  // ghost jobs share global, pooled, token, pacing and in-flight constraints.
+  const query=[
+   "INSERT INTO ghost_cloud_owner_chat(id,actor,provider,model,pool,started_at,reserved_tokens,status)",
+   "SELECT ?,?,?,?,?,?,?,'running'",
+   "WHERE (SELECT enabled FROM ghost_cloud_control WHERE id=1)=1",
+   "AND (SELECT COUNT(*) FROM (",
+   "SELECT started_at FROM ghost_cloud_attempts WHERE started_at>?",
+   "UNION ALL SELECT started_at FROM ghost_cloud_owner_chat WHERE started_at>?))<144",
+   "AND (SELECT COUNT(*) FROM (",
+   "SELECT started_at FROM ghost_cloud_attempts WHERE pool=? AND started_at>?",
+   "UNION ALL SELECT started_at FROM ghost_cloud_owner_chat WHERE pool=? AND started_at>?))<?",
+   "AND COALESCE((SELECT SUM(reserved_tokens) FROM (",
+   "SELECT reserved_tokens FROM ghost_cloud_attempts WHERE pool=? AND started_at>?",
+   "UNION ALL SELECT reserved_tokens FROM ghost_cloud_owner_chat WHERE pool=? AND started_at>?)),0)+?<=?",
+   "AND NOT EXISTS (",
+   "SELECT 1 FROM ghost_cloud_attempts WHERE pool=? AND (status='running' OR started_at>? OR retry_after>?)",
+   "UNION ALL SELECT 1 FROM ghost_cloud_owner_chat WHERE pool=? AND (status='running' OR started_at>? OR retry_after>?))",
+   "AND (SELECT COUNT(*) FROM (",
+   "SELECT started_at FROM ghost_cloud_attempts WHERE pool=? AND status IN ('failed','uncertain') AND started_at>?",
+   "UNION ALL SELECT started_at FROM ghost_cloud_owner_chat WHERE pool=? AND status IN ('failed','uncertain') AND started_at>?))<3",
+   "RETURNING id"
+  ].join(' ');
+  const claim=await sql(env,query,
+   uid,actor,provider,cfg.model,cfg.pool,now,reserved,
+   now-86400000,now-86400000,
+   cfg.pool,now-86400000,cfg.pool,now-86400000,cfg.requests_per_day,
+   cfg.pool,now-86400000,cfg.pool,now-86400000,reserved,cfg.tokens_per_day,
+   cfg.pool,now-cfg.min_interval_ms,now,cfg.pool,now-cfg.min_interval_ms,now,
+   cfg.pool,now-3600000,cfg.pool,now-3600000).first();
+  if(!claim)return json({error:'provider_capacity_or_stop_or_circuit_blocked',provider},429);
+  // STOP and eligibility may change between reservation and the HTTPS call.
+  if((await sql(env,'SELECT enabled FROM ghost_cloud_control WHERE id=1').first())?.enabled!==1||
+     cloud.eligibility(provider,cfg,env,Date.now())){
+   await sql(env,"UPDATE ghost_cloud_owner_chat SET status='failed',error_code='stopped_before_request',finished_at=? WHERE id=? AND status='running'",
+    Date.now(),uid).run();
+   return json({error:'provider_stopped_before_request',provider},409);
+  }
+  let outcome;
+  try{outcome=await cloud.infer(provider,cfg,env,prompt);}catch{outcome={status:'uncertain',error_code:'transport_or_response_failure'};}
+  const status=outcome.status==='needs_review'?'complete':
+   outcome.status==='failed'?'failed':'uncertain';
+  const output=status==='complete'&&typeof outcome.output==='string'?outcome.output:null;
+  const end=Date.now();
+  const saved=await sql(env,[
+   "UPDATE ghost_cloud_owner_chat SET status=?,error_code=?,actual_model=?,tokens_input=?,tokens_output=?,",
+   "output=?,retry_after=?,finished_at=? WHERE id=? AND status='running'"
+  ].join(' '),status,outcome.error_code||null,outcome.actual_model||null,
+   outcome.tokens_input??null,outcome.tokens_output??null,output,
+   outcome.retry_after??null,end,uid).run();
+  if(saved?.meta?.changes!==1)return json({error:'inference_receipt_unconfirmed'},503);
+  // A write acknowledgement is not proof that the exact inference/token
+  // receipt is durably readable. Fail closed if the private D1 row differs.
+  let persisted;
+  try {
+   persisted=await sql(env,
+    'SELECT provider,model,status,actual_model,tokens_input,tokens_output,output,error_code,finished_at FROM ghost_cloud_owner_chat WHERE id=?',
+    uid).first();
+  } catch {return json({error:'inference_receipt_unconfirmed'},503);}
+  if(!persisted||persisted.provider!==provider||persisted.model!==cfg.model||
+     persisted.status!==status||persisted.actual_model!==(outcome.actual_model||null)||
+     persisted.tokens_input!==(outcome.tokens_input??null)||
+     persisted.tokens_output!==(outcome.tokens_output??null)||
+     persisted.output!==output||persisted.error_code!==(outcome.error_code||null)||
+     persisted.finished_at!==end)return json({error:'inference_receipt_unconfirmed'},503);
+  return json({source:'private_site_cloud',mac_required:false,id:uid,provider,
+   requested_model:cfg.model,actual_model:outcome.actual_model||null,
+   status,output,tokens_input:outcome.tokens_input??null,
+   tokens_output:outcome.tokens_output??null,
+   error_code:status==='complete'?null:outcome.error_code||'inference_uncertain',
+   quota_remaining:null});
+ }
+
  async function control(env,enabled) {
   if(typeof enabled!=='boolean')throw Error('invalid_control');
   await sql(env,'INSERT INTO ghost_cloud_control(id,enabled) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled',enabled?1:0).run();
@@ -212,10 +358,28 @@ export function createCloudOperations(base, cloud) {
    const quotaObservation=provider==='groq'?readGroqRpd(response.headers,Date.now()):null;
    const data=await bounded(response,4194304),rows=data.data||data.models||data.result;
    if(!Array.isArray(rows))return {provider,status:'unrecognized_catalog'};
-   const models=rows.filter(m=>m&&typeof(m.id||m.name)==='string').filter(m=>provider!=='openrouter'||(m.id.endsWith(':free')&&m.pricing?.prompt!=null&&m.pricing?.completion!=null&&Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0)).slice(0,20).map(m=>({
-    id:String(m.id||m.name).slice(0,200),context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
-    catalog_zero_price:provider==='openrouter'?true:null
-   }));
+   // Cloudflare catalog objects contain UUID database keys in `id`;
+   // only `name` is a usable @cf/... inference model identifier.
+   // An authenticated catalog is still NOT proof of free inference eligibility.
+   const models=rows.filter(m=>m&&typeof m==='object').filter(m=>
+    provider==='cloudflare-ai'?
+     typeof m.name==='string'&&/^@cf\/[a-z0-9][a-z0-9_./-]*$/i.test(m.name):
+     typeof(m.id||m.name)==='string'
+   ).filter(m=>provider!=='openrouter'||(
+    typeof m.id==='string'&&m.id.endsWith(':free')&&
+    m.pricing?.prompt!=null&&m.pricing?.completion!=null&&
+    Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0
+   )).map(m=>{
+    const raw=String(provider==='cloudflare-ai'?m.name:(m.id||m.name));
+    // Gemini REST catalogs use "models/<name>"; the OpenAI-compatible
+    // chat-completions API accepts the bare model name. This is display
+    // metadata only and never authorizes a provider/model for dispatch.
+    const id=provider==='gemini'&&raw.startsWith('models/')?raw.slice(7):raw;
+    if(provider==='gemini'&&!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,179}$/.test(id))return null;
+    return {id:id.slice(0,200),
+     context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
+     catalog_zero_price:provider==='openrouter'?true:null};
+   }).filter(Boolean).slice(0,20);
    return {provider,status:'catalog_received',observed_at:Date.now(),models,
     ...(quotaObservation?{quota_observation:quotaObservation}:{}),
     billing_verified:false,quota_verified:quotaObservation!==null,canary_verified:false};
@@ -248,16 +412,51 @@ export function createCloudOperations(base, cloud) {
    // Never pretend a quota was durably recorded.
   }
  }
+
+ // Native Site scheduled refresh: provider metadata only, never chat/inference.
+ // Private Site identity and the existing D1 database are used directly;
+ // there is no GitHub->private-Site HTTP call or local machine dependency.
+ async function refreshCatalogs(env,fetcher=(...args)=>globalThis.fetch(...args),now=Date.now()) {
+  if(!env.DB)throw Error('private_store_unavailable');
+  const names=Object.keys(cloud.PROVIDERS);
+  const existing=(await sql(env,'SELECT provider,observed_at FROM ghost_cloud_provider_checks').all()).results;
+  const stale=names.filter(provider=>{
+   const row=existing.find(r=>r.provider===provider);
+   return !row||!Number.isSafeInteger(row.observed_at)||
+    row.observed_at>now+60000||now-row.observed_at>=3600000;
+  });
+  if(!stale.length)return {source:'site_native_catalog_refresh',checked:0,
+   persisted:0,catalog_received:0,skipped_fresh:names.length,inference_attempts:0};
+  const outcomes=await Promise.allSettled(stale.map(async provider=>{
+   const report=await inventory(env,provider,fetcher);
+   // Failed HTTP/catalog checks have no provider timestamp. Assign a stable
+   // Site clock timestamp to BOTH the write and its exact D1 readback.
+   const observed=Number.isSafeInteger(report.observed_at)?report.observed_at:Date.now();
+   await recordInventory(env,provider,{...report,observed_at:observed});
+   const saved=await sql(env,'SELECT observed_at,status,error_category FROM ghost_cloud_provider_checks WHERE provider=?',provider).first();
+   const persisted=!!saved&&saved.status===report.status&&
+    saved.observed_at===observed&&saved.error_category===(report.error_category||null);
+   return {persisted,catalog_received:persisted&&report.status==='catalog_received'};
+  }));
+  // A stored 401/403/timeout is an honest monitoring receipt, not a
+  // successful model catalog. Count confirmed catalogs separately.
+  return {source:'site_native_catalog_refresh',checked:stale.length,
+   persisted:outcomes.filter(r=>r.status==='fulfilled'&&r.value.persisted===true).length,
+   catalog_received:outcomes.filter(r=>r.status==='fulfilled'&&r.value.catalog_received===true).length,
+   skipped_fresh:names.length-stale.length,inference_attempts:0};
+ }
+
  const tools=[
   {name:'rovor_cloud_workforce_status',description:'Read actual private cloud job/model/token receipts. Missing or disabled providers are explicit.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true}},
   {name:'rovor_provider_inventory',description:'Read a fixed provider models endpoint without inference. Does not establish account billing, remaining quota or successful inference.',inputSchema:{type:'object',properties:{provider:{type:'string',enum:Object.keys(cloud.PROVIDERS)}},required:['provider'],additionalProperties:false},annotations:{readOnlyHint:true}},
+  {name:'rovor_provider_catalog_refresh',description:'Refresh stale authenticated provider catalogs inside the existing private Site and verify D1 readback. No chat inference, billing authorization, or task dispatch.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:false,destructiveHint:false}},
   {name:'rovor_cloud_control',description:'Pause or resume the existing cloud job ledger. Provider eligibility and private approvals still apply.',inputSchema:{type:'object',properties:{enabled:{type:'boolean'}},required:['enabled'],additionalProperties:false},annotations:{readOnlyHint:false,destructiveHint:false}},
   {name:'rovor_cloud_replenish',description:'Enqueue at most nine privately approved public packets copied from the canonical task queue; unchanged jobs deduplicate.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:false,destructiveHint:false}},
   {name:'rovor_cloud_tick',description:'Execute a bounded existing cloud shift only through current verified zero-cost routes, quotas, STOP and immutable claims. No automatic replay.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:false,destructiveHint:false}},
   {name:'rovor_cloud_canary',description:'Run one pre-approved private canary ID. Exact billing/quota/model evidence and short-lived approval must already be configured server-side.',inputSchema:{type:'object',properties:{canary_id:{type:'string'}},required:['canary_id'],additionalProperties:false},annotations:{readOnlyHint:false,destructiveHint:false}}
  ];
  async function call(name,args,env) {
-  const allowed={rovor_cloud_workforce_status:[],rovor_provider_inventory:['provider'],rovor_cloud_control:['enabled'],rovor_cloud_replenish:[],rovor_cloud_tick:[],rovor_cloud_canary:['canary_id']};
+  const allowed={rovor_cloud_workforce_status:[],rovor_provider_inventory:['provider'],rovor_provider_catalog_refresh:[],rovor_cloud_control:['enabled'],rovor_cloud_replenish:[],rovor_cloud_tick:[],rovor_cloud_canary:['canary_id']};
   if(!args||typeof args!=='object'||Array.isArray(args)||Object.keys(args).some(k=>!allowed[name].includes(k)))throw Error('invalid_arguments');
   if(name==='rovor_cloud_workforce_status')return status(env);
   if(name==='rovor_provider_inventory'){
@@ -266,9 +465,18 @@ export function createCloudOperations(base, cloud) {
    // Persist its bounded public status so the existing HUD can report when
    // this exact provider was last checked rather than a stale historical row.
    const report=await inventory(env,args.provider);
-   await recordInventory(env,args.provider,report);
-   return report;
+   const observed=Number.isSafeInteger(report.observed_at)?report.observed_at:Date.now();
+   await recordInventory(env,args.provider,{...report,observed_at:observed});
+   // A provider GET alone cannot prove that the Site wrote to its bound D1.
+   // Verify the exact persisted row EVEN when GET failed with 401/403.
+   const stored=await sql(env,'SELECT observed_at,status,error_category FROM ghost_cloud_provider_checks WHERE provider=?',args.provider).first();
+   const expectedError=report.error_category??null;
+   const saved=!!stored&&stored.status===report.status&&stored.observed_at===observed&&
+    (stored.error_category??null)===expectedError;
+   if(!saved)throw Error('provider_catalog_d1_readback_mismatch');
+   return {...report,observed_at:observed,d1_persisted:true,d1_observed_at:observed};
   }
+  if(name==='rovor_provider_catalog_refresh')return refreshCatalogs(env);
   if(name==='rovor_cloud_control')return control(env,args.enabled);
   if(name==='rovor_cloud_replenish')return replenish(env);
   if(name==='rovor_cloud_tick')return cloud.tick(env);
@@ -299,6 +507,59 @@ export function createCloudOperations(base, cloud) {
  function browserUI(){
   let busy=false,data=null,painted='',connection='connecting',lastOk=null;
   const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
+
+ // Same-origin cloud inference on the existing private Site. No Mac bridge.
+ function installOwnerCloudChat(){
+  const panel=document.getElementById('workloadPanel');
+  if(!panel||document.getElementById('rovor-owner-cloud-chat'))return;
+  const section=el('section');section.id='rovor-owner-cloud-chat';section.className='wl-card';
+  section.append(el('strong','ASK ROVOR · PRIVATE CLOUD PROVIDERS'));
+  section.append(el('p','Direct cloud API execution · all nine provider connections · zero Mac dependency · only verified free routes admitted'));
+  const select=el('select');select.setAttribute('aria-label','Cloud provider');select.className='wl-button';
+  const input=el('textarea');input.placeholder='Ask a selected verified free provider…';
+  input.maxLength=4000;input.rows=3;input.style.cssText='box-sizing:border-box;width:100%;max-width:100%;min-height:80px;display:block';
+  const submit=el('button','SEND TO CLOUD PROVIDER');submit.type='button';submit.className='wl-button';submit.disabled=true;
+  const notice=el('p','Checking private cloud provider admission…');notice.setAttribute('role','status');
+  const answer=el('pre');answer.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto';
+  section.append(select,input,submit,notice,answer);panel.prepend(section);
+  async function inventory(){
+   try{
+    const r=await fetch('/api/ghost/chat/models',{cache:'no-store',signal:AbortSignal.timeout(10000)});
+    if(!r.ok)throw Error('unavailable');
+    const data=await r.json();
+    if(data.source!=='private_site_cloud'||data.mac_required!==false||!Array.isArray(data.providers)||data.providers.length!==9)throw Error('invalid');
+    select.textContent='';let eligible=0;
+    for(const p of data.providers){
+     const option=el('option',p.provider.toUpperCase()+' · '+(p.model||'no pinned model')+' · '+p.admission);
+     option.value=p.provider;option.disabled=!p.ready;if(p.ready)eligible++;
+     select.append(option);
+    }
+    submit.disabled=eligible===0;
+    notice.textContent=eligible?eligible+' cloud provider route(s) admitted. Requests use the existing shared free-only limits.':
+     'All nine cloud providers are currently blocked by free-tier verification or configuration. No chargeable requests will be sent.';
+   }catch{submit.disabled=true;notice.textContent='Private cloud provider status unavailable. No request sent.';}
+  }
+  submit.onclick=async()=>{
+   if(submit.disabled||!input.value.trim())return;
+   const provider=select.value,prompt=input.value;
+   submit.disabled=true;answer.textContent='';notice.textContent='Cloud request submitted; awaiting recorded provider response…';
+   try{
+    const r=await fetch('/api/ghost/chat',{method:'POST',credentials:'same-origin',
+     headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,prompt}),signal:AbortSignal.timeout(60000)});
+    const data=await r.json();
+    if(!r.ok||data.status!=='complete'||typeof data.output!=='string')throw Error(data.reason||data.error||'cloud_request_unconfirmed');
+    answer.textContent=data.output;
+    notice.textContent='CLOUD COMPLETE · '+data.provider+' · requested '+data.requested_model+
+     ' · actual '+(data.actual_model||'not attested')+
+     ' · input/output tokens '+(data.tokens_input??'unknown')+'/'+(data.tokens_output??'unknown')+
+     ' · receipt '+data.id;
+   }catch(error){notice.textContent='Cloud request not completed: '+String(error.message||'unavailable').replaceAll('_',' ')+
+    '. No automatic retry.';}
+   finally{await inventory();}
+  };
+  inventory();
+ }
+
   function linkState(){
    const panel=document.getElementById('workloadPanel');if(!panel)return;
    let status=document.getElementById('rovor-cloud-link-state');
@@ -327,6 +588,32 @@ export function createCloudOperations(base, cloud) {
    const section=el('section');section.id='rovor-cloud-live';section.className='wl-card';
    section.append(el('strong','CLOUD EMPLOYEES · '+(data.enabled?'DISPATCH ENABLED':'DISPATCH PAUSED')));
    const pause=el('button',data.enabled?'PAUSE':'RESUME');pause.className='wl-button';pause.onclick=async()=>{try{const r=await fetch('/api/ghost/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!data.enabled})});if(!r.ok)throw Error('control_unavailable');await poll();}catch{disconnect();}};section.append(pause);
+   const refresh=el('button','REFRESH STALE CATALOGS');
+   refresh.className='wl-button';refresh.type='button';
+   const refreshNotice=el('p','Owner-only metadata checks · no inference or free-billing proof. Recent checks are skipped.');
+   refresh.onclick=async()=>{
+    if(refresh.disabled)return;
+    refresh.disabled=true;refreshNotice.textContent='Checking stale provider catalogs in the private cloud…';
+    try{
+     const r=await fetch('/api/ghost/catalog-refresh',{method:'POST',
+      headers:{'Content-Type':'application/json'},cache:'no-store'});
+     if(!r.ok)throw Error('catalog_refresh_unavailable');
+     const result=await r.json();
+     if(result.source!=='site_native_catalog_refresh'||
+        !Number.isSafeInteger(result.checked)||result.checked>9||result.checked<0||
+        !Number.isSafeInteger(result.persisted)||result.persisted<0||result.persisted>result.checked||
+        !Number.isSafeInteger(result.catalog_received)||result.catalog_received<0||
+        result.catalog_received>result.persisted||result.inference_attempts!==0)
+      throw Error('invalid_catalog_receipt');
+     refreshNotice.textContent='CATALOG CHECKS '+result.checked+'/9 · D1 SAVED '+
+      result.persisted+' · MODELS LISTED '+result.catalog_received+
+      ' · CACHED '+result.skipped_fresh+
+      ' · FREE INFERENCE NOT VERIFIED';
+    }catch{
+     refreshNotice.textContent='Catalog refresh could not be confirmed; no model requests were authorized.';
+    }finally{refresh.disabled=false;}
+   };
+   section.append(refresh,refreshNotice);
    for(const p of data.providers){
     const last=data.attempts.find(a=>a.provider===p.provider);
     const card=el('div');card.className='wl-card';
@@ -453,12 +740,12 @@ export function createCloudOperations(base, cloud) {
     data=snapshot;connection='connected';lastOk=Date.now();paint();
    }catch{disconnect();}finally{busy=false;}
   }
-  linkState();poll();setInterval(poll,15000);document.addEventListener('visibilitychange',poll);
+  installOwnerCloudChat();linkState();poll();setInterval(poll,15000);document.addEventListener('visibilitychange',poll);
   for(const name of ['workloadPanel','activityPanel']){const panel=document.getElementById(name);if(panel)new MutationObserver(()=>{if(!document.getElementById(name==='workloadPanel'?'rovor-cloud-live':'rovor-cloud-results'))paint();}).observe(panel,{childList:true});}
  }
  const script='<script>('+browserUI.toString()+')();</script>';
  return {
-  inventory,status,control,replenish,installApprovedFeeder,installHostedShiftRunner,
+  inventory,status,refreshCatalogs,control,replenish,installApprovedFeeder,installHostedShiftRunner,
   async fetch(request,env){
    const url=new URL(request.url),actor=owner(request);
    // Only the registered owner-private Site's dispatch may invoke this shared
@@ -487,6 +774,16 @@ export function createCloudOperations(base, cloud) {
     if(!actor)return json({error:'site_identity_required'},401);
     try{
      if(url.pathname==='/api/ghost/status'&&request.method==='GET')return json(await status(env));
+     if(url.pathname==='/api/ghost/catalog-refresh'&&request.method==='POST'){
+      // Only a signed-in, same-origin owner action may contact provider APIs.
+      // No GitHub->Site service bearer, model inference or approval change.
+      if(request.headers.get('Origin')!==url.origin||
+         request.headers.get('Sec-Fetch-Site')!=='same-origin')
+       return json({error:'owner_browser_required'},403);
+      return json(await refreshCatalogs(env));
+     }
+     if(url.pathname==='/api/ghost/chat/models'&&request.method==='GET')return json(await ownerChatModels(env));
+     if(url.pathname==='/api/ghost/chat'&&request.method==='POST')return ownerChat(request,env,actor);
      if(url.pathname==='/api/ghost/control'&&request.method==='POST'){
       const body=await bounded(request);if(Object.keys(body).join(',')!=='enabled')throw Error('invalid_control');return json(await control(env,body.enabled));
      }
@@ -495,6 +792,10 @@ export function createCloudOperations(base, cloud) {
      return json({error:'unsupported_operation'},404);
     }catch{return json({error:'cloud_operation_failed'},503);}
    }
+   // Do not fall through to a legacy MCP handler when owner identity is
+   // absent. The new catalog refresh writes private D1 and must stay owner-only.
+   if(url.pathname==='/mcp'&&request.method==='POST'&&!actor)
+    return json({error:'site_identity_required'},401);
    if(url.pathname==='/mcp'&&request.method==='POST'&&actor){
     let rpc;try{rpc=await bounded(request.clone());}catch{return json({error:'invalid_rpc'},400);}
     if(rpc.method==='tools/list'){

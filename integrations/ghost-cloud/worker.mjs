@@ -29,8 +29,42 @@ export default {
   try{
    if(request.method==='GET'&&url.pathname==='/api/ghost/status'){
     const now=Date.now();let config;try{config=JSON.parse(env.GHOST_FLEET_CONFIG||'{}');}catch{return json({error:'invalid_fleet_config'},503);}
-    const providers=Object.keys(PROVIDERS).map(provider=>({provider,configured_model:config[provider]?.model??null,admission:eligibility(provider,config[provider],env,now)??'eligible',online_verified:false}));
     const control=await env.DB.prepare('SELECT enabled FROM ghost_cloud_control WHERE id=1').first();
+    // Count only the CURRENT pinned provider model with a durable, complete
+    // exact-model inference + token receipt. A response from a prior model,
+    // unknown upstream identity or pre-attestation call is not online proof.
+    const since=now-3600000;
+    const proofs=(await env.DB.prepare(`SELECT provider,model,actual_model,MAX(finished_at) verified_at
+      FROM ghost_cloud_attempts WHERE status='needs_review' AND finished_at BETWEEN ? AND ?
+      AND output IS NOT NULL AND LENGTH(TRIM(output))>0 AND actual_model=model
+      AND tokens_input>=0 AND tokens_output>=0
+      GROUP BY provider,model,actual_model`).bind(since,now).all()).results;
+    let chatProofs=[];
+    try{
+     chatProofs=(await env.DB.prepare(`SELECT provider,model,actual_model,MAX(finished_at) verified_at
+       FROM ghost_cloud_owner_chat WHERE status='complete' AND finished_at BETWEEN ? AND ?
+       AND output IS NOT NULL AND LENGTH(TRIM(output))>0 AND actual_model=model
+       AND tokens_input>=0 AND tokens_output>=0
+       GROUP BY provider,model,actual_model`).bind(since,now).all()).results;
+    }catch{/* Legacy Site without the optional owner-chat table has no chat evidence. */}
+    const lastReply=new Map();
+    for(const entry of [...proofs,...chatProofs]){
+     const cfg=config[entry.provider];
+     if(!Object.hasOwn(PROVIDERS,entry.provider)||!cfg||entry.model!==cfg.model||
+        entry.actual_model!==cfg.model||!Number.isSafeInteger(entry.verified_at)||
+        !Number.isSafeInteger(cfg.verified_at)||entry.verified_at<cfg.verified_at)continue;
+     lastReply.set(entry.provider,Math.max(lastReply.get(entry.provider)||0,entry.verified_at));
+    }
+    const providers=Object.keys(PROVIDERS).map(provider=>{
+     const admission=eligibility(provider,config[provider],env,now)??'eligible';
+     const last_inference_at=lastReply.get(provider)||null;
+     const recent_inference_verified=last_inference_at!==null;
+     return {provider,configured_model:config[provider]?.model??null,admission,
+      recent_inference_verified,last_inference_at,
+      // Online means both currently admissible and proven by a recent reply;
+      // it is NOT a claim that a request is actively running now.
+      online_verified:control?.enabled===1&&admission==='eligible'&&recent_inference_verified};
+    });
     const {results}=await env.DB.prepare(`SELECT a.id,a.provider,a.model requested_model,a.actual_model,a.started_at,a.finished_at,a.status,a.error_code,a.tokens_input,a.tokens_output,a.retry_after,a.human_review,j.employee,j.task_id,j.title
      FROM ghost_cloud_attempts a JOIN ghost_cloud_jobs j ON a.job_id=j.id ORDER BY a.started_at DESC LIMIT 50`).all();
     return json({schema_version:1,execution_source:'cloud_provider',observed_at:now,enabled:control?.enabled===1,providers,attempts:results});

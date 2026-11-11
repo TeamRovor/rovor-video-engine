@@ -1,0 +1,80 @@
+name: ROVOR cloud autonomous work discovery
+
+# Proactive issue/CI triage, not a hidden inference or GitHub-writing bot.
+# Actions cron may be delayed by GitHub; scheduled ≠ guaranteed continuous.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/rovor-autonomous-discovery.yml'
+      - 'tools/rovor_auto_discovery.mjs'
+      - 'tests/test_rovor_auto_discovery.mjs'
+  schedule:
+    - cron: '17 * * * *'
+  # Scheduled GitHub runs can be delayed for hours. Trusted-main failures
+  # trigger the same read-only discovery path without waiting for the clock.
+  workflow_run:
+    workflows:
+      - 'OmniRoute reasoning admission offline regression'
+      - 'OmniRoute free dispatch permit offline regression'
+      - 'ROVOR work routing and queue consistency'
+      - 'Walter task identity replay guard'
+      - 'Walter public task grounding offline regression'
+      - 'Nine-provider cloud runtime checks'
+      - 'Private HUD cloud operations checks'
+      - 'GitHub-owned PRIVATE ROVOR HUD (Cloudflare Worker)'
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: read
+  pull-requests: read
+
+# Pull requests must not hold up the hourly trusted-main discovery.
+# A newer PR revision supersedes earlier checks; scheduled/manual main runs
+# serialize without interruption so D1 receipts remain deterministic.
+concurrency:
+  group: rovor-autonomous-discovery-${{ github.event_name == 'pull_request' && github.head_ref || 'main' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == 'TeamRovor/rovor-video-engine')
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify discovery is read-only and cannot spend or claim work
+        run: |
+          node --check tools/rovor_auto_discovery.mjs
+          node --check integrations/hud-cloud/discovery-inbox.mjs
+          node --test tests/test_rovor_auto_discovery.mjs tests/test_hud_discovery_inbox.mjs
+
+  discover:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == 'TeamRovor/rovor-video-engine'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    environment: rovor-hud-production
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
+      ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Find verified GitHub defects and store one review-only HUD draft
+        # Never download triggering artifacts or checkout its head SHA.
+        # workflow_run uses the reviewed default branch's own github.sha.
+        run: node tools/rovor_auto_discovery.mjs

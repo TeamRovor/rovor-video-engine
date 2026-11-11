@@ -111,9 +111,32 @@ export function summarizeGroqKeyCatalog(status){
     tokens_per_minute:metric(c.tokens_per_minute,'minute'),
     billing_verified:false, inference_verified:false};
 }
+// A secret-bulk update immediately following deploy can briefly route to a
+// previous asset version. Retry only an otherwise valid older pinned commit.
+// Auth failures, exposure, malformed responses and permanent mismatch never pass.
+export async function verifyPinnedRepoSource(read,expectedRepoCommit,{attempts=9,pause=delay,intervalMs=3000}={}){
+ if(!/^[a-f0-9]{40}$/.test(expectedRepoCommit))throw Error('expected_repo_commit_invalid');
+ if(!Number.isSafeInteger(attempts)||attempts<1||attempts>20)throw Error('invalid_repo_verification_attempts');
+ const srcPath='/api/hud/github/source?path=coordination%2FTASK-INTAKE.md';
+ for(let attempt=1;attempt<=attempts;attempt++){
+  const anon=await read(srcPath,false);
+  if(anon.status!==401)throw Error('anonymous_repo_source_exposed');
+  const live=await read(srcPath,true);
+  if(live.status!==200)throw Error('private_repo_source_unavailable');
+  let repo;try{repo=await live.json();}catch{throw Error('private_repo_source_invalid');}
+  if(repo?.source!=='reviewed_github_checkout'||repo.repo!=='TeamRovor/rovor-video-engine'||
+   repo.path!=='coordination/TASK-INTAKE.md'||!(/^[a-f0-9]{40}$/.test(repo.commit||''))||
+   repo.fetched_live!==false||repo.can_write!==false||repo.mac_required!==false||
+   typeof repo.text!=='string'||!repo.text||repo.text.length>1800||typeof repo.truncated!=='boolean')
+    throw Error('private_repo_source_invalid');
+  if(repo.commit===expectedRepoCommit)return true;
+  if(attempt<attempts)await pause(intervalMs);
+ }
+ throw Error('private_repo_source_invalid_commit_mismatch');
+}
 export async function verifyGithubHud({origin, readerToken, send = fetch, expectedQuotaAsset = null,
   expectedChatAsset = null, expectCloudGroq = false, expectGroqKeyCatalog = false,
-  requireLiveTelemetry = true, pause = delay}) {
+  requireLiveTelemetry = true, expectedRepoCommit = null, pause = delay}) {
   origin = verifiedOrigin(origin);
   if (typeof readerToken !== 'string' || readerToken.length < 32)
     throw Error('readback_credentials_missing');
@@ -141,6 +164,9 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
   // Private D1 idea inbox must not be accessible without reader identity.
   const anonymousIdeas=await read('/api/hud/ideas',false);
   if(anonymousIdeas.status!==401)throw Error('anonymous_idea_inbox_exposed');
+  // Prove this release serves the *exact reviewed Git commit* through the
+  // authenticated cloud-only GitHub excerpt endpoint. Never log source text.
+  if(expectedRepoCommit!==null)await verifyPinnedRepoSource(read,expectedRepoCommit,{pause});
   const anonymousRoot = await read('/', false);
   if (anonymousRoot.status !== 303 ||
       !new URL(anonymousRoot.headers.get('Location') || '/', origin).href.startsWith(origin + '/login'))
@@ -268,6 +294,7 @@ export async function verifyGithubHud({origin, readerToken, send = fetch, expect
     cloud_groq_key_catalog:cloudGroqCatalog,
     private_auth_verified: true, original_hud_verified: true,
     private_idea_inbox_verified: true,
+    reviewed_repo_source_verified: expectedRepoCommit===null?null:true,
     quota_board_verified: true, database_api_verified: true,
     quota_asset_matches_checkout: expectedQuotaAsset === null ? null : true,
     chat_asset_matches_checkout: expectedChatAsset === null ? null : true,
@@ -293,6 +320,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     expectedQuotaAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/live-quota-board.js', import.meta.url), 'utf8'),
     expectedChatAsset: readFileSync(new URL('../../dashboard/command-center/native-v8-9/hud-chat.js', import.meta.url), 'utf8'),
     requireLiveTelemetry: false,
+    expectedRepoCommit: process.env.GITHUB_SHA,
     expectCloudGroq: groqCloudReady(process.env,Date.now()),
     expectGroqKeyCatalog:typeof process.env.GROQ_HUD_API_KEY==='string'&&process.env.GROQ_HUD_API_KEY.length>=16})
     .then(result => {

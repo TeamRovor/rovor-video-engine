@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#061222">
+<title>ROVOR · Private Workforce Reviews</title>
+<style>
+:root{color-scheme:dark;--cyan:#71cfff;--ink:#d6eefe;--quiet:#92b5d0;--edge:#315f83;--surface:#0b2139;--back:#040d1a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 74% 0%,#113a5b 0%,#061b30 29%,var(--back) 75%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100dvh}
+a{color:var(--cyan)}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+button:disabled{opacity:.5;cursor:not-allowed}#patch-preparation input,#patch-preparation select,#patch-preparation textarea{font:16px system-ui;width:100%;color:var(--ink);background:#07192d;border:1px solid var(--edge);border-radius:8px;padding:9px}#patch-preparation label{display:block;margin:10px 0;font-size:13px}#patch-preparation input[type=checkbox]{width:auto}#patch-preparation pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:320px;overflow:auto}#patch-preparation .line-range{display:flex;gap:12px}#patch-preparation .line-range label{flex:1}main{max-width:1130px;margin:auto;padding:26px clamp(16px,4vw,40px) 80px}
+.top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;border-bottom:1px solid var(--edge);padding:3px 0 22px}
+.brand{font-size:14px;font-weight:850;letter-spacing:.27em;color:#e8f7ff}.brand small{display:block;letter-spacing:.16em;color:var(--quiet);font-size:10px;margin-top:8px;font-weight:600}
+nav{display:flex;gap:10px;flex-wrap:wrap}nav a{text-decoration:none;border:1px solid var(--edge);background:#102a47;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700}
+h1{font-size:clamp(25px,4vw,39px);margin:29px 0 6px;letter-spacing:-.035em}
+.intro{color:var(--quiet);line-height:1.6;max-width:760px;margin:0 0 24px;font-size:14px}
+.status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0}
+.stat{border:1px solid var(--edge);background:linear-gradient(145deg,#0b2947,#08192c);padding:18px;border-radius:15px;min-width:0}
+.stat strong{display:block;font-size:28px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}.stat small{display:block;margin-top:7px;color:var(--quiet);font-size:12px;line-height:1.45}.stat .compact{font-size:18px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:30px 0 12px}
+h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea5;background:#103b60;color:#f0f8ff;border-radius:10px;padding:11px 18px;min-height:44px;font-size:13px;font-weight:700}
+#message{min-height:22px;color:#b7cfe0;font-size:13px;line-height:1.5}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:13px}
+.job{border:1px solid var(--edge);border-radius:16px;background:linear-gradient(140deg,var(--surface),#07192d);padding:19px;overflow-wrap:anywhere}
+.job-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.job h3{font-size:17px;letter-spacing:-.01em;margin:0 0 8px}.metadata{font-size:12px;color:var(--quiet);line-height:1.6;margin:5px 0}
+.state{display:inline-flex;align-items:center;border:1px solid #547ca0;background:#113955;border-radius:30px;padding:7px 11px;font-size:11px;font-weight:800;letter-spacing:.05em;white-space:nowrap}
+.state.wait{border-color:#957e4f;background:#332a1b;color:#ffe8b6}
+.state.ok{border-color:#366b85;color:#c7eafa}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.actions button{border:1px solid #477d9f;background:#153956;color:#e0f2ff;border-radius:10px;padding:11px 16px;font-size:13px;font-weight:740;min-height:44px}
+.actions .approve{background:#18405a;border-color:#56abcc}
+.actions .reject{background:#422a33;border-color:#935362;color:#ffdae0}
+.draft{border-top:1px solid #325d7a;margin-top:15px;padding-top:16px}
+.draft h4{margin:0 0 8px;font-size:13px;letter-spacing:.05em}
+.draft pre{white-space:pre-wrap;word-break:break-word;line-height:1.65;font-family:inherit;font-size:14px;border-radius:10px;background:#03101f;border:1px solid #254663;max-height:60vh;overflow:auto;margin:0;padding:17px}
+.digest{word-break:break-all;font-size:11px;color:#8bb1cc;line-height:1.55;margin-top:12px}
+.notice{border-top:1px solid var(--edge);padding-top:22px;margin-top:33px;color:#91aec4;font-size:12px;line-height:1.7;max-width:840px}
+#page-status{font-size:12px;color:#a4d8ef}
+@media(max-width:560px){main{padding-top:14px}.status-grid{gap:8px}.stat{padding:12px}.stat strong{font-size:23px}.stat small{font-size:10px}h1{font-size:27px}.job{padding:14px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+.inbox-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0 10px}.inbox-overview div{border:1px solid var(--edge);border-radius:13px;background:linear-gradient(145deg,#0d304e,#08192c);padding:16px;min-width:0}.inbox-overview strong{display:block;font-size:clamp(20px,4vw,30px);overflow-wrap:anywhere;line-height:1.2;color:#e5f6ff}.inbox-overview span{display:block;color:var(--quiet);font-size:12px;margin-top:6px}.inbox-guidance{font-size:14px;line-height:1.5;color:var(--quiet);margin:0 0 15px}.decision-guide{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0 24px}.decision-guide div{background:#0b2139;border:1px solid var(--edge);border-radius:12px;padding:14px}.decision-guide strong{display:block;color:#e8f7ff;font-size:14px;margin-bottom:5px}.decision-guide span{font-size:13px;color:var(--quiet);line-height:1.5;display:block}.technical-panel{border:1px solid var(--edge);border-radius:14px;padding:14px;margin:20px 0;background:#07192d}.technical-panel>summary,.receipt-details>summary{cursor:pointer;color:var(--cyan);font-weight:700;font-size:14px;padding:5px 0;min-height:30px}.technical-panel[open]>summary{margin-bottom:12px}.receipt-details{margin-top:12px;border-top:1px solid #254663;padding-top:8px}.receipt-details>summary{font-size:12px;font-weight:600}.job .explanation{color:var(--ink);line-height:1.6;font-size:14px;margin:10px 0}.review-note{border-left:3px solid var(--cyan);padding:10px 14px;background:#0a2a43;border-radius:0 9px 9px 0;line-height:1.6;font-size:14px;margin:14px 0}.draft-output{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:15px;margin:10px 0;background:#061526;padding:16px;border-radius:10px;border:1px solid #254663}.draft-output h4{font-size:15px;line-height:1.4;margin:16px 0 5px;letter-spacing:0}.draft-output p{margin:7px 0}.draft-output ul{margin:5px 0;padding-left:22px}.draft-output code{white-space:pre-wrap}.review-feedback{min-height:22px;color:#d0e9f9;font-size:13px;line-height:1.5;margin:12px 0 0}.actions .defer{background:transparent}.actions .approve{background:#18516d;border-color:#72cfff}.draft .actions button{font-size:14px}.history-summary{font-size:13px;color:var(--quiet);margin:0 0 12px}.task-type{font-size:11px;font-weight:750;letter-spacing:.08em;color:var(--cyan);margin:0 0 7px;text-transform:uppercase}.draft-summary{border:1px solid #315f83;border-radius:10px;padding:12px 15px;margin:10px 0;background:#0b2942}.draft-summary p{font-size:14px;line-height:1.6;margin:8px 0;white-space:pre-wrap}.draft-summary strong{display:block;font-size:12px;color:var(--cyan);margin:0 0 4px}.draft-full{margin-top:10px}.draft-full>summary{cursor:pointer;color:var(--cyan);font-size:13px;font-weight:700;min-height:36px;padding:8px 0}.job[data-deferred="true"]{opacity:.82}.review-feedback:empty{display:none}@media(max-width:560px){.inbox-overview{gap:7px}.inbox-overview div{padding:11px 9px}.inbox-overview span{font-size:11px}.decision-guide{grid-template-columns:1fr;gap:6px}.decision-guide div{padding:10px 12px}.decision-guide strong,.decision-guide span{display:inline;font-size:13px}.decision-guide strong{margin-right:6px}.draft-output{font-size:15px;padding:12px}.draft .actions button{flex:1 1 100%}.technical-panel{padding:12px}}
+[hidden]{display:none!important}.quick-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0 20px}.quick-stop{border:1px solid #a75c72;border-radius:10px;min-height:44px;padding:10px 15px;background:#422a33;color:#ffdae0;font-size:14px;font-weight:750}.quick-controls a{font-size:13px;font-weight:650}.quick-controls span{font-size:12px;color:var(--quiet);line-height:1.4}.draft>button.defer{font:inherit;color:var(--cyan);border:1px solid #477d9f;background:#102a47;border-radius:9px;min-height:44px;padding:10px 16px}.receipt-details summary,.draft-full summary{overflow-wrap:anywhere}.review-feedback{overflow-wrap:anywhere}
+.source-status{margin:13px 0 0;padding:13px 15px;border:1px solid #477b9d;border-radius:12px;background:#0b2942;line-height:1.5}.source-status strong{display:block;font-size:13px;color:var(--cyan)}.source-status p{font-size:14px;margin:6px 0 4px}.source-status small{display:block;font-size:11px;color:var(--quiet);margin-top:6px}.source-status a{font-size:13px}.source-status[data-evidence-state="newer_check_passed"],.source-status[data-evidence-state="check_passed_now"],.source-status[data-evidence-state="issue_closed"],.source-status[data-evidence-state="pull_merged"],.source-status[data-evidence-state="pull_closed"]{border-color:#6b9ab5;background:#132b42}
+.owner-brief{border:1px solid #3b6685;background:#071b31;border-radius:14px;padding:16px;margin:15px 0 8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.owner-brief-heading{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.07em;color:#9ecbe7;margin:0 0 3px}
+.owner-fact{padding:12px 13px;border:1px solid #284e6b;border-radius:10px;background:#09253d;min-width:0}
+.owner-fact:first-of-type,.owner-fact:nth-of-type(2),.owner-fact:last-child{grid-column:1/-1}
+.owner-fact h4{font-size:12px;letter-spacing:0;color:#b5ddf5;margin:0 0 7px}
+.owner-fact p{font-size:14px;line-height:1.6;color:#e2eff9;margin:0}
+.owner-fact.benefit{border-color:#36647d}
+.owner-fact.concern{border-color:#966c49;background:#292337}
+.owner-fact.concern h4{color:#ffe1ad}
+.employee-report-caution{font-size:13px;line-height:1.55;color:#a9c9dd;margin:0 0 12px}
+.source-decision-note{border-top:1px solid #3a5970;padding-top:7px;margin-top:10px!important;color:#d8e8f4}
+@media(max-width:680px){.owner-brief{grid-template-columns:minmax(0,1fr);padding:11px;gap:8px}.owner-fact{grid-column:1/-1;padding:11px}.owner-brief-heading{font-size:10px}}
+.report-claims{border:1px solid #436a89;border-radius:13px;background:#091e32;padding:13px;margin:14px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.report-claims-heading{grid-column:1/-1;font-size:11px;letter-spacing:.06em;font-weight:800;color:#afd5ef;margin:0 0 2px}
+.report-claim{background:#102b42;border:1px solid #34516b;border-radius:10px;padding:11px 13px;min-width:0}
+.report-claim h5{font-size:12px;color:#acd6f0;margin:0 0 6px}
+.report-claim p{font-size:14px;line-height:1.6;overflow-wrap:anywhere;white-space:pre-wrap;margin:0}
+.report-claim.missing{border-color:#9a7757;background:#282b36}
+.report-claim.missing h5{color:#f7d9b9}
+.missing-report-warning{grid-column:1/-1;margin:0;color:#fad6b8;font-size:13px;line-height:1.5}
+@media(max-width:680px){.report-claims{grid-template-columns:minmax(0,1fr);padding:10px;gap:7px}.report-claims-heading,.missing-report-warning{grid-column:1}.report-claim{padding:10px}}
+.first-pr-card{border-color:#467eaa;background:linear-gradient(135deg,#103757,#081e34);margin:20px 0 10px}
+.first-pr-card h2{font-size:17px}
+#first-pr-state{margin:11px 0;font-size:14px;line-height:1.55;color:#e4f6ff}
+#first-pr-state p{margin:0 0 8px}
+#first-pr-state a{display:inline-block;margin-top:5px;font-weight:750;overflow-wrap:anywhere}
+#patch-preparation{margin-top:15px}
+</style>
+<script type="module" src="/workforce-review.js"></script>
+</head>
+<body>
+<main>
+<header class="top"><div class="brand">ROVOR DIGITAL<small>PRIVATE CLOUD WORKFORCE · OWNER DESK</small></div>
+<nav aria-label="Private navigation"><a href="/">Return to HUD</a><a href="/">Open Ask ROVOR on HUD</a></nav></header>
+<h1>Review inbox</h1>
+<p class="intro">Every review explains what the employee attempted, the exact kind of deliverable saved, possible benefits, concerns and what approval does. PASS never certifies a fix or deploys code.</p>
+<section class="inbox-overview" aria-label="Review overview">
+ <div><strong id="pending">—</strong><span>Need your decision</span></div>
+ <div><strong id="reviewed">—</strong><span>Reviewed</span></div>
+ <div><strong id="stop-state">—</strong><span>Workforce</span></div>
+</section>
+<p id="inbox-guidance" class="inbox-guidance">Loading your review queue…</p>
+<div class="quick-controls" aria-label="Workforce quick controls">
+ <button id="owner-stop" class="quick-stop" disabled>STOP workforce</button>
+ <a id="stop-fallback" href="https://github.com/TeamRovor/rovor-video-engine/actions/workflows/cloud-gemini-workforce.yml" rel="noreferrer">STOP via GitHub</a>
+ <span id="quick-control-note">Checking control access…</span>
+</div>
+<section class="decision-guide" aria-label="How to review work">
+ <div><strong>Keep this work</strong><span>The actual report is specific and worth saving. PASS records acceptance, not a verified fix.</span></div>
+ <div><strong>Reject this work</strong><span>The report is generic, wrong, outdated or not actionable. FAIL does not start another job.</span></div>
+ <div><strong>Not sure?</strong><span>Review later. No decision is recorded.</span></div>
+</section>
+<div class="section-head"><h2>Needs your attention</h2><button class="refresh" id="refresh" type="button">Refresh inbox</button></div>
+<p id="message" role="status" aria-live="polite">Loading your work…</p>
+<div id="jobs" class="grid" aria-live="off"></div>
+<p id="page-status" role="status" aria-live="polite"></p>
+<details class="technical-panel" id="history-panel"><summary>Past reviews &amp; other jobs</summary><div id="history" class="grid"></div></details>
+<section class="job first-pr-card" aria-label="First ROVOR autonomous draft pull request">
+<h2>First autonomous GitHub draft PR</h2>
+<div id="first-pr-state" role="status" aria-live="polite">Checking protected GitHub permissions and saved jobs…</div>
+<p class="metadata">The owner selects a permitted source excerpt and improvement → ROVOR generates one proposal using an admitted free model → you review and PASS or FAIL the exact proposal → you separately authorize a single <strong>draft PR</strong>. No automatic merge or release.</p>
+<p class="metadata"><a href="/login?next=%2Fworkforce-review.html">Sign in with the separate owner key</a> to prepare a source task. No keys are sent to the AI.</p>
+</section>
+<details class="technical-panel"><summary>Workforce status &amp; advanced controls</summary>
+<section class="status-grid" aria-label="Private workforce summary">
+<div class="stat"><strong id="native-clock" class="compact">—</strong><small id="native-detail">Last actual native cron event</small></div>
+<div class="stat"><strong id="standing-state" class="compact">—</strong><small>Seven-day recurring approval</small></div>
+<div class="stat"><strong id="github-discovery-state" class="compact">—</strong><small id="github-discovery-detail">Independent GitHub App · native clock</small></div>
+</section>
+<section class="job" aria-label="Private owner controls">
+<h2>Owner controls</h2>
+<p id="owner-session" class="metadata" role="status">Checking owner session…</p>
+<p id="github-patch-readiness" class="metadata" role="status">Checking employee GitHub draft-PR access…</p>
+<p class="metadata">Start lets ROVOR look for new work for seven days. It can attempt three jobs per rolling day and pauses when three drafts are awaiting review. STOP prevents new jobs from starting.</p>
+<div class="actions"><button id="owner-start" class="approve" disabled>Start recurring workforce</button></div>
+<p class="metadata"><a href="/login?next=%2Fworkforce-review.html">Sign in with your separate owner key</a>. <a href="https://github.com/TeamRovor/rovor-video-engine/actions/workflows/start-cloud-workforce.yml" rel="noreferrer">Protected GitHub fallback</a> remains available.</p>
+<p id="owner-action-status" class="metadata" role="status"></p>
+</section>
+
+</details>
+<section id="patch-preparation" class="job" hidden aria-label="Prepare an owner-scoped engineering task" style="margin-top:15px">
+<h2>Prepare the first source-change proposal</h2>
+<p class="metadata">Read a small, exact source excerpt through ROVOR’s own GitHub App. Nothing is sent to a model until you explicitly authorize the excerpt and objective.</p>
+<label>Allowed file<select id="patch-path"></select></label>
+<div class="line-range"><label>First line<input id="patch-start-line" type="number" min="1" max="10000" value="1"></label><label>Last line<input id="patch-end-line" type="number" min="1" max="10000" value="20"></label></div>
+<label>Small improvement objective<textarea id="patch-brief" maxlength="500" rows="3" placeholder="Example: Make the mobile label more legible in this exact CSS excerpt without changing ROVOR’s design."></textarea></label>
+<div class="actions"><button id="patch-preview-button">Read exact source excerpt</button></div>
+<pre id="patch-preview-text" class="draft" hidden></pre>
+<label id="patch-consent-label" hidden><input id="patch-consent" type="checkbox"> I approve this exact excerpt and objective as public-safe for the pinned free Gemini model. They contain no credentials, client data or confidential code.</label>
+<div class="actions"><button id="patch-task-button" class="approve" disabled>Queue reviewed source task</button></div>
+<p id="patch-preparation-status" class="metadata" role="status"></p>
+</section>
+<footer class="notice">This is the existing Cloudflare HUD review ledger, not the separate private ChatGPT Site database. A successful draft does not prove live nine-provider inference, external remaining free quota, or automatic publication. STOP prevents new claims; it cannot cancel an upstream call already sent.</footer>
+</main>
+</body>
+</html>

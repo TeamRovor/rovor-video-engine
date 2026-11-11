@@ -60,6 +60,10 @@ test('compiler uses one exact v2 suffix, retains original HUD and no duplicate e
   assert.match(compiled,/ROVOR_CLOUD_SCHEDULED_SHIFT_V1 [a-f0-9]{64}/);
   assert.equal((compiled.match(/export default/g)||[]).length,1);
   assert.match(compiled,/__operations\.replenish/);assert.match(compiled,/__cloud\.tick/);
+  assert.match(compiled,/__operations\.refreshCatalogs\(env\)/,'catalog refresh stays inside opted-in Site schedule');
+  assert.match(compiled,/rovor_catalog_refresh_failed/,'failed D1/catalog checks are observable in private Site logs');
+  assert.match(compiled,/checked:check\.checked,persisted:check\.persisted/,'logged refresh counts are based on persisted checks');
+  assert.doesNotMatch(compiled,/refreshCatalogs\(env\)\.catch\(\(\)=>null\)/,'do not silently swallow monitoring failures');
   assert.throws(()=>compileScheduledShift(compiled,shiftSource),/unexpected_existing_site_bundle/);
 });
 test('compiler refuses wrong Site or unexpected module shape',()=>{
@@ -97,7 +101,9 @@ test('canonical feed misconfiguration fails closed instead of falling back to ol
   const imported=await import('data:text/javascript;base64,'+Buffer.from(compiled).toString('base64'));
   const s=mock(),promises=[];
   s.env.GHOST_FEED_COMMIT='a'.repeat(40);
-  delete s.env.GHOST_APPROVED_TASKS;
+  // Empty/missing approvals intentionally yield an idle shift. Malformed explicit
+  // approval configuration must instead fail closed without legacy fallback.
+  s.env.GHOST_APPROVED_TASKS='{invalid-json';
   imported.default.scheduled({},s.env,{waitUntil:p=>promises.push(p)});
   await Promise.all(promises);
   const result=await (await imported.default.fetch(req('/api/ghost/shifts'),s.env)).json();
@@ -149,6 +155,22 @@ test('one-bundle composer dry-run leaves original staged v2 untouched',t=>{
   assert.deepEqual(r.migrations,['0002_cloud_review_one_decision.sql','0003_cloud_scheduled_shift.sql']);
   assert.equal(r.duplicate_review_preflight_required,true);
 });
+test('composer accepts existing private Site object-form D1 binding and still rejects wrong binding',t=>{
+ const dir=existing(t),manifestPath=path.join(dir,'.openai/hosting.json');
+ const original=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+ fs.writeFileSync(manifestPath,JSON.stringify({...original,d1:{binding:'DB'}}));
+ const dry=composeScheduledShift(dir);
+ assert.equal(dry.prepared,false);
+ assert.equal(dry.project_id,original.project_id);
+ const staged=composeScheduledShift(dir,{apply:true});
+ assert.equal(staged.prepared,true);
+ assert.equal(staged.deployment_performed,false);
+ assert.equal(fs.readFileSync(manifestPath,'utf8'),JSON.stringify({...original,d1:{binding:'DB'}}));
+ const wrong=existing(t),wrongPath=path.join(wrong,'.openai/hosting.json');
+ fs.writeFileSync(wrongPath,JSON.stringify({...original,d1:{binding:'UNRELATED'}}));
+ assert.throws(()=>composeScheduledShift(wrong),/wrong_site_or_database/);
+});
+
 test('composer appends review UNIQUE index before scheduler in the existing Site journal',t=>{
   const dir=existing(t);
   const r=composeScheduledShift(dir,{apply:true});
@@ -193,7 +215,8 @@ test('existing journaled owner review index is not restaged or reordered',t=>{
   const dir=existing(t),jpath=path.join(dir,'drizzle/meta/_journal.json');
   const journal=JSON.parse(fs.readFileSync(jpath,'utf8'));
   const tag='0002_owner_review_one_decision';
-  fs.writeFileSync(path.join(dir,'drizzle',tag+'.sql'),'CREATE UNIQUE INDEX IF NOT EXISTS ghost_cloud_reviews_one_decision_per_attempt ON ghost_cloud_reviews(attempt_id);');
+  const reviewed=fs.readFileSync(new URL('migrations/owner-review-one-decision.sql',sourceDir),'utf8').replace(/;[ \t]*\n/g,';\n--> statement-breakpoint\n');
+  fs.writeFileSync(path.join(dir,'drizzle',tag+'.sql'),reviewed);
   journal.entries.push({idx:2,version:'6',tag,breakpoints:true});
   fs.writeFileSync(jpath,JSON.stringify(journal));
   const r=composeScheduledShift(dir,{apply:true});
@@ -201,6 +224,18 @@ test('existing journaled owner review index is not restaged or reordered',t=>{
   assert.deepEqual(r.migrations,['0003_cloud_scheduled_shift.sql']);
   assert.equal(fs.existsSync(path.join(dir,'drizzle/0002_cloud_review_one_decision.sql')),false);
   assert.equal(JSON.parse(fs.readFileSync(jpath)).entries.length,4);
+});
+test('journaled review index must exactly match approved SQL before scheduler staging',t=>{
+  const dir=existing(t),jpath=path.join(dir,'drizzle/meta/_journal.json');
+  const journal=JSON.parse(fs.readFileSync(jpath,'utf8'));
+  const tag='0002_owner_review_one_decision';
+  const location=path.join(dir,'drizzle',tag+'.sql');
+  fs.writeFileSync(location,'CREATE INDEX unrelated ON ghost_cloud_reviews(attempt_id);');
+  journal.entries.push({idx:2,version:'6',tag,breakpoints:true});
+  fs.writeFileSync(jpath,JSON.stringify(journal));
+  assert.throws(()=>composeScheduledShift(dir,{apply:true}),/journaled_review_index_mismatch/);
+  assert.equal(fs.readFileSync(path.join(dir,'worker/index.js'),'utf8'),v2);
+  assert.equal(fs.existsSync(path.join(dir,'drizzle/0003_cloud_scheduled_shift.sql')),false);
 });
 test('mismatched existing dist bundle fails without modifying staged v2',t=>{
   const dir=existing(t);

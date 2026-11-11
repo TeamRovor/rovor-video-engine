@@ -1,0 +1,101 @@
+name: ROVOR Cloudflare Gemini workforce - approved pilot and STOP
+# Native Cloudflare 5-minute cron remains registered in the EXISTING Worker.
+# This workflow only submits a NEW, exact immutable canonical candidate upon
+# explicit owner task-ID selection and true approval. The Git source keeps its
+# approved_for_cloud=false flag; only the owner dispatch can opt in that one
+# task in memory. No historical v1 replay, automatic approval or paid route.
+on:
+  pull_request:
+    paths:
+      - 'integrations/hud-cloud/approved-workforce.mjs'
+      - 'integrations/hud-cloud/worker.mjs'
+      - 'integrations/hud-cloud/schema.sql'
+      - 'dashboard/command-center/native-v8-9/hud-chat.js'
+      - 'tools/cloud_gemini_workforce_control.mjs'
+      - 'tests/test_hud_cloud_workforce.mjs'
+      - '.github/workflows/cloud-gemini-workforce.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'integrations/hud-cloud/approved-workforce.mjs'
+      - 'integrations/hud-cloud/worker.mjs'
+      - 'integrations/hud-cloud/schema.sql'
+      - 'dashboard/command-center/native-v8-9/hud-chat.js'
+      - 'tools/cloud_gemini_workforce_control.mjs'
+      - 'tests/test_hud_cloud_workforce.mjs'
+      - '.github/workflows/cloud-gemini-workforce.yml'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Read status, execute ONE new approved v2 task, enable recurring after owner PASS, or STOP"
+        type: choice
+        default: status
+        required: true
+        options:
+          - status
+          - pilot_once
+          - enable_schedule
+          - stop
+      task_id:
+        description: "For pilot_once: selected new unapproved v2 candidate (Gus website offer prefilled)"
+        type: string
+        required: false
+        default: cloud-gemini-website-offer-pilot-20261110
+      revision:
+        description: "For pilot_once only: selected v2+ packet revision (old v1 tasks never replayed)"
+        type: string
+        required: false
+        default: v2
+      confirm_owner_approval:
+        description: "I explicitly approve the selected NEW v2 pilot task or recurring schedule after my PASS"
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify STOP, D1 receipts, owner review and trusted canonical GitHub source
+        run: |
+          node --check integrations/hud-cloud/approved-workforce.mjs
+          node --check integrations/hud-cloud/worker.mjs
+          node --check dashboard/command-center/native-v8-9/hud-chat.js
+          node --check tools/cloud_gemini_workforce_control.mjs
+          node --test tests/test_hud_cloud_workforce.mjs tests/test_hud_cloud_gemini.mjs tests/test_ghost_cloud_feed.mjs
+
+  owner-control:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    environment: rovor-hud-production
+    concurrency:
+      group: rovor-gemini-workforce-owner-control
+      cancel-in-progress: false
+    env:
+      ROVOR_HUD_READER_TOKEN: ${{ secrets.ROVOR_HUD_READER_TOKEN }}
+      ROVOR_HUD_WRITER_TOKEN: ${{ secrets.ROVOR_HUD_WRITER_TOKEN }}
+      ROVOR_WORKFORCE_ACTION: ${{ inputs.action }}
+      ROVOR_WORKFORCE_TASK_ID: ${{ inputs.task_id }}
+      ROVOR_WORKFORCE_REVISION: ${{ inputs.revision }}
+      ROVOR_OWNER_CONFIRMS_NEW_TASK: ${{ inputs.confirm_owner_approval }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Owner-private fixed-endpoint one-shot operator (no model keys in GitHub)
+        run: node tools/cloud_gemini_workforce_control.mjs

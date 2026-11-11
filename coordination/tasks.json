@@ -5981,36 +5981,244 @@
       ]
     },
     {
-      "id": "ask-rovor-model-intelligence-20261109",
-      "title": "Add fail-closed Ask ROVOR nine-provider model intelligence and selection contract",
+      "id": "cloud-gemini-website-offer-pilot-20261110",
+      "title": "Draft an owner-reviewed ROVOR Digital website offer and discovery call script",
       "priority": 1,
-      "status": "blocked",
-      "owner": "ChatGPT / Amar Ask ROVOR 2.0 registry session 2026-11-09",
-      "branch": "feature/ask-rovor-model-intelligence-20261109",
+      "status": "active",
+      "owner": "TeamRovor / owner decision required before one-time Gemini pilot",
+      "branch": "main",
       "scopes": [
-        "integrations/hud-cloud/ask-rovor-model-registry.mjs",
-        "tests/test_ask_rovor_model_registry.mjs",
-        "integrations/hud-cloud/ASK-ROVOR-MODEL-REGISTRY.md"
+        "subsystem:cloud-gemini-website-offer-pilot-20261110"
       ],
       "depends_on": [],
-      "next_update": "After owner reviews updated draft PR #312 and a relevant hosted test run",
-      "next_action": "Draft PR #312 now includes fixed capability-fit routing, safe prototype-key handling and four additional regression cases; isolated Node.js 22/22 tests PASS. Review latest PR head and run hosted tests before merging. Next isolated PR should build authenticated server evidence adapter and atomic quota reservations; no production routing enabled.",
-      "acceptance": "All nine providers represented; exact model IDs and independently dated eligibility, billing and quota evidence; no unverified inference; manual selection and STOP fail closed; deterministic quality/latency preference instead of round robin; tests pass; PR review only.",
-      "links": [
-        "https://github.com/TeamRovor/rovor-video-engine/issues/309",
-        "https://github.com/TeamRovor/rovor-video-engine/pull/312"
-      ],
-      "updated_at": "2026-11-09",
-      "blocker": "Owner/hosted CI review pending; registry is read-only and not wired to Ask ROVOR production. Current synthetic tests are not real nine-provider routing/canary proof.",
-      "validation": {
-        "status": "local-isolated-22-pass/hosted-ci-unverified/no-live-routing",
-        "commands": [
-          "node --check integrations/hud-cloud/ask-rovor-model-registry.mjs",
-          "node --test tests/test_ask_rovor_model_registry.mjs"
-        ],
-        "result": "Node.js v22.16.0 isolated 22/22 PASS, including no-task-fit fallback, optional review task fit, prototype-like IDs and owner-rejected quality downgrades. GitHub PR head 40f1aea0e59f41c6f3b67b0874cdd15a5ec843b0 before handoff commit; hosted CI and Cloudflare inference unverified.",
-        "branch": "feature/ask-rovor-model-intelligence-20261109"
+      "updated_at": "2026-11-10T20:33:00-06:00",
+      "next_update": "After an explicit owner-selected pilot_once workflow and a real private D1 draft receipt",
+      "next_action": "Ask the owner to inspect this new public-only candidate, then explicitly select pilot_once with its exact task ID and revision v2. Keep STOP disabled before/after one bounded request; record owner PASS/FAIL before enabling a schedule.",
+      "acceptance": "Exactly one new Gemini 3.5 Flash Lite cloud draft, authenticated model/D1 receipt, output digest and owner PASS/FAIL. No repeated v1 attempt, no publication, no external messages, no paid route and no unapproved scheduling.",
+      "cloud_inference": {
+        "revision": "v2",
+        "approved_for_cloud": false,
+        "data_class": "public_repository",
+        "employee": "Gus",
+        "kind": "plan",
+        "prompt": "You are producing a review-only business development asset for ROVOR Digital, a human-led creative and digital production business. Publicly described services include small-business websites, landing pages, logo/branding, social content, booking/inquiry setup, domain connection, business email, and online stores. Draft ONE concise one-page website service offer that speaks to a local small-business owner without claiming any existing clients, testimonials, published projects, prices, guarantees, delivery deadlines, or work already performed. Include: (1) a plain-English value proposition of at most 45 words, (2) three clear service scope options with differences described but no prices, (3) an eight-question discovery call script that asks about business goals, current domain/site, customer conversion action, content/assets, approvals, timeline preferences, accessibility, and handoff, (4) a neutral follow-up message of at most 80 words that invites the prospect to discuss the project but makes no false promises, and (5) a factual owner-review checklist that flags anything requiring verification before use. Keep the overall draft under 600 words. This is for owner PASS/FAIL review only: do not send, publish, modify files, invent contacts, or represent any work as completed."
       }
+    },
+    {
+      "id": "cloud-walter-workflow-factory-20261110",
+      "title": "Produce a strictly validated, owner-reviewed GitHub Actions test-workflow proposal",
+      "priority": 1,
+      "status": "active",
+      "owner": "TeamRovor — explicit owner approval required before first model call",
+      "branch": "main",
+      "scopes": [
+        "subsystem:cloud-walter-workflow-factory-20261110"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-10T18:00:00-06:00",
+      "next_update": "After one explicitly owner-approved v2 pilot and SHA256 owner PASS",
+      "next_action": "Owner must explicitly select this v2 task once. After a real Gemini response and exact private D1 PASS, the GitHub proposal bridge compiles the bounded spec into a review-only pull request.",
+      "acceptance": "One pinned Gemini 3.5 Flash Lite reply containing strict JSON specifying an allowlisted no-secret read-only CI test workflow; SHA256 owner PASS, trusted GitHub proposal PR, no model-supplied arbitrary shell commands, no direct main writes, no paid route.",
+      "cloud_inference": {
+        "revision": "v2",
+        "approved_for_cloud": false,
+        "data_class": "public_repository",
+        "employee": "Walter",
+        "kind": "plan",
+        "prompt": "You are Walter, designing a safe new ROVOR Digital GitHub Actions workflow for owner review. Return ONLY ONE valid JSON object with exactly the keys workflow_id, name, description, template, tests, and schedule. No markdown fences or extra prose. Set workflow_id to 'rovor-mobile-hud-regression', name to 'ROVOR Mobile HUD Regression', description to 'Check the existing ROVOR HUD phone drawer and cloud review security on demand', template to 'node-test', tests to exactly ['tests/test_hud_mobile_drawer_stability.mjs','tests/test_hud_private_review_page.mjs'], and schedule to 'manual'. Evaluate whether this task could identify regressions before answering, but never alter the identifiers, test paths, or other required fields. Do not include any shell commands, URLs, tokens, permissions, secrets, code snippets, GitHub API actions, schedules other than manual, claims of prior execution, or external calls. The workflow will be compiled from a trusted fixed template, not executed from your raw output. This proposal is untrusted until the owner inspects the generated JSON and independently records PASS or FAIL on the exact private draft digest."
+      }
+    },
+    {
+      "id": "workforce-owner-admission-guidance-20261111",
+      "title": "Explain observed workforce wait conditions in the owner review desk",
+      "priority": 1,
+      "status": "done",
+      "owner": "Codex / Amar owner admission guidance 2026-11-11",
+      "branch": "fix/workforce-owner-admission-guidance-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/workforce-review.js",
+        "tests/test_workforce_admission_guidance.mjs",
+        "tests/test_hud_private_review_page.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T07:29:48.694Z",
+      "next_update": "Complete; production readback verified",
+      "next_action": "PR #372 merged and deployed. Run 42979736409 passed phone/tablet/desktop owner-review checks and authenticated byte-for-byte production review desk readback. Capacity guidance is live; no provider inference or eligibility change.",
+      "acceptance": "Focused behavioral tests show daily/review caps, no-queue/no-discovery, stopped/unauthorized and invalid snapshots truthfully; no new endpoint, writes or inference.",
+      "evidence": [
+        {
+          "commit": "8c528dc6bf9e7e4e9ffb5fa9dd1a172db5de2855",
+          "platform": "GitHub-hosted Node HUD safety/browser checks; local macOS Node 24.22.0",
+          "check": "267 HUD safety tests including four admission guidance tests; all 12 PR checks passed; local syntax and task/routing validation",
+          "result": "PASS; merged source. Production rollout pending verification, no new model call.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/372"
+        },
+        {
+          "commit": "8c528dc6bf9e7e4e9ffb5fa9dd1a172db5de2855",
+          "platform": "Protected GitHub production deployment to existing Cloudflare HUD",
+          "check": "Owner-review Chromium phone/tablet/desktop; private auth and byte-for-byte review desk/script readback",
+          "result": "PASS; production deployment and exact private review script verified. No inference run.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42979736409"
+        }
+      ]
+    },
+    {
+      "id": "hud-chat-stream-stability-20261111",
+      "title": "Smooth streamed chat and preserve owner reading position",
+      "priority": 1,
+      "status": "done",
+      "owner": "Codex / Amar chat stability 2026-11-11",
+      "branch": "fix/hud-chat-stream-stability-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/hud-chat.js",
+        "tests/test_hud_chat_mobile.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T08:16:44.764Z",
+      "next_update": "Complete; deployed chat asset verified",
+      "next_action": "PR #379 deployed in protected run 42985560728. Authenticated production verifier confirms chat_asset_matches_checkout=true; phone/tablet/desktop Chromium and 284 HUD safety tests passed. No live inference run.",
+      "acceptance": "Deterministic frame tests show chunk coalescing, following only at bottom, preserved reading position and cancelled pending frames; existing HUD checks pass.",
+      "evidence": [
+        {
+          "commit": "268b137d3311ea8e123372410cef1022773563f8",
+          "platform": "Local macOS Node 24.22.0 and GitHub-hosted HUD safety/browser checks",
+          "check": "18 mobile-chat tests including four new frame/scroll regressions; 284 full HUD safety tests; responsive/browser-budget/data checks",
+          "result": "PASS; merged source. Production rollout pending readback. No model routing or provider execution changes.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/379"
+        },
+        {
+          "commit": "268b137d3311ea8e123372410cef1022773563f8",
+          "platform": "Protected production deploy to existing Cloudflare HUD",
+          "check": "Authenticated chat asset matches reviewed checkout; private auth, interactive Ask ROVOR and owner review device checks",
+          "result": "PASS. Live source verified; no claim of a measured device frame rate or new provider inference.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42985560728"
+        }
+      ]
+    },
+    {
+      "id": "hud-workload-refresh-stability-20261111",
+      "title": "Keep Workload refresh stable and preserve keyboard inspection",
+      "priority": 1,
+      "status": "done",
+      "owner": "Codex / Amar Workload stability 2026-11-11",
+      "branch": "fix/hud-workload-refresh-stability-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/live-quota-board.js",
+        "tests/test_hud_ios_quota_rings.mjs",
+        "tests/test_hud_popup_refresh.cjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T08:25:30.173Z",
+      "next_update": "Complete; production quota asset verified",
+      "next_action": "PR #380 deployed in protected run 42986715688; authenticated quota_asset_matches_checkout=true. 287 HUD safety tests and all applicable polling, bridge and browser checks passed. No live inference or measured FPS claim.",
+      "acceptance": "Identical markup retains existing nodes; changed telemetry still renders; overview and jump focus restore without scrolling; existing HUD checks pass.",
+      "evidence": [
+        {
+          "commit": "3f463b913ac81c8672a02d5560675747e991e4af",
+          "platform": "Local Node 24.22.0 and GitHub-hosted HUD/bridge/browser checks",
+          "check": "32 quota-board tests, real polling regression, full HUD safety, responsive/browser-budget/data and live-bridge tests",
+          "result": "PASS; merged source. Production rollout pending verification.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/380"
+        },
+        {
+          "commit": "3f463b913ac81c8672a02d5560675747e991e4af",
+          "platform": "Protected production deployment to existing Cloudflare HUD",
+          "check": "Authenticated original HUD and exact quota asset readback",
+          "result": "PASS; production asset matches reviewed checkout.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42986715688"
+        }
+      ]
+    },
+    {
+      "id": "hud-chat-background-catalog-20261111",
+      "title": "Keep chat responsive during bounded background model checks",
+      "priority": 1,
+      "status": "done",
+      "owner": "Codex / Amar chat background refresh 2026-11-11",
+      "branch": "fix/hud-chat-background-catalog-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/hud-chat.js",
+        "tests/test_hud_chat_mobile.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T08:36:19.972Z",
+      "next_update": "Complete; production chat asset verified",
+      "next_action": "PR #381 deployed in protected run 42988132713; chat_asset_matches_checkout=true. 291 safety tests and responsive browser checks passed. Background checks preserve same-source controls while pending; failed checks close readiness. No model inference.",
+      "acceptance": "Background refresh preserves readiness; foreground/source changes remain gated; failed checks close readiness; active requests cannot be overwritten; existing checks pass.",
+      "evidence": [
+        {
+          "commit": "99456311d8310a20d278f8688bcddd57b3683070",
+          "platform": "macOS Node 24.22.0 and GitHub-hosted HUD/browser checks",
+          "check": "22 mobile-chat tests including background refresh, failure closure, provider change and request invalidation; full HUD safety/browser checks",
+          "result": "PASS; merged source; production readback pending.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/381"
+        },
+        {
+          "commit": "99456311d8310a20d278f8688bcddd57b3683070",
+          "platform": "Protected production deployment to existing Cloudflare HUD",
+          "check": "Authenticated production original HUD/chat asset readback",
+          "result": "PASS; chat asset matches reviewed checkout.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42988132713"
+        }
+      ]
+    },
+    {
+      "id": "hud-chat-jump-latest-20261111",
+      "title": "Add an accessible chat return-to-latest control",
+      "priority": 1,
+      "status": "done",
+      "owner": "Codex / Amar chat return-to-latest 2026-11-11",
+      "branch": "fix/hud-chat-jump-latest-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/hud-chat.js",
+        "tests/test_hud_chat_mobile.mjs"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T08:45:21.697Z",
+      "next_update": "Complete; deployed chat asset verified",
+      "next_action": "PR #382 deployed in run 42989320626 with authenticated chat_asset_matches_checkout=true. 294 safety tests and responsive browser checks passed. Jump to latest adds no model execution or automatic scrolling.",
+      "acceptance": "Control visibility follows distance from bottom, explicit click jumps to latest, stream paints update state, and existing tests pass without provider or backend changes.",
+      "evidence": [
+        {
+          "commit": "1dcb2c5ed268c7dccf29a2f4cfb7195b0a1f5a29",
+          "platform": "macOS Node 24.22.0 and GitHub-hosted HUD/browser checks",
+          "check": "25 mobile-chat tests including return-to-latest state/scroll, redraw/viewport and accessibility regressions; full safety and responsive checks",
+          "result": "PASS; merged source, production readback pending.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/382"
+        },
+        {
+          "commit": "1dcb2c5ed268c7dccf29a2f4cfb7195b0a1f5a29",
+          "platform": "Protected Cloudflare HUD production deployment",
+          "check": "Authenticated original HUD and exact chat asset readback",
+          "result": "PASS; production chat asset matches reviewed checkout.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42989320626"
+        }
+      ]
+    },
+    {
+      "id": "hud-command-deck-20261111",
+      "title": "Refresh responsive HUD home and touch navigation",
+      "priority": 1,
+      "status": "done",
+      "owner": "Codex / Amar HUD refresh",
+      "branch": "feat/hud-responsive-command-deck-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/hud-mobile.css"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T21:55:51.908Z",
+      "next_update": "Release readback on main",
+      "next_action": "Check the private production release for this reviewed revision.",
+      "acceptance": "Existing data and actions remain accessible at phone, tablet and desktop sizes.",
+      "evidence": [
+        {
+          "commit": "6ccf755628024210c97fbc757fa95ed64652bd5d",
+          "platform": "GitHub-hosted Chromium",
+          "check": "Home at 360×780, 390×844, 844×390, 820×1180 and 1440×900; private HUD safety and responsive chat checks",
+          "result": "Passed six-panel bounds, touch targets and horizontal overflow checks.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/43107107729"
+        }
+      ]
     }
   ]
 }

@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {
   validateDeploymentSecrets, prepareConfig, assertGithubReleaseContext
 } from '../integrations/hud-cloud/prepare-github-deploy.mjs';
-import {verifyGithubHud, verifyAnonymousTelemetry, verifyAdvancingReports, verifiedOrigin, hasNineProviderMeterAsset, summarizeGroqKeyCatalog} from '../integrations/hud-cloud/verify-github-deploy.mjs';
+import {verifyGithubHud, verifyPinnedRepoSource, verifyAnonymousTelemetry, verifyAdvancingReports, verifiedOrigin, hasNineProviderMeterAsset, summarizeGroqKeyCatalog} from '../integrations/hud-cloud/verify-github-deploy.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 
 const dir = new URL('../integrations/hud-cloud/', import.meta.url);
@@ -233,7 +233,7 @@ test('deployment readback validates the exact Ask ROVOR release even while Mac t
   const report={source:'cloud_hud_telemetry',connection:'stale',received_at:'2026-10-28T00:38:25.840Z',
     snapshot:{snapshot_at:'2026-10-28T00:38:25.577Z',
       connections:Array.from({length:9},(_,i)=>({provider:String(i),connection_count:1}))}};
-  function createSend({publicChat=false,oldChat=false,oldBackend=false,publicCatalog=false,publicIdeas=false,oldIdeas=false}={}){
+  function createSend({publicChat=false,oldChat=false,oldBackend=false,publicCatalog=false,publicIdeas=false,oldIdeas=false,publicRepo=false,oldRepo=false}={}){
     return async(url,opts)=>{
       const resource=new URL(url).pathname;
       const authenticated=opts.headers.Authorization==='Bearer '+token;
@@ -242,6 +242,7 @@ test('deployment readback validates the exact Ask ROVOR release even while Mac t
         if(publicChat&&resource==='/hud-chat.js')return new Response('EXPOSED',{status:200});
         if(publicCatalog&&resource==='/api/hud/chat/models')return Response.json({models:['EXPOSED']});
         if(publicIdeas&&resource==='/api/hud/ideas')return Response.json({items:[{text:'EXPOSED'}]});
+        if(publicRepo&&resource==='/api/hud/github/source')return Response.json({text:'EXPOSED'});
         return Response.json({error:'unauthorized'},{status:401});
       }
       if(resource==='/')return new Response('<html><body>ROVOR_START_OMNIROUTE<script src="/hud-quota.js"></script></body></html>');
@@ -253,6 +254,11 @@ test('deployment readback validates the exact Ask ROVOR release even while Mac t
         catalog:{source:'groq_api_models_catalog',state:'catalog_received',model_present:true,
           requests_per_day:{unit:'requests',window:'day',limit:1000,remaining:975,reset_at:null},
           tokens_per_minute:{unit:'tokens',window:'minute',limit:8000,remaining:7470,reset_at:null}}});
+      if(resource==='/api/hud/github/source')return oldRepo?Response.json({error:'not_found'},{status:404}):
+        Response.json({source:'reviewed_github_checkout',repo:'TeamRovor/rovor-video-engine',
+          path:'coordination/TASK-INTAKE.md',commit:'a'.repeat(40),
+          text:'Reviewed source excerpt for testing',truncated:false,
+          can_write:false,fetched_live:false,mac_required:false});
       if(resource==='/api/hud/ideas')return oldIdeas?Response.json({error:'not_found'},{status:404}):
         Response.json({source:'private_rovor_idea_inbox',execution_authorized:false,mac_required:false,items:[]});
       if(resource==='/api/hud/status')return Response.json(report);
@@ -264,6 +270,14 @@ test('deployment readback validates the exact Ask ROVOR release even while Mac t
   const result=await verifyGithubHud({...input,send:createSend()});
   assert.equal(result.deployment_verified,true);
   assert.equal(result.private_idea_inbox_verified,true);
+  const withRepo=await verifyGithubHud({...input,send:createSend(),expectedRepoCommit:'a'.repeat(40)});
+  assert.equal(withRepo.reviewed_repo_source_verified,true);
+  await assert.rejects(()=>verifyGithubHud({...input,send:createSend({publicRepo:true}),expectedRepoCommit:'a'.repeat(40)}),
+    /anonymous_repo_source_exposed/);
+  await assert.rejects(()=>verifyGithubHud({...input,send:createSend({oldRepo:true}),expectedRepoCommit:'a'.repeat(40)}),
+    /private_repo_source_unavailable/);
+  await assert.rejects(()=>verifyGithubHud({...input,send:createSend(),expectedRepoCommit:'b'.repeat(40)}),
+    /private_repo_source_invalid/);
   assert.equal(result.private_auth_verified,true);
   assert.equal(result.chat_asset_matches_checkout,true);
   assert.equal(result.chat_model_endpoint_verified,true);
@@ -333,4 +347,20 @@ test('readback Groq response summary whitelists only catalog/limits and rejects 
  assert(!JSON.stringify(s).includes('SHOULD_NEVER_LEAK'));
  assert.throws(()=>summarizeGroqKeyCatalog({...base,mac_required:true}),/groq_catalog_readback_invalid/);
  assert.throws(()=>summarizeGroqKeyCatalog({...base,catalog:{...base.catalog,state:'magically_free'}}),/groq_catalog_readback_invalid/);
+});
+
+test('pinned release tolerates old valid asset during rollout but never relaxes privacy or exact commit',async()=>{
+ const expected='b'.repeat(40),old='a'.repeat(40);
+ let reads=0,waits=0;
+ const valid=commit=>Response.json({source:'reviewed_github_checkout',repo:'TeamRovor/rovor-video-engine',
+  path:'coordination/TASK-INTAKE.md',commit,text:'bounded source',truncated:false,fetched_live:false,can_write:false,mac_required:false});
+ const read=async(path,auth)=>auth?valid(++reads<3?old:expected):new Response(null,{status:401});
+ assert.equal(await verifyPinnedRepoSource(read,expected,{pause:async()=>{waits++;}}),true);
+ assert.equal(reads,3);assert.equal(waits,2);
+ await assert.rejects(()=>verifyPinnedRepoSource(async(path,auth)=>auth?valid(old):new Response(null,{status:401}),expected,
+  {attempts:2,pause:async()=>{}}),/commit_mismatch/);
+ let exposed=0;
+ await assert.rejects(()=>verifyPinnedRepoSource(async()=>{exposed++;return valid(expected)},expected,
+  {pause:async()=>{}}),/anonymous_repo_source_exposed/);
+ assert.equal(exposed,1);
 });

@@ -2,7 +2,16 @@ import {readGoogleGeminiQuota} from './gemini-cloud-monitoring.mjs';
 import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';
 import {probeGroqCatalogue} from './groq-quota-monitor.mjs';
 import {submitIdea,listIdeas} from './idea-inbox.mjs';
+import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
+import {getRepoSource} from './repo-source.mjs';
+import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';
+import {repoCatchupStatus,refreshRepoCatchup} from './repo-catchup.mjs';
+import {reviewEvidence} from './review-evidence.mjs';
+import {queueGithubPatch,githubPatchStatus,githubPatchTick,previewGithubPatchSource,queueGithubPatchTask} from './github-patch-gateway.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
+import {intake as workforceIntake,control as workforceControl,status as workforceStatus,
+  draft as workforceDraft,review as workforceReview,tick as workforceTick,recordNativeTick}
+  from './approved-workforce.mjs';
 import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';
 // Private telemetry only: no inference, job dispatch, or Mac control.
 const PERIODS = new Set(['1m', '1h', '24h', '7d']);
@@ -22,10 +31,10 @@ const ROLES = new Set(['walter', 'mike', 'jane', 'jesse', 'gale', 'gus', 'saul',
 const LIMIT = 32768;
 const LOGIN = `<!doctype html><meta name="viewport" content="width=device-width"><title>ROVOR HUD sign in</title>
 <body style="background:#020916;color:#bde5ff;font:16px system-ui;padding:32px"><h1>ROVOR · HUD</h1>
-<p>Sign in to view private usage and employee reports on this device.</p>
-<form id="login"><label>HUD viewing key <input id="key" type="password" autocomplete="current-password" required></label> <button>Sign in</button></form>
-<p id="status" role="status"></p><script>document.getElementById('login').onsubmit=async e=>{e.preventDefault();const key=document.getElementById('key');try{const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:key.value})});key.value='';if(r.ok)location.replace('/');else document.getElementById('status').textContent='Sign-in failed.'}catch{document.getElementById('status').textContent='Connection unavailable.'}}</script>`;
-const CLOUD_START = `<script src="/hud-quota.js"></script><script src="/hud-chat.js"></script><script>document.getElementById('connectOmniRoute')?.remove();window.ROVOR_OMNIROUTE_REQUEST=(resource,opts)=>fetch(resource,{...opts,credentials:'same-origin'});window.ROVOR_START_OMNIROUTE?.();window.ROVOR_QUOTA_BOARD?.start?.();</script>`;
+<p>Sign in with your private viewing key, or your separate owner key to control workforce execution.</p>
+<form id="login"><label>HUD access key <input id="key" type="password" autocomplete="current-password" required></label> <button>Sign in</button></form>
+<p id="status" role="status"></p><script>document.getElementById('login').onsubmit=async e=>{e.preventDefault();const key=document.getElementById('key');try{const r=await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:key.value})});key.value='';if(r.ok)location.replace(new URLSearchParams(location.search).get('next')==='/workforce-review.html'?'/workforce-review.html':'/');else document.getElementById('status').textContent='Sign-in failed.'}catch{document.getElementById('status').textContent='Connection unavailable.'}}</script>`;
+const CLOUD_START = `<link rel="stylesheet" href="/hud-mobile.css"><script src="/hud-quota.js"></script><script src="/hud-chat.js"></script><script>document.getElementById('connectOmniRoute')?.remove();window.ROVOR_OMNIROUTE_REQUEST=(resource,opts)=>fetch(resource,{...opts,credentials:'same-origin'});window.ROVOR_START_OMNIROUTE?.();window.ROVOR_QUOTA_BOARD?.start?.();</script>`;
 const response = (status, body) => Response.json(body, {status, headers: {
   'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
@@ -254,6 +263,41 @@ async function authorized(request, secret) {
   return different === 0;
 }
 
+// Owner sessions are distinct from viewer and server-writer credentials.
+const OWNER_COOKIE='rovor_hud_owner',OWNER_SESSION_MS=24*3600000;
+function ownerConfigured(env){
+  const key=env?.HUD_OWNER_TOKEN;
+  return typeof key==='string'&&/^[!-~]{32,200}$/.test(key)&&
+    key!==env.HUD_READER_TOKEN&&key!==env.HUD_WRITER_TOKEN;
+}
+function cookieValue(request,name){
+  const matches=String(request.headers.get('Cookie')||'').split(';').map(x=>x.trim())
+    .filter(x=>x.startsWith(name+'='));
+  if(matches.length!==1)return null;
+  try{return decodeURIComponent(matches[0].slice(name.length+1));}catch{return null;}
+}
+async function ownerSignature(env,payload){
+  const enc=new TextEncoder();
+  const key=await crypto.subtle.importKey('raw',enc.encode(env.HUD_OWNER_TOKEN),
+    {name:'HMAC',hash:'SHA-256'},false,['sign']);
+  return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,enc.encode(payload))),
+    b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function newOwnerSession(env,now){
+  const payload='v1.'+(now+OWNER_SESSION_MS)+'.'+crypto.randomUUID();
+  return payload+'.'+await ownerSignature(env,payload);
+}
+async function ownerSession(request,env,now){
+  if(!ownerConfigured(env))return false;
+  const raw=cookieValue(request,OWNER_COOKIE);
+  if(typeof raw!=='string'||raw.length>160)return false;
+  const match=/^(v1\.([0-9]{13})\.[a-f0-9-]{36})\.([a-f0-9]{64})$/.exec(raw);
+  if(!match||Number(match[2])<=now||Number(match[2])>now+OWNER_SESSION_MS)return false;
+  const expected=await ownerSignature(env,match[1]);let difference=0;
+  for(let i=0;i<64;i++)difference|=expected.charCodeAt(i)^match[3].charCodeAt(i);
+  return difference===0;
+}
+
 async function boundedJSON(request) {
   if (Number(request.headers.get('Content-Length') || 0) > LIMIT) fail();
   if (!request.body) fail();
@@ -336,25 +380,44 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     if (request.headers.get('Origin') !== url.origin) return response(403, {error: 'origin_denied'});
     let token;
     try { token = (await boundedJSON(request)).token; } catch { return response(400, {error: 'invalid_login'}); }
-    if (typeof token !== 'string' || !await authorized({headers: new Headers({Authorization: 'Bearer ' + token})}, env.HUD_READER_TOKEN)) return response(401, {error: 'unauthorized'});
-    if (env.HUD_WRITER_TOKEN === env.HUD_READER_TOKEN) return response(503, {error: 'service_not_configured'});
-    return new Response(null, {status: 204, headers: {'Cache-Control': 'no-store',
-      'Set-Cookie': 'rovor_hud_reader=' + encodeURIComponent(token) + '; Path=/; Max-Age=604800; Secure; HttpOnly; SameSite=Strict'}});
+    if(typeof token!=='string')return response(401,{error:'unauthorized'});
+    const presented={headers:new Headers({Authorization:'Bearer '+token})};
+    const owner=ownerConfigured(env)&&await authorized(presented,env.HUD_OWNER_TOKEN);
+    if(!owner&&!await authorized(presented,env.HUD_READER_TOKEN))return response(401,{error:'unauthorized'});
+    if(env.HUD_WRITER_TOKEN===env.HUD_READER_TOKEN||typeof env.HUD_READER_TOKEN!=='string'||
+       env.HUD_READER_TOKEN.length<32)return response(503,{error:'service_not_configured'});
+    const headers=new Headers({'Cache-Control':'no-store'});
+    headers.append('Set-Cookie','rovor_hud_reader='+encodeURIComponent(env.HUD_READER_TOKEN)+
+      '; Path=/; Max-Age=604800; Secure; HttpOnly; SameSite=Strict');
+    // A viewer login explicitly revokes the browser's prior owner session.
+    // Only a signed, expiring session reaches the cookie, never the owner key.
+    if(owner)headers.append('Set-Cookie',OWNER_COOKIE+'='+encodeURIComponent(await newOwnerSession(env,now))+
+      '; Path=/api/hud/; Max-Age=86400; Secure; HttpOnly; SameSite=Strict');
+    else if(env.HUD_OWNER_TOKEN)headers.append('Set-Cookie',OWNER_COOKIE+
+      '=; Path=/api/hud/; Max-Age=0; Secure; HttpOnly; SameSite=Strict');
+    return new Response(null,{status:204,headers});
   }
   const ingest = url.pathname === '/api/hud/ingest';
+  const discoveryWriter = url.pathname === '/api/hud/discovery' || url.pathname === '/api/hud/discovery/status';
+  // Only the existing distinct server-held writer token can enqueue/dispatch
+  // immutable canonical jobs or change STOP. Browser readers cannot.
+  const workforceWriter = request.method === 'POST' &&
+    ['/api/hud/workforce/intake','/api/hud/workforce/tick','/api/hud/workforce/control','/api/hud/workforce/github-patch','/api/hud/workforce/repo-catchup/refresh'].includes(url.pathname);
   // A separate writer-only channel allows the Mac to report its available
   // routes and execute explicitly submitted chat requests via outbound polling.
   const chatWriter = request.method === 'POST' &&
     (url.pathname === '/api/hud/chat/bridge' || url.pathname === '/api/hud/chat/claim' ||
       /^\/api\/hud\/chat\/result\/[a-f0-9-]{36}$/i.test(url.pathname));
   let authRequest = request;
-  if (!ingest && !chatWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
+  if (!ingest && !chatWriter && !discoveryWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/workforce/review' || url.pathname === '/api/hud/owner/workforce' || url.pathname === '/api/hud/owner/github-patch' || url.pathname === '/api/hud/owner/patch-source' || url.pathname === '/api/hud/owner/patch-task' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
     try {
       const cookie = String(request.headers.get('Cookie') || '').split(';').map(c => c.trim()).find(c => c.startsWith('rovor_hud_reader='));
       if (cookie) authRequest = {headers: new Headers({Authorization: 'Bearer ' + decodeURIComponent(cookie.slice(17))})};
     } catch {}
   }
-  if (!await authorized(authRequest, ingest || chatWriter ? env.HUD_WRITER_TOKEN : env.HUD_READER_TOKEN)) {
+  if (!await authorized(authRequest, ingest || chatWriter || discoveryWriter || workforceWriter ? env.HUD_WRITER_TOKEN : env.HUD_READER_TOKEN)) {
+    if (request.method === 'GET' && url.pathname === '/workforce-review.html')
+      return Response.redirect(url.origin+'/login?next=%2Fworkforce-review.html',303);
     if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return Response.redirect(url.origin + '/login', 303);
     return response(401, {error: 'unauthorized'});
   }
@@ -415,12 +478,134 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       const result = await chatStatus(env.DB, url.pathname.slice('/api/hud/chat/status/'.length), now);
       return response(result.status, result.status === 200 ? result : {error:result.error});
     }
+    if(request.method==='GET'&&url.pathname==='/api/hud/owner/session')
+      return response(200,{configured:ownerConfigured(env),owner_authenticated:await ownerSession(request,env,now)});
+    if(request.method==='POST'&&['/api/hud/owner/workforce','/api/hud/owner/github-patch','/api/hud/owner/patch-source','/api/hud/owner/patch-task'].includes(url.pathname)){
+      if(request.headers.get('Origin')!==url.origin)return response(403,{error:'origin_denied'});
+      if(!await ownerSession(request,env,now))return response(403,{error:'owner_session_required'});
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_owner_operation'});}
+      if(!body||typeof body!=='object'||Array.isArray(body))return response(400,{error:'invalid_owner_operation'});
+      if(url.pathname==='/api/hud/owner/patch-source'){
+        const preview=await previewGithubPatchSource(env,body,now,fetcher);
+        return response(preview.status,preview.body);
+      }
+      if(url.pathname==='/api/hud/owner/patch-task'){
+        const queued=await queueGithubPatchTask(env,body,now,fetcher);
+        return response(queued.status,queued.body);
+      }
+      if(url.pathname==='/api/hud/owner/github-patch'){
+        if(Object.keys(body).sort().join(',')!=='confirm,job_id,output_sha256'||body.confirm!=='authorize_draft_pr')
+          return response(400,{error:'explicit_patch_authorization_required'});
+        const queued=await queueGithubPatch(env,{job_id:body.job_id,output_sha256:body.output_sha256},now);
+        return response(queued.status,queued.body);
+      }
+      if(Object.keys(body).sort().join(',')==='action'&&body.action==='stop'){
+        const out=await workforceControl(env.DB,false,null,now);return response(out.status,out.body);
+      }
+      if(Object.keys(body).sort().join(',')!=='action,confirm'||body.action!=='start'||
+         body.confirm!=='authorize_7_day_discovery')return response(400,{error:'explicit_standing_authorization_required'});
+      // Derive the pinned commit from the reviewed deployed checkout, never
+      // from a browser field or an AI response. Same D1 PASS/STOP/queue gate.
+      const source=await getRepoSource(env,request,'coordination/TASK-INTAKE.md');
+      if(source.status!==200||source.body?.source!=='reviewed_github_checkout'||
+         !/^[a-f0-9]{40}$/.test(source.body?.commit||''))return response(503,{error:'reviewed_source_unavailable'});
+      const out=await workforceControl(env.DB,true,source.body.commit,now);
+      return response(out.status,out.body);
+    }
+    if(request.method==='GET'&&url.pathname==='/api/hud/workforce/github-patch')
+      return response(200,await githubPatchStatus(env));
+    if(request.method==='POST'&&url.pathname==='/api/hud/workforce/github-patch'){
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'patch_authorization_invalid'});}
+      const result=await queueGithubPatch(env,body,now);return response(result.status,result.body);
+    }
+    if (request.method === 'GET' && url.pathname === '/api/hud/workforce/native-discovery')
+      return response(200,await nativeDiscoveryStatus(env));
+    if (request.method === 'GET' && url.pathname === '/api/hud/workforce/repo-catchup')
+      return response(200,await repoCatchupStatus(env));
+    if (request.method === 'POST' && url.pathname === '/api/hud/workforce/repo-catchup/refresh'){
+      // An empty POST may still expose an empty stream in Workers, despite
+      // the caller explicitly sending no payload. Reject actual bytes,
+      // never infer request authorization or parameters from a body.
+      const declared=request.headers.get('Content-Length');
+      if(declared!==null&&declared!=='0')return response(400,{error:'body_not_allowed'});
+      if(request.body){
+        const reader=request.body.getReader();let hasBytes=false,ended=false;
+        try{
+          for(let i=0;i<4;i++){
+            const packet=await reader.read();
+            if(packet.done){ended=true;break;}
+            if(packet.value?.byteLength>0){hasBytes=true;break;}
+          }
+        }catch{hasBytes=true;}
+        finally{await reader.cancel().catch(()=>{});}
+        if(hasBytes||!ended)return response(400,{error:'body_not_allowed'});
+      }
+      const result=await refreshRepoCatchup(env,now,fetcher);
+      return response(result.status,result.body);
+    }
+    if (request.method === 'GET' && url.pathname.startsWith('/api/hud/workforce/evidence/')) {
+      const result=await reviewEvidence(env,url.pathname.slice('/api/hud/workforce/evidence/'.length),now,fetcher);
+      return response(result.status,result.body);
+    }
+    if (request.method === 'GET' && url.pathname === '/api/hud/workforce/status') {
+      const result=await workforceStatus(env.DB);return response(result.status,result.body);
+    }
+    if (request.method === 'GET' && url.pathname.startsWith('/api/hud/workforce/draft/')) {
+      const result=await workforceDraft(env.DB,url.pathname.slice('/api/hud/workforce/draft/'.length));
+      return response(result.status,result.body);
+    }
+    if (request.method === 'POST' && url.pathname === '/api/hud/workforce/intake') {
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_intake'});}
+      const result=await workforceIntake(env.DB,body,now);return response(result.status,result.body);
+    }
+    if (request.method === 'POST' && url.pathname === '/api/hud/workforce/control') {
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_control'});}
+      if(!body||!['enabled','enabled,recurring_source_commit'].includes(Object.keys(body).sort().join(',')))
+        return response(400,{error:'invalid_control'});
+      if(Object.hasOwn(body,'recurring_source_commit')&&
+         (body.enabled!==true||typeof body.recurring_source_commit!=='string'||!/^[a-f0-9]{40}$/.test(body.recurring_source_commit)))
+        return response(400,{error:'invalid_control'});
+      const result=await workforceControl(env.DB,body.enabled,body.recurring_source_commit??null,now);
+      return response(result.status,result.body);
+    }
+    if (request.method === 'POST' && url.pathname === '/api/hud/workforce/review') {
+      if(request.headers.get('Origin')!==url.origin)return response(403,{error:'origin_denied'});
+      // Existing legacy owner-private review stays compatible until the
+      // independent owner key is installed. A configured but invalid key
+      // never silently downgrades review authority to viewer credentials.
+      if(env.HUD_OWNER_TOKEN&&!await ownerSession(request,env,now))
+        return response(403,{error:'owner_session_required'});
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_review'});}
+      const result=await workforceReview(env.DB,body,now);return response(result.status,result.body);
+    }
+    if (request.method === 'POST' && url.pathname === '/api/hud/workforce/tick') {
+      // No URL/body-driven prompt, model, provider or replay.
+      if(request.headers.get('Content-Length')!=='0'&&request.headers.get('Content-Length')!==null)
+        return response(400,{error:'tick_body_denied'});
+      const result=await workforceTick(env,now,fetcher);return response(result.status,result.body);
+    }
     if (request.method === 'GET' && url.pathname === '/api/hud/gemini/models') return response(200, await cloudGeminiModels(env));
     if (request.method === 'GET' && url.pathname === '/api/hud/gemini/usage') return cloudGeminiUsage(env,now);
     if (request.method === 'POST' && url.pathname === '/api/hud/gemini/chat') {
       if (request.headers.get('Origin') !== url.origin) return response(403,{error:'origin_denied'});
       let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_gemini_chat'});}
       return cloudGeminiChat(body,env,now);
+    }
+    // Writer-only, durable GitHub evidence intake. Unlike browser ideas,
+    // it requires the existing private writer credential, not a reader cookie.
+    // No inference, auto-approval, GitHub write or canonical job dispatch.
+    if(url.pathname==='/api/hud/discovery/status'){
+      if(request.method!=='GET')return response(405,{error:'method_not_allowed'});
+      const result=await discoveryStatus(env.DB,now);
+      return response(result.status,result.body);
+    }
+    if(url.pathname==='/api/hud/discovery'){
+      if(request.method!=='POST')return response(405,{error:'method_not_allowed'});
+      if(!request.headers.get('Content-Type')?.startsWith('application/json'))
+        return response(415,{error:'json_required'});
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_discovery'});}
+      const result=await submitDiscovery(env.DB,body,now);
+      return response(result.status,result.body);
     }
     // Owner-private intake saves a reviewable idea only; it never dispatches
     // models, writes GitHub, schedules jobs or bypasses the canonical feed.
@@ -439,6 +624,12 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
         return response(result.status,result.body);
       }
       return response(405,{error:'method_not_allowed'});
+    }
+    // Source excerpt is pinned to this reviewed Cloudflare deployment's exact
+    // Git SHA. There are no browser-supplied Git paths or GitHub credentials.
+    if(request.method==='GET'&&url.pathname==='/api/hud/github/source'){
+      const result=await getRepoSource(env,request,url.searchParams.get('path'));
+      return response(result.status,result.body);
     }
     if (request.method === 'GET' && url.pathname === '/api/chat/models')
       return response(200,{models:[...(env.AI?CHAT_MODELS:[]),...(groqCloudReady(env,now)?[GROQ_CLOUD_ROUTE]:[])]});
@@ -486,10 +677,28 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       return response(200, {jsonrpc: '2.0', id: rpc.id ?? null, error: {code: -32601, message: 'Method not found'}});
     }
     if (request.method === 'GET' && env.ASSETS && !url.pathname.startsWith('/api/') && url.pathname !== '/mcp') {
-      const asset = await env.ASSETS.fetch(request);
+      // Cloudflare Assets canonicalizes *.html to extensionless URLs and may
+      // return a 307 redirect even after Worker reader authentication. Fetch
+      // the canonical static asset internally, then serve its bytes at the
+      // owner-private deep link with the strict review-page CSP below.
+      const assetRequest=url.pathname==='/workforce-review.html'
+        ?new Request(new URL('/workforce-review',url.origin),request):request;
+      const asset = await env.ASSETS.fetch(assetRequest);
       if ((asset.headers.get('Content-Type') || '').includes('text/html')) {
         const html = await asset.text();
         if (!html.includes('</body>')) return response(503, {error: 'hud_asset_invalid'});
+        // A separate owner-only D1 review page is deliberately NOT injected with
+        // the full HUD chat bootstrap. Both HTML and its companion JS still
+        // pass this exact same private reader-cookie authentication above.
+        if(url.pathname==='/workforce-review.html'){
+          if(asset.status!==200)return response(404,{error:'not_found'});
+          return new Response(html,{status:200,headers:{
+            'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store',
+            'Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',
+            'X-Frame-Options':'DENY',
+            'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+          }});
+        }
         return new Response(html.replace('</body>', CLOUD_START + '</body>'), {status: asset.status,
           headers: {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer'}});
       }
@@ -501,7 +710,25 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
 
 export default {
   fetch(request, env) { return handle(request, env); },
-  // Only cleans expired private chat prompts/results. Does not schedule models,
-  // employees, worker shifts or paid API requests.
-  async scheduled(_event, env) { if (env.DB) await expireChat(env.DB, Date.now()); }
+  // Reuse the EXISTING Cloudflare 5-minute cron. Workforce STOP starts
+  // disabled in D1, and only fresh independently verified Gemini replies
+  // can admit one owner-approved job. No GitHub-to-private-Site HTTP needed.
+  async scheduled(event, env) {
+    if(!env.DB)return;
+    // Chat maintenance must not prevent the separate workforce clock from
+    // running. Still report the maintenance failure to Cloudflare.
+    let maintenanceFailed=false;
+    try{await expireChat(env.DB,Date.now());}catch{maintenanceFailed=true;}
+    let discoveryFailed=false;
+    try{await nativeDiscoveryTick(env,Date.now());}catch{discoveryFailed=true;}
+    const startedAt=Date.now();
+    const result=await workforceTick(env,startedAt);
+    if(Number.isSafeInteger(event?.scheduledTime)&&event.scheduledTime>0)
+      await recordNativeTick(env.DB,event.scheduledTime,startedAt,Math.max(startedAt,Date.now()),result);
+    let patchFailed=false;
+    try{await githubPatchTick(env,Date.now());}catch{patchFailed=true;}
+    if(maintenanceFailed)throw Error('scheduled_chat_maintenance_failed');
+    if(patchFailed)throw Error('scheduled_github_patch_failed');
+    if(discoveryFailed)throw Error('scheduled_native_discovery_failed');
+  }
 };

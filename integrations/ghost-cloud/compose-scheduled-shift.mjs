@@ -131,14 +131,26 @@ export function compileScheduledShift(v2Source,shiftSource,feedSource=null) {
     " return response;\n"+
     "},\n"+
     "scheduled(_event,env,ctx){\n"+
-    ' if(env.GHOST_CRON_OPT_IN==='+JSON.stringify(OPT_IN)+')ctx.waitUntil(__shift.runScheduledShift(env,{replenish:env.GHOST_FEED_COMMIT?(__feed?__feed.replenishApprovedJobs:async()=>{throw Error("approved_feed_not_bundled")}):__operations.replenish,tick:__cloud.tick}));\n'+
+    ' if(env.GHOST_CRON_OPT_IN==='+JSON.stringify(OPT_IN)+')ctx.waitUntil((async()=>{\n'+
+    '  // Existing private Site executes its own catalog health checks and D1 writes.\n'+
+    '  // No public URL, service bearer, GitHub HTTP call, or model inference.\n'+
+    '  try{\n'+
+    '   if(typeof __operations.refreshCatalogs!=="function")throw Error("refresh_unavailable");\n'+
+    '   const check=await __operations.refreshCatalogs(env);\n'+
+    '   console.log("rovor_catalog_refresh",JSON.stringify({checked:check.checked,persisted:check.persisted,skipped_fresh:check.skipped_fresh,failed:check.checked-check.persisted}));\n'+
+    '  }catch(error){\n'+
+    '   // Never log credentials, provider response bodies or private Site tokens.\n'+
+    '   console.error("rovor_catalog_refresh_failed",error?.message==="private_store_unavailable"?"private_store_unavailable":"refresh_unavailable");\n'+
+    '  }\n'+
+    '  return __shift.runScheduledShift(env,{replenish:env.GHOST_FEED_COMMIT?(__feed?__feed.replenishApprovedJobs:async()=>{throw Error("approved_feed_not_bundled")}):__operations.replenish,tick:__cloud.tick});\n'+
+    ' })());\n'+
     "}\n};\n";
   return v2Source.slice(0,v2Source.lastIndexOf(TAIL))+ending;
 }
 export function composeScheduledShift(directory,{apply=false,sourceDirectory=here}={}) {
   const root=path.resolve(directory),manifestPath=safe(root,'.openai/hosting.json');
   const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
-  if(manifest.project_id!==SITE||manifest.d1!=='DB')throw Error('wrong_site_or_database');
+  if(manifest.project_id!==SITE||!(manifest.d1==='DB'||manifest.d1?.binding==='DB'))throw Error('wrong_site_or_database');
   const worker=safe(root,'worker/index.js'),built=safe(root,'dist/server/index.js');
   const initial=fs.readFileSync(worker,'utf8');
   if(initial!==fs.readFileSync(built,'utf8'))throw Error('site_bundle_mismatch');
@@ -159,6 +171,15 @@ export function composeScheduledShift(directory,{apply=false,sourceDirectory=her
   const hasReviewIndex=journal.entries.some(e=>
     e.tag.endsWith('_cloud_review_one_decision')||e.tag.endsWith('_owner_review_one_decision'));
   const reviewSource=fs.readFileSync(path.join(sourceDirectory,'migrations/owner-review-one-decision.sql'),'utf8');
+  // An existing journal entry is not proof that the one-decision index was
+  // staged correctly. Verify the exact reviewed SQL before skipping it.
+  if(hasReviewIndex){
+    const existing=journal.entries.find(e=>
+      e.tag.endsWith('_cloud_review_one_decision')||e.tag.endsWith('_owner_review_one_decision'));
+    const recorded=fs.readFileSync(safe(root,'drizzle/'+existing.tag+'.sql'),'utf8');
+    const expected=reviewSource.replace(/;[ \t]*\n/g,';\n--> statement-breakpoint\n');
+    if(recorded!==expected)throw Error('journaled_review_index_mismatch');
+  }
   if(!reviewSource.includes('CREATE UNIQUE INDEX IF NOT EXISTS ghost_cloud_reviews_one_decision_per_attempt')||
      !reviewSource.includes('ON ghost_cloud_reviews(attempt_id)')||
      /(^|\n)\s*(INSERT|UPDATE|DELETE|DROP|ALTER)\b/i.test(reviewSource))throw Error('unexpected_review_schema');

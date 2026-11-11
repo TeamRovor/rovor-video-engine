@@ -72,6 +72,10 @@ test('self-contained bundle preserves original HUD and imports without dependenc
   const core = read('integrations/hud-cloud/worker.mjs'), adapter = read('integrations/hud-cloud/sites-adapter.mjs');
   const a = bundleSitesWorker(core, adapter, html), b = bundleSitesWorker(core, adapter, html);
   assert.equal(a, b);
+  assert.doesNotMatch(a, /^import\s/m,'all new cloud modules must be bundled without unresolved imports');
+  assert.match(a, /submitDiscovery/);
+  assert.match(a, /getRepoSource/);
+  assert.match(a, /listIdeas/);
   const module = await import('data:text/javascript;base64,' + Buffer.from(a).toString('base64'));
   assert.equal(typeof module.default.fetch, 'function');
   const quota = await module.default.fetch(req('/api/hud/gemini/project-quota', {identity: 'owner-id'}), env);
