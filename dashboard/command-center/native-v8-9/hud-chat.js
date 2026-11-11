@@ -1145,7 +1145,7 @@
                       const review=await fetch('/api/hud/workforce/review',{
                         method:'POST',credentials:'same-origin',
                         headers:{'Content-Type':'application/json'},
-                        body:JSON.stringify({job_id:entry.id,verdict})
+                        body:JSON.stringify({job_id:entry.id,verdict,output_sha256:sha})
                       });
                       if(!review.ok)throw Error('review_not_saved');
                       const saved=await review.json();
