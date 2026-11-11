@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: finished acoustic/FV/SH trace reviewed
+CARTOON-EVAN-FINISHED-TRACE.md / evan-engine/reviews/finished-trace-v1.json. Existingtrace reused: original18.40–19.55sPCM/25msFFT/5mshop/553actualsamples480Hz. Starts18.57/18.60only30msapart inweakmodeledF; exactonsetunresolved. Current19.11afterlasttransient/decay; older19.44includeslowlevelbroadband(-42.12dBFS20ms), NOTblanksilence; identityunverified. Retaincurrentintervals; noart/controls/retiming;18flagsopen.
+
+Fouractualoral/FV/roundfixtures447/449/454/457 matchcaptureto1e-9; actuallowerlipreconstructto1e-6/consumedincisorsexact. Fcontact447FV.982931. SH18.88–19.01roundMaterial0; native454genericnarrowteethslit, weakSHsilhouette. Articulationlimitation, NOTtimingverdict. outputs/evan-cartoon-finished-trace/Review.html:36BYTE-EXACTfullframes438..473;36/144normal/slowdecodes;24000exactPCM292000:316000.57PNGhashes/current+frozen selectedsources verified; nativeplothalves/4faces/2contactplanes/4normal/2slow inspected. Seventeenflaggedwords deepertraced; all18unresolved. Realtime/listening/polishedFALSE; no pendingjobs;automationACTIVE. Full/defaults/protectedversions preserved.
+
+NEXT: finaldigital65, originalrecordingend +actualL/tongue/settlingcontrols. Consolidateall18region evidence beforeONEboundedSHsilhouetteimprovement; noautomaticretiming/newexpressionvariants. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync; localpushauthunavailable.
+
 ## Current task: browser→tabs acoustic/bilabial trace reviewed
 CARTOON-EVAN-BROWSER-TABS-TRACE.md / evan-engine/reviews/browser-tabs-trace-v1.json. Existingtrace reused: original13.40–14.85sPCM/25msFFT/5mshop/697actualsamples480Hz. Olderbrowser13.50precedingmodeledF/ER; current13.60preparesB. Currenttabs13.95beforetransient/vowelcluster; oldertabs14.42–14.8overlapstrailingdecay/pause/nextonset. Retaincurrentintervals; exactwordedgesunverified. Noart/controls/retiming;18flagsopen.
 

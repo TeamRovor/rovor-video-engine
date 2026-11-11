@@ -1,0 +1,210 @@
+{
+  "status": "finished-acoustic-fv-sh-trace-reviewed",
+  "traceRange": [
+    18.4,
+    19.55
+  ],
+  "geometrySamples": 553,
+  "samplingHz": 480,
+  "fftWindowSamples": 400,
+  "fftHopSamples": 80,
+  "hypotheses": [
+    18.6,
+    18.57,
+    19.44,
+    19.11
+  ],
+  "flaggedWordScriptIndices": [
+    55
+  ],
+  "centered20msRmsAndControlProbes": [
+    {
+      "center": 18.57,
+      "sourceSamples": [
+        296960,
+        297280
+      ],
+      "rmsDbFS": -32.82175210181181,
+      "actualControlTime": 18.570833333333333,
+      "innerGap": 4.569976806640625,
+      "fv": 0.9380801699887096,
+      "roundMaterial": 0.002537988954936426
+    },
+    {
+      "center": 18.6,
+      "sourceSamples": [
+        297440,
+        297760
+      ],
+      "rmsDbFS": -44.64955658600269,
+      "actualControlTime": 18.6,
+      "innerGap": 3.27166748046875,
+      "fv": 0.9915023293471907,
+      "roundMaterial": 4.840859065568315e-05
+    },
+    {
+      "center": 18.62,
+      "sourceSamples": [
+        297760,
+        298080
+      ],
+      "rmsDbFS": -48.06775283424656,
+      "actualControlTime": 18.620833333333334,
+      "innerGap": 3.193450927734375,
+      "fv": 0.9884412920588964,
+      "roundMaterial": 8.316301412722084e-06
+    },
+    {
+      "center": 18.94,
+      "sourceSamples": [
+        302880,
+        303200
+      ],
+      "rmsDbFS": -31.810741900302002,
+      "actualControlTime": 18.939583333333335,
+      "innerGap": 4.08941650390625,
+      "fv": 0.0,
+      "roundMaterial": 0.0
+    },
+    {
+      "center": 19.01,
+      "sourceSamples": [
+        304000,
+        304320
+      ],
+      "rmsDbFS": -47.25678257269065,
+      "actualControlTime": 19.010416666666668,
+      "innerGap": 3.852386474609375,
+      "fv": 0.0,
+      "roundMaterial": 0.0
+    },
+    {
+      "center": 19.11,
+      "sourceSamples": [
+        305600,
+        305920
+      ],
+      "rmsDbFS": -65.60765127316905,
+      "actualControlTime": 19.110416666666666,
+      "innerGap": 1.13134765625,
+      "fv": 0.0,
+      "roundMaterial": 0.0
+    },
+    {
+      "center": 19.3,
+      "sourceSamples": [
+        308640,
+        308960
+      ],
+      "rmsDbFS": -46.14084421655238,
+      "actualControlTime": 19.3,
+      "innerGap": 0.149993896484375,
+      "fv": 0.0,
+      "roundMaterial": 0.0
+    },
+    {
+      "center": 19.44,
+      "sourceSamples": [
+        310880,
+        311200
+      ],
+      "rmsDbFS": -42.124888177310766,
+      "actualControlTime": 19.439583333333335,
+      "innerGap": 0.149993896484375,
+      "fv": 0.0,
+      "roundMaterial": 0.0
+    }
+  ],
+  "actualRasterOralFVAndRoundMatchesTo1eMinus9": [
+    447,
+    449,
+    454,
+    457
+  ],
+  "actualRasterFVRecords": {
+    "447": {
+      "fv": 0.9829308694684671,
+      "roundMaterial": 6.2782651208342e-06,
+      "lowerLipFloatSha256": "32a90bd1cf5851650841f054562ee9d81df722ac111c89e6460bd7a49e04239c",
+      "incisorsFloatSha256": "c8b1d8446b458e8515217b7e22c55015d6e019c0b56190cd2459be07ae2022ef",
+      "lowerLipAlphaCoverage": 180.6908416748047,
+      "incisorAlphaCoverage": 86.2957992553711
+    },
+    "449": {
+      "fv": 0.13899425142030675,
+      "roundMaterial": 0.0,
+      "lowerLipFloatSha256": "af268938e4cde5f29381b7c6e59e09434e2077d3ba7e7cee106aa75a4c10276c",
+      "incisorsFloatSha256": "2756d76cd035e64a47e09d6471d7c0c8108b5fa6fc64d60e58c16cc6c0d6e34d",
+      "lowerLipAlphaCoverage": 308.8687744140625,
+      "incisorAlphaCoverage": 171.39292907714844
+    },
+    "454": {
+      "fv": 0.0,
+      "roundMaterial": 0.0,
+      "lowerLipFloatSha256": "48c98a568dfcd1d3201f6c092277492c1e9f61f2d7fe28b1388c6e193c1d5224",
+      "incisorsFloatSha256": "44da89710d41e5d3d332e255b9da5faadeea86c148a91567686b6a26631e57f7",
+      "lowerLipAlphaCoverage": 337.03411865234375,
+      "incisorAlphaCoverage": 159.3650360107422
+    },
+    "457": {
+      "fv": 0.0,
+      "roundMaterial": 0.0,
+      "lowerLipFloatSha256": "2dda2595f1ebd9945baaf42ca4692932fecea2a0f75c01da433b7f0c4b53a953",
+      "incisorsFloatSha256": "ad1e5758b3922d7d1244bcfb743f552f73badab3532538cc7c3a367f83712534",
+      "lowerLipAlphaCoverage": 337.0123291015625,
+      "incisorAlphaCoverage": 121.1933364868164
+    }
+  },
+  "actualLowerLipPlanesMatchTo1eMinus6": true,
+  "actualIncisorConsumedPlanesExact": true,
+  "shRoundedMaterialMaximum": 0,
+  "nativeFacesInspected": [
+    447,
+    449,
+    454,
+    457
+  ],
+  "isolatedContactPlanesInspected": [
+    447
+  ],
+  "normalDecodedSourceFramesInspected": [
+    447,
+    449,
+    454,
+    457
+  ],
+  "slowDecodedVideoFramesInspected": [
+    36,
+    64
+  ],
+  "nativeResolutionTraceHalvesInspected": true,
+  "stageFramesByteExact": 36,
+  "normalDecodedFrames": 36,
+  "slowDecodedFrames": 144,
+  "contextPcmSamples": 24000,
+  "contextPcmRange": [
+    292000,
+    316000
+  ],
+  "contextPcmByteExact": true,
+  "pngHashesVerified": 57,
+  "selectedCurrentFrozenSourcesVerified": 118,
+  "findings": [
+    "The older/current starts18.60/18.57 differ by only30ms, within the same weak modeled F interval;25ms mixed windows do not resolve an exact onset. Retain current timing without clearing its flag.",
+    "Current end19.11 follows the last transient/decay. The older19.44 end includes a later low-level broadband stretch; it is not blank silence (-42.12dBFS/20ms). The spectrum alone cannot establish whether a weak sound belongs to the word, breath or background.",
+    "Actual FV contact peaks near18.6; fixture447 strength0.982931. Four actual oral/FV/rounded controls match capture; lower-lip reconstruction matches to1e-6 and consumed incisor arrays are exact. These checks do not measure physical pressure or prove F timing.",
+    "Actual rounded-material control is0 throughout the modeled SH18.88\u201319.01 interval. Native454 reads as a generic narrow teeth slit, with limited distinct SH silhouette at stage scale. This is an articulation/readability limitation to revisit after the remaining timing region, not a reason to retime SH."
+  ],
+  "disposition": "retain-current-intervals-exact-onset-and-tail-unverified",
+  "timingChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "flaggedWordsWithDeeperTraces": 17,
+  "independentListening": false,
+  "exactBoundariesVerified": false,
+  "realTimePlaybackAccepted": false,
+  "animationAccepted": false,
+  "polished": false,
+  "pendingJobs": [],
+  "next": "Review final digital/script65 original recording end, actual L/tongue and settling controls. Then consolidate all18 region evidence before a bounded SH silhouette improvement; no automatic retiming/new expression variants."
+}
