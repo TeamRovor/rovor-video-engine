@@ -6141,9 +6141,9 @@
         "tests/test_hud_chat_mobile.mjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-11-11T08:34:48.748Z",
-      "next_update": "Protected production deployment readback",
-      "next_action": "PR #381 merged at 99456311d8310a20d278f8688bcddd57b3683070. Local 22 mobile-chat tests and all applicable hosted HUD/browser checks passed; verify deployed chat asset. No provider inference or admission change.",
+      "updated_at": "2026-11-11T08:36:19.972Z",
+      "next_update": "Complete; production chat asset verified",
+      "next_action": "PR #381 deployed in protected run 42988132713; chat_asset_matches_checkout=true. 291 safety tests and responsive browser checks passed. Background checks preserve same-source controls while pending; failed checks close readiness. No model inference.",
       "acceptance": "Background refresh preserves readiness; foreground/source changes remain gated; failed checks close readiness; active requests cannot be overwritten; existing checks pass.",
       "evidence": [
         {
@@ -6152,6 +6152,13 @@
           "check": "22 mobile-chat tests including background refresh, failure closure, provider change and request invalidation; full HUD safety/browser checks",
           "result": "PASS; merged source; production readback pending.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/381"
+        },
+        {
+          "commit": "99456311d8310a20d278f8688bcddd57b3683070",
+          "platform": "Protected production deployment to existing Cloudflare HUD",
+          "check": "Authenticated production original HUD/chat asset readback",
+          "result": "PASS; chat asset matches reviewed checkout.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42988132713"
         }
       ]
     }
