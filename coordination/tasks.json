@@ -6194,6 +6194,31 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42989320626"
         }
       ]
+    },
+    {
+      "id": "hud-command-deck-20261111",
+      "title": "Refresh responsive HUD home and touch navigation",
+      "priority": 1,
+      "status": "done",
+      "owner": "Codex / Amar HUD refresh",
+      "branch": "feat/hud-responsive-command-deck-20261111",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/hud-mobile.css"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-11T21:55:51.908Z",
+      "next_update": "Release readback on main",
+      "next_action": "Check the private production release for this reviewed revision.",
+      "acceptance": "Existing data and actions remain accessible at phone, tablet and desktop sizes.",
+      "evidence": [
+        {
+          "commit": "6ccf755628024210c97fbc757fa95ed64652bd5d",
+          "platform": "GitHub-hosted Chromium",
+          "check": "Home at 360×780, 390×844, 844×390, 820×1180 and 1440×900; private HUD safety and responsive chat checks",
+          "result": "Passed six-panel bounds, touch targets and horizontal overflow checks.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/43107107729"
+        }
+      ]
     }
   ]
 }

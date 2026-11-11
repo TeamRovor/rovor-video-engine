@@ -32,6 +32,13 @@ const respond=(res,data,status=200)=>{res.writeHead(status,{'Content-Type':'appl
 async function main(){
   server=http.createServer(async(req,res)=>{
     const route=new URL(req.url,'http://127.0.0.1').pathname;
+    if(route==='/home-layout'){
+      const assets=path.resolve(__dirname,'../dashboard/command-center/native-v8-9');
+      const home=fs.readFileSync(path.join(assets,'index.html'),'utf8');
+      const css=fs.readFileSync(path.join(assets,'hud-mobile.css'),'utf8');
+      res.writeHead(200,{'Content-Type':'text/html','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; img-src data:"});
+      return res.end(home.replace('</head>','<style>'+css+'</style></head>'));
+    }
     if(route==='/hud-chat.js'){res.writeHead(200,{'Content-Type':'text/javascript'});return res.end(js);}
     if(route==='/api/hud/chat/models')return respond(res,{online:true,models:[model,otherModel]});
     if(route==='/api/chat/models')return respond(res,{models:['@cf/meta/llama-3.1-8b-instruct','groq/openai/gpt-oss-20b']});
@@ -94,6 +101,26 @@ async function main(){
     m.error?callback.reject(Error(JSON.stringify(m.error))):callback.resolve(m.result);
   });
   await cmd('Page.enable');await cmd('Runtime.enable');
+  for(const [width,height] of [[360,780],[390,844],[844,390],[820,1180],[1440,900]]){
+    const mobile=width<1200;
+    await cmd('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile});
+    await cmd('Emulation.setTouchEmulationEnabled',{enabled:mobile});
+    await cmd('Page.navigate',{url:origin+'/home-layout'});
+    await waitFor(()=>evaluate('return location.pathname==="/home-layout" && document.readyState==="complete" && !!document.querySelector("#hud .panel-expand")'),'HUD home');
+    const layout=await evaluate(`
+      const panels=[...document.querySelectorAll("#hud .rail > .panel")];
+      const sizes=panels.map(p=>p.getBoundingClientRect());
+      const expands=panels.map(p=>p.querySelector(".panel-expand").getBoundingClientRect());
+      return {count:panels.length,width:document.documentElement.scrollWidth,
+        fits:sizes.every(r=>r.width>0 && r.left>=-1 && r.right<=innerWidth+1),
+        touch:expands.every(r=>r.height>=44 && r.width>=44)};
+    `);
+    assert.equal(layout.count,6,'HUD panel count');
+    assert(layout.fits&&layout.width<=width+2,'HUD home overflow at '+width+'x'+height+' '+JSON.stringify(layout));
+    if(width<=780 || (mobile && height<=560))assert(layout.touch,'HUD expand targets at '+width);
+    console.log('PASS actual HUD home layout '+width+'x'+height);
+  }
+  await cmd('Emulation.setTouchEmulationEnabled',{enabled:false});
   for(const [width,height,name] of views){
     await cmd('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:name!=='Windows/Mac desktop'});
     await cmd('Page.navigate',{url:origin+'/?v='+encodeURIComponent(name)});
