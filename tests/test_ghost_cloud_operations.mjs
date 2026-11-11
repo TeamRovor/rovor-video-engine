@@ -338,6 +338,42 @@ test('service route never performs inference or reads private status without ind
  delete s.env.GHOST_SERVICE_TOKEN;
  assert.equal((await s.ops.fetch(request('/api/ghost/service',{body:{operation:'shift'},serviceToken:token}),s.env)).status,401);
 });
+test('authenticated service inventory requires exact D1 readback on success and provider denial',async()=>{
+ const s=setup(),oldFetch=globalThis.fetch;
+ let calls=0;
+ try{
+  globalThis.fetch=async(url,options)=>{
+   calls++;assert.equal(url,'https://api.groq.com/openai/v1/models');
+   assert.equal(options.method,'GET');
+   return Response.json({data:[{id:'openai/gpt-oss-20b'}]});
+  };
+  const run=()=>s.ops.fetch(request('/api/ghost/service',{identity:null,
+   body:{operation:'inventory',provider:'groq'},serviceToken:s.env.GHOST_SERVICE_TOKEN}),s.env);
+  const accepted=await run();assert.equal(accepted.status,200);
+  const ok=await accepted.json();
+  assert.equal(calls,1);assert.equal(ok.provider,'groq');
+  assert.equal(ok.status,'catalog_received');assert.equal(ok.d1_persisted,true);
+  assert.equal(ok.d1_observed_at,ok.observed_at);
+  assert.equal(ok.billing_verified,false);assert.equal(ok.canary_verified,false);
+  let stored=s.db.prepare('SELECT observed_at,status,error_category FROM ghost_cloud_provider_checks WHERE provider=?').get('groq');
+  assert.equal(stored.observed_at,ok.observed_at);assert.equal(stored.status,ok.status);
+  let snapshot=await s.ops.status(s.env);
+  assert.equal(snapshot.providers.find(p=>p.provider==='groq').last_check.observed_at,ok.observed_at);
+  assert.equal(snapshot.providers.find(p=>p.provider==='groq').online_verified,false);
+  globalThis.fetch=async()=>new Response('denied',{status:401});
+  const denied=await run();assert.equal(denied.status,200);
+  const fail=await denied.json();
+  assert.equal(fail.status,'http_401');assert.equal(fail.d1_persisted,true);
+  assert.equal(fail.d1_observed_at,fail.observed_at);
+  stored=s.db.prepare('SELECT observed_at,status,error_category FROM ghost_cloud_provider_checks WHERE provider=?').get('groq');
+  assert.equal(stored.observed_at,fail.observed_at);assert.equal(stored.status,'http_401');
+  snapshot=await s.ops.status(s.env);
+  const provider=snapshot.providers.find(p=>p.provider==='groq');
+  assert.equal(provider.catalog_connection.state,'failed');
+  assert.equal(provider.online_verified,false);
+  assert.equal(provider.last_check.observed_at,fail.observed_at);
+ }finally{globalThis.fetch=oldFetch;}
+});
 test('authenticated private service shift is still constrained by STOP and refuses review',async()=>{
  const s=setup();
  const r=await s.ops.fetch(request('/api/ghost/service',{identity:null,body:{operation:'shift'},serviceToken:s.env.GHOST_SERVICE_TOKEN}),s.env);

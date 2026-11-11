@@ -758,7 +758,11 @@ export function createCloudOperations(base, cloud) {
      const body=await bounded(request);
      if(Object.keys(body).some(k=>!['operation','provider'].includes(k)))throw Error('invalid_service');
      if(body.operation==='status')return json(await status(env));
-     if(body.operation==='inventory'){const result=await inventory(env,body.provider);await recordInventory(env,body.provider,result);return json(result);}
+     if(body.operation==='inventory'){
+      // Reuse the same exact catalog→D1 readback as the private MCP action.
+      // A successful upstream GET alone does not prove durable persistence.
+      return json(await call('rovor_provider_inventory',{provider:body.provider},env));
+     }
      if(body.operation==='shift'){
       // A compiled scheduled Site registers the durable D1 shift ledger.
       // Reuse this authenticated route; never report a hosted wakeup as native.
