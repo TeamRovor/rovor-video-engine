@@ -6166,7 +6166,7 @@
       "id": "hud-chat-jump-latest-20261111",
       "title": "Add an accessible chat return-to-latest control",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar chat return-to-latest 2026-11-11",
       "branch": "fix/hud-chat-jump-latest-20261111",
       "scopes": [
@@ -6174,10 +6174,19 @@
         "tests/test_hud_chat_mobile.mjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-11-11T08:40:51.892Z",
-      "next_update": "Scroll-state regressions and hosted HUD/browser checks",
-      "next_action": "Expose a touch/keyboard Jump to latest control when reading older messages; update it after streaming, redraw and viewport changes.",
-      "acceptance": "Control visibility follows distance from bottom, explicit click jumps to latest, stream paints update state, and existing tests pass without provider or backend changes."
+      "updated_at": "2026-11-11T08:43:53.181Z",
+      "next_update": "Protected deployment readback",
+      "next_action": "PR #382 merged at 1dcb2c5ed268c7dccf29a2f4cfb7195b0a1f5a29. Local 25 mobile-chat tests and all applicable hosted HUD/browser checks passed. Verify production chat asset. No model inference.",
+      "acceptance": "Control visibility follows distance from bottom, explicit click jumps to latest, stream paints update state, and existing tests pass without provider or backend changes.",
+      "evidence": [
+        {
+          "commit": "1dcb2c5ed268c7dccf29a2f4cfb7195b0a1f5a29",
+          "platform": "macOS Node 24.22.0 and GitHub-hosted HUD/browser checks",
+          "check": "25 mobile-chat tests including return-to-latest state/scroll, redraw/viewport and accessibility regressions; full safety and responsive checks",
+          "result": "PASS; merged source, production readback pending.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/382"
+        }
+      ]
     }
   ]
 }
