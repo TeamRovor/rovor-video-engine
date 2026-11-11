@@ -136,3 +136,41 @@ CREATE INDEX IF NOT EXISTS hud_auto_discovery_day
   ON hud_auto_discovery_inbox(day_id);
 CREATE INDEX IF NOT EXISTS hud_auto_discovery_recent
   ON hud_auto_discovery_inbox(created_at DESC);
+
+
+-- Separate Mac-independent, owner-approved Gemini pilot lane. Never shares
+-- the ChatGPT Site's private D1 or claims to sync its owner PASS/FAIL ledger.
+-- A singleton STOP gate defaults to disabled; no preexisting job replays.
+CREATE TABLE IF NOT EXISTS hud_cloud_workforce_control (
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ enabled INTEGER NOT NULL DEFAULT 0 CHECK(enabled IN (0,1))
+);
+INSERT OR IGNORE INTO hud_cloud_workforce_control(id,enabled) VALUES(1,0);
+
+CREATE TABLE IF NOT EXISTS hud_cloud_workforce_jobs (
+ id TEXT PRIMARY KEY,
+ task_id TEXT NOT NULL,
+ employee TEXT NOT NULL,
+ kind TEXT NOT NULL,
+ title TEXT NOT NULL,
+ prompt TEXT NOT NULL,
+ source_commit TEXT NOT NULL,
+ created_at INTEGER NOT NULL,
+ started_at INTEGER,
+ finished_at INTEGER,
+ state TEXT NOT NULL DEFAULT 'queued'
+  CHECK(state IN ('queued','running','needs_review','failed','uncertain')),
+ actual_model TEXT,
+ output TEXT,
+ output_sha256 TEXT,
+ error_code TEXT,
+ human_review TEXT NOT NULL DEFAULT 'not_recorded'
+  CHECK(human_review IN ('not_recorded','passed','failed')),
+ reviewed_at INTEGER,
+ CHECK((human_review='not_recorded' AND reviewed_at IS NULL) OR
+       (human_review IN ('passed','failed') AND reviewed_at IS NOT NULL))
+);
+CREATE INDEX IF NOT EXISTS hud_cloud_workforce_queue
+ ON hud_cloud_workforce_jobs(state,created_at,id);
+CREATE INDEX IF NOT EXISTS hud_cloud_workforce_attempts
+ ON hud_cloud_workforce_jobs(started_at);
