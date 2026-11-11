@@ -101,6 +101,28 @@ export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
   native_github_read_verified:verified,last_native_check_at:last?new Date(last.started_at).toISOString():null,
   last_native_result:last?.result_state??null,mac_required:false,chatgpt_required:false,github_actions_required:false};
 }
+// Read-only check of the deployed private owner's approval gate. The GitHub
+// App write scope does not grant a human owner session. No owner credential,
+// cookie, verdict, model request, or repository mutation occurs here.
+export async function verifyDeployedOwnerSession(env,send=fetch){
+ const token=env?.ROVOR_HUD_READER_TOKEN;
+ if(typeof token!=='string'||token.length<32||/[\r\n]/.test(token))throw Error('private_reader_secret_missing');
+ const url=ORIGIN+'/api/hud/owner/session';
+ const get=auth=>send(url,{method:'GET',redirect:'manual',cache:'no-store',
+  signal:AbortSignal.timeout(12000),headers:auth?{Authorization:'Bearer '+token}:{}});
+ const anon=await get(false);
+ if(anon.status!==401)throw Error('owner_session_anonymous_exposure');
+ const live=await get(true);
+ if(live.status!==200)throw Error('owner_session_status_unavailable');
+ const raw=await live.text();
+ if(raw.length>1000)throw Error('owner_session_status_invalid');
+ let data;try{data=JSON.parse(raw);}catch{throw Error('owner_session_status_invalid');}
+ if(typeof data?.configured!=='boolean'||data.owner_authenticated!==false||
+    Object.keys(data).sort().join(',')!=='configured,owner_authenticated')
+  throw Error('owner_session_status_invalid');
+ return {private_auth_verified:true,owner_session_configured:data.configured,
+  owner_approval_authorized_by_this_read:false,repository_written:false};
+}
 // Verify the *deployed* private Worker after secret-bulk, not merely the
 // permission returned to GitHub's runner. No model requests or repository writes.
 // The exact single-repository App scope is checked separately by --patch-effective.
@@ -152,6 +174,7 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
   mode==='--worker'?verifyGithubWorker(process.env):
   mode==='--patch'?verifyGithubPatchPermissions(process.env):
   mode==='--patch-worker'?verifyGithubPatchWorker(process.env):
+  mode==='--owner-session'?verifyDeployedOwnerSession(process.env):
   mode==='--patch-capability'?inspectGithubPatchCapability(process.env):
   mode==='--patch-effective'?(async()=>{
    const effective=await resolveOptionalPatchDeployment(process.env);
