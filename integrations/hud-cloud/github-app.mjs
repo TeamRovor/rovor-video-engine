@@ -111,14 +111,26 @@ export async function readGithubCommitCatchup(token,send=fetch){
     commits.some(c=>!validSha(c?.sha)))throw Error('github_catchup_invalid');
  const shas=commits.map(c=>c.sha);
  if(new Set(shas).size!==shas.length)throw Error('github_catchup_invalid');
- const detail=await read('/commits/'+shas[0]);
- if(detail?.sha!==shas[0]||!Array.isArray(detail.files)||detail.files.length>100)
-  throw Error('github_catchup_invalid');
- const changed=detail.files.slice(0,24).map(f=>f?.filename);
- if(changed.some(p=>typeof p!=='string'||p.length<1||p.length>200||
+ // Inspect every recent commit, not just HEAD; fixed routes and bounded reads.
+ const details=await Promise.all(shas.map(sha=>read('/commits/'+sha+'?per_page=30')));
+ const allPaths=new Set(),counts=[];
+ let truncated=false;
+ for(let i=0;i<details.length;i++){
+  const detail=details[i],sha=shas[i];
+  if(detail?.sha!==sha||!Array.isArray(detail.files)||detail.files.length>30)
+   throw Error('github_catchup_invalid');
+  const paths=detail.files.map(f=>f?.filename);
+  if(paths.some(p=>typeof p!=='string'||p.length<1||p.length>200||
     /[\r\n\u0000-\u001f]/.test(p)))throw Error('github_catchup_invalid');
- return {head_sha:shas[0],recent_commit_shas:shas,changed_paths:changed,
-  changed_paths_truncated:detail.files.length>24||detail.files.length===100};
+  for(const p of paths)allPaths.add(p);
+  if(paths.length===30)truncated=true;
+  counts.push({sha,files_observed:paths.length,paths_truncated:paths.length===30});
+ }
+ const changed=[...allPaths];
+ return {head_sha:shas[0],recent_commit_shas:shas,
+  scanned_commit_count:shas.length,commit_file_counts:counts,
+  changed_paths:changed.slice(0,24),
+  changed_paths_truncated:truncated||changed.length>24};
 }
 
 // Fixed, read-only current metadata for an already recorded review job.

@@ -131,9 +131,18 @@ export async function verifyDeployedRepoCatchup(env,send=fetch){
    typeof s.changed_paths_truncated!=='boolean')throw Error('repo_catchup_status_invalid');
  }
  if(doc.state==='ready'&&!s)throw Error('repo_catchup_status_invalid');
+ if(doc.snapshot_freshness!==undefined&&
+   !['fresh','stale','unavailable'].includes(doc.snapshot_freshness))throw Error('repo_catchup_status_invalid');
+ if(s?.scanned_commit_count!==undefined&&
+   (s.scanned_commit_count!==s.recent_commit_shas.length||
+    !Array.isArray(s.commit_file_counts)||s.commit_file_counts.length!==s.scanned_commit_count||
+    s.commit_file_counts.some((item,i)=>item?.sha!==s.recent_commit_shas[i]||
+      !Number.isSafeInteger(item.files_observed)||item.files_observed<0||item.files_observed>30||
+      typeof item.paths_truncated!=='boolean')))throw Error('repo_catchup_status_invalid');
  return {private_auth_verified:true,state:doc.state,checkpoint_present:!!s,
   head_sha:s?.head_sha??null,recent_commit_count:s?.recent_commit_shas.length??0,
-  changed_path_count:s?.changed_paths.length??0,model_called:false,repository_written:false};
+  changed_path_count:s?.changed_paths.length??0,scanned_commit_count:s?.scanned_commit_count??null,
+  snapshot_freshness:doc.snapshot_freshness??'unavailable',model_called:false,repository_written:false};
 }
 
 // Read-only check of the deployed private owner's approval gate. The GitHub
