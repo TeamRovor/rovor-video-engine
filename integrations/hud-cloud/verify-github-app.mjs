@@ -106,7 +106,7 @@ export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
 // The exact single-repository App scope is checked separately by --patch-effective.
 export async function verifyGithubPatchWorker(env,send=fetch,{attempts=5,pause=delay,intervalMs=2000}={}){
  const token=env?.ROVOR_HUD_READER_TOKEN;
- if(typeof token!=='string'||token.length<32||/[\\r\\n]/.test(token))throw Error('private_reader_secret_missing');
+ if(typeof token!=='string'||token.length<32||/[\r\n]/.test(token))throw Error('private_reader_secret_missing');
  if(!Number.isInteger(attempts)||attempts<1||attempts>8)throw Error('invalid_patch_readback_attempts');
  const expectedEnabled=env.ROVOR_GITHUB_PATCH_ENABLED==='true';
  let expectedPaths=[];
