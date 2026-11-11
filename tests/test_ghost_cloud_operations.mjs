@@ -313,10 +313,10 @@ test('approved packet, real dispatcher, returned usage and explicit owner review
  s.env.GHOST_FLEET_CONFIG=JSON.stringify({groq:{enabled:true,model:'pinned-model',pool:'verified-pool',zero_cost:true,commercial_use:true,
   evidence_sha256:'a'.repeat(64),verified_at:now-1000,valid_until:now+3600000,canary_sha256:'b'.repeat(64),canary_at:now-500,
   requests_per_day:3,tokens_per_day:10000,min_interval_ms:1000,max_input_bytes:1000,max_output_tokens:128,roles:['Saul'],kinds:['research']}});
- let requests=0;s.cloud.tick=env=>runtime.tick(env,async()=>{requests++;return Response.json({model:'actual-upstream',choices:[{message:{content:'Specific reviewable output from the simulated provider.'},finish_reason:'stop'}],usage:{prompt_tokens:11,completion_tokens:13}});});
+ let requests=0;s.cloud.tick=env=>runtime.tick(env,async()=>{requests++;return Response.json({model:'pinned-model',choices:[{message:{content:'Specific reviewable output from the simulated provider.'},finish_reason:'stop'}],usage:{prompt_tokens:11,completion_tokens:13}});});
  await rpc(s.ops,s.env,'rovor_cloud_control',{enabled:true});await rpc(s.ops,s.env,'rovor_cloud_replenish');
  assert.equal((await rpc(s.ops,s.env,'rovor_cloud_tick')).dispatched,1);assert.equal(requests,1);
- const status=await rpc(s.ops,s.env,'rovor_cloud_workforce_status');assert.equal(status.attempts[0].human_review,'not_recorded');assert.equal(status.attempts[0].actual_model,'actual-upstream');assert.equal(status.attempts[0].tokens_output,13);
+ const status=await rpc(s.ops,s.env,'rovor_cloud_workforce_status');assert.equal(status.attempts[0].human_review,'not_recorded');assert.equal(status.attempts[0].actual_model,'pinned-model');assert.equal(status.attempts[0].tokens_output,13);
  assert.equal((await s.ops.fetch(request('/api/ghost/review',{body:{job_id:j.id,verdict:'passed'},browser:true}),s.env)).status,200);
  assert.equal((await s.ops.status(s.env)).attempts[0].human_review,'passed');
  await rpc(s.ops,s.env,'rovor_cloud_replenish');await rpc(s.ops,s.env,'rovor_cloud_tick');assert.equal(requests,1);
