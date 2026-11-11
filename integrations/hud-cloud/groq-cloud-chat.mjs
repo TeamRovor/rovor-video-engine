@@ -1,4 +1,4 @@
-import {groqCatalogEvidence} from './groq-quota-monitor.mjs';
+import {groqCatalogEvidence,recordGroqCompletionQuota,groqCompletionQuotaEvidence} from './groq-quota-monitor.mjs';
 // Mac-independent, owner-private Groq chat. Fixed endpoint/model; no paid fallback.
 // This module never reads local OmniRoute, starts workers or stores raw prompts.
 export const GROQ_CLOUD_ROUTE = 'groq/openai/gpt-oss-20b';
@@ -65,7 +65,7 @@ export async function cloudGroqStatus(env,db,now=Date.now()) {
   const catalog=await groqCatalogEvidence(db,now);
   return {source:'cloud_direct_groq',model:GROQ_CLOUD_ROUTE,ready,admission,mac_required:false,
     credentials_present:typeof env?.GROQ_HUD_API_KEY==='string'&&env.GROQ_HUD_API_KEY.length>=16,
-    catalog,
+    catalog,completion_quota:await groqCompletionQuotaEvidence(db,now),
     observed_at:new Date(now).toISOString(),
     locally_admitted_today:usage?.day_id===Math.floor(now/DAY)?usage.attempts:0,
     last_cloud_completion_at:receipt?.created_at?new Date(receipt.created_at).toISOString():null,
@@ -99,7 +99,10 @@ export async function cloudGroqChat(body,env,db,now=Date.now(),fetcher=fetch){
     try{await upstream.body?.cancel();}catch{}
     return error(502,'groq_upstream_redirect_denied');
   }
-  if(upstream.status===429){await upstream.body?.cancel();return error(429,'groq_provider_rate_limited');}
+  if(upstream.status===429){
+    try{await recordGroqCompletionQuota(db,upstream.headers,now,429);}catch{/* optional telemetry */}
+    await upstream.body?.cancel();return error(429,'groq_provider_rate_limited');
+  }
   if(!upstream.ok){await upstream.body?.cancel();return error(502,'groq_upstream_failed');}
   let doc;
   try{const raw=await upstream.text();if(raw.length>65536)throw Error();doc=JSON.parse(raw);}
@@ -113,6 +116,7 @@ export async function cloudGroqChat(body,env,db,now=Date.now(),fetcher=fetch){
     await db.prepare('INSERT INTO hud_groq_chat_receipts(id,created_at,model,prompt_tokens,completion_tokens) VALUES(?,?,?,?,?)')
       .bind(crypto.randomUUID(),now,UPSTREAM_MODEL,input,output).run();
   }catch{return error(503,'groq_receipt_not_persisted');}
+  try{await recordGroqCompletionQuota(db,upstream.headers,now,200);}catch{/* never replay a completed inference */}
   const sse='data: '+JSON.stringify({choices:[{delta:{content:answer}}]})+'\n\ndata: [DONE]\n\n';
   return new Response(sse,{status:200,headers:{'Content-Type':'text/event-stream','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 }

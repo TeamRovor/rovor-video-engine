@@ -33,7 +33,7 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   ].join('\n')+'\n';
   const groqImport = "import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';";
   const groqProbeImport = "import {probeGroqCatalogue} from './groq-quota-monitor.mjs';";
-  const groqCatalogImport = "import {groqCatalogEvidence} from './groq-quota-monitor.mjs';";
+  const groqCatalogImport = "import {groqCatalogEvidence,recordGroqCompletionQuota,groqCompletionQuotaEvidence} from './groq-quota-monitor.mjs';";
   const ideaImport = "import {submitIdea,listIdeas} from './idea-inbox.mjs';";
   const discoveryImport = "import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';";
   const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
@@ -63,8 +63,8 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const groqCloudSource = fs.readFileSync(path.join(here, 'groq-cloud-chat.mjs'), 'utf8');
   if (groqCloudSource.split(groqCatalogImport).length !== 2)
     throw Error('Unexpected Groq quota module import');
-  const groqQuota = 'const {groqCatalogEvidence,probeGroqCatalogue} = (() => {\n' +
-    plain(groqQuotaSource) + '\nreturn {groqCatalogEvidence,probeGroqCatalogue};})();\n';
+  const groqQuota = 'const {groqCatalogEvidence,probeGroqCatalogue,recordGroqCompletionQuota,groqCompletionQuotaEvidence} = (() => {\n' +
+    plain(groqQuotaSource) + '\nreturn {groqCatalogEvidence,probeGroqCatalogue,recordGroqCompletionQuota,groqCompletionQuotaEvidence};})();\n';
   const groqCloud = 'const {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} = (() => {\n' +
     plain(groqCloudSource.replace(groqCatalogImport, '')) +
     '\nreturn {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus};})();\n';
