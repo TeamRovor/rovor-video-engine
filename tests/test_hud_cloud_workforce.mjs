@@ -4,6 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {intake,control,status,draft,review,tick} from '../integrations/hud-cloud/approved-workforce.mjs';
 import worker,{handle} from '../integrations/hud-cloud/worker.mjs';
+import {verifyWorkforce} from '../integrations/hud-cloud/verify-cloud-workforce.mjs';
 import {planOwnerSelectedPilot,checkOperatorContext} from '../tools/cloud_gemini_workforce_control.mjs';
 
 const now=Date.parse('2026-11-11T02:05:00.000Z');
@@ -384,4 +385,26 @@ test('historical and failed workforce jobs never inherit aggregate provider toke
  assert.equal(historical.tokens_output,null);
  assert.equal(historical.provider,null);
  assert.equal((await draft(s.DB,job.id)).body.tokens_input,null);
+});
+
+test('production verifier distinguishes actual scheduled inference from historical manual receipts and identifies observed limits',async()=>{
+ const makeJob=(id,started,review='not_recorded')=>({id,state:'needs_review',human_review:review,
+   provider:'google-gemini-cloud',requested_model:model,actual_model:model,output_sha256:'a'.repeat(64),
+   tokens_input:10,tokens_output:20,started_at:started,finished_at:started+100});
+ const native=makeJob('gc-native',now-1000),manual=makeJob('gc-manual',now-2000,'passed');
+ const missing=makeJob('gc-no-receipt',now-3000);delete missing.output_sha256;
+ const event={scheduled_at:now-1100,started_at:now-1100,finished_at:now-800,result_state:'needs_review',
+  http_status:200,dispatch_reported:1,job_id:native.id,inference_completed:1};
+ const idle={...event,scheduled_at:now-500,started_at:now-500,finished_at:now-400,result_state:'idle_or_safety_limited',dispatch_reported:0,job_id:null,inference_completed:0};
+ const body={source:'existing_cloudflare_hud_gemini_workforce',mac_required:false,enabled:true,configured_model:model,
+  site_review_ledger_synced:false,recurring_execution_authorized:true,
+  standing_plan:{max_attempts_per_rolling_day:3,max_pending_reviews:2},items:[native,manual,missing],
+  native_schedule:{source:'cloudflare_scheduled_event',last_tick:idle,recent_ticks:[idle,event,{...event,job_id:missing.id}]}};
+ const mock=async(url,init)=>init.method==='POST'||!init.headers.Authorization?new Response(null,{status:401}):Response.json(body);
+ const proof=await verifyWorkforce({token:reader,send:mock,now});
+ assert.equal(proof.exact_job_token_receipts,2);assert.equal(proof.native_inference_receipts_matched,1);
+ assert.equal(proof.last_native_inference_completed,false);assert.equal(proof.inference_proven_by_this_read,false);
+ assert.deepEqual(proof.admission_snapshot.observed_constraints,['rolling_day_attempt_limit','pending_review_limit','no_queued_job']);
+ assert.equal(proof.admission_snapshot.oldest_observed_attempt_expires_at,new Date(now-3000+86400000).toISOString());
+ assert(!JSON.stringify(proof).includes(native.id));
 });
