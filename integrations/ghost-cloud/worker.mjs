@@ -30,24 +30,29 @@ export default {
    if(request.method==='GET'&&url.pathname==='/api/ghost/status'){
     const now=Date.now();let config;try{config=JSON.parse(env.GHOST_FLEET_CONFIG||'{}');}catch{return json({error:'invalid_fleet_config'},503);}
     const control=await env.DB.prepare('SELECT enabled FROM ghost_cloud_control WHERE id=1').first();
-    // The previous status always returned online_verified:false, even after
-    // successful real provider completions. Count only recent durable D1
-    // reply receipts, never catalog GETs, keys, synthetic checks or a job claim.
+    // Count only the CURRENT pinned provider model with a durable, complete
+    // exact-model inference + token receipt. A response from a prior model,
+    // unknown upstream identity or pre-attestation call is not online proof.
     const since=now-3600000;
-    const proofs=(await env.DB.prepare(`SELECT provider,MAX(finished_at) verified_at
+    const proofs=(await env.DB.prepare(`SELECT provider,model,actual_model,MAX(finished_at) verified_at
       FROM ghost_cloud_attempts WHERE status='needs_review' AND finished_at BETWEEN ? AND ?
-      AND output IS NOT NULL AND LENGTH(TRIM(output))>0
-      GROUP BY provider`).bind(since,now).all()).results;
+      AND output IS NOT NULL AND LENGTH(TRIM(output))>0 AND actual_model=model
+      AND tokens_input>=0 AND tokens_output>=0
+      GROUP BY provider,model,actual_model`).bind(since,now).all()).results;
     let chatProofs=[];
     try{
-     chatProofs=(await env.DB.prepare(`SELECT provider,MAX(finished_at) verified_at
+     chatProofs=(await env.DB.prepare(`SELECT provider,model,actual_model,MAX(finished_at) verified_at
        FROM ghost_cloud_owner_chat WHERE status='complete' AND finished_at BETWEEN ? AND ?
-       AND output IS NOT NULL AND LENGTH(TRIM(output))>0
-       GROUP BY provider`).bind(since,now).all()).results;
+       AND output IS NOT NULL AND LENGTH(TRIM(output))>0 AND actual_model=model
+       AND tokens_input>=0 AND tokens_output>=0
+       GROUP BY provider,model,actual_model`).bind(since,now).all()).results;
     }catch{/* Legacy Site without the optional owner-chat table has no chat evidence. */}
     const lastReply=new Map();
     for(const entry of [...proofs,...chatProofs]){
-     if(!Object.hasOwn(PROVIDERS,entry.provider)||!Number.isSafeInteger(entry.verified_at))continue;
+     const cfg=config[entry.provider];
+     if(!Object.hasOwn(PROVIDERS,entry.provider)||!cfg||entry.model!==cfg.model||
+        entry.actual_model!==cfg.model||!Number.isSafeInteger(entry.verified_at)||
+        !Number.isSafeInteger(cfg.verified_at)||entry.verified_at<cfg.verified_at)continue;
      lastReply.set(entry.provider,Math.max(lastReply.get(entry.provider)||0,entry.verified_at));
     }
     const providers=Object.keys(PROVIDERS).map(provider=>{
