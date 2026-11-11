@@ -18,7 +18,7 @@ test('credentials verification only mints scoped token and reads fixed repo, nev
   assert.equal(init.method,'GET');assert(url.startsWith('https://api.github.com/repos/TeamRovor/rovor-video-engine/'));
   return Response.json(url.includes('/actions/runs')?{workflow_runs:[]}:[{body:'never output private contents'}]);
  },NOW);
- assert.equal(r.read_verified,true);assert.equal(calls.length,4);assert(!JSON.stringify(r).includes('token'));
+ assert.equal(r.read_verified,true);assert.equal(calls.length,5);assert(!JSON.stringify(r).includes('token'));
  assert(!JSON.stringify(r).includes('private contents'));
 });
 test('missing, incomplete and denied credentials fail closed with no raw error',async()=>{

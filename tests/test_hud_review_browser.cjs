@@ -47,6 +47,13 @@ async function main(){
   if(route==='/api/hud/owner/session')return respond(res,{configured:false,owner_authenticated:false});
   if(route==='/api/hud/workforce/github-patch')return respond(res,{configured:false});
   if(route==='/api/hud/workforce/native-discovery')return respond(res,{source:'rovor_native_github_discovery',configured:true,enabled:true,mac_required:false,chatgpt_required:false,github_actions_required:false,last_check:null});
+  if(route.startsWith('/api/hud/workforce/evidence/')){
+   const r=records.find(x=>x.id===route.split('/').at(-1));
+   if(!r)return respond(res,{error:'not_found'},404);
+   return respond(res,{source:'rovor_private_review_evidence',job_id:r.id,source_key:r.task_id.slice('cloud-discovery-'.length),
+    state:r.id==='gc-rec-one'?'newer_check_passed':'issue_open',title:r.id==='gc-rec-one'?'Private HUD release check':'Open issue',
+    related_id:r.id==='gc-rec-one'?5678:null,finished_at:now,model_called:false,github_written:false});
+  }
   if(route.startsWith('/api/hud/workforce/draft/')){
    const r=records.find(x=>x.id===route.split('/').at(-1));
    if(!r)return respond(res,{error:'not_found'},404);
@@ -106,6 +113,9 @@ async function main(){
   assert(info.buttons.every(h=>h>=44),name+' tap targets too small');
   assert.equal(info.history,false);assert.equal(info.details,false);assert.equal(info.images,0);
   assert(info.summary.includes('The cause is not verified.'));
+  await waitFor(()=>evaluate('return !!document.querySelector(".source-status[data-evidence-state=newer_check_passed]")'),name+' current evidence');
+  assert(await evaluate('return document.querySelector(".source-status[data-evidence-state=newer_check_passed]").textContent.includes("may already be addressed")'));
+  assert.equal(writes.length,0,'current GitHub evidence never makes a review decision');
   assert(info.stop>0,'STOP fallback must stay visible outside advanced details');
   assert.equal(writes.length,0,'opening and verifying must not make decisions');
  }

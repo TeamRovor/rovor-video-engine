@@ -81,16 +81,60 @@ export const mintGithubReadToken=(env,now=Date.now(),send=fetch)=>mintInstallati
  {contents:'read',issues:'read',pull_requests:'read',actions:'read'},now,send);
 export const mintGithubPatchToken=(env,now=Date.now(),send=fetch)=>mintInstallationToken(env,
  {contents:'write',pull_requests:'write'},now,send);
-const routes=Object.freeze({runs:'/actions/runs?status=failure&per_page=8',issues:'/issues?state=open&per_page=8',pulls:'/pulls?state=open&per_page=8'});
+const routes=Object.freeze({runs:'/actions/runs?branch=main&status=failure&per_page=8',successes:'/actions/runs?branch=main&event=push&status=success&per_page=8',issues:'/issues?state=open&per_page=8',pulls:'/pulls?state=open&per_page=8'});
 export async function readGithubDiscovery(token,send=fetch){
  if(typeof token!=='string'||token.length<20)throw Error('github_installation_token_denied');
  const result=await Promise.all(Object.entries(routes).map(async ([key,path])=>{
   const res=await send(API+'/repos/'+REPO+path,{method:'GET',redirect:'manual',headers:headers(token),signal:AbortSignal.timeout(12000)});
   if(res.status!==200){await res.body?.cancel();throw Error('github_discovery_read_denied');}
   const data=await boundedJson(res);
-  const rows=key==='runs'?data?.workflow_runs:data;
+  const rows=key==='runs'||key==='successes'?data?.workflow_runs:data;
   if(!Array.isArray(rows)||rows.length>8)throw Error('github_discovery_response_invalid');
   return [key,rows];
  }));
  return Object.fromEntries(result);
+}
+
+// Fixed, read-only current metadata for an already recorded review job.
+const validEvidenceId=n=>Number.isSafeInteger(n)&&n>0;
+const evidenceKey=/^(run|issue|pr)-([1-9][0-9]{0,11})$/;
+const titleOf=v=>typeof v==='string'?v.replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,140):'';
+async function getEvidenceJSON(token,route,send){
+ const res=await send(API+'/repos/'+REPO+route,{method:'GET',redirect:'manual',
+  headers:headers(token),signal:AbortSignal.timeout(10000)});
+ if(res.status!==200){await res.body?.cancel();throw Error('github_evidence_unavailable');}
+ return boundedJson(res);
+}
+export async function readGithubReviewEvidence(token,key,send=fetch){
+ const parsed=evidenceKey.exec(key||'');
+ if(!parsed||typeof token!=='string'||token.length<20)throw Error('github_evidence_invalid');
+ const [,kind,num]=parsed,id=Number(num);
+ if(kind==='run'){
+  const run=await getEvidenceJSON(token,'/actions/runs/'+num,send);
+  if(run?.id!==id||run.head_branch!=='main'||!['push','workflow_dispatch'].includes(run.event))
+   throw Error('github_evidence_invalid');
+  const title=titleOf(run.name);
+  if(run.conclusion==='success')return {state:'check_passed_now',title,related_id:null};
+  if(run.status!=='completed')return {state:'check_in_progress',title,related_id:null};
+  if(run.conclusion!=='failure')return {state:'check_other_outcome',title,related_id:null};
+  // Manual dispatches may have different inputs; only compare auto pushes.
+  if(run.event==='push'&&validEvidenceId(run.workflow_id)&&Number.isFinite(Date.parse(run.created_at))){
+   const list=await getEvidenceJSON(token,'/actions/workflows/'+run.workflow_id+'/runs?branch=main&event=push&status=completed&per_page=8',send);
+   if(!Array.isArray(list?.workflow_runs)||list.workflow_runs.length>8)throw Error('github_evidence_invalid');
+   const next=list.workflow_runs.filter(x=>validEvidenceId(x.id)&&x.id!==id&&x.workflow_id===run.workflow_id&&
+    x.head_branch==='main'&&x.event==='push'&&x.status==='completed'&&
+    Number.isFinite(Date.parse(x.created_at))&&Date.parse(x.created_at)>Date.parse(run.created_at))
+    .sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)||b.id-a.id)[0];
+   if(next?.conclusion==='success')return {state:'newer_check_passed',title,related_id:next.id};
+   if(next?.conclusion==='failure')return {state:'newer_check_failed',title,related_id:next.id};
+  }
+  return {state:'check_failed',title,related_id:null};
+ }
+ const row=await getEvidenceJSON(token,(kind==='issue'?'/issues/':'/pulls/')+num,send);
+ if(row?.number!==id||!['open','closed'].includes(row.state)||(kind==='issue'&&row.pull_request))
+  throw Error('github_evidence_invalid');
+ const title=titleOf(row.title);
+ if(kind==='issue')return {state:row.state==='closed'?'issue_closed':
+  Array.isArray(row.assignees)&&row.assignees.length?'issue_assigned':'issue_open',title,related_id:null};
+ return {state:row.merged===true?'pull_merged':row.state==='closed'?'pull_closed':'pull_open',title,related_id:null};
 }

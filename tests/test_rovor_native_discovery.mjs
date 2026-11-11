@@ -44,11 +44,11 @@ test('native clock discovers one real evidence key with scoped GitHub App token 
  arm(sqlite);
  const results=await Promise.all([nativeDiscoveryTick(env,NOW,send),nativeDiscoveryTick(env,NOW,send)]);
  assert.equal(results.filter(x=>x.state==='owner_review_draft_queued').length,1);
- assert.equal(calls.length,4);
+ assert.equal(calls.length,5);
  assert.equal(sqlite.prepare('SELECT discovery_key FROM hud_auto_discovery_inbox').get().discovery_key,'run-123456');
  assert.equal((await nativeDiscoveryStatus(env)).last_check.result_state,'owner_review_draft_queued');
  assert.equal((await nativeDiscoveryTick(env,NOW+1000,send)).state,'interval_not_due');
- assert.equal(calls.length,4);
+ assert.equal(calls.length,5);
  assert.equal(sqlite.prepare('SELECT count(*) n FROM hud_cloud_workforce_jobs').get().n,0);
 });
 test('credential scope escalation and redirect fail closed without repository access',async()=>{
@@ -73,13 +73,13 @@ test('full shared draft budget still records independent read-only proof without
  const insert=sqlite.prepare("INSERT INTO hud_auto_discovery_inbox(id,discovery_key,day_id,created_at,content,priority,state) VALUES(?,?,?,?,?,?,'pending_review')");
  for(let i=0;i<6;i++)insert.run(crypto.randomUUID(),'issue-'+(i+1),Math.floor(NOW/86400000),NOW,'test draft',50);
  const calls=[];const result=await nativeDiscoveryTick(env,NOW,upstream(calls));
- assert.equal(result.state,'daily_draft_budget_reached');assert.equal(calls.length,4);
+ assert.equal(result.state,'daily_draft_budget_reached');assert.equal(calls.length,5);
  const status=await nativeDiscoveryStatus(env);assert.equal(status.standing_ready,true);
  assert.equal(status.last_check.result_state,'daily_draft_budget_reached');assert.equal(status.last_check.discovery_key,null);
  assert.equal(sqlite.prepare('SELECT count(*) n FROM hud_auto_discovery_inbox').get().n,6);
  assert.equal(sqlite.prepare('SELECT count(*) n FROM hud_cloud_workforce_jobs').get().n,0);
- assert.equal((await nativeDiscoveryTick(env,NOW+1000,upstream(calls))).state,'interval_not_due');assert.equal(calls.length,4);
+ assert.equal((await nativeDiscoveryTick(env,NOW+1000,upstream(calls))).state,'interval_not_due');assert.equal(calls.length,5);
  sqlite.exec('UPDATE hud_cloud_workforce_control SET enabled=0');
  assert.equal((await nativeDiscoveryStatus(env)).standing_ready,false);
- assert.equal((await nativeDiscoveryTick(env,NOW+3600000,upstream(calls))).state,'stopped');assert.equal(calls.length,4);
+ assert.equal((await nativeDiscoveryTick(env,NOW+3600000,upstream(calls))).state,'stopped');assert.equal(calls.length,5);
 });

@@ -261,3 +261,10 @@ CREATE TABLE IF NOT EXISTS hud_github_patch_task_sources (
  snippet_sha256 TEXT NOT NULL,snippet TEXT NOT NULL,start_line INTEGER NOT NULL,
  end_line INTEGER NOT NULL,authorized_at INTEGER NOT NULL
 );
+
+-- Cached private current GitHub evidence, never an approval or inference.
+CREATE TABLE IF NOT EXISTS hud_workforce_review_evidence (
+ job_id TEXT PRIMARY KEY REFERENCES hud_cloud_workforce_jobs(id),
+ source_key TEXT NOT NULL,checked_at INTEGER NOT NULL,finished_at INTEGER,
+ result_state TEXT NOT NULL,source_title TEXT,related_id INTEGER
+);

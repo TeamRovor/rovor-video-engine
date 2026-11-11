@@ -40,13 +40,14 @@ export async function runDiscovery({env=process.env,send=fetch,now=Date.now()}={
    Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
  const hudHeaders={Authorization:'Bearer '+env.ROVOR_HUD_WRITER_TOKEN,
    Accept:'application/json'};
- const [runData,issueData,pullData,record]=await Promise.all([
-   fetchJSON(API+'/actions/runs?status=failure&per_page='+DISCOVERY_PER_PAGE,gitHeaders,send),
+ const [runData,successData,issueData,pullData,record]=await Promise.all([
+   fetchJSON(API+'/actions/runs?branch=main&status=failure&per_page='+DISCOVERY_PER_PAGE,gitHeaders,send),
+   fetchJSON(API+'/actions/runs?branch=main&event=push&status=success&per_page='+DISCOVERY_PER_PAGE,gitHeaders,send),
    fetchJSON(API+'/issues?state=open&per_page='+DISCOVERY_PER_PAGE,gitHeaders,send),
    fetchJSON(API+'/pulls?state=open&per_page='+DISCOVERY_PER_PAGE,gitHeaders,send),
    fetchJSON(HUD+'/api/hud/discovery/status',hudHeaders,send)
  ]);
- if(!Array.isArray(runData?.workflow_runs)||!Array.isArray(issueData)||
+ if(!Array.isArray(runData?.workflow_runs)||!Array.isArray(successData?.workflow_runs)||!Array.isArray(issueData)||
     !Array.isArray(pullData)||record?.source!=='private_rovor_discovery'||
     record.execution_authorized!==false||record.mac_required!==false||
     record.daily_limit!==MAX_AUTOMATED_DRAFTS_PER_UTC_DAY||
@@ -56,7 +57,7 @@ export async function runDiscovery({env=process.env,send=fetch,now=Date.now()}={
  if(record.submitted_today>=MAX_AUTOMATED_DRAFTS_PER_UTC_DAY)
    return {state:'daily_draft_budget_reached',queued:false,inspected:true};
  const seen=new Set(record.recent_keys);
- const choices=discoverCandidates({runs:runData.workflow_runs,issues:issueData,pulls:pullData},now);
+ const choices=discoverCandidates({runs:runData.workflow_runs,successes:successData.workflow_runs,issues:issueData,pulls:pullData},now);
  // D1 still rejects duplicates if an old key fell out of the bounded
  // readback. Bound retries so stale PRs cannot flood the private Worker.
  let probeCount=0;
