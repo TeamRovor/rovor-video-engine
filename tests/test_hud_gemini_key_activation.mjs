@@ -55,6 +55,16 @@ test('Untrusted or wrong-trigger context cannot activate Google key',()=>{
   }
 });
 
+test('one-shot Gemini verifier demands a fresh challenged response and exact private D1 readback',()=>{
+  const src=readFileSync(new URL('../integrations/hud-cloud/verify-cloud-gemini.mjs',import.meta.url),'utf8');
+  assert.match(src,/randomBytes\(8\)\.toString\('hex'\)/);
+  assert.match(src,/including this exact token: '\+challenge/);
+  assert.match(src,/output\.includes\(challenge\)/);
+  assert.match(src,/X-ROVOR-Resolved-Model/);
+  assert.match(src,/per_model_receipt_not_advanced/);
+  assert.doesNotMatch(src,/retry\s*\(/);
+});
+
 test('Existing deployment workflow gates activation to one marked main merge and a single canary',()=>{
   const yaml=readFileSync(new URL('../.github/workflows/deploy-private-hud-cloudflare.yml',import.meta.url),'utf8');
   assert.match(yaml,/GEMINI_ACTIVATE_ONCE:[^\n]*github\.event_name == 'push'[^\n]*\[gemini-activate-once\]/);
