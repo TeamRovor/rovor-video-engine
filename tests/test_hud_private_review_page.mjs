@@ -116,3 +116,15 @@ test('Post-deploy verifier refuses stale review assets and proves anonymous auth
   origin,readerToken:'wrong',send,expectedHtml:html,expectedScript:pageJS}),
   /private_review_deploy_credentials_invalid/);
 });
+
+test('review desk exposes native scheduler evidence and exact per-job usage without fabricating activity',()=>{
+ assert.match(html,/id="native-clock"/);
+ assert.match(html,/id="standing-state"/);
+ assert.match(pageJS,/data\.native_schedule\?\.source==='cloudflare_scheduled_event'/);
+ assert.match(pageJS,/NO RECEIPT/);
+ assert.match(pageJS,/no completed inference/);
+ assert.match(pageJS,/validTokens\(entry\.tokens_input\)&&validTokens\(entry\.tokens_output\)/);
+ assert.match(pageJS,/Exact job token usage: not recorded/);
+ assert.match(html,/start-cloud-workforce\.yml/);
+ assert.doesNotMatch(pageJS,/\/api\/hud\/workforce\/(tick|intake|control)/);
+});
