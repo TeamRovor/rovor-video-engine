@@ -75,6 +75,8 @@ test('STOP starts disabled, immutable canonical intake deduplicates, and public 
  const overview=(await status(s.DB)).body;
  assert.equal(overview.items[0].state,'queued');
  assert.equal(overview.items[0].human_review,'not_recorded');
+ assert.equal(overview.items[0].tokens_input,null);
+ assert.equal(overview.items[0].tokens_output,null);
  assert(!JSON.stringify(overview).includes(job.prompt));
  assert.equal(s.db.prepare('SELECT COUNT(*) n FROM hud_cloud_workforce_jobs').get().n,1);
 });
@@ -96,6 +98,18 @@ test('one real Gemini-model mock reply advances D1 and leaves exact private owne
  const usage=s.db.prepare('SELECT attempts,completed,input_tokens,output_tokens FROM hud_gemini_chat_model_usage WHERE model=?').get(model);
  assert.equal(usage.completed,1);
  assert.equal(usage.input_tokens,18);
+ assert.equal(result.body.tokens_input,18);
+ assert.equal(result.body.tokens_output,12);
+ const exact=(await status(s.DB)).body.items.find(x=>x.id===job.id);
+ assert.equal(exact.provider,'google-gemini-cloud');
+ assert.equal(exact.requested_model,model);
+ assert.equal(exact.tokens_input,18);
+ assert.equal(exact.tokens_output,12);
+ assert.equal(row.tokens_input,18);
+ assert.equal(row.tokens_output,12);
+ const exactRow=s.db.prepare('SELECT * FROM hud_cloud_workforce_usage WHERE job_id=?').get(job.id);
+ assert.equal(exactRow.output_sha256,row.output_sha256);
+ assert.equal(exactRow.actual_model,model);
  assert.equal((await tick(s.env,now+1000,google(calls))).body.dispatched,0);
  assert.equal(calls.filter(c=>c.method==='POST').length,1,'no completed-job replay');
  assert.equal((await review(s.DB,{job_id:job.id,verdict:'passed',output_sha256:'0'.repeat(64)},now+2400)).status,409);
@@ -358,4 +372,16 @@ test('writer-only control requires pinned source and owner PASS for standing app
  assert.equal(rejected.status,409);
  assert.equal((await handle(jsonRequest('/api/hud/workforce/control',writer,'POST',
   {...body,recurring_source_commit:'main'}),s.env,now)).status,400);
+});
+
+test('historical and failed workforce jobs never inherit aggregate provider token counts',async()=>{
+ const s=setup();approved(s);
+ await intake(s.DB,packet,now);
+ s.db.prepare("UPDATE hud_cloud_workforce_jobs SET state='needs_review',actual_model=?,output_sha256=? WHERE id=?").run(model,'a'.repeat(64),job.id);
+ s.db.prepare('INSERT INTO hud_gemini_chat_usage(day,completed,input_tokens,output_tokens) VALUES(?,1,1000,2000)').run('2026-11-11');
+ const historical=(await status(s.DB)).body.items[0];
+ assert.equal(historical.tokens_input,null);
+ assert.equal(historical.tokens_output,null);
+ assert.equal(historical.provider,null);
+ assert.equal((await draft(s.DB,job.id)).body.tokens_input,null);
 });

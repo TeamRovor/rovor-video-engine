@@ -16,6 +16,7 @@ const DISCOVERY_MAX_AGE=36*3600000;
 const REPO='https://github.com/TeamRovor/rovor-video-engine';
 const json=(value,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 const validId=id=>typeof id==='string'&&/^[a-z0-9][a-z0-9-]{0,149}$/.test(id);
+const verifiedCount=value=>typeof value==='string'&&/^(0|[1-9][0-9]{0,15})$/.test(value)&&Number.isSafeInteger(Number(value))?Number(value):null;
 const digest=async text=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))),
  b=>b.toString(16).padStart(2,'0')).join('');
 
@@ -190,9 +191,12 @@ export async function status(db){
   const ticks=await db.prepare(`SELECT scheduled_at,started_at,finished_at,result_state,
    http_status,dispatch_reported,job_id,inference_completed
    FROM hud_cloud_workforce_native_ticks ORDER BY started_at DESC,id DESC LIMIT 12`).all();
-  const rows=await db.prepare(`SELECT id,task_id,employee,kind,title,source_commit,created_at,
-    started_at,finished_at,state,actual_model,output_sha256,human_review,reviewed_at,error_code
-    FROM hud_cloud_workforce_jobs ORDER BY created_at DESC LIMIT 50`).all();
+  const rows=await db.prepare(`SELECT j.id,j.task_id,j.employee,j.kind,j.title,j.source_commit,j.created_at,
+    j.started_at,j.finished_at,j.state,j.actual_model,j.output_sha256,j.human_review,j.reviewed_at,j.error_code,
+    u.provider,u.requested_model,u.tokens_input,u.tokens_output
+    FROM hud_cloud_workforce_jobs j LEFT JOIN hud_cloud_workforce_usage u
+    ON u.job_id=j.id AND u.output_sha256=j.output_sha256 AND u.actual_model=j.actual_model
+    ORDER BY j.created_at DESC LIMIT 50`).all();
   return {status:200,body:{source:'existing_cloudflare_hud_gemini_workforce',
     mac_required:false,enabled:gate.enabled===1,configured_model:MODEL,
     recurring_execution_authorized:gate.enabled===1&&plan?.active===1&&plan.expires_at>Date.now(),
@@ -210,8 +214,11 @@ export async function status(db){
 export async function draft(db,id){
  if(!validId(id))return {status:400,body:{error:'invalid_job_id'}};
  try{
-  const row=await db.prepare(`SELECT id,employee,title,state,output,output_sha256,
-    human_review,reviewed_at FROM hud_cloud_workforce_jobs WHERE id=?`).bind(id).first();
+  const row=await db.prepare(`SELECT j.id,j.employee,j.title,j.state,j.output,j.output_sha256,
+    j.human_review,j.reviewed_at,u.provider,u.requested_model,u.tokens_input,u.tokens_output
+    FROM hud_cloud_workforce_jobs j LEFT JOIN hud_cloud_workforce_usage u
+    ON u.job_id=j.id AND u.output_sha256=j.output_sha256 AND u.actual_model=j.actual_model
+    WHERE j.id=?`).bind(id).first();
   return row?{status:200,body:row}:{status:404,body:{error:'job_not_found'}};
  }catch{return {status:503,body:{error:'private_workforce_store_unavailable'}};}
 }
@@ -275,6 +282,7 @@ export async function tick(env,now=Date.now(),send=fetch){
   }
   // After the durable claim, NO retry even if upstream response is uncertain.
   let state='uncertain',error_code='no_verified_response',output=null,actual_model=null,output_sha256=null;
+ let tokensInput=null,tokensOutput=null;
   try{
    const response=await cloudGeminiChat({model:MODEL,messages:[{role:'user',content:claim.prompt}]},
     env,now,send);
@@ -285,6 +293,9 @@ export async function tick(env,now=Date.now(),send=fetch){
       response.headers.get('X-ROVOR-Resolved-Model')!==MODEL){
     error_code='wrong_model_or_provider_receipt';
    }else{
+    tokensInput=verifiedCount(response.headers.get('X-ROVOR-Input-Tokens'));
+    tokensOutput=verifiedCount(response.headers.get('X-ROVOR-Output-Tokens'));
+    if(tokensInput===null||tokensOutput===null)throw Error('missing_exact_token_receipt');
     const wire=await response.text();
     if(wire.length>MAX_OUTPUT*2||!wire.includes('data: [DONE]'))throw Error('incomplete_reply');
     const chunks=[];
@@ -299,13 +310,30 @@ export async function tick(env,now=Date.now(),send=fetch){
     state='needs_review';error_code=null;
    }
   }catch{state='uncertain';error_code='response_or_receipt_uncertain';}
-  const result=await db.prepare(`UPDATE hud_cloud_workforce_jobs
+  const finishedAt=Date.now();
+  const finish=db.prepare(`UPDATE hud_cloud_workforce_jobs
     SET state=?,finished_at=?,actual_model=?,output=?,output_sha256=?,error_code=?
     WHERE id=? AND state='running'`)
-    .bind(state,Date.now(),actual_model,output,output_sha256,error_code,claim.id).run();
-  if(result.meta.changes!==1)return {status:503,body:{state:'receipt_unconfirmed',dispatched:1}};
+    .bind(state,finishedAt,actual_model,output,output_sha256,error_code,claim.id);
+  if(state==='needs_review'){
+   // One atomic D1 batch binds the verified usage to the exact output digest.
+   // Never infer per-job tokens from the project's cumulative counters.
+   const receipt=db.prepare(`INSERT INTO hud_cloud_workforce_usage
+    (job_id,output_sha256,provider,requested_model,actual_model,tokens_input,tokens_output,recorded_at)
+    SELECT id,output_sha256,'google-gemini-cloud',?,?,?,?,?
+    FROM hud_cloud_workforce_jobs WHERE id=? AND state='needs_review'
+     AND output_sha256=? AND finished_at=?`)
+    .bind(MODEL,MODEL,tokensInput,tokensOutput,finishedAt,claim.id,output_sha256,finishedAt);
+   const results=await db.batch([finish,receipt]);
+   if(results.some(x=>x.meta?.changes!==1))
+    return {status:503,body:{state:'receipt_unconfirmed',dispatched:1}};
+  }else{
+   const result=await finish.run();
+   if(result.meta.changes!==1)return {status:503,body:{state:'receipt_unconfirmed',dispatched:1}};
+  }
   return {status:200,body:{state,dispatched:1,id:claim.id,
    model:state==='needs_review'?MODEL:null,owner_review_required:state==='needs_review',
+   ...(state==='needs_review'?{provider:'google-gemini-cloud',tokens_input:tokensInput,tokens_output:tokensOutput}:{}),
    inference_completed:state==='needs_review'}};
  }catch{return {status:503,body:{state:'runtime_or_store_unavailable',dispatched:0}};}
 }
