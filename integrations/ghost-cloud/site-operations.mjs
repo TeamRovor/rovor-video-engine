@@ -557,6 +557,32 @@ export function createCloudOperations(base, cloud) {
    const section=el('section');section.id='rovor-cloud-live';section.className='wl-card';
    section.append(el('strong','CLOUD EMPLOYEES · '+(data.enabled?'DISPATCH ENABLED':'DISPATCH PAUSED')));
    const pause=el('button',data.enabled?'PAUSE':'RESUME');pause.className='wl-button';pause.onclick=async()=>{try{const r=await fetch('/api/ghost/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:!data.enabled})});if(!r.ok)throw Error('control_unavailable');await poll();}catch{disconnect();}};section.append(pause);
+   const refresh=el('button','REFRESH STALE CATALOGS');
+   refresh.className='wl-button';refresh.type='button';
+   const refreshNotice=el('p','Owner-only metadata checks · no inference or free-billing proof. Recent checks are skipped.');
+   refresh.onclick=async()=>{
+    if(refresh.disabled)return;
+    refresh.disabled=true;refreshNotice.textContent='Checking stale provider catalogs in the private cloud…';
+    try{
+     const r=await fetch('/api/ghost/catalog-refresh',{method:'POST',
+      headers:{'Content-Type':'application/json'},cache:'no-store'});
+     if(!r.ok)throw Error('catalog_refresh_unavailable');
+     const result=await r.json();
+     if(result.source!=='site_native_catalog_refresh'||
+        !Number.isSafeInteger(result.checked)||result.checked>9||result.checked<0||
+        !Number.isSafeInteger(result.persisted)||result.persisted<0||result.persisted>result.checked||
+        !Number.isSafeInteger(result.catalog_received)||result.catalog_received<0||
+        result.catalog_received>result.persisted||result.inference_attempts!==0)
+      throw Error('invalid_catalog_receipt');
+     refreshNotice.textContent='CATALOG CHECKS '+result.checked+'/9 · D1 SAVED '+
+      result.persisted+' · MODELS LISTED '+result.catalog_received+
+      ' · CACHED '+result.skipped_fresh+
+      ' · FREE INFERENCE NOT VERIFIED';
+    }catch{
+     refreshNotice.textContent='Catalog refresh could not be confirmed; no model requests were authorized.';
+    }finally{refresh.disabled=false;}
+   };
+   section.append(refresh,refreshNotice);
    for(const p of data.providers){
     const last=data.attempts.find(a=>a.provider===p.provider);
     const card=el('div');card.className='wl-card';
@@ -717,6 +743,14 @@ export function createCloudOperations(base, cloud) {
     if(!actor)return json({error:'site_identity_required'},401);
     try{
      if(url.pathname==='/api/ghost/status'&&request.method==='GET')return json(await status(env));
+     if(url.pathname==='/api/ghost/catalog-refresh'&&request.method==='POST'){
+      // Only a signed-in, same-origin owner action may contact provider APIs.
+      // No GitHub->Site service bearer, model inference or approval change.
+      if(request.headers.get('Origin')!==url.origin||
+         request.headers.get('Sec-Fetch-Site')!=='same-origin')
+       return json({error:'owner_browser_required'},403);
+      return json(await refreshCatalogs(env));
+     }
      if(url.pathname==='/api/ghost/chat/models'&&request.method==='GET')return json(await ownerChatModels(env));
      if(url.pathname==='/api/ghost/chat'&&request.method==='POST')return ownerChat(request,env,actor);
      if(url.pathname==='/api/ghost/control'&&request.method==='POST'){
