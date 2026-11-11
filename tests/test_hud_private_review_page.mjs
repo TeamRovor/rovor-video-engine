@@ -17,7 +17,7 @@ function mockEnv(){
   ASSETS:{async fetch(request){
    requests.push(new URL(request.url).pathname);
    const path=new URL(request.url).pathname;
-   if(path==='/workforce-review.html')
+   if(path==='/workforce-review')
     return new Response(html,{status:200,headers:{'Content-Type':'text/html; charset=utf-8'}});
    if(path==='/workforce-review.js')
     return new Response(pageJS,{status:200,headers:{'Content-Type':'application/javascript'}});
@@ -58,7 +58,7 @@ test('Authenticated private reader cookie serves standalone review, with no inje
   Authorization:'Bearer '+token}),env);
  assert.equal(authenticatedScript.status,200);
  assert.equal(await authenticatedScript.text(),pageJS);
- assert.deepEqual(requests,['/workforce-review.html','/workforce-review.js']);
+ assert.deepEqual(requests,['/workforce-review','/workforce-review.js']);
 });
 
 test('Private review JS verifies exact output SHA-256 before immutable user PASS or FAIL',()=>{
