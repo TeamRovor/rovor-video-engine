@@ -124,7 +124,6 @@
 
   // Workload Distribution card content only. The parent panel dimensions and
   // existing ROVOR HUD frame are untouched.
-  let compactTab='models';
   let compactPick=null;
   let retainedPopup=null;
   // Real, authenticated nine-provider request-log preview. This never claims
