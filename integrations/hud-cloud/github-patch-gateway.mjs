@@ -42,7 +42,7 @@ export function parsePatch(raw,sourceCommit,env){
   throw Error('patch_proposal_invalid');
  return p;
 }
-const gate=async(db)=>(await db.prepare('SELECT enabled FROM hud_cloud_workforce_control WHERE id=1').first())?.enabled===1;
+const gate=async(db)=>(await db.prepare('SELECT enabled FROM hud_cloud_workforce_control WHERE id=1').bind().first())?.enabled===1;
 async function reviewedJob(db,id,hash){
  const job=await db.prepare(`SELECT id,source_commit,output,output_sha256,kind,human_review,state
   FROM hud_cloud_workforce_jobs WHERE id=?`).bind(id).first();
