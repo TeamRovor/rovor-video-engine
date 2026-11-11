@@ -718,6 +718,39 @@ test('owner cloud chat migration rejects wrong project, altered build and redire
 });
 
 
+test('owner-only same-origin catalog button checks nine D1 rows without inference',async t=>{
+ const {env,db,ops}=setup();const urls=[];
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  urls.push(url);assert.equal(options.method,'GET');
+  assert.equal(options.redirect,'manual');
+  assert.ok(!url.includes('/chat/completions'));
+  return Response.json({data:[{id:'read-only-model'}]});
+ });
+ const anonymous=await ops.fetch(request('/api/ghost/catalog-refresh',
+  {body:{},identity:null,browser:true}),env);
+ assert.equal(anonymous.status,401);
+ const crossSite=await ops.fetch(request('/api/ghost/catalog-refresh',{body:{}}),env);
+ assert.equal(crossSite.status,403);
+ const wrongMethod=await ops.fetch(request('/api/ghost/catalog-refresh',{browser:true}),env);
+ assert.equal(wrongMethod.status,404);
+ assert.equal(urls.length,0);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,0);
+ const first=await ops.fetch(request('/api/ghost/catalog-refresh',{body:{},browser:true}),env);
+ assert.equal(first.status,200);
+ assert.deepEqual(await first.json(),{source:'site_native_catalog_refresh',
+  checked:9,persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
+ assert.equal(urls.length,9);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
+ const second=await ops.fetch(request('/api/ghost/catalog-refresh',{body:{},browser:true}),env);
+ assert.deepEqual(await second.json(),{source:'site_native_catalog_refresh',
+  checked:0,persisted:0,catalog_received:0,skipped_fresh:9,inference_attempts:0});
+ assert.equal(urls.length,9,'fresh catalogs cannot cause duplicate upstream calls');
+ const page=await (await ops.fetch(request('/'),env)).text();
+ assert.match(page,/REFRESH STALE CATALOGS/);
+ assert.match(page,/FREE INFERENCE NOT VERIFIED/);
+ assert.ok(!page.includes(env.GHOST_SERVICE_TOKEN));
+});
+
 test('native cloud catalog refresh persists nine real GET observations without a model call and skips fresh checks',async()=>{
  const {env,db,ops}=setup();
  const seen=[];
