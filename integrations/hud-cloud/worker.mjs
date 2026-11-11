@@ -5,6 +5,9 @@ import {submitIdea,listIdeas} from './idea-inbox.mjs';
 import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
 import {getRepoSource} from './repo-source.mjs';
 import {cloudGeminiModels,cloudGeminiChat,cloudGeminiUsage} from './cloud-gemini-chat.mjs';
+import {intake as workforceIntake,control as workforceControl,status as workforceStatus,
+  draft as workforceDraft,review as workforceReview,tick as workforceTick}
+  from './approved-workforce.mjs';
 import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';
 // Private telemetry only: no inference, job dispatch, or Mac control.
 const PERIODS = new Set(['1m', '1h', '24h', '7d']);
@@ -345,19 +348,23 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
   }
   const ingest = url.pathname === '/api/hud/ingest';
   const discoveryWriter = url.pathname === '/api/hud/discovery' || url.pathname === '/api/hud/discovery/status';
+  // Only the existing distinct server-held writer token can enqueue/dispatch
+  // immutable canonical jobs or change STOP. Browser readers cannot.
+  const workforceWriter = request.method === 'POST' &&
+    ['/api/hud/workforce/intake','/api/hud/workforce/tick','/api/hud/workforce/control'].includes(url.pathname);
   // A separate writer-only channel allows the Mac to report its available
   // routes and execute explicitly submitted chat requests via outbound polling.
   const chatWriter = request.method === 'POST' &&
     (url.pathname === '/api/hud/chat/bridge' || url.pathname === '/api/hud/chat/claim' ||
       /^\/api\/hud\/chat\/result\/[a-f0-9-]{36}$/i.test(url.pathname));
   let authRequest = request;
-  if (!ingest && !chatWriter && !discoveryWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
+  if (!ingest && !chatWriter && !discoveryWriter && (request.method === 'GET' || (request.method === 'POST' && (url.pathname === '/api/chat' || url.pathname === '/api/hud/ideas' || url.pathname === '/api/hud/gemini/chat' || url.pathname === '/api/hud/workforce/review' || url.pathname === '/api/hud/chat/submit' || /^\/api\/hud\/chat\/cancel\/[a-f0-9-]{36}$/i.test(url.pathname)))) && !request.headers.has('Authorization')) {
     try {
       const cookie = String(request.headers.get('Cookie') || '').split(';').map(c => c.trim()).find(c => c.startsWith('rovor_hud_reader='));
       if (cookie) authRequest = {headers: new Headers({Authorization: 'Bearer ' + decodeURIComponent(cookie.slice(17))})};
     } catch {}
   }
-  if (!await authorized(authRequest, ingest || chatWriter || discoveryWriter ? env.HUD_WRITER_TOKEN : env.HUD_READER_TOKEN)) {
+  if (!await authorized(authRequest, ingest || chatWriter || discoveryWriter || workforceWriter ? env.HUD_WRITER_TOKEN : env.HUD_READER_TOKEN)) {
     if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) return Response.redirect(url.origin + '/login', 303);
     return response(401, {error: 'unauthorized'});
   }
@@ -417,6 +424,33 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     if (request.method === 'GET' && url.pathname.startsWith('/api/hud/chat/status/')) {
       const result = await chatStatus(env.DB, url.pathname.slice('/api/hud/chat/status/'.length), now);
       return response(result.status, result.status === 200 ? result : {error:result.error});
+    }
+    if (request.method === 'GET' && url.pathname === '/api/hud/workforce/status') {
+      const result=await workforceStatus(env.DB);return response(result.status,result.body);
+    }
+    if (request.method === 'GET' && url.pathname.startsWith('/api/hud/workforce/draft/')) {
+      const result=await workforceDraft(env.DB,url.pathname.slice('/api/hud/workforce/draft/'.length));
+      return response(result.status,result.body);
+    }
+    if (request.method === 'POST' && url.pathname === '/api/hud/workforce/intake') {
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_intake'});}
+      const result=await workforceIntake(env.DB,body,now);return response(result.status,result.body);
+    }
+    if (request.method === 'POST' && url.pathname === '/api/hud/workforce/control') {
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_control'});}
+      if(!body||Object.keys(body).join(',')!=='enabled')return response(400,{error:'invalid_control'});
+      const result=await workforceControl(env.DB,body.enabled);return response(result.status,result.body);
+    }
+    if (request.method === 'POST' && url.pathname === '/api/hud/workforce/review') {
+      if(request.headers.get('Origin')!==url.origin)return response(403,{error:'origin_denied'});
+      let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_review'});}
+      const result=await workforceReview(env.DB,body,now);return response(result.status,result.body);
+    }
+    if (request.method === 'POST' && url.pathname === '/api/hud/workforce/tick') {
+      // No URL/body-driven prompt, model, provider or replay.
+      if(request.headers.get('Content-Length')!=='0'&&request.headers.get('Content-Length')!==null)
+        return response(400,{error:'tick_body_denied'});
+      const result=await workforceTick(env,now,fetcher);return response(result.status,result.body);
     }
     if (request.method === 'GET' && url.pathname === '/api/hud/gemini/models') return response(200, await cloudGeminiModels(env));
     if (request.method === 'GET' && url.pathname === '/api/hud/gemini/usage') return cloudGeminiUsage(env,now);
@@ -526,7 +560,12 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
 
 export default {
   fetch(request, env) { return handle(request, env); },
-  // Only cleans expired private chat prompts/results. Does not schedule models,
-  // employees, worker shifts or paid API requests.
-  async scheduled(_event, env) { if (env.DB) await expireChat(env.DB, Date.now()); }
+  // Reuse the EXISTING Cloudflare 5-minute cron. Workforce STOP starts
+  // disabled in D1, and only fresh independently verified Gemini replies
+  // can admit one owner-approved job. No GitHub-to-private-Site HTTP needed.
+  async scheduled(_event, env) {
+    if(!env.DB)return;
+    await expireChat(env.DB,Date.now());
+    await workforceTick(env,Date.now());
+  }
 };
