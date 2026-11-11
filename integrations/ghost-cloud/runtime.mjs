@@ -36,11 +36,24 @@ export function validateJob(j) {
  return j;
 }
 
+// Catalog identifiers are not necessarily executable chat model IDs.
+// Reject known mismatches before either a normal job OR a one-time canary.
+// This checks provider API shape only; it never verifies cost, quota or rights.
+export function modelEndpointCompatibility(provider, model) {
+ if (provider==='gemini' && model.startsWith('models/'))
+  return 'provider_model_id_mismatch';
+ if (provider==='cloudflare-ai' && !/^@cf\/[a-zA-Z0-9][a-zA-Z0-9_./-]{1,180}$/.test(model))
+  return 'provider_model_id_mismatch';
+ return null;
+}
+
 export function eligibility(provider, cfg, env, now) {
  if (!Object.hasOwn(PROVIDERS, provider)) return 'unknown_provider';
  if (!cfg || cfg.enabled !== true) return 'not_configured';
  if (typeof env[PROVIDERS[provider][1]] !== 'string' || env[PROVIDERS[provider][1]].length < 16) return 'missing_secret';
  if (typeof cfg.model !== 'string' || !/^[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}$/.test(cfg.model) || /(^|[/:-])(auto|latest)([/:-]|$)/i.test(cfg.model)) return 'unpinned_model';
+ const modelMismatch=modelEndpointCompatibility(provider,cfg.model);
+ if(modelMismatch)return modelMismatch;
  if (cfg.zero_cost !== true || cfg.commercial_use !== true || !/^[a-f0-9]{64}$/.test(cfg.evidence_sha256 || '')) return 'eligibility_unverified';
  if (!Number.isSafeInteger(cfg.verified_at) || cfg.verified_at > now || now - cfg.verified_at > DAY ||
      !Number.isSafeInteger(cfg.valid_until) || cfg.valid_until <= now || cfg.valid_until > cfg.verified_at + DAY) return 'eligibility_expired';
