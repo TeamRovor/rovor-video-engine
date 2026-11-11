@@ -68,7 +68,7 @@ async function refreshNativeDiscovery(){
  }catch{githubDiscoveryState.textContent='UNAVAILABLE';githubDiscoveryDetail.textContent='Private D1 readback unavailable';}
 }
 const ownerSessionLabel=byId('owner-session'),ownerStart=byId('owner-start'),ownerStop=byId('owner-stop'),ownerActionStatus=byId('owner-action-status');
-const githubPatchReadiness=byId('github-patch-readiness');
+const githubPatchReadiness=byId('github-patch-readiness'),firstPrState=byId('first-pr-state');
 let ownerActive=false,ownerConfigured=false,ownerBusy=false,ownerStartArmed=false,patchConfigured=false;
 function ownerButtons(data){
  ownerStart.disabled=ownerBusy||!ownerActive||data?.enabled!==false||
@@ -132,8 +132,60 @@ patchTaskButton.addEventListener('click',async()=>{
  }catch{patchPreparationStatus.textContent='Task not confirmed. Preview again and inspect the queue before retrying.';clearSourcePreview();}
  finally{patchBusy=false;updatePatchButtons();}
 });
+// Report which exact step is done without confusing permission verification
+// with an actual ROVOR GitHub write. Model/PR claims come only from private D1.
+function firstPrProgress(patch){
+ firstPrState.textContent='';
+ const note=make('p');
+ firstPrState.append(note);
+ if(!patch||patch.source!=='rovor_independent_github_patch'){
+  note.textContent='Private GitHub draft-PR status is unavailable. No write or permission is assumed.';
+  return;
+ }
+ const opens=Array.isArray(patch.items)?patch.items.find(x=>x.state==='opened'&&
+  Number.isSafeInteger(x.pr_number)&&x.pr_number>0):null;
+ if(opens){
+  note.textContent='An actual ROVOR draft PR is recorded. It remains a draft: tests and separate human merge approval are required.';
+  const link=make('a','','Open draft PR #'+opens.pr_number);
+  link.href='https://github.com/TeamRovor/rovor-video-engine/pull/'+opens.pr_number;
+  link.rel='noreferrer';link.target='_blank';firstPrState.append(link);
+  return;
+ }
+ if(patch.configured!==true||patch.readiness!=='write_scope_verified_at_deployment'||
+  !Number.isSafeInteger(patch.write_scope_verified_at)){
+  note.textContent='GitHub write scope has not been verified in the deployed Worker. The safe patch executor is not confirmed ready.';
+  return;
+ }
+ const writes=Array.isArray(patch.items)?patch.items.find(x=>['queued','running','uncertain'].includes(x.state)):null;
+ if(writes){
+  note.textContent=writes.state==='uncertain'?
+   'A previous GitHub write has an uncertain outcome. Investigate it: do not retry or queue another write.':
+   'An approved GitHub draft-PR attempt is queued or running. No draft PR has been confirmed yet.';
+  return;
+ }
+ const work=latestWorkforce?.items?.find(x=>typeof x.id==='string'&&x.id.startsWith('gc-patch-src-')&&
+   (['queued','running'].includes(x.state)||(x.state==='needs_review'&&x.human_review==='not_recorded')||
+    (x.state==='needs_review'&&x.human_review==='passed')));
+ if(work){
+  note.textContent=work.human_review==='passed'?
+   'An engineering proposal was accepted. Inspect it in Past reviews, then separately authorize one draft PR.':
+   work.state==='needs_review'?
+   'An engineering proposal awaits PASS or FAIL. That decision alone cannot create a PR.':
+   'The first source task is queued or running. Cloud free-model quotas and STOP still apply.';
+  return;
+ }
+ if(!ownerActive){
+  note.textContent='GitHub write permissions passed at the protected deployment. Sign in with the owner key to choose a safe source excerpt.';
+ }else if(latestWorkforce?.enabled!==true){
+  note.textContent='GitHub write permissions passed. STOP is active; the workforce must be explicitly restarted before an engineering task can be queued.';
+ }else{
+  note.textContent='GitHub write permissions passed. Select a safe allowlisted file and approve its exact excerpt below to start the first proposal.';
+  const limited=latestWorkforce?.admission?.observed_constraints?.includes('rolling_day_attempt_limit');
+  if(limited)firstPrState.append(make('p','','Free-model attempts are currently at the rolling-day limit. Source review can proceed; inference must wait until capacity resets.'));
+ }
+}
 async function refreshOwner(){
- ownerActive=false;ownerConfigured=false;patchConfigured=false;
+ ownerActive=false;ownerConfigured=false;patchConfigured=false;let patch=null;
  try{
   const session=await privateRequest('/api/hud/owner/session');
   ownerConfigured=session.configured===true;
@@ -141,17 +193,20 @@ async function refreshOwner(){
   ownerSessionLabel.textContent=ownerActive?'OWNER SESSION ACTIVE · private controls unlocked':
    ownerConfigured?'Viewing session only · sign in with owner key for decisions and controls':
    'Owner key not configured · protected GitHub fallback remains available';
-  const patch=await privateRequest('/api/hud/workforce/github-patch');
+  patch=await privateRequest('/api/hud/workforce/github-patch');
   patchConfigured=patch.configured===true&&Array.isArray(patch.allowed_paths)&&patch.allowed_paths.length>0;
   const messages={
    disabled_by_owner:'GitHub draft PRs: disabled. Owner must enable ROVOR_GITHUB_PATCH_ENABLED in protected repository variables.',
    write_scope_unavailable:'GitHub draft PRs: requested, but the App lacks confirmed Contents + Pull requests write permission. The code-writing tool is locked; review and read-only discovery remain available.',
    app_credentials_missing:'GitHub draft PRs: GitHub App credentials are not configured.',
    allowlist_missing_or_invalid:'GitHub draft PRs: the owner must set an exact safe ROVOR_GITHUB_PATCH_PATHS allowlist.',
-   configuration_complete_write_scope_unverified:'GitHub draft PRs: configured. Real write permissions must pass the protected deployment preflight; no live PR claimed.',
+   configuration_complete_write_scope_unverified:'GitHub draft PRs: configured, but protected deployment proof is not available in the Worker.',
+   write_scope_verified_at_deployment:'GitHub draft PRs: Contents and Pull requests write scope verified at the protected deployment; an actual draft PR is a separate milestone.',
    status_unavailable:'GitHub draft PRs: private status unavailable.'
   };
   githubPatchReadiness.textContent=messages[patch.readiness]||'GitHub draft PRs: configuration has not been verified.';
+  if(patch.readiness==='write_scope_verified_at_deployment'&&Number.isSafeInteger(patch.write_scope_verified_at))
+   githubPatchReadiness.textContent+=' Verified '+formatTime(patch.write_scope_verified_at)+'.';
   const current=patchPath.value;patchPath.textContent='';
   if(patchConfigured)for(const path of patch.allowed_paths){
    if(typeof path!=='string')continue;
@@ -161,6 +216,7 @@ async function refreshOwner(){
  }catch{ownerSessionLabel.textContent='Owner session could not be verified';
   githubPatchReadiness.textContent='GitHub draft PRs: private configuration could not be verified.';}
  patchPanel.hidden=!(ownerActive&&patchConfigured);
+ firstPrProgress(patch);
  clearSourcePreview();ownerButtons(latestWorkforce);updatePatchButtons();
 }
 async function ownerControl(action){

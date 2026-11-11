@@ -116,6 +116,8 @@ async function main(){
   assert(!info.overflow,name+' horizontal overflow');
   assert(info.buttons.every(h=>h>=44),name+' tap targets too small');
   assert.equal(info.history,false);assert.equal(info.details,false);assert.equal(info.images,0);
+  assert(await evaluate('return document.querySelector("#first-pr-state").textContent.includes("No write or permission is assumed")'),
+   name+' no false permission claim when the mock Worker lacks a write proof');
   const skipped=await evaluate('return document.querySelector("#history").textContent');
   assert(skipped.includes('SKIPPED · OUTDATED')&&skipped.includes('No provider tokens were spent'),
     name+' skipped work is not explained to the owner');
