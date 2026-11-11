@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,7 +22,11 @@ ROUTE = control.GHOST_ROUTE
 PROVIDERS = tuple(sorted(control.PROVIDERS))
 
 
-def audit_catalog_persistence(token: str, request=control.safe_request) -> dict:
+def audit_catalog_persistence(token: str, request=control.safe_request, now_ms=None) -> dict:
+    # An exact D1 match to an old catalog check is not proof of a new check.
+    # The bounded window also rejects fabricated future timestamps.
+    if now_ms is None:
+        now_ms = int(time.time() * 1000)
     rows = []
     if not control.credential(token):
         return {"state": "service_secret_missing", "catalog_received": 0,
@@ -65,7 +70,7 @@ def audit_catalog_persistence(token: str, request=control.safe_request) -> dict:
             catalog_ok = (
                 payload.get("status") == "catalog_received"
                 and type(payload.get("observed_at")) is int
-                and payload["observed_at"] > 0
+                and now_ms - 300000 <= payload["observed_at"] <= now_ms + 60000
                 and isinstance(payload.get("models"), list)
                 and len(payload["models"]) <= 20
             )
