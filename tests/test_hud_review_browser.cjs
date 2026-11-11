@@ -123,7 +123,7 @@ async function main(){
     name+' unstructured report not flagged');
   const safeClaims=await evaluate('return {images:document.querySelectorAll("#jobs img").length,untrusted:document.querySelector("#jobs .report-claims").textContent.includes("<img src=x") }');
   assert.equal(safeClaims.images,0);
-  assert.equal(safeClaims.untrusted,false);
+  assert.equal(safeClaims.untrusted,true,'hostile text is shown literally, not executed');
   const briefing=await evaluate('return document.querySelector("#jobs .owner-brief").textContent');
   for(const label of ['What ROVOR investigated','What it actually produced','How it might benefit ROVOR','Concerns and missing proof','What your PASS will do'])
    assert(briefing.includes(label),name+' missing '+label);
