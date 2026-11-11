@@ -137,7 +137,7 @@ test('Compact preview shows nine provider choices, eight employees, refresh and 
   click({wlCompactEmployee:'jane'});
   assert.equal(opened,1);
   sandbox.window.ROVOR_WORKLOAD.mount(host);
-  assert.match(host.child.innerHTML,/LAST MAC REPORT/);
+  assert.match(host.child.innerHTML,/JANE × North Mini Code/);
 });
 
 test('Workload selection survives unrelated refresh remount, resets after popup close',()=>{
