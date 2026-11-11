@@ -177,7 +177,7 @@ export function composeScheduledShift(directory,{apply=false,sourceDirectory=her
     const existing=journal.entries.find(e=>
       e.tag.endsWith('_cloud_review_one_decision')||e.tag.endsWith('_owner_review_one_decision'));
     const recorded=fs.readFileSync(safe(root,'drizzle/'+existing.tag+'.sql'),'utf8');
-    const expected=reviewSource.replace(/;[ \\t]*\\n/g,';\\n--> statement-breakpoint\\n');
+    const expected=reviewSource.replace(/;[ \t]*\n/g,';\n--> statement-breakpoint\n');
     if(recorded!==expected)throw Error('journaled_review_index_mismatch');
   }
   if(!reviewSource.includes('CREATE UNIQUE INDEX IF NOT EXISTS ghost_cloud_reviews_one_decision_per_attempt')||
