@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: full brow/lid cartoon construction candidate assembled
+CARTOON-EVAN-EXPRESSION-CONTINUOUS.md / evan-engine/reviews/expression-continuous-v1.json. outputs/evan-cartoon-expression-continuous/Review.html: separate23snormal/92sslow.552PNGs=499BYTE-EXACT priorfullv4 +14reviewedbrow124..137 +39reviewedlid138..176;20closingexact. No newrasterposes/art/retiming/defaultpromotion. Real layeredconstruction/guards inheritedfromcomponents; NOTfreshfullrig evaluation. Prior383recovered-speakingframes missing historicalindividualguardrecords limitation remains.
+
+552/2208complete decodes;368000originalfullPCM incl352758narrationprefixexact;552PNG/film/current+frozen selectedsources/18markerbytes/36contextlinks verified. Alloverview+15normal/11slowdecodedstills inspected, coveringcuejoins/blink/return/hand/body/closingcut. Morevisibleeye/browasymmetry; fixedgaze/browsilhouette/uppercrease/ink/jaggedclosingcuff/modestbodyacting remainbelowconcept. Realtime/listening/exactphonetics/polishedFALSE;18flagsopen. No pendingjobs;automationACTIVE. Oldfulls/defaults/protectedversions preserved.
+
+NEXT: browser→thing acoustic/TH-contact region usingoriginalPCM/spectrogram andactualmouth/tonguecontrols. Keepfullcandidate/all18flags; noautomaticretiming/newexpressionvariants. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync; localpushauthunavailable.
+
 ## Current task: independent skeptical upper-lid component reviewed
 CARTOON-EVAN-LID-ACCENT.md / evan-engine/reviews/lid-accent-v1.json. Existingleftupper skin/inkplane accepts left_upper0..1; lower/opposite lids unchanged; fullblinkwins via blink+(1−blink)*narrowing. skeptical_narrowing optin5.73→6.03(.35)→7.06→7.37; strongerbrow baseline. Defaultzero preserved; noart/retiming.18testsPASS. Trial.55nearlyclosedeye rejected; preservedseparately, reduced.35retainsvisiblepupil.
 

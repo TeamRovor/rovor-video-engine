@@ -1,0 +1,74 @@
+{
+  "frames": 552,
+  "priorFullFramesByteExact": 499,
+  "reviewedBrowFrames": 14,
+  "reviewedLidFrames": 39,
+  "changedFrames": 53,
+  "closingFramesByteExact": 20,
+  "films": {
+    "Normal": {
+      "decodedFrames": 552,
+      "sha256": "a7f00e09359b3284a06fcc6728138f5199875ad4e7b6a06529ba56876304da84",
+      "inspectedSampleSourceIndices": [
+        0,
+        123,
+        124,
+        137,
+        138,
+        146,
+        158,
+        170,
+        176,
+        177,
+        269,
+        374,
+        531,
+        532,
+        551
+      ]
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 2208,
+      "sha256": "53c9524417dd025a3d4f6e685d1ff35f82768f333a7499da93de3f599cb9e31c",
+      "inspectedSampleSourceIndices": [
+        492,
+        496,
+        548,
+        552,
+        584,
+        632,
+        680,
+        704,
+        708,
+        2124,
+        2128
+      ]
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 368000,
+    "decodedPcm16Samples": 368000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "fullPcmSamples": 368000,
+  "pcmSha256": "af0c18f27f03b16bfeebe882bcfbad1e14fa1d4fa4f7e87f4608421a7b3af470",
+  "sourceFileCount": 81,
+  "reviewImageCount": 30,
+  "inheritedAuditLimit": "383 recovered speaking frames in the prior full v4 retain missing historical individual guard records. Five were rerender-checked previously; this integration does not create a fresh audit for them.",
+  "timingMarkersByteExact": true,
+  "timingContextsVerified": 36,
+  "timingFlagsOpen": 18,
+  "flagsCleared": 0,
+  "newRasterPosesRendered": 0,
+  "defaultChanged": false,
+  "oldFullPreserved": true,
+  "realTimePlaybackAccepted": false,
+  "listeningAccepted": false,
+  "polished": false,
+  "visualReviewScope": "all overview panels, 15 normal and 11 slow decoded stills; no real-time playback/listening acceptance",
+  "reviewPath": "outputs/evan-cartoon-expression-continuous/Review.html",
+  "next": "Review the next untraced browser\u2192thing acoustic/TH-contact region using original PCM, spectrogram and actual mouth/tongue controls; no new expression variants or automatic retiming.",
+  "pendingJobs": []
+}
