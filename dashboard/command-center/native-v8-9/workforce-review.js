@@ -16,6 +16,37 @@ const pending=byId('pending'),reviewed=byId('reviewed'),stop=byId('stop-state');
 const refreshButton=byId('refresh');
 const nativeClock=byId('native-clock'),nativeDetail=byId('native-detail'),standing=byId('standing-state');
 const validTokens=n=>Number.isSafeInteger(n)&&n>=0;
+function admissionGuidance(admission,now=Date.now()){
+ const unavailable='Workforce capacity details are unavailable or stale. Refresh to check why work is waiting.';
+ if(!admission||admission.source!=='read_only_private_D1'||
+    admission.provider_admission_verified_by_this_read!==false||
+    !Number.isSafeInteger(admission.observed_at)||admission.observed_at>now||now-admission.observed_at>300000||
+    !['queued_jobs','running_or_uncertain','pending_reviews','rolling_day_attempts',
+      'rolling_day_limit','pending_review_limit','fresh_unattempted_discoveries'].every(k=>validTokens(admission[k]))||
+    admission.rolling_day_limit<1||admission.pending_review_limit<1||
+    !Array.isArray(admission.observed_constraints))return unavailable;
+ const reasons={
+  stop_closed:'STOP is active.',
+  standing_authorization_inactive:'Recurring owner authorization is inactive.',
+  running_or_uncertain_claim:'A running or uncertain job must finish or be reconciled before another starts.',
+  rolling_day_attempt_limit:'The rolling 24-hour attempt limit is reached.',
+  pending_review_limit:'The review queue is full; review a result to make room.',
+  no_queued_job:'No job is queued.',
+  no_fresh_unattempted_discovery:'No fresh, unattempted discovery is recorded.'
+ };
+ if(admission.observed_constraints.some(k=>!Object.hasOwn(reasons,k)))return unavailable;
+ const parts=[`Latest workforce check: ${admission.rolling_day_attempts} of ${admission.rolling_day_limit} attempts in the last 24 hours; `+
+  `${admission.pending_reviews} of ${admission.pending_review_limit} reviews waiting; ${admission.queued_jobs} jobs queued; `+
+  `${admission.fresh_unattempted_discoveries} fresh discoveries.`];
+ parts.push(...admission.observed_constraints.map(k=>reasons[k]));
+ if(admission.observed_constraints.includes('rolling_day_attempt_limit')){
+  const slot=admission.earliest_rolling_slot_at;
+  parts.push(Number.isSafeInteger(slot)&&slot>admission.observed_at&&slot<=admission.observed_at+86400000?
+   'Earliest daily slot: '+formatTime(slot)+'.':'The next daily slot is not verified.');
+ }
+ parts.push('These are observed queue limits. Provider checks still apply; a free slot does not guarantee execution.');
+ return parts.join(' ');
+}
 const githubDiscoveryState=byId('github-discovery-state'),githubDiscoveryDetail=byId('github-discovery-detail');
 async function refreshNativeDiscovery(){
  try{
@@ -457,6 +488,7 @@ async function refresh(clearNotice=true){
    'Your review queue is full. ROVOR pauses new recurring jobs until you review a result. You can leave any uncertain result undecided.':
    pendingCount>0?'Read the result and decide whether it is useful. Your decision does not run code or publish anything.':
    'You have no outstanding decisions. New work will appear here as it is completed.';
+  guidance.textContent+=' '+admissionGuidance(data.admission);
   jobs.textContent='';history.textContent='';
   const pendingLoads=[],evidenceLoads=[];
   const ordered=rows.slice().sort((a,b)=>{
@@ -546,3 +578,4 @@ async function refresh(clearNotice=true){
 refreshButton.addEventListener('click',()=>refresh());
 refresh();
 })();
+
