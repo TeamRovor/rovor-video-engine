@@ -4,6 +4,7 @@
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {appendFileSync} from 'node:fs';
+import {setTimeout as delay} from 'node:timers/promises';
 import {githubAppConfigured,githubAppCredentialIssue,mintGithubReadToken,mintGithubPatchToken,readGithubDiscovery} from './github-app.mjs';
 import {githubPatchConfiguration} from './github-patch-gateway.mjs';
 const ORIGIN='https://rovor-hud-telemetry.rovordigital.workers.dev';
@@ -100,11 +101,57 @@ export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
   native_github_read_verified:verified,last_native_check_at:last?new Date(last.started_at).toISOString():null,
   last_native_result:last?.result_state??null,mac_required:false,chatgpt_required:false,github_actions_required:false};
 }
+// Verify the *deployed* private Worker after secret-bulk, not merely the
+// permission returned to GitHub's runner. No model requests or repository writes.
+// The exact single-repository App scope is checked separately by --patch-effective.
+export async function verifyGithubPatchWorker(env,send=fetch,{attempts=5,pause=delay,intervalMs=2000}={}){
+ const token=env?.ROVOR_HUD_READER_TOKEN;
+ if(typeof token!=='string'||token.length<32||/[\\r\\n]/.test(token))throw Error('private_reader_secret_missing');
+ if(!Number.isInteger(attempts)||attempts<1||attempts>8)throw Error('invalid_patch_readback_attempts');
+ const expectedEnabled=env.ROVOR_GITHUB_PATCH_ENABLED==='true';
+ let expectedPaths=[];
+ if(expectedEnabled){
+  try{expectedPaths=JSON.parse(env.ROVOR_GITHUB_PATCH_PATHS||'[]');}catch{}
+  if(!Array.isArray(expectedPaths)||!expectedPaths.length||expectedPaths.length>12||
+     expectedPaths.some(x=>typeof x!=='string')||new Set(expectedPaths).size!==expectedPaths.length)
+    throw Error('expected_patch_allowlist_invalid');
+ }
+ const url=ORIGIN+'/api/hud/workforce/github-patch';
+ const get=authorized=>send(url,{method:'GET',redirect:'manual',cache:'no-store',
+  signal:AbortSignal.timeout(12000),headers:authorized?{Authorization:'Bearer '+token}:{}});
+ for(let attempt=0;attempt<attempts;attempt++){
+  const anonymous=await get(false);
+  if(anonymous.status!==401)throw Error('github_patch_anonymous_access_not_denied');
+  const live=await get(true);
+  if(live.status!==200){
+   if(attempt===attempts-1)throw Error('github_patch_worker_readback_unavailable');
+   await pause(intervalMs);continue;
+  }
+  const raw=await live.text();
+  if(raw.length>60000)throw Error('github_patch_worker_readback_invalid');
+  let data;try{data=JSON.parse(raw);}catch{throw Error('github_patch_worker_readback_invalid');}
+  if(data?.source!=='rovor_independent_github_patch'||typeof data.configured!=='boolean'||
+     data.merges_allowed!==false||data.mac_required!==false||data.chatgpt_required!==false||
+     !Array.isArray(data.allowed_paths)||data.allowed_paths.length>12||
+     !Array.isArray(data.items)||data.items.length>30||data.storage_unavailable)
+    throw Error('github_patch_worker_readback_invalid');
+  if(data.configured===expectedEnabled&&
+     JSON.stringify(data.allowed_paths)===JSON.stringify(expectedPaths))
+   return {private_auth_verified:true,configured:data.configured,
+    allowed_path_count:data.allowed_paths.length,allowlist_matches_deployment:true,
+    permitted_action:'owner_approved_draft_pr_only',merges_allowed:false,
+    repository_written_by_verifier:false};
+  if(attempt===attempts-1)throw Error('github_patch_worker_config_mismatch');
+  await pause(intervalMs);
+ }
+ throw Error('github_patch_worker_readback_unavailable');
+}
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const mode=process.argv[2];
  const task=mode==='--credentials'?verifyGithubCredentials(process.env):
   mode==='--worker'?verifyGithubWorker(process.env):
   mode==='--patch'?verifyGithubPatchPermissions(process.env):
+  mode==='--patch-worker'?verifyGithubPatchWorker(process.env):
   mode==='--patch-capability'?inspectGithubPatchCapability(process.env):
   mode==='--patch-effective'?(async()=>{
    const effective=await resolveOptionalPatchDeployment(process.env);
