@@ -197,22 +197,31 @@ class HostedShiftTests(unittest.TestCase):
         self.assertIsNone(handler.redirect_request(None, None, 302, "move", {},
                                                    "https://evil.example/"))
 
-    def test_workflow_does_not_run_models_on_untrusted_pull_requests(self):
+    def test_legacy_scheduler_is_manual_only_and_native_cloudflare_owns_recurring_ticks(self):
         workflow = (ROOT / ".github/workflows/ghost-cloud-github-scheduler.yml").read_text()
-        self.assertIn("cron: '*/5 * * * *'", workflow)
-        self.assertIn("github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'", workflow)
+        wrangler = (ROOT / "integrations/hud-cloud/wrangler.jsonc").read_text()
+        worker = (ROOT / "integrations/hud-cloud/worker.mjs").read_text()
+        # The old GitHub->private-Site HTTP scheduler repeatedly got 403.
+        # It must never claim to be the autonomous workforce's live clock.
+        self.assertNotIn("\\n  schedule:", workflow)
+        self.assertNotIn("cron: '*/5 * * * *'", workflow)
+        self.assertIn("  workflow_dispatch:", workflow)
+        self.assertIn("confirm_legacy_site_diagnostic:", workflow)
+        self.assertIn("if: github.event_name == 'workflow_dispatch' && inputs.confirm_legacy_site_diagnostic == true", workflow)
+        self.assertNotIn("service-credential-preflight:", workflow)
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn("ROVOR_GHOST_SERVICE_TOKEN: " + chr(36) + "{{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}", workflow)
         self.assertNotIn("pull_request_target", workflow)
-        # Secret shape check may run on main pushes, but never on PRs.
-        self.assertIn("if: github.event_name == 'push' && github.ref == 'refs/heads/main'", workflow)
-        self.assertIn("service-credential-preflight:", workflow)
-        preflight = workflow.split("  service-credential-preflight:", 1)[1].split("\n  shift:", 1)[0]
-        self.assertNotIn("actions/checkout", preflight)
-        self.assertNotIn("tools/ghost_cloud_hosted_shift.py", preflight)
-        self.assertIn("repository_service_secret_too_short", preflight)
-        self.assertIn("repository_service_secret_invalid_bearer_format", preflight)
-        self.assertIn("repository_service_secret_shape_ok", preflight)
+        # Native production clock is present in the EXISTING Worker.
+        self.assertIn('"*/5 * * * *"', wrangler)
+        self.assertIn("async scheduled(event, env)", worker)
+        self.assertIn("nativeDiscoveryTick(env,Date.now())", worker)
+        self.assertIn("workforceTick(env,startedAt)", worker)
+        self.assertIn("githubPatchTick(env,Date.now())", worker)
+        # CI still tests legacy safety on PRs and pushes, without secret access.
+        self.assertIn("if: github.event_name == 'pull_request' || github.event_name == 'push'", workflow)
+        self.assertIn("python3 -m unittest discover", workflow)
+        self.assertIn("cancel-in-progress: false", workflow)
 
 
 if __name__ == "__main__":

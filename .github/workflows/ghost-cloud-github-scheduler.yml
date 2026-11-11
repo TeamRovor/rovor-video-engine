@@ -1,10 +1,17 @@
-name: ROVOR cloud workforce (hosted shift)
+name: ROVOR legacy Site shift (manual diagnostic only)
 
+# The production cloud workforce runs on the existing Cloudflare Worker
+# */5-minute native cron (wrangler.jsonc + worker.scheduled). The old Site
+# service returned HTTP 403 and must not compete as another live scheduler.
+# Retain a deliberately confirmed manual legacy diagnostic only.
 on:
-  schedule:
-    # GitHub-hosted dispatcher; schedule can be delayed by GitHub load.
-    - cron: '*/5 * * * *'
   workflow_dispatch:
+    inputs:
+      confirm_legacy_site_diagnostic:
+        type: boolean
+        required: true
+        default: false
+        description: 'Diagnostic ONLY: try the retired private Site endpoint; may return HTTP 403'
   pull_request:
     paths:
       - '.github/workflows/ghost-cloud-github-scheduler.yml'
@@ -38,41 +45,11 @@ jobs:
         run: python3 -m unittest discover -s tests -p test_ghost_cloud_hosted_shift.py -v
 
 
-  service-credential-preflight:
-    # Run on trusted main pushes ONLY. Never expose Actions secrets to PR code
-    # or shell arguments. No checkout, network request, or model invocation.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 1
-    steps:
-      - name: Verify hosted service secret shape without revealing value
-        env:
-          ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import json
-          import os
-          import sys
-
-          token = os.environ.get("ROVOR_GHOST_SERVICE_TOKEN", "")
-          if not token:
-              reason = "repository_service_secret_not_configured"
-          elif len(token) < 32:
-              reason = "repository_service_secret_too_short"
-          elif any(not ("!" <= ch <= "~") for ch in token):
-              reason = "repository_service_secret_invalid_bearer_format"
-          else:
-              reason = "repository_service_secret_shape_ok"
-          print(json.dumps({"state": reason, "dispatched": 0}))
-          if reason != "repository_service_secret_shape_ok":
-              print("::error title=ROVOR hosted secret invalid::Configure a matching dedicated 32+ character service credential in Actions and the existing private Site.")
-              sys.exit(1)
-          print("Credential shape passes; matching Site configuration and live shift remain unverified.")
-          PY
 
   shift:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    # This cannot run on pull_request, push or timer; even a manual run
+    # requires an explicit owner check and never affects the Cloudflare cron.
+    if: github.event_name == 'workflow_dispatch' && inputs.confirm_legacy_site_diagnostic == true
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
