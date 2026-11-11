@@ -6108,9 +6108,9 @@
         "tests/test_hud_popup_refresh.cjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-11-11T08:23:57.918Z",
-      "next_update": "Protected production deployment readback",
-      "next_action": "PR #380 merged; focused tests, refresh polling regression, HUD safety and browser checks all passed. Verify deployed quota asset matches reviewed checkout. No provider inference changes.",
+      "updated_at": "2026-11-11T08:25:30.173Z",
+      "next_update": "Complete; production quota asset verified",
+      "next_action": "PR #380 deployed in protected run 42986715688; authenticated quota_asset_matches_checkout=true. 287 HUD safety tests and all applicable polling, bridge and browser checks passed. No live inference or measured FPS claim.",
       "acceptance": "Identical markup retains existing nodes; changed telemetry still renders; overview and jump focus restore without scrolling; existing HUD checks pass.",
       "evidence": [
         {
@@ -6119,6 +6119,13 @@
           "check": "32 quota-board tests, real polling regression, full HUD safety, responsive/browser-budget/data and live-bridge tests",
           "result": "PASS; merged source. Production rollout pending verification.",
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/380"
+        },
+        {
+          "commit": "3f463b913ac81c8672a02d5560675747e991e4af",
+          "platform": "Protected production deployment to existing Cloudflare HUD",
+          "check": "Authenticated original HUD and exact quota asset readback",
+          "result": "PASS; production asset matches reviewed checkout.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/42986715688"
         }
       ]
     }
