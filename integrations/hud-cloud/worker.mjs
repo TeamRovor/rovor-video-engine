@@ -560,7 +560,12 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
 
 export default {
   fetch(request, env) { return handle(request, env); },
-  // Only cleans expired private chat prompts/results. Does not schedule models,
-  // employees, worker shifts or paid API requests.
-  async scheduled(_event, env) { if (env.DB) await expireChat(env.DB, Date.now()); }
+  // Reuse the EXISTING Cloudflare 5-minute cron. Workforce STOP starts
+  // disabled in D1, and only fresh independently verified Gemini replies
+  // can admit one owner-approved job. No GitHub-to-private-Site HTTP needed.
+  async scheduled(_event, env) {
+    if(!env.DB)return;
+    await expireChat(env.DB,Date.now());
+    await workforceTick(env,Date.now());
+  }
 };
