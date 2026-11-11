@@ -3,6 +3,7 @@
 // EXISTING private Cloudflare HUD. Uses key-listed, owner-attested Free-tier
 // text models; does not depend on Mac, trust catalog-only results, or change
 // other providers, tasks, approvals or scheduling.
+import {randomBytes} from 'node:crypto';
 const ORIGIN='https://rovor-hud-telemetry.rovordigital.workers.dev';
 const PREFERENCE=['gemini-3.5-flash-lite','gemini-3.1-flash-lite',
   'gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-2.5-flash-lite','gemini-3.5-flash','gemini-2.5-flash'];
@@ -43,11 +44,14 @@ async function main(){
     throw Error('selected_gemini_model_429_cooldown_active');
   console.log('Verified private HUD lists '+(catalog.models.length-1)+
     ' approved project-listed text models. One model selected for canary.');
+  // A fresh, unpredictable challenge makes a historical/static reply
+  // insufficient; never log the challenge or include private data in it.
+  const challenge='rv'+randomBytes(8).toString('hex');
   const r=await fetch(ORIGIN+'/api/hud/gemini/chat',{
     method:'POST',redirect:'manual',
     headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Origin:ORIGIN},
     body:JSON.stringify({model,messages:[{role:'user',
-      content:'Respond in one short sentence confirming this is a Gemini connection test.'}]}),
+      content:'Confirm this Gemini connection test in one short sentence, including this exact token: '+challenge}]}),
     signal:AbortSignal.timeout(40000)
   });
   if(!r.ok){
@@ -62,6 +66,8 @@ async function main(){
   const output=await r.text();
   if(!output.includes('data: [DONE]')||!/"content":"[^"]{1,}/.test(output))
     throw Error('gemini_no_completed_response');
+  if(!output.includes(challenge))
+    throw Error('gemini_fresh_challenge_missing');
   const after=await read('/api/hud/gemini/usage',token);
   if(!after.ok)throw Error('private_model_usage_readback_failed');
   const usage=await after.json();
@@ -70,8 +76,8 @@ async function main(){
      !Array.isArray(usage.models)||
      !usage.models.some(m=>m.model===model&&m.completed>completedBefore))
     throw Error('per_model_receipt_not_advanced');
-  console.log('PASS: one real Google Gemini reply through '+model+
-    '; project-wide and per-model private D1 counters advanced. No Mac.');
+  console.log('PASS: one fresh, challenge-matched Google Gemini reply through '+model+
+    '; HUD-wide and per-model private D1 counters advanced. No Mac.');
   console.log('No proof of remaining external quota or billing tier beyond owner attestation.');
 }
 main().catch(error=>{
