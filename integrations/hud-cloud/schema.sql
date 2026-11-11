@@ -175,3 +175,15 @@ CREATE INDEX IF NOT EXISTS hud_cloud_workforce_queue
  ON hud_cloud_workforce_jobs(state,created_at,id);
 CREATE INDEX IF NOT EXISTS hud_cloud_workforce_attempts
  ON hud_cloud_workforce_jobs(started_at);
+
+-- Explicit, time-limited standing owner authorization for fresh discovery triage.
+-- Never inferred from a one-shot pilot. STOP disarms this independently.
+CREATE TABLE IF NOT EXISTS hud_cloud_workforce_series (
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ active INTEGER NOT NULL DEFAULT 0 CHECK(active IN (0,1)),
+ source_commit TEXT,
+ approved_at INTEGER,
+ expires_at INTEGER,
+ CHECK(active=0 OR (source_commit IS NOT NULL AND LENGTH(source_commit)=40 AND approved_at IS NOT NULL AND expires_at>approved_at))
+);
+INSERT OR IGNORE INTO hud_cloud_workforce_series(id,active) VALUES(1,0);

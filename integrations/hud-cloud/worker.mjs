@@ -440,8 +440,13 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
     }
     if (request.method === 'POST' && url.pathname === '/api/hud/workforce/control') {
       let body;try{body=await boundedJSON(request);}catch{return response(400,{error:'invalid_control'});}
-      if(!body||Object.keys(body).join(',')!=='enabled')return response(400,{error:'invalid_control'});
-      const result=await workforceControl(env.DB,body.enabled);return response(result.status,result.body);
+      if(!body||!['enabled','enabled,recurring_source_commit'].includes(Object.keys(body).sort().join(',')))
+        return response(400,{error:'invalid_control'});
+      if(Object.hasOwn(body,'recurring_source_commit')&&
+         (body.enabled!==true||typeof body.recurring_source_commit!=='string'||!/^[a-f0-9]{40}$/.test(body.recurring_source_commit)))
+        return response(400,{error:'invalid_control'});
+      const result=await workforceControl(env.DB,body.enabled,body.recurring_source_commit??null,now);
+      return response(result.status,result.body);
     }
     if (request.method === 'POST' && url.pathname === '/api/hud/workforce/review') {
       if(request.headers.get('Origin')!==url.origin)return response(403,{error:'origin_denied'});
