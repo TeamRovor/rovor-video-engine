@@ -6099,7 +6099,7 @@
       "id": "hud-workload-refresh-stability-20261111",
       "title": "Keep Workload refresh stable and preserve keyboard inspection",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "Codex / Amar Workload stability 2026-11-11",
       "branch": "fix/hud-workload-refresh-stability-20261111",
       "scopes": [
@@ -6108,10 +6108,19 @@
         "tests/test_hud_popup_refresh.cjs"
       ],
       "depends_on": [],
-      "updated_at": "2026-11-11T08:18:42.428Z",
-      "next_update": "Focused refresh tests and hosted HUD checks",
-      "next_action": "Skip identical board replacements and preserve overview/jump focus through changed telemetry.",
-      "acceptance": "Identical markup retains existing nodes; changed telemetry still renders; overview and jump focus restore without scrolling; existing HUD checks pass."
+      "updated_at": "2026-11-11T08:23:57.918Z",
+      "next_update": "Protected production deployment readback",
+      "next_action": "PR #380 merged; focused tests, refresh polling regression, HUD safety and browser checks all passed. Verify deployed quota asset matches reviewed checkout. No provider inference changes.",
+      "acceptance": "Identical markup retains existing nodes; changed telemetry still renders; overview and jump focus restore without scrolling; existing HUD checks pass.",
+      "evidence": [
+        {
+          "commit": "3f463b913ac81c8672a02d5560675747e991e4af",
+          "platform": "Local Node 24.22.0 and GitHub-hosted HUD/bridge/browser checks",
+          "check": "32 quota-board tests, real polling regression, full HUD safety, responsive/browser-budget/data and live-bridge tests",
+          "result": "PASS; merged source. Production rollout pending verification.",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/380"
+        }
+      ]
     }
   ]
 }
