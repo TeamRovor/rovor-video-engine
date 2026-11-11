@@ -164,3 +164,44 @@ test('owner-requested draft PRs remain explicitly blocked when deployment downsc
  assert.equal(status.configured,false);
  assert.equal(status.readiness,'write_scope_unavailable');
 });
+
+test('STOP permanently revokes all queued draft-PR authorizations, even after START',async()=>{
+ const s=setup();enable(s);
+ assert.equal((await queueGithubPatch(s.env,s.body,NOW)).status,202);
+ const queued=s.sqlite.prepare('SELECT state,expires_at FROM hud_github_patch_jobs WHERE job_id=?').get(s.body.job_id);
+ assert.equal(queued.state,'queued');
+ assert(queued.expires_at>NOW);
+ const stopped=await control(s.env.DB,false,null,NOW+7);
+ assert.equal(stopped.status,200);
+ const revoked=s.sqlite.prepare('SELECT state,error_code,finished_at FROM hud_github_patch_jobs WHERE job_id=?').get(s.body.job_id);
+ assert.deepEqual({...revoked},{state:'failed',error_code:'stopped_before_github_write',finished_at:NOW+7});
+ // A later START must not replay the previously approved patch; no API
+ // request, token mint or repository write may occur.
+ enable(s);
+ const events=[];
+ assert.equal((await githubPatchTick(s.env,NOW+8,async(...args)=>{
+  events.push(args);throw Error('unexpected external GitHub request');
+ })).state,'idle_or_safety_limited');
+ assert.equal(events.length,0);
+ assert.equal((await queueGithubPatch(s.env,s.body,NOW+9)).status,409);
+ const receipt=(await githubPatchStatus(s.env)).items[0];
+ assert.equal(receipt.error_code,'stopped_before_github_write');
+ assert.equal(receipt.state,'failed');
+ // Repeated STOP does not rewrite immutable terminal evidence.
+ assert.equal((await control(s.env.DB,false,null,NOW+10)).status,200);
+ assert.deepEqual({...s.sqlite.prepare('SELECT state,error_code,finished_at FROM hud_github_patch_jobs WHERE job_id=?').get(s.body.job_id)},{...revoked});
+});
+test('STOP preserves uncertain write receipts instead of falsely calling them cancelled',async()=>{
+ const s=setup();enable(s);
+ assert.equal((await queueGithubPatch(s.env,s.body,NOW)).status,202);
+ s.sqlite.prepare("UPDATE hud_github_patch_jobs SET state='uncertain',started_at=? WHERE job_id=?").run(NOW,s.body.job_id);
+ assert.equal((await control(s.env.DB,false,null,NOW+2)).status,200);
+ const row=s.sqlite.prepare('SELECT state,error_code,finished_at FROM hud_github_patch_jobs WHERE job_id=?').get(s.body.job_id);
+ assert.equal(row.state,'uncertain');
+ assert.equal(row.error_code,null);
+ assert.equal(row.finished_at,null);
+ enable(s);
+ assert.equal((await githubPatchTick(s.env,NOW+86400002,async()=>{
+  throw Error('uncertain job must block new external writes');
+ })).state,'idle_or_safety_limited');
+});

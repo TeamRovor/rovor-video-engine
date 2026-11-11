@@ -63,9 +63,15 @@ export async function control(db,enabled,seriesCommit=null,now=Date.now()){
     db.prepare('UPDATE hud_cloud_workforce_series SET active=0 WHERE id=1').bind(),
     db.prepare('UPDATE hud_cloud_workforce_control SET enabled=0 WHERE id=1').bind(),
     db.prepare(`UPDATE hud_cloud_workforce_jobs SET state='failed',finished_at=?,
-     error_code='stopped_before_claim' WHERE state='queued' AND (id LIKE 'gc-rec-%' OR id LIKE 'gc-patch-src-%')`).bind(now)
+     error_code='stopped_before_claim' WHERE state='queued' AND (id LIKE 'gc-rec-%' OR id LIKE 'gc-patch-src-%')`).bind(now),
+    // A separately authorized draft PR is also work: STOP permanently
+    // revokes every *queued* approval. It cannot rearm on a later START.
+    // Leave in-flight/uncertain rows intact for manual reconciliation.
+    db.prepare(`UPDATE hud_github_patch_jobs SET state='failed',finished_at=?,
+     error_code='stopped_before_github_write' WHERE state='queued'`).bind(now)
    ]);
-   if(results.slice(0,2).some(r=>r.meta?.changes!==1))
+   if(results.slice(0,2).some(r=>r.meta?.changes!==1)||
+      results.slice(2).some(r=>typeof r.meta?.changes!=='number'))
     return {status:503,body:{error:'workforce_control_unavailable'}};
    return {status:200,body:{enabled:false,recurring_authorized:false}};
   }
