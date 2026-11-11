@@ -1,0 +1,36 @@
+name: Ask ROVOR model intelligence registry (offline)
+on:
+  pull_request:
+    paths:
+      - 'integrations/hud-cloud/ask-rovor-model-registry.mjs'
+      - 'integrations/hud-cloud/ASK-ROVOR-MODEL-REGISTRY.md'
+      - 'tests/test_ask_rovor_model_registry.mjs'
+      - '.github/workflows/ask-rovor-model-intelligence.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'integrations/hud-cloud/ask-rovor-model-registry.mjs'
+      - 'integrations/hud-cloud/ASK-ROVOR-MODEL-REGISTRY.md'
+      - 'tests/test_ask_rovor_model_registry.mjs'
+      - '.github/workflows/ask-rovor-model-intelligence.yml'
+permissions:
+  contents: read
+jobs:
+  offline-registry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check strict registry syntax
+        run: node --check integrations/hud-cloud/ask-rovor-model-registry.mjs
+      - name: Execute all registry safety and deterministic routing tests
+        run: node --test tests/test_ask_rovor_model_registry.mjs
+      - name: Verify existing coordination contracts
+        run: |
+          python3 tools/project_loop.py check
+          python3 tools/task_routing_pair.py --check
