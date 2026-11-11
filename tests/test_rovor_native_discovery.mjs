@@ -134,22 +134,22 @@ test('catch-up GitHub failure does not block evidence discovery or erase last su
 
 test('writer-only catch-up refresh makes a real bounded GitHub metadata read without submitting jobs',async()=>{
  const {env,sqlite}=setup();arm(sqlite);const calls=[];const url='https://hud.test/api/hud/workforce/repo-catchup/refresh';
- assert.equal((await handle(new Request(url,{method:'POST'}),env,upstream(calls))).status,401);
- assert.equal((await handle(new Request(url,{method:'POST',headers:{Authorization:'Bearer '+R}}),env,upstream(calls))).status,401);
+ assert.equal((await handle(new Request(url,{method:'POST'}),env,NOW,upstream(calls))).status,401);
+ assert.equal((await handle(new Request(url,{method:'POST',headers:{Authorization:'Bearer '+R}}),env,NOW,upstream(calls))).status,401);
  assert.equal(calls.length,0);
- const real=await handle(new Request(url,{method:'POST',headers:{Authorization:'Bearer '+W}}),env,upstream(calls));
+ const real=await handle(new Request(url,{method:'POST',headers:{Authorization:'Bearer '+W}}),env,NOW,upstream(calls));
  assert.equal(real.status,200);assert.equal((await real.json()).state,'ready');
  assert.equal(calls.length,8);
  assert.equal((await repoCatchupStatus(env)).snapshot.head_sha,'a'.repeat(40));
  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM hud_cloud_workforce_jobs').get().n,0);
  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM hud_auto_discovery_inbox').get().n,0);
- const next=await handle(new Request(url,{method:'POST',headers:{Authorization:'Bearer '+W}}),env,upstream(calls));
+ const next=await handle(new Request(url,{method:'POST',headers:{Authorization:'Bearer '+W}}),env,NOW,upstream(calls));
  assert.equal(next.status,200);assert.equal((await next.json()).state,'interval_not_due');
  assert.equal(calls.length,8);
 });
 test('catch-up refresh honors STOP and never touches GitHub when disarmed',async()=>{
  const {env,sqlite}=setup();const calls=[];const url='https://hud.test/api/hud/workforce/repo-catchup/refresh';
- const blocked=await handle(new Request(url,{method:'POST',headers:{Authorization:'Bearer '+W}}),env,upstream(calls));
+ const blocked=await handle(new Request(url,{method:'POST',headers:{Authorization:'Bearer '+W}}),env,NOW,upstream(calls));
  assert.equal(blocked.status,409);assert.equal((await blocked.json()).state,'stopped');
  assert.equal(calls.length,0);
  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM hud_native_repo_catchup').get().n,0);
