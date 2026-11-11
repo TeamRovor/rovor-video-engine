@@ -153,6 +153,22 @@ test('one-bundle composer dry-run leaves original staged v2 untouched',t=>{
   assert.deepEqual(r.migrations,['0002_cloud_review_one_decision.sql','0003_cloud_scheduled_shift.sql']);
   assert.equal(r.duplicate_review_preflight_required,true);
 });
+test('composer accepts existing private Site object-form D1 binding and still rejects wrong binding',t=>{
+ const dir=existing(t),manifestPath=path.join(dir,'.openai/hosting.json');
+ const original=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+ fs.writeFileSync(manifestPath,JSON.stringify({...original,d1:{binding:'DB'}}));
+ const dry=composeScheduledShift(dir);
+ assert.equal(dry.prepared,false);
+ assert.equal(dry.project_id,original.project_id);
+ const staged=composeScheduledShift(dir,{apply:true});
+ assert.equal(staged.prepared,true);
+ assert.equal(staged.deployment_performed,false);
+ assert.equal(fs.readFileSync(manifestPath,'utf8'),JSON.stringify({...original,d1:{binding:'DB'}}));
+ const wrong=existing(t),wrongPath=path.join(wrong,'.openai/hosting.json');
+ fs.writeFileSync(wrongPath,JSON.stringify({...original,d1:{binding:'UNRELATED'}}));
+ assert.throws(()=>composeScheduledShift(wrong),/wrong_site_or_database/);
+});
+
 test('composer appends review UNIQUE index before scheduler in the existing Site journal',t=>{
   const dir=existing(t);
   const r=composeScheduledShift(dir,{apply:true});
