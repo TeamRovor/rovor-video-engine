@@ -77,7 +77,8 @@ test('an absent or invalid owner key never grants PASS/FAIL to the private viewe
  const review={job_id:'gc-owner-pilot',verdict:'passed',output_sha256:DIGEST};
  const decision=(cookie='',token=null)=>handle(s.req('/api/hud/workforce/review',{
   method:'POST',cookie,token,body:review}),s.env,now);
- const state=()=>s.sql.prepare("SELECT human_review,reviewed_at FROM hud_cloud_workforce_jobs WHERE id='gc-owner-pilot'").get();
+ // Node SQLite produces null-prototype records; normalize before strict equality.
+ const state=()=>({...s.sql.prepare("SELECT human_review,reviewed_at FROM hud_cloud_workforce_jobs WHERE id='gc-owner-pilot'").get()});
  delete s.env.HUD_OWNER_TOKEN;
  const viewer=await login(s,R);
  assert.equal((await (await handle(s.req('/api/hud/owner/session',{cookie:viewer.cookie}),s.env,now)).json()).configured,false);
