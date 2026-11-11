@@ -194,6 +194,14 @@
     localStorage.setItem(SESSIONS_KEY,JSON.stringify(sessions.slice(0,16)));
   }catch{}};
 
+  function bindLatestControl(log,button){
+    const update=()=>{button.hidden=log.scrollHeight-log.clientHeight-log.scrollTop<=80;};
+    log.addEventListener('scroll',update,{passive:true});
+    button.addEventListener('click',()=>{log.scrollTop=log.scrollHeight;update();});
+    new MutationObserver(update).observe(log,{childList:true,subtree:true,characterData:true});
+    if(typeof ResizeObserver!=='undefined')new ResizeObserver(update).observe(log);
+    update();
+  }
   function paintChatLog(log,paint){
     const top=log.scrollTop;
     const following=log.scrollHeight-log.clientHeight-top<=80;
@@ -406,6 +414,15 @@
     mobileMenu.setAttribute('aria-label','Open conversations');
     const close=el('button',{type:'button',textContent:'✕',title:'Close (Esc)'});close.setAttribute('aria-label','Close chat');
     const log=el('div',{id:'rvc-log'});log.setAttribute('role','log');log.setAttribute('aria-live','polite');
+    const jumpLatest=el('button',{type:'button',className:'rvc-jump-latest',textContent:'↓ Jump to latest',hidden:true});
+    jumpLatest.setAttribute('aria-controls','rvc-log');
+    const logShell=el('div',{className:'rvc-log-shell'},log,jumpLatest);
+    document.head.append(el('style',{textContent:`
+#rvc .rvc-log-shell{position:relative;display:flex;flex:1;min-height:0;min-width:0}
+#rvc .rvc-jump-latest{position:absolute;z-index:2;bottom:12px;left:50%;transform:translateX(-50%);min-height:44px;padding:9px 16px;border:1px solid #76c8ff;border-radius:22px;background:#0a2c4d;color:#e7f7ff;font:600 13px system-ui;white-space:nowrap;box-shadow:0 4px 18px #0008}
+#rvc .rvc-jump-latest[hidden]{display:none!important}
+#rvc .rvc-jump-latest:focus-visible{outline:2px solid #d5f2ff;outline-offset:3px}
+`}));
     const context=el('input',{type:'checkbox',checked:true,id:'rvc-ctx'});
     const input=el('textarea',{placeholder:'Message… (Enter to send, Shift+Enter for a new line)'});input.setAttribute('aria-label','Message');
     const send=el('button',{type:'submit',textContent:'Send'});
@@ -498,7 +515,7 @@
         el('small',{},'Conversation history is stored on this device. Model text is not proof of employee execution.')),
       el('div',{className:'rvc-main'},
         el('header',{},mobileMenu,el('strong',{textContent:'ASK ROVOR'}),sourceSelect,modelSlot,clear,close),
-        connectionBar,providerDetails,log,
+        connectionBar,providerDetails,logShell,
         el('footer',{},teamRow,repoRow,routingNote,workforceDetails,ideaInbox,ideaFeedback,el('div',{className:'rvc-context-note',textContent:'Send asks a model; Queue idea saves a draft for owner review only. No automatic GitHub writes or AI execution.'}),form)));
     panel.setAttribute('aria-label','ROVOR chat');
     const sideBackdrop=el('button',{type:'button',className:'rvc-side-backdrop'});
@@ -506,6 +523,7 @@
     panel.append(sideBackdrop,modelSheet);
     sideBackdrop.onclick=()=>{panel.dataset.sideOpen='false';};
     document.body.append(fab,panel);
+    bindLatestControl(log,jumpLatest);
 
     // A deliberately separate route browser keeps the chat composer uncluttered.
     // Selection is explicit and never starts inference or changes providers.
@@ -1356,5 +1374,6 @@
   window.ROVOR_HUD_CHAT={start:()=>{if(!document.getElementById('rvc'))build();}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>window.ROVOR_HUD_CHAT.start());else window.ROVOR_HUD_CHAT.start();
 })();
+
 
 

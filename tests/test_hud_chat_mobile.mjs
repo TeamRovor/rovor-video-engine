@@ -5,6 +5,36 @@ import vm from 'node:vm';
 
 const src=readFileSync(new URL('../dashboard/command-center/native-v8-9/hud-chat.js',import.meta.url),'utf8');
 
+function latestControl(){
+  const events={},observers=[],buttonEvents={};
+  const log={scrollTop:0,scrollHeight:1000,clientHeight:400,
+    addEventListener(name,fn,opts){events[name]=fn;assert.equal(opts.passive,true);}};
+  const button={hidden:true,addEventListener(name,fn){buttonEvents[name]=fn;}};
+  class Observer{constructor(fn){observers.push(fn);}observe(target){assert.equal(target,log);}}
+  const code=src.slice(src.indexOf('  function bindLatestControl('),src.indexOf('  function paintChatLog('));
+  vm.runInNewContext(code+'\nbindLatestControl(log,button)',{log,button,MutationObserver:Observer,ResizeObserver:Observer});
+  return {log,button,events,observers,click:buttonEvents.click};
+}
+test('Jump to latest appears away from the bottom and an explicit click returns to the reply',()=>{
+  const s=latestControl();assert.equal(s.button.hidden,false);
+  s.click();assert.equal(s.log.scrollTop,s.log.scrollHeight);assert.equal(s.button.hidden,true);
+  s.log.scrollTop=100;s.events.scroll();assert.equal(s.button.hidden,false);
+});
+test('streaming, conversation redraw and viewport changes keep the latest control accurate',()=>{
+  const s=latestControl();s.log.scrollTop=600;s.events.scroll();assert.equal(s.button.hidden,true);
+  s.log.scrollHeight=1300;s.observers[0]();assert.equal(s.button.hidden,false);
+  s.log.scrollHeight=100;s.log.scrollTop=0;s.observers[0]();assert.equal(s.button.hidden,true);
+  s.log.scrollHeight=600;s.log.clientHeight=200;s.observers[1]();assert.equal(s.button.hidden,false);
+  s.log.clientHeight=600;s.observers[1]();assert.equal(s.button.hidden,true);
+});
+test('return-to-latest is a keyboard-native button with a touch target and reserved log space',()=>{
+  assert.match(src,/type:'button',className:'rvc-jump-latest'/);
+  assert.match(src,/jumpLatest\.setAttribute\('aria-controls','rvc-log'\)/);
+  assert.match(src,/\.rvc-jump-latest\{[^}]*min-height:44px/);
+  assert.match(src,/connectionBar,providerDetails,logShell,/);
+  assert.match(src,/bindLatestControl\(log,jumpLatest\)/);
+});
+
 function catalogHarness(){
   const requests=[];
   const send={disabled:false},modelBrowse={disabled:false},stateLabel={textContent:'Last confirmed reply'};
@@ -272,5 +302,6 @@ test('task routing uses real, recent per-model receipt reliability only with suf
   assert.equal(taskPlanner(evidence)(question,catalog).routes[0],'groq/fast:free',
     'stale performance observations must not influence choices');
 });
+
 
 
