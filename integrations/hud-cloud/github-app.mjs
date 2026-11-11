@@ -48,23 +48,27 @@ function headers(token){
  return {Authorization:'Bearer '+token,Accept:'application/vnd.github+json',
   'X-GitHub-Api-Version':'2022-11-28','User-Agent':'ROVOR-Cloud-Executor'};
 }
-export async function mintGithubReadToken(env,now=Date.now(),send=fetch){
+async function mintInstallationToken(env,permissions,now,send){
  const jwt=await appJwt(env,now);
  const res=await send(API+'/app/installations/'+env.ROVOR_GITHUB_INSTALLATION_ID+'/access_tokens',{
   method:'POST',redirect:'manual',headers:{...headers(jwt),'Content-Type':'application/json'},
-  body:JSON.stringify({repositories:['rovor-video-engine'],permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read'}}),
+  body:JSON.stringify({repositories:['rovor-video-engine'],permissions}),
   signal:AbortSignal.timeout(10000)});
  if(res.status!==201){await res.body?.cancel();throw Error('github_installation_token_denied');}
  const data=await boundedJson(res,30000);
  if(typeof data.token!=='string'||data.token.length<20||data.token.length>1024||
     !Number.isFinite(Date.parse(data.expires_at))||Date.parse(data.expires_at)<=now||
     Date.parse(data.expires_at)>now+3700000||
-    !data.permissions||['contents','issues','pull_requests','actions'].some(k=>data.permissions[k]!=='read')||
-    Object.values(data.permissions).some(v=>v!=='read')||
+    !data.permissions||Object.entries(permissions).some(([k,v])=>data.permissions[k]!==v)||
+    Object.entries(data.permissions).some(([k,v])=>k==='metadata'?v!=='read':permissions[k]!==v)||
     (data.repositories!==undefined&&(!Array.isArray(data.repositories)||data.repositories.length!==1||data.repositories[0]?.full_name!==REPO)))
   throw Error('github_installation_token_scope_invalid');
  return data.token;
 }
+export const mintGithubReadToken=(env,now=Date.now(),send=fetch)=>mintInstallationToken(env,
+ {contents:'read',issues:'read',pull_requests:'read',actions:'read'},now,send);
+export const mintGithubPatchToken=(env,now=Date.now(),send=fetch)=>mintInstallationToken(env,
+ {contents:'write',pull_requests:'write'},now,send);
 const routes=Object.freeze({runs:'/actions/runs?status=failure&per_page=8',issues:'/issues?state=open&per_page=8',pulls:'/pulls?state=open&per_page=8'});
 export async function readGithubDiscovery(token,send=fetch){
  if(typeof token!=='string'||token.length<20)throw Error('github_installation_token_denied');
