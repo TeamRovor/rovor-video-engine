@@ -79,7 +79,7 @@ export function upgradeRegisteredSite(directory,{apply=false,expectedSourceSha25
  const journal=JSON.parse(fs.readFileSync(journalPath,'utf8'));
  if(journal.version!=='7'||journal.dialect!=='sqlite'||!Array.isArray(journal.entries)||
     !journal.entries.length||journal.entries.length>9999||
-    journal.entries.some((e,i)=>e.idx!==i||!/^\\d{4}_[a-z0-9_]+$/.test(e.tag)||
+    journal.entries.some((e,i)=>e.idx!==i||!/^\d{4}_[a-z0-9_]+$/.test(e.tag)||
       !fs.existsSync(safe(root,'drizzle/'+e.tag+'.sql')))||
     !journal.entries.some(e=>e.tag.endsWith('_cloud_operations')))
   throw Error('existing_site_migration_journal_invalid');
