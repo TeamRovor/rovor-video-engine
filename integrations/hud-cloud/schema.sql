@@ -155,6 +155,7 @@ CREATE TABLE IF NOT EXISTS hud_cloud_workforce_jobs (
  title TEXT NOT NULL,
  prompt TEXT NOT NULL,
  source_commit TEXT NOT NULL,
+ revision TEXT NOT NULL,
  created_at INTEGER NOT NULL,
  started_at INTEGER,
  finished_at INTEGER,
