@@ -39,7 +39,7 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
   const nativeDiscoveryImport = "import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';";
   if(core.split(nativeDiscoveryImport).length!==2)throw Error('Unexpected native discovery import');
-  const nativeDiscoveryUnavailable = "const nativeDiscoveryStatus=()=>({source:'cloudflare_only',configured:false,enabled:false});\\n";
+  const nativeDiscoveryUnavailable = "const nativeDiscoveryStatus=()=>({source:'cloudflare_only',configured:false,enabled:false});\n";
   const discoveryValidatorImport = "import {validateIdea} from './idea-inbox.mjs';";
   const relayImport = "import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';";
   const chatParserImport = "import {parseChatRequest} from '../../tools/hud_chat.mjs';";
