@@ -33,6 +33,18 @@ const QUOTA_SCOPES = new Set(['account_model', 'project_model', 'organization_mo
 const validTime = value => Number.isSafeInteger(value) && value > 0;
 const fresh = (at, now, maxAge) => validTime(at) && at <= now && now - at <= maxAge;
 const safeID = id => typeof id === 'string' && MODEL_ID.test(id);
+// Keep read-only route suggestions compatible with the existing cloud executor.
+// This is NOT a free-use entitlement check or a dispatch authorization.
+const EXECUTOR_PINNED_ID = /^[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}$/;
+const MOVING_ALIAS = /(^|[/:-])(auto|latest)([/:-]|$)/i;
+function modelIdentityFailure(provider, id) {
+  if (!EXECUTOR_PINNED_ID.test(id) || MOVING_ALIAS.test(id)) return 'unpinned_model';
+  if (provider === 'gemini' && id.startsWith('models/')) return 'provider_model_id_mismatch';
+  if (provider === 'cloudflare-ai' && !id.startsWith('@cf/')) return 'provider_model_id_mismatch';
+  if (provider === 'openrouter' && !id.endsWith(':free')) return 'paid_route_denied';
+  if (provider === 'huggingface' && !/:[a-z0-9-]+$/.test(id)) return 'unpinned_upstream';
+  return null;
+}
 const keyFor = (provider, modelId) => JSON.stringify([provider, modelId]);
 const scoreKey = (provider, id, task) => JSON.stringify([provider, id, task]);
 
@@ -179,7 +191,8 @@ export function createModelRegistry({catalogs = [], admissions = [], reviews = [
       const key = keyFor(provider, id);
       const admission = evidence.get(key);
       const blocked_reason = !catalogFresh ? 'catalog_stale_or_unavailable' :
-        conflicts.has(key) ? 'conflicting_private_admission' : proofFailure(admission, id, now_ms);
+        modelIdentityFailure(provider, id) ||
+        (conflicts.has(key) ? 'conflicting_private_admission' : proofFailure(admission, id, now_ms));
       const byTask = {};
       for (const task of TASK_FAMILIES) {
         const observed = feedback.get(scoreKey(provider, id, task));
