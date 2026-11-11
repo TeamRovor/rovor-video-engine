@@ -97,10 +97,11 @@ test('one real Gemini-model mock reply advances D1 and leaves exact private owne
  assert.equal(usage.input_tokens,18);
  assert.equal((await tick(s.env,now+1000,google(calls))).body.dispatched,0);
  assert.equal(calls.filter(c=>c.method==='POST').length,1,'no completed-job replay');
- const first=await review(s.DB,{job_id:job.id,verdict:'passed'},now+2500);
+ assert.equal((await review(s.DB,{job_id:job.id,verdict:'passed',output_sha256:'0'.repeat(64)},now+2400)).status,409);
+ const first=await review(s.DB,{job_id:job.id,verdict:'passed',output_sha256:row.output_sha256},now+2500);
  assert.equal(first.body.human_review,'passed');
  assert.equal(first.body.output_sha256,row.output_sha256);
- assert.equal((await review(s.DB,{job_id:job.id,verdict:'failed'},now+3500)).status,409);
+ assert.equal((await review(s.DB,{job_id:job.id,verdict:'failed',output_sha256:row.output_sha256},now+3500)).status,409);
  assert.equal((await draft(s.DB,job.id)).body.human_review,'passed');
 });
 
@@ -123,7 +124,7 @@ test('upstream 429 becomes a nonreplayed failed attempt; no invented completed d
  assert.equal(result.body.dispatched,1);
  assert.equal(result.body.state,'failed');
  assert.equal((await draft(s.DB,job.id)).body.output,null);
- assert.equal((await review(s.DB,{job_id:job.id,verdict:'passed'},now+10)).status,409);
+ assert.equal((await review(s.DB,{job_id:job.id,verdict:'passed',output_sha256:'0'.repeat(64)},now+10)).status,409);
  assert.equal((await tick(s.env,now+5000,google(calls))).body.dispatched,0);
  assert.equal(calls.filter(c=>c.method==='POST').length,1);
 });
@@ -136,9 +137,9 @@ test('new workforce endpoints distinguish writer, reader and owner same-origin r
  assert.equal((await handle(jsonRequest('/api/hud/workforce/status',reader),s.env,now)).status,200);
  assert.equal((await handle(jsonRequest('/api/hud/workforce/draft/'+job.id,reader),s.env,now)).status,200);
  assert.equal((await handle(jsonRequest('/api/hud/workforce/review',writer,'POST',
-  {job_id:job.id,verdict:'passed'}),s.env,now)).status,401);
+  {job_id:job.id,verdict:'passed',output_sha256:'0'.repeat(64)}),s.env,now)).status,401);
  assert.equal((await handle(jsonRequest('/api/hud/workforce/review',reader,'POST',
-  {job_id:job.id,verdict:'passed'}),s.env,now)).status,409);
+  {job_id:job.id,verdict:'passed',output_sha256:'0'.repeat(64)}),s.env,now)).status,409);
  assert.equal((await handle(jsonRequest('/api/hud/workforce/control',reader,'POST',
   {enabled:true}),s.env,now)).status,401);
  assert.equal((await handle(jsonRequest('/api/hud/workforce/control',writer,'POST',
