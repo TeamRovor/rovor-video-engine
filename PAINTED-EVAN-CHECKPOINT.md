@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: independent skeptical upper-lid component reviewed
+CARTOON-EVAN-LID-ACCENT.md / evan-engine/reviews/lid-accent-v1.json. Existingleftupper skin/inkplane accepts left_upper0..1; lower/opposite lids unchanged; fullblinkwins via blink+(1−blink)*narrowing. skeptical_narrowing optin5.73→6.03(.35)→7.06→7.37; strongerbrow baseline. Defaultzero preserved; noart/retiming.18testsPASS. Trial.55nearlyclosedeye rejected; preservedseparately, reduced.35retainsvisiblepupil.
+
+outputs/evan-cartoon-lid-accent/Review.html: original5.5–7.5s;39actualposes reproducepriorbrowcomponent +9byteexactoffcue. Rightx≥215/speechy≥310/oral/jaw/audit/neck/nonhead/brand exact. Threeactualnativefixtures138/146/158 defaultparity; closedblinkunchanged.48baseline+48normal+192slowdecodes;32000exactPCM88000:120000. Native138/146/158/170/176 +7normal/5slow/3baseline samplesinspected. Moreasymmetriceyeopening; uppercrease/ink/fixedgaze/bodyacting remainbelowconcept. Realtime/listening/polishedFALSE;18flagsopen; no pendingjobs;automationACTIVE. Oldfulls/defaults/protectedversions preserved.
+
+NEXT: assemble ONEseparatefullv4candidate using reviewedbrow/lidframes only; allunaffectedframesBYTE-EXACT incl20closing. FulloriginalPCM/all18flags preserved. Reviewfullcut beforeaddingexpressionvariants. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync; localpushauthunavailable.
+
 ## Current task: stronger asymmetric brow component reviewed
 CARTOON-EVAN-BROW-ACCENT.md / evan-engine/reviews/brow-accent-v1.json. skeptical_brows(strong=True) is opt-in: leftRaise−6/rightRaise8/leftTilt−7/rightTilt−1, SAME 5.14/5.73/7.06/7.37 envelope and registered brow planes. Default−2/7/−4/−3 unchanged. Native speech uses original expression; upper renderer alone receives accent. No new artwork, retiming or full/default replacement.10testsPASS.
 

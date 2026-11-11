@@ -30,31 +30,36 @@ class CartoonEyelids:
         if self.domain[310:].any():
             raise ValueError('Eyelid ownership crossed speech boundary')
 
-    def planes(self, amount):
+    def planes(self, amount, *, left_upper=0.):
         if not np.isfinite(amount) or not 0 <= amount <= 1:
             raise ValueError('Blink must be finite and within 0..1')
-        if amount == 0:
+        if not np.isfinite(left_upper) or not 0 <= left_upper <= 1:
+            raise ValueError('Left upper-lid narrowing must be finite and within 0..1')
+        if amount == 0 and left_upper == 0:
             return []
         result = []
         # shortcut: authored lid curves and 12% ink onset; artist refinement is still required.
         onset = min(1., amount / .12)
-        for x, top, bottom, close, mask, col, yy in self.eyes:
-            upper = top + (close-top)*amount
+        for i, (x, top, bottom, close, mask, col, yy) in enumerate(self.eyes):
+            # A full blink owns closure; the independent upper lid yields continuously.
+            upper_amount = amount + (1-amount)*left_upper if i == 0 else amount
+            upper_onset = min(1., upper_amount / .12)
+            upper = top + (close-top)*upper_amount
             lower = bottom + (close-bottom)*amount
-            for coverage in [np.clip(upper[col]-yy+1, 0, 1), np.clip(yy-lower[col]+1, 0, 1)]:
+            for coverage, opacity in [(np.clip(upper[col]-yy+1, 0, 1), upper_onset), (np.clip(yy-lower[col]+1, 0, 1), onset)]:
                 plane = self.skin.copy()
-                plane[:, :, 3] = np.rint(coverage * mask * onset * 255).astype('uint8')
+                plane[:, :, 3] = np.rint(coverage * mask * opacity * 255).astype('uint8')
                 result.append(plane)
             ink = Image.new('RGBA', (2048, 2048))
             draw = ImageDraw.Draw(ink)
-            for curve, width, opacity in [(upper, 6, onset), (lower, 3, onset*(1-amount))]:
+            for curve, width, opacity in [(upper, 6, upper_onset), (lower, 3, onset*(1-amount))]:
                 draw.line([(round(px*4), round(py*4)) for px, py in zip(x, curve)], fill=(32, 21, 17, round(255*opacity)), width=width, joint='curve')
             result.append(np.array(ink.resize((512, 512), Image.Resampling.LANCZOS)))
         return result
 
-    def pose(self, amount):
+    def pose(self, amount, *, left_upper=0.):
         result = Image.fromarray(self.source)
-        for plane in self.planes(amount):
+        for plane in self.planes(amount, left_upper=left_upper):
             result.alpha_composite(Image.fromarray(plane))
         posed = np.array(result)
         posed[~self.domain] = self.source[~self.domain]

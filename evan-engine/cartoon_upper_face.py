@@ -45,7 +45,7 @@ class CartoonUpperFace:
         result[:, 353:] = self.glasses[:, 353:]
         return result
 
-    def render(self, speech, expression, amount, *, blink=0.):
+    def render(self, speech, expression, amount, *, blink=0., left_upper=0.):
         base = np.array(speech)
         if base.shape != (512, 512, 4) or base.dtype != np.uint8:
             raise ValueError('Expected native 512x512 RGBA speech face')
@@ -53,8 +53,8 @@ class CartoonUpperFace:
         if not np.isfinite(list(values.values())).all():
             raise ValueError('Expected finite brow controls')
         image = base.copy()
-        foundation = self.eyelids.pose(blink)
-        domain = self.domain | (self.eyelids.domain if blink else False)
+        foundation = self.eyelids.pose(blink, left_upper=left_upper)
+        domain = self.domain | (self.eyelids.domain if blink or left_upper else False)
         image[domain] = foundation[domain]
         canvas = image.astype('float32')
         canvas[:, :, :3] *= canvas[:, :, 3:4] / 255
@@ -111,3 +111,16 @@ def skeptical_blink(t, plan):
     # shortcut: one authored accent, not automatic emotion or eye-gaze inference.
     keys = [(mid-lead, 0.), (mid-lead*.15, 1.), (mid+tail*.175, 1.), (mid+tail, 0.)]
     return float(np.clip(flowing_track(t, keys), 0, 1))
+
+
+def skeptical_narrowing(t, plan):
+    """One opt-in left upper-lid accent after the skeptical glasses arrive."""
+    from skeptical_cartoon_review import skeptical_event
+    from painted_timing import flowing_track
+    if not np.isfinite(t):
+        raise ValueError('Expected finite review time')
+    event = skeptical_event(plan)
+    if event is None:
+        return 0.
+    arrive = min(event['arrive']+.30, (event['arrive']+event['hold'])/2)
+    return float(np.clip(flowing_track(t, [(event['arrive'], 0.), (arrive, .35), (event['hold'], .35), (event['settle'], 0.)]), 0, .35))

@@ -1,0 +1,53 @@
+{
+  "sourceFrames": [
+    132,
+    180
+  ],
+  "films": {
+    "Baseline": {
+      "decodedFrames": 48,
+      "sha256": "67f6b0fb714c088cc923d063c091064e0abec75c20e825accb67966ae36676e7"
+    },
+    "Normal": {
+      "decodedFrames": 48,
+      "sha256": "cd1af55abe84d7bfb39243d8205011fff109332e7f47f00f6ba15918f0a403ca"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 192,
+      "sha256": "c98c4604c523dc7bb699dfc9b7a417dff11f7c74b6f26c61e9127e220fbb2e1f"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 32000,
+    "decodedPcm16Samples": 32000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "exactPcmRange": [
+    88000,
+    120000
+  ],
+  "exactPcmSha256": "f5d0a16789ea12ffcd0c872bdc6c8114ab661ad3d8a1a67e0b51a87fd92c8337",
+  "sourceFileCount": 71,
+  "pngHashCount": 74,
+  "testsPassed": 18,
+  "polished": false,
+  "timingFlagsOpen": 18,
+  "peakNarrowing": 0.35,
+  "priorTrialPeak": 0.55,
+  "priorTrialSelected": false,
+  "reviewPath": "outputs/evan-cartoon-lid-accent/Review.html",
+  "newGuardedPoses": 39,
+  "unchangedOffcuePoses": 9,
+  "registeredArtReused": true,
+  "artGenerated": false,
+  "defaultChanged": false,
+  "fullFilmUpdated": false,
+  "flagsCleared": 0,
+  "realTimePlaybackAccepted": false,
+  "listeningAccepted": false,
+  "limits": "More asymmetric eye opening in sampled stills; existing upper crease/ink, fixed gaze, brow silhouettes and modest body acting remain below the cartoon concept.",
+  "next": "Integrate only the reviewed brow/lid component frames into a separate full v4 candidate; reuse all unaffected frames byte-exact, including 20 closing frames; preserve full original PCM and all 18 flags.",
+  "pendingJobs": []
+}

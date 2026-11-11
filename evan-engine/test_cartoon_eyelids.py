@@ -74,6 +74,53 @@ class EyelidTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             skeptical_blink(mid, invalid)
 
+    def test_left_upper_is_independent_and_full_blink_wins(self):
+        source = self.lids.source.copy()
+        for blink in (0, .5, 1):
+            baseline = self.lids.pose(blink)
+            candidate = self.lids.pose(blink, left_upper=.55)
+            np.testing.assert_array_equal(candidate[:, 215:], baseline[:, 215:])
+            np.testing.assert_array_equal(candidate[~self.lids.domain], baseline[~self.lids.domain])
+            if blink == 1:
+                np.testing.assert_array_equal(candidate, baseline)
+            else:
+                self.assertGreater(np.any(candidate != baseline, axis=2).sum(), 20)
+            before = self.lids.planes(blink or .01)
+            after = self.lids.planes(blink or .01, left_upper=.55)
+            np.testing.assert_array_equal(before[1], after[1])  # Lower plane stays put.
+            for a, b in zip(before[3:], after[3:]):
+                np.testing.assert_array_equal(a, b)
+        np.testing.assert_array_equal(self.lids.source, source)
+        base = Image.fromarray(self.rig.underlay)
+        before = np.array(self.rig.render(base, {}, 25))
+        after = np.array(self.rig.render(base, {}, 25, left_upper=.55))
+        np.testing.assert_array_equal(after[310:], before[310:])
+        opaque = self.rig.glasses_plane(25)[:, :, 3] == 255
+        np.testing.assert_array_equal(after[opaque], before[opaque])
+        for amount in (-.01, 1.01, np.nan, np.inf):
+            with self.assertRaises(ValueError):
+                self.lids.pose(0, left_upper=amount)
+
+    def test_skeptical_narrowing_shift_bounds_and_rest(self):
+        from cartoon_upper_face import skeptical_narrowing
+        from skeptical_cartoon_review import skeptical_event
+        words = "that's not some random browser thing".split()
+        plan = {'words': [dict(word=w, start=5+i*.3, end=5.2+i*.3, scriptIndex=i) for i, w in enumerate(words)]}
+        shifted = {'words': [dict(w, start=w['start']+2, end=w['end']+2) for w in plan['words']]}
+        event = skeptical_event(plan)
+        values=[]
+        for t in np.arange(4, 8, 1/480):
+            v=skeptical_narrowing(t,plan);values.append(v)
+            self.assertTrue(0 <= v <= .35)
+            self.assertAlmostEqual(v,skeptical_narrowing(t+2,shifted))
+            if t <= event['arrive'] or t >= event['settle']:
+                self.assertEqual(v,0)
+        self.assertLess(float(abs(np.diff(values)).max()),.006)
+        self.assertEqual(skeptical_narrowing(event['hold'],plan),.35)
+        self.assertEqual(skeptical_narrowing(6,{'words':[]}),0)
+        with self.assertRaises(ValueError):
+            skeptical_narrowing(np.nan,plan)
+
 
 if __name__ == '__main__':
     unittest.main()
