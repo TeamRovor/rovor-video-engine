@@ -549,6 +549,18 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       if ((asset.headers.get('Content-Type') || '').includes('text/html')) {
         const html = await asset.text();
         if (!html.includes('</body>')) return response(503, {error: 'hud_asset_invalid'});
+        // A separate owner-only D1 review page is deliberately NOT injected with
+        // the full HUD chat bootstrap. Both HTML and its companion JS still
+        // pass this exact same private reader-cookie authentication above.
+        if(url.pathname==='/workforce-review.html'){
+          if(asset.status!==200)return response(404,{error:'not_found'});
+          return new Response(html,{status:200,headers:{
+            'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store',
+            'Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',
+            'X-Frame-Options':'DENY',
+            'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+          }});
+        }
         return new Response(html.replace('</body>', CLOUD_START + '</body>'), {status: asset.status,
           headers: {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer'}});
       }
