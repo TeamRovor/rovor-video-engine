@@ -204,3 +204,16 @@ CREATE TABLE IF NOT EXISTS hud_cloud_workforce_native_ticks (
 );
 CREATE INDEX IF NOT EXISTS hud_cloud_workforce_native_ticks_recent
  ON hud_cloud_workforce_native_ticks(started_at DESC);
+
+-- Exact token usage belongs to the same immutable workforce output digest.
+-- Old completed jobs are not backfilled from aggregate chat usage.
+CREATE TABLE IF NOT EXISTS hud_cloud_workforce_usage (
+ job_id TEXT PRIMARY KEY REFERENCES hud_cloud_workforce_jobs(id),
+ output_sha256 TEXT NOT NULL CHECK(LENGTH(output_sha256)=64),
+ provider TEXT NOT NULL CHECK(provider='google-gemini-cloud'),
+ requested_model TEXT NOT NULL,
+ actual_model TEXT NOT NULL,
+ tokens_input INTEGER NOT NULL CHECK(tokens_input>=0),
+ tokens_output INTEGER NOT NULL CHECK(tokens_output>=0),
+ recorded_at INTEGER NOT NULL
+);

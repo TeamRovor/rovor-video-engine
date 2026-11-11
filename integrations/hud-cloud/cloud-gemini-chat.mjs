@@ -339,6 +339,7 @@ export async function cloudGeminiChat(body,env,now=Date.now(),send=fetch){
   return new Response(payload,{status:200,headers:{
     'Content-Type':'text/event-stream','Cache-Control':'no-store',
     'X-Content-Type-Options':'nosniff','X-ROVOR-Provider':'google-gemini-cloud',
-    'X-ROVOR-Requested-Model':body.model,'X-ROVOR-Resolved-Model':model
+    'X-ROVOR-Requested-Model':body.model,'X-ROVOR-Resolved-Model':model,
+    'X-ROVOR-Input-Tokens':String(inTok),'X-ROVOR-Output-Tokens':String(outTok)
   }});
 }
