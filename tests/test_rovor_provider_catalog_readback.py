@@ -128,6 +128,23 @@ class CatalogReadbackTests(unittest.TestCase):
         self.assertEqual(report["persisted"], 0)
         self.assertEqual(report["site_d1_receipts"], 0)
 
+    def test_reused_recent_d1_row_is_not_a_new_persisted_catalog_check(self):
+        client = FakeSite()
+        # Simulate a service that returns an existing, recent D1 row from
+        # its inventory cache rather than making a new provider observation.
+        client.rows["groq"] = {
+            "provider": "groq",
+            "observed_at": NOW_MS + list(check.PROVIDERS).index("groq"),
+            "status": "catalog_received",
+            "error_category": None,
+        }
+        report = check.audit_catalog_persistence(TOKEN, request=client, now_ms=NOW_MS)
+        self.assertEqual(report["catalog_received"], 9)
+        self.assertEqual(report["persisted"], 8)
+        self.assertEqual(report["state"], "catalog_or_persistence_incomplete")
+        self.assertFalse(next(row for row in report["providers"]
+                              if row["provider"] == "groq")["persisted"])
+
     def test_missing_secret_makes_zero_requests(self):
         client = FakeSite()
         report = check.audit_catalog_persistence("short", request=client, now_ms=NOW_MS)

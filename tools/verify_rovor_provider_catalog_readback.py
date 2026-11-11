@@ -59,6 +59,10 @@ def audit_catalog_persistence(token: str, request=control.safe_request, now_ms=N
                 "catalog_received": 0, "persisted": 0,
                 "providers": rows, "inference_verified": False,
                 "free_billing_verified": False}
+    # Compare against the private D1 preflight snapshot: a cached check is not
+    # evidence of a new catalog observation in this audit.
+    before = {item["provider"]: item.get("last_check")
+              for item in preflight["providers"] if isinstance(item, dict)}
     sent = {}
     for provider in PROVIDERS:
         # The service internally sends GET /models, not POST /chat/completions.
@@ -117,6 +121,9 @@ def audit_catalog_persistence(token: str, request=control.safe_request, now_ms=N
             and last_check.get("status") == result["status"]
             and type(last_check.get("observed_at")) is int
             and last_check["observed_at"] == result["observed_at"]
+            and (not isinstance(before.get(provider), dict)
+                 or type(before[provider].get("observed_at")) is not int
+                 or result["observed_at"] > before[provider]["observed_at"])
         )
         rows.append({
             "provider": provider,
