@@ -39,6 +39,18 @@ export async function verifyGithubPatchPermissions(env,send=fetch,now=Date.now()
   repo:'TeamRovor/rovor-video-engine',scoped_permissions:'contents_write_pull_requests_write',
   allowed_path_count:cfg.allowed_path_count,repository_written:false};
 }
+// Informational, credential-safe capability check: a short-lived downscoped
+// installation token is minted and discarded without GitHub repository writes.
+// Missing write permissions are reported, never taken as approval or enabled.
+export async function inspectGithubPatchCapability(env,send=fetch,now=Date.now()){
+ if(!githubAppConfigured(env))return {write_scope_available:false,reason:'app_not_configured',repository_written:false};
+ try{await mintGithubPatchToken(env,now,send);}catch{
+  return {write_scope_available:false,reason:'write_scope_unavailable',repository_written:false};
+ }
+ return {write_scope_available:true,reason:'scoped_token_verified',
+  permissions:'contents_write_pull_requests_write',repository:'TeamRovor/rovor-video-engine',
+  repository_written:false,patch_executor_enabled:env.ROVOR_GITHUB_PATCH_ENABLED==='true'};
+}
 export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
  const token=env.ROVOR_HUD_READER_TOKEN;
  if(typeof token!=='string'||token.length<32||/[\r\n]/.test(token))throw Error('private_reader_secret_missing');
@@ -74,7 +86,8 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
  const mode=process.argv[2];
  const task=mode==='--credentials'?verifyGithubCredentials(process.env):
   mode==='--worker'?verifyGithubWorker(process.env):
-  mode==='--patch'?verifyGithubPatchPermissions(process.env):Promise.reject(Error('invalid_verification_mode'));
+  mode==='--patch'?verifyGithubPatchPermissions(process.env):
+  mode==='--patch-capability'?inspectGithubPatchCapability(process.env):Promise.reject(Error('invalid_verification_mode'));
  task.then(r=>console.log(JSON.stringify(r))).catch(e=>{
   const code=String(e?.message||'github_app_verification_unavailable');
   console.error('ROVOR independent GitHub verification: '+(/^[a-z0-9_]{3,90}$/.test(code)?code:'github_app_verification_unavailable'));

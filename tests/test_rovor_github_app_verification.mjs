@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
 import {githubAppCredentialIssue} from '../integrations/hud-cloud/github-app.mjs';
-import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions} from '../integrations/hud-cloud/verify-github-app.mjs';
+import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability} from '../integrations/hud-cloud/verify-github-app.mjs';
 const NOW=Date.now(),pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
 const env={ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem,
  ROVOR_NATIVE_DISCOVERY_ENABLED:'true',ROVOR_HUD_READER_TOKEN:'r'.repeat(40)};
@@ -83,4 +83,30 @@ test('patch verifier distinguishes disabled, absent allowlist, rejected and unde
   token:'mock-patch-token-at-least-twenty-chars',expires_at:new Date(NOW+3600000).toISOString(),
   permissions:{contents:'read',pull_requests:'write',metadata:'read'}},{status:201}),NOW),/github_patch_write_scope_invalid/);
  await assert.rejects(()=>verifyGithubPatchPermissions({...enabled,ROVOR_GITHUB_APP_ID:''},no,NOW),/github_patch_app_credentials_missing/);
+});
+
+test('informational GitHub patch capability probe proves write-token scope but cannot enable executor or edit repository',async()=>{
+ const calls=[];
+ const result=await inspectGithubPatchCapability(env,async(url,init)=>{
+  calls.push({url,method:init.method});
+  assert.equal(url,'https://api.github.com/app/installations/456/access_tokens');
+  assert.equal(init.method,'POST');assert.equal(init.redirect,'manual');
+  assert.deepEqual(JSON.parse(init.body),{repositories:['rovor-video-engine'],
+   permissions:{contents:'write',pull_requests:'write'}});
+  return Response.json({token:'mock-temporary-token-long-enough',
+   expires_at:new Date(NOW+3600000).toISOString(),
+   permissions:{contents:'write',pull_requests:'write',metadata:'read'},
+   repositories:[{full_name:'TeamRovor/rovor-video-engine'}]},{status:201});
+ },NOW);
+ assert.equal(result.write_scope_available,true);assert.equal(result.patch_executor_enabled,false);
+ assert.equal(result.repository_written,false);assert.equal(calls.length,1);
+ assert(!JSON.stringify(result).includes('mock-temporary-token'));
+});
+test('informational GitHub patch capability probe fails closed without secrets or fatal deployment failure',async()=>{
+ const no=async()=>{throw Error('must not be called');};
+ assert.deepEqual(await inspectGithubPatchCapability({},no,NOW),
+  {write_scope_available:false,reason:'app_not_configured',repository_written:false});
+ const denied=await inspectGithubPatchCapability(env,async()=>new Response('private upstream error', {status:403}),NOW);
+ assert.deepEqual(denied,{write_scope_available:false,reason:'write_scope_unavailable',repository_written:false});
+ assert(!JSON.stringify(denied).includes('private upstream'));
 });
