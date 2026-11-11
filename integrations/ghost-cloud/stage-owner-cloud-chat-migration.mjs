@@ -49,9 +49,19 @@ export function stageOwnerCloudChatMigration(directory, {apply = false, sourceDi
         !fs.existsSync(safe(root, 'drizzle/' + e.tag + '.sql'))))
     throw Error('invalid_existing_migration_journal');
   const already = journal.entries.find(e => e.tag.endsWith('_owner_cloud_chat'));
-  if (already) return {project_id: PROJECT, prepared: false,
-    migration: already.tag + '.sql', already_journaled: true,
-    deployment_performed: false, d1_applied: 'unknown'};
+  if (already) {
+    // A journal tag alone is not proof the intended forward-only migration
+    // exists. Refuse to treat an absent or substituted SQL file as staged.
+    const recorded = fs.readFileSync(safe(root, 'drizzle/' + already.tag + '.sql'), 'utf8');
+    const expected = safeMigration(fs.readFileSync(
+      safe(sourceDirectory, 'migrations/owner-cloud-chat.sql'), 'utf8'));
+    if (recorded !== expected) throw Error('journaled_owner_chat_schema_mismatch');
+    return {project_id: PROJECT, prepared: false,
+      migration: already.tag + '.sql', already_journaled: true,
+      deployment_performed: false, d1_applied: 'unknown',
+      runtime_bundle_contains_owner_chat:
+        active.includes('function ownerChatModels(') && active.includes('/api/ghost/chat')};
+  }
   const source = safe(sourceDirectory, 'migrations/owner-cloud-chat.sql');
   const sql = safeMigration(fs.readFileSync(source, 'utf8'));
   const tag = String(journal.entries.length).padStart(4, '0') + '_owner_cloud_chat';
