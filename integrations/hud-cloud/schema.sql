@@ -251,3 +251,13 @@ CREATE TABLE IF NOT EXISTS hud_github_patch_events (
  step TEXT NOT NULL CHECK(step IN ('tree','commit','branch','draft_pr')),
  reference TEXT NOT NULL,recorded_at INTEGER NOT NULL,PRIMARY KEY(job_id,step)
 );
+
+-- Exact owner-classified source excerpt for the independent patch task.
+-- This is private; only the owner-approved public-safe excerpt is sent
+-- to the pinned free model. It cannot expand to other files or lines.
+CREATE TABLE IF NOT EXISTS hud_github_patch_task_sources (
+ job_id TEXT PRIMARY KEY REFERENCES hud_cloud_workforce_jobs(id),
+ path TEXT NOT NULL,base_commit TEXT NOT NULL,blob_sha TEXT NOT NULL,
+ snippet_sha256 TEXT NOT NULL,snippet TEXT NOT NULL,start_line INTEGER NOT NULL,
+ end_line INTEGER NOT NULL,authorized_at INTEGER NOT NULL
+);

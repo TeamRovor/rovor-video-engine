@@ -23,7 +23,57 @@ function ownerButtons(data){
  ownerStop.disabled=ownerBusy||!ownerActive||data?.enabled!==true;
  if(ownerStart.disabled||!ownerStartArmed)ownerStart.textContent='Start recurring workforce';
 }
-let latestWorkforce=null;
+let latestWorkforce=null,sourcePreview=null;
+const patchPanel=byId('patch-preparation'),patchPath=byId('patch-path'),patchStart=byId('patch-start-line'),
+ patchEnd=byId('patch-end-line'),patchBrief=byId('patch-brief'),patchPreviewButton=byId('patch-preview-button'),
+ patchPreviewText=byId('patch-preview-text'),patchConsent=byId('patch-consent'),patchConsentLabel=byId('patch-consent-label'),
+ patchTaskButton=byId('patch-task-button'),patchPreparationStatus=byId('patch-preparation-status');
+let patchBusy=false;
+function updatePatchButtons(){
+ patchPreviewButton.disabled=patchBusy||!ownerActive||!patchConfigured||!patchPath.value;
+ patchTaskButton.disabled=patchBusy||!ownerActive||!patchConfigured||!sourcePreview||!patchConsent.checked||
+  latestWorkforce?.enabled!==true||!patchBrief.value.trim();
+}
+function clearSourcePreview(){
+ sourcePreview=null;patchConsent.checked=false;patchConsentLabel.hidden=true;
+ patchPreviewText.hidden=true;patchPreviewText.textContent='';updatePatchButtons();
+}
+for(const field of [patchPath,patchStart,patchEnd,patchBrief])field.addEventListener('input',clearSourcePreview);
+patchConsent.addEventListener('change',updatePatchButtons);
+patchPreviewButton.addEventListener('click',async()=>{
+ if(patchBusy||!ownerActive)return;
+ clearSourcePreview();patchBusy=true;updatePatchButtons();
+ patchPreparationStatus.textContent='Reading pinned source; no inference…';
+ try{
+  const body={path:patchPath.value,start_line:Number(patchStart.value),end_line:Number(patchEnd.value)};
+  const preview=await privateRequest('/api/hud/owner/patch-source',{method:'POST',body});
+  if(preview.path!==body.path||preview.start_line!==body.start_line||preview.end_line!==body.end_line||
+    typeof preview.snippet!=='string'||!SHA.test(preview.snippet_sha256)||
+    await digest(preview.snippet)!==preview.snippet_sha256||preview.provider_called!==false||
+    preview.job_created!==false||preview.github_written!==false)throw Error('source_preview_unconfirmed');
+  if(patchPath.value!==body.path||Number(patchStart.value)!==body.start_line||
+    Number(patchEnd.value)!==body.end_line)throw Error('source_selection_changed');
+  sourcePreview=preview;patchPreviewText.textContent=preview.snippet;patchPreviewText.hidden=false;
+  patchConsentLabel.hidden=false;patchPreparationStatus.textContent='Pinned '+preview.base_commit.slice(0,12)+
+   ' · lines '+preview.start_line+'–'+preview.end_line+' of '+preview.total_lines+' · SHA-256 verified';
+ }catch{patchPreparationStatus.textContent='Source preview unavailable or scope denied. Choose a smaller allowed excerpt.';}
+ finally{patchBusy=false;updatePatchButtons();}
+});
+patchTaskButton.addEventListener('click',async()=>{
+ if(patchTaskButton.disabled||!sourcePreview)return;
+ const p=sourcePreview;patchBusy=true;updatePatchButtons();
+ patchPreparationStatus.textContent='Saving exact owner-authorized source task…';
+ try{
+  const body={path:p.path,start_line:p.start_line,end_line:p.end_line,base_commit:p.base_commit,blob_sha:p.blob_sha,
+    snippet_sha256:p.snippet_sha256,brief:patchBrief.value.trim(),confirm:'authorize_public_safe_patch_inference'};
+  const saved=await privateRequest('/api/hud/owner/patch-task',{method:'POST',body});
+  if(saved.state!=='queued'||!ID.test(saved.job_id)||saved.snippet_sha256!==p.snippet_sha256||
+     saved.provider_called!==false||saved.github_written!==false)throw Error('patch_task_unconfirmed');
+  clearSourcePreview();patchPreparationStatus.textContent='D1 CONFIRMED · queued '+saved.job_id+' · awaiting native tick.';
+  await refresh(false);
+ }catch{patchPreparationStatus.textContent='Task not confirmed. Preview again and inspect the queue before retrying.';clearSourcePreview();}
+ finally{patchBusy=false;updatePatchButtons();}
+});
 async function refreshOwner(){
  ownerActive=false;ownerConfigured=false;patchConfigured=false;
  try{
@@ -34,9 +84,16 @@ async function refreshOwner(){
    ownerConfigured?'Viewing session only · sign in with owner key for decisions and controls':
    'Owner key not configured · protected GitHub fallback remains available';
   const patch=await privateRequest('/api/hud/workforce/github-patch');
-  patchConfigured=patch.configured===true;
+  patchConfigured=patch.configured===true&&Array.isArray(patch.allowed_paths)&&patch.allowed_paths.length>0;
+  const current=patchPath.value;patchPath.textContent='';
+  if(patchConfigured)for(const path of patch.allowed_paths){
+   if(typeof path!=='string')continue;
+   const option=make('option','',path);option.value=path;patchPath.append(option);
+  }
+  if([...patchPath.options].some(x=>x.value===current))patchPath.value=current;
  }catch{ownerSessionLabel.textContent='Owner session could not be verified';}
- ownerButtons(latestWorkforce);
+ patchPanel.hidden=!(ownerActive&&patchConfigured);
+ clearSourcePreview();ownerButtons(latestWorkforce);updatePatchButtons();
 }
 async function ownerControl(action){
  if(!ownerActive||ownerBusy)return;
@@ -281,7 +338,7 @@ async function refresh(clearNotice=true){
   message.textContent=errorMessage(error);
   pending.textContent='?';reviewed.textContent='?';stop.textContent='?';
   nativeClock.textContent='?';nativeDetail.textContent='Readback unavailable';standing.textContent='?';
-  jobs.textContent='';latestWorkforce=null;ownerActive=false;ownerButtons(null);
+  jobs.textContent='';latestWorkforce=null;ownerActive=false;ownerButtons(null);patchPanel.hidden=true;clearSourcePreview();
  }finally{refreshButton.disabled=false;}
 }
 refreshButton.addEventListener('click',()=>refresh());
