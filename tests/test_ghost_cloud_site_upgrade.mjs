@@ -73,7 +73,8 @@ test('unknown or tampered Site execution wrappers cannot be silently overwritten
   oldOperations.replace('const __operations = (() => {','const __operations = hacked()'),
   oldOperations.replace('ROVOR_CLOUD_OPERATIONS_V1','ROVOR_CLOUD_OPERATIONS_FAKE'),
   oldOperations+'\n// ROVOR_CLOUD_OPERATIONS_V1 '+'b'.repeat(64),
-  oldScheduled.replace('scheduled(_event,env,ctx){','scheduled(notApproved,env,ctx){'),
+  oldScheduled.replace('\n},\nscheduled(_event,env,ctx){',
+   '\n},\nscheduled(notApproved,env,ctx){'),
   oldScheduled.replace('if(__operations.installHostedShiftRunner){','if(true){')
  ];
  for(const [index,bad] of incorrect.entries())
