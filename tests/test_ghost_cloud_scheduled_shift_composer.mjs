@@ -101,7 +101,9 @@ test('canonical feed misconfiguration fails closed instead of falling back to ol
   const imported=await import('data:text/javascript;base64,'+Buffer.from(compiled).toString('base64'));
   const s=mock(),promises=[];
   s.env.GHOST_FEED_COMMIT='a'.repeat(40);
-  delete s.env.GHOST_APPROVED_TASKS;
+  // Empty/missing approvals intentionally yield an idle shift. Malformed explicit
+  // approval configuration must instead fail closed without legacy fallback.
+  s.env.GHOST_APPROVED_TASKS='{invalid-json';
   imported.default.scheduled({},s.env,{waitUntil:p=>promises.push(p)});
   await Promise.all(promises);
   const result=await (await imported.default.fetch(req('/api/ghost/shifts'),s.env)).json();
