@@ -12,6 +12,8 @@ const make=(tag,className,text)=>{
 const jobs=byId('jobs'),message=byId('message'),state=byId('page-status');
 const pending=byId('pending'),reviewed=byId('reviewed'),stop=byId('stop-state');
 const refreshButton=byId('refresh');
+const nativeClock=byId('native-clock'),nativeDetail=byId('native-detail'),standing=byId('standing-state');
+const validTokens=n=>Number.isSafeInteger(n)&&n>=0;
 const SHA=/^[a-f0-9]{64}$/;
 const ID=/^[a-z0-9][a-z0-9-]{0,149}$/;
 const VERDICTS=new Set(['passed','failed']);
@@ -140,6 +142,15 @@ async function refresh(clearNotice=true){
   stop.textContent=data.enabled?'ENABLED':'STOPPED';
   stop.title=data.enabled?'New job claims permitted by STOP only (all provider and review gates still apply)':
    'New model job claims stopped; saved drafts remain available for review';
+  const tick=data.native_schedule?.source==='cloudflare_scheduled_event'?data.native_schedule.last_tick:null;
+  const validTick=tick&&Number.isSafeInteger(tick.scheduled_at)&&tick.scheduled_at>0&&
+    typeof tick.result_state==='string'&&/^[a-z0-9_]{1,80}$/.test(tick.result_state);
+  nativeClock.textContent=validTick?tick.result_state.replaceAll('_',' ').toUpperCase():'NO RECEIPT';
+  nativeDetail.textContent=validTick?'Native event '+formatTime(tick.scheduled_at)+
+   (tick.inference_completed===1?' · completed job':' · no completed inference'):'No native cron receipt recorded';
+  standing.textContent=data.recurring_execution_authorized===true?'ARMED':'NOT ARMED';
+  standing.title=data.recurring_execution_authorized===true?'Expires '+formatTime(data.standing_plan?.expires_at):
+   'Recurring execution requires a reviewed PASS and standing owner authorization';
   jobs.textContent='';
   const ordered=rows.slice().sort((a,b)=>{
    const ap=a.state==='needs_review'&&a.human_review==='not_recorded'?1:0;
@@ -157,6 +168,10 @@ async function refresh(clearNotice=true){
    heading.append(make('p','metadata','Requested at '+formatTime(entry.created_at)+
     ' · completed '+formatTime(entry.finished_at)));
    heading.append(make('p','metadata','Actual model: '+(entry.actual_model||'Not confirmed')));
+   const exact=entry.provider==='google-gemini-cloud'&&validTokens(entry.tokens_input)&&validTokens(entry.tokens_output);
+   heading.append(make('p','metadata',exact?
+    'Exact provider usage: '+entry.tokens_input.toLocaleString()+' input · '+entry.tokens_output.toLocaleString()+' output tokens':
+    'Exact job token usage: not recorded'));
    const awaiting=entry.state==='needs_review'&&entry.human_review==='not_recorded';
    const tag=make('span','state '+(awaiting?'wait':VERDICTS.has(entry.human_review)?'ok':''),
     awaiting?'AWAITING YOUR REVIEW':VERDICTS.has(entry.human_review)?
@@ -176,11 +191,12 @@ async function refresh(clearNotice=true){
    jobs.append(card);
   }
   message.textContent='D1 readback confirmed · '+pendingCount+' awaiting owner review · '+
-   reviewedCount+' reviewed · cloud execution STOP '+(data.enabled?'ON':'OFF')+
+   reviewedCount+' reviewed · cloud dispatch '+(data.enabled?'ENABLED':'STOPPED')+
    '. Models are not assumed online merely from their saved receipts.';
  }catch(error){
   message.textContent=errorMessage(error);
   pending.textContent='?';reviewed.textContent='?';stop.textContent='?';
+  nativeClock.textContent='?';nativeDetail.textContent='Readback unavailable';standing.textContent='?';
   jobs.textContent='';
  }finally{refreshButton.disabled=false;}
 }

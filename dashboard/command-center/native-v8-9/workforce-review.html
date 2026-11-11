@@ -19,7 +19,7 @@ h1{font-size:clamp(25px,4vw,39px);margin:29px 0 6px;letter-spacing:-.035em}
 .intro{color:var(--quiet);line-height:1.6;max-width:760px;margin:0 0 24px;font-size:14px}
 .status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0}
 .stat{border:1px solid var(--edge);background:linear-gradient(145deg,#0b2947,#08192c);padding:18px;border-radius:15px;min-width:0}
-.stat strong{display:block;font-size:28px;font-weight:800;line-height:1.2}.stat small{display:block;margin-top:7px;color:var(--quiet);font-size:12px}
+.stat strong{display:block;font-size:28px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}.stat small{display:block;margin-top:7px;color:var(--quiet);font-size:12px;line-height:1.45}.stat .compact{font-size:18px}
 .section-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:30px 0 12px}
 h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea5;background:#103b60;color:#f0f8ff;border-radius:10px;padding:11px 18px;min-height:44px;font-size:13px;font-weight:700}
 #message{min-height:22px;color:#b7cfe0;font-size:13px;line-height:1.5}
@@ -55,7 +55,10 @@ h2{font-size:17px;letter-spacing:.02em;margin:0}.refresh{border:1px solid #477ea
 <div class="stat"><strong id="pending">—</strong><small>Awaiting review</small></div>
 <div class="stat"><strong id="reviewed">—</strong><small>Owner reviewed</small></div>
 <div class="stat"><strong id="stop-state">—</strong><small>Cloud job dispatch</small></div>
+<div class="stat"><strong id="native-clock" class="compact">—</strong><small id="native-detail">Last actual native cron event</small></div>
+<div class="stat"><strong id="standing-state" class="compact">—</strong><small>Seven-day recurring approval</small></div>
 </section>
+<p class="intro">After reviewing a satisfactory Gemini draft and recording PASS, use the <a href="https://github.com/TeamRovor/rovor-video-engine/actions/workflows/start-cloud-workforce.yml" rel="noreferrer">protected standing authorization workflow</a> to enable recurring discovery. A PASS alone never starts the scheduler.</p>
 <div class="section-head"><h2>Saved job receipts</h2><button class="refresh" id="refresh" type="button">Refresh receipts</button></div>
 <p id="message" role="status" aria-live="polite">Checking private records…</p>
 <div id="jobs" class="grid" aria-live="off"></div>
