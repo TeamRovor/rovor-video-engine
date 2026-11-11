@@ -176,6 +176,12 @@ export async function infer(provider,cfg,env,prompt,fetcher=(...args)=>globalThi
   // Never attribute rate limits when the returned model differs from the pinned request.
   const rate_limit_observations=provider==='mistral'&&info.actual_model===cfg.model?
    readMistralMinuteLimits(response.headers,cfg.model,now):[];
+  // HTTP 200 is not proof that a pinned free-only route was actually used.
+  // A missing or different resolved model must never become a review-ready
+  // draft, advance the successful-route receipt, or trigger a second request.
+  if(info.actual_model!==cfg.model)return {...info,status:'failed',
+   error_code:info.actual_model===null?'upstream_model_unverified':'upstream_model_mismatch',
+   retry_after:null,...(quota_observation?{quota_observation}:{})};
   if(typeof text!=='string'||!text.trim()||bytes(text)>32768||choice.finish_reason!=='stop')return {...info,status:'failed',error_code:'incomplete_output',retry_after:null,
    ...(quota_observation?{quota_observation}:{}),...(rate_limit_observations.length?{rate_limit_observations}:{})};
   return {...info,status:'needs_review',error_code:null,output:text,retry_after:null,
