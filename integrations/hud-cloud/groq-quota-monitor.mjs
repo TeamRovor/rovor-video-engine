@@ -93,3 +93,38 @@ export async function probeGroqCatalogue(env,db,now=Date.now(),fetcher=fetch){
       rpd?.limit??null,rpd?.remaining??null,rpd?.reset_at??null,
       tpm?.limit??null,tpm?.remaining??null,tpm?.reset_at??null,now).run();
 }
+
+// Save only headers from an already authorized pinned-model request.
+export async function recordGroqCompletionQuota(db,headers,now,status){
+  if(!Number.isSafeInteger(now)||now<=0||![200,429].includes(status))return;
+  const q=groqRateHeaders(headers,now),r=q.requests_per_day,t=q.tokens_per_minute;
+  await db.prepare(`INSERT INTO hud_groq_completion_quota
+    (id,observed_at,response_status,rpd_limit,rpd_remaining,rpd_reset_at,tpm_limit,tpm_remaining,tpm_reset_at)
+    VALUES (1,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
+    observed_at=excluded.observed_at,response_status=excluded.response_status,
+    rpd_limit=excluded.rpd_limit,rpd_remaining=excluded.rpd_remaining,rpd_reset_at=excluded.rpd_reset_at,
+    tpm_limit=excluded.tpm_limit,tpm_remaining=excluded.tpm_remaining,tpm_reset_at=excluded.tpm_reset_at
+    WHERE excluded.observed_at>=hud_groq_completion_quota.observed_at`)
+    .bind(now,status,r?.limit??null,r?.remaining??null,r?.reset_at??null,
+      t?.limit??null,t?.remaining??null,t?.reset_at??null).run();
+}
+export async function groqCompletionQuotaEvidence(db,now=Date.now()){
+  const empty={source:'groq_api_completion_headers',state:'not_checked',observed_at:null,
+    response_status:null,requests_per_day:null,tokens_per_minute:null,
+    scope:'Groq API response headers; billing unknown'};
+  let row;
+  try{row=await db.prepare('SELECT * FROM hud_groq_completion_quota WHERE id=1').bind().first();}
+  catch{return {...empty,state:'unavailable'};}
+  if(!row||!Number.isSafeInteger(row.observed_at)||![200,429].includes(row.response_status))return empty;
+  const age=now-row.observed_at,fresh=age>=0&&age<=MAX_QUOTA_AGE_MS;
+  const metric=(prefix,unit,window,maxAge)=>{
+    const limit=row[prefix+'_limit'],remaining=row[prefix+'_remaining'],reset=row[prefix+'_reset_at'];
+    if(!fresh||age>maxAge||!Number.isSafeInteger(limit)||limit<=0||
+       !Number.isSafeInteger(remaining)||remaining<0||remaining>limit||
+       (reset!==null&&(!Number.isFinite(Date.parse(reset))||Date.parse(reset)<=now)))return null;
+    return {unit,window,limit,remaining,used:limit-remaining,reset_at:reset};
+  };
+  return {...empty,state:fresh?'response_received':'stale',observed_at:new Date(row.observed_at).toISOString(),
+    response_status:row.response_status,requests_per_day:metric('rpd','requests','day',MAX_QUOTA_AGE_MS),
+    tokens_per_minute:metric('tpm','tokens','minute',60000)};
+}

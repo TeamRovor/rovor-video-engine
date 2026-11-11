@@ -217,3 +217,12 @@ CREATE TABLE IF NOT EXISTS hud_cloud_workforce_usage (
  tokens_output INTEGER NOT NULL CHECK(tokens_output>=0),
  recorded_at INTEGER NOT NULL
 );
+
+-- Latest authenticated completion rate-limit headers, not billing evidence.
+CREATE TABLE IF NOT EXISTS hud_groq_completion_quota (
+ id INTEGER PRIMARY KEY CHECK(id=1),
+ observed_at INTEGER NOT NULL,
+ response_status INTEGER NOT NULL CHECK(response_status IN (200,429)),
+ rpd_limit INTEGER, rpd_remaining INTEGER, rpd_reset_at TEXT,
+ tpm_limit INTEGER, tpm_remaining INTEGER, tpm_reset_at TEXT
+);

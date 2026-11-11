@@ -1028,14 +1028,23 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
  const cloudGroqValid=groqCloud?.source==='cloud_direct_groq'&&groqCloud?.mac_required===false&&
    Number.isFinite(Date.parse(groqCloud?.observed_at||''))&&Math.abs(Date.now()-Date.parse(groqCloud.observed_at))<=15000;
  const gc=cloudGroqValid?groqCloud.catalog:null;
- const grpd=gc?.state==='catalog_received'?gc.requests_per_day:null;
- const gtpm=gc?.state==='catalog_received'?gc.tokens_per_minute:null;
+ const gcomp=cloudGroqValid?groqCloud.completion_quota:null;
+ const completionLatest=gcomp?.source==='groq_api_completion_headers'&&
+   Number.isFinite(Date.parse(gcomp.observed_at||''))&&
+   (!Number.isFinite(Date.parse(gc?.observed_at||''))||Date.parse(gcomp.observed_at)>=Date.parse(gc.observed_at));
+ const quotaSource=completionLatest?(gcomp.state==='response_received'?gcomp:null):
+   (gc?.state==='catalog_received'?gc:null);
+ const grpd=quotaSource?.requests_per_day??null;
+ const gtpm=quotaSource?.tokens_per_minute??null;
  const quotaInfo='<span>GROQ API · model '+(gc?.model_present===true?'IN CATALOG':gc?.model_present===false?'NOT IN CATALOG':'NOT VERIFIED')+
   ' · catalogue '+esc(gc?.state||'unavailable')+' · billing status NOT VERIFIED by headers</span>'+
   '<span>Daily requests (RPD): '+(grpd?fmt(grpd.remaining)+' / '+fmt(grpd.limit)+' remaining'+(grpd.reset_at?' · reset '+esc(prettyTime(grpd.reset_at)):''):'UNKNOWN')+
   ' · tokens/min (TPM): '+(gtpm?fmt(gtpm.remaining)+' / '+fmt(gtpm.limit)+' remaining'+(gtpm.reset_at?' · reset '+esc(prettyTime(gtpm.reset_at)):''):'UNKNOWN')+
-  ' · only fresh Groq response headers are shown</span>'+
-  (gc?.state==='catalog_received'&&(!grpd||!gtpm)?
+  ' · only fresh Groq response headers are shown'+
+  (completionLatest?' · authenticated completion response '+esc(gcomp.response_status)+' · '+esc(gcomp.state):'')+'</span>'+
+  (completionLatest&&(!grpd||!gtpm)?
+   '<span>Latest completion did not supply current usable headers for every limit. UNKNOWN does not mean zero.</span>':
+  gc?.state==='catalog_received'&&(!grpd||!gtpm)?
    '<span>Groq model lookup succeeded, but its catalogue response did not supply usable RPD/TPM rate headers. Remaining allowance cannot be calculated. UNKNOWN does not mean zero or a Mac disconnection.</span>':'');
  const cloudGroqPanel='<section class="rvq-cloud" aria-label="Mac independent cloud Groq activity"><strong>CLOUD GROQ · DIRECT · NO MAC REQUIRED</strong>'+
    (cloudGroqValid?'<span>Route: '+esc(groqCloud.model||'groq/openai/gpt-oss-20b')+
