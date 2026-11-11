@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
 import {githubAppCredentialIssue} from '../integrations/hud-cloud/github-app.mjs';
-import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability,resolveOptionalPatchDeployment} from '../integrations/hud-cloud/verify-github-app.mjs';
+import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability,resolveOptionalPatchDeployment,verifyGithubPatchWorker} from '../integrations/hud-cloud/verify-github-app.mjs';
 import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-secret-payload.mjs';
 const NOW=Date.now(),pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
 const env={ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem,
@@ -144,4 +144,58 @@ test('optional release mode enables writes only after exact downscoped token pro
  assert.equal(result.write_scope_verified,true);
  assert.equal(result.repository_written,false);
  assert.equal(requests,1);
+});
+
+
+test('deployed patch executor is private, enabled and exactly confined to approved paths',async()=>{
+ const config={...env,ROVOR_GITHUB_PATCH_ENABLED:'true',
+  ROVOR_GITHUB_PATCH_PATHS:'["architecture/ROVOR-AUTONOMOUS-DISCOVERY.md"]'};
+ const seen=[];
+ const read=async(url,opts)=>{
+  assert.equal(url,'https://rovor-hud-telemetry.rovordigital.workers.dev/api/hud/workforce/github-patch');
+  assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');
+  seen.push(opts.headers.Authorization?'reader':'anonymous');
+  return opts.headers.Authorization?Response.json({source:'rovor_independent_github_patch',
+   configured:true,readiness:'configuration_complete_write_scope_unverified',
+   allowed_paths:['architecture/ROVOR-AUTONOMOUS-DISCOVERY.md'],items:[],
+   mac_required:false,chatgpt_required:false,merges_allowed:false}):new Response(null,{status:401});
+ };
+ const proof=await verifyGithubPatchWorker(config,read,{attempts:2,pause:async()=>{}});
+ assert.deepEqual(seen,['anonymous','reader']);
+ assert.equal(proof.configured,true);assert.equal(proof.allowlist_matches_deployment,true);
+ assert.equal(proof.repository_written_by_verifier,false);
+ assert.equal(proof.merges_allowed,false);
+ assert(!JSON.stringify(proof).includes(config.ROVOR_HUD_READER_TOKEN));
+});
+
+test('deployed patch checker rejects public exposure and unauthorized scope expansion',async()=>{
+ const config={...env,ROVOR_GITHUB_PATCH_ENABLED:'true',ROVOR_GITHUB_PATCH_PATHS:'["architecture/roadmap.md"]'};
+ const snapshot={source:'rovor_independent_github_patch',configured:true,
+  allowed_paths:['architecture/roadmap.md','evan-engine/src/unsafe.js'],items:[],
+  mac_required:false,chatgpt_required:false,merges_allowed:false};
+ const fetcher=async(_url,options)=>options.headers.Authorization?Response.json(snapshot):new Response(null,{status:401});
+ await assert.rejects(()=>verifyGithubPatchWorker(config,fetcher,{attempts:2,pause:async()=>{}}),/github_patch_worker_config_mismatch/);
+ let authCount=0;
+ await assert.rejects(()=>verifyGithubPatchWorker(config,async(_url,options)=>{
+  authCount++;return Response.json(snapshot);
+ }),/github_patch_anonymous_access_not_denied/);
+ assert.equal(authCount,1);
+ const disabled={...config,ROVOR_GITHUB_PATCH_ENABLED:'false'};
+ const good=await verifyGithubPatchWorker(disabled,async(_url,options)=>options.headers.Authorization?
+  Response.json({...snapshot,configured:false,allowed_paths:[]}):new Response(null,{status:401}),
+  {attempts:1,pause:async()=>{}});
+ assert.equal(good.configured,false);assert.equal(good.allowed_path_count,0);
+});
+
+test('deployed patch checker retries only bounded propagation mismatch, not security failure',async()=>{
+ const config={...env,ROVOR_GITHUB_PATCH_ENABLED:'true',ROVOR_GITHUB_PATCH_PATHS:'["architecture/roadmap.md"]'};
+ let authenticated=0,retries=0;
+ const r=await verifyGithubPatchWorker(config,async(_url,options)=>{
+  if(!options.headers.Authorization)return new Response(null,{status:401});
+  authenticated++;
+  return Response.json({source:'rovor_independent_github_patch',configured:authenticated>1,
+   allowed_paths:authenticated>1?['architecture/roadmap.md']:[],items:[],
+   mac_required:false,chatgpt_required:false,merges_allowed:false});
+ },{attempts:2,pause:async()=>{retries++}});
+ assert.equal(r.configured,true);assert.equal(authenticated,2);assert.equal(retries,1);
 });
