@@ -101,6 +101,41 @@ export async function verifyGithubWorker(env,send=fetch,now=Date.now()){
   native_github_read_verified:verified,last_native_check_at:last?new Date(last.started_at).toISOString():null,
   last_native_result:last?.result_state??null,mac_required:false,chatgpt_required:false,github_actions_required:false};
 }
+// Live readback only. A deployed endpoint without a completed hourly checkpoint
+// must never be presented as proof that an employee caught up on GitHub.
+export async function verifyDeployedRepoCatchup(env,send=fetch){
+ const token=env?.ROVOR_HUD_READER_TOKEN;
+ if(typeof token!=='string'||token.length<32||/[\r\n]/.test(token))throw Error('private_reader_secret_missing');
+ const url=ORIGIN+'/api/hud/workforce/repo-catchup';
+ const get=authenticated=>send(url,{method:'GET',redirect:'manual',cache:'no-store',
+  signal:AbortSignal.timeout(12000),headers:authenticated?{Authorization:'Bearer '+token}:{}});
+ if((await get(false)).status!==401)throw Error('repo_catchup_anonymous_exposure');
+ const r=await get(true);
+ if(r.status!==200)throw Error('repo_catchup_private_status_unavailable');
+ const raw=await r.text();
+ if(raw.length>8000)throw Error('repo_catchup_status_invalid');
+ let doc;try{doc=JSON.parse(raw);}catch{throw Error('repo_catchup_status_invalid');}
+ if(doc?.source!=='rovor_private_repo_catchup'||
+  !['not_checked','ready','read_unavailable'].includes(doc.state)||
+  doc.private_reader_required!==true||doc.model_called!==false||doc.repository_written!==false||
+  doc.mac_required!==false||doc.chatgpt_required!==false)throw Error('repo_catchup_status_invalid');
+ const s=doc.snapshot,validSha=x=>typeof x==='string'&&/^[a-f0-9]{40}$/.test(x);
+ if(s!==null){
+  if(!s||!validSha(s.head_sha)||!Array.isArray(s.recent_commit_shas)||
+   s.recent_commit_shas.length<1||s.recent_commit_shas.length>4||
+   s.recent_commit_shas.some(x=>!validSha(x))||s.recent_commit_shas[0]!==s.head_sha||
+   !Array.isArray(s.changed_paths)||s.changed_paths.length>24||
+   s.changed_paths.some(x=>typeof x!=='string'||x.length>200||x.length<1)||
+   !['failed_run_ids','recent_success_run_ids','open_issue_numbers','open_pr_numbers'].every(k=>
+    Array.isArray(s[k])&&s[k].length<=8&&s[k].every(n=>Number.isSafeInteger(n)&&n>0))||
+   typeof s.changed_paths_truncated!=='boolean')throw Error('repo_catchup_status_invalid');
+ }
+ if(doc.state==='ready'&&!s)throw Error('repo_catchup_status_invalid');
+ return {private_auth_verified:true,state:doc.state,checkpoint_present:!!s,
+  head_sha:s?.head_sha??null,recent_commit_count:s?.recent_commit_shas.length??0,
+  changed_path_count:s?.changed_paths.length??0,model_called:false,repository_written:false};
+}
+
 // Read-only check of the deployed private owner's approval gate. The GitHub
 // App write scope does not grant a human owner session. No owner credential,
 // cookie, verdict, model request, or repository mutation occurs here.
@@ -185,6 +220,7 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
   mode==='--patch'?verifyGithubPatchPermissions(process.env):
   mode==='--patch-worker'?verifyGithubPatchWorker(process.env):
   mode==='--owner-session'?verifyDeployedOwnerSession(process.env):
+  mode==='--repo-catchup'?verifyDeployedRepoCatchup(process.env):
   mode==='--patch-capability'?inspectGithubPatchCapability(process.env):
   mode==='--patch-effective'?(async()=>{
    const effective=await resolveOptionalPatchDeployment(process.env);
