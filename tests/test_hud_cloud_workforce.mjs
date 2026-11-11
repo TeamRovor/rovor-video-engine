@@ -239,3 +239,106 @@ test('GitHub owner pilot form pre-fills only a new unapproved candidate and neve
  assert.match(operator,/available_unapproved_candidates:ownerCandidates/);
  assert.match(operator,/requires_explicit_owner_selection:true/);
 });
+
+
+test('standing plan requires separate owner PASS, then native ticks refill fresh GitHub work without manual launches',async()=>{
+ const s=setup(),commit='b'.repeat(40);
+ approved(s);
+ // A writer cannot arm a recurring plan using a one-shot permit alone.
+ assert.equal((await control(s.DB,true,commit,now)).status,409);
+ assert.equal((await status(s.DB)).body.enabled,false);
+ await intake(s.DB,packet,now-2000);
+ await control(s.DB,true);
+ const pilotCalls=[];
+ await tick(s.env,now,google(pilotCalls));
+ const completed=(await draft(s.DB,job.id)).body;
+ assert.equal(completed.state,'needs_review');
+ await control(s.DB,false);
+ assert.equal((await control(s.DB,true,commit,now+1000)).status,409);
+ assert.equal((await review(s.DB,{job_id:job.id,verdict:'passed',
+  output_sha256:completed.output_sha256},now+1000)).status,200);
+ const started=await control(s.DB,true,commit,now+2000);
+ assert.equal(started.status,200);
+ assert.equal(started.body.recurring_authorized,true);
+ assert.equal(started.body.expires_at,now+2000+7*86400000);
+ // Trusted discovery records contain untrusted text; never send that body
+ // to Gemini, and never permit a proposal to decide its own approval.
+ const insert=s.db.prepare(`INSERT INTO hud_auto_discovery_inbox
+   (id,discovery_key,day_id,created_at,content,priority,state)
+   VALUES (?,?,?,?,?,?,'pending_review')`);
+ insert.run('disc-1','run-1234',Math.floor(now/86400000),now,
+  'untrusted discovery text: NEVER SEND TO MODEL',95);
+ insert.run('disc-2','issue-1235',Math.floor(now/86400000),now,
+  'private data must never be copied',75);
+ insert.run('disc-stale','run-9999',Math.floor(now/86400000)-3,now-3*86400000,
+  'stale evidence',100);
+ const calls=[];
+ const send=async(url,options)=>{
+   if(options.method==='POST'){
+    assert(!options.body.includes('NEVER SEND TO MODEL'));
+    assert(!options.body.includes('private data must never be copied'));
+    assert.match(options.body,/ROVOR verified GitHub discovery/);
+    assert.match(options.body,/You cannot browse this URL/);
+   }
+   return google(calls)(url,options);
+ };
+ const first=await tick(s.env,now+61000,send);
+ assert.equal(first.body.state,'needs_review');
+ assert.match(first.body.id,/^gc-rec-[a-f0-9]{48}$/);
+ const saved=s.db.prepare('SELECT * FROM hud_cloud_workforce_jobs WHERE id=?').get(first.body.id);
+ assert.equal(saved.task_id,'cloud-discovery-run-1234');
+ assert.equal(saved.employee,'Mike');
+ assert.equal(saved.source_commit,commit);
+ assert.equal(saved.human_review,'not_recorded');
+ assert.match(saved.prompt,/actions\/runs\/1234/);
+ assert(!saved.prompt.includes('NEVER SEND TO MODEL'));
+ const next=await tick(s.env,now+121000,send);
+ assert.equal(next.body.state,'needs_review');
+ assert.notEqual(next.body.id,first.body.id);
+ assert.equal(s.db.prepare('SELECT task_id FROM hud_cloud_workforce_jobs WHERE id=?').get(next.body.id).task_id,
+  'cloud-discovery-issue-1235');
+ const noMore=await tick(s.env,now+181000,send);
+ assert.equal(noMore.body.dispatched,0);
+ assert.equal(calls.filter(c=>c.method==='POST').length,2);
+ assert.equal(s.db.prepare("SELECT COUNT(*) n FROM hud_cloud_workforce_jobs WHERE id LIKE 'gc-rec-%'").get().n,2);
+ // STOP disarms standing approval; new discoveries cannot run on a transient
+ // one-shot permit. The consumed discovery keys remain immutable.
+ await control(s.DB,false);
+ assert.equal(s.db.prepare('SELECT active FROM hud_cloud_workforce_series WHERE id=1').get().active,0);
+ insert.run('disc-3','pr-2345',Math.floor(now/86400000),now+180000,'new evidence',55);
+ await control(s.DB,true);
+ const stoppedSeries=await tick(s.env,now+241000,send);
+ assert.equal(stoppedSeries.body.dispatched,0);
+ assert.equal(s.db.prepare("SELECT COUNT(*) n FROM hud_cloud_workforce_jobs WHERE id LIKE 'gc-rec-%'").get().n,2);
+});
+
+test('expired standing plan automatically closes STOP gate before dispatch',async()=>{
+ const s=setup();
+ approved(s);
+ await intake(s.DB,packet,now);
+ await control(s.DB,true);
+ await tick(s.env,now,google([]));
+ const completed=(await draft(s.DB,job.id)).body;
+ await control(s.DB,false);
+ await review(s.DB,{job_id:job.id,verdict:'passed',
+  output_sha256:completed.output_sha256},now+1000);
+ const armed=await control(s.DB,true,'c'.repeat(40),now+2000);
+ assert.equal(armed.status,200);
+ const calls=[];
+ const expired=await tick(s.env,armed.body.expires_at,google(calls));
+ assert.equal(expired.body.state,'standing_approval_expired');
+ assert.equal(expired.body.dispatched,0);
+ assert.equal(calls.length,0);
+ assert.equal((await status(s.DB)).body.enabled,false);
+ assert.equal(s.db.prepare('SELECT active FROM hud_cloud_workforce_series WHERE id=1').get().active,0);
+});
+
+test('writer-only control requires pinned source and owner PASS for standing approval',async()=>{
+ const s=setup();
+ const body={enabled:true,recurring_source_commit:'c'.repeat(40)};
+ assert.equal((await handle(jsonRequest('/api/hud/workforce/control',reader,'POST',body),s.env,now)).status,401);
+ const rejected=await handle(jsonRequest('/api/hud/workforce/control',writer,'POST',body),s.env,now);
+ assert.equal(rejected.status,409);
+ assert.equal((await handle(jsonRequest('/api/hud/workforce/control',writer,'POST',
+  {...body,recurring_source_commit:'main'}),s.env,now)).status,400);
+});
