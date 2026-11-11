@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node --test tests/test_ghost_cloud_operations.mjs tests/test_ghost_cloud.mjs tests/test_ghost_cloud_canary_preflight.mjs
+      - run: node --test tests/test_ghost_cloud_operations.mjs tests/test_ghost_cloud.mjs tests/test_ghost_cloud_canary_preflight.mjs tests/test_ghost_cloud_site_upgrade.mjs
       - run: node --test tests/test_hud_verified_quota.mjs
       - run: python3 tools/project_loop.py check
       - run: python3 tools/task_routing_pair.py --check
