@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
 import {githubAppCredentialIssue} from '../integrations/hud-cloud/github-app.mjs';
-import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability,resolveOptionalPatchDeployment,verifyGithubPatchWorker} from '../integrations/hud-cloud/verify-github-app.mjs';
+import {verifyGithubCredentials,verifyGithubWorker,verifyGithubPatchPermissions,inspectGithubPatchCapability,resolveOptionalPatchDeployment,verifyGithubPatchWorker,verifyDeployedOwnerSession} from '../integrations/hud-cloud/verify-github-app.mjs';
 import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-secret-payload.mjs';
 const NOW=Date.now(),pem=generateKeyPairSync('rsa',{modulusLength:2048}).privateKey.export({type:'pkcs1',format:'pem'});
 const env={ROVOR_GITHUB_APP_ID:'123',ROVOR_GITHUB_INSTALLATION_ID:'456',ROVOR_GITHUB_APP_PRIVATE_KEY:pem,
@@ -198,4 +198,28 @@ test('deployed patch checker retries only bounded propagation mismatch, not secu
    mac_required:false,chatgpt_required:false,merges_allowed:false});
  },{attempts:2,pause:async()=>{retries++}});
  assert.equal(r.configured,true);assert.equal(authenticated,2);assert.equal(retries,1);
+});
+
+
+test('deployed owner gate is checked privately without any owner authorization or write',async()=>{
+ const seen=[];
+ const mocked=async(url,init)=>{
+  assert.equal(url,'https://rovor-hud-telemetry.rovordigital.workers.dev/api/hud/owner/session');
+  assert.equal(init.method,'GET');assert.equal(init.redirect,'manual');
+  seen.push(init.headers.Authorization?'reader':'anonymous');
+  return init.headers.Authorization?Response.json({configured:true,owner_authenticated:false}):new Response(null,{status:401});
+ };
+ const got=await verifyDeployedOwnerSession(env,mocked);
+ assert.deepEqual(seen,['anonymous','reader']);
+ assert.equal(got.owner_session_configured,true);
+ assert.equal(got.owner_approval_authorized_by_this_read,false);
+ assert.equal(got.repository_written,false);
+ assert(!JSON.stringify(got).includes(env.ROVOR_HUD_READER_TOKEN));
+});
+test('deployed owner gate distinguishes missing owner secret from exposure or invalid data',async()=>{
+ const fetcher=(_url,opts)=>opts.headers.Authorization?Response.json({configured:false,owner_authenticated:false}):new Response(null,{status:401});
+ assert.equal((await verifyDeployedOwnerSession(env,fetcher)).owner_session_configured,false);
+ await assert.rejects(()=>verifyDeployedOwnerSession(env,async()=>Response.json({configured:true,owner_authenticated:false})),/owner_session_anonymous_exposure/);
+ await assert.rejects(()=>verifyDeployedOwnerSession(env,async(_url,opts)=>opts.headers.Authorization?
+  Response.json({configured:true,owner_authenticated:true}):new Response(null,{status:401})),/owner_session_status_invalid/);
 });

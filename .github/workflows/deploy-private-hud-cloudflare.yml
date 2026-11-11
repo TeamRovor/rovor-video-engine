@@ -235,6 +235,8 @@ jobs:
         run: node verify-github-app.mjs --worker
       - name: Verify deployed GitHub draft-PR executor and exact private path allowlist
         run: node verify-github-app.mjs --patch-worker
+      - name: Check deployed private owner review gate without owner login or changes
+        run: node verify-github-app.mjs --owner-session
       - name: Verify anonymous denial, authenticated original HUD, quota script, and D1 status
         run: node verify-github-deploy.mjs
       - name: Report authenticated Google Gemini key-listed models from deployed Cloudflare HUD (no inference)
