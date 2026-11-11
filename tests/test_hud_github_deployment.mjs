@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {
   validateDeploymentSecrets, prepareConfig, assertGithubReleaseContext
 } from '../integrations/hud-cloud/prepare-github-deploy.mjs';
-import {verifyGithubHud, verifyAnonymousTelemetry, verifyAdvancingReports, verifiedOrigin, hasNineProviderMeterAsset, summarizeGroqKeyCatalog} from '../integrations/hud-cloud/verify-github-deploy.mjs';
+import {verifyGithubHud, verifyPinnedRepoSource, verifyAnonymousTelemetry, verifyAdvancingReports, verifiedOrigin, hasNineProviderMeterAsset, summarizeGroqKeyCatalog} from '../integrations/hud-cloud/verify-github-deploy.mjs';
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 
 const dir = new URL('../integrations/hud-cloud/', import.meta.url);
@@ -347,4 +347,20 @@ test('readback Groq response summary whitelists only catalog/limits and rejects 
  assert(!JSON.stringify(s).includes('SHOULD_NEVER_LEAK'));
  assert.throws(()=>summarizeGroqKeyCatalog({...base,mac_required:true}),/groq_catalog_readback_invalid/);
  assert.throws(()=>summarizeGroqKeyCatalog({...base,catalog:{...base.catalog,state:'magically_free'}}),/groq_catalog_readback_invalid/);
+});
+
+test('pinned release tolerates old valid asset during rollout but never relaxes privacy or exact commit',async()=>{
+ const expected='b'.repeat(40),old='a'.repeat(40);
+ let reads=0,waits=0;
+ const valid=commit=>Response.json({source:'reviewed_github_checkout',repo:'TeamRovor/rovor-video-engine',
+  path:'coordination/TASK-INTAKE.md',commit,text:'bounded source',truncated:false,fetched_live:false,can_write:false,mac_required:false});
+ const read=async(path,auth)=>auth?valid(++reads<3?old:expected):new Response(null,{status:401});
+ assert.equal(await verifyPinnedRepoSource(read,expected,{pause:async()=>{waits++;}}),true);
+ assert.equal(reads,3);assert.equal(waits,2);
+ await assert.rejects(()=>verifyPinnedRepoSource(async(path,auth)=>auth?valid(old):new Response(null,{status:401}),expected,
+  {attempts:2,pause:async()=>{}}),/commit_mismatch/);
+ let exposed=0;
+ await assert.rejects(()=>verifyPinnedRepoSource(async()=>{exposed++;return valid(expected)},expected,
+  {pause:async()=>{}}),/anonymous_repo_source_exposed/);
+ assert.equal(exposed,1);
 });
