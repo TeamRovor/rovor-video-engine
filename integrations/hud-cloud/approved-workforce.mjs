@@ -16,8 +16,10 @@ const digest=async text=>Array.from(new Uint8Array(await crypto.subtle.digest('S
 export async function intake(db,body,now=Date.now()){
  let job;
  try{
-  if(!body||Object.keys(body).sort().join(',')!=='approval,job'||
-     body.approval!=='trusted_canonical_owner_approval_v1')throw Error('invalid');
+  if(!body||Object.keys(body).sort().join(',')!=='approval,job,revision'||
+     body.approval!=='trusted_canonical_owner_approval_v1'||
+     typeof body.revision!=='string'||!/^v(?:[2-9]|[1-9][0-9]+)$/.test(body.revision))
+     throw Error('invalid');
   job=validateJob(body.job);
   if(!job.id.startsWith('gc-')||job.prompt.length>4000||
      !Number.isSafeInteger(now)||now<=0)throw Error('invalid');
@@ -26,14 +28,14 @@ export async function intake(db,body,now=Date.now()){
   const old=await db.prepare('SELECT * FROM hud_cloud_workforce_jobs WHERE id=?').bind(job.id).first();
   if(old){
    const unchanged=['employee','task_id','kind','title','prompt','source_commit']
-     .every(k=>old[k]===job[k]);
+     .every(k=>old[k]===job[k])&&old.revision===body.revision;
    return unchanged?{status:200,body:{id:job.id,duplicate:true,queued:false}}:
      {status:409,body:{error:'immutable_job_conflict'}};
   }
   const result=await db.prepare(`INSERT OR IGNORE INTO hud_cloud_workforce_jobs
-   (id,task_id,employee,kind,title,prompt,source_commit,created_at,state,human_review)
-   VALUES (?,?,?,?,?,?,?,?,'queued','not_recorded')`)
-   .bind(job.id,job.task_id,job.employee,job.kind,job.title,job.prompt,job.source_commit,now).run();
+   (id,task_id,employee,kind,title,prompt,source_commit,revision,created_at,state,human_review)
+   VALUES (?,?,?,?,?,?,?,?,?,'queued','not_recorded')`)
+   .bind(job.id,job.task_id,job.employee,job.kind,job.title,job.prompt,job.source_commit,body.revision,now).run();
   if(result.meta.changes!==1)return {status:409,body:{error:'immutable_job_conflict'}};
   return {status:201,body:{id:job.id,queued:true,mac_required:false,execution_started:false,
     owner_review_required:true}};
