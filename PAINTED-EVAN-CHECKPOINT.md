@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: it’s→basically acoustic/oral trace reviewed
+CARTOON-EVAN-ITS-BASICALLY-TRACE.md / evan-engine/reviews/its-basically-trace-v1.json. Existingtrace reused: original9–10.85sPCM/25msFFT/5mshop/889actualsamples480Hz. Older9.04start inprecedingmodeledfavicon tail;9.42edge in near-silentpause(-81.34dBFS/20ms), unsupported. Newenergyclusternearcurrent10.19;10.31leads tomodeledBseal/release10.41–10.45. Noise/pause spectralpeaks donotlabelwords. Retaincurrentintervals; noart/controls/retiming;18flagsopen.
+
+Fouractualrasteroralfixtures245/247/249/251 matchcaptureto1e-9; tongueinactiveinfixtures, laterLcurveNOTnewrasteranatomyvalidation. Gap~.173px near10.31/.15floor10.36/11.02px10.45. outputs/evan-cartoon-its-basically-trace/Review.html:48BYTE-EXACTfullframes216..263;48/192normal/slowdecodes;32000exactPCM144000:176000.61PNGhashes/current+frozen selectedsources verified; nativeplothalves/4faces/4normal/2slow inspected. Nineflaggedwords deepertraced; all18unresolved. Realtime/listening/polishedFALSE; no pendingjobs;automationACTIVE. Full/defaults/protectedversions preserved.
+
+NEXT: basically→a→tiny/script32–33, current10.84/10.93 versusolder10.23/10.32; Region03originalPCM/spectrum +actualoraltransitions. Keepfullcandidate/all18flags; noautomaticretiming/newexpressionvariants. Publishvia connectedRovorGitHub API/leaseddevelopmentref/HTTPSfetch/exact-tree sync; localpushauthunavailable.
+
 ## Current task: browser→thing acoustic/oral/tongue trace reviewed
 CARTOON-EVAN-BROWSER-THING-TRACE.md / evan-engine/reviews/browser-thing-trace-v1.json. Existinglocaltrace reused: original6.10–7.10sPCM/25msFFT/5mshop/481actualsamples480Hz. Browser22flagged; thing23UNFLAGGEDcontext. Older6.13start insideperiodicstretch; current6.39 inside modeledM/Bseal before6.43release; exactwordsplitunverified. Older6.66edge catchesinternalspectralchange; near6.75–6.8energyfalls beforelaterenergeticsegment. RMS/strongestdelta doNOTlabelboundary. NOretiming/controls/artchange;18flagsopen.
 
