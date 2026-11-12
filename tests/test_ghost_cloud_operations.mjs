@@ -663,6 +663,7 @@ test('private Site exposes nine cloud-only models, never Mac relay or secrets',a
 
 test('owner cloud inference shares D1 ledger, returns real model and token receipts without a Mac',async()=>{
  const s=setup(),now=Date.now();
+ s.db.exec(read('quota-observations.sql'));
  s.env.GHOST_FLEET_CONFIG=JSON.stringify({groq:{
   enabled:true,model:'openai/gpt-oss-20b',pool:'verified-groq-pool',
   zero_cost:true,commercial_use:true,evidence_sha256:'a'.repeat(64),
