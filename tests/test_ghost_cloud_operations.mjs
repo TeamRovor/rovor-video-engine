@@ -8,7 +8,7 @@ import path from 'node:path';
 import * as runtime from '../integrations/ghost-cloud/runtime.mjs';
 import worker from '../integrations/ghost-cloud/worker.mjs';
 import {runCanary} from '../integrations/ghost-cloud/canary-preflight.mjs';
-import {createCloudOperations} from '../integrations/ghost-cloud/site-operations.mjs';
+import {createCloudOperations,PROVIDER_CATALOG_ENDPOINTS,catalogRequestEndpoint,normalizeProviderCatalog,classifyCatalogReadFailure} from '../integrations/ghost-cloud/site-operations.mjs';
 import {compileOperations,composeOperations} from '../integrations/ghost-cloud/compose-operations.mjs';
 import {stageOwnerCloudChatMigration} from '../integrations/ghost-cloud/stage-owner-cloud-chat-migration.mjs';
 
@@ -214,6 +214,75 @@ test('inventory errors do not leak key or vendor body',async()=>{
  const {env,ops}=setup();const result=await ops.inventory(env,'groq',async()=>new Response('sensitive upstream',{status:403}));
  assert.deepEqual(result,{provider:'groq',status:'http_403'});
 });
+
+test('API reader lists exactly nine fixed HTTPS provider endpoints without arbitrary URLs',()=>{
+ const expected=['groq','gemini','mistral','nvidia','openrouter','sambanova','cohere','huggingface','cloudflare-ai'];
+ assert.deepEqual(Object.keys(PROVIDER_CATALOG_ENDPOINTS),expected);
+ for(const p of expected.filter(x=>x!=='cloudflare-ai')){
+  const url=new URL(catalogRequestEndpoint(p));
+  assert.equal(url.protocol,'https:');assert.equal(url.username,'');assert.equal(url.password,'');
+ }
+ assert.equal(catalogRequestEndpoint('cloudflare-ai','a'.repeat(32)),
+  'https://api.cloudflare.com/client/v4/accounts/'+'a'.repeat(32)+'/ai/models/search');
+ assert.equal(catalogRequestEndpoint('cloudflare-ai','not-a-real-account'),null);
+ assert.throws(()=>catalogRequestEndpoint('https://attacker.invalid'),/unknown_provider/);
+});
+
+test('one API catalog parser handles nine provider schemas without transmitting secrets or granting inference',()=>{
+ const cases=[
+  ['groq',{data:[{id:'openai/gpt-oss-20b',context_length:131072}]}],
+  ['gemini',{models:[{name:'models/gemini-2.5-flash'}]}],
+  ['mistral',{data:[{id:'codestral-2508'}]}],
+  ['nvidia',{data:[{id:'deepseek-ai/deepseek-v4.1-flash'}]}],
+  ['openrouter',{data:[{id:'nvidia/nemotron-3.5-lightning:free',pricing:{prompt:'0',completion:'0'}}]}],
+  ['sambanova',{data:[{id:'gpt-oss-120b'}]}],
+  ['cohere',{models:[{id:'command-r7b-12-2024'}]}],
+  ['huggingface',{data:[{id:'Qwen/Qwen3.8-27B'}]}],
+  ['cloudflare-ai',{result:[{id:'private-uuid',name:'@cf/meta/llama-3.2-3b-instruct'}]}],
+ ];
+ for(const [provider,reply] of cases){
+  reply.private_api_key='NEVER_ECHO_SECRET';
+  const normalized=normalizeProviderCatalog(provider,reply);
+  assert.equal(normalized.length,1,provider);
+  assert.equal(normalized[0].catalog_zero_price,provider==='openrouter'?true:null);
+  assert.equal(normalized[0].pinned_model_candidate,true);
+  assert(!JSON.stringify(normalized).includes('private-uuid'));
+  assert(!JSON.stringify(normalized).includes('NEVER_ECHO_SECRET'));
+ }
+});
+
+test('reader safely rejects malformed catalogs, paid/free ambiguity, duplicates, aliases, and excessive IDs',()=>{
+ assert.equal(normalizeProviderCatalog('groq',{status:200,secret:'private'}),null);
+ assert.equal(normalizeProviderCatalog('cloudflare-ai',{success:false,result:[{name:'@cf/valid'}]}),null);
+ assert.deepEqual(normalizeProviderCatalog('groq',{data:[{id:'https://attacker.invalid?a=secret'},{id:'groq-1'},{id:'groq-1'}]}).map(m=>m.id),['groq-1']);
+ assert.deepEqual(normalizeProviderCatalog('openrouter',{data:[
+  {id:'test/unknown:free'},{id:'test/paid:free',pricing:{prompt:'0.1',completion:'0'}},
+  {id:'test/free:free',pricing:{prompt:'0.000',completion:'0'}}]}).map(m=>m.id),['test/free:free']);
+ assert.equal(normalizeProviderCatalog('mistral',{data:[{id:'codestral-latest'}]})[0].pinned_model_candidate,false);
+ assert.equal(normalizeProviderCatalog('groq',{data:[{id:'gpt-oss-auto'}]})[0].pinned_model_candidate,false);
+ const many=[...Array.from({length:50},(_,i)=>({id:'unsafe?'+i})),...Array.from({length:22},(_,i)=>({id:'valid-'+i}))];
+ assert.equal(normalizeProviderCatalog('groq',{data:many}).length,20);
+});
+
+test('429, redirects, and upstream errors do not retry or expose API keys or response bodies',async()=>{
+ const {env,ops}=setup();
+ for(const code of [302,401,429,500]){
+  let calls=0;
+  const response=await ops.inventory(env,'groq',async()=>{calls++;
+   return new Response('Authorization: Bearer private-provider-key',{status:code});});
+  assert.equal(calls,1);
+  assert.deepEqual(response,{provider:'groq',status:'http_'+code});
+ }
+ const failure=await ops.inventory(env,'groq',async()=>{
+  throw new TypeError('Authorization: Bearer private-provider-key');
+ });
+ assert.equal(failure.status,'catalog_unavailable');
+ assert.equal(failure.error_category,'transport_or_runtime');
+ assert(!JSON.stringify(failure).includes('private-provider-key'));
+ assert.deepEqual(classifyCatalogReadFailure({name:'TimeoutError',message:'secret-unsafe'}),
+  {error_category:'timeout',error_name:'TimeoutError'});
+});
+
 test('MCP discovery adds cloud actions but no human-review writer',async()=>{
  const {env,ops}=setup();const r=await ops.fetch(request('/mcp',{body:{jsonrpc:'2.0',id:1,method:'tools/list'}}),env);const doc=await r.json();
  assert.equal(doc.result.tools.length,8);assert.ok(doc.result.tools.some(t=>t.name==='rovor_cloud_tick'));assert.ok(doc.result.tools.some(t=>t.name==='rovor_provider_catalog_refresh'));
