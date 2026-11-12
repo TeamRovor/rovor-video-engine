@@ -31,7 +31,7 @@ test('platform viewer loads original HUD with cloud-only startup and no viewing 
   const shown = await response.text();
   assert.ok(shown.startsWith(html.slice(0, 1000)));
   const injection = shown.slice(html.indexOf('</body>'), shown.indexOf('</body>'));
-  assert.match(injection, /ROVOR_QUOTA_BOARD\\?\\.startCloud\\?\\.\\(\\)/);
+  assert.match(injection, /ROVOR_QUOTA_BOARD\?\.startCloud\?\.\(\)/);
   assert.doesNotMatch(injection, /ROVOR_START_OMNIROUTE/);
   assert.equal(shown.replace(injection, ''), html);
   assert.equal(shown.includes(env.HUD_WRITER_TOKEN), false);
