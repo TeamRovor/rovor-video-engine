@@ -55,7 +55,8 @@ def provider_readiness(providers: list, now_ms: int | None = None) -> list[dict]
         return []
     by_name = {
         entry.get("provider"): entry for entry in providers
-        if isinstance(entry, dict) and entry.get("provider") in PROVIDERS
+        if isinstance(entry, dict) and isinstance(entry.get("provider"), str)
+        and entry.get("provider") in PROVIDERS
     }
     if len(by_name) != len(PROVIDERS):
         return []
@@ -81,7 +82,8 @@ def provider_readiness(providers: list, now_ms: int | None = None) -> list[dict]
             and not re.search(r"(^|[/:-])(auto|latest)([/:-]|$)", model, re.I)
         )
         raw_admission = item.get("admission")
-        admission = raw_admission if raw_admission in PROVIDER_ADMISSIONS else "unclassified"
+        admission = (raw_admission if isinstance(raw_admission, str)
+                     and raw_admission in PROVIDER_ADMISSIONS else "unclassified")
         rows.append({
             "provider": name,
             "credentials": "configured" if item.get("credentials_configured") is True else "unverified",
@@ -89,7 +91,7 @@ def provider_readiness(providers: list, now_ms: int | None = None) -> list[dict]
             "model": "declared_pinned" if model_pinned else "not_pinned",
             "admission": admission,
             "online": "verified" if item.get("online_verified") is True
-                      and admission == "eligible" else "not_verified",
+                      and admission == "eligible" and model_pinned else "not_verified",
         })
     return rows
 
