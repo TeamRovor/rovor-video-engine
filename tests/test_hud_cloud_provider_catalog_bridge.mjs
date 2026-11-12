@@ -111,6 +111,7 @@ test('missing/shared service credentials fail without network or pretending onli
   assert.equal(snapshot.provider_count,9);
   assert.equal(snapshot.inference_online_verified_count,0);
   assert.equal(snapshot.providers[0].status,'bridge_unconfigured');
+  assert.equal(snapshot.providers[0].direct_setup_blocker,'no_provider_key');
  }
 });
 test('service denial, missing Site D1 receipt, mismatched timestamp and unsafe model names are fail-closed',async()=>{
@@ -126,6 +127,7 @@ test('service denial, missing Site D1 receipt, mismatched timestamp and unsafe m
   assert.equal(receipt.site_d1_verified,false);
   const snapshot=await catalogBridgeStatus(s.env,T);
   assert.equal(snapshot.site_d1_verified_count,0);
+  assert.equal(snapshot.providers[0].direct_setup_blocker,'no_provider_key');
   assert.equal(snapshot.providers[0].inference_online_verified,false);
  }
 });
@@ -162,10 +164,13 @@ test('release reports per-provider blockers without exposing secrets or model na
  assert.equal(report.fresh_provider_slots,1);
  assert.equal(report.recent_site_d1_catalog_receipts,0);
  assert.equal(report.catalog_check_states.gemini,'bridge_unconfigured');
+ assert.equal(report.direct_setup_blockers.gemini,'no_provider_key');
  assert.equal(report.catalog_check_states.groq,'never_checked');
  assert.equal(report.verified_online_inference_providers,0);
  assert(!JSON.stringify(report).includes(S));
  assert(!Object.hasOwn(report,'models'));
+ const ui=readFileSync(new URL('../dashboard/command-center/native-v8-9/workforce-review.js',import.meta.url),'utf8');
+ assert.match(ui,/Direct cloud key missing; private Site relay denied/);
 });
 
 
