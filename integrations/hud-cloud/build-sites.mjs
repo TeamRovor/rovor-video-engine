@@ -23,6 +23,8 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const groqImport = "import {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} from './groq-cloud-chat.mjs';";
   const groqProbeImport = "import {probeGroqCatalogue} from './groq-quota-monitor.mjs';";
   const groqCatalogImport = "import {groqCatalogEvidence} from './groq-quota-monitor.mjs';";
+  const ideaImport = "import {submitIdea,listIdeas} from './idea-inbox.mjs';";
+  const repoImport = "import {getRepoSource} from './repo-source.mjs';";
   const relayImport = "import {catalog as relayCatalog, publishCatalog, enqueue as enqueueChat, claim as claimChat, finish as finishChat, status as chatStatus, cancel as cancelChat, expire as expireChat} from './omniroute-chat-relay.mjs';";
   const chatParserImport = "import {parseChatRequest} from '../../tools/hud_chat.mjs';";
   if (core.split(relayImport).length !== 2) throw Error('Unexpected private chat relay import');
@@ -53,11 +55,27 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const groqCloud = 'const {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus} = (() => {\n' +
     plain(groqCloudSource.replace(groqCatalogImport, '')) +
     '\nreturn {GROQ_CLOUD_ROUTE,groqCloudReady,cloudGroqChat,cloudGroqStatus};})();\n';
-  return dependency + relay + groqQuota + groqCloud + geminiCloud +
+  // A self-contained data: module cannot resolve ./ relative imports. Keep
+  // the public-only inbox and repository readback inside local closures.
+  // New import chains must fail the build instead of shipping a broken Site.
+  if (core.split(ideaImport).length !== 2 || core.split(repoImport).length !== 2)
+    throw Error('Unexpected HUD inbox/source imports');
+  const ideaSource = fs.readFileSync(path.join(here, 'idea-inbox.mjs'), 'utf8');
+  const repoSource = fs.readFileSync(path.join(here, 'repo-source.mjs'), 'utf8');
+  if (/^\s*import\s/m.test(ideaSource) || /^\s*import\s/m.test(repoSource))
+    throw Error('Unexpected nested Site dependency');
+  const ideaInbox = 'const {submitIdea,listIdeas} = (() => {\n' +
+    plain(ideaSource) + '\nreturn {submitIdea,listIdeas};})();\n';
+  const repoReader = 'const {getRepoSource} = (() => {\n' +
+    plain(repoSource) + '\nreturn {getRepoSource};})();\n';
+  const bundle = dependency + relay + groqQuota + groqCloud + geminiCloud + ideaInbox + repoReader +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
-      .replace(groqImport, '').replace(groqProbeImport, '').replace(coreEnd, '')) +
+      .replace(groqImport, '').replace(groqProbeImport, '')
+      .replace(ideaImport, '').replace(repoImport, '').replace(coreEnd, '')) +
     '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
+  if (/^\s*import\s/m.test(bundle)) throw Error('Unbundled Site dependency');
+  return bundle;
 }
 
 export function buildSite(destination) {
