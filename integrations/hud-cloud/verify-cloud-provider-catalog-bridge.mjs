@@ -53,6 +53,9 @@ export async function verifyCatalogBridge(token,send=fetch,{attempts=5,pause=del
       typeof row.site_d1_verified!=='boolean'||
       !['original_site','direct_provider'].includes(row.catalog_source)||
       (row.catalog_source==='direct_provider'&&row.site_d1_verified!==false)||
+      (row.direct_setup_blocker!==null&&
+       !['no_provider_key','missing_account'].includes(row.direct_setup_blocker))||
+      (row.catalog_source==='direct_provider'&&row.direct_setup_blocker!==null)||
       (row.direct_error_category!==null&&
        !['transport_unavailable','provider_auth_denied','provider_rate_limited',
         'provider_http_unavailable','invalid_catalog_body','invalid_catalog_shape',
@@ -79,6 +82,7 @@ export async function verifyCatalogBridge(token,send=fetch,{attempts=5,pause=del
    direct_provider_catalog_receipts:direct,
    catalog_sources:Object.fromEntries(data.providers.map(p=>[p.provider,p.catalog_source])),
    direct_error_categories:Object.fromEntries(data.providers.map(p=>[p.provider,p.direct_error_category])),
+   direct_setup_blockers:Object.fromEntries(data.providers.map(p=>[p.provider,p.direct_setup_blocker])),
    verified_online_inference_providers:0,
    catalog_only:true,mac_required:false};
  }

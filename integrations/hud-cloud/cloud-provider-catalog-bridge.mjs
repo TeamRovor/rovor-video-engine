@@ -100,13 +100,18 @@ export async function refreshCatalogBridge(env,now=Date.now(),send=fetch){
  // credential already exists on this Worker. The Site is optional fallback,
  // not a prerequisite for Groq/Gemini or a reason to call completions.
  const direct=await directProviderCatalog(env,provider,send);
+ // Track the missing direct key independently from a denied legacy Site relay.
+ // This safe category carries no credential values and never enables inference.
+ const directSetupBlocker=direct.status==='unconfigured'?
+  (direct.error_category==='missing_account'?'missing_account':'no_provider_key'):null;
  const found=direct.status==='unconfigured'?
   {...await inspect(env,provider,now,send),source:'original_site',error_category:null}:
   {status:direct.status==='catalog_received'?'catalog_received':'upstream_unavailable',
    source:'direct_provider',error_category:direct.error_category||null,
    models:direct.models,siteD1:false};
  const modelsJSON=JSON.stringify({source:found.source,
-  error_category:found.error_category,models:found.models});
+  error_category:found.error_category,direct_setup_blocker:directSetupBlocker,
+  models:found.models});
  const saved=await db.prepare(`INSERT INTO hud_site_catalog_rows
   (provider,checked_at,status,site_d1_verified,models_json)
   VALUES(?,?,?,?,?) ON CONFLICT(provider) DO UPDATE SET
@@ -133,11 +138,15 @@ export async function catalogBridgeStatus(env,now=Date.now()){
  const known=new Map(rows.map(r=>[r.provider,r]));
  const providers=CATALOG_PROVIDERS.map(provider=>{
   const row=known.get(provider);
-  let models=[],catalogSource='original_site',directErrorCategory=null;
+  let models=[],catalogSource='original_site',directErrorCategory=null,
+   directSetupBlocker=null;
   if(row)try{
    const value=JSON.parse(row.models_json);
    const list=Array.isArray(value)?value:value?.models;
    if(Array.isArray(list)&&list.length<=20&&list.every(safeModel))models=list;
+   if(!Array.isArray(value)&&
+      ['no_provider_key','missing_account'].includes(value?.direct_setup_blocker))
+    directSetupBlocker=value.direct_setup_blocker;
    if(!Array.isArray(value)&&value?.source==='direct_provider'){
     catalogSource='direct_provider';
     const allowed=['no_provider_key','transport_unavailable',
@@ -150,6 +159,7 @@ export async function catalogBridgeStatus(env,now=Date.now()){
   const checked=validTime(row?.checked_at)?row.checked_at:null;
   return {provider,status:row?.status||'never_checked',
    catalog_source:catalogSource,direct_error_category:directErrorCategory,
+   direct_setup_blocker:directSetupBlocker,
    checked_at:checked===null?null:new Date(checked).toISOString(),
    freshness:checked!==null&&checked<=now&&now-checked<=FRESH?'fresh':'stale_or_unavailable',
    model_count:models.length,models,
