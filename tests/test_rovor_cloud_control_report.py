@@ -84,6 +84,9 @@ class ControlReportTests(unittest.TestCase):
         self.assertEqual(report["workforce"]["configured_provider_count"],9)
         self.assertEqual(report["workforce"]["verified_online_providers"],0)
         self.assertEqual(report["workforce"]["eligible_providers"],0)
+        self.assertEqual(len(report["workforce"]["provider_readiness"]),9)
+        self.assertTrue(all(row["online"] == "not_verified"
+                            for row in report["workforce"]["provider_readiness"]))
         self.assertEqual(report["workforce"]["pending_reviews"],3)
         self.assertEqual(report["workforce"]["reported_employee_roles"],8)
         self.assertEqual(report["workforce"]["last_scheduled_shift"],"idle")
@@ -152,10 +155,6 @@ class ControlReportTests(unittest.TestCase):
         self.assertEqual(entry["model"], "not_pinned")
         self.assertNotIn("Bearer PRIVATE", json.dumps(sanitized))
 
-        workforce = {"provider_readiness": sanitized, "service": "reachable"}
-        fake_report = {"credentials_present": {"google_free_project_key": True,
-                       "private_site_service_token": True}, "hud": {},
-                       "workforce": workforce}
         # Markdown sanitization is tested using the real report shape below.
         report = ops.build_report(env(), opener=HTTP(env()["ROVOR_GHOST_SERVICE_TOKEN"]))
         report["workforce"]["provider_readiness"] = sanitized
