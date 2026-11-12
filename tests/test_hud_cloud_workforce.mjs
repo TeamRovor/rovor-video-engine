@@ -553,3 +553,35 @@ test('GitHub timeout or missing App leaves the queued job and daily inference bu
  assert.equal(row.state,'queued');assert.equal(row.started_at,null);assert.equal(row.finished_at,null);
  assert.equal(s.db.prepare('SELECT COUNT(*) n FROM hud_cloud_workforce_jobs WHERE started_at IS NOT NULL').get().n,0);
 });
+
+test('approved documentation receives one bounded Walter review and keeps human verdict separate',async()=>{
+ const s=setup(); approved(s); await control(s.DB,true);
+ const id='gc-patch-src-'+'1'.repeat(40),path='architecture/ROVOR-AUTONOMOUS-DISCOVERY.md';
+ const commit='a'.repeat(40),blob='b'.repeat(40),snippet='Open the inbox.';
+ s.env.ROVOR_GITHUB_PATCH_PATHS=JSON.stringify([path]);
+ s.db.prepare(`INSERT INTO hud_cloud_workforce_jobs
+  (id,task_id,employee,kind,title,prompt,source_commit,revision,created_at)
+  VALUES(?,?,'Mike','code_review','Document the inbox',?,?,'v2',?)`).run(id,'patch-task',
+  'Prepare a proposal.\n'+JSON.stringify({objective:'Name the inbox',source_excerpt:snippet}),commit,now);
+ s.db.prepare('INSERT INTO hud_github_patch_task_sources VALUES(?,?,?,?,?,?,?,?,?)')
+  .run(id,path,commit,blob,'c'.repeat(64),snippet,1,1,now);
+ const outputs=[JSON.stringify({version:1,base_commit:commit,title:'Name inbox',summary:'Clarify the inbox name',
+  change:{path,blob_sha:blob,before:snippet,after:'Open the Review inbox.'}}),
+  'ACCEPT\nThe replacement identifies the inbox while preserving the original instruction.'];
+ const calls=[];
+ const send=async(url,opts)=>{
+  if(opts.method==='GET')return google(calls)(url,opts);
+  const text=outputs.shift();assert.ok(text,'no duplicate inference');
+  return Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text}]}}],
+   usageMetadata:{promptTokenCount:18,candidatesTokenCount:12}});
+ };
+ assert.equal((await tick(s.env,now,send)).body.id,id);
+ assert.equal((await tick(s.env,now+61000,send)).body.id,'wr-'+id);
+ const data=(await status(s.DB,now+62000)).body;
+ const original=data.items.find(x=>x.id===id);
+ assert.equal(original.walter_verdict,'walter_accepted');
+ assert.equal(original.human_review,'not_recorded');
+ assert.equal(data.admission.pending_reviews,0);
+ assert.equal(data.admission.rolling_day_attempts,2);
+ assert.equal((await tick(s.env,now+121000,send)).body.dispatched,0);
+});
