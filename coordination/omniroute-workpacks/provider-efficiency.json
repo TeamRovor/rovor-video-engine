@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "slug": "provider-efficiency",
+  "id": "omni-provider-efficiency",
+  "title": "Evaluate safe, low-cost OmniRoute task distribution",
+  "role": "inference-routing",
+  "inputs": [
+    "integrations/open-interpreter/OMNIROUTE.md",
+    "WORK.md"
+  ],
+  "task": "Given OmniRoute already installed locally at 127.0.0.1:20128 with tested provider connections Cloudflare AI, Gemini, Groq Primary and Mistral; inference endpoint key is stored in the Mac Keychain; and named ROVOR priority combos exist but individual route reliability and zero-cost terms are not fully proven: design a conservative routing rubric for fast summarization, code/test critique, complex architecture critique and evidence QA. Suggest a minimal set of reproducible read-only prompts and scorecards to measure response correctness, latency, cost, tool compatibility, provider failures and model false claims. Treat local Codex streaming via rovai as UNVERIFIED, and do not assume any route is free. No self-selected paid fallback or automatic quota bypass.",
+  "deliverable": "Small provider benchmark matrix and task-routing decision logic with safety limits.",
+  "acceptance": [
+    "No assumption that all combo routes are working or no-cost",
+    "No paid fallback or third-party credential disclosure",
+    "Distinguishes Open Interpreter and Codex protocol compatibility",
+    "Proposes real measurements instead of invented speedups"
+  ],
+  "visibility": "public-repository-metadata-only",
+  "output_mode": "draft_review_only",
+  "max_input_chars": 28000,
+  "max_output_chars": 22000,
+  "external_effects_allowed": false,
+  "mac_gui_required": false
+}
