@@ -377,17 +377,19 @@ test('protected Worker deployment passes the existing Site catalog service key w
 });
 
 
+// Preserve existing secret-precedence while also accepting the exact ROVOR_CLOUD_*
+// aliases used by the protected release environment. Never log secret values.
 test('seven optional provider catalog keys remain wired from protected Actions to Worker secrets',()=>{
  const workflow=readFileSync(new URL('../.github/workflows/deploy-private-hud-cloudflare.yml',import.meta.url),'utf8');
  const payload=readFileSync(new URL('../integrations/hud-cloud/private-worker-secret-payload.mjs',import.meta.url),'utf8');
  const expected={
-  MISTRAL:'ROVOR_MISTRAL_API_KEY || secrets.MISTRAL_API_KEY',
-  NVIDIA:'ROVOR_NVIDIA_API_KEY || secrets.NVIDIA_API_KEY',
-  COHERE:'ROVOR_COHERE_API_KEY || secrets.COHERE_API_KEY',
-  SAMBANOVA:'ROVOR_SAMBANOVA_API_KEY || secrets.SAMBANOVA_API_KEY',
-  OPENROUTER:'ROVOR_OPENROUTER_API_KEY || secrets.OPENROUTER_API_KEY',
-  HUGGINGFACE:'ROVOR_HUGGINGFACE_API_KEY || secrets.HUGGINGFACE_API_KEY',
-  CLOUDFLARE_AI:'ROVOR_CLOUDFLARE_AI_API_KEY'
+  MISTRAL:'ROVOR_MISTRAL_API_KEY || secrets.MISTRAL_API_KEY || secrets.ROVOR_CLOUD_MISTRAL_API_KEY',
+  NVIDIA:'ROVOR_NVIDIA_API_KEY || secrets.NVIDIA_API_KEY || secrets.ROVOR_CLOUD_NVIDIA_API_KEY',
+  COHERE:'ROVOR_COHERE_API_KEY || secrets.COHERE_API_KEY || secrets.ROVOR_CLOUD_COHERE_API_KEY',
+  SAMBANOVA:'ROVOR_SAMBANOVA_API_KEY || secrets.SAMBANOVA_API_KEY || secrets.ROVOR_CLOUD_SAMBANOVA_API_KEY',
+  OPENROUTER:'ROVOR_OPENROUTER_API_KEY || secrets.OPENROUTER_API_KEY || secrets.ROVOR_CLOUD_OPENROUTER_API_KEY',
+  HUGGINGFACE:'ROVOR_HUGGINGFACE_API_KEY || secrets.HUGGINGFACE_API_KEY || secrets.ROVOR_CLOUD_HUGGINGFACE_API_KEY',
+  CLOUDFLARE_AI:'ROVOR_CLOUDFLARE_AI_API_KEY || secrets.ROVOR_CLOUD_CLOUDFLARE_AI_API_KEY'
  };
  for(const [provider,value] of Object.entries(expected)){
   const from='ROVOR_CLOUD_'+provider+'_API_KEY';

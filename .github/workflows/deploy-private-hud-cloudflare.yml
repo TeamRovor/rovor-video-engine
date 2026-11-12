@@ -184,14 +184,16 @@ jobs:
       ROVOR_HUD_OWNER_TOKEN: ${{ secrets.ROVOR_HUD_OWNER_TOKEN }}
       # Existing Site service key, optionally bridged to Worker; never echoed.
       ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
-      # Optional direct GET-only model catalogs. Never treat keys as free inference approval.
-      ROVOR_CLOUD_MISTRAL_API_KEY: ${{ secrets.ROVOR_MISTRAL_API_KEY || secrets.MISTRAL_API_KEY }}
-      ROVOR_CLOUD_NVIDIA_API_KEY: ${{ secrets.ROVOR_NVIDIA_API_KEY || secrets.NVIDIA_API_KEY }}
-      ROVOR_CLOUD_COHERE_API_KEY: ${{ secrets.ROVOR_COHERE_API_KEY || secrets.COHERE_API_KEY }}
-      ROVOR_CLOUD_SAMBANOVA_API_KEY: ${{ secrets.ROVOR_SAMBANOVA_API_KEY || secrets.SAMBANOVA_API_KEY }}
-      ROVOR_CLOUD_OPENROUTER_API_KEY: ${{ secrets.ROVOR_OPENROUTER_API_KEY || secrets.OPENROUTER_API_KEY }}
-      ROVOR_CLOUD_HUGGINGFACE_API_KEY: ${{ secrets.ROVOR_HUGGINGFACE_API_KEY || secrets.HUGGINGFACE_API_KEY }}
-      ROVOR_CLOUD_CLOUDFLARE_AI_API_KEY: ${{ secrets.ROVOR_CLOUDFLARE_AI_API_KEY }}
+      # Optional direct GET-only catalogs. Preserve legacy names, then accept the exact
+      # ROVOR_CLOUD_* secret names. A missing value never installs a blank key.
+      # Catalog authentication is not free billing, quota or inference approval.
+      ROVOR_CLOUD_MISTRAL_API_KEY: ${{ secrets.ROVOR_MISTRAL_API_KEY || secrets.MISTRAL_API_KEY || secrets.ROVOR_CLOUD_MISTRAL_API_KEY }}
+      ROVOR_CLOUD_NVIDIA_API_KEY: ${{ secrets.ROVOR_NVIDIA_API_KEY || secrets.NVIDIA_API_KEY || secrets.ROVOR_CLOUD_NVIDIA_API_KEY }}
+      ROVOR_CLOUD_COHERE_API_KEY: ${{ secrets.ROVOR_COHERE_API_KEY || secrets.COHERE_API_KEY || secrets.ROVOR_CLOUD_COHERE_API_KEY }}
+      ROVOR_CLOUD_SAMBANOVA_API_KEY: ${{ secrets.ROVOR_SAMBANOVA_API_KEY || secrets.SAMBANOVA_API_KEY || secrets.ROVOR_CLOUD_SAMBANOVA_API_KEY }}
+      ROVOR_CLOUD_OPENROUTER_API_KEY: ${{ secrets.ROVOR_OPENROUTER_API_KEY || secrets.OPENROUTER_API_KEY || secrets.ROVOR_CLOUD_OPENROUTER_API_KEY }}
+      ROVOR_CLOUD_HUGGINGFACE_API_KEY: ${{ secrets.ROVOR_HUGGINGFACE_API_KEY || secrets.HUGGINGFACE_API_KEY || secrets.ROVOR_CLOUD_HUGGINGFACE_API_KEY }}
+      ROVOR_CLOUD_CLOUDFLARE_AI_API_KEY: ${{ secrets.ROVOR_CLOUDFLARE_AI_API_KEY || secrets.ROVOR_CLOUD_CLOUDFLARE_AI_API_KEY }}
       ROVOR_HUD_DEPLOY_ORIGIN: ${{ vars.ROVOR_HUD_DEPLOY_ORIGIN }}
       ROVOR_GEMINI_CLOUD_API_KEY: ${{ secrets.ROVOR_GEMINI_API_KEY || secrets.GEMINI_API_KEY }}
       GEMINI_ACTIVATE_ONCE: ${{ github.event_name == 'push' && (contains(github.event.head_commit.message, '[gemini-activate-once]') || contains(github.event.head_commit.message, '[gemini-verify-3.8-flash]')) }}
