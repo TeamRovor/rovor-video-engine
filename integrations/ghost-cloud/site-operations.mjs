@@ -363,6 +363,7 @@ export function createCloudOperations(base, cloud) {
      persisted.tokens_output!==(outcome.tokens_output??null)||
      persisted.output!==output||persisted.error_code!==(outcome.error_code||null)||
      persisted.finished_at!==end)return json({error:'inference_receipt_unconfirmed'},503);
+  if(provider==='groq')await recordGroqQuota(env,outcome.quota_observation);
   return json({source:'private_site_cloud',mac_required:false,id:uid,provider,
    requested_model:cfg.model,actual_model:outcome.actual_model||null,
    status,output,tokens_input:outcome.tokens_input??null,
@@ -420,8 +421,10 @@ export function createCloudOperations(base, cloud) {
   const observed=Number.isSafeInteger(report.observed_at)?report.observed_at:Date.now();
   await sql(env,'INSERT INTO ghost_cloud_provider_checks(provider,observed_at,status,error_category) VALUES(?,?,?,?) ON CONFLICT(provider) DO UPDATE SET observed_at=excluded.observed_at,status=excluded.status,error_category=excluded.error_category',
    provider,observed,report.status,report.error_category||null).run();
-  const q=report.quota_observation;
-  if(provider!=='groq'||report.status!=='catalog_received'||!q||
+  if(provider==='groq'&&report.status==='catalog_received')await recordGroqQuota(env,report.quota_observation);
+ }
+ async function recordGroqQuota(env,q) {
+  if(!q||
      q.source!=='authenticated_groq_rpd_response_headers'||
      q.unit!=='requests_per_day'||q.scope!=='provider_account'||
      !Number.isSafeInteger(q.observed_at)||q.observed_at<=0||
@@ -437,7 +440,7 @@ export function createCloudOperations(base, cloud) {
      quota_limit=excluded.quota_limit,remaining=excluded.remaining,
      resets_at=excluded.resets_at,source=excluded.source
     WHERE excluded.observed_at>=ghost_cloud_provider_quota.observed_at`,
-    provider,q.observed_at,'requests',q.used,q.limit,q.remaining,q.resets_at,q.source).run();
+    'groq',q.observed_at,'requests',q.used,q.limit,q.remaining,q.resets_at,q.source).run();
   }catch{
    // An owner who has not applied the optional Site migration gets no meter.
    // Never pretend a quota was durably recorded.
