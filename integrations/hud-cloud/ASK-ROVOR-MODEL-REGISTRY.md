@@ -13,6 +13,7 @@ The existing Ask ROVOR Smart route in `dashboard/command-center/native-v8-9/hud-
 All data must be prepared **inside a trusted, authenticated server**. Never accept eligibility from a browser body, model-generated text, GitHub issue, page content or source excerpt.
 
 - `catalogs`: entries `{provider, observed_at_ms, models:[{id,context_length?}]}`. Use exact IDs from a current fixed-provider catalog endpoint; presence alone is not inference proof.
+  - Gemini IDs must match the cloud inventory's normalized OpenAI-compatible identity (`gemini-2.5-flash`), not the REST catalog identity (`models/gemini-2.5-flash`). Never normalize or substitute proof IDs after verification; exact catalog/admission/canary matching remains mandatory.
 - `admissions`: entries with `provider`, exact `model_id`, `dispatch_enabled`, `stop_requested`, `zero_cost`, `canary`, `quota`, optional `cooldown_until_ms`. A private server must validate current billing and authorizations **before** creating these records. Strings and booleans in a JSON receipt **do not independently prove** free billing or enforce provider quotas.
 - `reviews`: owner-reviewed outcome receipts `{provider,model_id,task_family,outcome:'accepted'|'rejected',receipt_ref,finished_at_ms}`. Avoid model-assessed self-ratings. Unique review receipts only; no prompt/response contents.
 - `now_ms`: injection of trusted server clock for testability.
