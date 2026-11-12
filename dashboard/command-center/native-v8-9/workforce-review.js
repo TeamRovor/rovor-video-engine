@@ -24,6 +24,10 @@ function catalogReadable(entry){
   if(entry.direct_error_category==='provider_rate_limited')return 'Provider catalog rate-limited';
   return 'Direct provider catalog unavailable · no inference confirmed';
  }
+ if(entry.status==='site_auth_denied'&&entry.direct_setup_blocker==='no_provider_key')
+  return 'Direct cloud key missing; private Site relay denied';
+ if(entry.status==='site_auth_denied'&&entry.direct_setup_blocker==='missing_account')
+  return 'Cloudflare AI account binding missing; private Site relay denied';
  if(entry.site_d1_verified===true&&entry.status==='catalog_received')return 'Catalog and Site D1 confirmed';
  if(entry.status==='site_receipt_missing')return 'Catalog found; Site D1 proof missing';
  if(entry.status==='site_readback_mismatch')return 'Site D1 receipt mismatch';
