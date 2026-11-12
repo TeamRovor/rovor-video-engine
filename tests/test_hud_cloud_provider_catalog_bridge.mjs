@@ -235,15 +235,22 @@ test('native direct provider catalog failures are recorded without Site fallback
 test('OpenRouter public zero-price names and Cloudflare model name use exact catalog IDs only',async()=>{
  const env={OPENROUTER_API_KEY:'o'.repeat(40),CLOUDFLARE_AI_API_KEY:'c'.repeat(40),
   CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32)};
+ const openCalls=[];
  const open=await directProviderCatalog(env,'openrouter',async(url,opts)=>{
-  assert.equal(url,'https://openrouter.ai/api/v1/models');
+  openCalls.push(url);
+  assert.equal(opts.method,'GET');
   assert.equal(opts.headers.Authorization,'Bearer '+env.OPENROUTER_API_KEY);
+  if(url==='https://openrouter.ai/api/v1/key')
+   return Response.json({data:{is_free_tier:true}});
+  assert.equal(url,'https://openrouter.ai/api/v1/models');
   return Response.json({data:[
    {id:'vendor/preview:free',pricing:{prompt:'0',completion:'0'}},
    {id:'vendor/paid',pricing:{prompt:'0.1',completion:'0'}},
    {id:'vendor/not-actually-free:free',pricing:{prompt:'0',completion:'0.03'}}
   ]});
  });
+ assert.deepEqual(openCalls,['https://openrouter.ai/api/v1/key',
+  'https://openrouter.ai/api/v1/models']);
  assert.deepEqual(open.models,['vendor/preview:free']);
  const cf=await directProviderCatalog(env,'cloudflare-ai',async(url,opts)=>{
   assert.equal(url,'https://api.cloudflare.com/client/v4/accounts/'+'a'.repeat(32)+'/ai/models/search');
@@ -264,4 +271,26 @@ test('optional provider catalog secrets remain server-only and never use Cloudfl
  assert(!Object.hasOwn(payload,'CLOUDFLARE_API_TOKEN'));
  assert(!Object.hasOwn(payload,'CLOUDFLARE_AI_API_KEY'));
  assert.throws(()=>buildHudSecretPayload({...env,ROVOR_CLOUD_MISTRAL_API_KEY:R}));
+});
+
+test('OpenRouter public model catalog cannot falsely authenticate a rejected key',async()=>{
+ const env={OPENROUTER_API_KEY:'o'.repeat(40)};
+ const calls=[];
+ const denied=await directProviderCatalog(env,'openrouter',async(url,opts)=>{
+  calls.push(url);
+  assert.equal(opts.headers.Authorization,'Bearer '+env.OPENROUTER_API_KEY);
+  if(url==='https://openrouter.ai/api/v1/key')
+   return new Response('denied',{status:401});
+  throw Error('unauthenticated model catalog must not be queried');
+ });
+ assert.equal(denied.status,'unavailable');
+ assert.equal(denied.error_category,'provider_auth_denied');
+ assert.deepEqual(denied.models,[]);
+ assert.deepEqual(calls,['https://openrouter.ai/api/v1/key']);
+ const malformed=await directProviderCatalog(env,'openrouter',async(url)=>{
+  assert.equal(url,'https://openrouter.ai/api/v1/key');
+  return Response.json({data:[]});
+ });
+ assert.equal(malformed.status,'invalid');
+ assert.equal(malformed.error_category,'invalid_catalog_shape');
 });
