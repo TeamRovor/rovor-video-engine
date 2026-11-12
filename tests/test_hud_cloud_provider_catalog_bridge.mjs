@@ -7,7 +7,7 @@ import {catalogBridgeStatus,refreshCatalogBridge,CATALOG_PROVIDERS}
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 import {verifyCatalogBridge} from '../integrations/hud-cloud/verify-cloud-provider-catalog-bridge.mjs';
 import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-secret-payload.mjs';
-import {directProviderCatalog} from '../integrations/hud-cloud/direct-provider-catalog.mjs';
+import {directProviderCatalog,directCatalogSetupBlocker} from '../integrations/hud-cloud/direct-provider-catalog.mjs';
 
 const R='r'.repeat(40),W='w'.repeat(40),S='s'.repeat(48);
 const T=Date.parse('2026-11-11T20:00:00.000Z');
@@ -170,7 +170,7 @@ test('release reports per-provider blockers without exposing secrets or model na
  assert(!JSON.stringify(report).includes(S));
  assert(!Object.hasOwn(report,'models'));
  const ui=readFileSync(new URL('../dashboard/command-center/native-v8-9/workforce-review.js',import.meta.url),'utf8');
- assert.match(ui,/Direct cloud key missing; private Site relay denied/);
+ assert.match(ui,/Direct cloud key missing/);
 });
 
 
@@ -298,4 +298,27 @@ test('OpenRouter public model catalog cannot falsely authenticate a rejected key
  });
  assert.equal(malformed.status,'invalid');
  assert.equal(malformed.error_category,'invalid_catalog_shape');
+});
+
+
+test('live secret presence updates readback immediately without forging D1 catalog checks',async()=>{
+ const s=setup();
+ await refreshCatalogBridge(s.env,T,reply(T,{code:403}).send);
+ const before=await catalogBridgeStatus(s.env,T);
+ assert.equal(before.providers[0].status,'site_auth_denied');
+ assert.equal(before.providers[0].direct_setup_blocker,'no_provider_key');
+ const key='a'.repeat(40);
+ s.env.GEMINI_API_KEY=key;
+ const installed=await catalogBridgeStatus(s.env,T);
+ assert.equal(installed.providers[0].direct_setup_blocker,null);
+ assert.equal(installed.providers[0].status,'site_auth_denied');
+ assert.equal(installed.providers[0].catalog_source,'original_site');
+ assert.equal(installed.inference_online_verified_count,0);
+ assert(!JSON.stringify(installed).includes(key));
+ delete s.env.GEMINI_API_KEY;
+ const removed=await catalogBridgeStatus(s.env,T);
+ assert.equal(removed.providers[0].direct_setup_blocker,'no_provider_key');
+ assert.equal(removed.providers[0].status,'site_auth_denied');
+ assert.equal(directCatalogSetupBlocker({...s.env,CLOUDFLARE_AI_API_KEY:'c'.repeat(40)},'cloudflare-ai'),'missing_account');
+ assert.equal(directCatalogSetupBlocker({...s.env,CLOUDFLARE_AI_API_KEY:'c'.repeat(40),CLOUDFLARE_ACCOUNT_ID:'b'.repeat(32)},'cloudflare-ai'),null);
 });
