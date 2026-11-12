@@ -64,6 +64,23 @@ test('current issue and PR readback does not treat assigned, relabeled, draft or
  const issue={number:9,title:'Issue',state:'open',assignees:[],labels:[{name:'bug'}]};
  assert.equal((await readGithubReviewEvidence(token,'issue-9',fixture('/issues/9',issue),now)).state,'issue_open');
  assert.equal((await readGithubReviewEvidence(token,'issue-9',fixture('/issues/9',{...issue,labels:[]}),now)).state,'issue_no_longer_labeled');
+ // The native discovery stage admits recent, unassigned, unlabeled P0/P1
+ // issues. The live pre-inference check must recognize only those anchored
+ // priority prefixes, never arbitrary text or issue bodies.
+ for(const title of ['P0: owner session blocked','P1: phone controls inaccessible']){
+  assert.equal((await readGithubReviewEvidence(token,'issue-9',
+   fixture('/issues/9',{...issue,title,labels:[]}),now)).state,'issue_open');
+ }
+ for(const title of ['Context P0: not a priority','P2: out of scope','P0:','P0 : typo']){
+  assert.equal((await readGithubReviewEvidence(token,'issue-9',
+   fixture('/issues/9',{...issue,title,labels:[]}),now)).state,'issue_no_longer_labeled');
+ }
+ assert.equal((await readGithubReviewEvidence(token,'issue-9',
+  fixture('/issues/9',{...issue,title:'P0: owner session blocked',labels:[],
+   assignees:[{login:'owner'}]}),now)).state,'issue_assigned');
+ assert.equal((await readGithubReviewEvidence(token,'issue-9',
+  fixture('/issues/9',{...issue,title:'P0: owner session blocked',labels:[],
+   state:'closed'}),now)).state,'issue_closed');
  assert.equal((await readGithubReviewEvidence(token,'issue-9',fixture('/issues/9',{...issue,assignees:[{login:'maintainer'}]}),now)).state,'issue_assigned');
  const pull={number:8,title:'PR',state:'open',draft:false,merged:false,assignees:[],
   updated_at:new Date(now-10*86400000).toISOString()};
