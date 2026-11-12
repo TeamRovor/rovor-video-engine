@@ -210,6 +210,39 @@ test('fixed-endpoint GET inventory returns bounded public model metadata only',a
  assert.equal(calls,1);assert.deepEqual(result.models.map(m=>m.id),['known/free:free']);assert.equal(result.billing_verified,false);assert.equal(result.quota_verified,false);assert.ok(!JSON.stringify(result).includes('must not return'));
  await assert.rejects(ops.inventory(env,'https://attacker.invalid',async()=>{throw Error();}));
 });
+test('catalog does not treat empty OpenRouter prices as free and marks exact model candidates',async()=>{
+ const {env,ops}=setup();
+ const router=await ops.inventory(env,'openrouter',async()=>Response.json({data:[
+  {id:'vendor/free:free',pricing:{prompt:'0',completion:'0.000'}},
+  {id:'vendor/numeric:free',pricing:{prompt:0,completion:0}},
+  {id:'vendor/blank:free',pricing:{prompt:'',completion:'0'}},
+  {id:'vendor/space:free',pricing:{prompt:' ',completion:'0'}},
+  {id:'vendor/hex:free',pricing:{prompt:'0x0',completion:'0'}},
+  {id:'vendor/not-free:free',pricing:{prompt:'0.0001',completion:'0'}}
+ ]}));
+ assert.deepEqual(router.models.map(m=>m.id),['vendor/free:free','vendor/numeric:free']);
+ assert(router.models.every(m=>m.catalog_zero_price===true&&m.pinned_model_candidate===true));
+ assert.equal(router.billing_verified,false);
+ assert.equal(router.canary_verified,false);
+ const gemini=await ops.inventory(env,'gemini',async()=>Response.json({models:[
+  {name:'models/gemini-2.5-flash-lite'},
+  {name:'models/gemini-flash-latest'}
+ ]}));
+ assert.deepEqual(gemini.models.map(m=>[m.id,m.pinned_model_candidate]),[
+  ['gemini-2.5-flash-lite',true],['gemini-flash-latest',false]
+ ]);
+ const cloudflare=await ops.inventory(env,'cloudflare-ai',async()=>Response.json({result:[
+  {id:'12345678-1234-1234-1234-123456789012',name:'@cf/meta/llama-3.2-3b-instruct'}
+ ]}));
+ assert.deepEqual(cloudflare.models.map(m=>[m.id,m.pinned_model_candidate]),[
+  ['@cf/meta/llama-3.2-3b-instruct',true]
+ ]);
+ const hf=await ops.inventory(env,'huggingface',async()=>Response.json({data:[
+  {id:'Qwen/Qwen3.8-27B'},{id:'Qwen/Qwen3.8-27B:provider-pinned'}
+ ]}));
+ assert.deepEqual(hf.models.map(m=>m.pinned_model_candidate),[false,true]);
+ assert.equal(hf.billing_verified,false);
+});
 test('inventory errors do not leak key or vendor body',async()=>{
  const {env,ops}=setup();const result=await ops.inventory(env,'groq',async()=>new Response('sensitive upstream',{status:403}));
  assert.deepEqual(result,{provider:'groq',status:'http_403'});
