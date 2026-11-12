@@ -231,6 +231,8 @@ function firstPrProgress(patch){
  if(work){
   note.textContent=work.human_review==='passed'?
    'An engineering proposal was accepted. Inspect it in Past reviews, then separately authorize one draft PR.':
+   work.walter_verdict==='walter_accepted'?'Walter checked the documentation proposal. Open Past reviews to read both receipts.':
+   ['queued','running'].includes(work.walter_state)?'Walter is checking the documentation proposal. His review will appear beside Mike’s result.':
    work.state==='needs_review'?
    'An engineering proposal awaits PASS or FAIL. That decision alone cannot create a PR.':
    'The first source task is queued or running. Cloud free-model quotas and STOP still apply.';
@@ -340,6 +342,10 @@ function formatTime(value){
 async function digest(text){
  const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)));
  return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+}
+function needsOwner(entry){
+ return entry.state==='needs_review'&&entry.human_review==='not_recorded'&&
+  entry.walter_verdict!=='walter_accepted'&&!['queued','running'].includes(entry.walter_state);
 }
 function safeJob(entry){
  return !!entry&&typeof entry==='object'&&ID.test(entry.id)&&
@@ -659,7 +665,7 @@ async function refresh(clearNotice=true){
   await Promise.all([refreshOwner(),refreshNativeDiscovery()]);
   if(generation!==refreshGeneration)return;
   const rows=data.items;
-  const pendingCount=rows.filter(x=>x.state==='needs_review'&&x.human_review==='not_recorded').length;
+  const pendingCount=rows.filter(x=>needsOwner(x)).length;
   const reviewedCount=rows.filter(x=>VERDICTS.has(x.human_review)).length;
   pending.textContent=String(pendingCount);
   reviewed.textContent=String(reviewedCount);
@@ -684,18 +690,18 @@ async function refresh(clearNotice=true){
   jobs.textContent='';history.textContent='';
   const pendingLoads=[],evidenceLoads=[];
   const ordered=rows.slice().sort((a,b)=>{
-   const ap=a.state==='needs_review'&&a.human_review==='not_recorded'?1:0;
-   const bp=b.state==='needs_review'&&b.human_review==='not_recorded'?1:0;
+   const ap=needsOwner(a)?1:0;
+   const bp=needsOwner(b)?1:0;
    return bp-ap||((b.created_at||0)-(a.created_at||0));
   });
   if(!pendingCount)jobs.append(make('div','job','You’re all caught up. No work needs a decision right now.'));
-  if(!rows.some(x=>!(x.state==='needs_review'&&x.human_review==='not_recorded')))
+  if(!rows.some(x=>!(needsOwner(x))))
    history.append(make('p','history-summary','No past reviews or other jobs yet.'));
   for(const entry of ordered){
    const card=make('article','job');
    const header=make('div','job-header');
    const heading=make('div'),context=reviewContext(entry);
-   const awaiting=entry.state==='needs_review'&&entry.human_review==='not_recorded';
+   const awaiting=needsOwner(entry);
    heading.append(make('p','task-type',context.type+' · '+entry.employee));
    heading.append(make('h3','',context.title));
    if(context.evidenceLabel){
@@ -704,11 +710,18 @@ async function refresh(clearNotice=true){
    const superseded=entry.state==='failed'&&entry.error_code==='discovery_no_longer_actionable'&&
     entry.started_at==null&&entry.actual_model==null;
    const humanState=awaiting?'NEEDS DECISION':entry.human_review==='passed'?'KEPT · PASS':
-    entry.human_review==='failed'?'REJECTED · FAIL':superseded?'SKIPPED · OUTDATED':
+    entry.human_review==='failed'?'REJECTED · FAIL':entry.walter_verdict==='walter_accepted'?'REVIEWED BY WALTER':
+    ['queued','running'].includes(entry.walter_state)?'WALTER REVIEW PENDING':superseded?'SKIPPED · OUTDATED':
     entry.state==='running'?'IN PROGRESS':
     entry.state==='queued'?'WAITING TO START':entry.state==='uncertain'?'NEEDS TECHNICAL CHECK':'NOT COMPLETED';
    const tag=make('span','state '+(awaiting?'wait':VERDICTS.has(entry.human_review)?'ok':''),humanState);
    header.append(heading,tag);card.append(header);
+   if(entry.walter_id){
+    card.append(make('p','metadata','Walter review receipt: '+entry.walter_id));
+    if(entry.walter_model&&validTokens(entry.walter_input)&&validTokens(entry.walter_output))
+     card.append(make('p','metadata',entry.walter_model+' · '+entry.walter_input+' input · '+entry.walter_output+' output tokens'));
+    if(entry.walter_reason)card.append(make('p','explanation',entry.walter_reason));
+   }
    if(superseded){
     card.append(make('p','explanation','ROVOR checked this discovery against current GitHub metadata and found it was no longer eligible. The job was skipped before any AI inference. No provider tokens were spent on this job, no code was changed, and no owner decision is needed.'));
     card.append(make('p','metadata','Recorded outcome: discovery_no_longer_actionable. A later START will not replay this item.'));
