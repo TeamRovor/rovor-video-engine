@@ -8,6 +8,15 @@ const within=(raw,now,maxAge)=>{
 };
 const candidate=(key,priority,text)=>({key,priority,text});
 const allowedLabels=new Set(['security','bug','regression','accessibility','hud','reliability']);
+ // A tracked owner-prioritized issue should not disappear merely because its
+ // GitHub labels were never assigned. Priority comes only from a short,
+ // anchored title prefix; untrusted title/body text is NEVER passed to a model.
+ // This lane creates review-only D1 drafts and cannot execute GitHub changes.
+function titlePriority(title){
+ if(typeof title!=='string'||title.length>180)return null;
+ const match=/^P([01]):\s+\S/i.exec(title);
+ return match?Number(match[1]):null;
+}
 function labelsOf(issue){
  return (Array.isArray(issue?.labels)?issue.labels:[])
    .map(l=>typeof l==='string'?l:l?.name)
@@ -40,10 +49,13 @@ export function discoverCandidates({runs=[],successes=[],issues=[],pulls=[]},now
      (Array.isArray(issue.assignees)&&issue.assignees.length>0))continue;
    const tags=labelsOf(issue);
    const kind=tags.find(l=>allowedLabels.has(l));
-   if(!kind)continue;
-   const priority=kind==='security'?88:kind==='regression'||kind==='bug'?78:kind==='reliability'?72:kind==='accessibility'?67:58;
+   const severity=titlePriority(issue.title);
+   if(!kind&&severity===null)continue;
+   const labelPriority=kind==='security'?88:kind==='regression'||kind==='bug'?78:kind==='reliability'?72:kind==='accessibility'?67:kind==='hud'?58:0;
+   const priority=Math.max(labelPriority,severity===0?90:severity===1?76:0);
+   const category=kind||('P'+severity+' priority');
    choices.push(candidate('issue-'+issue.number,priority,
-     '[ROVOR-DISCOVERY:issue-'+issue.number+'] Review existing unassigned '+kind+
+     '[ROVOR-DISCOVERY:issue-'+issue.number+'] Review existing unassigned '+category+
      ' issue #'+issue.number+' at https://github.com/'+REPO+'/issues/'+issue.number+
      '. Verify the report and check the canonical task queue for ownership and duplicates.'+
      ' Propose a concrete, testable correction, without claiming or modifying the issue.'));
