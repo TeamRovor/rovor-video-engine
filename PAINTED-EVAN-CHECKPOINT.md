@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: SH temporal construction checked; keep experimental
+CARTOON-EVAN-SH-TEMPORAL.md / reviews/sh-temporal-v1.json. outputs/evan-cartoon-sh-temporal/Review.html:102 actual baseline/candidate geometry samples at480Hz,18.839583–19.05s. Finite positive oral triangles (minimum area2=1.454518), skin targets exact; five fixture widths match actual prior rasters to1e-6. Largest sampled width step2.243393px; finite-difference peak1076.8286px/s. Only24fpsframes454–456 differ (1600/1622/1115pixels), including lower-face/jaw exposure. Plot inspected. No numerical fold/offcue defect found; metrics do not prove a perceptual pop or justify another variant.
+
+Keep SH experimental/no full or default promotion. Synchronized normal/slow review remains available; ordinary-speed acting/listening/exact phonetics/polished acceptance FALSE. All18timing flags remain unresolved; automation ACTIVE, no pending jobs. No art/retiming/expression change. Previous three SH commits published and branch synchronized before this bounded report. Main/V3/V4/updater/native Moho protected.
+
+NEXT: diagnose existing closing sleeve notch at532 against registered hand/forearm source, sleeve alpha and mesh parents. Preserve existing closing PNGs/full films/native projects while diagnosing. No new mouth/art/expression variant, Moho, merge or deploy.
+
 ## Current task: synchronized SH comparison prepared; still unaccepted
 CARTOON-EVAN-SH-COMPARISON.md / reviews/sh-comparison-v1.json. outputs/evan-cartoon-sh-comparison/Review.html hasONEsynchronizedbaseline-left/candidate-right film withoriginalnarration, normal/half/loop controls andsilentquarter-speed.30raw2560×720pairs arepixel-exact1280×720sourcehalves; noresampling. Original18.25–19.5sPCM20k byte-exactpreviouscontext;30/120completevideo decodes. Five normal/one slow decodedpairs inspected: compactSH nativeeffectremainssubtleatstagescale; no realtimelistening/acting/polishedacceptance.
 

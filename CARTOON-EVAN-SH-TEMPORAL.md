@@ -1,0 +1,9 @@
+# SH entry/return: dense geometry and actual frame differences
+
+Local review: `outputs/evan-cartoon-sh-temporal/Review.html`.102samples at480Hz cover18.839583–19.05s. Both baseline and opt-in paths use actual GeometryCapture; every sample retains finite positive oral triangles and equal skin targets. Five fixture widths447/457/454/455/456 match previously raster-rendered widths to1e-6. The corner-only Y invariance check is retained. Minimum oral triangle area2 is1.454518; this is a construction guard, not an anatomy/polish score.
+
+The greatest sampled width step is2.243393nativepx per1/480s; peak finite-difference speed1076.8286px/s. The25% contraction has only three changed24fpsoutput poses. Frame454 changes1600pixels in[249,166,325,205],455 changes1622 in[249,165,327,205],456 changes1115 in[250,165,321,205]. No other output frame differs. These boxes include lower-face/jaw exposure; equal incoming jaw/skin controls do not imply identical assembled jaw pixels.
+
+The inspected dense plot shows bounded entry, hold and return with no observed numerical fold or off-cue output change. Fast finite differences do not establish a perceptual pop or justify another parameter variant. The synchronized normal/slow comparison remains available; ordinary-speed acting and independent listening are still unaccepted. Keep SH experimental and current full/defaults unchanged. All18timing flags remain unresolved; no art/retiming/new expression variant was added.
+
+Next: trace the existing closing sleeve notch at source532 against actual registered hand/forearm source, sleeve alpha and mesh parents. Diagnose before editing; preserve existing closing PNGs/full films/native projects and approved updater. This is a separate existing construction defect, not acceptance or integration of the SH experiment. No Moho, merge or deployment.
