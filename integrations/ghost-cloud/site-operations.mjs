@@ -358,6 +358,9 @@ export function createCloudOperations(base, cloud) {
    const quotaObservation=provider==='groq'?readGroqRpd(response.headers,Date.now()):null;
    const data=await bounded(response,4194304),rows=data.data||data.models||data.result;
    if(!Array.isArray(rows))return {provider,status:'unrecognized_catalog'};
+   // A blank or whitespace price must not be coerced to numeric zero.
+   // Catalog prices are advisory; they never grant inference admission.
+   const explicitlyZero=v=>v===0||(typeof v==='string'&&/^0+(?:\.0+)?$/.test(v));
    // Cloudflare catalog objects contain UUID database keys in `id`;
    // only `name` is a usable @cf/... inference model identifier.
    // An authenticated catalog is still NOT proof of free inference eligibility.
@@ -368,7 +371,7 @@ export function createCloudOperations(base, cloud) {
    ).filter(m=>provider!=='openrouter'||(
     typeof m.id==='string'&&m.id.endsWith(':free')&&
     m.pricing?.prompt!=null&&m.pricing?.completion!=null&&
-    Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0
+    explicitlyZero(m.pricing.prompt)&&explicitlyZero(m.pricing.completion)
    )).map(m=>{
     const raw=String(provider==='cloudflare-ai'?m.name:(m.id||m.name));
     // Gemini REST catalogs use "models/<name>"; the OpenAI-compatible
@@ -376,9 +379,14 @@ export function createCloudOperations(base, cloud) {
     // metadata only and never authorizes a provider/model for dispatch.
     const id=provider==='gemini'&&raw.startsWith('models/')?raw.slice(7):raw;
     if(provider==='gemini'&&!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,179}$/.test(id))return null;
-    return {id:id.slice(0,200),
+    const clipped=id.slice(0,200);
+    const pinned=/^[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}$/.test(clipped)&&
+     !/(^|[/:-])(auto|latest)([/:-]|$)/i.test(clipped)&&
+     (provider!=='huggingface'||/:[a-z0-9-]+$/.test(clipped));
+    return {id:clipped,
      context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
-     catalog_zero_price:provider==='openrouter'?true:null};
+     catalog_zero_price:provider==='openrouter'?true:null,
+     pinned_model_candidate:pinned};
    }).filter(Boolean).slice(0,20);
    return {provider,status:'catalog_received',observed_at:Date.now(),models,
     ...(quotaObservation?{quota_observation:quotaObservation}:{}),
