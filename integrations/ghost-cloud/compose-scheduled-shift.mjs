@@ -37,6 +37,9 @@ function scheduleWidget() {
       const recent=run.started_at<=Date.now()+60000&&Date.now()-run.started_at<=600000;
       const reasons={
         no_unattempted_jobs:'no new unattempted jobs in cloud queue',
+        no_private_approved_packets:'no private packets approved for dispatch',
+        no_current_approved_packet:'no currently approved recurring packet',
+        approved_packets_already_attempted:'approved packets already attempted; no automatic replay',
         no_eligible_providers:'all nine provider routes ineligible',
         unattempted_jobs_not_dispatched:'unattempted jobs blocked by current admission or assignment'
       };
