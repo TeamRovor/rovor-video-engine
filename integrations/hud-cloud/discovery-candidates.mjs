@@ -12,7 +12,7 @@ const allowedLabels=new Set(['security','bug','regression','accessibility','hud'
  // GitHub labels were never assigned. Priority comes only from a short,
  // anchored title prefix; untrusted title/body text is NEVER passed to a model.
  // This lane creates review-only D1 drafts and cannot execute GitHub changes.
-function titlePriority(title){
+export function titlePriority(title){
  if(typeof title!=='string'||title.length>180)return null;
  const match=/^P([01]):\s+\S/i.exec(title);
  return match?Number(match[1]):null;
