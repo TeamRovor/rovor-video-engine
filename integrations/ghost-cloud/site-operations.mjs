@@ -380,9 +380,10 @@ export function createCloudOperations(base, cloud) {
     const id=provider==='gemini'&&raw.startsWith('models/')?raw.slice(7):raw;
     if(provider==='gemini'&&!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,179}$/.test(id))return null;
     const clipped=id.slice(0,200);
-    const pinned=/^[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}$/.test(clipped)&&
-     !/(^|[/:-])(auto|latest)([/:-]|$)/i.test(clipped)&&
-     (provider!=='huggingface'||/:[a-z0-9-]+$/.test(clipped));
+    // A shortened catalog ID is display-only, never an exact pin candidate.
+    const pinned=id.length<=200&&/^[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}$/.test(id)&&
+     !/(^|[/:-])(auto|latest)([/:-]|$)/i.test(id)&&
+     (provider!=='huggingface'||/:[a-z0-9-]+$/.test(id));
     return {id:clipped,
      context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
      catalog_zero_price:provider==='openrouter'?true:null,
