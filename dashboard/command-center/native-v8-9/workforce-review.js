@@ -231,6 +231,8 @@ function firstPrProgress(patch){
  if(work){
   note.textContent=work.human_review==='passed'?
    'An engineering proposal was accepted. Inspect it in Past reviews, then separately authorize one draft PR.':
+   work.walter_verdict==='walter_accepted'?'Walter checked the documentation proposal. Open Past reviews to read both receipts.':
+   ['queued','running'].includes(work.walter_state)?'Walter is checking the documentation proposal. His review will appear beside Mike’s result.':
    work.state==='needs_review'?
    'An engineering proposal awaits PASS or FAIL. That decision alone cannot create a PR.':
    'The first source task is queued or running. Cloud free-model quotas and STOP still apply.';
@@ -716,6 +718,8 @@ async function refresh(clearNotice=true){
    header.append(heading,tag);card.append(header);
    if(entry.walter_id){
     card.append(make('p','metadata','Walter review receipt: '+entry.walter_id));
+    if(entry.walter_model&&validTokens(entry.walter_input)&&validTokens(entry.walter_output))
+     card.append(make('p','metadata',entry.walter_model+' · '+entry.walter_input+' input · '+entry.walter_output+' output tokens'));
     if(entry.walter_reason)card.append(make('p','explanation',entry.walter_reason));
    }
    if(superseded){
