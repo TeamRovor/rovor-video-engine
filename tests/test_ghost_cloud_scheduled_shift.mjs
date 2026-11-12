@@ -57,6 +57,40 @@ test('no fresh jobs yields an idle receipt, not a fabricated online worker',asyn
   assert.equal(r.status,'idle');assert.equal(r.dispatched,0);
   assert.equal(r.reason,'no_unattempted_jobs');
 });
+test('idle shift reports why the approved feeder produced no fresh work',async()=>{
+  const cases=[
+    [{status:'empty',queued:0,duplicates:0},'no_private_approved_packets'],
+    [{status:'complete',queued:0,duplicates:0},'no_current_approved_packet'],
+    [{status:'complete',queued:0,duplicates:2},'approved_packets_already_attempted'],
+    [{queued:0,duplicates:0},'no_unattempted_jobs'],
+  ];
+  for(const [feed,expected] of cases){
+    const s=setup();
+    const r=await runScheduledShift(s.env,{
+      replenish:async()=>feed,
+      tick:async()=>({enabled:true,dispatched:0}),
+      clock:s.clock,newId:s.newId
+    });
+    assert.equal(r.status,'idle');
+    assert.equal(r.dispatched,0);
+    assert.equal(r.reason,expected);
+    assert.equal(s.db.prepare('SELECT reason FROM ghost_cloud_shift_runs').get().reason,expected);
+  }
+});
+
+test('pending unattempted work takes precedence over empty-feeder diagnosis',async()=>{
+  const s=setup();s.db.exec("INSERT INTO ghost_cloud_jobs(id) VALUES('ready')");
+  const denied=Object.fromEntries(['groq','gemini','cloudflare-ai','mistral','nvidia',
+    'openrouter','sambanova','cohere','huggingface'].map(provider=>[provider,'not_configured']));
+  const r=await runScheduledShift(s.env,{
+    replenish:async()=>({status:'empty',queued:0,duplicates:0}),
+    tick:async()=>({enabled:true,dispatched:0,denied}),
+    clock:s.clock,newId:s.newId
+  });
+  assert.equal(r.reason,'no_eligible_providers');
+  assert.equal(r.dispatched,0);
+});
+
 test('idle shift distinguishes all ineligible routes from blocked unattempted work',async()=>{
   const s=setup();s.db.exec("INSERT INTO ghost_cloud_jobs(id) VALUES('ready')");
   const denied=Object.fromEntries(['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'].map(id=>[id,'not_configured']));
