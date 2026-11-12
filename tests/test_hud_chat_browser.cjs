@@ -184,6 +184,11 @@ async function main(){
   assert(await evaluate('return !!document.querySelector(".rvc-copy")'),'copy response action missing');
   await evaluate('document.querySelector("#rvc button[aria-label=\\"Close chat\\"]").click();document.querySelector("#rvc-fab").click();return true');
   assert(await evaluate('return document.querySelector("#rvc-log").textContent.includes("REPLY RECEIVED")'),'receipt disappeared from history');
+  // A completed receipt can paint before ask() finally unlocks the composer.
+  // A programmatic requestSubmit() while busy is correctly ignored; model
+  // this test as an actual user's next enabled Send, not a rushed hidden click.
+  await waitFor(()=>evaluate('return !document.querySelector("#rvc form button[type=submit]").disabled && !document.querySelector("#rvc textarea").disabled'),
+    'composer unlocked after first private job receipt');
   // Explicit Send and opted-in two-model review produce two independent
   // D1 job IDs. This is mocked Chrome QA, not proof of actual Mac parallelism.
   await evaluate(`const picker=document.querySelector("#rvc-model");picker.value="__rovor_smart_route__";
@@ -191,8 +196,13 @@ async function main(){
     const team=document.querySelector("#rvc-team-review");team.checked=true;
     team.dispatchEvent(new Event("change",{bubbles:true}));
     const box=document.querySelector("#rvc textarea");box.value="Compare two approaches to fixing this code";
-    box.dispatchEvent(new Event("input",{bubbles:true}));
-    document.querySelector("#rvc form").requestSubmit();return true`);
+    box.dispatchEvent(new Event("input",{bubbles:true}));return true`);
+  // Check the actual two-route plan and enabled Send, then submit once.
+  // This preserves separate receipt assertions rather than extending a
+  // timeout that could mask a lost/invalid second model request.
+  await waitFor(()=>evaluate('return document.querySelector(".rvc-routing-note").textContent.startsWith("Two-model review:") && !document.querySelector("#rvc form button[type=submit]").disabled'),
+    'two-model route plan and Send ready');
+  await evaluate('document.querySelector("#rvc form").requestSubmit();return true');
   await waitFor(()=>evaluate('return Array.from(document.querySelectorAll(".rvc-receipt")).filter(e=>e.textContent.includes("REPLY RECEIVED")).length>=3'),
     'two independent model receipts',200);
   assert.equal(submits,3,'one first request plus two team requests required');
