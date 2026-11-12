@@ -17,17 +17,21 @@ const refreshButton=byId('refresh');
 const catalogSummary=byId('cloud-provider-summary'),catalogGrid=byId('cloud-provider-grid');
 const catalogNames=['gemini','groq','mistral','nvidia','cohere','sambanova','cloudflare-ai','openrouter','huggingface'];
 function catalogReadable(entry){
+ // Current key presence takes precedence over a previously successful D1
+ // catalog row, which may be stale after credentials are removed or rotated.
+ if(entry?.direct_setup_blocker==='no_provider_key')
+  return 'Direct cloud key missing'+(entry.status==='site_auth_denied'?'; private Site relay denied':' · catalog connection not verified');
+ if(entry?.direct_setup_blocker==='missing_account')
+  return 'Cloudflare AI account binding missing · direct catalog unavailable';
  if(entry?.freshness!=='fresh')return 'No recent catalog verification';
+ if(entry.catalog_source==='original_site'&&entry.status==='site_auth_denied')
+  return 'Direct key configured; awaiting next native catalog check (previous Site relay denied)';
  if(entry.catalog_source==='direct_provider'){
   if(entry.status==='catalog_received')return 'Direct provider catalog authenticated · inference unverified';
   if(entry.direct_error_category==='provider_auth_denied')return 'Direct provider authentication denied';
   if(entry.direct_error_category==='provider_rate_limited')return 'Provider catalog rate-limited';
   return 'Direct provider catalog unavailable · no inference confirmed';
  }
- if(entry.status==='site_auth_denied'&&entry.direct_setup_blocker==='no_provider_key')
-  return 'Direct cloud key missing; private Site relay denied';
- if(entry.status==='site_auth_denied'&&entry.direct_setup_blocker==='missing_account')
-  return 'Cloudflare AI account binding missing; private Site relay denied';
  if(entry.site_d1_verified===true&&entry.status==='catalog_received')return 'Catalog and Site D1 confirmed';
  if(entry.status==='site_receipt_missing')return 'Catalog found; Site D1 proof missing';
  if(entry.status==='site_readback_mismatch')return 'Site D1 receipt mismatch';

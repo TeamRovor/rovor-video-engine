@@ -1,4 +1,4 @@
-import {directProviderCatalog} from './direct-provider-catalog.mjs';
+import {directProviderCatalog,directCatalogSetupBlocker} from './direct-provider-catalog.mjs';
 // Read-only, Mac-independent bridge from the EXISTING owner-private Site.
 // Never sends prompts, calls chat completions, changes STOP, or grants free-tier
 // eligibility. Site D1 and Cloudflare D1 are DISTINCT trust boundaries.
@@ -156,6 +156,10 @@ export async function catalogBridgeStatus(env,now=Date.now()){
     directErrorCategory=allowed.includes(value.error_category)?value.error_category:null;
    }
   }catch{}
+  // The live server setup gate is authoritative for CURRENT key presence.
+  // The D1 row remains an immutable historic catalog check and its status is
+  // never promoted to authentication or inference when a key is newly added.
+  directSetupBlocker=directCatalogSetupBlocker(env,provider);
   const checked=validTime(row?.checked_at)?row.checked_at:null;
   return {provider,status:row?.status||'never_checked',
    catalog_source:catalogSource,direct_error_category:directErrorCategory,
