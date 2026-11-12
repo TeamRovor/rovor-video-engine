@@ -242,6 +242,13 @@ test('catalog does not treat empty OpenRouter prices as free and marks exact mod
  ]}));
  assert.deepEqual(hf.models.map(m=>m.pinned_model_candidate),[false,true]);
  assert.equal(hf.billing_verified,false);
+ // Truncated display names must not masquerade as exact executable IDs.
+ const oversized='vendor/'+ 'x'.repeat(200);
+ const longModel=await ops.inventory(env,'groq',async()=>Response.json({data:[{id:oversized}]}));
+ assert.equal(longModel.models.length,1);
+ assert.equal(longModel.models[0].id.length,200);
+ assert.notEqual(longModel.models[0].id,oversized);
+ assert.equal(longModel.models[0].pinned_model_candidate,false);
 });
 test('inventory errors do not leak key or vendor body',async()=>{
  const {env,ops}=setup();const result=await ops.inventory(env,'groq',async()=>new Response('sensitive upstream',{status:403}));
