@@ -5,6 +5,11 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: SH native identity pilot — not accepted
+CARTOON-EVAN-SH-NATIVE-PILOT.md + opt-in sh_cartoon_review.py/test_sh_cartoon_review.py. HelperredistributesnoncontactshapeidentityduringSH; contacts/rest/timing/defaultspreserved.2testsPASS. Native453/454/457 in outputs/evan-cartoon-sh-native-pilot: skinTarget/upper310exact, aftercue457pixel-exact; peak454roundMaterial0→.183538. Inspectednative454before/after: NEGLIGIBLEvisibleimprovement, NOTaccepted. No longrender/full/default/artchange. Normal/slowcomponentPENDING. All18timingflagsunresolved; automationACTIVE; protectedversions/nativeMoho/updaterpreserved.
+
+NEXT: quantify existingoralcorner/widthconstraint at454; ONEboundedSHcorneraccent onexistingregisteredrig, preservejaw/contactinputs. Requiremeaningfulnative silhouette before shortnormal/slowcomponent. Sources+6PNGhashes saved. Localdevelopmentcommit mayneedpublishing; inspectactualbranch first. NoMoho/merge/deploy.
+
 ## Current task: final digital trace and all18 evidence index complete
 CARTOON-EVAN-DIGITAL-TRACE.md / reviews/digital-trace-v1.json + CARTOON-EVAN-ALL18-ACOUSTIC-REVIEW.md / reviews/all18-acoustic-review-v1.json. outputs/evan-cartoon-timing-review/Review.html indexes10cases coveringALL18flaggedwords withoriginalPCM/spectra +actualrigtraces. Alltraceaudio/plan/reference/PNG/film/historicalFROZENsourcehashes verified; historicalcurrentfilesmaydiffer. CoverageisNOTaccuracy;0cleared/0retimed/18exactedgesunverified. Independentlistening/realtime/polishedFALSE;automationACTIVE.
 

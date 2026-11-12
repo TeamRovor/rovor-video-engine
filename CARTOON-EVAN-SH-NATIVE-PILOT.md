@@ -1,0 +1,7 @@
+# SH shape pilot — experimental, unaccepted
+
+The opt-in sh_shape_weights helper redistributes only non-contact shape identity toward the existing rounded oral material during SH. It preserves normalized weights, original bilabial/FV components, fully settled rest and all phone intervals. No default caller uses it. Two unit tests pass, including shifted cue, bounds, immutability, rest/contact preservation and invalid input checks.
+
+Three actual native fixtures453/454/457 were rendered at outputs/evan-cartoon-sh-native-pilot. Original skin target and upper310rows remain exact; after-cue457 is pixel-exact. Peak454 raises rounded material0→0.183538. Native before/after454 inspected: visible improvement is negligible. This is not accepted SH articulation or animation polish. Existing authored lip-corner constraints may limit silhouette narrowing; inspect that interaction before any longer render. No new artwork, retiming, full film or default change. All18timing flags remain unresolved.
+
+Next: quantify the oral corner/width constraint at454 and try one bounded SH corner accent on the same registered rig. Only proceed to a normal/slow component if the native silhouette becomes meaningfully distinct. Preserve jaw/contact inputs and current full films. Native pilot source snapshots and PNG hashes are retained. Pilot initially ran before the added fully-settled-rest early return; actual fixtures are not fully settled during SH, so that addition is covered by the rest unit test and does not alter those pilot states.
