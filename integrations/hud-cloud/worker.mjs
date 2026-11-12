@@ -6,6 +6,7 @@ import {submitIdea,listIdeas} from './idea-inbox.mjs';
 import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
 import {getRepoSource} from './repo-source.mjs';
 import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';
+import {runCloudScheduledLanes} from './scheduled-lanes.mjs';
 import {repoCatchupStatus,refreshRepoCatchup} from './repo-catchup.mjs';
 import {reviewEvidence} from './review-evidence.mjs';
 import {queueGithubPatch,githubPatchStatus,githubPatchTick,previewGithubPatchSource,queueGithubPatchTask} from './github-patch-gateway.mjs';
@@ -719,27 +720,22 @@ export default {
   // can admit one owner-approved job. No GitHub-to-private-Site HTTP needed.
   async scheduled(event, env) {
     if(!env.DB)return;
-    // Chat maintenance must not prevent the separate workforce clock from
-    // running. Still report the maintenance failure to Cloudflare.
-    let maintenanceFailed=false;
-    try{await expireChat(env.DB,Date.now());}catch{maintenanceFailed=true;}
-    let discoveryFailed=false;
-    try{await nativeDiscoveryTick(env,Date.now());}catch{discoveryFailed=true;}
-    const startedAt=Date.now();
-    const result=await workforceTick(env,startedAt);
-    if(Number.isSafeInteger(event?.scheduledTime)&&event.scheduledTime>0)
-      await recordNativeTick(env.DB,event.scheduledTime,startedAt,Math.max(startedAt,Date.now()),result);
-    // STOP suppresses even the optional direct-provider catalog GETs. Keep
-    // scheduled metadata/review maintenance independent; no provider network
-    // while the owner has closed the workforce gate.
-    try{
-      const gate=await env.DB.prepare('SELECT enabled FROM hud_cloud_workforce_control WHERE id=1').first();
-      if(gate?.enabled===1)await refreshCatalogBridge(env,Date.now());
-    }catch{/* optional read-only catalog telemetry must not block STOP */}
-    let patchFailed=false;
-    try{await githubPatchTick(env,Date.now());}catch{patchFailed=true;}
-    if(maintenanceFailed)throw Error('scheduled_chat_maintenance_failed');
-    if(patchFailed)throw Error('scheduled_github_patch_failed');
-    if(discoveryFailed)throw Error('scheduled_native_discovery_failed');
+    // Existing five-minute Cloudflare cron: independent branches cannot
+    // starve the GitHub draft-PR worker when Gemini or catalog checks stall.
+    // Discovery still precedes the associated inference; STOP gates remain
+    // inside each unchanged operator-approved task executor.
+    return runCloudScheduledLanes({
+      maintain:()=>expireChat(env.DB,Date.now()),
+      discover:()=>nativeDiscoveryTick(env,Date.now()),
+      workforce:startedAt=>workforceTick(env,startedAt),
+      record:(startedAt,finishedAt,result)=>
+        Number.isSafeInteger(event?.scheduledTime)&&event.scheduledTime>0?
+          recordNativeTick(env.DB,event.scheduledTime,startedAt,finishedAt,result):undefined,
+      refreshCatalogs:async()=>{
+        const gate=await env.DB.prepare('SELECT enabled FROM hud_cloud_workforce_control WHERE id=1').first();
+        if(gate?.enabled===1)await refreshCatalogBridge(env,Date.now());
+      },
+      patch:()=>githubPatchTick(env,Date.now())
+    });
   }
 };
