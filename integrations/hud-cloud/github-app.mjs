@@ -1,3 +1,4 @@
+import {titlePriority} from './discovery-candidates.mjs';
 // Independent ROVOR GitHub App. Fixed repository, fixed HTTPS origin,
 // least-privilege installation token; never send credentials to a model.
 const REPO='TeamRovor/rovor-video-engine';
@@ -140,6 +141,10 @@ const titleOf=v=>typeof v==='string'?v.replace(/[\u0000-\u001f\u007f]/g,' ').tri
 const issueLabels=new Set(['security','bug','regression','accessibility','hud','reliability']);
 const hasDefectLabel=row=>Array.isArray(row?.labels)&&row.labels.some(l=>
  issueLabels.has(String(typeof l==='string'?l:l?.name||'').toLowerCase()));
+// Live GitHub source verification shares the exact same priority rule as
+// automated discovery. An unlabeled P0/P1 can yield a review-only draft,
+// never a permission to bypass STOP, free quotas or owner approval.
+const hasDiscoveryIssueEvidence=row=>hasDefectLabel(row)||titlePriority(row?.title)!==null;
 
 async function getEvidenceJSON(token,route,send){
  const res=await send(API+'/repos/'+REPO+route,{method:'GET',redirect:'manual',
@@ -178,7 +183,7 @@ export async function readGithubReviewEvidence(token,key,send=fetch,now=Date.now
  const title=titleOf(row.title);
  if(kind==='issue')return {state:row.state==='closed'?'issue_closed':
   Array.isArray(row.assignees)&&row.assignees.length?'issue_assigned':
-  !hasDefectLabel(row)?'issue_no_longer_labeled':'issue_open',title,related_id:null};
+  !hasDiscoveryIssueEvidence(row)?'issue_no_longer_labeled':'issue_open',title,related_id:null};
  const updated=Date.parse(row.updated_at||'');
  const fresh=Number.isFinite(updated)&&updated<=now&&now-updated<5*86400000;
  return {state:row.merged===true?'pull_merged':row.state==='closed'?'pull_closed':
