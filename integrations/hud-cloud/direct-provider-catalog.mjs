@@ -54,6 +54,37 @@ export async function directProviderCatalog(env,provider,send=fetch){
    return result('unconfigured',[],'missing_account');
   url='https://api.cloudflare.com/client/v4/accounts/'+account+'/ai/models/search';
  }
+ // OpenRouter's model catalog is public unless an organization opts into
+ // key-scoped filtering. A 200 from /models alone cannot authenticate the
+ // configured key. Verify the real API key through its documented read-only
+ // endpoint first; this never grants free-tier billing or inference admission.
+ if(provider==='openrouter'){
+  let probe;
+  try{
+   probe=await send('https://openrouter.ai/api/v1/key',{
+    method:'GET',redirect:'manual',
+    headers:{Authorization:'Bearer '+key,Accept:'application/json'},
+    signal:AbortSignal.timeout(12000)});
+  }catch{return result('unavailable',[],'transport_unavailable');}
+  if(probe.status===401||probe.status===403){
+   await probe.body?.cancel().catch(()=>{});
+   return result('unavailable',[],'provider_auth_denied');
+  }
+  if(probe.status===429){
+   await probe.body?.cancel().catch(()=>{});
+   return result('unavailable',[],'provider_rate_limited');
+  }
+  if(!probe.ok){
+   await probe.body?.cancel().catch(()=>{});
+   return result('unavailable',[],'provider_http_unavailable');
+  }
+  let keyInfo;
+  try{keyInfo=await readJSON(probe);}
+  catch{return result('invalid',[],'invalid_catalog_body');}
+  if(!keyInfo?.data||typeof keyInfo.data!=='object'||
+    Array.isArray(keyInfo.data))
+   return result('invalid',[],'invalid_catalog_shape');
+ }
  let response;
  try{
   const headers=provider==='gemini'
