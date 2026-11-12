@@ -234,10 +234,12 @@ export async function status(db,now=Date.now()){
   const rows=await db.prepare(`SELECT j.id,j.task_id,j.employee,j.kind,j.title,j.source_commit,j.created_at,
     j.started_at,j.finished_at,j.state,j.actual_model,j.output_sha256,j.human_review,j.reviewed_at,j.error_code,
     w.error_code AS walter_verdict,w.state AS walter_state,w.id AS walter_id,w.output AS walter_reason,
+    wu.actual_model AS walter_model,wu.tokens_input AS walter_input,wu.tokens_output AS walter_output,
     u.provider,u.requested_model,u.tokens_input,u.tokens_output
     FROM hud_cloud_workforce_jobs j LEFT JOIN hud_cloud_workforce_usage u
     ON u.job_id=j.id AND u.output_sha256=j.output_sha256 AND u.actual_model=j.actual_model
     LEFT JOIN hud_cloud_workforce_jobs w ON w.id='wr-'||j.id AND w.revision=j.output_sha256
+    LEFT JOIN hud_cloud_workforce_usage wu ON wu.job_id=w.id AND wu.output_sha256=w.output_sha256
     WHERE j.id NOT LIKE 'wr-%' ORDER BY j.created_at DESC LIMIT 50`).all();
   return {status:200,body:{source:'existing_cloudflare_hud_gemini_workforce',
     mac_required:false,enabled:gate.enabled===1,configured_model:MODEL,
