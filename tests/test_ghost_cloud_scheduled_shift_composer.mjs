@@ -58,6 +58,9 @@ test('compiler uses one exact v2 suffix, retains original HUD and no duplicate e
   const compiled=compileScheduledShift(v2,shiftSource);
   assert.equal(compiled.slice(0,v2.indexOf(TAIL)),v2.slice(0,v2.indexOf(TAIL)));
   assert.match(compiled,/ROVOR_CLOUD_SCHEDULED_SHIFT_V1 [a-f0-9]{64}/);
+  assert.match(compiled,/no_private_approved_packets/);
+  assert.match(compiled,/no_current_approved_packet/);
+  assert.match(compiled,/approved_packets_already_attempted/);
   assert.equal((compiled.match(/export default/g)||[]).length,1);
   assert.match(compiled,/__operations\.replenish/);assert.match(compiled,/__cloud\.tick/);
   assert.match(compiled,/__operations\.refreshCatalogs\(env\)/,'catalog refresh stays inside opted-in Site schedule');
@@ -95,6 +98,7 @@ test('canonical feed branch uses approved task allowlist instead of exhausted st
   assert.equal(result.runs.length,1);
   assert.equal(result.runs[0].status,'idle','empty approved feed is safe and does not call legacy fixed packets');
   assert.equal(result.runs[0].dispatched,0);
+  assert.equal(result.runs[0].reason,'no_private_approved_packets');
 });
 test('canonical feed misconfiguration fails closed instead of falling back to old packet intake',async()=>{
   const compiled=compileScheduledShift(v2,shiftSource,feedSource);
