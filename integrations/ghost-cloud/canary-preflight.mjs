@@ -121,7 +121,8 @@ export async function runCanary({provider,cfg,env,approval,fetcher=(...args)=>gl
        tokens_input=count(data?.usage?.prompt_tokens);
        tokens_output=count(data?.usage?.completion_tokens);
        if(actual_model!==cfg.model){status='failed';error_code='model_mismatch';}
-       else if(choice?.finish_reason!=='stop'||choice?.message?.content!==marker){
+       else if(choice?.finish_reason!=='stop'||typeof choice?.message?.content!=='string'||
+        choice.message.content.trim()!==marker){
          status='failed';error_code='canary_mismatch';
        }else if(tokens_input===null||tokens_output===null||tokens_input<1||tokens_output<1){
          // A canary without exact positive provider token receipts cannot
