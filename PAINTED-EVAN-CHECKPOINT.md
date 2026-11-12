@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: synchronized SH comparison prepared; still unaccepted
+CARTOON-EVAN-SH-COMPARISON.md / reviews/sh-comparison-v1.json. outputs/evan-cartoon-sh-comparison/Review.html hasONEsynchronizedbaseline-left/candidate-right film withoriginalnarration, normal/half/loop controls andsilentquarter-speed.30raw2560×720pairs arepixel-exact1280×720sourcehalves; noresampling. Original18.25–19.5sPCM20k byte-exactpreviouscontext;30/120completevideo decodes. Five normal/one slow decodedpairs inspected: compactSH nativeeffectremainssubtleatstagescale; no realtimelistening/acting/polishedacceptance.
+
+No newmouth/art/expressionvariant orfull/default/timingchange; all18flagsunresolved;automationACTIVE;no pendingjobs. Currenthelpersremainexperimental/no defaultcallers. Threeboundedlocaldevelopmentcommits preparedforleasedGitHubpublish/exact-treesync; inspectactualbranch. Main/V3/V4/updater/nativeMoho protected.
+
+NEXT: quantifySHentry/returncontinuity480Hz +actual24fpsframedifferences toidentifyconcretetemporaldefect beforeanyadjustment/fullintegration. Keep synchronizedordinary-speedreview; don'tpromotefromstills/tests. NoMoho/merge/deploy.
+
 ## Current task: opt-in SH corner accent short component sampled
 CARTOON-EVAN-SH-CORNER.md / reviews/sh-corner-v1.json. Authoredoralcornerconstraints restoreidentity-onlywidth; postconstraint sh_corner_target caps25% oralX contraction duringexistingSH. CornerY/nonoralanchors exact; incomingcontact/jawinputs and skinTarget/upper310preserved. Actualjaw/lipplanes follownewcorners, NOTalljawpixelsunchanged.3testsPASS. Noart/retiming/default/fullchange;all18timingflagsopen.
 

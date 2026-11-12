@@ -1,0 +1,45 @@
+{
+  "films": {
+    "Normal": {
+      "decodedFrames": 30,
+      "sha256": "fe6d984387d77cbed7d7f3abb73f852f5641f158f8fe6028a12f554cfa478628"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 120,
+      "sha256": "1e09d001d9a78e389b5372a85c148a85c548b417160248d41d83f5ee3bd3c94b"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 20000,
+    "decodedPcm16Samples": 20000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "sourceFrames": [
+    438,
+    468
+  ],
+  "nativeStageWidth": 1280,
+  "comparisonWidth": 2560,
+  "resampling": false,
+  "synchronizedOriginalPcmSamples": 20000,
+  "sourceWavSha256": "d1044f48ab9115e8ed13804b94f791c44522dc9d571a7896c927b7eb37660009",
+  "realTimePlaybackAccepted": false,
+  "listeningAccepted": false,
+  "polished": false,
+  "flagsUnresolved": 18,
+  "pendingJobs": [],
+  "inspectedNormalSamples": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "inspectedSlowSamples": [
+    2
+  ],
+  "visualVerdict": "Synchronized stills show compact native SH shape but subtle stage-scale change; no real-time acting or listening acceptance.",
+  "reviewPath": "outputs/evan-cartoon-sh-comparison/Review.html"
+}
