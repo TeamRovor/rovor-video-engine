@@ -43,6 +43,37 @@ test('rank only evidence-backed unassigned work, not manufactured busywork',()=>
  assert.deepEqual(discoverCandidates({runs:[{...runs[0],head_branch:'feature/test'}],
    issues:[{...issues[0],assignees:[{login:'maintainer'}]}],pulls:[]},NOW),[]);
 });
+test('unlabeled P0/P1 issues remain review-only candidates, without copying untrusted titles',()=>{
+ const freshP0={number:407,state:'open',labels:[],updated_at:recent,assignees:[],
+   title:'P0: owner session blocked',body:'UNTRUSTED_PROMPT_DO_NOT_REPEAT'};
+ const freshP1={...freshP0,number:412,title:'P1: cloud workforce admission'};
+ const misleading={...freshP0,number:413,title:'Context P0: not an anchored priority'};
+ const assigned={...freshP0,number:414,assignees:[{login:'other-owner'}]};
+ const stale={...freshP0,number:415,updated_at:old};
+ const items=discoverCandidates({runs:[],issues:[freshP0,freshP1,misleading,assigned,stale],pulls:[]},NOW);
+ assert.deepEqual(items.map(x=>x.key),['issue-407','issue-412']);
+ assert.deepEqual(items.map(x=>x.priority),[90,76]);
+ for(const item of items){
+  assert(!item.text.includes('owner session blocked'));
+  assert(!item.text.includes('UNTRUSTED_PROMPT_DO_NOT_REPEAT'));
+  assert(item.text.includes('proposal')||item.text.includes('Propose'));
+ }
+});
+test('GitHub discovery reads recently updated issues rather than only newest-created issues',async()=>{
+ const f=fake({runSet:[],issueSet:[{number:407,state:'open',labels:[],
+   updated_at:recent,assignees:[],title:'P0: owner session blocked'}],pullSet:[]});
+ const result=await runDiscovery({env,send:f.send,now:NOW});
+ assert.equal(result.state,'owner_review_draft_queued');
+ assert.equal(f.posts[0].key,'issue-407');
+ const call=f.calls.find(c=>c.url.includes('/issues?'));
+ assert(call,'issues read must be made');
+ const params=new URL(call.url).searchParams;
+ assert.equal(params.get('state'),'open');
+ assert.equal(params.get('sort'),'updated');
+ assert.equal(params.get('direction'),'desc');
+ assert.equal(params.get('per_page'),String(DISCOVERY_PER_PAGE));
+ assert.equal(f.calls.filter(c=>c.options.method==='POST').length,1);
+});
 test('read-only GitHub evidence saves one owner-review-only D1 draft, not inference',async()=>{
  const f=fake(),r=await runDiscovery({env,send:f.send,now:NOW});
  assert.deepEqual(r,{state:'owner_review_draft_queued',queued:true,kind:'run',priority:95,

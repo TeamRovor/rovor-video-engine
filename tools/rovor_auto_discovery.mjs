@@ -43,7 +43,7 @@ export async function runDiscovery({env=process.env,send=fetch,now=Date.now()}={
  const [runData,successData,issueData,pullData,record]=await Promise.all([
    fetchJSON(API+'/actions/runs?branch=main&status=failure&per_page='+DISCOVERY_PER_PAGE,gitHeaders,send),
    fetchJSON(API+'/actions/runs?branch=main&event=push&status=success&per_page='+DISCOVERY_PER_PAGE,gitHeaders,send),
-   fetchJSON(API+'/issues?state=open&per_page='+DISCOVERY_PER_PAGE,gitHeaders,send),
+   fetchJSON(API+'/issues?state=open&sort=updated&direction=desc&per_page='+DISCOVERY_PER_PAGE,gitHeaders,send),
    fetchJSON(API+'/pulls?state=open&per_page='+DISCOVERY_PER_PAGE,gitHeaders,send),
    fetchJSON(HUD+'/api/hud/discovery/status',hudHeaders,send)
  ]);
