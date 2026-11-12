@@ -5979,6 +5979,38 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/pull/105"
         }
       ]
+    },
+    {
+      "id": "hud-cloud-home-preview-poll-20261109",
+      "title": "Refresh cloud workload home preview without opening full Workload drawer",
+      "priority": 1,
+      "status": "blocked",
+      "owner": "ChatGPT / Amar HUD home-preview patch 2026-11-09",
+      "branch": "fix/hud-cloud-home-preview-poll-20261109",
+      "scopes": [
+        "dashboard/command-center/native-v8-9/live-quota-board.js",
+        "tests/test_hud_cloud_workload.mjs"
+      ],
+      "depends_on": [],
+      "next_update": "After hosted checks and reviewed stacked PR integration",
+      "next_action": "Review PR #316 exact head, run Node workload suite and GitHub-hosted HUD CI, then integrate into PR #314 (not directly into main); require PR #314 owner release and Cloudflare deployment readback. Missing /api/ghost/status private Site readback remains a separate blocker.",
+      "acceptance": "Cloud readback starts on HUD boot without opening drawer; preview updates with factual evidence; opening drawer renders cached cloud response immediately without repeat network call; background refresh bounded; no false provider activation.",
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/314",
+        "https://github.com/TeamRovor/rovor-video-engine/issues/309",
+        "https://github.com/TeamRovor/rovor-video-engine/pull/316"
+      ],
+      "updated_at": "2026-11-09T10:21:00Z",
+      "blocker": "Stacked draft PR #316 awaits GitHub-hosted safety/mobile CI, review and integration into PR #314. Existing Cloudflare and private Sites are not deployed by this patch.",
+      "validation": {
+        "status": "isolated-v8-2-pass/github-actions-unverified/not-deployed",
+        "checks": [
+          "Exact live-quota-board.js loaded and executed in isolated V8 DOM mock",
+          "2/2 new behavior checks: cloud readback starts without drawer, 60s home refresh vs 10s drawer, no hidden-tab polls, cached drawer renders without a duplicate fetch"
+        ],
+        "result": "PASS 2/2 isolated functional checks. Node.js hosted suite and browser visual review not run.",
+        "commit": "6cbf1eae9ee28b4c53564394f3c65d214c6bf749"
+      }
     }
   ]
 }
