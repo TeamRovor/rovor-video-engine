@@ -37,13 +37,15 @@ const keyFor = (provider, modelId) => JSON.stringify([provider, modelId]);
 const scoreKey = (provider, id, task) => JSON.stringify([provider, id, task]);
 
 // Editorial *hypotheses* keyed by exact provider/model IDs observed in the
-// inventory audit. They are not benchmarks or permission to use those models.
+// inventory audit. Gemini IDs use the normalized OpenAI-compatible cloud
+// inventory identity (e.g. gemini-2.5-flash), not REST's models/ prefix.
+// They are not benchmarks or permission to use those models.
 // Unlisted models remain representable and can become eligible after evidence.
 export const ADVISORY_CAPABILITIES = Object.freeze({
   gemini: Object.freeze({
-    'models/gemini-3.1-flash-lite': ['classification', 'general', 'operations'],
-    'models/gemini-2.5-flash': ['general', 'reasoning', 'research', 'creative'],
-    'models/gemini-3.1-pro-preview': ['reasoning', 'research', 'code'],
+    'gemini-3.1-flash-lite': ['classification', 'general', 'operations'],
+    'gemini-2.5-flash': ['general', 'reasoning', 'research', 'creative'],
+    'gemini-3.1-pro-preview': ['reasoning', 'research', 'code'],
   }),
   groq: Object.freeze({
     'openai/gpt-oss-20b': ['classification', 'general', 'operations', 'code'],

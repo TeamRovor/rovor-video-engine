@@ -7,7 +7,7 @@ import {
 
 const NOW = Date.parse('2026-11-09T09:30:00.000Z');
 const model = (provider, id, context_length = 131072) => ({provider, id, context_length});
-const GEMINI = model('gemini', 'models/gemini-3.1-flash-lite');
+const GEMINI = model('gemini', 'gemini-3.1-flash-lite');
 const GROQ = model('groq', 'openai/gpt-oss-20b');
 const OPENROUTER = model('openrouter', 'cohere/north-mini-code:free');
 const catalog = (m, at = NOW-1000) => ({provider: m.provider, observed_at_ms: at,
@@ -54,6 +54,19 @@ test('a fully current privately supplied evidence packet can mark an exact model
   assert.deepEqual(chosen.routes, [{provider: GEMINI.provider, model_id: GEMINI.id}]);
   assert.equal(entry(r, GEMINI.provider, GEMINI.id).quota_scope, 'project_model');
   assert.equal(entry(r, GEMINI.provider, GEMINI.id).quota_remaining_requests, 10);
+});
+
+test('Gemini uses cloud-normalized exact IDs and never upgrades REST-prefixed proof', () => {
+  const live = model('gemini', 'gemini-2.5-flash');
+  const restPrefixed = model('gemini', 'models/gemini-2.5-flash');
+  const mismatched = snapshot([catalog(live)], [admission(restPrefixed)]);
+  assert.equal(entry(mismatched,live.provider,live.id).blocked_reason,'no_private_admission');
+  assert.equal(selectModelRoutes(mismatched,{task_family:'general'}).reason,'no_verified_eligible_models');
+  const matching = snapshot([catalog(live)], [admission(live)]);
+  assert.deepEqual(entry(matching,live.provider,live.id).advisory_task_families,
+    ['general','reasoning','research','creative']);
+  assert.deepEqual(selectModelRoutes(matching,{task_family:'general'}).routes,
+    [{provider:'gemini',model_id:'gemini-2.5-flash'}]);
 });
 
 test('untrusted upstream catalog fields are never reflected in registry output', () => {
@@ -135,7 +148,7 @@ test('duplicate private admissions block rather than take an arbitrary first or 
 test('moving model aliases never pass an otherwise complete private admission', () => {
   for (const m of [
     model('mistral','codestral-latest'),
-    model('gemini','models/gemini-flash-latest'),
+    model('gemini','gemini-flash-latest'),
     model('groq','openai/gpt-oss-auto'),
     model('huggingface','Qwen/Qwen3.8-27B:auto'),
   ]) {
