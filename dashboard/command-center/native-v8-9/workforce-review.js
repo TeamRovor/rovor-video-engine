@@ -18,6 +18,12 @@ const catalogSummary=byId('cloud-provider-summary'),catalogGrid=byId('cloud-prov
 const catalogNames=['gemini','groq','mistral','nvidia','cohere','sambanova','cloudflare-ai','openrouter','huggingface'];
 function catalogReadable(entry){
  if(entry?.freshness!=='fresh')return 'No recent catalog verification';
+ if(entry.catalog_source==='direct_provider'){
+  if(entry.status==='catalog_received')return 'Direct provider catalog authenticated · inference unverified';
+  if(entry.direct_error_category==='provider_auth_denied')return 'Direct provider authentication denied';
+  if(entry.direct_error_category==='provider_rate_limited')return 'Provider catalog rate-limited';
+  return 'Direct provider catalog unavailable · no inference confirmed';
+ }
  if(entry.site_d1_verified===true&&entry.status==='catalog_received')return 'Catalog and Site D1 confirmed';
  if(entry.status==='site_receipt_missing')return 'Catalog found; Site D1 proof missing';
  if(entry.status==='site_readback_mismatch')return 'Site D1 receipt mismatch';
@@ -34,12 +40,16 @@ async function refreshProviderCatalog(generation){
      !Array.isArray(data.providers)||data.providers.length!==9||
      data.providers.some((p,i)=>p.provider!==catalogNames[i]||
       !Number.isSafeInteger(p.model_count)||p.model_count<0||p.model_count>20||
+      !['direct_provider','original_site'].includes(p.catalog_source)||
       typeof p.site_d1_verified!=='boolean'||p.inference_online_verified!==false||
       p.free_billing_verified!==false||p.quota_verified!==false||p.canary_verified!==false))
    throw Error('invalid_catalog_readback');
   const verified=data.providers.filter(p=>p.site_d1_verified===true&&p.freshness==='fresh').length;
-  if(data.site_d1_verified_count!==verified)throw Error('invalid_catalog_readback');
-  catalogSummary.textContent=verified+' / 9 current Site D1 checks';
+  const direct=data.providers.filter(p=>p.catalog_source==='direct_provider'&&
+   p.freshness==='fresh'&&p.status==='catalog_received').length;
+  if(data.site_d1_verified_count!==verified||data.direct_catalog_received_count!==direct)
+   throw Error('invalid_catalog_readback');
+  catalogSummary.textContent=direct+' direct catalogs · '+verified+' Site D1 checks / 9';
   catalogGrid.replaceChildren();
   for(const p of data.providers){
    const row=make('div','catalog-card');row.setAttribute('role','listitem');

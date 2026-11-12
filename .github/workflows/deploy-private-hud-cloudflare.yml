@@ -110,6 +110,7 @@ jobs:
           node --check integrations/hud-cloud/build-repo-snapshot.mjs
           node --check integrations/hud-cloud/worker.mjs
           node --check integrations/hud-cloud/cloud-provider-catalog-bridge.mjs
+          node --check integrations/hud-cloud/direct-provider-catalog.mjs
           node --check integrations/hud-cloud/verify-cloud-provider-catalog-bridge.mjs
           node --check integrations/hud-cloud/approved-workforce.mjs
           node --check integrations/hud-cloud/verify-cloud-workforce.mjs
