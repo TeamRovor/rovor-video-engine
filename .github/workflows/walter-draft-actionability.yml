@@ -1,0 +1,42 @@
+name: Walter private draft actionability offline regression
+
+on:
+  pull_request:
+    paths:
+      - 'tools/walter_draft_actionability.py'
+      - 'tests/test_walter_draft_actionability.py'
+      - 'tools/walter_source_citation_gate.py'
+      - '.github/workflows/walter-draft-actionability.yml'
+      - 'coordination/tasks.json'
+      - 'coordination/work-routing.json'
+  push:
+    branches: [main]
+    paths:
+      - 'tools/walter_draft_actionability.py'
+      - 'tests/test_walter_draft_actionability.py'
+      - 'tools/walter_source_citation_gate.py'
+      - '.github/workflows/walter-draft-actionability.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.9', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Focused draft actionability and novelty regressions
+        run: python -m unittest discover -s tests -p test_walter_draft_actionability.py -v
+      - name: Shared task queue validation
+        run: python tools/project_loop.py check
+      - name: Shared routing parity validation
+        run: python tools/task_routing_pair.py --check
