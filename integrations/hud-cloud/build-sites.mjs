@@ -42,6 +42,8 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const discoveryImport = "import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';";
   const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
   const nativeDiscoveryImport = "import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';";
+  const scheduledLanesImport = "import {runCloudScheduledLanes} from './scheduled-lanes.mjs';";
+  if(core.split(scheduledLanesImport).length!==2)throw Error('Unexpected native cloud cron import');
   const repoCatchupImport = "import {repoCatchupStatus,refreshRepoCatchup} from './repo-catchup.mjs';";
   if(core.split(repoCatchupImport).length!==2)throw Error('Unexpected repo catch-up import');
   const repoCatchupUnavailable = "const repoCatchupStatus=()=>({source:'cloudflare_only',state:'unavailable'}),refreshRepoCatchup=()=>({status:404,body:{error:'cloudflare_only'}});\n";
@@ -106,7 +108,7 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
     workforceUnavailable + nativeDiscoveryUnavailable + repoCatchupUnavailable + githubPatchUnavailable + reviewEvidenceUnavailable + cloudCatalogUnavailable +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
       .replace(groqImport, '').replace(groqProbeImport, '').replace(workforceImport, '').replace(catalogBridgeImport, '')
-      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '').replace(repoCatchupImport, '').replace(githubPatchImport, '').replace(reviewEvidenceImport, '')
+      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '').replace(repoCatchupImport, '').replace(githubPatchImport, '').replace(reviewEvidenceImport, '').replace(scheduledLanesImport, '')
       .replace(coreEnd, '')) +
     '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
