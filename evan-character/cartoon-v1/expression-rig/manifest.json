@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "sourceSha256": "4ced32d69f2097c3d3fa27a0a09fa0ea47aa892622a3827c12097b8bcda2ce5d",
+  "registration": {
+    "ecc": 0.9994960221970284,
+    "matrix": [
+      [
+        1.000114917755127,
+        3.765275664591172e-07,
+        -0.012311475351452827
+      ],
+      [
+        -0.00011517773964442313,
+        1.0003937482833862,
+        -0.16451266407966614
+      ]
+    ],
+    "skinOffset": [
+      -5.0,
+      -2.0,
+      -1.0
+    ]
+  },
+  "pivots": {
+    "left": [
+      188,
+      220
+    ],
+    "right": [
+      280,
+      219
+    ]
+  },
+  "animationReady": false,
+  "limitations": [
+    "Only original brow drawings are articulated; eyes remain hidden by sunglasses",
+    "Hair/glasses clip brow excursion",
+    "Skin repair and brow edges need full-resolution review"
+  ]
+}

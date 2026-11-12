@@ -1,0 +1,43 @@
+{
+  "status": "forehead-full-shot-pilots-sampled-construction",
+  "sourceFrames": [
+    0,
+    69,
+    269,
+    374,
+    531
+  ],
+  "previousV3FullBaselinesExact": 5,
+  "originalTorsoBaselinesExact": 5,
+  "nativeBelow240Exact": true,
+  "oralJawAuditExact": true,
+  "nonHeadLayersExact": true,
+  "officialStageExact": true,
+  "actualExistingDigitFlexAt269": true,
+  "protectedClosingFramesByteExact": 20,
+  "pngHashesVerified": 45,
+  "selectedCurrentAndFrozenSourcesVerified": 60,
+  "fullStageStillsInspected": [
+    0,
+    69,
+    269,
+    374,
+    531
+  ],
+  "protectedClosingStillInspected": 532,
+  "findings": [
+    "No new static registration failure in sampled opening, hand, payoff and late speaking shots.",
+    "Local forehead band is reduced; small brow/frame/temple edges and limited expression range remain.",
+    "Closing531/532 is an intentional protected camera cut; full motion review remains pending."
+  ],
+  "animationAccepted": false,
+  "realTimePlaybackReviewed": false,
+  "listeningReviewed": false,
+  "exactPhonemeBoundariesVerified": false,
+  "polishedMilestoneReady": false,
+  "defaultChanged": false,
+  "fullFilmUpdated": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "next": "Separate full v4 candidate from the shared actual-shot renderer,72reviewed component frames,5pilots and20protected closing frames; preserve full narration PCM and18timing markers. Inspect normal/slow context after export verification."
+}

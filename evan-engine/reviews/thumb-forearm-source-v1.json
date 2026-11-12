@@ -1,0 +1,99 @@
+{
+  "scope": "Continuous generated hand/forearm, rigid arc-derived forearm parent plus independent wrist skin; cuff join unapproved",
+  "minimumHandArea2": 5.121016203833074,
+  "films": {
+    "Normal.mp4": {
+      "decodedFrames": 48,
+      "sha256": "e0671f4621c739aaf5ea7468f54927001747cefcdb92038aa099590dd614a2e3"
+    },
+    "Slow.mp4": {
+      "decodedFrames": 192,
+      "sha256": "a4e079b7948430d4329045413fd7e6adb041ecf5b2def1a73f0bae3d06a19151"
+    },
+    "Stage-Normal.mp4": {
+      "decodedFrames": 48,
+      "sha256": "f08126368fab9580f1d6c2a164afad8abf219f5fda17ee8413a066415aa0fc2c"
+    },
+    "Stage-Slow.mp4": {
+      "decodedFrames": 192,
+      "sha256": "e96f65b1b8db9b2b4389a39738fa36f17fdfbe695b5b168bc095c1347fd76fbd"
+    }
+  },
+  "sourceGuides": [
+    {
+      "y": 850,
+      "center": 599,
+      "width": 236
+    },
+    {
+      "y": 1300,
+      "center": 675.5,
+      "width": 353
+    },
+    {
+      "y": 1400,
+      "center": 694.5,
+      "width": 321
+    }
+  ],
+  "handDomainY": [
+    0,
+    1350
+  ],
+  "rawSourceArtworkModified": false,
+  "sourceAlphaCleanup": false,
+  "runtimeComponentOwnership": true,
+  "attachmentAccepted": false,
+  "animationAccepted": false,
+  "productionImported": false,
+  "sourceAudit": [
+    {
+      "version": 1,
+      "size": [
+        1024,
+        1536
+      ],
+      "sha256": "d80f13618af174e6c0c16a940745df1289b8efc139e985c2a91b8b68fdb07c91",
+      "alphaCorePercentiles": [
+        251.0,
+        253.0,
+        253.0,
+        254.0,
+        254.0
+      ],
+      "alphaPositivePixels": 450084,
+      "alphaOutside8Pixels": 1669,
+      "alphaOutside8Max": 1,
+      "alphaOutside8Mass": 6.545098039215686,
+      "rawSourceModified": false
+    },
+    {
+      "version": 2,
+      "size": [
+        1024,
+        1536
+      ],
+      "sha256": "f2063f694cd5a25e3dbbcb12edbdc2e9778c180e04a033dac46594873ee356b3",
+      "alphaCorePercentiles": [
+        251.0,
+        253.0,
+        254.0,
+        254.0,
+        254.0
+      ],
+      "alphaPositivePixels": 459091,
+      "alphaOutside8Pixels": 194,
+      "alphaOutside8Max": 1,
+      "alphaOutside8Mass": 0.7607843137254902,
+      "rawSourceModified": false
+    }
+  ],
+  "sourcePlateSelected": "evan-character/cartoon-v1/thumb-forearm-v2/source.png",
+  "registeredWorkingComponent": false,
+  "sourceOnly": true,
+  "nativeFramesInspected": 48,
+  "attachmentStatus": "REJECTED: exposed proximal cap and cuff-opening mismatch",
+  "localOutput": "outputs/evan-cartoon-thumb-forearm-source",
+  "prototypeCommitted": false,
+  "next": "Fit actual posed cuff-opening guide and proximal mesh underlap without changing distal wrist/hand"
+}

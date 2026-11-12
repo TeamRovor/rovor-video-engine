@@ -1,0 +1,51 @@
+{
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "geometryOnly": true,
+  "timingChanged": false,
+  "animationAccepted": false,
+  "findings": [
+    {
+      "frames": [
+        724,
+        725
+      ],
+      "bilabialContact": [
+        0.26286139143522963,
+        0.6861900219562628
+      ],
+      "roundingIdentityFraction": [
+        0.6051573425600484,
+        0.39401337395264163
+      ],
+      "roundedArcStrength": [
+        0.4460848414574682,
+        0.12364532822901729
+      ],
+      "aperture": [
+        6.985543036772771,
+        3.4880967118966706
+      ],
+      "interpretation": "P anticipation raises contact and suppresses rounded width before its assigned onset; no boundary correction established."
+    },
+    {
+      "frames": [
+        887,
+        888
+      ],
+      "bilabialContact": [
+        0.8135376372194294,
+        0.3299954483385845
+      ],
+      "roundedArcStrength": [
+        0.045323578719988065,
+        0.22247582529695453
+      ],
+      "aperture": [
+        4.955702824719364,
+        14.22866430233409
+      ],
+      "interpretation": "M contact release coincides with rapid opening into short AO; closure timing and curve quality still require independent listening/playback review."
+    }
+  ],
+  "automaticSmoothingApplied": false
+}

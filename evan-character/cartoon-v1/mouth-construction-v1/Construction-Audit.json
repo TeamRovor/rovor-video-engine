@@ -1,0 +1,142 @@
+{
+  "sourceSha256": "6a5a01be2c90ef012281b6dc2f95dcd6cdf0d59cea9ac3966729515e7e3f02aa",
+  "referenceSha256": "6422eab50ec6002802c3e84cdd6da68bd5d5863cc10a45c57ffe7772547b4ece",
+  "sourceAlphaPreserved": true,
+  "poses": [
+    {
+      "pose": "Seal",
+      "sourceBox": [
+        95,
+        54,
+        554,
+        690
+      ],
+      "initialPlacement": [
+        [
+          0.583032488822937,
+          0.0,
+          95.0
+        ],
+        [
+          0.0,
+          0.583032488822937,
+          52.0
+        ]
+      ],
+      "upperFaceCorrection": [
+        [
+          0.997783362865448,
+          -0.005675468593835831,
+          2.308624267578125
+        ],
+        [
+          0.000516934902407229,
+          0.9790509343147278,
+          0.9594542384147644
+        ]
+      ],
+      "upperFaceECC": 0.990906488991513,
+      "upperFaceMeanAbsRgbError": 7.290933645028851,
+      "upperFaceDiagnosticPass": true,
+      "error": null,
+      "registrationReady": false,
+      "animationReady": false,
+      "missing": [
+        "Separate skin, lip rim, cavity, teeth/tongue planes",
+        "Matched lip-corner/inner-lip/jaw correspondences",
+        "Verified normal/slow voiced performance"
+      ]
+    },
+    {
+      "pose": "Release",
+      "sourceBox": [
+        740,
+        53,
+        554,
+        691
+      ],
+      "initialPlacement": [
+        [
+          0.583032488822937,
+          0.0,
+          95.0
+        ],
+        [
+          0.0,
+          0.583032488822937,
+          52.0
+        ]
+      ],
+      "upperFaceCorrection": [
+        [
+          0.9968797564506531,
+          -0.005013217683881521,
+          2.846768856048584
+        ],
+        [
+          0.0002797793422359973,
+          0.9820261001586914,
+          0.6288954019546509
+        ]
+      ],
+      "upperFaceECC": 0.9915617296269552,
+      "upperFaceMeanAbsRgbError": 7.045792047998037,
+      "upperFaceDiagnosticPass": true,
+      "error": null,
+      "registrationReady": false,
+      "animationReady": false,
+      "missing": [
+        "Separate skin, lip rim, cavity, teeth/tongue planes",
+        "Matched lip-corner/inner-lip/jaw correspondences",
+        "Verified normal/slow voiced performance"
+      ]
+    },
+    {
+      "pose": "Rounded",
+      "sourceBox": [
+        1396,
+        53,
+        555,
+        691
+      ],
+      "initialPlacement": [
+        [
+          0.5819819569587708,
+          0.0,
+          95.0
+        ],
+        [
+          0.0,
+          0.5819819569587708,
+          52.0
+        ]
+      ],
+      "upperFaceCorrection": [
+        [
+          0.9960041642189026,
+          -0.0038139570970088243,
+          2.611985445022583
+        ],
+        [
+          0.0006049730582162738,
+          0.9794124960899353,
+          0.763571560382843
+        ]
+      ],
+      "upperFaceECC": 0.9917585566341336,
+      "upperFaceMeanAbsRgbError": 6.957367230399807,
+      "upperFaceDiagnosticPass": true,
+      "error": null,
+      "registrationReady": false,
+      "animationReady": false,
+      "missing": [
+        "Separate skin, lip rim, cavity, teeth/tongue planes",
+        "Matched lip-corner/inner-lip/jaw correspondences",
+        "Verified normal/slow voiced performance"
+      ]
+    }
+  ],
+  "animationReady": false,
+  "wholeHeadSwapsAllowed": false,
+  "limits": "Upper-face ECC is diagnostic only; no source plate is a registered working layered rig."
+}

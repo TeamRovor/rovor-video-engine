@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "sourceSha256": "d9b28f07257b181a6a090c8ccc54caee834cfcb8ca9ba27cc33e4d4f39837d5a",
+  "isolatedReferenceSha256": "e6f3b750a77b016a7aab20b06eb61de23ca3dcc5acc3d04af161961ef29b46be",
+  "contextPath": "head-rig-v2/head-H.png",
+  "contextSha256": "f6a3994a6d063ab6c0d7e2841d77f27917330e25433e4396c05490a82050e505",
+  "sourceBounds": [
+    549,
+    505,
+    755,
+    769
+  ],
+  "matrix": [
+    [
+      0.12121212482452393,
+      0.0,
+      157.96969604492188
+    ],
+    [
+      0.0,
+      0.12121212482452393,
+      260.7878723144531
+    ]
+  ],
+  "rootAnchor": [
+    237,
+    354
+  ],
+  "targetTop": 322,
+  "animationReady": false,
+  "rootSourceSha256": "bff4e1e9967813c9f7bbddf75d5dccd8351e9d22c2d3ed12e9986beadf86523a",
+  "construction": "original floor plus generated blade; root fixed, blade compressed/retracted for non-L and lifted from existing acoustic H weight",
+  "limitations": [
+    "Stylized clear-L target, not calibrated speaker anatomy",
+    "No separate dark-L/coda or lateral-airflow geometry",
+    "Existing H viseme also serves TH/DH; no separate dental construction",
+    "Raster contour and lip construction still need artist review"
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "status": "its-basically-acoustic-oral-trace-reviewed",
+  "traceRange": [
+    9.0,
+    10.85
+  ],
+  "geometrySamples": 889,
+  "samplingHz": 480,
+  "fftWindowSamples": 400,
+  "fftHopSamples": 80,
+  "hypotheses": [
+    9.04,
+    10.19,
+    9.42,
+    10.31
+  ],
+  "flaggedWordScriptIndices": [
+    30,
+    31
+  ],
+  "centered20msRmsAndControlProbes": [
+    {
+      "center": 9.04,
+      "sourceSamples": [
+        144480,
+        144800
+      ],
+      "rmsDbFS": -33.08177439601806,
+      "actualControlTime": 9.039583333333333,
+      "innerGap": 18.541748046875,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 9.42,
+      "sourceSamples": [
+        150560,
+        150880
+      ],
+      "rmsDbFS": -81.33960497667245,
+      "actualControlTime": 9.420833333333333,
+      "innerGap": 0.149993896484375,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 10.19,
+      "sourceSamples": [
+        162880,
+        163200
+      ],
+      "rmsDbFS": -43.12398596247849,
+      "actualControlTime": 10.189583333333333,
+      "innerGap": 6.597076416015625,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 10.31,
+      "sourceSamples": [
+        164800,
+        165120
+      ],
+      "rmsDbFS": -41.79540356897025,
+      "actualControlTime": 10.310416666666667,
+      "innerGap": 0.173004150390625,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 10.36,
+      "sourceSamples": [
+        165600,
+        165920
+      ],
+      "rmsDbFS": -62.596891614305,
+      "actualControlTime": 10.360416666666667,
+      "innerGap": 0.149993896484375,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 10.45,
+      "sourceSamples": [
+        167040,
+        167360
+      ],
+      "rmsDbFS": -24.10527203240237,
+      "actualControlTime": 10.45,
+      "innerGap": 11.02288818359375,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    }
+  ],
+  "actualRasterOralMatchesTo1eMinus9": [
+    245,
+    247,
+    249,
+    251
+  ],
+  "actualRasterTongueRecords": {
+    "245": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 12.086226463317871,
+      "bladeCoverageAfterFloor": 2.572183609008789,
+      "floorCoverage": 296.0364990234375,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    },
+    "247": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 3.109306573867798,
+      "bladeCoverageAfterFloor": 0.08602716773748398,
+      "floorCoverage": 64.9666748046875,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    },
+    "249": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 1.4846711158752441,
+      "bladeCoverageAfterFloor": 0.5325092673301697,
+      "floorCoverage": 24.749313354492188,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    },
+    "251": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 14.871835708618164,
+      "bladeCoverageAfterFloor": 0.16990886628627777,
+      "floorCoverage": 393.19952392578125,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    }
+  },
+  "tongueInactiveInRasterFixtures": true,
+  "nativeFacesInspected": [
+    245,
+    247,
+    249,
+    251
+  ],
+  "normalDecodedSourceFramesInspected": [
+    245,
+    247,
+    249,
+    251
+  ],
+  "slowDecodedVideoFramesInspected": [
+    124,
+    132
+  ],
+  "nativeResolutionTraceHalvesInspected": true,
+  "stageFramesByteExact": 48,
+  "normalDecodedFrames": 48,
+  "slowDecodedFrames": 192,
+  "contextPcmSamples": 32000,
+  "contextPcmRange": [
+    144000,
+    176000
+  ],
+  "contextPcmByteExact": true,
+  "pngHashesVerified": 61,
+  "selectedCurrentFrozenSourcesVerified": 97,
+  "findings": [
+    "The older9.04 start falls in the preceding modeled favicon tail. The older9.42 it\u2019s/basically boundary is in an almost silent stretch: centered20ms RMS -81.34dBFS. This context does not support moving the new phrase into that pause.",
+    "A new energetic speech cluster begins around the current10.19 start. Current10.31 boundary is followed by a low-energy modeled B closure around10.36 and release into the later energetic segment near10.41\u201310.45. Exact word/phone boundaries remain unverified.",
+    "Spectral distance has peaks within low-level pause/breath/noise as well as speech. Neither those peaks nor amplitude thresholds identify words.",
+    "Actual gap near10.31 is0.173px, at10.36 the0.15px floor, and by10.45 about11.02px. Four raster oral/capture fixtures match; tongue controls are inactive in those four fixtures. The later L-control peak in the trace is not a new raster validation of L anatomy."
+  ],
+  "disposition": "retain-current-intervals-older-pause-anchor-unsupported",
+  "timingChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "flaggedWordsWithDeeperTraces": 9,
+  "independentListening": false,
+  "exactBoundariesVerified": false,
+  "realTimePlaybackAccepted": false,
+  "animationAccepted": false,
+  "polished": false,
+  "pendingJobs": [],
+  "next": "Trace basically\u2192a\u2192tiny/script32\u201333 at10.84/10.93 versus older10.23/10.32, using original Region03 spectrum and actual oral controls. No automatic threshold retiming/new expression variants."
+}

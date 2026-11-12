@@ -1,0 +1,17 @@
+# L versus dental tongue: construction study, not approved artwork
+
+The current H channel conflates L, TH and DH. The optional PhoneTongueCartoonHead now partitions the existing acoustic H kernels by actual phone identity. L retains the raised blade; TH/DH flatten and widen that same registered blade about its fixed root. Mouth geometry, phoneme timing, energy response, material H salience, floor/teeth/lip masks and the selected head drawing are unchanged. The context restores even after a failed frame; direct weights calls retain the prior L interpretation. Non-acoustic plans retain the previous behavior.
+
+This is an authored deformation of the existing tiny tongue component. No bitmap was generated or redrawn. It is NOT an independently drawn dental pose, protrusion through the teeth, a dental model, or validated English speech biomechanics. The existing drawn floor and upper-tooth masking remain in front. Full-resolution early comparisons show the main effect is hiding the old central tongue stem. A credible TH/DH tip at the incisors is still missing. Do not promote this profile, change defaults or call this a visual quality milestone.
+
+## Reproduce and evaluate
+
+render_phone_tongue_study.py accepts plan, original PCM16 WAV and output directory. It renders current versus study heads at native512px on1280x720 panels, with real waveform and phone labels. Three discontinuous0.5s excerpts: source frames76–99 (DH, “that”),124–147 (L, “little”),312–335 (TH, “thing”),48fps. Source time remains visible; normal film concatenates the corresponding original audio samples. Quarter-speed film is muted and repeats each source frame4times. It is a contact transition diagnostic, not a complete scene/performance film. Full scene remains the previous rooted-floor reference.
+
+Partition uses the same consonant kernel center anticipation18ms and radius clamp55–140ms as acoustic_weights. It partitions L/TH/DH support only, normalizes locally and falls back to L when no support. H amplitude still comes from the existing planner, including silence and other contacts. At dentalFraction0 the previous root matrix is exact. Full dental scales X1.55/Y.45 versus L1/1; ordinary vowel X.8/Y.12 remains exact. Root source(237,354) fixed. These authored numbers are an experiment, not anatomical calibration.
+
+## Next concrete artwork task
+
+Draw/derive a distinct broad dental tip with readable left/right corners, underside and a short neck rooted into the floor, in the same cel palette and line weight. Register it against the existing oral ring and tooth strip; preserve the selected head. The dental surface should meet the incisor plane while L curls behind it. Decide the correct upper-teeth/tip/lower-inner-lip occlusion from drawings rather than exposing a compressed vertical stem. Require full-head silhouette checks and real-word normal/slow transitions before promotion. The heavy lip corners, plain tooth strip and absent independent chin still require coordinated character-art cleanup; a human animator/artist is needed for final anatomy/performance approval.
+
+Tests check kernel isolation/fallback, fixed root, no-dental equality, positive geometry, exact direct rest/bilabial/FV/L and exception cleanup, plus the five existing rooted-floor regressions. They do not establish an attractive pose, timing accuracy, listening acceptance or studio quality. Main, V3/V4, native Moho and updater are unchanged. Automation stays active because the polished milestone is incomplete.

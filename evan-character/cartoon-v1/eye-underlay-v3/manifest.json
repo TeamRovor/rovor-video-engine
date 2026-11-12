@@ -1,0 +1,54 @@
+{
+  "status": "targeted-temple-construction-see-reviews/temple-hair-v1.json",
+  "rawSourceSha256": "d19c3a4bded57a941b90854fd49556f4e89f0ed589fbf8adf6770d3c9ea44e31",
+  "sourceSize": [
+    1151,
+    1367
+  ],
+  "crop": [
+    310,
+    220,
+    374,
+    296
+  ],
+  "eccTrialScore": 0.7324055464719026,
+  "eccTrialMatrix": [
+    [
+      1.0,
+      0.0,
+      21.271528244018555
+    ],
+    [
+      0.0,
+      1.0,
+      -10.456827163696289
+    ]
+  ],
+  "eccTrialRejected": true,
+  "registration": "authored crop bounds",
+  "matrix": [
+    [
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      1.0,
+      0.0
+    ]
+  ],
+  "colorOffset": [
+    -1.0,
+    -1.0,
+    0.0
+  ],
+  "nativePatchPixels": 1133,
+  "outsideTemplePatchExactToV2": true,
+  "neutralOriginalMouthJawExact": true,
+  "originalOpaqueOuterCornerPixelsGuarded": 922,
+  "outerCornerPixelsCorrected": 9,
+  "animationReady": false,
+  "defaultChanged": false,
+  "fullFilmUpdated": false
+}

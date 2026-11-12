@@ -1,0 +1,38 @@
+{
+  "sourceSha256": "9ee03f0480f8aa341ae2d608bfecb825aea7f6349388a0eb7c62af2c5473b516",
+  "sourceBounds": [
+    258,
+    408,
+    1014,
+    949
+  ],
+  "sourceRoot": [
+    680.0,
+    948
+  ],
+  "rootAnchor": [
+    237,
+    354
+  ],
+  "targetExtent": [
+    36,
+    34
+  ],
+  "matrix": [
+    [
+      0.04784689098596573,
+      0.0,
+      204.464111328125
+    ],
+    [
+      0.0,
+      0.06299840658903122,
+      294.27752685546875
+    ]
+  ],
+  "sampling": "Premultiplied AREA resize then LINEAR subpixel translation; matrix expresses source-pixel-center correspondence.",
+  "registeredSha256": "3f2545e56f66f250c5029f449b706c549e41486163bf8a9337966ffa83f714ba",
+  "alphaPolicy": "Original alpha retained; premultiplied affine registration only.",
+  "animationReady": false,
+  "limits": "Generated source art separately registered; not a full mouth, anatomical calibration or native Moho rig."
+}

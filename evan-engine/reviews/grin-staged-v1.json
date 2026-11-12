@@ -1,0 +1,72 @@
+{
+  "audio": {
+    "Before": {
+      "sourcePcm16Samples": 64000,
+      "decodedPcm16Samples": 64000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": ""
+    },
+    "After": {
+      "sourcePcm16Samples": 64000,
+      "decodedPcm16Samples": 64000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": ""
+    }
+  },
+  "sourceSampleRange": [
+    304000,
+    352758
+  ],
+  "originalPcmSamples": 48758,
+  "zeroPadSamples": 15242,
+  "sourcePcmPrefixExact": true,
+  "speakingCopiedFramesExact": 144,
+  "tailFrames": 48,
+  "films": {
+    "Before-Normal.mp4": {
+      "decodedFrames": 192,
+      "sha256": "8c5d74b22e525595a6e7f47eab63ebb3d057aa4aceac8b82672addcaaf98d3e0"
+    },
+    "Before-Quarter-Speed.mp4": {
+      "decodedFrames": 768,
+      "sha256": "3dbd1c666122fc7f8ab58b98a0085e1c4a3805a4a8b9b0bc993444952f8091cd"
+    },
+    "After-Normal.mp4": {
+      "decodedFrames": 192,
+      "sha256": "36c86995ff6d45ef76e355443d24fda9e00bb3e552b516f17f8e694244f4861a"
+    },
+    "After-Quarter-Speed.mp4": {
+      "decodedFrames": 768,
+      "sha256": "07b0912e82812a80c3a6d2152cd33ac763c298477f05e047e9f91e1e63403e80"
+    }
+  },
+  "smileStart": 22.127374999999997,
+  "sourceAudioEnd": 22.047375,
+  "upper310Exact": 48,
+  "outsideFaceExact": 48,
+  "brandExact": 48,
+  "minimumOral": 0.059276580810546875,
+  "minimumJaw": 45.5,
+  "sourcePlanSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "runtimeSpeechProfileChanged": false,
+  "fullStageAccepted": false,
+  "polishedMilestoneReady": false,
+  "parentCommit": "10923c9f8afcbbbd56e3c118ab3fec3f0efc7b5b",
+  "freshCachedCalibrationFrame": 1055,
+  "firstChangedFrame": 1063,
+  "originalAudioCoveredByExactSpeakingFrames": 147,
+  "minimumArms": {
+    "left": 563.0256350094675,
+    "right": 310.24948053688087
+  },
+  "visualReview": [
+    "all48 native mouth/jaw pairs",
+    "full-stage peak1080",
+    "full-stage hold1103"
+  ],
+  "finding": "Restrained smile is visible but thin crown and unchanged upper-face acting remain below expressive cartoon bar. No performance or fullstage acceptance.",
+  "independentListeningOrRealtimePlaybackAccepted": false,
+  "alignmentFlagsCleared": false
+}

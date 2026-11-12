@@ -1,0 +1,7 @@
+# Unused incisor study
+
+Mode: built-in image_gen. transparent_background=true. Reference: oral-rig/upper-teeth.png. This generation was triggered by a mistaken reading of hidden RGB in a transparent source preview. Alpha verification showed the legacy source already isolates teeth. The generated study is retained for provenance only, NOT loaded into the rig; original teeth are reused.
+
+## Exact prompt
+
+Use case: precise-object-edit. Asset type: isolated upper-incisor paint layer for the EXISTING entertaining Evan 2D cartoon animation rig. Input image is the full-face reference; match ONLY its visible cream upper-teeth shape inside the open speaking mouth, with the same three-quarter perspective and clean cel illustration style. Produce one isolated upper-teeth group on a genuinely transparent background. A slim shallow curved arch, broad horizontally, slightly wider toward viewer's left, softly tapered at both ends, subtly irregular lower incisor edge, one joined ivory tooth plane with a very restrained warm shade along the upper edge. No individual tiled rectangular teeth, no gum, no lips or lip rim, no mouth cavity, no tongue, no face, skin, nose, hair, glasses, neck, text, outlines around the entire tooth group, cast shadow or background. Not a smile emoji or denture illustration. Preserve the understated simplified tooth design visible in the reference. Center the single isolated tooth plane with generous transparent margin; large clean source drawing for later registration, not a finished rig or full-head replacement.

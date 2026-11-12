@@ -1,0 +1,31 @@
+{
+  "mode": "built-in image_gen",
+  "referenceRoles": {
+    "Release-Jaw-Guide-Opaque.png": "authored registration guide, not final art",
+    "Release-Reference.png": "current flawed renderer proportions, not target lip design",
+    "design-sheet-v1.png": "selected cartoon style/likeness"
+  },
+  "sources": [
+    {
+      "file": "jaw-v1.png",
+      "generatorFile": "exec-994f9917-79b9-4153-8dd9-a843f7177b1c.png",
+      "sha256": "714035538b752d49e2fca0875ad5619cf8b95cd63da8205856b476d0aaa1ac27",
+      "decision": "Rejected: enclosed smile line inside the jaw"
+    },
+    {
+      "file": "jaw-v2.png",
+      "generatorFile": "exec-693eff52-ea6d-4d57-baaa-9477eecb890f.png",
+      "sha256": "ee5e2682072632fcf693d7e87e068026963166ac8f553485f66bc574bbbabe1d",
+      "decision": "Experimental combined lower-lip/jaw plane; no enclosed mouth or neck. Assembly rejected for production."
+    }
+  ],
+  "originalAlphaRetained": true,
+  "colorKeyOrOpacityExtraction": false,
+  "invariantsPixelExact": false,
+  "registration": "source canvas normalized into fixed native window [128,288,384,448]; not fitted to opaque bounds",
+  "reviewToolLoaded": true,
+  "defaultProfileChanged": false,
+  "independentLipAndJawPaintPlanes": false,
+  "nativeMoho": false,
+  "animationReady": false
+}

@@ -1,0 +1,178 @@
+{
+  "sourceAnchors": [
+    [
+      146.0,
+      118.0
+    ],
+    [
+      1473.0,
+      158.0
+    ],
+    [
+      651.0,
+      811.0
+    ]
+  ],
+  "targetOldSourceAnchors": [
+    [
+      222.0,
+      155.0
+    ],
+    [
+      1296.0,
+      181.0
+    ],
+    [
+      637.0,
+      708.0
+    ]
+  ],
+  "anchors": "manually annotated left/right upper attachment and chin tip; not a full contour fit",
+  "sourceToOldMatrix": [
+    [
+      0.8090650436785852,
+      0.009267175962935881,
+      102.78297685930013
+    ],
+    [
+      -0.004560762543486791,
+      0.8013032973801743,
+      61.11208224048851
+    ]
+  ],
+  "sourceToNativeMatrix": [
+    [
+      0.13075798749923706,
+      0.0014977253740653396,
+      144.61138916015625
+    ],
+    [
+      -0.0007348660728894174,
+      0.12911231815814972,
+      297.84686279296875
+    ]
+  ],
+  "sourceCorrespondence": {
+    "knots": [
+      {
+        "x": 164.0,
+        "guideY": 315.0,
+        "paintedHalfAlphaY": 312.3787841796875,
+        "sourceResidualY": -2.6212158203125
+      },
+      {
+        "x": 181.0,
+        "guideY": 320.0,
+        "paintedHalfAlphaY": 319.09332275390625,
+        "sourceResidualY": -0.90667724609375
+      },
+      {
+        "x": 194.0,
+        "guideY": 325.0,
+        "paintedHalfAlphaY": 323.8451843261719,
+        "sourceResidualY": -1.154815673828125
+      },
+      {
+        "x": 211.0,
+        "guideY": 327.0,
+        "paintedHalfAlphaY": 328.2471008300781,
+        "sourceResidualY": 1.247100830078125
+      },
+      {
+        "x": 228.5,
+        "guideY": 328.5,
+        "paintedHalfAlphaY": 329.5572204589844,
+        "sourceResidualY": 1.057220458984375
+      },
+      {
+        "x": 246.0,
+        "guideY": 327.0,
+        "paintedHalfAlphaY": 329.5098571777344,
+        "sourceResidualY": 2.509857177734375
+      },
+      {
+        "x": 263.0,
+        "guideY": 325.0,
+        "paintedHalfAlphaY": 327.7186279296875,
+        "sourceResidualY": 2.7186279296875
+      },
+      {
+        "x": 278.0,
+        "guideY": 323.28570556640625,
+        "paintedHalfAlphaY": 325.37139892578125,
+        "sourceResidualY": 2.085693359375
+      },
+      {
+        "x": 298.0,
+        "guideY": 321.0,
+        "paintedHalfAlphaY": 322.2405700683594,
+        "sourceResidualY": 1.240570068359375
+      },
+      {
+        "x": 329.0,
+        "guideY": 320.0,
+        "paintedHalfAlphaY": 317.6852111816406,
+        "sourceResidualY": -2.314788818359375
+      }
+    ],
+    "minimumSourceTriangleArea2": 45.5,
+    "sourcePixelsModified": false,
+    "sourceAlphaModified": false,
+    "targetGeometryChanged": false,
+    "chinArtCorrected": false
+  },
+  "rows": [
+    {
+      "frame": 851,
+      "minimumTriangleArea2": 51.86051940917969,
+      "fv": 0.991209082378506,
+      "lipCenter": [
+        235.01461791992188,
+        323.4890441894531
+      ],
+      "chinY": 393.00433349609375,
+      "noseMaximumRGBAChange": 0,
+      "upper288RowsExact": true,
+      "oralBelow240": 0,
+      "continuousFVFallbacks": 0
+    },
+    {
+      "frame": 855,
+      "minimumTriangleArea2": 51.131744384765625,
+      "fv": 0.23503641329084363,
+      "lipCenter": [
+        235.8248291015625,
+        333.5448303222656
+      ],
+      "chinY": 393.35528564453125,
+      "noseMaximumRGBAChange": 0,
+      "upper288RowsExact": true,
+      "oralBelow240": 0,
+      "continuousFVFallbacks": 0
+    },
+    {
+      "frame": 892,
+      "minimumTriangleArea2": 51.86212158203125,
+      "fv": 0.9829749977063229,
+      "lipCenter": [
+        234.9726104736328,
+        323.74688720703125
+      ],
+      "chinY": 393.4646301269531,
+      "noseMaximumRGBAChange": 0,
+      "upper288RowsExact": true,
+      "oralBelow240": 0,
+      "continuousFVFallbacks": 0
+    }
+  ],
+  "animationReady": false,
+  "workingRigComponent": false,
+  "sourceAlphaModified": false,
+  "heldOutLowerContourDistancePixels": {
+    "region": "alpha silhouette y>=345, symmetric distance; threshold used for diagnosis only",
+    "count": 558,
+    "median": 0.0,
+    "percentile95": 1.0,
+    "maximum": 1.0
+  }
+}

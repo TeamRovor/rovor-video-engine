@@ -1,0 +1,184 @@
+{
+  "status": "browser-thing-acoustic-oral-tongue-trace-reviewed",
+  "traceRange": [
+    6.1,
+    7.1
+  ],
+  "geometrySamples": 481,
+  "samplingHz": 480,
+  "fftWindowSamples": 400,
+  "fftHopSamples": 80,
+  "wordHypotheses": [
+    6.13,
+    6.39,
+    6.66,
+    6.75
+  ],
+  "flaggedWordScriptIndex": 22,
+  "thingIsUnflaggedContext": true,
+  "centered20msRmsAndControlProbes": [
+    {
+      "center": 6.13,
+      "sourceSamples": [
+        97920,
+        98240
+      ],
+      "rmsDbFS": -19.411241296442853,
+      "actualControlTime": 6.129166666666666,
+      "innerGap": 7.8800048828125,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 6.39,
+      "sourceSamples": [
+        102080,
+        102400
+      ],
+      "rmsDbFS": -32.06032145302018,
+      "actualControlTime": 6.389583333333333,
+      "innerGap": 0.149993896484375,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 6.66,
+      "sourceSamples": [
+        106400,
+        106720
+      ],
+      "rmsDbFS": -34.01636920935097,
+      "actualControlTime": 6.660416666666666,
+      "innerGap": 11.431732177734375,
+      "tongueLift": 0.0,
+      "dentalFraction": 0.0
+    },
+    {
+      "center": 6.75,
+      "sourceSamples": [
+        107840,
+        108160
+      ],
+      "rmsDbFS": -32.085519781946175,
+      "actualControlTime": 6.75,
+      "innerGap": 14.4842529296875,
+      "tongueLift": 0.5106381755193231,
+      "dentalFraction": 1.0
+    },
+    {
+      "center": 6.79,
+      "sourceSamples": [
+        108480,
+        108800
+      ],
+      "rmsDbFS": -52.80025458545271,
+      "actualControlTime": 6.789583333333334,
+      "innerGap": 13.666015625,
+      "tongueLift": 0.9162467813604118,
+      "dentalFraction": 1.0
+    },
+    {
+      "center": 6.85,
+      "sourceSamples": [
+        109440,
+        109760
+      ],
+      "rmsDbFS": -30.879828907369987,
+      "actualControlTime": 6.85,
+      "innerGap": 9.903076171875,
+      "tongueLift": 0.02341198975831809,
+      "dentalFraction": 1.0
+    }
+  ],
+  "actualRasterOralAndTongueMatchesTo1eMinus9": [
+    154,
+    160,
+    162,
+    163
+  ],
+  "actualRasterTongueRecords": {
+    "154": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 1.4846711158752441,
+      "bladeCoverageAfterFloor": 0.5325092673301697,
+      "floorCoverage": 24.749313354492188,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    },
+    "160": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 14.019208908081055,
+      "bladeCoverageAfterFloor": 1.2440770864486694,
+      "floorCoverage": 372.2834777832031,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    },
+    "162": {
+      "lift": 0.5106381755193231,
+      "sourceBladeYScale": 0.5740402936935425,
+      "bladeCoverageBeforeFloor": 240.72958374023438,
+      "bladeCoverageAfterFloor": 42.52973937988281,
+      "floorCoverage": 486.1954040527344,
+      "validPremultiplied": true,
+      "dentalFraction": 1.0
+    },
+    "163": {
+      "lift": 0.8957992966653905,
+      "sourceBladeYScale": 0.9733266830444336,
+      "bladeCoverageBeforeFloor": 213.87440490722656,
+      "bladeCoverageAfterFloor": 93.69877624511719,
+      "floorCoverage": 454.1628723144531,
+      "validPremultiplied": true,
+      "dentalFraction": 1.0
+    }
+  },
+  "tongueCurvesAreAuthoredControls": true,
+  "dentalCurveIsPartitionNotTongueShape": true,
+  "nativeFacesInspected": [
+    154,
+    160,
+    162,
+    163
+  ],
+  "normalDecodedSourceFramesInspected": [
+    154,
+    160,
+    162,
+    163
+  ],
+  "slowDecodedVideoFramesInspected": [
+    72,
+    76
+  ],
+  "nativeResolutionTraceHalvesInspected": true,
+  "stageFramesByteExact": 30,
+  "normalDecodedFrames": 30,
+  "slowDecodedFrames": 120,
+  "contextPcmSamples": 20000,
+  "contextPcmRange": [
+    96000,
+    116000
+  ],
+  "contextPcmByteExact": true,
+  "pngHashesVerified": 43,
+  "selectedCurrentFrozenSourcesVerified": 92,
+  "findings": [
+    "The earlier6.13 browser-start anchor lies within a strong periodic stretch. The current6.39 estimate lies in the lower-energy modeled M/B closure plateau before release near6.43; this context cannot identify the exact M-to-B word split.",
+    "The older6.66 browser/thing edge coincides with a strong internal spectral change; energy persists afterward. Around6.75\u20136.8 the spectrum loses much of that periodic energy before the later energetic segment. Spectral change strength alone cannot select a word boundary.",
+    "The original20ms RMS at6.66 and6.75 is similar; near6.79 it is much lower. Energy does not prove phoneme identity, and mixed25ms windows do not establish an exact TH onset.",
+    "Actual lip gap is at the0.15px floor near6.39, about14.48px at6.75. Authored tongue lift is0.510638 at6.75 and about0.916 near6.79, with dental partition1. Four raster oral/tongue comparisons match. These controls do not measure the recorded speaker\u2019s tongue."
+  ],
+  "disposition": "retain-current-intervals-no-automatic-retiming",
+  "timingChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "independentListening": false,
+  "exactBoundariesVerified": false,
+  "realTimePlaybackAccepted": false,
+  "animationAccepted": false,
+  "polished": false,
+  "pendingJobs": [],
+  "next": "Trace flagged it\u2019s\u2192basically (script30/31) against original Region03 PCM/spectrum and actual oral transitions. No new expression variants or automatic threshold retiming."
+}

@@ -1,0 +1,117 @@
+{
+  "runtimeSourceCommit": "54635b7458687870721ea34624503b79bf7c13c9",
+  "sourceFrames": [
+    696,
+    1056
+  ],
+  "sourceSamples": [
+    232000,
+    352000
+  ],
+  "audio": {
+    "sourcePcm16Samples": 120000,
+    "decodedPcm16Samples": 120000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "films": {
+    "Normal": {
+      "decodedFrames": 360,
+      "sha256": "a20c05ab3fe94844fe81a9f83af570cde56a7eb8049b4836a32b0b46334859a4"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 1440,
+      "sha256": "67fa8a0d584117d3904cc2d186d4bf71e2d12ac092370f16f187c886ec980776"
+    }
+  },
+  "upper288Exact": 360,
+  "noseMaximumChange": 0,
+  "minimumOral": 0.023623911663889885,
+  "minimumJaw": 45.5,
+  "minimumArms": {
+    "left": 494.6158370879494,
+    "right": 135.35149457940372
+  },
+  "fallbacks": [
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    }
+  ],
+  "workingFacePlanes": 11,
+  "bodyControlsAndBrowsAndFaviconExact": null,
+  "phonemeTimingChanged": false,
+  "artworkChanged": false,
+  "independentListeningOrRealTimePlaybackAccepted": false,
+  "polishedMilestoneReady": false,
+  "comparison": {
+    "comparisonSourceFrames": [
+      696,
+      936
+    ],
+    "bodyControlsBrowsAndFaviconExactComparedFrames": 240,
+    "samples": 240,
+    "framesChanged": 27,
+    "outsideMouthRegionExact": true,
+    "unionChangedBBox": [
+      250,
+      165,
+      326,
+      207
+    ],
+    "runtimeCommit": "54635b7458687870721ea34624503b79bf7c13c9",
+    "codeSha256": {
+      "separated_oral_review.py": "5f2c985f56567db05259bbf60db40c73a6f32300467fe2f25d6627841f10d47e",
+      "lower_lip_plane.py": "956ff58a07c25fd7017c29421a226fdcad9a82e2c9e28a98948b34136e1c6d08",
+      "finished_cartoon_scene.py": "d1ff8cb7248332b287ebb611e7b4f26b895228c28c35c8b76215937b20c979bb",
+      "render_finished_thought.py": "93cd03947f7b4b7e09f2a0c945afc4186304b40019d7c02068c499370d3981a6",
+      "narrated_export.py": "638f88dacb0275106607a72281712b98094cea35c730e5e275c11f5334075061"
+    }
+  },
+  "nativeStagedMouthFramesInspected": 360,
+  "fullStageFramesInspected": [
+    696,
+    824,
+    888,
+    935,
+    981,
+    1016,
+    1055
+  ],
+  "reviewMethod": "Full-resolution static frames and sequential native mouth contact sheets; encoded films fully decoded, not independently listened to or accepted in real time.",
+  "sourceHashes": {
+    "package.py": "0f937d0b78024f172b174125dee2c797c2ac31b2b3d24f2da77dd8c4e9888e4d",
+    "separated_oral_review.py": "5f2c985f56567db05259bbf60db40c73a6f32300467fe2f25d6627841f10d47e",
+    "lower_lip_plane.py": "956ff58a07c25fd7017c29421a226fdcad9a82e2c9e28a98948b34136e1c6d08",
+    "render_finished_thought.py": "93cd03947f7b4b7e09f2a0c945afc4186304b40019d7c02068c499370d3981a6",
+    "finished_cartoon_scene.py": "d1ff8cb7248332b287ebb611e7b4f26b895228c28c35c8b76215937b20c979bb",
+    "compare.py": "962d482ef3cc780df6ddd0c74b3750d158df53f42f3c79955ca48010cf339305"
+  },
+  "observedLimits": [
+    "Mouth remains small at720p; thin FV/dental and pink closed lip read need drawing review.",
+    "Body/eye/hand acting still restrained versus concept grin/skepticism/laughter.",
+    "Outro has no distinct gesture or new stage message.",
+    "Source-alpha and asymmetric hand drawings unchanged."
+  ]
+}

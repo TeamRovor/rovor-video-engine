@@ -1,0 +1,79 @@
+{
+  "animationReady": false,
+  "sourceHashes": {
+    "hand-source/right-point-v1.png": "b0020f3504d49d8410dee3566380ae9e4ec7ab81abf748ffc29911f91033e5d2",
+    "index-source/hidden-palm-v1.png": "a114d935109bb248119e126d2d1b4b036b89b9561e4aa2fa757f5cd8835b65f8"
+  },
+  "registration": {
+    "ecc": 0.9734259129267074,
+    "hiddenCorrection": [
+      [
+        1.0094815492630005,
+        0.0015931266825646162,
+        -4.829402446746826
+      ],
+      [
+        -0.0020136625971645117,
+        1.0138648748397827,
+        -5.297726154327393
+      ]
+    ],
+    "sourceToBody": [
+      [
+        0.15454812347888947,
+        -0.04141104593873024,
+        761.3607788085938
+      ],
+      [
+        0.04141104593873024,
+        0.15454812347888947,
+        661.0100708007812
+      ]
+    ]
+  },
+  "joints": [
+    [
+      807,
+      749
+    ],
+    [
+      938,
+      904
+    ],
+    [
+      1026,
+      998
+    ]
+  ],
+  "axis": [
+    0.680632373314984,
+    0.7326251240543231
+  ],
+  "palmTransitionRows": [
+    520,
+    560
+  ],
+  "limitations": [
+    "Only the index has independent phalange controls; three fingers and thumb remain one drawing",
+    "Bending a straight drawing cannot supply artist-designed folded creases",
+    "Thin hand outline and wrist join still need cleanup"
+  ],
+  "indexAngleLimits": [
+    [
+      -10,
+      0
+    ],
+    [
+      0,
+      60
+    ],
+    [
+      0,
+      35
+    ]
+  ],
+  "skinningBlendWidths": [
+    160,
+    130
+  ]
+}

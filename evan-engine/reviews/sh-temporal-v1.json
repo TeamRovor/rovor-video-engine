@@ -1,0 +1,57 @@
+{
+  "rasterWidthsMatched": [
+    447,
+    457,
+    454,
+    455,
+    456
+  ],
+  "maximum480HzWidthStep": 2.2433929443359375,
+  "maximumFiniteDifferencePixelsPerSecond": 1076.82861328125,
+  "minimumOralArea2": 1.4545180797576904,
+  "flagsUnresolved": 18,
+  "timingChanged": false,
+  "realTimePlaybackAccepted": false,
+  "listeningAccepted": false,
+  "polished": false,
+  "conclusion": "No non-finite/folded dense sample or off-cue changed output frame found. Fast quarter-width contraction is represented by only three changed 24fps frames; numerical continuity cannot establish ordinary-speed acting quality. No new variant or parameter change is justified by these metrics alone.",
+  "maximumAuthoredContractionPercent": 25,
+  "changedStageFrames": [
+    {
+      "sourceFrame": 454,
+      "changedPixels": 1600,
+      "maximumChannelChange": 151,
+      "box": [
+        249,
+        166,
+        325,
+        205
+      ]
+    },
+    {
+      "sourceFrame": 455,
+      "changedPixels": 1622,
+      "maximumChannelChange": 121,
+      "box": [
+        249,
+        165,
+        327,
+        205
+      ]
+    },
+    {
+      "sourceFrame": 456,
+      "changedPixels": 1115,
+      "maximumChannelChange": 72,
+      "box": [
+        250,
+        165,
+        321,
+        205
+      ]
+    }
+  ],
+  "denseSamples": 102,
+  "plotInspected": true,
+  "next": "Keep SH experimental. Diagnose the existing closing sleeve notch against registered hand/forearm and sleeve alpha at532, without altering protected closing PNGs or native Moho projects."
+}

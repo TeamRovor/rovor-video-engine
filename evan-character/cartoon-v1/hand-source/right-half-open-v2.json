@@ -1,0 +1,39 @@
+{
+  "status": "unregistered-half-open-transition-source-candidate",
+  "tool": "built-in image_gen",
+  "skill": "/Users/amarhavic/.codex/skills/.system/imagegen/SKILL.md",
+  "sourceFile": "right-half-open-v2.png",
+  "animationReady": false,
+  "registered": false,
+  "individuallyArticulatedDigits": false,
+  "rawAlphaPreserved": true,
+  "prompts": {
+    "initial": "Use case: precise-object-edit\nAsset type: transparent 2D cartoon hand transition SOURCE PLATE for Evan animation; not a finished rig.\nInput images: Image 1 is the EDIT TARGET: open palm with heavy clean black ink. Image 2 is a pose reference ONLY for the eventual closed pointing endpoint.\nPrimary request: Edit Image 1 to make ONE anatomically coherent halfway pose between its open palm and Image 2's point. Keep the index finger extended along Image 1's existing diagonal down-right direction. Curl ONLY the middle, ring and little fingers about halfway into the palm, with clearly readable bent knuckles and all three shortened but separately identifiable. Bring the thumb halfway inward toward those curling fingers; it must still be identifiable and not fused with the index. This is the middle drawing of an open-to-point action, not a second fully closed fist.\nInvariants: preserve Image 1's forearm position, wrist location, palm scale, diagonal orientation, canvas composition, skin palette, thick smooth black outline weight and simple cel shading. The unchanged forearm must remain attached at upper left. Five digits total including thumb. Whole forearm and all fingertips within canvas. Match Image 1 ink thickness, not the thinner Image 2 contours. Clean smooth edges without flecks or stippling.\nBackground: genuinely transparent RGBA. No text, no labels, no extra poses, no sleeve, no character, no props, no backdrop, no contact shadow.",
+    "revision": "Use case: precise-object-edit\nInput: the supplied transparent cartoon hand is the edit target. It is TOO CLOSED for the required halfway motion drawing. Change ONLY the three curled middle/ring/little fingers and thumb. UNFURL those three fingers: each proximal segment extends out from the palm and each distal segment bends only about 45 degrees back toward the viewer. They must visibly project farther outward than the current curled fist, separated by clear gaps, creating a HALF-OPEN palm, neither spread fully open nor a closed pointing fist. Thumb lifts outward away from the index instead of pressing into the fist. Keep the extended index finger unchanged. Preserve forearm, wrist, palm position and size, canvas, thick black contour, skin palette, diagonal orientation and simple cel shading. Five digits total, anatomically coherent. One hand only, all fingers visible, transparent RGBA background, no text/props/backdrop. This is a transition drawing opening halfway from a point toward a spread palm."
+  },
+  "inputs": [
+    "open-palm-filtered-v1/source-v1.png",
+    "hand-source/right-point-v1.png"
+  ],
+  "initialOutput": "exec-78167581-67ec-4a77-8b3e-33c4fe47e1c2.png",
+  "selectedOutput": "exec-ab506940-59c0-4ccc-8afe-3b5454026630.png",
+  "review": {
+    "fullResolutionInspected": true,
+    "initialRejected": "Three fingers remained nearly fully curled; insufficient intermediate silhouette.",
+    "revision": "Three bent fingers now project separately below the palm, thumb lifted and index extended. Better intermediate silhouette, with heavier open-palm ink. Nail and crease details may be dense at delivery size.",
+    "invariants": "Forearm placement appears close, but generated wrist/palm geometry and pixels are NOT exact preservation. Registration and native/delivery comparisons remain required.",
+    "transitionAccepted": false
+  },
+  "nextConcreteWork": "Manually locate wrist/axis; register separately with existing .192 wrist-fit builder and associated RGBA filtering. Compare open/half-open/point at one shared native wrist and delivery pose before attempting a new transition. No alpha dissolve or automatic acceptance from an added drawing.",
+  "size": [
+    1402,
+    1122
+  ],
+  "sha256": "3b774a89b90490e8a44a0b8fb918c848dc5a78f5676c9ea6820c07dddc173f37",
+  "alphaBounds": [
+    41,
+    22,
+    1348,
+    1087
+  ]
+}

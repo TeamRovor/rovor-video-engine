@@ -1,0 +1,178 @@
+{
+  "status": "v3-component-ownership-and-root-coverage-corrected-narrated-flex-reviewed",
+  "workingFolder": "digit-curl-v3",
+  "sourceUnmodified": true,
+  "sourceAlphaUnmodified": true,
+  "sourceCleanupApplied": false,
+  "componentCorrection": {
+    "transverseCutY": 900,
+    "coreAlphaThreshold": 250,
+    "largeComponentLabels": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "largeComponentPixelCounts": [
+      15914,
+      21997,
+      23130,
+      6638
+    ],
+    "reassignedVisiblePixels": 1138,
+    "sourceAlphaChanged": false
+  },
+  "allFourRootsFreezeSourcePixels": 60,
+  "testsPassed": 20,
+  "newTests": 11,
+  "coreComponentOwnershipGuard": true,
+  "opaqueRootAlpha": {
+    "oldV2DroppedPixels": 178,
+    "newV3DroppedPixels": 0,
+    "newV3ProtectedPixels": 44070,
+    "maximumAmplitude": 0.2
+  },
+  "fullStrokeGeometryRejected": true,
+  "earlierV1V2GeometryTestsRetained": true,
+  "event": {
+    "anticipate": 10.73,
+    "arrive": 11.03,
+    "hold": 11.41,
+    "settle": 11.75,
+    "scriptIndices": [
+      33,
+      34
+    ]
+  },
+  "sourceFrameRange": [
+    240,
+    312
+  ],
+  "frames": 72,
+  "updatedNativePoses": [
+    258,
+    259,
+    260,
+    261,
+    262,
+    263,
+    264,
+    265,
+    266,
+    267,
+    268,
+    269,
+    270,
+    271,
+    272,
+    273,
+    274,
+    275,
+    276,
+    277,
+    278,
+    279,
+    280,
+    281
+  ],
+  "offCueByteExactCount": 48,
+  "films": {
+    "Normal": {
+      "decodedFrames": 72,
+      "sha256": "4283b64856807822c2eacc2ea25c6773c7c1cf4220b2e71f356acb7327c0f82c"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 288,
+      "sha256": "2af2978b742f7564bac2c09585d2fc80ed3346d3897b3c9edd8f430308fdb5fa"
+    }
+  },
+  "normalSeconds": 3,
+  "slowSeconds": 12,
+  "narrationDriven": true,
+  "sourcePcmSamples": [
+    160000,
+    208000
+  ],
+  "sourcePcmCount": 48000,
+  "sourcePcmExact": true,
+  "aacIsLossy": true,
+  "baselineStageAndOutsideHandExact": true,
+  "nativeOralJawAuditAndOtherLayersExact": true,
+  "minimumArmTriangleArea2": 195.01484516282602,
+  "visualInspection": {
+    "allUpdatedNativeSourceFrames": [
+      258,
+      259,
+      260,
+      261,
+      262,
+      263,
+      264,
+      265,
+      266,
+      267,
+      268,
+      269,
+      270,
+      271,
+      272,
+      273,
+      274,
+      275,
+      276,
+      277,
+      278,
+      279,
+      280,
+      281
+    ],
+    "rawNativeSourceFramesForInspection": [
+      258,
+      270,
+      281
+    ],
+    "overviewSourceFrames": [
+      240,
+      257,
+      258,
+      262,
+      265,
+      270,
+      273,
+      277,
+      281,
+      282,
+      295,
+      311
+    ],
+    "decodedNormalClipFrames": [
+      17,
+      23,
+      29,
+      35,
+      41,
+      42
+    ],
+    "decodedSlowClipFrames": [
+      92,
+      116,
+      140
+    ]
+  },
+  "visualFinding": "All24native posed pairs show connected wrist and separated digit contours without observed new root gaps. Three680x722source samples and light-background peak crop inspected; prior opaque contour threads are reduced. Delivery flex is subtle under the existing explanatory palm/brows and returns continuously to open. No fist or full-point claim.",
+  "componentConstructionReviewed": true,
+  "readyForContinuousCandidate": true,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "newSourceArtworkGenerated": false,
+  "phonemeTimingChanged": false,
+  "flagsCleared": 0,
+  "pendingJobs": false,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "nextConcreteWork": "Build a separate full continuous candidate by reusing source frames258..281 from this reviewed component and copying the other528current collar-continuous PNGs exactly, including20closing frames. Preserve original full PCM and all18current acoustic markers/context links. Verify552/2208decodes/source hashes and inspect cue boundaries/full-context delivery before accepting the integration. Do not strengthen curl or substitute point drawings."
+}

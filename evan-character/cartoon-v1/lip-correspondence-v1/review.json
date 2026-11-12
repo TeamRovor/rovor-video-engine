@@ -1,0 +1,95 @@
+{
+  "sourceArtworkModified": false,
+  "newGeneratedArtwork": false,
+  "sourceRegistration": {
+    "knots": [
+      {
+        "x": 164.0,
+        "guideY": 315.0,
+        "paintedHalfAlphaY": 312.4024963378906,
+        "sourceResidualY": -2.597503662109375
+      },
+      {
+        "x": 181.0,
+        "guideY": 320.0,
+        "paintedHalfAlphaY": 318.6588439941406,
+        "sourceResidualY": -1.341156005859375
+      },
+      {
+        "x": 194.0,
+        "guideY": 325.0,
+        "paintedHalfAlphaY": 323.5810241699219,
+        "sourceResidualY": -1.418975830078125
+      },
+      {
+        "x": 211.0,
+        "guideY": 327.0,
+        "paintedHalfAlphaY": 327.7544250488281,
+        "sourceResidualY": 0.754425048828125
+      },
+      {
+        "x": 228.5,
+        "guideY": 328.5,
+        "paintedHalfAlphaY": 329.3664245605469,
+        "sourceResidualY": 0.866424560546875
+      },
+      {
+        "x": 246.0,
+        "guideY": 327.0,
+        "paintedHalfAlphaY": 329.3083190917969,
+        "sourceResidualY": 2.308319091796875
+      },
+      {
+        "x": 263.0,
+        "guideY": 325.0,
+        "paintedHalfAlphaY": 327.4397277832031,
+        "sourceResidualY": 2.439727783203125
+      },
+      {
+        "x": 278.0,
+        "guideY": 323.28570556640625,
+        "paintedHalfAlphaY": 324.7228698730469,
+        "sourceResidualY": 1.437164306640625
+      },
+      {
+        "x": 298.0,
+        "guideY": 321.0,
+        "paintedHalfAlphaY": 321.7634582519531,
+        "sourceResidualY": 0.763458251953125
+      },
+      {
+        "x": 329.0,
+        "guideY": 320.0,
+        "paintedHalfAlphaY": 317.7544250488281,
+        "sourceResidualY": -2.245574951171875
+      }
+    ],
+    "minimumSourceTriangleArea2": 45.5,
+    "sourcePixelsModified": false,
+    "sourceAlphaModified": false,
+    "targetGeometryChanged": false,
+    "chinArtCorrected": false,
+    "sourceJaw": "../jaw-overlap-v1/Jaw.png",
+    "sourceJawSha256": "df9cc5a850c84ce12450c3d14dda17ade72d1f6ce86143736d7f304ba8583d89",
+    "sourceCavity": "../painted-oral-parts-v1/Cavity.png",
+    "sourceCavitySha256": "05b00b41e296869d9e2bea784a159f1126235df992443a369de023da33a9f93c",
+    "registrationMethod": "fractional source-alpha contour measurement, source-mesh correspondence only; no source paint/alpha edits",
+    "defaultProfileChanged": false,
+    "animationReady": false
+  },
+  "tests": 3,
+  "oralBeforeBelow240Total": 8589,
+  "oralAfterBelow240Total": 56,
+  "oralAfterBelow128Total": 0,
+  "residualFrameCount": 10,
+  "residualMinimumAlpha": 225,
+  "previousNativeSamplesExact": true,
+  "upper288RowsExact": true,
+  "bottom400RowsExact": true,
+  "defaultProfileChanged": false,
+  "timingChanged": false,
+  "independentListening": false,
+  "continuousPlaybackAcceptance": false,
+  "animationReady": false,
+  "polishedMilestoneComplete": false
+}

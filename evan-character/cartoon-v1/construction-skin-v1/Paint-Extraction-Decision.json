@@ -1,0 +1,12 @@
+{
+  "status": "rejected for runtime",
+  "reason": "Visible skin-colored residual-opacity speckling around the combined mouth; minimum-opacity matting reconstructs its paired background but is not artist-designed independent lip/interior alpha",
+  "sourceReconstructionErrors": [
+    0.0445,
+    0.04895,
+    0.08154
+  ],
+  "lowErrorIsNotArtAcceptance": true,
+  "workingSkinComponent": "separate registered underpainting only",
+  "next": "Paint proper transparent lip rim/lower inner lip and cavity planes from coordinated context; preserve source silhouette and landmarks"
+}

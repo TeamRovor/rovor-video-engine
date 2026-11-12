@@ -1,0 +1,35 @@
+{
+  "mode": "built-in image_gen",
+  "selectedDirection": "cartoon-v1/source/design-sheet-v1.png",
+  "sources": [
+    {
+      "file": "compression-sequence-v1.png",
+      "generatorFile": "exec-54196538-bfe2-4980-9eaa-12fa7749819d.png",
+      "sha256": "7548381479f12e2269b46483786c239ec89c83a8c9c69235364798acc61e4abe",
+      "decision": "Rejected: hooked contact corners; dots on relaxed seal; tooth/tongue in open pose; no useful lip roll."
+    },
+    {
+      "file": "compression-sequence-v2.png",
+      "generatorFile": "exec-57f5bcc0-2f37-4a15-8a98-719d85ced655.png",
+      "sha256": "d81eeb9b1a51829b0dce2725860afed5dc2d9797f6d08755a7ca7c0cd7d94ca1",
+      "decision": "Source-only: tooth removed, but contact hook/dot and prominent lower floor remain; insufficient compressed-lip volume."
+    },
+    {
+      "file": "exploded-parts-v1.png",
+      "generatorFile": "exec-0f7b2524-8521-46e5-b5d1-4f065367efaa.png",
+      "sha256": "f1f832a91bb200de80d6353c797df284e6267ec1f6e7c215eca4d91f0729d891",
+      "decision": "Rejected separation: upper muzzle and lower jaw both contain complete mouths; jaw includes neck."
+    },
+    {
+      "file": "exploded-parts-v2.png",
+      "generatorFile": "exec-8b83a046-a66b-4414-b6e0-a52ff1ce1411.png",
+      "sha256": "cb94d3c32c2c6d4fc228e6cfe56e32627fab90b5abbdc35f1dd6a919a676b484",
+      "decision": "Jaw open notch/neck separation improved. Still lacks designed lower lip; upper component still contains complete mouth. Registration rejected."
+    }
+  ],
+  "sourceAlphaRetained": true,
+  "colorKeyOrOpacityExtraction": false,
+  "runtimeLoaded": false,
+  "animationReady": false,
+  "wholeHeadSwaps": false
+}

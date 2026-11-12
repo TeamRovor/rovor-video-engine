@@ -1,0 +1,90 @@
+{
+  "status": "v2-ownership-and-bounded-flex-reviewed-fine-contour-defects-remain",
+  "sourceUnmodified": true,
+  "sourceAlphaUnmodified": true,
+  "workingFolder": "digit-curl-v2",
+  "ownership": {
+    "expansionPixels": 12,
+    "overlapAssignment": "nearest manually inspected joint polyline",
+    "explicitFixedIndexMask": true,
+    "thumbRootFreezeSourcePixels": 60
+  },
+  "legacyV1Preserved": true,
+  "defaultFolderStillV1": true,
+  "testsPassed": 9,
+  "newTests": 6,
+  "selectedStaticDistalRemnantsOld": 5,
+  "selectedStaticDistalRemnantsNew": 0,
+  "guardDefinition": "Alpha>127; manually defined distal-index polygon beyond80source-axis pixels, moving digit source cutoff90. These selected regions do not cover all faint alpha or proximal seams.",
+  "boundedAmountRange": [
+    0,
+    0.2
+  ],
+  "knuckleCoefficients": {
+    "middle": -8,
+    "ring": 10,
+    "little": 30,
+    "thumb": 12
+  },
+  "all48AmplitudesPassSelectedDistalPairAndIndexGuards": true,
+  "fullStrokeStillRejected": true,
+  "fullStrokeDistalIndexOverlapPixels": 11974,
+  "frames": 48,
+  "films": {
+    "Normal": {
+      "decodedFrames": 48,
+      "sha256": "017d79bf41c24765cb0a526f828f45d005e8fb6b111dc439ff300ba18679126a"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 192,
+      "sha256": "d9cd7d0c0daefc142e262274d18ed0bb8768cc03673741799a1f11d6cb78063a"
+    }
+  },
+  "normalSeconds": 2,
+  "slowSeconds": 8,
+  "restRegisteredSkinExact": true,
+  "endpointsNativeAndStageByteExact": true,
+  "outsideRightHandStageExact": true,
+  "heldSceneFrame": 69,
+  "narrationDriven": false,
+  "audioIncluded": false,
+  "visualInspection": {
+    "nativeSamples": [
+      0,
+      4,
+      8,
+      12,
+      16,
+      20,
+      23,
+      24,
+      28,
+      35,
+      40,
+      47
+    ],
+    "decodedNormalFrames": [
+      0,
+      12,
+      24,
+      47
+    ],
+    "decodedSlowFrames": [
+      48,
+      96
+    ]
+  },
+  "visualFinding": "Broad detached spikes and thumb separation reduced; bounded flex is subtle at delivery size. Fine light/dark contour threads remain between little/ring fingers in native spread samples despite the selected alpha>127 guards passing. Scene integration remains unaccepted. No closed-fist depth or performance acceptance.",
+  "fingersIndependentlySkinned": 4,
+  "jointsPerDigit": 3,
+  "animationAccepted": false,
+  "fullFilmUpdated": false,
+  "defaultSceneChanged": false,
+  "flagsCleared": 0,
+  "pendingJobs": false,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "polishedMilestoneReady": false,
+  "nextConcreteWork": "Trace full-alpha foreign contour threads in separated finger planes. Use source connected components below a transverse distal cut (inspect near source y900) and fingertip seeds to assign complete finger edges, retaining original RGB/alpha and exact rest reconstruction. Inspect root underlap; broaden guards to faint alpha and seam regions before another bounded motion render. Do not add pose swaps or increase curl strength."
+}

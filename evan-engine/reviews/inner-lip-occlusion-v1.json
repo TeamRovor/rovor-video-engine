@@ -1,0 +1,102 @@
+{
+  "baseCommit": "8e495c1c27dbdecc120f647f9731c7d1e139d452",
+  "integratedFix": "Clip oral interiors to inner lip coverage, rather than outer backing alpha alone",
+  "geometrySamples": 1307,
+  "geometryExact": true,
+  "zeroInteriorClosedSamples": 248,
+  "testsPassed": 16,
+  "closedFrame": 885,
+  "beforeCrownAblation": {
+    "maximumDifference": 119,
+    "pixelsChangedOverTwo": 56
+  },
+  "afterCrownAblation": {
+    "maximumDifference": 0,
+    "pixelsChangedOverTwo": 0
+  },
+  "normalAndFVTeethRetained": true,
+  "authoredInkInsetNativePixels": 0.5,
+  "phoneTimingChanged": false,
+  "artworkChanged": false,
+  "animationAccepted": false,
+  "independentListeningVerified": false,
+  "polishedMilestoneReady": false,
+  "sourceHashes": {
+    "Integrated-Separated-Oral.py": "75dd01b962b78647246caf177e009e8a7fca722120e53ed7abc31c1956e075cb",
+    "Regression-Tests.py": "da74bcecf7eda7d94fc3302c4d4bf888dfa3fb1185a738984b12cc44721aac32",
+    "baseline_separated.py": "82993ef476faaf6df634bb265b619a440430e4fc0d2e9b7c388290c18ab49378",
+    "render_occlusion.py": "37cd6290b96ed7207d6b2ed6f2fd1fd6f33bacdd0805f8fa521d6725f21d7a4c",
+    "package_occlusion.py": "9f01687dc4b55978b18571dc072e33246aba1aa2586b2cc598cd359725a517df",
+    "audit_occlusion.py": "82e2197277a0595e68d09cb23739f0a278fd82efe83f2681a9259bc05ddfc950"
+  },
+  "nativePairsInspected": 96,
+  "fullFramesInspected": [
+    885,
+    899
+  ],
+  "allOralCoordinatesExactInRenderedPairs": true,
+  "comparisons": [
+    {
+      "label": "More",
+      "sourceFrames": [
+        864,
+        912
+      ],
+      "sourceSamples": [
+        288000,
+        304000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "d0b2206730df4a0b2c2c4a4a118ea6b9b9f29422da0f716700295b21c51b310c"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "9fc3e0cd452719e802643c5cbe5b59ae325ed2b150feb88e87c0b46b09f2718b"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": true
+    },
+    {
+      "label": "Up-All",
+      "sourceFrames": [
+        960,
+        1008
+      ],
+      "sourceSamples": [
+        320000,
+        336000
+      ],
+      "audio": {
+        "sourcePcm16Samples": 16000,
+        "decodedPcm16Samples": 16000,
+        "rate": 16000,
+        "codec": "AAC",
+        "decodeErrors": ""
+      },
+      "films": {
+        "Normal": {
+          "decodedFrames": 48,
+          "sha256": "02e871d210023a1c2813a3d9bd4434b750a6effd9bf6507cb2370dca70b15513"
+        },
+        "Quarter-Speed": {
+          "decodedFrames": 192,
+          "sha256": "bddb1fbb71ed28834b770c64fe7f3007c5e35f83453c8b709654b952c29e8b95"
+        }
+      },
+      "upper288Exact": true,
+      "independentSkinExact": true,
+      "widthExact": true
+    }
+  ]
+}

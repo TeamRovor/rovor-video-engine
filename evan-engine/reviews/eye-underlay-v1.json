@@ -1,0 +1,78 @@
+{
+  "status": "static-registration-reviewed-motion-blocked-by-ownership-seam",
+  "sourceSha256": "99a9325ded471a3af89ba33c8657dab641cdafddd6370a7fe20fc02058134bff",
+  "targetSha256": "10349164bd57dce24ac22721b16b2ca3b88523b634df6f9ed632297ccd390e78",
+  "sourceSize": [
+    1254,
+    1254
+  ],
+  "sourceAlphaUnmodified": true,
+  "ecc": 0.9968694719391404,
+  "matrix": [
+    [
+      1.0011793375015259,
+      -0.001126105198636651,
+      -0.053742554038763046
+    ],
+    [
+      0.0008707241504453123,
+      0.999403178691864,
+      -0.17229905724525452
+    ]
+  ],
+  "skinOffset": [
+    -3.0,
+    -6.0,
+    -2.0
+  ],
+  "ownershipPixels": 10208,
+  "restRgbaExact": true,
+  "outsideOwnershipExact": true,
+  "workingRegisteredDerivatives": true,
+  "animationReady": false,
+  "staticPoses": [
+    {
+      "amount": 0,
+      "templeAnchorX": 353,
+      "fullLensThroughX": 326,
+      "lensYScale": 1.0
+    },
+    {
+      "amount": 12,
+      "templeAnchorX": 353,
+      "fullLensThroughX": 326,
+      "lensYScale": 1.0
+    },
+    {
+      "amount": 18,
+      "templeAnchorX": 353,
+      "fullLensThroughX": 326,
+      "lensYScale": 1.0
+    },
+    {
+      "amount": 25,
+      "templeAnchorX": 353,
+      "fullLensThroughX": 326,
+      "lensYScale": 0.65
+    }
+  ],
+  "defaultChanged": false,
+  "fullFilmUpdated": false,
+  "sourcePlateRegistered": false,
+  "registeredDerivativesExist": true,
+  "staticReviewAccepted": false,
+  "sourcePlateUsableForConstruction": true,
+  "visualInspection": {
+    "rawSourceFullResolution": true,
+    "registeredSource512": true,
+    "ownershipOverlay512": true,
+    "staticPositionsInspected": [
+      0,
+      12,
+      18,
+      25
+    ]
+  },
+  "visualAssessment": "Raw source is a useful construction input, not a replacement head. Direct12/18px lowering exposes little eye.25px lowering with0.65lens-height scale exposes both eyes while clearing the mouth, and the temple remains anchored. Rejected for animation: pale/skin-colored step along the old upper frame footprint and a hard skin edge on the moved frame remain visible; initial binary ownership may also capture nose-adjacent ink. Exact rest reconstruction and high ECC do not establish a seamless moving rig.",
+  "nextConcreteWork": "Keep the same source and25px/0.65static probe. Refine original sunglasses ownership around the nose/temple and extract an associated-alpha frame edge; correct the underlay skin boundary without deleting source alpha. Inspect native rest/lowered composites on light/dark backgrounds, preserve original mouth/jaw and source files, then add edge/registration guards before any narrated motion. Do not generate more heads, change timing or replace full film."
+}

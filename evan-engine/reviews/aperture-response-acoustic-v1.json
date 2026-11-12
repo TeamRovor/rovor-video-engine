@@ -1,0 +1,120 @@
+{
+  "sourceAudioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "range": [
+    15.24,
+    15.62
+  ],
+  "sourceSampleRange": [
+    240000,
+    250400
+  ],
+  "sampleRate": 16000,
+  "rmsWindowSamples": 80,
+  "fftWindowSamples": 256,
+  "fftHopSamples": 32,
+  "phoneLabels": [
+    {
+      "start": 15.0,
+      "end": 15.12,
+      "phone": "UW",
+      "value": "F",
+      "word": "super",
+      "scriptIndex": 43,
+      "timing": "acoustic-forced",
+      "acousticScore": -110,
+      "confidence": null
+    },
+    {
+      "start": 15.12,
+      "end": 15.19,
+      "phone": "P",
+      "value": "A",
+      "word": "super",
+      "scriptIndex": 43,
+      "timing": "acoustic-forced",
+      "acousticScore": -167,
+      "confidence": null
+    },
+    {
+      "start": 15.19,
+      "end": 15.26,
+      "phone": "ER",
+      "value": "C",
+      "word": "super",
+      "scriptIndex": 43,
+      "timing": "acoustic-forced",
+      "acousticScore": -135,
+      "confidence": null
+    },
+    {
+      "start": 15.26,
+      "end": 15.34,
+      "phone": "S",
+      "value": "B",
+      "word": "small",
+      "scriptIndex": 44,
+      "timing": "acoustic-forced",
+      "acousticScore": -93,
+      "confidence": null
+    },
+    {
+      "start": 15.34,
+      "end": 15.42,
+      "phone": "M",
+      "value": "A",
+      "word": "small",
+      "scriptIndex": 44,
+      "timing": "acoustic-forced",
+      "acousticScore": -58,
+      "confidence": null
+    },
+    {
+      "start": 15.42,
+      "end": 15.48,
+      "phone": "AO",
+      "value": "E",
+      "word": "small",
+      "scriptIndex": 44,
+      "timing": "acoustic-forced",
+      "acousticScore": -43,
+      "confidence": null
+    },
+    {
+      "start": 15.48,
+      "end": 15.56,
+      "phone": "L",
+      "value": "H",
+      "word": "small",
+      "scriptIndex": 44,
+      "timing": "acoustic-forced",
+      "acousticScore": -231,
+      "confidence": null
+    },
+    {
+      "start": 15.56,
+      "end": 15.6,
+      "phone": "D",
+      "value": "B",
+      "word": "detail",
+      "scriptIndex": 45,
+      "timing": "acoustic-forced",
+      "acousticScore": -192,
+      "confidence": null
+    },
+    {
+      "start": 15.6,
+      "end": 15.72,
+      "phone": "IY",
+      "value": "B",
+      "word": "detail",
+      "scriptIndex": 45,
+      "timing": "acoustic-forced",
+      "acousticScore": -404,
+      "confidence": null
+    }
+  ],
+  "timingChanged": false,
+  "exactBoundariesVerified": false,
+  "limits": "Waveform/RMS and spectrogram are visual evidence only; voiced M has energy and simple energy peaks cannot locate phone boundaries exactly."
+}

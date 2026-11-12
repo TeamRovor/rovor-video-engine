@@ -1,0 +1,49 @@
+{
+  "originalFramesExact": 192,
+  "repeatedFinalFramesExact": 60,
+  "holdFrame": 1103,
+  "endTime": 24.25,
+  "cutFrame": 1063,
+  "cutTime": 22.145833333333332,
+  "raisedShotDwellSeconds": 2.1041666666666665,
+  "shortRaisedShotDwellSeconds": 0.8541666666666666,
+  "sourcePcmRange": [
+    304000,
+    352758
+  ],
+  "originalPcmSamples": 48758,
+  "zeroPadSamples": 35242,
+  "wavPcmExact": true,
+  "audio": {
+    "sourcePcm16Samples": 84000,
+    "decodedPcm16Samples": 84000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "films": {
+    "Longer-Normal.mp4": {
+      "decodedFrames": 252,
+      "sha256": "931f31215115acc53f5b4d83c39ba6aba3fb92306287cb37beda54b535238d5b"
+    },
+    "Longer-Quarter-Speed.mp4": {
+      "decodedFrames": 1008,
+      "sha256": "1b6817de2b96b381d7d0e9fb02e659803fbb9b35df135c25bdc96244473dbe9d"
+    }
+  },
+  "sourceVerificationSha256": "32060251ad75bf723d837006ccae3fa4795622eac2d9486b1fcc2765f8e47d43",
+  "scriptSha256": "09df5553bb79118bed987e9d81893414c6f5211576bd26d4276f712cb1f8061d",
+  "defaultChanged": false,
+  "sourceArtworkChanged": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "polishedMilestoneReady": false,
+  "scope": "One longer held closing-card comparison; all existing motion preserved",
+  "normalDurationSeconds": 5.25,
+  "slowDurationSeconds": 21,
+  "addedHoldSeconds": 1.25,
+  "holdFrameVisuallyInspected": 1163,
+  "referenceDirectionCompared": true,
+  "performanceAccepted": false,
+  "next": "Compare a clearly distinct waist-up closing composition, retain timing/audio and native layered rig; no more dwell variants"
+}

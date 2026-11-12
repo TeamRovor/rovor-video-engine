@@ -1,0 +1,13 @@
+# Version → of → your: acoustic and actual labiodental construction
+
+The existing local trace covers original10.65–12.10s: centered25ms FFT/5ms hop and697actual control samples at480Hz. Three flagged words/script34–36 compare older/current starts10.69/11.41,11.36/11.75,11.52/11.85. The earlier group overlaps preceding modeled K/L, tiny-to-version and ER passages. The original spectrum falls toward weaker energy near11.41 before a later ER cluster;11.75 lies within periodic energy and11.85 near a later reduction. These observations support retaining the current intervals, not exact word or V onset/release claims. No retiming; all18flags stay open.
+
+Four actual raster oral/FV fixtures275/278/284/286 match geometry/control capture to1e-9. Their actual independent lower-lip planes reconstruct from the captured inner arch and FV strength to1e-6; rigid-incisor planes match the consumed material arrays. Float plane hashes and alpha coverage are recorded. Contact fixtures275/284 have FV strengths0.957509/0.934874; release fixtures278/286 have0. The existing thickness scale1−0.4FV is an authored proxy, not pressure or measured anatomy. At286 rounding clips the incisor coverage to0; this is recorded rather than treated as a missing-plane failure.
+
+Native contact/release faces and isolated275/284lip/incisor planes were inspected. The FV pose reads as a narrow incisor/lip slit, with limited full-stage phonetic readability. Continuous controls and matching plane arrays establish construction evidence; they do not establish studio quality, timing accuracy or physical tooth/lip contact.
+
+Local review: `outputs/evan-cartoon-version-of-your-trace/Review.html`. Thirty byte-exact current full-stage frames264..293, complete30/120normal/slow decodes and20,000exact original PCM samples176,000:196,000 are retained; AAC is lossy. Native plot halves, four native faces, four contact-plane images and four normal/two slow decoded stills were inspected. Same fixed gaze, brow/ink edges and modest acting remain; no real-time/listening/polished acceptance.
+
+Checks cover source/plan hashes, centered windows,697sample bounds, four actual-raster comparisons, lower-lip reconstruction, consumed incisors, speech/right-eye ownership, image hashes and exact PCM. Fourteen flagged words now have deeper traces; all18exact boundaries remain unresolved. Full/defaults/protected versions/updater/native Moho projects preserved. No artwork, production control, Moho, merge or deployment change.
+
+Next: browser→tabs/script41–42 against original Region04 spectrum and actual articulation. No automatic threshold retiming or new expression variants.

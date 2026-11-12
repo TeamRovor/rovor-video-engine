@@ -1,0 +1,147 @@
+{
+  "runtimeParentCommit": "2a89470dbad348b6638ae9434de38f5dcefa3a67",
+  "runtimeIncludesUncommittedGesture": true,
+  "sourceCodeSha256": {
+    "finished_cartoon_scene.py": "0c4fba9e9553f0fca66dae6c66f9b4a34697b0cad8779b1bbcb1034afbc80652",
+    "render_finished_thought.py": "d1d04709769649e411f7b8f999f48f4169a86259b4a64513e40b16b1ba00d72c"
+  },
+  "closingEvent": {
+    "anticipate": 20.39,
+    "prepare": 20.69,
+    "arrive": 21.15,
+    "hold": 21.91,
+    "settle": 22.71,
+    "scriptIndices": [
+      62,
+      63,
+      64,
+      65
+    ]
+  },
+  "nativeFaceAndBrowsAndFaviconExact": 144,
+  "stageBrandRegionExact": 144,
+  "sourceFrames": [
+    912,
+    1056
+  ],
+  "sourceSamples": [
+    304000,
+    352000
+  ],
+  "audio": {
+    "sourcePcm16Samples": 48000,
+    "decodedPcm16Samples": 48000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "beforeAudio": {
+    "sourcePcm16Samples": 48000,
+    "decodedPcm16Samples": 48000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "films": {
+    "Rovor-Finished-Thought-Normal": {
+      "decodedFrames": 144,
+      "sha256": "51242319331af2da4a3a5fff6712b5d1b3fcc0dc525bcb6dd10a5e96c9bd8f5b"
+    },
+    "Rovor-Finished-Thought-Quarter-Speed": {
+      "decodedFrames": 576,
+      "sha256": "52adcfab38b993e351f167ef61e73009a46a01028507fd24a7a272a0d65ed830"
+    },
+    "Before-Normal": {
+      "decodedFrames": 144,
+      "sha256": "9e48f82ac8da7d91d191fcd7663650f52f9cc5919eff8c50559ea83d4656c27d"
+    },
+    "Before-Quarter-Speed": {
+      "decodedFrames": 576,
+      "sha256": "a32dc6111fcdcd02c84c1fcfe83f04cf44010c8c57430638942bcce33a04da50"
+    }
+  },
+  "upper288Exact": 144,
+  "noseMaximumChange": 0,
+  "minimumOral": 0.023623911663889885,
+  "minimumJaw": 45.5,
+  "minimumArms": {
+    "left": 494.6158370879494,
+    "right": 257.6299509624635
+  },
+  "fallbacks": [
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    },
+    {
+      "dentalMorph": 0,
+      "fv": 0,
+      "dental": 0,
+      "rounded": 0
+    }
+  ],
+  "workingFacePlanes": 11,
+  "bodyControlsChanged": true,
+  "phonemeTimingChanged": false,
+  "artworkChanged": false,
+  "independentListeningOrRealTimePlaybackAccepted": false,
+  "polishedMilestoneReady": false,
+  "sourceSnapshotsSha256": {
+    "package.py": "dab561e9f088edbeff22e31086e16396bad64ac78dcd3145c5d755b6916b49e6",
+    "test_finished_cartoon_scene.py": "94eea01e07dde24c7b53487618827a097edd3c785246124314c5afd28644f03d",
+    "render_finished_thought.py": "d1d04709769649e411f7b8f999f48f4169a86259b4a64513e40b16b1ba00d72c",
+    "finished_cartoon_scene.py": "0c4fba9e9553f0fca66dae6c66f9b4a34697b0cad8779b1bbcb1034afbc80652",
+    "Before-finished_cartoon_scene.py": "d1ff8cb7248332b287ebb611e7b4f26b895228c28c35c8b76215937b20c979bb"
+  },
+  "testsPassed": 8,
+  "extendedFullSettleArmCheckSamples": 1105,
+  "pilotFullFramesInspected": [
+    979,
+    1016,
+    1030,
+    1055
+  ],
+  "finalFullFramesInspected": [
+    988,
+    1016,
+    1055
+  ],
+  "nativeHandSamplesInspected": [
+    984,
+    988,
+    992,
+    996,
+    1000,
+    1004,
+    1008,
+    1012,
+    1016,
+    1020,
+    1030,
+    1055
+  ],
+  "unchangedBeforeCueFrames": 67,
+  "changedStageFrames": 77,
+  "firstChangedStageFrame": 979,
+  "generatedGrinIntegrated": false,
+  "gestureIntegratedInDevelopmentScene": true,
+  "observedLimits": [
+    "Existing fixed hand drawing is readable through this bend, but finger articulation and hand-size asymmetry remain.",
+    "Ending has a held palm rather than expressive grin/eye acting.",
+    "Original18 word flags and4phone warnings unresolved; no independent listening/realtime acceptance."
+  ]
+}

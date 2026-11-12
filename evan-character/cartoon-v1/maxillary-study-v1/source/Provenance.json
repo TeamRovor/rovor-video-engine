@@ -1,0 +1,11 @@
+{
+  "mode": "built-in image_gen",
+  "transparent_background": true,
+  "file": "unused-incisor-study-v1.png",
+  "sha256": "502864d505f26c21da65224d98100ec1ed53d0f8c188e8a7a18672648a5da69f",
+  "generatedOriginal": "exec-9d54c0d7-2d8d-4354-866f-78686852ac91.png",
+  "reference": "oral-rig/upper-teeth.png",
+  "referenceSha256": "6a3de1c6bcc74fbf42e2cccc2926ef6ffbea32cf195733dfd3879303faab3fab",
+  "runtimeSelected": false,
+  "decision": "Not selected. Generation followed a mistaken hidden-RGB preview diagnosis; alpha verification proved existing source already isolates teeth. Rig experiment reuses original source."
+}

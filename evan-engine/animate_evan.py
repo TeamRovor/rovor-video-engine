@@ -9,6 +9,7 @@ import math
 import os
 from pathlib import Path
 import subprocess
+import sys
 import wave
 
 from scene_planner import generate_plan, validate_plan
@@ -64,18 +65,32 @@ def make_scene(transcript, cues, duration, manual_plan=None):
                 scenePlan=scenes, gestures=gestures)
 
 
+def frame_command(config, character, scene, frames, start, total):
+    """Choose an opt-in backend without importing painted build dependencies."""
+    if character == 'painted':
+        return [config.get('painted_python', sys.executable), HERE / 'render_painted_scene.py',
+                scene, frames, start, total]
+    return [config['node'], HERE / 'render_frames.cjs', scene, frames, start, total]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mp3', type=Path)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--config', type=Path, default=HERE / 'local_tools.json')
+    parser.add_argument('--script', type=Path, help='Authoritative narration text; painted pronunciation planning')
     parser.add_argument('--plan', type=Path, help='Optional hand-written JSON array of scenes')
     parser.add_argument('--resume', action='store_true', help='Continue stages in an existing output directory')
-    parser.add_argument('--character', choices=('calibrated','reference','vector'), default='calibrated', help='V4 calibrated sprites (default), V3 reference sprites, or V2 vector')
+    parser.add_argument('--character', choices=('calibrated','reference','vector','painted'), default='calibrated', help='V4 calibrated sprites (default), V3 reference, V2 vector, or experimental painted mesh rig')
     parser.add_argument('--mouth-mode', choices=('subtle','detailed','still'), default='subtle', help='Subtle lips (default), detailed phonemes or no lip swapping')
+    parser.add_argument('--fps', type=int, choices=(24,30,48,60), default=24, help='Painted frame rate; existing renderers remain 24 fps')
     args = parser.parse_args()
+    if args.character != 'painted' and args.fps != 24:
+        parser.error('Frame rates other than 24 currently require --character painted.')
     if not args.mp3.is_file() or args.mp3.suffix.lower() != '.mp3':
         parser.error('Please provide an existing MP3 recording.')
+    if args.script and not args.script.is_file():
+        parser.error('The narration script file was not found.')
     if args.plan and not args.plan.is_file():
         parser.error('The scene-plan JSON file was not found.')
     audio = args.mp3.resolve()
@@ -83,13 +98,19 @@ def main():
                    'modified_ns': audio.stat().st_mtime_ns,
                    'plan': str(args.plan.resolve()) if args.plan else None, 'character': args.character,
                    'mouth_mode': args.mouth_mode}
+    if args.fps != 24:
+        fingerprint['fps'] = args.fps
+    if args.character == 'painted':
+        fingerprint['painted_renderer_version'] = 4
+    if args.script:
+        fingerprint['script'] = args.script.read_text()
     args.output.mkdir(parents=True, exist_ok=args.resume)
     out = args.output.resolve()
     state = out / 'render_request.json'
     if args.resume:
         previous = read_json(state)
         if previous != fingerprint:
-            raise ValueError('Resume requires an existing run with the same audio and scene plan.')
+            raise ValueError('Resume requires the same audio, plan and render settings; start a fresh output after a renderer update.')
     else:
         state.write_text(json.dumps(fingerprint, indent=2))
     cfg = json.loads(args.config.read_text())
@@ -114,7 +135,7 @@ def main():
             raise RuntimeError('Whisper did not produce usable segments.')
     dialog = out / 'dialog.txt'
     if not dialog.is_file():
-        dialog.write_text(' '.join(r['text'].strip() for r in transcript['transcription']))
+        dialog.write_text(args.script.read_text() if args.script else ' '.join(r['text'].strip() for r in transcript['transcription']))
     mouth_path = out / 'mouth.json'
     cues = read_json(mouth_path)
     if not cues or not cues.get('mouthCues'):
@@ -130,21 +151,36 @@ def main():
         scene = make_scene(transcript, cues, duration, provided_plan)
         scene['characterStyle'] = args.character
         scene['mouthMode'] = args.mouth_mode
+        if args.character == 'painted':
+            scene['fps'] = args.fps
+            word_path=out / 'words.json'
+            if not word_path.is_file():
+                run([cfg['whisper'], '-m', cfg['model'], '-f', wav, '-ojf', '-ml', '1', '-sow', '-of', out / 'words'])
+            planning_env=dict(os.environ)
+            if cfg.get('painted_packages'):
+                planning_env['PYTHONPATH']=str(cfg['painted_packages'])+os.pathsep+planning_env.get('PYTHONPATH','')
+            run([cfg.get('painted_python',sys.executable), HERE / 'speech_planner.py', dialog, word_path, wav, mouth_path, out / 'speech-plan.json', '--fps', args.fps], planning_env)
+            scene['speechPlan']=read_json(out / 'speech-plan.json')
+            run([cfg.get('painted_python',sys.executable), HERE / 'speech_review.py', out / 'speech-plan.json', wav, out / 'speech-timeline.png', '--audit-dir', out / 'speech-timing-audit'], planning_env)
         scene_path.write_text(json.dumps(scene, indent=2))
     current_scene=read_json(scene_path)
     if current_scene.get('duration') != duration:
         raise ValueError('Scene metadata does not match the audio duration.')
     if current_scene.get('characterStyle') != args.character or current_scene.get('mouthMode','subtle') != args.mouth_mode:
         raise ValueError('Saved scene character/mouth settings differ; create a new output directory.')
-    total = math.ceil(duration * 24)
+    if current_scene.get('fps',24) != args.fps:
+        raise ValueError('Saved frame rate differs; create a new output directory.')
+    total = math.ceil(duration * args.fps)
     frames = out / 'frames'
     frames.mkdir(exist_ok=True)
     # Resume at the first missing frame. Preserve all completed original frames.
     start = next((i for i in range(total) if not valid_frame(frames / f'{i:06d}.jpg')), total)
     print(f'Animating Evan: {start}/{total} frames already present...', flush=True)
     env = dict(os.environ, EVAN_SHARP=cfg['sharp'])
+    if args.character == 'painted' and cfg.get('painted_packages'):
+        env['PYTHONPATH'] = str(cfg['painted_packages']) + os.pathsep + env.get('PYTHONPATH', '')
     while start < total:
-        raw = run([cfg['node'], HERE / 'render_frames.cjs', scene_path, frames, start, total], env)
+        raw = run(frame_command(cfg, args.character, scene_path, frames, start, total), env)
         result = json.loads(raw)
         next_frame = result['nextFrame']
         if next_frame <= start:
@@ -154,7 +190,7 @@ def main():
     if not video.is_file() or video.stat().st_size == 0:
         print('Encoding the final video...', flush=True)
         staging = out / 'evan.partial.mp4'
-        run([cfg['ffmpeg'], '-y', '-v', 'error', '-framerate', '24', '-i', frames / '%06d.jpg',
+        run([cfg['ffmpeg'], '-y', '-v', 'error', '-framerate', str(args.fps), '-i', frames / '%06d.jpg',
              '-i', audio, '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'libx264',
              '-preset', 'ultrafast', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac',
              '-t', duration, '-movflags', '+faststart', staging])

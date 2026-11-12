@@ -1,0 +1,190 @@
+{
+  "sourceSha256": "a25f15417ddc0fb11bb262dc7b9cf6cfe9a843f9edc95cdb73f22ca264875e6e",
+  "referenceSha256": {
+    "Seal": "e5220b7b5c014bca1b091a4f962fb722fe455ad972ff561290838b9c260e1636",
+    "Release": "3ee3e6cf5f799f4a588251cf103d46e83b62d481bff89d09d9eb44cb0b8f0559",
+    "Rounded": "8c6a6bcf9a33226158d15c97dce1553e04c2c9ec5565ef9dd04e70795c66cf52"
+  },
+  "originalSkinSha256": "2cee2229260e1479781e512493a4bd88687e82862813aed7a27bc5faa97577a6",
+  "poses": [
+    {
+      "pose": "Seal",
+      "sourceBox": [
+        94,
+        53,
+        555,
+        694
+      ],
+      "initialPlacement": [
+        [
+          0.5855855941772461,
+          0.0,
+          93.0
+        ],
+        [
+          0.0,
+          0.5855855941772461,
+          52.0
+        ]
+      ],
+      "upperFaceCorrection": [
+        [
+          1.004441261291504,
+          -0.006732098758220673,
+          -0.174559086561203
+        ],
+        [
+          0.0005021842662245035,
+          0.9873209595680237,
+          0.3042742908000946
+        ]
+      ],
+      "upperFaceECC": 0.9987869903525723,
+      "upperFaceMeanAbsRgbError": 2.9716186686636936,
+      "upperFaceDiagnosticPass": true,
+      "error": null,
+      "registrationReady": false,
+      "animationReady": false,
+      "missing": [
+        "Separate skin, lip rim, cavity, teeth/tongue planes",
+        "Matched lip-corner/inner-lip/jaw correspondences",
+        "Verified normal/slow voiced performance"
+      ],
+      "paintROI": [
+        186,
+        315,
+        278,
+        350
+      ],
+      "reconstructionMeanRgbError": 0.0444968132180418
+    },
+    {
+      "pose": "Release",
+      "sourceBox": [
+        740,
+        52,
+        554,
+        695
+      ],
+      "initialPlacement": [
+        [
+          0.5848375558853149,
+          0.0,
+          94.0
+        ],
+        [
+          0.0,
+          0.5848375558853149,
+          52.0
+        ]
+      ],
+      "upperFaceCorrection": [
+        [
+          1.0018861293792725,
+          -0.005514573771506548,
+          0.836635410785675
+        ],
+        [
+          0.00023533200146630406,
+          0.9897572994232178,
+          -0.08366510272026062
+        ]
+      ],
+      "upperFaceECC": 0.9984600369620033,
+      "upperFaceMeanAbsRgbError": 3.1512096793926405,
+      "upperFaceDiagnosticPass": true,
+      "error": null,
+      "registrationReady": false,
+      "animationReady": false,
+      "missing": [
+        "Separate skin, lip rim, cavity, teeth/tongue planes",
+        "Matched lip-corner/inner-lip/jaw correspondences",
+        "Verified normal/slow voiced performance"
+      ],
+      "paintROI": [
+        192,
+        312,
+        276,
+        352
+      ],
+      "reconstructionMeanRgbError": 0.04895385932150709
+    },
+    {
+      "pose": "Rounded",
+      "sourceBox": [
+        1395,
+        53,
+        554,
+        694
+      ],
+      "initialPlacement": [
+        [
+          0.5848375558853149,
+          0.0,
+          94.0
+        ],
+        [
+          0.0,
+          0.5848375558853149,
+          53.0
+        ]
+      ],
+      "upperFaceCorrection": [
+        [
+          1.0006203651428223,
+          -0.004960654303431511,
+          1.161204218864441
+        ],
+        [
+          0.0008147966000251472,
+          0.9890269041061401,
+          0.3174741268157959
+        ]
+      ],
+      "upperFaceECC": 0.9984052657859023,
+      "upperFaceMeanAbsRgbError": 3.325270978755656,
+      "upperFaceDiagnosticPass": true,
+      "error": null,
+      "registrationReady": false,
+      "animationReady": false,
+      "missing": [
+        "Separate skin, lip rim, cavity, teeth/tongue planes",
+        "Matched lip-corner/inner-lip/jaw correspondences",
+        "Verified normal/slow voiced performance"
+      ],
+      "paintROI": [
+        192,
+        306,
+        278,
+        362
+      ],
+      "reconstructionMeanRgbError": 0.08153866197641998
+    }
+  ],
+  "workingSkin": {
+    "center": [
+      237,
+      337
+    ],
+    "radius": [
+      65,
+      29
+    ],
+    "innerBlendFraction": 0.3,
+    "noseGuardY": 310,
+    "localRgbOffset": [
+      0.0,
+      5.0,
+      6.0
+    ],
+    "originalAlphaExact": true,
+    "outsideMaskExact": true
+  },
+  "paintType": "derived minimum-opacity combined mouth paint; NOT independent lip/cavity/tongue",
+  "jawLayerSeparated": false,
+  "animationReady": false,
+  "limits": [
+    "One registered underpainting plane only in optional runtime profile",
+    "Remaining separated lip/interior/jaw parts and correspondence still needed"
+  ]
+}

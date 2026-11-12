@@ -1,0 +1,22 @@
+{
+  "tool": "Built-in image_gen / imagegen skill",
+  "skill": "/Users/amarhavic/.codex/skills/.system/imagegen/SKILL.md",
+  "sourceOpaquePlateSha256": "babbd4466734dcecdcdd73019ad6a8172c6c33c5cb82774c71d69524ccd1e49f",
+  "sourceSha256": "c79fadf995b29d72f7fe577e635d7749b50356372e289656844a8f0f3ce3bf08",
+  "promptSha256": "e7b807e9fc578ea9f2c53731f6647e85c9d790893722fb1f2da301eac5aa1641",
+  "originalGeneratedPath": "/Users/amarhavic/.codex/generated_images/01a14714-1eef-7362-bf18-f2721939893a/exec-97a6ef89-b614-4e71-9499-2edbdaa5fca6.png",
+  "sourcePixelsOrAlphaModified": false,
+  "requestedOriginalResolutionInspection": true,
+  "displayResizeNotice": "2167x726 displayed at2048x686",
+  "matteLimits": {
+    "nonzero": 551938,
+    "partial": 550140,
+    "opaque": 1798,
+    "nearOpaque": 534223,
+    "positiveAlphaIslands": 378,
+    "islandPixels": 1260
+  },
+  "registeredExperimentalPlane": true,
+  "approvedAnatomy": false,
+  "finishedSceneChanged": false
+}

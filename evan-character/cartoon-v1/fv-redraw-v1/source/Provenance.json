@@ -1,0 +1,53 @@
+{
+  "assets": [
+    {
+      "file": "contact-head-v1.png",
+      "sha256": "e651fb2a2259587be2be36d29ead4d6ccaee1542960ba053d2d9b0b81eb38734",
+      "promptFile": "contact-head-v1-prompt.txt",
+      "mode": "built-in image_gen edit",
+      "inputFiles": [
+        {
+          "path": "../../outputs/evan-cartoon-current-contact/Posed-Contact-851.png",
+          "sha256": "7ab02ac37b7cfe83232eaec2f3e5cd5ad8e961c97b2f8487957b4a91d76fd1b5"
+        }
+      ],
+      "sourceAlphaModified": false
+    },
+    {
+      "file": "contact-head-v2.png",
+      "sha256": "f886faa6212272cac38f1ba8a6297812ae6c95b4e559e6e0a895af6de8b2919f",
+      "promptFile": "contact-head-v2-prompt.txt",
+      "mode": "built-in image_gen edit",
+      "inputFiles": [
+        {
+          "path": "evan-character/cartoon-v1/fv-redraw-v1/source/contact-head-v1.png",
+          "sha256": "e651fb2a2259587be2be36d29ead4d6ccaee1542960ba053d2d9b0b81eb38734"
+        }
+      ],
+      "sourceAlphaModified": false
+    },
+    {
+      "file": "contact-jaw-v1.png",
+      "sha256": "d2193d0986a07f7f4540e3ed603fe99c82ee44e6da91df0bb6faa16dbe9e901f",
+      "promptFile": "contact-jaw-v1-prompt.txt",
+      "mode": "built-in image_gen edit",
+      "inputFiles": [
+        {
+          "path": "evan-character/cartoon-v1/jaw-overlap-v1/source/jaw-flat-v1.png",
+          "sha256": "66f37f016b27ec9066e403ccaa144bd5c89d913ea12c97413d0a67b22ed29e41"
+        },
+        {
+          "path": "evan-character/cartoon-v1/fv-redraw-v1/source/contact-head-v2.png",
+          "sha256": "f886faa6212272cac38f1ba8a6297812ae6c95b4e559e6e0a895af6de8b2919f"
+        }
+      ],
+      "sourceAlphaModified": false
+    }
+  ],
+  "fullHeadDrawingsAreUnregisteredSourceOnly": true,
+  "jawIsRegisteredCandidateOnly": true,
+  "reviewRendererLoadsCandidate": true,
+  "defaultProfileLoadsCandidate": false,
+  "nativeMohoModified": false,
+  "animationReady": false
+}

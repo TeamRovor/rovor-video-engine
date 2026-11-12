@@ -1,0 +1,123 @@
+{
+  "audio": {
+    "Before": {
+      "sourcePcm16Samples": 64000,
+      "decodedPcm16Samples": 64000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": ""
+    },
+    "After": {
+      "sourcePcm16Samples": 64000,
+      "decodedPcm16Samples": 64000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": ""
+    }
+  },
+  "sourceSampleRange": [
+    304000,
+    352758
+  ],
+  "originalPcmSamples": 48758,
+  "zeroPadSamples": 15242,
+  "sourcePcmPrefixExact": true,
+  "beforeCutCopiedFramesExact": 151,
+  "baselineFreshlyMatched": 48,
+  "films": {
+    "Before-Normal.mp4": {
+      "decodedFrames": 192,
+      "sha256": "886abdb2ec310dd20e5287e814708802cca611d695ab477623af6bc5803581cc"
+    },
+    "Before-Quarter-Speed.mp4": {
+      "decodedFrames": 768,
+      "sha256": "1c654b1cf510ede1eebdafdfd1fe4b5e8d6b034de7fc53f8cb919fd4bc1538bd"
+    },
+    "After-Normal.mp4": {
+      "decodedFrames": 192,
+      "sha256": "1631354250926c04966d1388ba663add37f9b581561a156843d5a7fabd734458"
+    },
+    "After-Quarter-Speed.mp4": {
+      "decodedFrames": 768,
+      "sha256": "382ba77c0d8de385d1de936ffda2d941991214ac0379e240b8b610331fd56072"
+    }
+  },
+  "cutFrame": 1063,
+  "cutTime": 22.145833333333332,
+  "sourceAudioEnd": 22.047375,
+  "guardEnd": 22.127374999999997,
+  "nativeOutsideLumenExact": 48,
+  "geometryExact": 48,
+  "brandExact": 48,
+  "minimumHandArea2": 3.0251690948911003,
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "defaultChanged": false,
+  "fullStageAccepted": false,
+  "polishedMilestoneReady": false,
+  "scope": "Postroll two-edge crown registration and independent material envelope, fixed oral/jaw shape",
+  "runtimeParent": "384886b2b6913d60bda6d62b809ddc53ac8f6275",
+  "focusedTestsPassed": 7,
+  "newTests": 4,
+  "nativeMouthFramesInspected": 41,
+  "fullStagePilotFramesInspected": [
+    1080
+  ],
+  "beforeFilmsHashExact": true,
+  "baselineMaterialTrace": {
+    "time": 22.5,
+    "strength": 0.35,
+    "envelope": 1.0,
+    "lumenAlphaMass": 460.3231506347656,
+    "rawCrownAlphaMass": 892.4699096679688,
+    "clippedCrownAlphaMass": 458.5174865722656,
+    "remainingAlphaMass": 415.98699951171875,
+    "occlusion": [
+      {
+        "layer": "Front dental tongue tip",
+        "remainingAlphaMass": 458.5174865722656
+      },
+      {
+        "layer": "Upper face and cheeks",
+        "remainingAlphaMass": 453.9647521972656
+      },
+      {
+        "layer": "Drawn jaw skin",
+        "remainingAlphaMass": 453.8288879394531
+      },
+      {
+        "layer": "Independent lower lip",
+        "remainingAlphaMass": 440.4982604980469
+      },
+      {
+        "layer": "Independent upper-lip cap",
+        "remainingAlphaMass": 422.73834228515625
+      },
+      {
+        "layer": "Upper lip carrier guard",
+        "remainingAlphaMass": 415.98699951171875
+      }
+    ],
+    "geometryUnchanged": true,
+    "upper310Exact": true
+  },
+  "bandAnalysis": {
+    "time": 22.5,
+    "lumenAlphaMass": 460.3231506347656,
+    "bandClippedAlphaMass": 237.67279052734375,
+    "bandFinalVisibleAlphaMass": 210.07664489746094,
+    "heldMaterialEnvelope": 1.0,
+    "heldGrinShapeStrength": 0.35,
+    "sourcePixelsModified": false,
+    "depthRule": "Two-edge registration to upper55% of actual held lumen plus1px upper burial",
+    "speechUseAccepted": false
+  },
+  "sourceArtworkModified": false,
+  "sourceAlphaCleanup": false,
+  "defaultPoseMethodChanged": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "localOutput": "outputs/evan-cartoon-grin-band",
+  "sourceSha256": "c79fadf995b29d72f7fe577e635d7749b50356372e289656844a8f0f3ce3bf08",
+  "sourceManifestSha256": "38ef941fb9a1c5ad66651b20fde606094ddd589d408d4af2c92af4a550880557",
+  "next": "Representative continuous narration review with current separated face and guarded ending, then phrase-level acting/timing review; no more isolated camera/dwell/material variants"
+}

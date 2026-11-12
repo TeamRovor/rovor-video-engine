@@ -1,0 +1,89 @@
+diff --git a/evan-engine/duration_cartoon_head.py b/evan-engine/duration_cartoon_head.py
+index ce361ea..36b31cb 100644
+--- a/evan-engine/duration_cartoon_head.py
++++ b/evan-engine/duration_cartoon_head.py
+@@ -36,0 +37,2 @@ class DurationCartoonHead(DentalFVCartoonHead):
++    def shape_control(self,t,plan):
++        return rounding_identity(t,plan)
+@@ -44 +46 @@ class DurationCartoonHead(DentalFVCartoonHead):
+-        return self.weights(identity,self.expression_control(t,plan),shape_weights=rounding_identity(t,plan),geometry_weights=self.jaw_control(t,plan,identity))
++        return self.weights(identity,self.expression_control(t,plan),shape_weights=self.shape_control(t,plan),geometry_weights=self.jaw_control(t,plan,identity))
+diff --git a/evan-engine/rounded_cartoon_head.py b/evan-engine/rounded_cartoon_head.py
+index 77f82aa..cd137a2 100644
+--- a/evan-engine/rounded_cartoon_head.py
++++ b/evan-engine/rounded_cartoon_head.py
+@@ -7 +7 @@ from speech_planner import planned_weights,acoustic_weights
+-def rounding_identity(t,plan):
++def rounding_identity(t,plan,*,contact_weighting=True):
+@@ -10 +10 @@ def rounding_identity(t,plan):
+-    return sum(acoustic_weights(max(0,t+(i-3)/48),plan,plan['fallbackCues'],energy_weighting=False)*v for i,v in enumerate(weights))/sum(weights)
++    return sum(acoustic_weights(max(0,t+(i-3)/48),plan,plan['fallbackCues'],energy_weighting=False,contact_weighting=contact_weighting)*v for i,v in enumerate(weights))/sum(weights)
+@@ -12,0 +13,3 @@ class RoundedCartoonHead(SolidCavityHead):
++    def rounding_strength(self,weights,identity):
++        # Contacts suppress rounding, including silent bilabial closures.
++        return (float(identity[5]+identity[6])/max(float(identity[1:].sum()),1e-9))*float(np.clip(1-weights[1]-weights[7],0,1))
+@@ -18,4 +21 @@ class RoundedCartoonHead(SolidCavityHead):
+-        rounding=float(identity[5]+identity[6])
+-        # Contacts suppress rounding, including silent bilabial closures.
+-        active=float(identity[1:].sum())
+-        strength=(rounding/max(active,1e-9))*float(np.clip(1-weights[1]-weights[7],0,1))
++        strength=self.rounding_strength(weights,identity)
+diff --git a/evan-engine/separated_oral_review.py b/evan-engine/separated_oral_review.py
+index d16c057..6c125c5 100644
+--- a/evan-engine/separated_oral_review.py
++++ b/evan-engine/separated_oral_review.py
+@@ -17,0 +18 @@ from painted_timing import ease
++from rounded_cartoon_head import rounding_identity
+@@ -30,0 +32,5 @@ class MaterialCapture(FaceCapture):
++ def shape_control(self,t,plan):
++  return rounding_identity(t,plan,contact_weighting=False)
++ def rounding_strength(self,weights,identity):
++  # Bilabial seals can retain vowel rounding; F/V still requires its wide contact.
++  return float(np.clip((identity[5]+identity[6])/max(float(identity[1:].sum()),1e-9)*(1-weights[7]),0,1))
+@@ -35 +41 @@ class MaterialCapture(FaceCapture):
+-  self.review_rounding=float(np.clip((identity[5]+identity[6])/max(float(identity[1:].sum()),1e-9)*(1-jaw[1]-jaw[7]),0,1))
++  self.review_rounding=self.rounding_strength(jaw,identity)
+diff --git a/evan-engine/speech_planner.py b/evan-engine/speech_planner.py
+index 3ca9bba..d8b4139 100644
+--- a/evan-engine/speech_planner.py
++++ b/evan-engine/speech_planner.py
+@@ -89 +89 @@ def planned_weights(t,plan,fallback):
+-def acoustic_weights(t,plan,fallback,*,energy_weighting=True):
++def acoustic_weights(t,plan,fallback,*,energy_weighting=True,contact_weighting=True):
+@@ -123,2 +123,3 @@ def acoustic_weights(t,plan,fallback,*,energy_weighting=True):
+-    out*=1-fv*.85;out[7]+=fv*.85
+-    out*=1-contact;out[1]+=contact
++    if contact_weighting:
++        out*=1-fv*.85;out[7]+=fv*.85
++        out*=1-contact;out[1]+=contact
+diff --git a/evan-engine/test_rounded_cartoon_head.py b/evan-engine/test_rounded_cartoon_head.py
+index b152f10..eb22690 100644
+--- a/evan-engine/test_rounded_cartoon_head.py
++++ b/evan-engine/test_rounded_cartoon_head.py
+@@ -37,0 +38,10 @@ class RoundingTests(unittest.TestCase):
++    def test_shape_context_keeps_neighbor_vowel_without_changing_contact_driver(self):
++        p=plan();p['fallbackCues']=[]
++        p['gestures'].append(dict(start=.17,end=.25,phone='P',value='A'))
++        before=copy.deepcopy(p);contact=acoustic_weights(.2,p,[])
++        context=acoustic_weights(.2,p,[],energy_weighting=False,contact_weighting=False)
++        self.assertGreater(contact[1],.99);self.assertGreater(context[6],.2)
++        self.assertAlmostEqual(context.sum(),1);self.assertGreaterEqual(context.min(),0)
++        np.testing.assert_array_equal(acoustic_weights(.2,p,[]),contact);self.assertEqual(p,before)
++        p['silences']=[dict(start=0,end=.8)]
++        np.testing.assert_allclose(acoustic_weights(.2,p,[],contact_weighting=False),np.eye(9)[0],atol=1e-8)
+diff --git a/evan-engine/test_separated_oral.py b/evan-engine/test_separated_oral.py
+index 1da07ea..1b135e1 100644
+--- a/evan-engine/test_separated_oral.py
++++ b/evan-engine/test_separated_oral.py
+@@ -23,0 +24,11 @@ class SeparatedOralTests(unittest.TestCase):
++ def test_rounded_bilabial_seal_stays_closed_without_forced_widening(self):
++  from current_contact_exposure import CurrentContactHead
++  from separated_oral_review import MaterialCapture
++  old=CurrentContactHead();new=MaterialCapture();seal=np.eye(9)[1];rounded=.5*seal+.5*np.eye(9)[6]
++  before=np.array(old.weights(seal,shape_weights=rounded,geometry_weights=seal));after=np.array(new.weights(seal,shape_weights=rounded,geometry_weights=seal))
++  self.assertLess(new.current_oral[0,0]-new.current_oral[8,0],old.current_oral[0,0]-old.current_oral[8,0])
++  self.assertLessEqual(float(new.current_oral[20,1]-new.current_oral[28,1]),.151)
++  np.testing.assert_array_equal(before[:288],after[:288])
++  # Full F/V retains the previous contact geometry even beside a rounded vowel.
++  contact=np.eye(9)[7];old.weights(contact,shape_weights=rounded,geometry_weights=contact);new.weights(contact,shape_weights=rounded,geometry_weights=contact)
++  np.testing.assert_array_equal(new.current_oral,old.current_oral)

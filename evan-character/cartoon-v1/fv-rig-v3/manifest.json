@@ -1,0 +1,122 @@
+{
+  "version": 3,
+  "source": "fv-source-v3/contact-v4.png",
+  "sourceSha256": "187e6e0594c52268f82cc24edaa31086a28467ace1330f7899e642265828d54b",
+  "hiddenSourceSha256": "1e5e02515645389a680f3c5b0b8f8e538bccd4846453122ba67b5c415a85a7b4",
+  "sourceBounds": [
+    484,
+    284,
+    1686,
+    518
+  ],
+  "hiddenBounds": [
+    482,
+    277,
+    1687,
+    516
+  ],
+  "hiddenRegistration": [
+    [
+      0.9975103735923767,
+      0.0,
+      3.200000047683716
+    ],
+    [
+      0.0,
+      0.9790794849395752,
+      12.794979095458984
+    ]
+  ],
+  "matrix": [
+    [
+      0.06322795152664185,
+      0.0,
+      167.39767456054688
+    ],
+    [
+      0.0,
+      0.05982905998826027,
+      300.008544921875
+    ]
+  ],
+  "targetBounds": [
+    198,
+    317,
+    274,
+    331
+  ],
+  "sourceCorners": [
+    [
+      198.1194336745474,
+      320.83950414159705
+    ],
+    [
+      273.8075068487061,
+      320.2626760299007
+    ]
+  ],
+  "registration": "canonical affine fit and alpha-endpoint corner estimates, not anatomical calibration",
+  "alphaSnapThreshold": 250,
+  "supersample": 4,
+  "components": [
+    "lip-contact",
+    "upper-teeth"
+  ],
+  "sourceCompositeMeanPremultipliedDifference255": 0.0012289606966078281,
+  "sourceCompositeLocalMeanPremultipliedDifference255": 0.492606520652771,
+  "animationReady": false,
+  "generationMode": "built-in imagegen",
+  "promptSha256": {
+    "generation.txt": "39efad6575468dd260fee4ff6c732c45be40d0d620b15514f0c41b69ccab0396",
+    "neutral-contact.txt": "cb548094cc203aedd291ae51d084bb8be92889438cc4230f5ccd2d27e6bd00f8",
+    "hidden-base.txt": "292b2ec74dcca7d7e51d39211c976859437c7d872ff8b30dbaab3036fb6371c0",
+    "contact-edit.txt": "263ece1b054c57a8e689f4bc40b4388f7d6973751d97d1cc71376d5d0e38eddc",
+    "upper-lip-edit.txt": "251e29de43b3b7f252f606400f8185b65f45ffe2be44a071654c2529aed94457"
+  },
+  "rawSourceSha256": {
+    "contact-v3.png": "d12d17c4a5a6e863765dcfe5509fd4999c14888ac503fc3fa30c56ff1d76df2f",
+    "contact-v2.png": "35ec46bf0c050e0402938b0a1f9232db86e56cb85d69afcfb27403e769885a4c",
+    "contact-v1.png": "d3f3045db012c82513e68d50ae02d63d9e9c2f8fe6ec7a962e2c119835fddb03",
+    "hidden-base-v1.png": "1e5e02515645389a680f3c5b0b8f8e538bccd4846453122ba67b5c415a85a7b4",
+    "contact-v4.png": "187e6e0594c52268f82cc24edaa31086a28467ace1330f7899e642265828d54b"
+  },
+  "styleReferenceSha256": "961742c26e3b985ed2870aeec7854c0e4deb69a9a433bb4bee78e4d72c30a0d7",
+  "generationGraph": [
+    {
+      "output": "contact-v1.png",
+      "reference": "source/design-sheet-v1.png",
+      "prompt": "generation.txt",
+      "status": "rejected grin"
+    },
+    {
+      "output": "contact-v2.png",
+      "reference": "contact-v1.png",
+      "prompt": "contact-edit.txt",
+      "status": "rejected grin"
+    },
+    {
+      "output": "contact-v3.png",
+      "reference": "source/design-sheet-v1.png",
+      "prompt": "neutral-contact.txt",
+      "status": "rejected upper-lip bulk"
+    },
+    {
+      "output": "contact-v4.png",
+      "reference": "contact-v3.png",
+      "prompt": "upper-lip-edit.txt",
+      "status": "chosen optional source"
+    },
+    {
+      "output": "hidden-base-v1.png",
+      "reference": "contact-v4.png",
+      "prompt": "hidden-base.txt",
+      "status": "hidden underpaint only"
+    }
+  ],
+  "limitations": [
+    "F/V share one pose; no calibrated speaker anatomy",
+    "Peach lower-lip volume and corner creases need artist review",
+    "Two actual contact layers currently share a uniform placement parent",
+    "Generated hidden plate used only beneath extracted teeth; canonical fit is authored"
+  ]
+}

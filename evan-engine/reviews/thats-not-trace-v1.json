@@ -1,0 +1,127 @@
+{
+  "status": "thats-not-acoustic-oral-tongue-trace-reviewed",
+  "traceRange": [
+    5.03,
+    5.9
+  ],
+  "geometrySamples": 418,
+  "samplingHz": 480,
+  "fftWindowSamples": 400,
+  "fftHopSamples": 80,
+  "hypotheses": [
+    5.17,
+    5.64
+  ],
+  "centered20msRmsEvidence": [
+    {
+      "center": 5.17,
+      "sourceSamples": [
+        82560,
+        82880
+      ],
+      "rmsDbFS": -79.70910696269553
+    },
+    {
+      "center": 5.64,
+      "sourceSamples": [
+        90080,
+        90400
+      ],
+      "rmsDbFS": -40.28479517858551
+    }
+  ],
+  "actualInnerLipGapNearOlderAnchor": 0.149993896484375,
+  "actualInnerLipGapNearAcousticBoundary": 5.092193603515625,
+  "actualRasterOralAndTongueMatchesTo1eMinus9": [
+    124,
+    129,
+    135,
+    136
+  ],
+  "actualRasterTongueRecords": {
+    "124": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 0.8527928590774536,
+      "bladeCoverageAfterFloor": 0.43741557002067566,
+      "floorCoverage": 14.068374633789062,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    },
+    "129": {
+      "lift": 0.8729967161581896,
+      "sourceBladeYScale": 0.961022675037384,
+      "bladeCoverageBeforeFloor": 276.11578369140625,
+      "bladeCoverageAfterFloor": 120.60719299316406,
+      "floorCoverage": 575.4337158203125,
+      "validPremultiplied": true,
+      "dentalFraction": 1.0
+    },
+    "135": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 9.281364440917969,
+      "bladeCoverageAfterFloor": 1.7160381078720093,
+      "floorCoverage": 179.1721649169922,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    },
+    "136": {
+      "lift": 0.0,
+      "sourceBladeYScale": 0.11999999731779099,
+      "bladeCoverageBeforeFloor": 13.335659980773926,
+      "bladeCoverageAfterFloor": 1.2053961753845215,
+      "floorCoverage": 314.0030822753906,
+      "validPremultiplied": true,
+      "dentalFraction": 0.0
+    }
+  },
+  "tongueCurvesAreAuthoredControls": true,
+  "dentalCurveIsPartitionNotTongueShape": true,
+  "nativeFacesInspected": [
+    129,
+    135,
+    136
+  ],
+  "normalDecodedSourceFramesInspected": [
+    124,
+    129,
+    135,
+    136
+  ],
+  "slowDecodedVideoFramesInspected": [
+    60,
+    64
+  ],
+  "nativeResolutionTraceHalvesInspected": true,
+  "stageFramesByteExact": 30,
+  "normalDecodedFrames": 30,
+  "slowDecodedFrames": 120,
+  "contextPcmSamples": 20000,
+  "contextPcmRange": [
+    80000,
+    100000
+  ],
+  "contextPcmByteExact": true,
+  "pngHashesVerified": 43,
+  "selectedCurrentFrozenSourcesVerified": 85,
+  "findings": [
+    "The older5.17s anchor falls inside the near-blank pre-utterance stretch, with centered20ms RMS about-79.71dBFS. It is unsupported by this context as the that\u2019s/not transition.",
+    "Near5.64s the spectrum changes from broad high-frequency energy toward periodic energy;25ms windows mix neighboring sounds, so the exact boundary remains unverified.",
+    "Actual oral meshes and tongue-lift/dental-partition controls match four raster samples; the native lip gap is about5.09pixels near5.64s.",
+    "The dental fraction is an authored partition, not a measured tongue shape. Its curve does not establish phonetic accuracy or animation polish."
+  ],
+  "disposition": "retain-acoustic-older-anchor-unsupported-no-retiming",
+  "timingChanged": false,
+  "controlsChanged": false,
+  "artworkChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "listeningVerified": false,
+  "exactBoundariesVerified": false,
+  "realTimePlaybackReviewed": false,
+  "animationAccepted": false,
+  "polishedMilestoneReady": false,
+  "pendingJobs": [],
+  "next": "Trace Region02some\u2192random/M\u2192R near6.08s versus older5.69s, pairing original PCM/spectral evidence with actual bilabial seal/release. No automatic threshold retiming or new art variants."
+}

@@ -1,0 +1,51 @@
+{
+  "sourceFrames": [
+    120,
+    192
+  ],
+  "newGuardedPoses": 53,
+  "unchangedOffcuePoses": 19,
+  "films": {
+    "Baseline": {
+      "decodedFrames": 72,
+      "sha256": "7b4b164397beeaa23dfec98665bc535db366d902d3d84329f0192054e44ad75e"
+    },
+    "Normal": {
+      "decodedFrames": 72,
+      "sha256": "d7f5a2b98651648438846ed756fa9efce859d5010f51574578d255bf239e41bd"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 288,
+      "sha256": "d7558bf71903b826e977cdc701e22fdeb0c235a73a3d139f99c60cbf5df4f982"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 48000,
+    "decodedPcm16Samples": 48000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "exactPcmRange": [
+    80000,
+    128000
+  ],
+  "exactPcmSha256": "79fc2ae81011e42c2cba3097c4b820050331c814a00e4f5532e350bb8a61fa29",
+  "testsPassed": 10,
+  "nativeBelow240Exact": true,
+  "oralJawAuditExact": true,
+  "nonHeadLayersAndNeckExact": true,
+  "officialStageExact": true,
+  "defaultChanged": false,
+  "artworkGenerated": false,
+  "phonemeTimingChanged": false,
+  "timingFlagsOpen": 18,
+  "flagsCleared": 0,
+  "realTimePlaybackAccepted": false,
+  "listeningAccepted": false,
+  "polished": false,
+  "pendingJobs": [],
+  "reviewPath": "outputs/evan-cartoon-brow-accent/Review.html",
+  "limits": "Control asymmetry is stronger; the visible effect is modest at stage scale. Fixed brow silhouettes, small inner-brow/lid/frame edges, fixed gaze and modest body acting remain below the concept sheet.",
+  "next": "One opt-in independent upper-eyelid skeptical narrowing using the existing registered lid planes; preserve the speech, glasses, body and baseline defaults. Short component before any full-film integration."
+}

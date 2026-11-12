@@ -1,0 +1,25 @@
+"""Isolated causal jaw-release candidate; exact current seal/FV, no retiming."""
+import numpy as np
+from separated_oral_review import MaterialCapture
+from rounded_duration_cartoon_head import rounded_duration_jaw_weights
+from painted_timing import ease
+from audit_separated_geometry import GeometryCaptured
+class Candidate(MaterialCapture):
+ def at(self,t,plan):
+  self.release_pairs=[(p,q)for p,q in zip(plan['phonemes'],plan['phonemes'][1:])if p['phone'].rstrip('012')in {'P','B','M'}and q['phone'].rstrip('012')=='AO'and abs(p['end']-q['start'])<1e-6]
+  return super().at(t,plan)
+ def jaw_control(self,t,plan,identity=None):
+  current=super().jaw_control(t,plan,identity)
+  if plan.get('alignment',{}).get('status')!='acoustic':return current
+  strength=max([float(ease((t-q['start'])/.025))*(1-float(ease((t-q['end'])/.06))) for p,q in getattr(self,'release_pairs',[])if q['start']<=t<q['end']+.06]or[0.])
+  if not strength:return current
+  slow=sum(rounded_duration_jaw_weights(max(0,t-i/48),plan)*v for i,v in enumerate([1,2,1]))/4
+  out=current*(1-strength)+slow*strength
+  fv=current[7];seal=min(max(current[1],out[1]),1-fv);budget=max(0.,1-seal-fv);out[[1,7]]=0
+  if out.sum()>1e-12:out*=budget/out.sum()
+  else:out[0]=budget
+  out[1]=seal;out[7]=fv
+  return out
+class GeometryCandidate(Candidate):
+ def skin_target(self,weights,target):
+  super().skin_target(weights,target);raise GeometryCaptured()

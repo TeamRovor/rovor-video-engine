@@ -1,0 +1,90 @@
+{
+  "parts": [
+    {
+      "source": "jaw-flat-v1.png",
+      "sourceSha256": "66f37f016b27ec9066e403ccaa144bd5c89d913ea12c97413d0a67b22ed29e41",
+      "sourceSize": [
+        1584,
+        993
+      ],
+      "window": [
+        128,
+        288,
+        384,
+        448
+      ],
+      "matrix": [
+        [
+          0.16161616146564484,
+          0.0,
+          128.0
+        ],
+        [
+          0.0,
+          0.16112789511680603,
+          288.0
+        ]
+      ],
+      "sourceAlphaModified": false
+    },
+    {
+      "source": "neck-back-v1.png",
+      "sourceSha256": "6e150e27076d1783d40444860f3d1a7579ed596cc7fa2dc5bc1280bceec0b231",
+      "sourceSize": [
+        1284,
+        1225
+      ],
+      "window": [
+        176,
+        320,
+        352,
+        488
+      ],
+      "matrix": [
+        [
+          0.1370716542005539,
+          0.0,
+          176.0
+        ],
+        [
+          0.0,
+          0.1371428519487381,
+          320.0
+        ]
+      ],
+      "sourceAlphaModified": false
+    }
+  ],
+  "registration": "fixed canvas normalization, no fit to alpha or source cleanup",
+  "animationReady": false,
+  "jawEdgeDiagnostic": [
+    {
+      "anchor": "left lip",
+      "x": 194,
+      "targetY": 325,
+      "actualY": 324,
+      "residualY": -1
+    },
+    {
+      "anchor": "lip center",
+      "x": 228,
+      "targetY": 329,
+      "actualY": 330,
+      "residualY": 1
+    },
+    {
+      "anchor": "right lip",
+      "x": 263,
+      "targetY": 325,
+      "actualY": 328,
+      "residualY": 3
+    },
+    {
+      "anchor": "chin",
+      "x": 220,
+      "targetY": 394,
+      "actualY": 399,
+      "residualY": 5
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "Built-in image_gen",
+  "skill": "/Users/amarhavic/.codex/skills/.system/imagegen/SKILL.md",
+  "generatedOriginal": "/Users/amarhavic/.codex/generated_images/01a14714-1eef-7362-bf18-f2721939893a/exec-40c81d46-a812-4528-87bf-fd8cbd38fae8.png",
+  "sourceReference": "evan-character/cartoon-v1/grin-construction-v1/source/grin-v1.png",
+  "referenceSha256": "8bf2044bfbf70b918f39d397bffd9fb3cfd1ed3d4aa8a0a2e526a3c4af926acc",
+  "outputSha256": "babbd4466734dcecdcdd73019ad6a8172c6c33c5cb82774c71d69524ccd1e49f",
+  "promptSha256": "55c7ff562dd1d3d02af6bcc85fa89e3196082c1cc49db1f2fbec0ca843c2b6d7",
+  "size": [
+    1672,
+    941
+  ],
+  "alphaRange": [
+    255,
+    255
+  ],
+  "fullResolutionInspected": true,
+  "opaqueSourcePlate": true,
+  "registeredWorkingComponent": false,
+  "backgroundRemoved": false,
+  "sourceAlphaThresholded": false,
+  "runtimeChanged": false,
+  "observedLimits": [
+    "Gray background has slight tonal variation despite flat-background request.",
+    "Black border and source tooth slope must be reconciled with lip ownership and current grin anchors."
+  ]
+}

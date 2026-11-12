@@ -1,0 +1,37 @@
+{
+  "tool": "image_gen.imagegen",
+  "skill": "/Users/amarhavic/.codex/skills/.system/imagegen/SKILL.md",
+  "mode": "edit",
+  "transparentBackground": false,
+  "promptFile": "Prompt.txt",
+  "inputs": [
+    {
+      "role": "tight edit target",
+      "path": "evan-character/cartoon-v1/temple-hair-v1/source/Edit-Target.png",
+      "sha256": "bbcd1f0c0be2d5460b22e5e360d2b70fd8e83a6dc6e94e8b7b38d71e849d990c",
+      "originalCrop": [
+        310,
+        220,
+        374,
+        296
+      ],
+      "upsample": 8
+    },
+    {
+      "role": "context only",
+      "path": "evan-character/cartoon-v1/expression-rig/browless-head.png",
+      "sha256": "10349164bd57dce24ac22721b16b2ca3b88523b634df6f9ed632297ccd390e78"
+    }
+  ],
+  "output": {
+    "path": "temple-hidden-v1.png",
+    "sha256": "d19c3a4bded57a941b90854fd49556f4e89f0ed589fbf8adf6770d3c9ea44e31",
+    "size": [
+      1151,
+      1367
+    ],
+    "rawBytesUnmodified": true,
+    "registered": false
+  },
+  "workingDerivative": "eye-underlay-v3: authored crop registration with bounded repair mask; source plate is not a rig"
+}

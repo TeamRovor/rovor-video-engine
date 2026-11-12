@@ -1,0 +1,77 @@
+{
+  "status": "source-ownership-traced-opt-in-alpha-trim-pilots-reviewed",
+  "sourceFrame": 374,
+  "sourceTime": 15.583333333333334,
+  "rootCause": "The head split starts its neck ownership at native x214, leaving an original thin neck edge in x208..213 dangling below the jaw over the registered extended neck. The torso collar is separate and remains untouched.",
+  "correction": "Optional trim_left_stub extends only the HEAD alpha cut six pixels left; neck mask, RGB, oral/jaw targets and source artwork are unchanged. Body flag trim_left_neck_stub defaults false.",
+  "pilots": [
+    {
+      "frame": 353,
+      "baselineStageExact": true,
+      "unchangedNeckTorsoArms": true,
+      "nativeOralJawAuditExact": true,
+      "changedStagePixels": 23
+    },
+    {
+      "frame": 374,
+      "baselineStageExact": true,
+      "unchangedNeckTorsoArms": true,
+      "nativeOralJawAuditExact": true,
+      "changedStagePixels": 38
+    },
+    {
+      "frame": 396,
+      "baselineStageExact": true,
+      "unchangedNeckTorsoArms": true,
+      "nativeOralJawAuditExact": true,
+      "changedStagePixels": 32
+    }
+  ],
+  "nativeOwnershipSheetsInspected": [
+    "baseline-ownership.png",
+    "held-ownership.png",
+    "Source-Head-Detail.png"
+  ],
+  "candidateJoinPairsInspected": [
+    353,
+    374,
+    396
+  ],
+  "deliveryCandidateFrameInspected": 374,
+  "testsPassed": 10,
+  "newTests": 1,
+  "defaultStageCalibrationsExact": [
+    353,
+    374,
+    396
+  ],
+  "sourceHashes": {
+    "work/collar-ownership-review/trace.py": "861d300947878432676f4bc1a27cf69995864d5b99e4c022b0ad2a02f0514fd4",
+    "work/collar-ownership-review/candidate.py": "f230936a12570738a8320a2d80db6c061a4e806114f6c12137baa7b6a9c26871",
+    "work/payoff-lean-review/pilot.py": "8d3c33d7096c6549d2729e22d1914b050a436c92d13843ce7f5b42835ad6c761",
+    "work/engine/evan-engine/cartoon_neck.py": "12293a9f8f710aba7315a23cf2503d54742ffc0090440e3568a71786dbf0b852",
+    "work/engine/evan-engine/cartoon_gesture_body.py": "02e38ed8275c51c2f6be6b65a7744054bdaa146a04ae5bc650c2d154cd453083",
+    "work/engine/evan-engine/test_cartoon_neck.py": "8e8ba963f89887114f90811751dda759e9040914a0e1a2bfa44beff39f3aa5f8",
+    "work/engine/evan-engine/payoff_cartoon_review.py": "b2b612d369da7b4a957657ba12714182a1d65568b1570a20f1d1ae96452b3c7b",
+    "work/engine/evan-engine/finished_cartoon_scene.py": "0c4fba9e9553f0fca66dae6c66f9b4a34697b0cad8779b1bbcb1034afbc80652",
+    "work/engine/evan-engine/separated_oral_review.py": "02ad47beba8bc49ac5a6320e6141bd8a02c96b7e54d5ba52398787f7617fefd8",
+    "outputs/evan-speech-alignment/Aligned-Speech-Plan.json": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+    "work/engine/evan-character/cartoon-v1/neck-art-rig/neck.png": "3b9519a0592098439a123fc88b249d0b23414cdf673d5b751bbe67915e243552",
+    "work/engine/evan-character/cartoon-v1/neck-art-rig/torso.png": "7fc8530453c6811d20912dbaea091612151e888cf09a1c36f4b137dcb26b8a39"
+  },
+  "fullFilmUpdated": false,
+  "normalSlowCorrectionShotReady": false,
+  "newArtwork": false,
+  "phonemeTimingChanged": false,
+  "flagsCleared": 0,
+  "pendingJobs": false,
+  "mohoProbed": false,
+  "merged": false,
+  "deployed": false,
+  "polishedMilestoneReady": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "visualAssessment": "Dangling lower ink tail is reduced; upper collar/jaw contour still exists. No broad neck opening observed in three pilot pairs. Tiny delivery-scale difference is not a polished-animation milestone.",
+  "nextConcreteWork": "Render a2s15\u201317s correction component through the actual separated face with trim_left_neck_stub=True and payoff_controls, source360..407. Require48/192decode, all native collar/jaw before-after pairs, exact PCM240000:272000 and nativeoraljaw/necktorsolayer preservation. The correction is opt-in for all speech, so later full-film integration must evaluate all532speech frames rather than copying only the payoff60; preserve20closing frames and all18timing flags.",
+  "sourceArtworkModified": false
+}

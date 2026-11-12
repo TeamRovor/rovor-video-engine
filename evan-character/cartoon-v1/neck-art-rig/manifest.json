@@ -1,0 +1,57 @@
+{
+  "animationReady": false,
+  "sourceSha256": "0e4e52fb6c854078c9ec303489378d7ca8df54a55dc376b0ea6e00aeb8e46d87",
+  "registration": {
+    "ecc": 0.9928889923975601,
+    "matrix": [
+      [
+        1.0013184547424316,
+        -0.0006668669520877302,
+        -0.1998942643404007
+      ],
+      [
+        0.0001619508839212358,
+        0.9979543685913086,
+        0.4852289855480194
+      ]
+    ]
+  },
+  "generatedFaceUsed": false,
+  "limitations": [
+    "2D head tilt only; no perspective turn",
+    "Collar and jaw overlap require assembled visual review"
+  ],
+  "collar": {
+    "sourceSha256": "b582dcff5a49d40056da3921a22b1278b4b35638db3b94ec4131a88dbf8a6da3",
+    "ecc": 0.9979112522785955,
+    "matrix": [
+      [
+        0.9996684193611145,
+        0.005411252845078707,
+        -0.6537061929702759
+      ],
+      [
+        8.471099863527343e-05,
+        0.996894359588623,
+        0.37238994240760803
+      ]
+    ],
+    "crop": [
+      350,
+      260,
+      650,
+      440
+    ],
+    "patchBounds": [
+      430,
+      280,
+      590,
+      400
+    ]
+  },
+  "spread": 0.25,
+  "targetHashes": {
+    "head-rig-v2/head-X.png": "9c3c1cb2be27dfce5a77bd16c7c110c73d97d27f4e36adbfa525cb4427a605ae",
+    "socket-rig/torso.png": "eb929f5dacd22cd86edd02e1aa9c5499ca1bd03296f814e4a59fb0cd4eb64848"
+  }
+}

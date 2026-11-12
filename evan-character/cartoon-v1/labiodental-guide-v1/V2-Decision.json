@@ -1,0 +1,22 @@
+{
+  "sourceSha256": "13564cbada2c7ece2138bcee34c38bd06dc23fcb2c61d49f0969dd8699fc3280",
+  "sameCanvasMatrixAsV1": [
+    [
+      0.11143694818019867,
+      0.0007331848028115928,
+      136.79322814941406
+    ],
+    [
+      -0.0007331378292292356,
+      0.11143646389245987,
+      266.3506774902344
+    ]
+  ],
+  "outsideUpperLipEnvelopeAlphaPixels": 0,
+  "outsideAlphaMaximum": 0,
+  "runtimeLoaded": false,
+  "animationReady": false,
+  "decision": "V2 softens the philtrum shadow modestly; corner hooks remain too prominent. Retain as the preferred registered candidate only, not accepted anatomy. Native 8-bit projection has zero out-of-envelope alpha; no import failure is claimed.",
+  "retainedCandidate": "Upper-Lip-Candidate-v2.png",
+  "sourceAlphaModified": false
+}

@@ -1,0 +1,49 @@
+{
+  "coordinateNote": "Native512 head geometry, not measured optical flow or anatomical limits",
+  "events": [
+    {
+      "control": "width",
+      "maximumNativeStep": 13.218551635742188,
+      "frames": [
+        724,
+        725
+      ],
+      "times": [
+        15.083333333333334,
+        15.104166666666666
+      ],
+      "accepted": false,
+      "word": "super",
+      "assignedPhone": "UW",
+      "phoneInterval": [
+        15,
+        15.12
+      ]
+    },
+    {
+      "control": "lowerY",
+      "maximumNativeStep": 12.113677978515625,
+      "frames": [
+        887,
+        888
+      ],
+      "times": [
+        18.479166666666668,
+        18.5
+      ],
+      "accepted": false,
+      "word": "more",
+      "assignedPhone": "AO",
+      "phoneInterval": [
+        18.47,
+        18.53
+      ]
+    }
+  ],
+  "automaticRetimingApplied": false,
+  "visualAcceptance": false,
+  "next": "Trace continuous rounding/contact driver around these source frame pairs; protect consonant closures and original audio timing.",
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "audioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "interpretation": "Both occur within an annotated vowel, but anticipatory neighboring contacts may contribute. Not proof of wrong alignment or a reason to suppress consonant closures."
+}

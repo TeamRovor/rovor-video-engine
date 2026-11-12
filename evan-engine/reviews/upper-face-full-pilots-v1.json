@@ -1,0 +1,40 @@
+{
+  "status": "full-shot-integration-pilots-pass-full-export-pending",
+  "sourceFrames": [
+    0,
+    69,
+    158,
+    269,
+    374,
+    531
+  ],
+  "baselineStageExactToCurrentFull": true,
+  "digitFlexRetainedAt269": true,
+  "blink158ExactReviewedComponent": true,
+  "nativeSpeechOralJawAuditExact": true,
+  "allNonHeadLayersExact": true,
+  "officialStageExact": true,
+  "protectedClosingByteExact": 20,
+  "imagesHashed": 50,
+  "stageSamplesInspected": [
+    0,
+    69,
+    158,
+    269,
+    374,
+    531,
+    532
+  ],
+  "motionReviewed": false,
+  "fullFilmUpdated": false,
+  "defaultChanged": false,
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "animationAccepted": false,
+  "observations": [
+    "Opening, gesture, blink, definition/finger-flex, payoff and final speaking pose reproduce existing full stage before the new upper face is applied.",
+    "The existing20-frame waist/thumbs-up closing remains byte-exact. Frame531/532 remains an intentional camera cut; motion across it still needs full-film review.",
+    "Known forehead/temple/lid defects and limited gaze/expression variety remain; static pilots are not a polished performance."
+  ],
+  "next": "Run the separate full upper-face candidate exporter:532 speaking frames use the same foundation, with reviewed72-frame component and5pilot reuse, plus20protected closing copies. Then verify full PCM/18 markers and inspect normal/slow full-context motion."
+}

@@ -1,0 +1,145 @@
+{
+  "sourceSha256": "d2193d0986a07f7f4540e3ed603fe99c82ee44e6da91df0bb6faa16dbe9e901f",
+  "sourceSize": [
+    1584,
+    993
+  ],
+  "window": [
+    128,
+    288,
+    384,
+    448
+  ],
+  "matrix": [
+    [
+      0.16161616146564484,
+      0.0,
+      128.0
+    ],
+    [
+      0.0,
+      0.16112789511680603,
+      288.0
+    ]
+  ],
+  "method": "Same fixed-canvas normalization as existing jaw; no geometric fit or source-alpha cleanup",
+  "sourceAlphaModified": false,
+  "workingRigComponent": false,
+  "animationReady": false,
+  "sourceCorrespondence": {
+    "knots": [
+      {
+        "x": 164.0,
+        "guideY": 315.0,
+        "paintedHalfAlphaY": 311.29833984375,
+        "sourceResidualY": -3.70166015625
+      },
+      {
+        "x": 181.0,
+        "guideY": 320.0,
+        "paintedHalfAlphaY": 318.12994384765625,
+        "sourceResidualY": -1.87005615234375
+      },
+      {
+        "x": 194.0,
+        "guideY": 325.0,
+        "paintedHalfAlphaY": 322.5964050292969,
+        "sourceResidualY": -2.403594970703125
+      },
+      {
+        "x": 211.0,
+        "guideY": 327.0,
+        "paintedHalfAlphaY": 326.5212707519531,
+        "sourceResidualY": -0.478729248046875
+      },
+      {
+        "x": 228.5,
+        "guideY": 328.5,
+        "paintedHalfAlphaY": 328.29376220703125,
+        "sourceResidualY": -0.20623779296875
+      },
+      {
+        "x": 246.0,
+        "guideY": 327.0,
+        "paintedHalfAlphaY": 328.4982604980469,
+        "sourceResidualY": 1.498260498046875
+      },
+      {
+        "x": 263.0,
+        "guideY": 325.0,
+        "paintedHalfAlphaY": 327.5376892089844,
+        "sourceResidualY": 2.537689208984375
+      },
+      {
+        "x": 278.0,
+        "guideY": 323.28570556640625,
+        "paintedHalfAlphaY": 325.5810852050781,
+        "sourceResidualY": 2.295379638671875
+      },
+      {
+        "x": 298.0,
+        "guideY": 321.0,
+        "paintedHalfAlphaY": 322.43218994140625,
+        "sourceResidualY": 1.43218994140625
+      },
+      {
+        "x": 329.0,
+        "guideY": 320.0,
+        "paintedHalfAlphaY": 318.0641174316406,
+        "sourceResidualY": -1.935882568359375
+      }
+    ],
+    "minimumSourceTriangleArea2": 45.5,
+    "sourcePixelsModified": false,
+    "sourceAlphaModified": false,
+    "targetGeometryChanged": false,
+    "chinArtCorrected": false
+  },
+  "frames": [
+    {
+      "frame": 851,
+      "minimumTriangleArea2": 51.86051940917969,
+      "fv": 0.991209082378506,
+      "lipCenter": [
+        235.01461791992188,
+        323.4890441894531
+      ],
+      "chinY": 393.00433349609375,
+      "noseMaximumRGBAChange": 0,
+      "upper288RowsExact": true,
+      "oralBelow240": 0,
+      "continuousFVFallbacks": 0,
+      "maximumBottom400Difference": 254
+    },
+    {
+      "frame": 855,
+      "minimumTriangleArea2": 51.131744384765625,
+      "fv": 0.23503641329084363,
+      "lipCenter": [
+        235.8248291015625,
+        333.5448303222656
+      ],
+      "chinY": 393.35528564453125,
+      "noseMaximumRGBAChange": 0,
+      "upper288RowsExact": true,
+      "oralBelow240": 0,
+      "continuousFVFallbacks": 0,
+      "maximumBottom400Difference": 254
+    },
+    {
+      "frame": 892,
+      "minimumTriangleArea2": 51.86212158203125,
+      "fv": 0.9829749977063229,
+      "lipCenter": [
+        234.9726104736328,
+        323.74688720703125
+      ],
+      "chinY": 393.4646301269531,
+      "noseMaximumRGBAChange": 0,
+      "upper288RowsExact": true,
+      "oralBelow240": 0,
+      "continuousFVFallbacks": 0,
+      "maximumBottom400Difference": 254
+    }
+  ]
+}

@@ -1,0 +1,434 @@
+{
+  "status": "all18-acoustic-and-actual-control-regions-reviewed",
+  "sourceAudioSha256": "28487eb9c730c3d6a9613a4d419d8d590aa3a72c7816de7fb9183d9a7e552f96",
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "referenceReviewSha256": "7f62deb0d0ace68056807014f26d32a90b71a36cdaae5533d8088d7773dfce27",
+  "flaggedWords": 18,
+  "traceCases": 10,
+  "totalOverlappingGeometrySamples": 5377,
+  "pngHashesVerified": 484,
+  "historicalFrozenSourceEntriesVerified": 997,
+  "currentFilesOfHistoricalManifestsRequiredToMatch": false,
+  "rows": [
+    {
+      "scriptIndex": 8,
+      "word": "tiny",
+      "acoustic": [
+        2.1,
+        2.65
+      ],
+      "olderAnchor": [
+        2.14,
+        2.36
+      ],
+      "region": "Region-01.png",
+      "case": "tiny-little",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 9,
+      "word": "little",
+      "acoustic": [
+        2.65,
+        2.92
+      ],
+      "olderAnchor": [
+        2.36,
+        2.73
+      ],
+      "region": "Region-01.png",
+      "case": "tiny-little",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 18,
+      "word": "that's",
+      "acoustic": [
+        5.36,
+        5.64
+      ],
+      "olderAnchor": [
+        4.72,
+        5.17
+      ],
+      "region": "Region-02.png",
+      "case": "thats-not",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 19,
+      "word": "not",
+      "acoustic": [
+        5.64,
+        5.82
+      ],
+      "olderAnchor": [
+        5.17,
+        5.38
+      ],
+      "region": "Region-02.png",
+      "case": "thats-not",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 20,
+      "word": "some",
+      "acoustic": [
+        5.82,
+        6.08
+      ],
+      "olderAnchor": [
+        5.38,
+        5.69
+      ],
+      "region": "Region-02.png",
+      "case": "some-random",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 21,
+      "word": "random",
+      "acoustic": [
+        6.08,
+        6.39
+      ],
+      "olderAnchor": [
+        5.69,
+        6.13
+      ],
+      "region": "Region-02.png",
+      "case": "some-random",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 22,
+      "word": "browser",
+      "acoustic": [
+        6.39,
+        6.75
+      ],
+      "olderAnchor": [
+        6.13,
+        6.66
+      ],
+      "region": "Region-02.png",
+      "case": "browser-thing",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 30,
+      "word": "it's",
+      "acoustic": [
+        10.19,
+        10.31
+      ],
+      "olderAnchor": [
+        9.04,
+        9.42
+      ],
+      "region": "Region-03.png",
+      "case": "its-basically",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 31,
+      "word": "basically",
+      "acoustic": [
+        10.31,
+        10.84
+      ],
+      "olderAnchor": [
+        9.42,
+        10.23
+      ],
+      "region": "Region-03.png",
+      "case": "its-basically",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 32,
+      "word": "a",
+      "acoustic": [
+        10.84,
+        10.93
+      ],
+      "olderAnchor": [
+        10.23,
+        10.32
+      ],
+      "region": "Region-03.png",
+      "case": "a-tiny",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 33,
+      "word": "tiny",
+      "acoustic": [
+        10.93,
+        11.41
+      ],
+      "olderAnchor": [
+        10.32,
+        10.69
+      ],
+      "region": "Region-03.png",
+      "case": "a-tiny",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 34,
+      "word": "version",
+      "acoustic": [
+        11.41,
+        11.75
+      ],
+      "olderAnchor": [
+        10.69,
+        11.36
+      ],
+      "region": "Region-03.png",
+      "case": "version-of-your",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 35,
+      "word": "of",
+      "acoustic": [
+        11.75,
+        11.85
+      ],
+      "olderAnchor": [
+        11.36,
+        11.52
+      ],
+      "region": "Region-03.png",
+      "case": "version-of-your",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 36,
+      "word": "your",
+      "acoustic": [
+        11.85,
+        11.97
+      ],
+      "olderAnchor": [
+        11.52,
+        11.89
+      ],
+      "region": "Region-03.png",
+      "case": "version-of-your",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 41,
+      "word": "browser",
+      "acoustic": [
+        13.6,
+        13.95
+      ],
+      "olderAnchor": [
+        13.5,
+        14.42
+      ],
+      "region": "Region-04.png",
+      "case": "browser-tabs",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 42,
+      "word": "tabs",
+      "acoustic": [
+        13.95,
+        14.42
+      ],
+      "olderAnchor": [
+        14.42,
+        14.8
+      ],
+      "region": "Region-04.png",
+      "case": "browser-tabs",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 55,
+      "word": "finished",
+      "acoustic": [
+        18.57,
+        19.11
+      ],
+      "olderAnchor": [
+        18.6,
+        19.44
+      ],
+      "region": "Region-05.png",
+      "case": "finished",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    },
+    {
+      "scriptIndex": 65,
+      "word": "digital",
+      "acoustic": [
+        21.32,
+        21.76
+      ],
+      "olderAnchor": [
+        21.65,
+        22.4
+      ],
+      "region": "Region-06.png",
+      "case": "digital",
+      "status": "evidence-reviewed-exact-boundaries-unverified"
+    }
+  ],
+  "evidence": [
+    {
+      "case": "tiny-little",
+      "scriptIndices": [
+        8,
+        9
+      ],
+      "tracePath": "outputs/evan-cartoon-tiny-little-trace/Trace.json",
+      "traceSha256": "83145ed3dd25eb084b2a0c2e1f013a947e4f25281ab50433a2364329ca140333",
+      "reviewPath": "outputs/evan-cartoon-tiny-little-trace/Review-Evidence.json",
+      "reviewSha256": "f179df1f60325d47829855645a732452fc062d260253e7c8e5f4aac91f189221",
+      "frozenManifestSha256": "ff7c61865a780887757a2226be00a837940e31a9513b3c0c4dd7c895da718ca3",
+      "geometrySamples": 259,
+      "historicalFrozenSourcesVerified": true
+    },
+    {
+      "case": "thats-not",
+      "scriptIndices": [
+        18,
+        19
+      ],
+      "tracePath": "outputs/evan-cartoon-thats-not-trace/Trace.json",
+      "traceSha256": "b4f6110724bf4b9c94729d40d43de4c924e6861ba1761d0a5746ee9cc7a8528e",
+      "reviewPath": "outputs/evan-cartoon-thats-not-trace/Review-Evidence.json",
+      "reviewSha256": "97dbb12b4828aac8140afbd5cc94980fd2da81b9f3ceeb3032db43dd590dfbf5",
+      "frozenManifestSha256": "4ab3786c6a35ee93e2f0cc8dfbb3cda2ea85a9b6ab98312c8e9b9d61a9e7258a",
+      "geometrySamples": 418,
+      "historicalFrozenSourcesVerified": true
+    },
+    {
+      "case": "some-random",
+      "scriptIndices": [
+        20,
+        21
+      ],
+      "tracePath": "outputs/evan-cartoon-some-random-trace/Trace.json",
+      "traceSha256": "1675a769139d3b6afd943be7e5d2e46ad2d6895344f63509823fcde60d6e94b4",
+      "reviewPath": "outputs/evan-cartoon-some-random-trace/Review-Evidence.json",
+      "reviewSha256": "565fcd1f43e549eb9c5bb19b718f7fd2718558bd5b4891ebe5c0b85862174ce9",
+      "frozenManifestSha256": "47a2289a4f16de1b17f7896ea9b211eaff884fd12f4b469d7f0820e7ede2a98f",
+      "geometrySamples": 327,
+      "historicalFrozenSourcesVerified": true
+    },
+    {
+      "case": "browser-thing",
+      "scriptIndices": [
+        22
+      ],
+      "tracePath": "outputs/evan-cartoon-browser-thing-trace/Trace.json",
+      "traceSha256": "74ec7777bc727ff7e850ceb689258b317db61652c5160d06a8fc9c5590c430f8",
+      "reviewPath": "outputs/evan-cartoon-browser-thing-trace/Review-Evidence.json",
+      "reviewSha256": "ed8f0d592cb61ce1caca48689bf77e33a537c6c2aa03ed989b4c94dd394728e1",
+      "frozenManifestSha256": "8fe54b9beac4bd6dbca5917d9b9da25cfc9a3744d8580d320e60bb878729f667",
+      "geometrySamples": 481,
+      "historicalFrozenSourcesVerified": true
+    },
+    {
+      "case": "its-basically",
+      "scriptIndices": [
+        30,
+        31
+      ],
+      "tracePath": "outputs/evan-cartoon-its-basically-trace/Trace.json",
+      "traceSha256": "7ad1023569024359211d96a88dc6634f18ab5534c195f29c3738fb34ef212d6e",
+      "reviewPath": "outputs/evan-cartoon-its-basically-trace/Review-Evidence.json",
+      "reviewSha256": "52d7426843dae8b33572a6f9cf280c681c23d7588737c8a11bfc17ae6e8a358d",
+      "frozenManifestSha256": "9758e21ead4767ef787fca2638582fb34b353ea59ccdf6c92a865c6da8cf4f5a",
+      "geometrySamples": 889,
+      "historicalFrozenSourcesVerified": true
+    },
+    {
+      "case": "a-tiny",
+      "scriptIndices": [
+        32,
+        33
+      ],
+      "tracePath": "outputs/evan-cartoon-a-tiny-trace/Trace.json",
+      "traceSha256": "87c3d7ad9be5aeae7048db60f6813cf4245faf13f95f7a063c922b456d073460",
+      "reviewPath": "outputs/evan-cartoon-a-tiny-trace/Review-Evidence.json",
+      "reviewSha256": "3449c52adf8d43e0313aac27b24135771258bb341a5f9ac83d7dd63324aaf0df",
+      "frozenManifestSha256": "70b932a91b9833ee6dde5060251797128392ef95517b188780e0e8f075508685",
+      "geometrySamples": 601,
+      "historicalFrozenSourcesVerified": true
+    },
+    {
+      "case": "version-of-your",
+      "scriptIndices": [
+        34,
+        35,
+        36
+      ],
+      "tracePath": "outputs/evan-cartoon-version-of-your-trace/Trace.json",
+      "traceSha256": "f2c341062e841e557bbccd12a0cc09f4549a03ba720e7b34143ad7acf8cd2ed4",
+      "reviewPath": "outputs/evan-cartoon-version-of-your-trace/Review-Evidence.json",
+      "reviewSha256": "1621f018142ba759f84479e0ba8c8425cebbefdd74ef8a1a084686cbb91d69c1",
+      "frozenManifestSha256": "b878f04715f171826bd481ba5846feaf09b834087dd1abd6791843894745704e",
+      "geometrySamples": 697,
+      "historicalFrozenSourcesVerified": true
+    },
+    {
+      "case": "browser-tabs",
+      "scriptIndices": [
+        41,
+        42
+      ],
+      "tracePath": "outputs/evan-cartoon-browser-tabs-trace/Trace.json",
+      "traceSha256": "247276bc44dc3bd5e40b236dfdce6b4af4035047e90cf5deee1351dac60e0bfa",
+      "reviewPath": "outputs/evan-cartoon-browser-tabs-trace/Review-Evidence.json",
+      "reviewSha256": "c91195efe71c644f8e556dcf5add0897461f7673310227d5a6e23a750ad099d3",
+      "frozenManifestSha256": "01f0cb4aa26b61518e891ffadf1de841e0da88041abcb6c559d47e29ea585f1d",
+      "geometrySamples": 697,
+      "historicalFrozenSourcesVerified": true
+    },
+    {
+      "case": "finished",
+      "scriptIndices": [
+        55
+      ],
+      "tracePath": "outputs/evan-cartoon-finished-trace/Trace.json",
+      "traceSha256": "324e4f044901a5d55df844810446b5ee20ddac47d9f0e6f45ecc5ed0b12a71d1",
+      "reviewPath": "outputs/evan-cartoon-finished-trace/Review-Evidence.json",
+      "reviewSha256": "d2120042eaa92823a2d828ab3bfe2ae8e1353a097da1093aa67817ca01bbbabc",
+      "frozenManifestSha256": "c4abac024033ef3364145445ca7a425bcceeeebbbfa03164761a079fc09f53ed",
+      "geometrySamples": 553,
+      "historicalFrozenSourcesVerified": true
+    },
+    {
+      "case": "digital",
+      "scriptIndices": [
+        65
+      ],
+      "tracePath": "outputs/evan-cartoon-digital-trace/Trace.json",
+      "traceSha256": "4480f41de0957a5d59c85734fa469492f147fabf0eaa32f862d84d5dec87598d",
+      "reviewPath": "outputs/evan-cartoon-digital-trace/Review-Evidence.json",
+      "reviewSha256": "5768de2072e85d5ff1b84e14f7b18d3ac6e99a397b27dad6826906c5cb222463",
+      "frozenManifestSha256": "065204bccc1af7100ed472fa204ac0d1df8e1a84094dd6b3ce12dfe673a5eefe",
+      "geometrySamples": 455,
+      "historicalFrozenSourcesVerified": true
+    }
+  ],
+  "flagsCleared": 0,
+  "flagsUnresolved": 18,
+  "timingChanged": false,
+  "independentListening": false,
+  "exactBoundariesVerified": false,
+  "realTimePlaybackAccepted": false,
+  "polished": false,
+  "digitalContextOriginalPcmSamples": 16758,
+  "digitalContextAddedSilentSamples": 3242,
+  "next": "One opt-in SH silhouette/articulation improvement on existing registered planes, using finished18.88\u201319.01; preserve timing/contact controls, current full/defaults, native projects and all flags."
+}

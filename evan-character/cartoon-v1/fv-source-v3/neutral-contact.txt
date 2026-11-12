@@ -1,0 +1,6 @@
+Use case: stylized-concept
+Asset type: ONE isolated labiodental F/V articulation mouth for a 2D cartoon rig.
+Reference image: STYLE ONLY. Output only the mouth component, no character sheet or face.
+Show a NEUTRAL UNSMILING mouth making the F sound. The two short upper front INCISORS point downward and press into the raised, inward-rolled lower lip at the centre. Show only those central two ivory tooth tips, occupying about one third of mouth width; the rest of the mouth is closed lips and small dark corner creases. The lower lip visibly curls UP and IN beneath the incisors, partly covering their lower edge. Mouth corners nearly level with a subtle three-quarter tilt. It must read a gentle labiodental bite, not a broad smile, clenched row of teeth or grin. No long horizontal white tooth strip. No tongue or lower teeth.
+Clean appealing male cartoon ink matching the reference, small restrained warm peach lip roll, simple cel colours, no fleshy modeling or glossy effects. Slightly asymmetric natural drawn shape, soft corner creases, no pointed wedges. Broad shallow compact proportions about 4:1.
+One large mouth centred with ample true transparent padding; no surrounding face skin, head, jaw, labels, text, extra objects or other mouths. This is source art for later layer separation and registration.

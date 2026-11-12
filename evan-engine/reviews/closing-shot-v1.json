@@ -1,0 +1,80 @@
+{
+  "audio": {
+    "Before": {
+      "sourcePcm16Samples": 64000,
+      "decodedPcm16Samples": 64000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": ""
+    },
+    "After": {
+      "sourcePcm16Samples": 64000,
+      "decodedPcm16Samples": 64000,
+      "rate": 16000,
+      "codec": "AAC",
+      "decodeErrors": ""
+    }
+  },
+  "sourceSampleRange": [
+    304000,
+    352758
+  ],
+  "originalPcmSamples": 48758,
+  "zeroPadSamples": 15242,
+  "sourcePcmPrefixExact": true,
+  "beforeCutCopiedFramesExact": 151,
+  "baselineFreshlyMatched": 48,
+  "films": {
+    "Before-Normal.mp4": {
+      "decodedFrames": 192,
+      "sha256": "c393dc951f04f69ac7646d2380b6e6b1fed650a3ac37e5978cda481e56bc9555"
+    },
+    "Before-Quarter-Speed.mp4": {
+      "decodedFrames": 768,
+      "sha256": "48d71427aa7507e3380d27f7ac87e7c21c1e114616ce3b7cfbfd7124ab47c25a"
+    },
+    "After-Normal.mp4": {
+      "decodedFrames": 192,
+      "sha256": "37502cd278e1da0e77b1227ea02021542cb27d36caeb688bcb53297797f92379"
+    },
+    "After-Quarter-Speed.mp4": {
+      "decodedFrames": 768,
+      "sha256": "686ce1fd44a2179e31cfbc337369a0ecdb13bca7e88cd7ad3beb3f75edb91fa3"
+    }
+  },
+  "cutFrame": 1063,
+  "cutTime": 22.145833333333332,
+  "sourceAudioEnd": 22.047375,
+  "guardEnd": 22.127374999999997,
+  "nativeFaceExact": 48,
+  "brandExact": 48,
+  "minimumHandArea2": 3.0251690948911003,
+  "planSha256": "af01ebd2e5f3bfeb5a46db2912321eab81d44c984b0999e3d36d11f1a77fcf7e",
+  "defaultChanged": false,
+  "fullStageAccepted": false,
+  "polishedMilestoneReady": false,
+  "scope": "Closing-shot integration review: registered forearm plus existing separated grin/brow",
+  "runtimeParent": "bcf01364ff14d2d2de10a0708fb8a214d535c785",
+  "focusedTestsPassed": 17,
+  "cropSequenceFramesInspected": 41,
+  "nativeHandPilotFramesInspected": [
+    1063,
+    1080,
+    1103
+  ],
+  "fullStageFramesInspected": [
+    1062,
+    1063,
+    1068,
+    1080,
+    1092,
+    1103
+  ],
+  "sourceArtworkModified": false,
+  "sourceAlphaCleanup": false,
+  "continuousFingerTransitionDemonstrated": false,
+  "independentListeningAccepted": false,
+  "realTimeActingAccepted": false,
+  "localOutput": "outputs/evan-cartoon-closing-shot",
+  "next": "Compare longer held ending after original audio, judge dwell/cut before new artwork"
+}
