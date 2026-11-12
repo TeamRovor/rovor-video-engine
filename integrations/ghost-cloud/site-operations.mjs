@@ -42,6 +42,70 @@ export function readGroqRpd(headers, observedAt = Date.now()) {
   };
 }
 
+/**
+ * One fixed, read-only API reader contract for all nine providers.
+ * The return values below are catalog metadata, never billing/inference grants.
+ * Keep helpers in this file: the private Site composer embeds this module.
+ */
+export const PROVIDER_CATALOG_ENDPOINTS=Object.freeze({
+ groq:'https://api.groq.com/openai/v1/models',
+ gemini:'https://generativelanguage.googleapis.com/v1beta/openai/models',
+ mistral:'https://api.mistral.ai/v1/models',
+ nvidia:'https://integrate.api.nvidia.com/v1/models',
+ openrouter:'https://openrouter.ai/api/v1/models',
+ sambanova:'https://api.sambanova.ai/v1/models',
+ cohere:'https://api.cohere.ai/v1/models',
+ huggingface:'https://router.huggingface.co/v1/models',
+ 'cloudflare-ai':null
+});
+export function catalogRequestEndpoint(provider,cloudflareAccountId=null) {
+ if(!Object.hasOwn(PROVIDER_CATALOG_ENDPOINTS,provider))throw Error('unknown_provider');
+ if(provider==='cloudflare-ai')return typeof cloudflareAccountId==='string'&&
+  /^[a-f0-9]{32}$/.test(cloudflareAccountId)?
+  'https://api.cloudflare.com/client/v4/accounts/'+cloudflareAccountId+'/ai/models/search':null;
+ return PROVIDER_CATALOG_ENDPOINTS[provider];
+}
+export function normalizeProviderCatalog(provider,payload) {
+ if(!Object.hasOwn(PROVIDER_CATALOG_ENDPOINTS,provider))throw Error('unknown_provider');
+ if(!payload||typeof payload!=='object'||Array.isArray(payload)||payload.success===false)return null;
+ const rows=payload.data??payload.models??payload.result;
+ if(!Array.isArray(rows))return null;
+ const models=[],seen=new Set();
+ const zeroPrice=v=>(typeof v==='number'&&v===0)||
+  (typeof v==='string'&&/^0(?:\.0+)?$/.test(v));
+ for(const entry of rows) {
+  if(!entry||typeof entry!=='object'||Array.isArray(entry))continue;
+  const original=provider==='cloudflare-ai'?entry.name:(entry.id||entry.name);
+  if(typeof original!=='string')continue;
+  const id=provider==='gemini'&&original.startsWith('models/')?original.slice(7):original;
+  if(typeof id!=='string'||id.length>200||
+   !/^[a-zA-Z0-9@][a-zA-Z0-9_./:@+-]{0,199}$/.test(id))continue;
+  if(provider==='gemini'&&!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,179}$/.test(id))continue;
+  if(provider==='cloudflare-ai'&&!/^@cf\/[a-z0-9][a-z0-9_./-]*$/i.test(id))continue;
+  if(provider==='openrouter'&&(!id.endsWith(':free')||
+   !zeroPrice(entry.pricing?.prompt)||!zeroPrice(entry.pricing?.completion)))continue;
+  if(seen.has(id))continue;
+  seen.add(id);
+  models.push({
+   id,
+   context_length:Number.isSafeInteger(entry.context_length)&&entry.context_length>0?
+    entry.context_length:null,
+   catalog_zero_price:provider==='openrouter'?true:null,
+   pinned_model_candidate:!/(^|[/:._-])(auto|latest)([/:._-]|$)/i.test(id)
+  });
+  if(models.length===20)break;
+ }
+ return models;
+}
+export function classifyCatalogReadFailure(error) {
+ // Never return raw exceptions or upstream response bodies: they can embed keys.
+ const name=typeof error?.name==='string'?error.name:'';
+ const category=name==='TimeoutError'?'timeout':name==='AbortError'?'aborted':
+  name==='SyntaxError'?'invalid_json':name==='TypeError'?'transport_or_runtime':'runtime_or_catalog';
+ return {error_category:category,error_name:
+  ['TypeError','ReferenceError','TimeoutError','AbortError','SyntaxError','Error'].includes(name)?name:'unknown'};
+}
+
 // Bound to the existing owner-private Site; model eligibility remains in runtime.mjs.
 export function createCloudOperations(base, cloud) {
  // Register the immutable, bundled canonical feeder once. No browser or service caller
@@ -335,55 +399,22 @@ export function createCloudOperations(base, cloud) {
   }
   return {queued,duplicates};
  }
- const endpoints={
-  groq:'https://api.groq.com/openai/v1/models',
-  gemini:'https://generativelanguage.googleapis.com/v1beta/openai/models',
-  mistral:'https://api.mistral.ai/v1/models',
-  nvidia:'https://integrate.api.nvidia.com/v1/models',
-  openrouter:'https://openrouter.ai/api/v1/models',
-  sambanova:'https://api.sambanova.ai/v1/models',
-  cohere:'https://api.cohere.ai/v1/models',
-  huggingface:'https://router.huggingface.co/v1/models'
- };
  async function inventory(env,provider,fetcher=(...args)=>globalThis.fetch(...args)) {
   if(!Object.hasOwn(cloud.PROVIDERS,provider))throw Error('unknown_provider');
   const key=env[cloud.PROVIDERS[provider][1]];if(typeof key!=='string'||key.length<16)return {provider,status:'missing_secret'};
-  const url=provider==='cloudflare-ai'&&/^[a-f0-9]{32}$/.test(env.CLOUDFLARE_ACCOUNT_ID||'')?
-   `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/models/search`:endpoints[provider];
+  const url=catalogRequestEndpoint(provider,env.CLOUDFLARE_ACCOUNT_ID);
   if(!url)return {provider,status:'account_metadata_missing'};
   try{
    const response=await fetcher(url,{method:'GET',redirect:'manual',headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
    if(!response.ok){await response.body?.cancel();return {provider,status:'http_'+response.status};}
    // Read authenticated provider quota headers without inferring limits from catalog entries.
    const quotaObservation=provider==='groq'?readGroqRpd(response.headers,Date.now()):null;
-   const data=await bounded(response,4194304),rows=data.data||data.models||data.result;
-   if(!Array.isArray(rows))return {provider,status:'unrecognized_catalog'};
-   // Cloudflare catalog objects contain UUID database keys in `id`;
-   // only `name` is a usable @cf/... inference model identifier.
-   // An authenticated catalog is still NOT proof of free inference eligibility.
-   const models=rows.filter(m=>m&&typeof m==='object').filter(m=>
-    provider==='cloudflare-ai'?
-     typeof m.name==='string'&&/^@cf\/[a-z0-9][a-z0-9_./-]*$/i.test(m.name):
-     typeof(m.id||m.name)==='string'
-   ).filter(m=>provider!=='openrouter'||(
-    typeof m.id==='string'&&m.id.endsWith(':free')&&
-    m.pricing?.prompt!=null&&m.pricing?.completion!=null&&
-    Number(m.pricing.prompt)===0&&Number(m.pricing.completion)===0
-   )).map(m=>{
-    const raw=String(provider==='cloudflare-ai'?m.name:(m.id||m.name));
-    // Gemini REST catalogs use "models/<name>"; the OpenAI-compatible
-    // chat-completions API accepts the bare model name. This is display
-    // metadata only and never authorizes a provider/model for dispatch.
-    const id=provider==='gemini'&&raw.startsWith('models/')?raw.slice(7):raw;
-    if(provider==='gemini'&&!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,179}$/.test(id))return null;
-    return {id:id.slice(0,200),
-     context_length:Number.isSafeInteger(m.context_length)?m.context_length:null,
-     catalog_zero_price:provider==='openrouter'?true:null};
-   }).filter(Boolean).slice(0,20);
+   const models=normalizeProviderCatalog(provider,await bounded(response,4194304));
+   if(models===null)return {provider,status:'unrecognized_catalog'};
    return {provider,status:'catalog_received',observed_at:Date.now(),models,
     ...(quotaObservation?{quota_observation:quotaObservation}:{}),
     billing_verified:false,quota_verified:quotaObservation!==null,canary_verified:false};
-  }catch(error){const message=String(error?.message||'');const category=/illegal invocation|illegal receiver/i.test(message)?'unbound_runtime_call':/not a function/i.test(message)?'missing_runtime_api':/timeout|timed out/i.test(message)?'timeout':/network|fetch|connect|dns|resolve/i.test(message)?'network':/abort/i.test(message)?'aborted':'runtime_or_catalog';return {provider,status:'catalog_unavailable',error_message:message.replaceAll(key,'[redacted]').replace(/[A-Za-z0-9_=\/-]{24,}/g,'[redacted]').slice(0,180),error_category:category,error_name:['TypeError','ReferenceError','TimeoutError','AbortError','SyntaxError','Error'].includes(error?.name)?error.name:'unknown'};}
+  }catch(error){return {provider,status:'catalog_unavailable',...classifyCatalogReadFailure(error)};}
  }
  async function recordInventory(env,provider,report) {
   const observed=Number.isSafeInteger(report.observed_at)?report.observed_at:Date.now();
