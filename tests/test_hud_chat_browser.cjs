@@ -187,7 +187,7 @@ async function main(){
   // A completed receipt can paint before ask() finally unlocks the composer.
   // A programmatic requestSubmit() while busy is correctly ignored; model
   // this test as an actual user's next enabled Send, not a rushed hidden click.
-  await waitFor(()=>evaluate('return !document.querySelector("#rvc form button[type=submit]').disabled && !document.querySelector("#rvc textarea").disabled'),
+  await waitFor(()=>evaluate('return !document.querySelector("#rvc form button[type=submit]").disabled && !document.querySelector("#rvc textarea").disabled'),
     'composer unlocked after first private job receipt');
   // Explicit Send and opted-in two-model review produce two independent
   // D1 job IDs. This is mocked Chrome QA, not proof of actual Mac parallelism.
@@ -200,7 +200,7 @@ async function main(){
   // Check the actual two-route plan and enabled Send, then submit once.
   // This preserves separate receipt assertions rather than extending a
   // timeout that could mask a lost/invalid second model request.
-  await waitFor(()=>evaluate('return document.querySelector(".rvc-routing-note").textContent.startsWith("Two-model review:") && !document.querySelector("#rvc form button[type=submit]').disabled'),
+  await waitFor(()=>evaluate('return document.querySelector(".rvc-routing-note").textContent.startsWith("Two-model review:") && !document.querySelector("#rvc form button[type=submit]").disabled'),
     'two-model route plan and Send ready');
   await evaluate('document.querySelector("#rvc form").requestSubmit();return true');
   await waitFor(()=>evaluate('return Array.from(document.querySelectorAll(".rvc-receipt")).filter(e=>e.textContent.includes("REPLY RECEIVED")).length>=3'),
