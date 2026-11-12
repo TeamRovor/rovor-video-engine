@@ -7,6 +7,7 @@ import {catalogBridgeStatus,refreshCatalogBridge,CATALOG_PROVIDERS}
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 import {verifyCatalogBridge} from '../integrations/hud-cloud/verify-cloud-provider-catalog-bridge.mjs';
 import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-secret-payload.mjs';
+import {directProviderCatalog} from '../integrations/hud-cloud/direct-provider-catalog.mjs';
 
 const R='r'.repeat(40),W='w'.repeat(40),S='s'.repeat(48);
 const T=Date.parse('2026-11-11T20:00:00.000Z');
@@ -165,4 +166,102 @@ test('release reports per-provider blockers without exposing secrets or model na
  assert.equal(report.verified_online_inference_providers,0);
  assert(!JSON.stringify(report).includes(S));
  assert(!Object.hasOwn(report,'models'));
+});
+
+
+test('native Cloudflare direct Gemini/Groq catalogs authenticate with fixed GET and bypass denied Site',async()=>{
+ const s=setup(),calls=[];
+ s.env.GEMINI_API_KEY='g'.repeat(40);
+ s.env.GROQ_HUD_API_KEY='q'.repeat(40);
+ const send=async(url,opts)=>{
+  calls.push({url,method:opts.method,redirect:opts.redirect,
+   auth:opts.headers.Authorization,google:opts.headers['x-goog-api-key']});
+  if(url==='https://generativelanguage.googleapis.com/v1beta/models')
+   return Response.json({models:[{name:'models/gemini-2.5-flash'},{name:'models/gemini-2.5-flash'}]});
+  if(url==='https://api.groq.com/openai/v1/models')
+   return Response.json({data:[{id:'openai/gpt-oss-20b'}]});
+  throw Error('unexpected Site request');
+ };
+ const first=await refreshCatalogBridge(s.env,T,send);
+ const second=await refreshCatalogBridge(s.env,T+300001,send);
+ assert.equal(first.provider,'gemini');assert.equal(second.provider,'groq');
+ assert.equal(first.catalog_source,'direct_provider');
+ assert.equal(first.site_d1_verified,false);
+ assert.equal(first.worker_d1_verified,true);
+ assert.equal(second.status,'catalog_received');
+ assert.equal(calls.length,2);
+ assert.equal(calls[0].method,'GET');assert.equal(calls[0].redirect,'manual');
+ assert.equal(calls[0].google,s.env.GEMINI_API_KEY);
+ assert.equal(calls[0].auth,undefined);
+ assert.equal(calls[1].auth,'Bearer '+s.env.GROQ_HUD_API_KEY);
+ const status=await catalogBridgeStatus(s.env,T+300001);
+ assert.equal(status.direct_catalog_received_count,2);
+ assert.equal(status.site_d1_verified_count,0);
+ assert.equal(status.inference_online_verified_count,0);
+ assert.equal(status.providers[0].catalog_source,'direct_provider');
+ assert.deepEqual(status.providers[0].models,['gemini-2.5-flash']);
+ assert.deepEqual(status.providers[1].models,['openai/gpt-oss-20b']);
+ assert(status.providers.every(x=>x.free_billing_verified===false&&x.quota_verified===false));
+ const proof=await verifyCatalogBridge(R,async(url,opts)=>opts.headers.Authorization?
+  Response.json(status):new Response('',{status:401}),{attempts:1});
+ assert.equal(proof.direct_provider_catalog_receipts,2);
+ assert.equal(proof.catalog_sources.gemini,'direct_provider');
+ assert.equal(proof.verified_online_inference_providers,0);
+ assert(!JSON.stringify(proof).includes(s.env.GROQ_HUD_API_KEY));
+});
+
+test('native direct provider catalog failures are recorded without Site fallback or Free admission',async()=>{
+ const cases=[
+  [401,'provider_auth_denied'],
+  [429,'provider_rate_limited'],
+  [500,'provider_http_unavailable']
+ ];
+ for(const [code,category] of cases){
+  const s=setup();s.env.GEMINI_API_KEY='g'.repeat(40);
+  let calls=0;
+  const result=await refreshCatalogBridge(s.env,T,async(url,opts)=>{
+   calls++;assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models');
+   return new Response('denied',{status:code});
+  });
+  assert.equal(calls,1,'configured direct key never silently routes to Site');
+  assert.equal(result.status,'upstream_unavailable');
+  const read=await catalogBridgeStatus(s.env,T);
+  assert.equal(read.providers[0].catalog_source,'direct_provider');
+  assert.equal(read.providers[0].direct_error_category,category);
+  assert.equal(read.direct_catalog_received_count,0);
+  assert.equal(read.providers[0].inference_online_verified,false);
+ }
+});
+test('OpenRouter public zero-price names and Cloudflare model name use exact catalog IDs only',async()=>{
+ const env={OPENROUTER_API_KEY:'o'.repeat(40),CLOUDFLARE_AI_API_KEY:'c'.repeat(40),
+  CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32)};
+ const open=await directProviderCatalog(env,'openrouter',async(url,opts)=>{
+  assert.equal(url,'https://openrouter.ai/api/v1/models');
+  assert.equal(opts.headers.Authorization,'Bearer '+env.OPENROUTER_API_KEY);
+  return Response.json({data:[
+   {id:'vendor/preview:free',pricing:{prompt:'0',completion:'0'}},
+   {id:'vendor/paid',pricing:{prompt:'0.1',completion:'0'}},
+   {id:'vendor/not-actually-free:free',pricing:{prompt:'0',completion:'0.03'}}
+  ]});
+ });
+ assert.deepEqual(open.models,['vendor/preview:free']);
+ const cf=await directProviderCatalog(env,'cloudflare-ai',async(url,opts)=>{
+  assert.equal(url,'https://api.cloudflare.com/client/v4/accounts/'+'a'.repeat(32)+'/ai/models/search');
+  return Response.json({result:[{id:'deadbeef-uuid',name:'@cf/meta/llama-3.1-8b-instruct'},
+   {id:'not-model',name:'javascript:bad'}]});
+ });
+ assert.deepEqual(cf.models,['@cf/meta/llama-3.1-8b-instruct']);
+ assert.equal(cf.status,'catalog_received');
+});
+test('optional provider catalog secrets remain server-only and never use Cloudflare deployment token',()=>{
+ const env={ROVOR_HUD_READER_TOKEN:R,ROVOR_HUD_WRITER_TOKEN:W,
+  ROVOR_CLOUD_MISTRAL_API_KEY:'m'.repeat(40),
+  ROVOR_CLOUD_OPENROUTER_API_KEY:'o'.repeat(40),
+  CLOUDFLARE_API_TOKEN:'deployment-is-not-ai'};
+ const payload=buildHudSecretPayload(env);
+ assert.equal(payload.MISTRAL_API_KEY,env.ROVOR_CLOUD_MISTRAL_API_KEY);
+ assert.equal(payload.OPENROUTER_API_KEY,env.ROVOR_CLOUD_OPENROUTER_API_KEY);
+ assert(!Object.hasOwn(payload,'CLOUDFLARE_API_TOKEN'));
+ assert(!Object.hasOwn(payload,'CLOUDFLARE_AI_API_KEY'));
+ assert.throws(()=>buildHudSecretPayload({...env,ROVOR_CLOUD_MISTRAL_API_KEY:R}));
 });

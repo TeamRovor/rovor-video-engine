@@ -35,6 +35,33 @@ export function buildHudSecretPayload(env) {
       throw Error('invalid_private_secret_configuration');
     payload.GHOST_SITE_SERVICE_TOKEN=key;
   }
+  // Optional server-only direct catalog keys. Never reuse the Cloudflare
+  // deployment API token as a model key, never print values, and do not write
+  // blanks over existing Cloudflare secrets.
+  const directKeys=[
+   ['ROVOR_CLOUD_MISTRAL_API_KEY','MISTRAL_API_KEY'],
+   ['ROVOR_CLOUD_NVIDIA_API_KEY','NVIDIA_API_KEY'],
+   ['ROVOR_CLOUD_COHERE_API_KEY','COHERE_API_KEY'],
+   ['ROVOR_CLOUD_SAMBANOVA_API_KEY','SAMBANOVA_API_KEY'],
+   ['ROVOR_CLOUD_OPENROUTER_API_KEY','OPENROUTER_API_KEY'],
+   ['ROVOR_CLOUD_HUGGINGFACE_API_KEY','HUGGINGFACE_API_KEY'],
+   ['ROVOR_CLOUD_CLOUDFLARE_AI_API_KEY','CLOUDFLARE_AI_API_KEY']
+  ];
+  for(const [source,target] of directKeys){
+   const value=env[source];
+   if(!value)continue;
+   if(!validSecret(value)||value===env.ROVOR_HUD_READER_TOKEN||
+      value===env.ROVOR_HUD_WRITER_TOKEN||
+      value===env.ROVOR_GHOST_SERVICE_TOKEN)
+    throw Error('invalid_private_secret_configuration');
+   payload[target]=value;
+  }
+  if(payload.CLOUDFLARE_AI_API_KEY){
+   if(typeof env.CLOUDFLARE_ACCOUNT_ID!=='string'||
+      !/^[a-f0-9]{32}$/i.test(env.CLOUDFLARE_ACCOUNT_ID))
+    throw Error('invalid_private_secret_configuration');
+   payload.CLOUDFLARE_ACCOUNT_ID=env.CLOUDFLARE_ACCOUNT_ID;
+  }
   if(env.ROVOR_HUD_OWNER_TOKEN){
     const owner=env.ROVOR_HUD_OWNER_TOKEN;
     if(typeof owner!=='string'||!/^[!-~]{32,200}$/.test(owner)||owner===env.ROVOR_HUD_READER_TOKEN||owner===env.ROVOR_HUD_WRITER_TOKEN)

@@ -729,10 +729,13 @@ export default {
     const result=await workforceTick(env,startedAt);
     if(Number.isSafeInteger(event?.scheduledTime)&&event.scheduledTime>0)
       await recordNativeTick(env.DB,event.scheduledTime,startedAt,Math.max(startedAt,Date.now()),result);
-    // One bounded read-only Site catalog per existing five-minute tick.
-    // This bridge cannot dispatch models, mutate approvals or interrupt
-    // the independent workforce on a Site/API outage.
-    try{await refreshCatalogBridge(env,Date.now());}catch{/* optional catalog telemetry */}
+    // STOP suppresses even the optional direct-provider catalog GETs. Keep
+    // scheduled metadata/review maintenance independent; no provider network
+    // while the owner has closed the workforce gate.
+    try{
+      const gate=await env.DB.prepare('SELECT enabled FROM hud_cloud_workforce_control WHERE id=1').first();
+      if(gate?.enabled===1)await refreshCatalogBridge(env,Date.now());
+    }catch{/* optional read-only catalog telemetry must not block STOP */}
     let patchFailed=false;
     try{await githubPatchTick(env,Date.now());}catch{patchFailed=true;}
     if(maintenanceFailed)throw Error('scheduled_chat_maintenance_failed');

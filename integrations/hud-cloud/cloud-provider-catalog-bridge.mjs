@@ -1,3 +1,4 @@
+import {directProviderCatalog} from './direct-provider-catalog.mjs';
 // Read-only, Mac-independent bridge from the EXISTING owner-private Site.
 // Never sends prompts, calls chat completions, changes STOP, or grants free-tier
 // eligibility. Site D1 and Cloudflare D1 are DISTINCT trust boundaries.
@@ -95,8 +96,17 @@ export async function refreshCatalogBridge(env,now=Date.now(),send=fetch){
  if(!lease)return {state:'interval_not_due',network_calls:0};
  const provider=CATALOG_PROVIDERS[lease.next_index];
  if(!provider)throw Error('catalog_clock_invalid');
- const found=await inspect(env,provider,now,send);
- const modelsJSON=JSON.stringify(found.models);
+ // Prefer the exact provider's own read-only HTTPS catalog when its
+ // credential already exists on this Worker. The Site is optional fallback,
+ // not a prerequisite for Groq/Gemini or a reason to call completions.
+ const direct=await directProviderCatalog(env,provider,send);
+ const found=direct.status==='unconfigured'?
+  {...await inspect(env,provider,now,send),source:'original_site',error_category:null}:
+  {status:direct.status==='catalog_received'?'catalog_received':'upstream_unavailable',
+   source:'direct_provider',error_category:direct.error_category||null,
+   models:direct.models,siteD1:false};
+ const modelsJSON=JSON.stringify({source:found.source,
+  error_category:found.error_category,models:found.models});
  const saved=await db.prepare(`INSERT INTO hud_site_catalog_rows
   (provider,checked_at,status,site_d1_verified,models_json)
   VALUES(?,?,?,?,?) ON CONFLICT(provider) DO UPDATE SET
@@ -111,7 +121,8 @@ export async function refreshCatalogBridge(env,now=Date.now(),send=fetch){
   row.site_d1_verified!==(found.siteD1?1:0)||row.models_json!==modelsJSON)
   throw Error('catalog_bridge_readback_unconfirmed');
  return {source:'cloudflare_site_catalog_bridge',provider,
-  status:found.status,site_d1_verified:found.siteD1,
+  status:found.status,catalog_source:found.source,
+  site_d1_verified:found.siteD1,
   model_count:found.models.length,worker_d1_verified:true,
   inference_online_verified:false};
 }
@@ -122,13 +133,23 @@ export async function catalogBridgeStatus(env,now=Date.now()){
  const known=new Map(rows.map(r=>[r.provider,r]));
  const providers=CATALOG_PROVIDERS.map(provider=>{
   const row=known.get(provider);
-  let models=[];
+  let models=[],catalogSource='original_site',directErrorCategory=null;
   if(row)try{
    const value=JSON.parse(row.models_json);
-   if(Array.isArray(value)&&value.length<=20&&value.every(safeModel))models=value;
+   const list=Array.isArray(value)?value:value?.models;
+   if(Array.isArray(list)&&list.length<=20&&list.every(safeModel))models=list;
+   if(!Array.isArray(value)&&value?.source==='direct_provider'){
+    catalogSource='direct_provider';
+    const allowed=['no_provider_key','transport_unavailable',
+     'provider_auth_denied','provider_rate_limited',
+     'provider_http_unavailable','invalid_catalog_body',
+     'invalid_catalog_shape','missing_account','unknown_provider'];
+    directErrorCategory=allowed.includes(value.error_category)?value.error_category:null;
+   }
   }catch{}
   const checked=validTime(row?.checked_at)?row.checked_at:null;
   return {provider,status:row?.status||'never_checked',
+   catalog_source:catalogSource,direct_error_category:directErrorCategory,
    checked_at:checked===null?null:new Date(checked).toISOString(),
    freshness:checked!==null&&checked<=now&&now-checked<=FRESH?'fresh':'stale_or_unavailable',
    model_count:models.length,models,
@@ -139,5 +160,7 @@ export async function catalogBridgeStatus(env,now=Date.now()){
  });
  return {source:'cloudflare_site_catalog_bridge',mac_required:false,
   provider_count:providers.length,site_d1_verified_count:providers.filter(x=>x.site_d1_verified&&x.freshness==='fresh').length,
+  direct_catalog_received_count:providers.filter(x=>x.catalog_source==='direct_provider'&&
+   x.freshness==='fresh'&&x.status==='catalog_received').length,
   inference_online_verified_count:0,providers};
 }
