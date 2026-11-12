@@ -1,3 +1,4 @@
+import {prepareWalterReview,walterAcceptedSql} from './github-patch-gateway.mjs';
 // Bounded, Mac-independent Gemini workforce lane in the existing Cloudflare HUD.
 // This does NOT replace the original private Site or its separate D1/reviews.
 // Only a trusted writer can submit GitHub-validated canonical public tasks.
@@ -65,7 +66,7 @@ export async function control(db,enabled,seriesCommit=null,now=Date.now()){
     db.prepare('UPDATE hud_cloud_workforce_series SET active=0 WHERE id=1').bind(),
     db.prepare('UPDATE hud_cloud_workforce_control SET enabled=0 WHERE id=1').bind(),
     db.prepare(`UPDATE hud_cloud_workforce_jobs SET state='failed',finished_at=?,
-     error_code='stopped_before_claim' WHERE state='queued' AND (id LIKE 'gc-rec-%' OR id LIKE 'gc-patch-src-%')`).bind(now),
+     error_code='stopped_before_claim' WHERE state='queued' AND (id LIKE 'gc-rec-%' OR id LIKE 'gc-patch-src-%' OR id LIKE 'wr-%')`).bind(now),
     // A separately authorized draft PR is also work: STOP permanently
     // revokes every *queued* approval. It cannot rearm on a later START.
     // Leave in-flight/uncertain rows intact for manual reconciliation.
@@ -172,7 +173,7 @@ export async function refillDiscovery(db,series,now){
    AND NOT EXISTS(SELECT 1 FROM hud_cloud_workforce_jobs WHERE state IN ('queued','running','uncertain'))
    AND NOT EXISTS(SELECT 1 FROM hud_cloud_workforce_jobs WHERE task_id=?)
    AND (SELECT COUNT(*) FROM hud_cloud_workforce_jobs WHERE state='needs_review'
-      AND human_review='not_recorded')<?
+      AND human_review='not_recorded' AND id NOT LIKE 'wr-%' AND NOT ${walterAcceptedSql})<?
    AND (SELECT COUNT(*) FROM hud_cloud_workforce_jobs WHERE started_at>=?)<?`)
   .bind(job.id,job.task_id,job.employee,job.kind,job.title,job.prompt,job.source_commit,'v2',now,
    series.approved_at,series.source_commit,now,job.task_id,MAX_PENDING_REVIEWS,now-DAY,MAX_DAILY).run();
@@ -211,7 +212,7 @@ export async function status(db,now=Date.now()){
   const counts=await db.prepare(`SELECT
     COALESCE(SUM(CASE WHEN state='queued' THEN 1 ELSE 0 END),0) queued,
     COALESCE(SUM(CASE WHEN state IN ('running','uncertain') THEN 1 ELSE 0 END),0) in_flight,
-    COALESCE(SUM(CASE WHEN state='needs_review' AND human_review='not_recorded' THEN 1 ELSE 0 END),0) pending_review,
+    COALESCE(SUM(CASE WHEN state='needs_review' AND human_review='not_recorded' AND id NOT LIKE 'wr-%' AND NOT ${walterAcceptedSql} THEN 1 ELSE 0 END),0) pending_review,
     COALESCE(SUM(CASE WHEN started_at>=? THEN 1 ELSE 0 END),0) rolling_attempts,
     MIN(CASE WHEN started_at>=? THEN started_at ELSE NULL END) oldest_attempt
     FROM hud_cloud_workforce_jobs`).bind(now-DAY,now-DAY).first();
@@ -232,10 +233,12 @@ export async function status(db,now=Date.now()){
     ?counts.oldest_attempt+DAY:null;
   const rows=await db.prepare(`SELECT j.id,j.task_id,j.employee,j.kind,j.title,j.source_commit,j.created_at,
     j.started_at,j.finished_at,j.state,j.actual_model,j.output_sha256,j.human_review,j.reviewed_at,j.error_code,
+    w.error_code AS walter_verdict,w.state AS walter_state,w.id AS walter_id,w.output AS walter_reason,
     u.provider,u.requested_model,u.tokens_input,u.tokens_output
     FROM hud_cloud_workforce_jobs j LEFT JOIN hud_cloud_workforce_usage u
     ON u.job_id=j.id AND u.output_sha256=j.output_sha256 AND u.actual_model=j.actual_model
-    ORDER BY j.created_at DESC LIMIT 50`).all();
+    LEFT JOIN hud_cloud_workforce_jobs w ON w.id='wr-'||j.id AND w.revision=j.output_sha256
+    WHERE j.id NOT LIKE 'wr-%' ORDER BY j.created_at DESC LIMIT 50`).all();
   return {status:200,body:{source:'existing_cloudflare_hud_gemini_workforce',
     mac_required:false,enabled:gate.enabled===1,configured_model:MODEL,
     recurring_execution_authorized:recurring,
@@ -300,7 +303,7 @@ export async function selectPreflightJob(db,plan,now,checkFreshness){
     AND (id NOT LIKE 'gc-patch-src-%' OR EXISTS(SELECT 1 FROM hud_github_patch_task_sources s WHERE s.job_id=hud_cloud_workforce_jobs.id))
     AND NOT EXISTS(SELECT 1 FROM hud_cloud_workforce_jobs WHERE state IN ('running','uncertain'))
     AND (SELECT COUNT(*) FROM hud_cloud_workforce_jobs WHERE started_at>=?)<?
-    ORDER BY created_at,id LIMIT 1`).bind(now-DAY,MAX_DAILY).first();
+    ORDER BY CASE WHEN id LIKE 'wr-%' THEN 0 ELSE 1 END,created_at,id LIMIT 1`).bind(now-DAY,MAX_DAILY).first();
   if(!candidate)break;
   if(!candidate.id.startsWith('gc-rec-')){next=candidate;break;}
   const evidence=await checkFreshness(candidate.task_id);
@@ -340,6 +343,9 @@ export async function tick(env,now=Date.now(),send=fetch){
   const evidence=await geminiModelEvidence(db,now);
   if(evidence.get(MODEL)?.verification!=='verified_recent_reply')
    return {status:200,body:{state:'model_reply_evidence_missing',dispatched:0}};
+  await db.prepare(`UPDATE hud_cloud_workforce_jobs AS w SET state='failed',finished_at=?,error_code='owner_review_recorded'
+    WHERE state='queued' AND id LIKE 'wr-%' AND EXISTS(SELECT 1 FROM hud_cloud_workforce_jobs j
+    WHERE j.id=w.task_id AND j.human_review!='not_recorded')`).bind(now).run();
   const picked=await selectPreflightJob(db,plan,now,taskId=>
    verifyDiscoveryJobFreshness(env,taskId,now,send));
   if(picked.blocked)return {status:200,body:picked.blocked};
@@ -392,6 +398,7 @@ export async function tick(env,now=Date.now(),send=fetch){
     if(!combined.trim()||combined.length>MAX_OUTPUT)throw Error('invalid_reply');
     output=combined;actual_model=MODEL;output_sha256=await digest(output);
     state='needs_review';error_code=null;
+    if(claim.id.startsWith('wr-'))error_code=/^ACCEPT\r?\n[^\r\n]{8,800}$/u.test(output.trim())?'walter_accepted':'walter_escalated';
    }
   }catch{state='uncertain';error_code='response_or_receipt_uncertain';}
   const finishedAt=Date.now();
@@ -408,8 +415,10 @@ export async function tick(env,now=Date.now(),send=fetch){
     FROM hud_cloud_workforce_jobs WHERE id=? AND state='needs_review'
      AND output_sha256=? AND finished_at=?`)
     .bind(MODEL,MODEL,tokensInput,tokensOutput,finishedAt,claim.id,output_sha256,finishedAt);
-   const results=await db.batch([finish,receipt]);
-   if(results.some(x=>x.meta?.changes!==1))
+   let review=null;
+   try{review=await prepareWalterReview(env,claim.id,output,output_sha256,finishedAt);}catch{/* Keep Mike’s receipt available for human review. */}
+   const results=await db.batch(review?[finish,receipt,review]:[finish,receipt]);
+   if(results.slice(0,2).some(x=>x.meta?.changes!==1))
     return {status:503,body:{state:'receipt_unconfirmed',dispatched:1}};
   }else{
    const result=await finish.run();
