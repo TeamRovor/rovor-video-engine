@@ -13,6 +13,7 @@ on:
       - 'dashboard/command-center/native-v8-9/hud-chat.js'
       - 'tools/cloud_gemini_workforce_control.mjs'
       - 'tests/test_hud_cloud_workforce.mjs'
+      - 'tests/test_hud_cloud_stale_discovery.mjs'
       - '.github/workflows/cloud-gemini-workforce.yml'
   push:
     branches: [main]
@@ -23,6 +24,7 @@ on:
       - 'dashboard/command-center/native-v8-9/hud-chat.js'
       - 'tools/cloud_gemini_workforce_control.mjs'
       - 'tests/test_hud_cloud_workforce.mjs'
+      - 'tests/test_hud_cloud_stale_discovery.mjs'
       - '.github/workflows/cloud-gemini-workforce.yml'
   workflow_dispatch:
     inputs:
@@ -72,7 +74,7 @@ jobs:
           node --check integrations/hud-cloud/worker.mjs
           node --check dashboard/command-center/native-v8-9/hud-chat.js
           node --check tools/cloud_gemini_workforce_control.mjs
-          node --test tests/test_hud_cloud_workforce.mjs tests/test_hud_cloud_gemini.mjs tests/test_ghost_cloud_feed.mjs
+          node --test tests/test_hud_cloud_workforce.mjs tests/test_hud_cloud_stale_discovery.mjs tests/test_hud_cloud_gemini.mjs tests/test_ghost_cloud_feed.mjs
 
   owner-control:
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'

@@ -12,6 +12,7 @@ const MAX_OUTPUT=12000;
 const DAY=86400000;
 const SERIES_DAYS=7;
 const MAX_PENDING_REVIEWS=3;
+const MAX_DISCOVERY_PREFLIGHTS_PER_TICK=3;
 const DISCOVERY_KEY=/^(run|issue|pr)-[1-9][0-9]{0,11}$/;
 const DISCOVERY_MAX_AGE=36*3600000;
 const REPO='https://github.com/TeamRovor/rovor-video-engine';
@@ -286,6 +287,41 @@ export async function review(db,body,now=Date.now()){
  }catch{return {status:503,body:{error:'private_workforce_review_unavailable'}};}
 }
 
+// Independently testable bounded D1 discovery selection. Freshness checks are
+// supplied by the server, never by a model or browser. No inference runs here.
+export async function selectPreflightJob(db,plan,now,checkFreshness){
+ const deadline=Number.isSafeInteger(now)&&now>0;
+ if(!deadline||typeof checkFreshness!=='function')throw Error('invalid_preflight_context');
+ let next=null,staleDiscarded=0,lastStaleId=null;
+ for(let check=0;check<MAX_DISCOVERY_PREFLIGHTS_PER_TICK;check++){
+  if(plan?.active===1)await refillDiscovery(db,plan,now);
+  const candidate=await db.prepare(`SELECT id,task_id FROM hud_cloud_workforce_jobs
+    WHERE state='queued'
+    AND (id NOT LIKE 'gc-patch-src-%' OR EXISTS(SELECT 1 FROM hud_github_patch_task_sources s WHERE s.job_id=hud_cloud_workforce_jobs.id))
+    AND NOT EXISTS(SELECT 1 FROM hud_cloud_workforce_jobs WHERE state IN ('running','uncertain'))
+    AND (SELECT COUNT(*) FROM hud_cloud_workforce_jobs WHERE started_at>=?)<?
+    ORDER BY created_at,id LIMIT 1`).bind(now-DAY,MAX_DAILY).first();
+  if(!candidate)break;
+  if(!candidate.id.startsWith('gc-rec-')){next=candidate;break;}
+  const evidence=await checkFreshness(candidate.task_id);
+  if(evidence?.state==='unavailable')return {next:null,staleDiscarded,blocked:{
+   state:'discovery_source_unverified',dispatched:0,inference_completed:false,
+   stale_discarded:staleDiscarded}};
+  if(evidence?.state==='actionable'){next=candidate;break;}
+  const removed=await db.prepare(`UPDATE hud_cloud_workforce_jobs
+   SET state='failed',finished_at=?,error_code='discovery_no_longer_actionable'
+   WHERE id=? AND state='queued'`).bind(now,candidate.id).run();
+  if(removed.meta?.changes!==1)return {next:null,staleDiscarded,blocked:{
+   state:'idle_or_safety_limited',dispatched:0}};
+  staleDiscarded++;lastStaleId=candidate.id;
+ }
+ if(!next)return {next:null,staleDiscarded,blocked:staleDiscarded?{
+  state:'discovery_no_longer_actionable',dispatched:0,id:lastStaleId,
+  inference_completed:false,stale_discarded:staleDiscarded}:{
+  state:'idle_or_safety_limited',dispatched:0}};
+ return {next,staleDiscarded,blocked:null};
+}
+
 export async function tick(env,now=Date.now(),send=fetch){
  const db=env?.DB;
  if(!db)return {status:503,body:{error:'private_workforce_store_unavailable'}};
@@ -304,33 +340,10 @@ export async function tick(env,now=Date.now(),send=fetch){
   const evidence=await geminiModelEvidence(db,now);
   if(evidence.get(MODEL)?.verification!=='verified_recent_reply')
    return {status:200,body:{state:'model_reply_evidence_missing',dispatched:0}};
-  if(plan?.active===1)await refillDiscovery(db,plan,now);
-  // Re-check a discovery against the live GitHub record before spending a
-  // single free-provider inference attempt. An already resolved issue or
-  // newer passing CI run must never become more generic owner busywork.
-  // No private GitHub content, workflow logs, issue bodies or keys go to the
-  // model. Outages retain the queued record for a later bounded recheck.
-  const next=await db.prepare(`SELECT id,task_id FROM hud_cloud_workforce_jobs
-    WHERE state='queued'
-    AND (id NOT LIKE 'gc-patch-src-%' OR EXISTS(SELECT 1 FROM hud_github_patch_task_sources s WHERE s.job_id=hud_cloud_workforce_jobs.id))
-    AND NOT EXISTS(SELECT 1 FROM hud_cloud_workforce_jobs WHERE state IN ('running','uncertain'))
-    AND (SELECT COUNT(*) FROM hud_cloud_workforce_jobs WHERE started_at>=?)<?
-    ORDER BY created_at,id LIMIT 1`).bind(now-DAY,MAX_DAILY).first();
-  if(!next)return {status:200,body:{state:'idle_or_safety_limited',dispatched:0}};
-  if(next.id.startsWith('gc-rec-')){
-   const evidence=await verifyDiscoveryJobFreshness(env,next.task_id,now,send);
-   if(evidence.state==='unavailable')return {status:200,body:{
-    state:'discovery_source_unverified',dispatched:0,inference_completed:false}};
-   if(evidence.state!=='actionable'){
-    const removed=await db.prepare(`UPDATE hud_cloud_workforce_jobs
-      SET state='failed',finished_at=?,error_code='discovery_no_longer_actionable'
-      WHERE id=? AND state='queued'`).bind(now,next.id).run();
-    if(removed.meta?.changes!==1)return {status:200,body:{
-      state:'idle_or_safety_limited',dispatched:0}};
-    return {status:200,body:{state:'discovery_no_longer_actionable',dispatched:0,
-      id:next.id,inference_completed:false}};
-   }
-  }
+  const picked=await selectPreflightJob(db,plan,now,taskId=>
+   verifyDiscoveryJobFreshness(env,taskId,now,send));
+  if(picked.blocked)return {status:200,body:picked.blocked};
+  const next=picked.next,staleDiscarded=picked.staleDiscarded;
   const claim=await db.prepare(`UPDATE hud_cloud_workforce_jobs SET state='running',started_at=?
     WHERE id=? AND state='queued'
     AND (id NOT LIKE 'gc-patch-src-%' OR EXISTS(SELECT 1 FROM hud_github_patch_task_sources s WHERE s.job_id=hud_cloud_workforce_jobs.id))
@@ -405,6 +418,6 @@ export async function tick(env,now=Date.now(),send=fetch){
   return {status:200,body:{state,dispatched:1,id:claim.id,
    model:state==='needs_review'?MODEL:null,owner_review_required:state==='needs_review',
    ...(state==='needs_review'?{provider:'google-gemini-cloud',tokens_input:tokensInput,tokens_output:tokensOutput}:{}),
-   inference_completed:state==='needs_review'}};
+   inference_completed:state==='needs_review',stale_discarded:staleDiscarded}};
  }catch{return {status:503,body:{state:'runtime_or_store_unavailable',dispatched:0}};}
 }
