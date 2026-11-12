@@ -5,6 +5,13 @@ Entertaining expressive 2D CARTOON; photograph is a loose identity reference. Fo
 
 Repo work/engine; development/evan-painted-rig; draft PR4 https://github.com/TeamRovor/rovor-video-engine/pull/4. Development commits only. NEVER merge/deploy without approval. Preserve main4e099b5f1a30661c952358f49e1e2d70a5fe2a62 and V4=27b664b9daa924ff17d3b874264bc4cef7131196, V3/V4/releases/approved symlinks/updater/native projects. Do NOT launch, restart or probe Moho unattended. Automation ACTIVE; polished milestone NOT ready. Notify only meaningful review milestone/completion/failure/action.
 
+## Current task: opt-in SH corner accent short component sampled
+CARTOON-EVAN-SH-CORNER.md / reviews/sh-corner-v1.json. Authoredoralcornerconstraints restoreidentity-onlywidth; postconstraint sh_corner_target caps25% oralX contraction duringexistingSH. CornerY/nonoralanchors exact; incomingcontact/jawinputs and skinTarget/upper310preserved. Actualjaw/lipplanes follownewcorners, NOTalljawpixelsunchanged.3testsPASS. Noart/retiming/default/fullchange;all18timingflagsopen.
+
+outputs/evan-cartoon-sh-corner/Review.html:3newstageposes454..456 reproducefullbaselines first +27BYTE-EXACTcopies438..467. F447/aftercue457nativepixel-exact. Native454/455morecompact; stillnarrowincisorslit/subtlestageeffect. Baseline30/candidate30/slow120decodes;20000originalPCM292000:312000 exact. Native and5normal/3slowdecodedstills inspected; realtimelistening/phonetics/polishedFALSE. Sources/PNG/filmhashes retained. No pendingjobs;automationACTIVE. LocaldevelopmentcommitsUNPUBLISHED; inspectactualbranch beforepublishing. Protectedversions/updater/nativeMoho preserved.
+
+NEXT: ordinary-speed shortphrase acting review before any separatefullintegration. No newmouth/art/expressionvariants/defaultpromotion fromtests. NoMoho/merge/deploy.
+
 ## Current task: SH native identity pilot — not accepted
 CARTOON-EVAN-SH-NATIVE-PILOT.md + opt-in sh_cartoon_review.py/test_sh_cartoon_review.py. HelperredistributesnoncontactshapeidentityduringSH; contacts/rest/timing/defaultspreserved.2testsPASS. Native453/454/457 in outputs/evan-cartoon-sh-native-pilot: skinTarget/upper310exact, aftercue457pixel-exact; peak454roundMaterial0→.183538. Inspectednative454before/after: NEGLIGIBLEvisibleimprovement, NOTaccepted. No longrender/full/default/artchange. Normal/slowcomponentPENDING. All18timingflagsunresolved; automationACTIVE; protectedversions/nativeMoho/updaterpreserved.
 

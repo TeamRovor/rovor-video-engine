@@ -1,0 +1,163 @@
+{
+  "rows": [
+    {
+      "sourceFrame": 447,
+      "baselineWidth": 78.31477355957031,
+      "candidateWidth": 78.31477355957031,
+      "upper310Exact": true,
+      "skinTargetExact": true,
+      "cornerYExact": true,
+      "jaw": [
+        0.01185497221275893,
+        0.0,
+        0.0052141583187739855,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.9829308694684671,
+        0.0
+      ],
+      "contact": 0.9829308694684671,
+      "constrainedWidth": 78.31477355957031
+    },
+    {
+      "sourceFrame": 457,
+      "baselineWidth": 86.28724670410156,
+      "candidateWidth": 86.28724670410156,
+      "upper310Exact": true,
+      "skinTargetExact": true,
+      "cornerYExact": true,
+      "jaw": [
+        0.6209236874027212,
+        0.0,
+        0.37907631259727875,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "contact": 0.0,
+      "constrainedWidth": 86.28724670410156
+    },
+    {
+      "sourceFrame": 454,
+      "baselineWidth": 86.295654296875,
+      "candidateWidth": 64.72174072265625,
+      "upper310Exact": true,
+      "skinTargetExact": true,
+      "cornerYExact": true,
+      "jaw": [
+        0.46546341267883173,
+        0.0,
+        0.5345365873211683,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "contact": 0.0,
+      "constrainedWidth": 86.295654296875,
+      "baselineFullStageExact": true
+    },
+    {
+      "sourceFrame": 455,
+      "baselineWidth": 86.34347534179688,
+      "candidateWidth": 64.75759887695312,
+      "upper310Exact": true,
+      "skinTargetExact": true,
+      "cornerYExact": true,
+      "jaw": [
+        0.6245045245306803,
+        0.0,
+        0.3754954754693197,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "contact": 0.0,
+      "constrainedWidth": 86.34347534179688,
+      "baselineFullStageExact": true
+    },
+    {
+      "sourceFrame": 456,
+      "baselineWidth": 86.33859252929688,
+      "candidateWidth": 80.74258422851562,
+      "upper310Exact": true,
+      "skinTargetExact": true,
+      "cornerYExact": true,
+      "jaw": [
+        0.6191129310309216,
+        0.0,
+        0.38088706896907853,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "contact": 0.0,
+      "constrainedWidth": 86.33859252929688,
+      "baselineFullStageExact": true
+    }
+  ],
+  "films": {
+    "Normal": {
+      "decodedFrames": 30,
+      "sha256": "617df0459d40ad24481189688085db30f894b06126a10711e18c3abd102e33db"
+    },
+    "Quarter-Speed": {
+      "decodedFrames": 120,
+      "sha256": "f7b27d3166511e7ac57cfb2ba4b0aba60abc05c456a9c2e90319edf134b05ec3"
+    }
+  },
+  "audio": {
+    "sourcePcm16Samples": 20000,
+    "decodedPcm16Samples": 20000,
+    "rate": 16000,
+    "codec": "AAC",
+    "decodeErrors": ""
+  },
+  "contextOriginalPcmSamples": 20000,
+  "pcmSha256": "fcb5bd7855641abcf0c829c0b0b4e19a3448d7d5ba13c8102a0bbb5e3b3e0932",
+  "copiedFullFrames": 27,
+  "newStageFrames": 3,
+  "flagsUnresolved": 18,
+  "polished": false,
+  "sourceFiles": 85,
+  "pngHashes": 48,
+  "testsPassed": 3,
+  "nativeSamplesInspected": [
+    447,
+    454,
+    455,
+    456,
+    457
+  ],
+  "normalSamplesInspected": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "slowSamplesInspected": [
+    1,
+    2,
+    3
+  ],
+  "defaultChanged": false,
+  "fullFilmUpdated": false,
+  "realTimePlaybackAccepted": false,
+  "listeningAccepted": false,
+  "pendingJobs": [],
+  "baselineSha256": "bc44d1f281bc0baabd010b83812a0c27744d3920bab90658429f5362a16271ba"
+}
