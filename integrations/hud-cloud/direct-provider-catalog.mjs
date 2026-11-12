@@ -23,6 +23,17 @@ const MODEL=/^[a-zA-Z0-9@][a-zA-Z0-9_./:@+-]{0,199}$/;
 const MAX_RESPONSE=4194304;
 const goodKey=value=>typeof value==='string'&&value.length>=16&&
   value.length<=512&&!/[\s\x00-\x1f\x7f]/.test(value);
+// Read-only, no-network check of installed server credentials. This is NOT
+// authentication, free billing or inference admission evidence.
+export function directCatalogSetupBlocker(env,provider){
+ if(!Object.hasOwn(ENDPOINTS,provider))return 'unknown_provider';
+ const key=env?.[KEYS[provider]];
+ if(!goodKey(key)||key===env?.HUD_READER_TOKEN||key===env?.HUD_WRITER_TOKEN)
+  return 'no_provider_key';
+ if(provider==='cloudflare-ai'&&!/^[a-f0-9]{32}$/i.test(env?.CLOUDFLARE_ACCOUNT_ID||''))
+  return 'missing_account';
+ return null;
+}
 async function readJSON(response){
  if(!response.body)throw Error('invalid_catalog_body');
  const chunks=[];let total=0,reader=response.body.getReader();
@@ -43,17 +54,13 @@ const result=(status,models=[],error_category=null)=>({
  source:'direct_provider',status,models,siteD1:false,error_category
 });
 export async function directProviderCatalog(env,provider,send=fetch){
- if(!Object.hasOwn(ENDPOINTS,provider))return result('unavailable',[],'unknown_provider');
- const key=env?.[KEYS[provider]];
- if(!goodKey(key)||key===env.HUD_READER_TOKEN||key===env.HUD_WRITER_TOKEN)
-  return result('unconfigured',[],'no_provider_key');
+ const setup=directCatalogSetupBlocker(env,provider);
+ if(setup==='unknown_provider')return result('unavailable',[],'unknown_provider');
+ if(setup)return result('unconfigured',[],setup);
+ const key=env[KEYS[provider]];
  let url=ENDPOINTS[provider];
- if(provider==='cloudflare-ai'){
-  const account=env?.CLOUDFLARE_ACCOUNT_ID;
-  if(typeof account!=='string'||!/^[a-f0-9]{32}$/i.test(account))
-   return result('unconfigured',[],'missing_account');
-  url='https://api.cloudflare.com/client/v4/accounts/'+account+'/ai/models/search';
- }
+ if(provider==='cloudflare-ai')
+  url='https://api.cloudflare.com/client/v4/accounts/'+env.CLOUDFLARE_ACCOUNT_ID+'/ai/models/search';
  // OpenRouter's model catalog is public unless an organization opts into
  // key-scoped filtering. A 200 from /models alone cannot authenticate the
  // configured key. Verify the real API key through its documented read-only
