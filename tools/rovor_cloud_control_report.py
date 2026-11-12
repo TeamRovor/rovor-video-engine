@@ -35,6 +35,67 @@ SERVICE_DENIED = {"401": "service_credential_missing_or_mismatched",
                   "403": "site_access_policy_denied",
                   "404": "site_service_route_unavailable"}
 
+# Fixed, public-safe status codes only. The private Site may return additional
+# free-form data, which must never be copied into Actions logs or artifacts.
+PROVIDER_ADMISSIONS = frozenset({
+    "eligible", "disabled_pending_verification", "not_configured",
+    "missing_secret", "unpinned_model", "provider_model_id_mismatch",
+    "eligibility_unverified", "eligibility_expired", "canary_unverified",
+    "invalid_limits", "invalid_routing_priority", "missing_account",
+    "paid_route_denied", "unpinned_upstream",
+})
+CATALOG_FRESH_MS = 75 * 60 * 1000
+
+
+def provider_readiness(providers: list, now_ms: int | None = None) -> list[dict]:
+    """Redacted private-Site admission summary, NEVER an authorization oracle."""
+    if now_ms is None:
+        now_ms = int(dt.datetime.now(dt.timezone.utc).timestamp() * 1000)
+    if not isinstance(providers, list) or len(providers) != len(PROVIDERS):
+        return []
+    by_name = {
+        entry.get("provider"): entry for entry in providers
+        if isinstance(entry, dict) and isinstance(entry.get("provider"), str)
+        and entry.get("provider") in PROVIDERS
+    }
+    if len(by_name) != len(PROVIDERS):
+        return []
+    rows = []
+    for name in sorted(PROVIDERS):
+        item = by_name[name]
+        check = item.get("last_check")
+        catalog = "not_confirmed"
+        if isinstance(check, dict) and check.get("provider") == name and (
+            check.get("status") == "catalog_received"
+        ):
+            observed = check.get("observed_at")
+            if type(observed) is int and now_ms - CATALOG_FRESH_MS <= observed <= now_ms + 60000:
+                catalog = "fresh_authenticated"
+            else:
+                catalog = "stale"
+        model = item.get("configured_model")
+        # Only report whether the *declared* model looks pinned, not whether
+        # the upstream actually resolved this model or charges zero dollars.
+        model_pinned = bool(
+            isinstance(model, str)
+            and re.fullmatch(r"[a-zA-Z0-9@][a-zA-Z0-9_./:@-]{0,199}", model)
+            and not re.search(r"(^|[/:-])(auto|latest)([/:-]|$)", model, re.I)
+        )
+        raw_admission = item.get("admission")
+        admission = (raw_admission if isinstance(raw_admission, str)
+                     and raw_admission in PROVIDER_ADMISSIONS else "unclassified")
+        rows.append({
+            "provider": name,
+            "credentials": "configured" if item.get("credentials_configured") is True else "unverified",
+            "catalog": catalog,
+            "model": "declared_pinned" if model_pinned else "not_pinned",
+            "admission": admission,
+            "online": "verified" if item.get("online_verified") is True
+                      and admission == "eligible" and model_pinned else "not_verified",
+        })
+    return rows
+
+
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -199,7 +260,7 @@ def summarize_workforce(token: str, opener=None) -> dict:
               "owner_stop": "unknown", "eligible_providers": None,
               "queue_pending": None, "pending_reviews": None,
               "last_scheduled_shift": "unknown", "native_schedule_verified": False,
-              "actual_recent_model_attempts": None,
+              "actual_recent_model_attempts": None, "provider_readiness": [],
               "reported_employee_roles": None, "recent_review_ready_attempts": None}
     if not credential(token):
         result["service"] = "blocked_service_secret_missing"
@@ -219,6 +280,7 @@ def summarize_workforce(token: str, opener=None) -> dict:
             result["configured_provider_count"] = sum(p.get("credentials_configured") is True for p in providers)
             result["verified_online_providers"] = sum(p.get("online_verified") is True for p in providers)
             result["eligible_providers"] = sum(p.get("admission") == "eligible" for p in providers)
+            result["provider_readiness"] = provider_readiness(providers)
     result["owner_stop"] = "dispatch_enabled" if data.get("enabled") is True else (
         "dispatch_paused" if data.get("enabled") is False else "unknown")
     pending = data.get("queue_pending")
@@ -319,6 +381,21 @@ def summary(report: dict) -> str:
     ]
     if missing:
         lines.append("- Missing/invalid deployment configuration: " + ", ".join(missing) + ".")
+    if workers.get("provider_readiness"):
+        lines.extend([
+            "",
+            "### Nine-provider admission detail — original private Site only",
+            "",
+            "Catalog freshness, declared model IDs, and saved API keys are **not** cost, quota, canary or live inference proof.",
+            "",
+            "| Provider | Credentials | Catalog | Declared model | Admission gate | Online receipt |",
+            "|---|---|---|---|---|---|",
+        ])
+        for route in workers["provider_readiness"]:
+            lines.append(
+                f"| {route['provider']} | {route['credentials']} | {route['catalog']} | "
+                f"{route['model']} | {route['admission']} | {route['online']} |"
+            )
     if report["mode"] == "deploy_and_test_gemini" and not report["owner_confirmed_free_tier"]:
         lines.append("- Owner confirmation required: this Google API key is for the Free-tier project.")
     if not flags["google_free_project_key"]:
