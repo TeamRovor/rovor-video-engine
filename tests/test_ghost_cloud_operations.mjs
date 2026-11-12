@@ -678,6 +678,8 @@ test('owner cloud inference shares D1 ledger, returns real model and token recei
   assert.equal(prompt,'Hello from private cloud');
   assert.equal(cfg.model,'openai/gpt-oss-20b');
   return {status:'needs_review',output:'Real mocked cloud answer',
+   quota_observation:{unit:'requests_per_day',used:2,limit:50,remaining:48,
+    observed_at:now,resets_at:now+3600000,source:'authenticated_groq_rpd_response_headers',scope:'provider_account'},
    actual_model:'openai/gpt-oss-20b',tokens_input:11,tokens_output:14};
  };
  await s.ops.control(s.env,true);
@@ -701,6 +703,9 @@ test('owner cloud inference shares D1 ledger, returns real model and token recei
  assert.equal(record.tokens_output,14);
  const report=await s.ops.status(s.env);
  const groq=report.providers.find(p=>p.provider==='groq');
+ assert.equal(groq.quota.remaining,48);
+ assert.equal(groq.quota.source,'authenticated_groq_rpd_response_headers');
+ assert.equal(groq.quota.resets_at,now+3600000);
  assert.equal(groq.owner_chat_24h.attempts,1);
  assert.equal(groq.owner_chat_24h.completed,1);
  assert.equal(groq.owner_chat_24h.tokens_output,14);
