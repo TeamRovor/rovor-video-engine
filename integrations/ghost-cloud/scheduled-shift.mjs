@@ -18,6 +18,7 @@ export async function runScheduledShift(env, {replenish, tick, clock = Date.now,
   const db = env.DB;
   await statement(db, "INSERT INTO ghost_cloud_shift_runs(id,started_at,status,queued,duplicates,dispatched) VALUES(? ,?,'running',0,0,0)", id, startedAt).run();
   let queued = 0, duplicates = 0, dispatched = 0, status = 'idle', reason = null;
+  let feedState = null;
   try {
     const enabled = await statement(db, 'SELECT enabled FROM ghost_cloud_control WHERE id=1').first();
     if (enabled?.enabled !== 1) {
@@ -30,6 +31,11 @@ export async function runScheduledShift(env, {replenish, tick, clock = Date.now,
       } else {
         if (!validCount(feed?.queued, 9) || !validCount(feed?.duplicates, 9) || feed.queued + feed.duplicates > 9) throw Error('invalid_feed_receipt');
         queued = feed.queued; duplicates = feed.duplicates;
+        // Only trusted feeder outcomes are used for public-safe idle diagnosis.
+        // The immutable job ledger still decides whether pending work exists.
+        feedState = feed.status === 'empty' ? 'no_private_approved_packets' :
+          feed.status === 'complete' && queued === 0 && duplicates === 0 ? 'no_current_approved_packet' :
+          queued === 0 && duplicates > 0 ? 'approved_packets_already_attempted' : null;
         // Respect STOP changes between replenishment and model invocation.
         const again = await statement(db, 'SELECT enabled FROM ghost_cloud_control WHERE id=1').first();
         if (again?.enabled !== 1) status = 'stopped';
@@ -63,7 +69,7 @@ export async function runScheduledShift(env, {replenish, tick, clock = Date.now,
               if(safeProviders.has(provider)&&record&&safeReasons.has(record.reason))
                 verifiedGate='claim_'+provider+'_'+record.reason;
             }
-            reason=pending.n===0?'no_unattempted_jobs':
+            reason=pending.n===0?(feedState||'no_unattempted_jobs'):
               allDenied?'no_eligible_providers':
               verifiedGate||'unattempted_jobs_not_dispatched';
           }
