@@ -112,6 +112,69 @@ class ControlReportTests(unittest.TestCase):
         self.assertTrue(ops.can_deploy(ops.deployment_secrets(e),"deploy_and_test_gemini",True))
         self.assertFalse(ops.can_deploy(ops.deployment_secrets(e),"deploy_and_test_gemini",False))
 
+    def test_nine_provider_readiness_is_redacted_and_keeps_catalog_separate(self):
+        now = 1794455910000
+        rows = [
+            {"provider": provider, "credentials_configured": True,
+             "configured_model": None, "admission": "disabled_pending_verification",
+             "online_verified": False, "last_check": None}
+            for provider in sorted(ops.PROVIDERS)
+        ]
+        groq = next(row for row in rows if row["provider"] == "groq")
+        groq.update({
+            "configured_model": "openai/gpt-oss-20b",
+            "admission": "eligibility_expired",
+            "online_verified": True,
+            "last_check": {"provider": "groq", "observed_at": now,
+                           "status": "catalog_received"},
+        })
+        result = ops.provider_readiness(rows, now_ms=now)
+        self.assertEqual(len(result), 9)
+        observed = next(row for row in result if row["provider"] == "groq")
+        self.assertEqual(observed["credentials"], "configured")
+        self.assertEqual(observed["catalog"], "fresh_authenticated")
+        self.assertEqual(observed["model"], "declared_pinned")
+        self.assertEqual(observed["admission"], "eligibility_expired")
+        self.assertEqual(observed["online"], "not_verified")
+        self.assertNotIn("gpt-oss-20b", json.dumps(result),
+                         "the readiness audit must not log raw operator model config")
+
+        untrusted = next(row for row in rows if row["provider"] == "nvidia")
+        untrusted["admission"] = "bad | markdown\\nAuthorization: Bearer PRIVATE"
+        untrusted["configured_model"] = "auto"
+        untrusted["last_check"] = {"provider": "nvidia",
+                                   "status": "catalog_received",
+                                   "observed_at": now - ops.CATALOG_FRESH_MS - 1}
+        sanitized = ops.provider_readiness(rows, now_ms=now)
+        entry = next(row for row in sanitized if row["provider"] == "nvidia")
+        self.assertEqual(entry["admission"], "unclassified")
+        self.assertEqual(entry["catalog"], "stale")
+        self.assertEqual(entry["model"], "not_pinned")
+        self.assertNotIn("Bearer PRIVATE", json.dumps(sanitized))
+
+        workforce = {"provider_readiness": sanitized, "service": "reachable"}
+        fake_report = {"credentials_present": {"google_free_project_key": True,
+                       "private_site_service_token": True}, "hud": {},
+                       "workforce": workforce}
+        # Markdown sanitization is tested using the real report shape below.
+        report = ops.build_report(env(), opener=HTTP(env()["ROVOR_GHOST_SERVICE_TOKEN"]))
+        report["workforce"]["provider_readiness"] = sanitized
+        rendered = ops.summary(report)
+        self.assertIn("Nine-provider admission detail", rendered)
+        self.assertIn("eligibility_expired", rendered)
+        self.assertNotIn("Bearer PRIVATE", rendered)
+        self.assertNotIn("gpt-oss-20b", rendered)
+
+    def test_malformed_provider_readiness_fails_closed_without_runtime_errors(self):
+        valid = [{"provider": p, "admission": {"untrusted": "raw"}}
+                 for p in sorted(ops.PROVIDERS)]
+        result = ops.provider_readiness(valid, now_ms=1794455910000)
+        self.assertEqual(len(result), 9)
+        self.assertTrue(all(row["admission"] == "unclassified" for row in result))
+        self.assertEqual(ops.provider_readiness(valid[:-1]), [])
+        valid[0]["provider"] = ["not", "hashable"]
+        self.assertEqual(ops.provider_readiness(valid), [])
+
     def test_site_service_key_missing_is_truthfully_unverified(self):
         e=env();e.pop("ROVOR_GHOST_SERVICE_TOKEN")
         report=ops.build_report(e,opener=HTTP("s"*48))
