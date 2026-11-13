@@ -29,6 +29,13 @@ test('team tracking maps three unique branches and attributes shared Windows PR 
   assert.match(source, /No unmerged commits is expected after merge/);
   assert.match(source, /Last PR update:/);
   assert.match(source, /Latest recorded branch PR:/);
+  assert.match(source, /lastAttempted/);
+  assert.match(source, /lastSuccessful/);
+  assert.match(source, /STALE · last complete refresh/);
+  assert.match(source, /Branch data unavailable:/);
+  assert.match(source, /Last poll attempt:/);
+  assert.match(source, /successAge > 30 \* 60 \* 1000/);
+  assert.match(source, /const complete = results\.every/);
 });
 
 test('injector stages module in existing HUD, is idempotent, and refuses unexpected source', () => {
