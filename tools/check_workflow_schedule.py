@@ -51,14 +51,19 @@ def check_directory(root):
         for line in text.splitlines():
             if line.lstrip().startswith("#"):
                 continue
-            match = re.match(r"""^(on|'on'|"on"):\s*(.*)$""", line)
+            match = re.match(
+                r"""^(?P<indent>[ \t]*)(?P<key>on|'on'|"on")(?P<spacing>[ \t]*):(?P<value>.*)$""",
+                line,
+            )
             if not match:
                 continue
             trigger_blocks += 1
-            key, value = match.groups()
+            key, value = match.group("key"), match.group("value")
             value = value.split("#", 1)[0].strip()
             if key != "on":
                 errors.append(f"{path.name}: unsupported quoted on: key")
+            elif match.group("indent") or match.group("spacing"):
+                errors.append(f"{path.name}: unsupported noncanonical on: key")
             elif value == "schedule":
                 errors.append(f"{path.name}: unsupported scalar on: schedule")
             elif value and not (
@@ -68,6 +73,8 @@ def check_directory(root):
                 errors.append(f"{path.name}: unsupported inline on: syntax")
         if trigger_blocks > 1:
             errors.append(f"{path.name}: duplicate top-level on: declarations")
+        if trigger_blocks == 0:
+            errors.append(f"{path.name}: missing canonical on: trigger header")
     return report, errors
 
 
