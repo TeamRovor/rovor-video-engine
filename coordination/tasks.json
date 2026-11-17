@@ -6219,25 +6219,6 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/43107107729"
         }
       ]
-    },
-    {
-      "id": "provider-catalog-contradictory-receipt-20261117",
-      "title": "Fail closed on contradictory provider catalog success receipts",
-      "priority": 1,
-      "status": "active",
-      "owner": "ChatGPT / independent ROVOR GitHub integration 2026-11-17",
-      "branch": "fix/provider-catalog-receipt-consistency-20261117",
-      "scopes": [
-        "tools/verify_rovor_provider_catalog_readback.py",
-        "tests/test_rovor_provider_catalog_readback.py"
-      ],
-      "depends_on": [],
-      "next_action": "Reject conflicting catalog_received records whose response or private D1 status reports a non-null error category; add focused regression tests and inspect PR CI.",
-      "acceptance": "Contradictory catalog/D1 error records cannot count toward 9/9 catalog persistence; valid receipts stay accepted, no inference, quota, billing, STOP, or scheduler changes.",
-      "links": [],
-      "updated_at": "2026-11-17T11:05:53.202Z",
-      "next_update": "After focused GitHub Actions verification and owner review",
-      "blocker": null
     }
   ]
 }
