@@ -47,13 +47,29 @@ def check_directory(root):
     # new schedule from the allowlist.
     for path in sorted([*root.glob("*.yml"), *root.glob("*.yaml")]):
         text = path.read_text(encoding="utf-8")
+        headers = 0
         for line in text.splitlines():
-            match = re.match(r"^on:\s*(.*)$", line)
-            if match:
-                value = match.group(1).strip()
-                if value.startswith("{") or value == "schedule":
-                    errors.append(f"{path.name}: unsupported inline on: syntax")
-                break
+            if line.lstrip().startswith("#"):
+                continue
+            # Valid YAML permits quoted, spaced and indented trigger keys.
+            # The lightweight inventory parser only understands canonical
+            # top-level 'on:' syntax. Reject all alternatives rather than
+            # silently missing a GitHub cron and authorizing a dispatcher.
+            match = re.match(r"""^(\\s*)(?P<key>on|'on'|"on")\\s*:(?P<value>.*)$""", line)
+            if not match:
+                continue
+            headers += 1
+            if headers > 1:
+                errors.append(f"{path.name}: duplicate on: trigger header")
+                continue
+            if match.group(1) or match.group("key") != "on" or not line.startswith("on:"):
+                errors.append(f"{path.name}: noncanonical on: header; use top-level unquoted on:")
+                continue
+            value = match.group("value").strip()
+            if value.startswith("{") or value == "schedule":
+                errors.append(f"{path.name}: unsupported inline on: syntax")
+        if not headers:
+            errors.append(f"{path.name}: missing canonical on: trigger header")
     return report, errors
 
 
