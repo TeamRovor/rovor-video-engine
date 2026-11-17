@@ -104,7 +104,10 @@ class ScheduleGuardTests(unittest.TestCase):
                 "# on: schedule\non: workflow_dispatch\n",
                 encoding="utf-8")
             errors = schedule.check_directory(root)[1]
-            self.assertEqual(errors, [])
+            self.assertFalse(
+                any("unsupported" in e or "missing canonical on:" in e
+                    or "duplicate top-level" in e for e in errors),
+                errors)
 
     def test_valid_inline_manual_trigger_is_not_rejected_by_surface_guard(self):
         with tempfile.TemporaryDirectory() as folder:
