@@ -245,7 +245,7 @@ test('one API catalog parser handles nine provider schemas without transmitting 
   const normalized=normalizeProviderCatalog(provider,reply);
   assert.equal(normalized.length,1,provider);
   assert.equal(normalized[0].catalog_zero_price,provider==='openrouter'?true:null);
-  assert.equal(normalized[0].pinned_model_candidate,true);
+  assert.equal(normalized[0].pinned_model_candidate,provider!=='huggingface');
   assert(!JSON.stringify(normalized).includes('private-uuid'));
   assert(!JSON.stringify(normalized).includes('NEVER_ECHO_SECRET'));
  }
