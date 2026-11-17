@@ -93,7 +93,7 @@ function attemptView(a) {
 }
 
 export async function readGhostStatus(env, fetcher=fetch, now=Date.now()) {
-  const token=env?.HUD_GHOST_SERVICE_TOKEN;
+  const token=env?.GHOST_SITE_SERVICE_TOKEN;
   if(typeof token!=='string'||token.length<32 ||
      token===env?.HUD_READER_TOKEN||token===env?.HUD_WRITER_TOKEN)
     return error('cloud_readback_not_configured',503);
