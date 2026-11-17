@@ -81,3 +81,85 @@ test('active boot and cloud polling never touch archived local endpoints',()=>{
   assert.doesNotMatch(workerJS.match(/const CLOUD_START = [^\n]+/)[0],/ROVOR_START_OMNIROUTE/);
   assert.doesNotMatch(popup,/Mac|LaunchAgent|omniroute|simulatedCounts|LAST REPORT/i);
 });
+
+function cloudPreviewHarness(){
+  const requests=[],summaries=[];
+  let clock=Date.now(),tick=null,observer=null,drawer=null;
+  class TestDate extends Date {static now(){return clock;}}
+  const document={
+    hidden:false,body:{},head:{append(){}},
+    createElement:()=>({}),getElementById:()=>null,addEventListener(){},
+    querySelectorAll:sel=>sel==='#rovor-workload-popup .wl-card'&&drawer?[drawer]:[],
+  };
+  const window={ROVOR_WORKLOAD:{setCloudSummary(value){summaries.push(value);}}};
+  const fetch=async (url,opts)=>{
+    requests.push({url,opts});
+    const data=url==='/api/ghost/status'
+      ? {execution_source:'cloud_provider',observed_at:clock,providers:[],attempts:[]}
+      : url==='/api/hud/gemini/models'
+      ? {source:'google_gemini_cloud_direct',directly_listed_models:['gemini-3.1-flash-lite'],verified_model_count:1}
+      : url==='/api/hud/gemini/usage'
+      ? {source:'cloud_gemini_direct',completed:1}
+      : url==='/api/chat/groq/status'
+      ? {source:'cloud_direct_groq',ready:true}
+      : {models:['@cf/meta/llama-3.1-8b-instruct']};
+    return {ok:true,json:async()=>data};
+  };
+  class Observer {constructor(cb){observer=cb;}observe(){}}
+  runInNewContext(quotaJS,{
+    window,document,fetch,MutationObserver:Observer,
+    setInterval(cb){tick=cb;},AbortSignal:{timeout(){return {};}},
+    Date:TestDate,Math,Number,String,Array,Map,Set,Object,Promise,
+  });
+  return {
+    start(){window.ROVOR_QUOTA_BOARD.startCloud();},
+    requests,summaries,document,
+    tick(){tick?.();},
+    advance(ms){clock+=ms;},
+    openDrawer(){
+      let html='';
+      drawer={
+        hidden:false,classList:{contains:()=>false},
+        querySelector:selector=>selector==='[data-rovor-cloud-placeholder]'?{}:null,
+        getAttribute:key=>key==='data-rovor-cloud-placeholder'?'true':null,
+        get outerHTML(){return html;},
+        set outerHTML(value){html=value;},
+      };
+      return {html:()=>html,mutate(){observer?.();}};
+    },
+  };
+}
+const settleCloud=()=>new Promise(resolve=>setImmediate(resolve));
+
+test('cloud home preview fetches live sources even without opening the Workload drawer',async()=>{
+  const app=cloudPreviewHarness();
+  app.start();await settleCloud();
+  assert.deepEqual(app.requests.map(r=>r.url),[
+    '/api/ghost/status','/api/hud/gemini/models','/api/hud/gemini/usage',
+    '/api/chat/groq/status','/api/chat/models',
+  ]);
+  assert.equal(app.summaries.length,1);
+  assert.equal(app.summaries[0].geminiModels,1);
+  assert.equal(app.summaries[0].geminiVerified,1);
+  assert.equal(app.summaries[0].groqReady,true);
+  assert(app.requests.every(r=>r.opts.credentials==='same-origin'&&r.opts.cache==='no-store'));
+
+  app.tick();await settleCloud();
+  assert.equal(app.requests.length,5,'respect cooldown; avoid duplicate network calls');
+  app.advance(10000);app.tick();await settleCloud();
+  assert.equal(app.requests.length,5,'home readback should not poll every ten seconds');
+  app.advance(50000);app.tick();await settleCloud();
+  assert.equal(app.requests.length,10,'refresh home readback at the one-minute cadence');
+  app.document.hidden=true;app.advance(10000);app.tick();await settleCloud();
+  assert.equal(app.requests.length,10,'do not poll in background tabs');
+});
+
+test('opening Workload during cloud-poll cooldown paints latest cached status immediately',async()=>{
+  const app=cloudPreviewHarness();
+  app.start();await settleCloud();
+  const drawer=app.openDrawer();
+  drawer.mutate();await settleCloud();
+  assert.match(drawer.html(),/PRIVATE CLOUD WORKFORCE · FRESH/);
+  assert.match(drawer.html(),/NINE PROVIDER SOURCES/);
+  assert.equal(app.requests.length,5,'no redundant requests when opening the drawer');
+});
