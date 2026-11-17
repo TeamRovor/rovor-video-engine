@@ -40,8 +40,6 @@ function providerView(p, now) {
   const catalogState=['authenticated','failed','stale','unknown'].includes(catalog?.state)
     ? catalog.state : 'unknown';
   const catalogAt=timestamp(catalog?.observed_at);
-  const legacyCheck=p.last_check;
-  const legacyAt=timestamp(legacyCheck?.observed_at);
   const quota=p.quota;
   const validQuota=quota?.status==='verified' &&
     timestamp(quota.observed_at)!==null &&
@@ -57,12 +55,6 @@ function providerView(p, now) {
     // neither a verified free allowance nor permission to run inference.
     catalog_connection:{state:catalogState,
       observed_at:catalogAt!==null&&catalogAt<=now+60000?catalogAt:null},
-    last_check:legacyCheck?.status==='catalog_received'&&
-      legacyAt!==null&&legacyAt<=now+60000
-      ? {status:'catalog_received',observed_at:legacyAt} : null,
-    // Source-derived proof still requires a matching, recent pinned-model
-    // attempt with actual model and token counts in the HUD readiness client.
-    recent_inference_verified:p.recent_inference_verified===true,
     admission:string(p.admission,70)||'unverified',
     online_verified:p.online_verified===true,
     // The existing private Site publishes a last_check D1 record, rather than
