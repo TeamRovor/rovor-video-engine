@@ -36,6 +36,27 @@ test('unknown task rejected',async()=>rejects(()=>plan(queue(),routing(),[{task_
 test('completed tasks cannot be requeued',async()=>{const q=queue();q.tasks[0].status='done';await rejects(()=>plan(q),'task_not_claimed');});
 test('task requires real active owner and scope',async()=>{const q=queue();q.tasks[0].owner='';await rejects(()=>plan(q),'task_not_claimed');});
 test('missing canonical routing blocks dispatch',async()=>rejects(()=>plan(queue(),{tasks:{}}),'task_unrouted'));
+
+test('cloud feed accepts existing GitHub-read and hosted-CI prerequisites',async()=>{
+ for(const requires of [[],['github-read'],['hosted-ci'],['github-read','hosted-ci']]){
+  const r=routing();r.tasks['public-task'].requires=requires;
+  assert.equal((await plan(queue(),r)).length,1);
+ }
+});
+test('approved tasks needing local or unknown tools cannot enter the cloud prompt-only queue',async()=>{
+ for(const capability of ['local-exec','original-assets','visual-review','moho-runtime',
+  'blender-runtime','final-cut-runtime','unknown-tool']){
+  const r=routing();r.tasks['public-task'].requires=[capability];
+  await rejects(()=>plan(queue(),r),'cloud_requirement_unavailable');
+ }
+});
+test('unavailable capability blocks writer before any source-approved job is enqueued',async()=>{
+ const e=env(),r=routing();r.tasks['public-task'].requires=['github-read','local-exec'];
+ let submitted=0;
+ await rejects(()=>replenishApprovedJobs(e,{fetcher:fetcher(queue(),r),
+  submit:async()=>{submitted++;return {queued:true};}}),'cloud_requirement_unavailable');
+ assert.equal(submitted,0);
+});
 test('unresolved canonical dependency blocks dispatch',async()=>{
  const q=queue();q.tasks[0].depends_on=['unresolved'];await rejects(()=>plan(q),'task_dependency_blocked');
 });
