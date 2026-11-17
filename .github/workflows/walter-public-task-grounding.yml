@@ -6,15 +6,11 @@ on:
       - tools/walter_public_task_grounding.py
       - tests/test_walter_public_task_grounding.py
       - .github/workflows/walter-public-task-grounding.yml
-      - coordination/tasks.json
-      - coordination/work-routing.json
   pull_request:
     paths:
       - tools/walter_public_task_grounding.py
       - tests/test_walter_public_task_grounding.py
       - .github/workflows/walter-public-task-grounding.yml
-      - coordination/tasks.json
-      - coordination/work-routing.json
 
 permissions:
   contents: read
