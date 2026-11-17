@@ -12,6 +12,13 @@ const INTERVAL=300000;
 const FRESH=3600000;
 const MAX_BODY=110000;
 const safeModel=s=>typeof s==='string'&&/^[a-zA-Z0-9@][a-zA-Z0-9_./:@+-]{0,199}$/.test(s);
+// An authenticated OpenRouter key counter is evidence of daily free-model
+// request capacity, not a provider billing attestation or an admitted route.
+const validOpenRouterRequests=q=>q&&typeof q==='object'&&!Array.isArray(q)&&
+ Object.keys(q).length===3&&['used','limit','remaining'].every(k=>Object.hasOwn(q,k))&&
+ Number.isSafeInteger(q.used)&&Number.isSafeInteger(q.limit)&&
+ Number.isSafeInteger(q.remaining)&&q.limit>0&&q.limit<=10000000&&
+ q.used>=0&&q.remaining>=0&&q.used+q.remaining===q.limit;
 const validTime=n=>Number.isSafeInteger(n)&&n>0;
 const secret=env=>{
  const v=env?.GHOST_SITE_SERVICE_TOKEN;
@@ -108,10 +115,15 @@ export async function refreshCatalogBridge(env,now=Date.now(),send=fetch){
   {...await inspect(env,provider,now,send),source:'original_site',error_category:null}:
   {status:direct.status==='catalog_received'?'catalog_received':'upstream_unavailable',
    source:'direct_provider',error_category:direct.error_category||null,
-   models:direct.models,siteD1:false};
+   models:direct.models,siteD1:false,
+   ...(provider==='openrouter'&&direct.status==='catalog_received'&&
+      validOpenRouterRequests(direct.free_model_daily_requests)?
+      {free_model_daily_requests:direct.free_model_daily_requests}:{})};
  const modelsJSON=JSON.stringify({source:found.source,
   error_category:found.error_category,direct_setup_blocker:directSetupBlocker,
-  models:found.models});
+  models:found.models,
+  ...(found.free_model_daily_requests?
+   {free_model_daily_requests:found.free_model_daily_requests}:{})});
  const saved=await db.prepare(`INSERT INTO hud_site_catalog_rows
   (provider,checked_at,status,site_d1_verified,models_json)
   VALUES(?,?,?,?,?) ON CONFLICT(provider) DO UPDATE SET
@@ -129,7 +141,9 @@ export async function refreshCatalogBridge(env,now=Date.now(),send=fetch){
   status:found.status,catalog_source:found.source,
   site_d1_verified:found.siteD1,
   model_count:found.models.length,worker_d1_verified:true,
-  inference_online_verified:false};
+  inference_online_verified:false,
+  openrouter_free_requests_persisted:
+   provider==='openrouter'&&!!found.free_model_daily_requests};
 }
 export async function catalogBridgeStatus(env,now=Date.now()){
  if(!env?.DB||!validTime(now))throw Error('catalog_bridge_unavailable');
@@ -139,7 +153,7 @@ export async function catalogBridgeStatus(env,now=Date.now()){
  const providers=CATALOG_PROVIDERS.map(provider=>{
   const row=known.get(provider);
   let models=[],catalogSource='original_site',directErrorCategory=null,
-   directSetupBlocker=null;
+   directSetupBlocker=null,storedOpenRouterRequests=null;
   if(row)try{
    const value=JSON.parse(row.models_json);
    const list=Array.isArray(value)?value:value?.models;
@@ -154,6 +168,8 @@ export async function catalogBridgeStatus(env,now=Date.now()){
      'provider_http_unavailable','invalid_catalog_body',
      'invalid_catalog_shape','missing_account','unknown_provider'];
     directErrorCategory=allowed.includes(value.error_category)?value.error_category:null;
+    if(provider==='openrouter'&&validOpenRouterRequests(value.free_model_daily_requests))
+     storedOpenRouterRequests=value.free_model_daily_requests;
    }
   }catch{}
   // The live server setup gate is authoritative for CURRENT key presence.
@@ -161,6 +177,16 @@ export async function catalogBridgeStatus(env,now=Date.now()){
   // never promoted to authentication or inference when a key is newly added.
   directSetupBlocker=directCatalogSetupBlocker(env,provider);
   const checked=validTime(row?.checked_at)?row.checked_at:null;
+  // Fail closed after 15 minutes or a UTC-day boundary. This is a private
+  // D1-backed quota observation only; Site fleet admission remains unchanged.
+  const freshOpenRouterRequests=provider==='openrouter'&&
+   row?.status==='catalog_received'&&storedOpenRouterRequests!==null&&
+   checked!==null&&checked<=now&&now-checked<=15*60000&&
+   Math.floor(checked/86400000)===Math.floor(now/86400000)?
+   {...storedOpenRouterRequests,observed_at:checked,
+    resets_at:(Math.floor(checked/86400000)+1)*86400000,
+    source:'authenticated_openrouter_key_free_model_daily_requests',
+    scope:'provider_account'}:null;
   return {provider,status:row?.status||'never_checked',
    catalog_source:catalogSource,direct_error_category:directErrorCategory,
    direct_setup_blocker:directSetupBlocker,
@@ -168,6 +194,7 @@ export async function catalogBridgeStatus(env,now=Date.now()){
    freshness:checked!==null&&checked<=now&&now-checked<=FRESH?'fresh':'stale_or_unavailable',
    model_count:models.length,models,
    site_d1_verified:row?.site_d1_verified===1,
+   free_model_daily_requests:freshOpenRouterRequests,
    // This endpoint is intentionally NOT an inference admission source.
    free_billing_verified:false,quota_verified:false,canary_verified:false,
    inference_online_verified:false};
