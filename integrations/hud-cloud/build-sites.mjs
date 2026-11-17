@@ -42,6 +42,11 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const discoveryImport = "import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';";
   const sourceImport = "import {getRepoSource} from './repo-source.mjs';";
   const nativeDiscoveryImport = "import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';";
+  // The older self-contained Site cannot import the Cloudflare-only service
+  // readback module. Do not copy its service token or cross-host bridge there.
+  const ghostReadbackImport = "import {readGhostStatus} from './ghost-status-readback.mjs';";
+  if(core.split(ghostReadbackImport).length!==2)throw Error('Unexpected cloud receipt bridge import');
+  const ghostReadbackUnavailable="const readGhostStatus=async()=>({status:404,body:{error:'cloudflare_only'}});\n";
   const scheduledLanesImport = "import {runCloudScheduledLanes} from './scheduled-lanes.mjs';";
   if(core.split(scheduledLanesImport).length!==2)throw Error('Unexpected native cloud cron import');
   const repoCatchupImport = "import {repoCatchupStatus,refreshRepoCatchup} from './repo-catchup.mjs';";
@@ -105,10 +110,10 @@ export function bundleSitesWorker(core, adapter, html, quotaJS = '') {
   const repoSource = 'const {getRepoSource} = (() => {\n'+
     plain(sourceSrc)+'\nreturn {getRepoSource};})();\n';
   return dependency + relay + groqQuota + groqCloud + idea + discovery + repoSource + geminiCloud +
-    workforceUnavailable + nativeDiscoveryUnavailable + repoCatchupUnavailable + githubPatchUnavailable + reviewEvidenceUnavailable + cloudCatalogUnavailable +
+    workforceUnavailable + nativeDiscoveryUnavailable + repoCatchupUnavailable + githubPatchUnavailable + reviewEvidenceUnavailable + cloudCatalogUnavailable + ghostReadbackUnavailable +
     plain(core.replace(monitorImport, '').replace(relayImport, '').replace(cloudGeminiImport, '')
       .replace(groqImport, '').replace(groqProbeImport, '').replace(workforceImport, '').replace(catalogBridgeImport, '')
-      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '').replace(repoCatchupImport, '').replace(githubPatchImport, '').replace(reviewEvidenceImport, '').replace(scheduledLanesImport, '')
+      .replace(ideaImport, '').replace(discoveryImport, '').replace(sourceImport, '').replace(nativeDiscoveryImport, '').replace(repoCatchupImport, '').replace(githubPatchImport, '').replace(reviewEvidenceImport, '').replace(scheduledLanesImport, '').replace(ghostReadbackImport, '')
       .replace(coreEnd, '')) +
     '\n' + plain(adapter.replace(adapterImport, '')) +
     '\nconst siteFetch = createSitesHandler(' + JSON.stringify(html) + ', ' + JSON.stringify(quotaJS) + ');\nexport default {fetch: siteFetch};\n';
