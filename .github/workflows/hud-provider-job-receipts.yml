@@ -5,6 +5,8 @@ on:
     paths:
       - 'dashboard/command-center/native-v8-9/live-quota-board.js'
       - 'tests/test_hud_live_quota_jobs.cjs'
+      - 'tools/hud_provider_usage.mjs'
+      - 'tests/test_hud_provider_usage.mjs'
       - '.github/workflows/hud-provider-job-receipts.yml'
   workflow_dispatch:
 
@@ -21,3 +23,5 @@ jobs:
           node-version: '24'
       - name: Verify provider-attributed jobs and escaping
         run: node tests/test_hud_live_quota_jobs.cjs
+      - name: Verify rolling-hour and Pacific-day provider usage receipts
+        run: node --test tests/test_hud_provider_usage.mjs
