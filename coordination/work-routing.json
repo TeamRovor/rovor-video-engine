@@ -1201,6 +1201,14 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "github-workflow-on-key-governance-20261117": {
+      "lane": "coordination",
+      "requires": [
+        "github-read",
+        "github-write"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
