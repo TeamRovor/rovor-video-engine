@@ -12,6 +12,10 @@ on:
       - 'tests/test_workflow_inventory.py'
       - 'tests/test_workflow_schedule.py'
       - 'tests/test_legacy_scheduler_policy.py'
+      - 'tools/pr_overlap_audit.py'
+      - 'tests/test_pr_overlap_audit.py'
+      - 'dashboard/command-center/native-v8-9/**'
+      - 'integrations/hud-cloud/**'
   push:
     branches: [main]
     paths:
@@ -22,9 +26,14 @@ on:
       - 'tests/test_workflow_inventory.py'
       - 'tests/test_workflow_schedule.py'
       - 'tests/test_legacy_scheduler_policy.py'
+      - 'tools/pr_overlap_audit.py'
+      - 'tests/test_pr_overlap_audit.py'
+      - 'dashboard/command-center/native-v8-9/**'
+      - 'integrations/hud-cloud/**'
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: workflow-governance-${{ github.event.pull_request.number || github.ref }}
@@ -43,7 +52,13 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_workflow_inventory.py' -v
           python3 -m unittest discover -s tests -p 'test_workflow_schedule.py' -v
           python3 -m unittest discover -s tests -p 'test_legacy_scheduler_policy.py' -v
+          python3 -m unittest discover -s tests -p 'test_pr_overlap_audit.py' -v
       - name: Enforce retired GitHub dispatcher remains manual and owner-guarded
         run: python3 tools/check_legacy_scheduler_policy.py
       - name: Require reviewed auxiliary GitHub clocks only
         run: python3 tools/check_workflow_schedule.py
+      - name: Advisory — flag overlapping active PR file scope
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 tools/pr_overlap_audit.py
