@@ -43,3 +43,7 @@ For code-writing, bug-fixing, refactoring and technical review, use the local [P
 - [OmniRoute](integrations/open-interpreter/OMNIROUTE.md): optional third-party AI gateway. Never switch model/provider, spend money, distribute files to external services or assume an available free tier without verified configuration and authorization. Keep the existing Open Interpreter provider until tested.
 - [Context Engineering](.agents/skills/context-engineering/SKILL.md) and [Debugging and Error Recovery](.agents/skills/debugging-and-error-recovery/SKILL.md): consult **on demand**, not on every request. Do not load all third-party skills or spawn agents indiscriminately. [Integration details](integrations/open-interpreter/AGENT-SKILLS.md).
 - For Mac setup, read [the consolidated one-pass guide](integrations/open-interpreter/ONE_PASS_MAC_SETUP.md) and run its read-only preflight before claiming integrations are active.
+
+## Windows PR #7 branch
+
+This branch carries the Windows setup and render-reliability work in PR #7; continue its existing implementation rather than recreating the engine. Keep hosted CI results separate from evidence of the local Windows runtime.

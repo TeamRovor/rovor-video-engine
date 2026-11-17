@@ -1,6 +1,7 @@
 // Articulated vector prototype based on Evan's supplied character references.
 // Original vector artwork, not a cutout or edit of the reference bitmaps.
 const {renderScene} = require('./scene_graphics.cjs');
+const {wrapCaption} = require('./caption_utils.cjs');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const ease = x => {x=clamp(x,0,1);return x*x*(3-2*x)};
@@ -36,8 +37,12 @@ function arm(side, shoulder, elbow, point) {
 
 function strength(t, data, kind) {
   if (!Array.isArray(data.gestures)) return 0;
-  return Math.max(0, ...data.gestures.filter(g=>g.kind===kind && t>=g.start-.36 && t<=g.end+.36)
-    .map(g=>pulse(t,g.start-.20,g.end+.20)));
+  let strongest=0;
+  for(const gesture of data.gestures){
+    if(gesture.kind!==kind || t<gesture.start-.36 || t>gesture.end+.36) continue;
+    strongest=Math.max(strongest,pulse(t,gesture.start-.20,gesture.end+.20));
+  }
+  return strongest;
 }
 
 function render(t, data) {
@@ -53,10 +58,10 @@ function render(t, data) {
   const rightShoulder=12+pointing*42+presenting*22+ending*12+pinch*34+emphasis*17;
   const leftElbow=-15-presenting*67-ending*55-emphasis*25;
   const rightElbow=-15-pointing*65-presenting*67-ending*50-pinch*56-emphasis*20;
-  const segments=data.segments || [];
-  const line=segments.find(s=>t>=s.start&&t<s.end)?.text || '';
-  const words=line.trim().split(/\s+/); let lines=[''];
-  for(const word of words){const j=lines.length-1;if((lines[j]+' '+word).trim().length>35)lines.push(word);else lines[j]=(lines[j]+' '+word).trim();}
+  const captions=data.captions || data.segments || [];
+  let line='';
+  for(let i=captions.length-1;i>=0;i--){if(t>=captions[i].start&&t<captions[i].end){line=captions[i].text;break}}
+  const lines=wrapCaption(line,35,3);
   const subtitle=lines.slice(0,3).map((s,i)=>`<text x="360" y="${1160+i*34}" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" font-weight="700" fill="#fff">${esc(s)}</text>`).join('');
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280" viewBox="0 0 720 1280" font-family="Arial,sans-serif">
   <defs>

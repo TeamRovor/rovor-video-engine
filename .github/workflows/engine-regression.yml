@@ -1,0 +1,51 @@
+name: Portable engine regression checks
+
+on:
+  pull_request:
+    paths:
+      - 'evan-engine/**'
+      - 'evan-character/**'
+      - 'install-on-windows.ps1'
+      - '.github/workflows/engine-regression.yml'
+  push:
+    branches: [codex/windows-reliability-v3-1]
+    paths:
+      - 'evan-engine/**'
+      - 'evan-character/**'
+      - 'install-on-windows.ps1'
+      - '.github/workflows/engine-regression.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: engine-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check Python engine behavior and preserved reference assets
+        working-directory: evan-engine
+        run: python -m unittest discover -p 'test_*.py' -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned local renderer dependency
+        working-directory: evan-engine
+        run: npm install --no-audit --no-fund --package-lock=false
+      - name: Draw and decode real reference-art and vector frames
+        working-directory: evan-engine
+        run: node --test test_renderer.cjs

@@ -1,3 +1,57 @@
+ROVOR DIGITAL VIDEO ENGINE V3.4.0 — OCTOBER 19 2026
+
+RENDER DIAGNOSTICS:
+- Completed renders write render_result.json with output settings, media size, and caption/scene fingerprints.
+- Per-stage timing and active elapsed time persist across resumed attempts; downtime between attempts is excluded.
+- MCP render status returns the completed render report and validates it against the current MP4.
+- MCP status reads only the last 8 KB of a render log, keeping repeated polling bounded on long runs.
+- Metrics are saved atomically after local processing stages; diagnostic write failures do not stop a render.
+
+PREFLIGHT:
+- Shared Windows/macOS dependency checks require Node.js 20.9.0 or newer for the pinned Sharp renderer.
+
+CAPTION INPUT:
+- Overlapping SRT cues are rejected because the video displays one caption at a time.
+
+SCENE PLAN INPUT:
+- Manual plans reject boolean or nonnumeric timings and scenes that start at or after the audio end, avoiding empty scenes at the duration boundary.
+
+ROVOR DIGITAL VIDEO ENGINE V3.3.0 — OCTOBER 19 2026
+
+CAPTION REVIEW AND RENDER SAFETY:
+- Each render now writes an editable captions.srt for correcting transcript text and timing.
+- Caption-only revisions reuse saved Whisper and Rhubarb results instead of repeating those slower stages.
+- Caption or saved-scene changes invalidate cached frames and trigger a new MP4 encode; the previous MP4 stays available until replacement.
+- Scene metadata is rebuilt when its transcript or mouth-timing source changes, and changed dialogue refreshes lip-sync cues.
+- Render progress is checkpointed, incomplete frames are regenerated, and concurrent processes cannot write to one render folder.
+- MCP polling reports an active render correctly even while an earlier MP4 remains available.
+- Unix process polling reaps completed child jobs so stopped renders do not remain marked active.
+- The MCP adapter can continue a stopped render from saved stages and its original local tool configuration.
+- MCP render requests can select a scene plan and character style or provide a reviewed SRT from the start.
+- MCP render responses include the editable captions file path for follow-up corrections.
+- Both character styles now render the edited SRT captions while keeping legacy scene files readable.
+
+PORTABILITY AND RENDER RELIABILITY:
+
+IMPLEMENTED IN THIS UPDATE:
+- Windows and macOS launchers share validated local-tool configuration.
+- A Windows PowerShell setup script prepares Sharp and adds the MCP adapter without overwriting an existing config or MCP entry.
+- Windows paths with spaces are supported by the interactive launcher.
+- Resume checks fingerprint audio, manual scene plans, tool configuration, and resolved tool/model file metadata.
+- Resume checks include the engine version so newer rendering code cannot silently reuse old frames.
+- Saved render metadata is written atomically; malformed transcript and lip-sync outputs are rejected.
+- Empty audio is rejected before transcription; malformed timing values are filtered out.
+- WAV conversion is validated and replaced atomically; long recordings stop converting shortly after the supported limit.
+- Long captions are wrapped and bounded to the on-screen caption area in both character styles.
+- Reference frames use one Sharp compositing pipeline, avoiding an extra full-frame encode/decode.
+- Frame batch ranges and saved scene plans are validated before rendering.
+- Render and MCP process handling now accounts for Windows process semantics.
+- Sharp is pinned in package.json for repeatable setup on supported Node versions.
+- Engine and MCP versions are aligned at 3.3.0 for that release.
+
+VALIDATION:
+- The existing test suite and a full Windows render were not run for this update.
+
 EVAN V3 REFERENCE ART — OCTOBER 16 2026
 
 SUCCESSFULLY VERIFIED LOCALLY:
