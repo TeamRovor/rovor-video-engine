@@ -1,10 +1,10 @@
 # GitHub Actions efficiency audit — 2026-11-17
 
-This document records a source-level inspection, not production runtime proof. Run `python3 tools/workflow_inventory.py --output /tmp/rovor-workflows.json --fail-on-dispatch-cron` to generate the complete machine-readable inventory of the repository's YAML workflows and flag accidental scheduler additions to known dispatch lanes. The tool is offline, read-only, has no credentials, and does not claim to fully parse or validate YAML.
+This document records a source-level inspection, not production runtime proof. Run `python3 tools/workflow_inventory.py --output /tmp/rovor-workflows.json --fail-on-dispatch-cron` to generate the complete machine-readable inventory of the repository's YAML workflows and flag accidental scheduler additions to known dispatch lanes. The tool is offline, read-only, has no credentials, and does not claim to fully parse or validate YAML. The existing legacy scheduler's PR/push test lane runs this inventory and fails if an identified dispatcher is given a GitHub cron; the protected manual shift is unchanged.
 
 ## Observed default-branch baseline
 
-- 77 workflow files under `.github/workflows/` at the time of inspection.
+- 72 workflow files on `main` at `dc851400b0f5` when rechecked on 2026-11-17 (later merges may change this count).
 - `ghost-cloud-github-scheduler.yml`: **manual legacy Site diagnostic only**; production cron removed.
 - `ghost-cloud-scheduled-shift.yml`: offline safety test only, not a scheduling authority.
 - `rovor-cloud-control-center.yml`: diagnostic/readback only; deployment owned by `deploy-private-hud-cloudflare.yml`.
