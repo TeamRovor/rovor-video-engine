@@ -188,6 +188,8 @@ jobs:
       ROVOR_HUD_OWNER_TOKEN: ${{ secrets.ROVOR_HUD_OWNER_TOKEN }}
       # Existing Site service key, optionally bridged to Worker; never echoed.
       ROVOR_GHOST_SERVICE_TOKEN: ${{ secrets.ROVOR_GHOST_SERVICE_TOKEN }}
+      # Owner-private Site URL held as a protected secret, never committed.
+      ROVOR_GHOST_SITE_SERVICE_URL: ${{ secrets.ROVOR_GHOST_SITE_SERVICE_URL }}
       # Optional direct GET-only catalogs. Preserve legacy names, then accept the exact
       # ROVOR_CLOUD_* secret names. A missing value never installs a blank key.
       # Catalog authentication is not free billing, quota or inference approval.
