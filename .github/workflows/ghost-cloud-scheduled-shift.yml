@@ -9,6 +9,7 @@ on:
       - 'tests/test_ghost_cloud_scheduled_shift_composer.mjs'
       - '.github/workflows/ghost-cloud-scheduled-shift.yml'
   push:
+    branches: [main]
     paths:
       - 'integrations/ghost-cloud/scheduled-shift.mjs'
       - 'integrations/ghost-cloud/scheduled-shift.sql'
@@ -16,6 +17,9 @@ on:
       - 'tests/test_ghost_cloud_scheduled_shift.mjs'
       - 'tests/test_ghost_cloud_scheduled_shift_composer.mjs'
       - '.github/workflows/ghost-cloud-scheduled-shift.yml'
+concurrency:
+  group: ghost-cloud-scheduled-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -24,6 +28,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'

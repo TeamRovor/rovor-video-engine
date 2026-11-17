@@ -1,0 +1,52 @@
+name: ROVOR Actions topology and duplicate-scheduler guard
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'tools/workflow_topology.py'
+      - 'tests/test_workflow_topology.py'
+      - '.github/WORKFLOW-OWNERSHIP.md'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+      - 'tools/workflow_topology.py'
+      - 'tests/test_workflow_topology.py'
+      - '.github/WORKFLOW-OWNERSHIP.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rovor-workflow-topology-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  inventory-and-scheduler-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify offline topology parser and scheduling guard
+        run: python -m unittest discover -s tests -p test_workflow_topology.py -v
+      - name: Audit current workflows without credentials or provider requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/workflow_topology.py --check --format markdown > "$RUNNER_TEMP/rovor-workflow-topology.md"
+          cat "$RUNNER_TEMP/rovor-workflow-topology.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish reviewable read-only inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rovor-actions-topology
+          path: ${{ runner.temp }}/rovor-workflow-topology.md
+          if-no-files-found: warn
+          retention-days: 7

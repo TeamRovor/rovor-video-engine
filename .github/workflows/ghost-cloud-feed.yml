@@ -15,13 +15,19 @@ on:
       - '.github/workflows/ghost-cloud-feed.yml'
       - 'integrations/ghost-cloud/runtime.mjs'
       - 'integrations/ghost-cloud/worker.mjs'
+concurrency:
+  group: ghost-cloud-feed-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
   approved-feed:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
