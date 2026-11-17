@@ -6,6 +6,9 @@ const SHA=/^[a-f0-9]{40}$/;
 const ID=/^[a-z0-9][a-z0-9-]{0,149}$/;
 const REV=/^[a-z0-9][a-z0-9-]{0,39}$/;
 const MAX_APPROVALS=9;
+// A cloud prompt-only worker may use immutable GitHub source/hosted CI, but
+// cannot satisfy local-exec, private asset, desktop GUI or unknown capabilities.
+const CLOUD_COMPATIBLE_REQUIRES=new Set(['github-read','hosted-ci']);
 const MAX_SOURCE_BYTES=1048576;
 const BASE='https://raw.githubusercontent.com/TeamRovor/rovor-video-engine/';
 const utf8=new TextEncoder();
@@ -70,6 +73,8 @@ export async function planApprovedJobs(tasks,routing,commit,approvals) {
      !Array.isArray(task.scopes)||!task.scopes.length)throw Error('task_not_claimed');
   const route=routing.tasks[task.id];
   if(!route||typeof route.lane!=='string'||!Array.isArray(route.requires))throw Error('task_unrouted');
+  if(route.requires.some(capability=>!CLOUD_COMPATIBLE_REQUIRES.has(capability)))
+   throw Error('cloud_requirement_unavailable');
   if(!Array.isArray(task.depends_on)||task.depends_on.some(id=>byId.get(id)?.status!=='done'))throw Error('task_dependency_blocked');
   const packet=task.cloud_inference;
   if(!packet||Object.keys(packet).sort().join(',')!=='approved_for_cloud,data_class,employee,kind,prompt,revision'||
