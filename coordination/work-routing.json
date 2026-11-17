@@ -1,6 +1,7 @@
 {
   "version": 1,
   "tasks": {
+    "project-loop-deep-dependency-validation-20261117": {"lane": "coordination", "requires": ["hosted-ci"], "objective": "reduce-repeat-work"},
     "windows-runtime": {
       "lane": "efficiency",
       "requires": [
