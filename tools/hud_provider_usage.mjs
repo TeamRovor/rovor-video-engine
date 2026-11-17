@@ -48,8 +48,15 @@ function projectCallLog(row) {
   const input = integer(row?.tokens?.in ?? row?.tokensIn ?? row?.tokens_input ?? row?.promptTokens);
   const output = integer(row?.tokens?.out ?? row?.tokensOut ?? row?.tokens_output ?? row?.completionTokens);
   const retry = row?.retryAfter ?? row?.retry_after;
-  const retryNumber = typeof retry === 'number' ? retry : typeof retry === 'string' && /^\d+(?:\.\d+)?$/.test(retry) ? Number(retry) : null;
-  const retryAfter = retryNumber !== null ? (retryNumber < 1e9 ? timestamp + retryNumber * 1000 : retryNumber < 1e11 ? retryNumber * 1000 : retryNumber) : safeTime(retry);
+  const retryNumber = typeof retry === 'number' ? retry :
+    typeof retry === 'string' && retry.length <= 24 && /^\d+(?:\.\d+)?$/.test(retry) ? Number(retry) : null;
+  const candidate = retryNumber !== null ?
+    (retryNumber < 1e9 ? timestamp + retryNumber * 1000 : retryNumber < 1e11 ? retryNumber * 1000 : retryNumber) :
+    safeTime(retry);
+  // Provider metadata is untrusted. Invalid dates must not crash usage reporting
+  // or manufacture a future account cooldown.
+  const retryAfter = Number.isFinite(candidate) && candidate >= timestamp &&
+    candidate <= Date.UTC(2100, 0, 1) ? candidate : null;
   return {id, timestamp, provider, model, status, input, output, retryAfter};
 }
 
