@@ -147,6 +147,86 @@ test('owner approved spec creates review-only PR, not a workflow installation',a
  assert(!calls.some(([cmd,...args])=>cmd==='gh'&&args.includes('merge')));
 });
 
+
+test('recovers a pushed approved proposal branch with no PR, without pushing again',async()=>{
+ const calls=[],rel='coordination/workflow-proposals/'+name+'.yml';
+ const yaml=compileReviewedWorkflow(content,digest).yaml.trim();
+ const branch='rovor/workflow-proposal-'+id.slice(3,19);
+ const response=await publishReviewed({env,send:http().send,exists:()=>false,
+  write(){throw Error('must not re-write approved proposal');},
+  git(cmd,args){
+   calls.push([cmd,...args]);
+   if(cmd==='git'&&args[0]==='ls-remote')return 'a'.repeat(40);
+   if(cmd==='git'&&args[0]==='fetch')return '';
+   if(cmd==='git'&&args[0]==='diff')return rel;
+   if(cmd==='git'&&args[0]==='show')return yaml;
+   if(cmd==='gh'&&args[1]==='list')return '[]';
+   if(cmd==='gh'&&args[1]==='create')
+    return 'https://github.com/TeamRovor/rovor-video-engine/pull/999';
+   throw Error('unexpected recovery operation');
+  }
+ });
+ assert.equal(response.created,1);
+ assert.equal(response.existing,0);
+ assert.equal(calls.filter(x=>x[0]==='git'&&x[1]==='fetch').length,2);
+ assert(calls.some(x=>x[0]==='git'&&x[1]==='show'&&x[2]==='FETCH_HEAD:'+rel));
+ assert(calls.some(x=>x[0]==='gh'&&x[1]==='pr'&&x[2]==='create'));
+ assert(!calls.some(x=>x[0]==='git'&&['push','checkout','commit','add'].includes(x[1])));
+ assert(calls.every(x=>!x.includes('--merge')));
+ assert.equal(branch,'rovor/workflow-proposal-'+'a'.repeat(16));
+});
+
+test('remote branch recovery refuses changed content or extra files before any PR write',async()=>{
+ const rel='coordination/workflow-proposals/'+name+'.yml';
+ const yaml=compileReviewedWorkflow(content,digest).yaml.trim();
+ for(const failure of ['modified-proposal','extra-file']){
+  const calls=[];
+  await assert.rejects(()=>publishReviewed({env,send:http().send,exists:()=>false,
+   git(cmd,args){
+    calls.push([cmd,...args]);
+    if(cmd==='git'&&args[0]==='ls-remote')return 'a'.repeat(40);
+    if(cmd==='git'&&args[0]==='fetch')return '';
+    if(cmd==='git'&&args[0]==='diff')
+     return failure==='extra-file'?rel+'\n.github/workflows/unauthorized.yml':rel;
+    if(cmd==='git'&&args[0]==='show')
+     return failure==='modified-proposal'?yaml+'\n# unauthorized':yaml;
+    throw Error('unexpected remote recovery call');
+   }
+  }),/existing_proposal_branch_conflict/);
+  assert(!calls.some(x=>x[0]==='gh'));
+ }
+});
+
+test('existing proposal PR must be open, target main, and match approved remote YAML',async()=>{
+ const rel='coordination/workflow-proposals/'+name+'.yml';
+ const yaml=compileReviewedWorkflow(content,digest).yaml.trim();
+ const branch='rovor/workflow-proposal-'+id.slice(3,19);
+ const accepted={number:999,url:'https://github.com/TeamRovor/rovor-video-engine/pull/999',
+  state:'OPEN',baseRefName:'main',headRefName:branch};
+ async function run(pr){
+  let created=false;
+  const result=await publishReviewed({env,send:http().send,exists:()=>false,
+   git(cmd,args){
+    if(cmd==='git'&&args[0]==='ls-remote')return 'a'.repeat(40);
+    if(cmd==='git'&&args[0]==='fetch')return '';
+    if(cmd==='git'&&args[0]==='diff')return rel;
+    if(cmd==='git'&&args[0]==='show')return yaml;
+    if(cmd==='gh'&&args[1]==='list')return JSON.stringify([pr]);
+    if(cmd==='gh'&&args[1]==='create'){created=true;throw Error('must not create');}
+    throw Error('unexpected operation');
+   }
+  });
+  assert.equal(created,false);
+  return result;
+ }
+ const okay=await run(accepted);
+ assert.equal(okay.existing,1);
+ assert.equal(okay.created,0);
+ for(const pr of [{...accepted,state:'CLOSED'}, {...accepted,baseRefName:'other'},
+  {...accepted,headRefName:'another'}, {...accepted,url:'https://example.invalid/999'}])
+  await assert.rejects(()=>run(pr),/existing_proposal_pr_unreviewable/);
+});
+
 test('bridge runs continuously with no inference only on trusted main and production credentials',async()=>{
  const workflow=readFileSync(new URL('../.github/workflows/rovor-ai-workflow-factory.yml',import.meta.url),'utf8');
  assert.match(workflow,/cron: "11 \*\/2 \* \* \*"/);
