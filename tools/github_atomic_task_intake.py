@@ -39,11 +39,21 @@ def _valid_sha(value):
     return isinstance(value, str) and bool(SHA.fullmatch(value))
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Never forward the GitHub bearer token to a redirected destination."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 class GitHubAPI:
     def __init__(self, token):
         if not isinstance(token, str) or not token.strip():
             raise IntakeError('Missing ROVOR_GITHUB_TOKEN for GitHub coordination access')
         self.token = token
+        # urllib's default redirect handler copies Authorization across hosts.
+        # All API paths are fixed to api.github.com; a redirect is never needed.
+        self.opener = urllib.request.build_opener(NoRedirect())
 
     def request(self, method, path, payload=None):
         if not isinstance(path, str) or not path.startswith('/'):
@@ -58,7 +68,7 @@ class GitHubAPI:
             'Content-Type': 'application/json',
         })
         try:
-            with urllib.request.urlopen(req, timeout=15) as response:
+            with self.opener.open(req, timeout=15) as response:
                 raw = response.read(MAX_RESPONSE_BYTES + 1)
             if len(raw) > MAX_RESPONSE_BYTES:
                 raise IntakeError('GitHub API response exceeded fixed bound')
@@ -68,6 +78,8 @@ class GitHubAPI:
             return result
         except urllib.error.HTTPError as exc:
             # Never print response bodies, token headers, task contents or URLs.
+            if 300 <= exc.code < 400:
+                raise IntakeError('GitHub API redirect refused; credential not forwarded') from None
             if exc.code in (409, 422):
                 raise Conflict('GitHub rejected a non-fast-forward or invalid ref update') from None
             if exc.code in (401, 403):
