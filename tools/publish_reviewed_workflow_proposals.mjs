@@ -13,7 +13,7 @@ const REPO='TeamRovor/rovor-video-engine';
 const run=(command,args,options={})=>execFileSync(command,args,{
  cwd:ROOT,encoding:'utf8',timeout:20000,
  stdio:['ignore','pipe','pipe'],...options
-}).trim();
+});
 
 function ensureTrustedContext(env){
  if(env.GITHUB_REPOSITORY!==REPO||env.GITHUB_REF!=='refs/heads/main'||
@@ -43,8 +43,32 @@ export async function publishReviewed({env=process.env,send=fetch,git=run,read=r
   // Deterministic branch gives at-most-once proposal creation per receipt.
   const remote=git('git',['ls-remote','--heads','origin','refs/heads/'+branch]);
   if(remote){
-   const prs=JSON.parse(git('gh',['pr','list','--repo',REPO,'--head',branch,'--state','all','--json','number,url','--limit','5']));
-   if(!Array.isArray(prs)||prs.length!==1)throw Error('existing_proposal_branch_unreviewable');
+   // A matching branch name and one PR are not proof that the approved
+   // receipt is what that PR proposes. Fail closed on moved or altered refs.
+   const branchRef='refs/heads/'+branch;
+   const match=/^([a-f0-9]{40})\t(refs\/heads\/[^\s]+)\n?$/.exec(remote);
+   if(!match||match[2]!==branchRef)
+    throw Error('existing_proposal_branch_unreviewable');
+   git('git',['fetch','--no-tags','origin',branchRef]);
+   const observed=git('git',['rev-parse','FETCH_HEAD']).trim();
+   if(observed!==match[1])throw Error('existing_proposal_branch_unreviewable');
+   // Checkout uses a shallow GitHub Actions clone. Trust GitHub's complete
+   // PR diff metadata for one-file scope, not a locally missing merge-base.
+   if(git('git',['show','FETCH_HEAD:'+rel])!==item.yaml)
+    throw Error('existing_proposal_branch_unreviewable');
+   const prs=JSON.parse(git('gh',['pr','list','--repo',REPO,'--head',branch,
+     '--state','all','--json',
+     'number,url,state,baseRefName,headRefName,headRefOid,changedFiles,files',
+     '--limit','5']));
+   if(!Array.isArray(prs)||prs.length!==1||
+      !Number.isInteger(prs[0].number)||prs[0].number<1||
+      prs[0].headRefOid!==observed||prs[0].baseRefName!=='main'||
+      prs[0].headRefName!==branch||!['OPEN','MERGED'].includes(prs[0].state)||
+      prs[0].changedFiles!==1||!Array.isArray(prs[0].files)||
+      prs[0].files.length!==1||prs[0].files[0]?.path!==rel||
+      typeof prs[0].url!=='string'||
+      !prs[0].url.startsWith('https://github.com/'+REPO+'/pull/'))
+    throw Error('existing_proposal_branch_unreviewable');
    existing++;
    continue;
   }
