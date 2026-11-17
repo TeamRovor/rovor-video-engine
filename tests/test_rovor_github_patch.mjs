@@ -36,7 +36,7 @@ function upstream(s,calls,{stale=false,rebase=false,divergent=false,shiftBeforeW
  if(url.endsWith('/access_tokens')){
   const permissions=JSON.parse(init.body).permissions;
   assert.deepEqual(permissions,permissions.contents==='read'?{contents:'read',issues:'read',pull_requests:'read',actions:'read'}:{contents:'write',pull_requests:'write'});
-  return Response.json({token:'mock-write-token-123456789',expires_at:new Date(NOW+3600000).toISOString(),permissions:{...permissions,metadata:'read'}},{status:201});
+  return Response.json({token:'mock-write-token-123456789',expires_at:new Date(NOW+3600000).toISOString(),permissions:{...permissions,metadata:'read'},repositories:[{full_name:'TeamRovor/rovor-video-engine'}]},{status:201});
  }
  assert.equal(init.headers.Authorization,'Bearer mock-write-token-123456789');
  assert(url.startsWith('https://api.github.com/repos/TeamRovor/rovor-video-engine/'));
