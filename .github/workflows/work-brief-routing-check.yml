@@ -1,4 +1,8 @@
 name: ROVOR work routing and queue consistency
+
+# Canonical owner for coordination-only changes: one queue/route verification
+# replaces repeated specialist regression matrices on every task JSON edit.
+# Specialist code/test changes still run their own focused regression workflows.
 on:
   pull_request:
     paths:
@@ -38,5 +42,9 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Validate existing owner and dependency queue
         run: python tools/project_loop.py check
+      - name: Verify the canonical task-to-capability route pairing
+        run: python tools/task_routing_pair.py --check
+      - name: Guard against queue-only CI fan-out regressions
+        run: python -m unittest discover -s tests -p test_coordination_ci_fanout.py -v
       - name: Test capability-safe routes, optional fallback and real queue coverage
         run: python -m unittest discover -s tests -p test_work_brief.py -v
