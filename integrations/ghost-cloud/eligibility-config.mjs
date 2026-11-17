@@ -66,7 +66,9 @@ export async function compileFleetConfig(attestations, env, now = Date.now()) {
       enabled: true, model: a.model, pool: a.pool,
       zero_cost: true, commercial_use: true,
       evidence_sha256: evidenceDigest, verified_at: verifiedAt,
-      valid_until: Math.min(verifiedAt + DAY, a.quota.reset_at),
+      // Both independently attested checks must remain fresh for the entire lease.
+      // A newer quota refresh must never extend older zero-cost billing proof.
+      valid_until: Math.min(a.billing.checked_at + DAY, a.quota.checked_at + DAY, a.quota.reset_at),
       canary_sha256: a.canary.sha256, canary_at: a.canary.at,
       requests_per_day: a.limits.requests_per_day,
       tokens_per_day: a.limits.tokens_per_day,
