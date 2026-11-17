@@ -111,7 +111,7 @@ function recurringFixture(){
  e.DB.prepare=(query)=>({
   first:async()=>({enabled:1}),
   bind(...args){return{first:async()=>{
-   if(query.startsWith('SELECT id FROM ghost_cloud_jobs'))return jobs.has(args[0])?{id:args[0]}:null;
+   if(query.startsWith('SELECT * FROM ghost_cloud_jobs'))return jobs.get(args[0])??null;
    if(query.includes('FROM ghost_cloud_jobs j'))return [...jobs.values()].some(
     j=>j.task_id===args[0]&&!attempted.has(j.id))?{pending:1}:null;
    throw Error('unexpected_recurring_query');
@@ -159,6 +159,29 @@ test('hourly approved recurring work is idempotent, bounded and never backfills 
  assert.equal(s.jobs.size,3);
 });
 const HOUR_MS=3600000;
+
+test('recurring slot detects a revised owner-approved packet instead of counting it as a duplicate',async()=>{
+ const s=recurringFixture();
+ assert.equal((await s.call(SERIES_NOW)).queued,1);
+ const oldId=s.writes[0].id;
+ s.q.tasks[0].cloud_inference.prompt='Updated approved public summary for {{RUN_WINDOW_UTC}}.';
+ s.q.tasks[0].cloud_inference.revision='v2';
+ s.e.GHOST_APPROVED_SERIES=JSON.stringify([{...seriesApproval,revision:'v2'}]);
+ s.e.GHOST_FEED_COMMIT='b'.repeat(40);
+ await rejects(()=>s.call(SERIES_NOW+1000),'job_id_conflict');
+ assert.equal(s.jobs.size,1,'no changed job is inserted over the original receipt');
+ assert.equal(s.writes.length,1,'conflict is detected before invoking the writer');
+ assert.equal(s.writes[0].id,oldId,'slot identity remains stable across revisions');
+});
+
+test('recurring slot rejects source-commit drift under the writer identity contract',async()=>{
+ const s=recurringFixture();
+ assert.equal((await s.call(SERIES_NOW)).queued,1);
+ s.e.GHOST_FEED_COMMIT='b'.repeat(40);
+ await rejects(()=>s.call(SERIES_NOW+1000),'job_id_conflict');
+ assert.equal(s.writes.length,1);
+ assert.equal(s.jobs.size,1);
+});
 
 test('recurring series invalid intent, bounds, or overly broad approvals fail before any job',async()=>{
  const s=recurringFixture();
