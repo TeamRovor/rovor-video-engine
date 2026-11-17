@@ -133,6 +133,27 @@ test('durable Retry-After values become timestamps and unknown tokens remain par
   assert.equal(groq.input_tokens_coverage_rolling_minute,'partial');
 });
 
+test('untrusted Retry-After cannot crash provider usage or invent a cooldown', () => {
+  const malformed = [
+    Number.POSITIVE_INFINITY, Number.NaN, -30, 1e30,
+    '9999999999999999999999999999999999999999',
+    '9999-12-31T23:59:59Z',
+    new Date(NOW-120000).toISOString(),
+  ];
+  for (let i=0; i<malformed.length; i++) {
+    const usage=reduceCallLogs(connections,[{
+      id:'bad-retry-'+i, timestamp:new Date(NOW-1000).toISOString(),
+      provider:'groq',model:'free-model',status:429,retryAfter:malformed[i]
+    }],{now:NOW});
+    const groq=usage.providers.find(p=>p.provider==='groq');
+    assert.equal(groq.attempts_rolling_hour,1);
+    assert.equal(groq.rate_limit_errors_rolling_hour,1);
+    assert.equal(groq.retry_after_at,null);
+    assert.equal(groq.models[0].retry_after_at,null);
+    assert.equal(groq.last_rate_limit_at,new Date(NOW-1000).toISOString());
+  }
+});
+
 test('OmniRoute native nested token receipts are counted by model and provider', () => {
   const usage=reduceCallLogs(connections,[{id:'native',timestamp:new Date(NOW-1000).toISOString(),provider:'openrouter',model:'vendor/free:model',requestedModel:'openrouter/vendor/free:model',status:200,tokens:{in:852,out:2840}}],{now:NOW});
   const openrouter=usage.providers.find(p=>p.provider==='openrouter');
