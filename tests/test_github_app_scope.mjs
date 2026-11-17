@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {generateKeyPairSync,webcrypto} from 'node:crypto';
+import {generateKeyPairSync} from 'node:crypto';
 import {mintGithubPatchToken,mintGithubReadToken} from '../integrations/hud-cloud/github-app.mjs';
 
 const now=Date.now();
@@ -29,11 +29,8 @@ function sender(payload,permissions){
 const patch={contents:'write',pull_requests:'write'};
 const read={contents:'read',issues:'read',pull_requests:'read',actions:'read'};
 test('exact named repository scope permits pinned write and read tokens',async()=>{
- const old=globalThis.crypto;globalThis.crypto=webcrypto;
- try{
   assert.equal(await mintGithubPatchToken(env,now,sender(response(patch,[repo]),patch)),'x'.repeat(24));
   assert.equal(await mintGithubReadToken(env,now,sender(response(read,[repo]),read)),'x'.repeat(24));
- }finally{globalThis.crypto=old;}
 });
 for(const [name,repositories] of [
  ['missing repository proof',undefined],
@@ -47,13 +44,9 @@ for(const [name,repositories] of [
   try{
    await assert.rejects(mintGithubPatchToken(env,now,sender(response(patch,repositories),patch)),
     /github_installation_token_scope_invalid/);
-  }finally{globalThis.crypto=old;}
- });
+  });
 }
 test('rejects missing repository evidence for read scope too',async()=>{
- const old=globalThis.crypto;globalThis.crypto=webcrypto;
- try{
   await assert.rejects(mintGithubReadToken(env,now,sender(response(read,undefined),read)),
    /github_installation_token_scope_invalid/);
- }finally{globalThis.crypto=old;}
 });
