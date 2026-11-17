@@ -49,6 +49,24 @@ def frames_sampled(a, b, fps):
     return max(0, math.ceil(b * fps - 1e-9) - math.ceil(a * fps - 1e-9))
 
 
+def silence_covers_gap(start, end, silences, tolerance=0.02):
+    """Return true only when acoustic silence spans cover a phone gap.
+
+    The 20 ms tolerance accounts for the aligner's 10 ms timing grid. A partial
+    overlap is not enough: uncovered speech-sized intervals remain review flags.
+    """
+    cursor = start
+    for silence_start, silence_end in sorted(silences):
+        if silence_end < cursor - tolerance:
+            continue
+        if silence_start > cursor + tolerance:
+            return False
+        cursor = max(cursor, silence_end)
+        if cursor >= end - tolerance:
+            return True
+    return cursor >= end - tolerance
+
+
 def audit(plan, duration, fps=60, wav_header_checked=False):
     if not numeric(duration) or not 0 < duration <= 3600:
         raise ValueError('Duration must be finite positive seconds, at most one hour')
@@ -104,9 +122,16 @@ def audit(plan, duration, fps=60, wav_header_checked=False):
             flags.append({'type':'unreviewed-acoustic-word', 'wordIndex':index,
                           'details':word['reviewFlags']})
 
+    silence_spans = []
+    for i, item in enumerate(plan.get('silences', [])):
+        t = bounds(item, duration, 'silence[%d]' % i, errors)
+        if t is not None:
+            silence_spans.append(t)
+
     previous_end = 0.
     counts = {index:0 for index in word_times}
     shape_counts, missed_contacts = {}, []
+    silence_backed_gaps = 0
     for i, phone in enumerate(phones):
         label = 'phone[%d]' % i
         t = bounds(phone, duration, label, errors)
@@ -136,8 +161,11 @@ def audit(plan, duration, fps=60, wav_header_checked=False):
         if a < previous_end - .025:
             errors.append(label + ': overlapping or unsorted acoustic phones')
         if a > previous_end + .20 and i:
-            flags.append({'type':'phone-gap-needs-rest-review','start':round(previous_end,5),
-                          'end':round(a,5)})
+            if silence_covers_gap(previous_end, a, silence_spans):
+                silence_backed_gaps += 1
+            else:
+                flags.append({'type':'phone-gap-needs-rest-review','start':round(previous_end,5),
+                              'end':round(a,5)})
         previous_end = max(previous_end, b)
         shape_counts[expected] = shape_counts.get(expected, 0) + 1
         sampled = frames_sampled(a, min(b, duration), fps)
@@ -150,16 +178,14 @@ def audit(plan, duration, fps=60, wav_header_checked=False):
     for index, count in counts.items():
         if count == 0:
             errors.append('word scriptIndex %d has no usable acoustic phones' % index)
-    for i, item in enumerate(plan.get('silences', [])):
-        if bounds(item, duration, 'silence[%d]' % i, errors) is None:
-            continue
     return {
         'status':'blocked' if errors else 'review_required' if flags else 'technical_pass_pending_visual_review',
         'alignmentSource': 'acoustic' if isinstance(align, dict) and align.get('status') == 'acoustic' else 'unverified',
         'provenance':'source-WAV header read' if wav_header_checked else 'operator-supplied duration; WAV unchecked',
         'fps':fps,'durationSeconds':round(duration,6),'wordCount':len(words),
         'phoneCount':len(phones),'firstTargetCounts':shape_counts,
-        'unsampledContactCount':len(missed_contacts),'errors':errors,'reviewFlags':flags,
+        'unsampledContactCount':len(missed_contacts),'silenceBackedGapCount':silence_backed_gaps,
+        'errors':errors,'reviewFlags':flags,
         'artisticApproval':False,'narrationPreserved':True,'published':False,
         'note':'Technical metadata review only; exact articulation needs rendered mouth, original audio, and a human listening/visual pass.'
     }

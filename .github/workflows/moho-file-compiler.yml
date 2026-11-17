@@ -1,0 +1,22 @@
+name: Native Moho file compiler checks
+on:
+  pull_request:
+    paths: ['tools/moho_compile.py', 'tests/test_moho_compile.py', '.github/workflows/moho-file-compiler.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compiler:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest discover -s tests -p test_moho_compile.py -v
