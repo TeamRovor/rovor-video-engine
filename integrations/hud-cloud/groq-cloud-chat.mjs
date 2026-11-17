@@ -75,6 +75,29 @@ export async function cloudGroqStatus(env,db,now=Date.now()) {
     remaining_provider_quota:'unknown'};
 }
 
+// Bound bytes while streaming: upstream Content-Length is not trusted, and
+// Response.text() would buffer unbounded provider output before validation.
+export async function readBoundedGroqResponse(response) {
+  const reader=response?.body?.getReader();
+  if(!reader)throw Error('missing_body');
+  const chunks=[];let total=0;
+  try {
+    for(;;){
+      const {done,value}=await reader.read();
+      if(done)break;
+      if(!(value instanceof Uint8Array))throw Error('invalid_chunk');
+      total+=value.byteLength;
+      if(total>65536)throw Error('oversized_response');
+      chunks.push(value);
+    }
+  } finally {
+    try{await reader.cancel();}catch{}
+  }
+  const data=new Uint8Array(total);let offset=0;
+  for(const chunk of chunks){data.set(chunk,offset);offset+=chunk.byteLength;}
+  return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(data));
+}
+
 export async function cloudGroqChat(body,env,db,now=Date.now(),fetcher=fetch){
   if(!groqCloudReady(env,now))return error(503,'groq_free_eligibility_unverified_or_expired');
   if(body?.model!==GROQ_CLOUD_ROUTE)return error(400,'model_not_available');
@@ -105,7 +128,7 @@ export async function cloudGroqChat(body,env,db,now=Date.now(),fetcher=fetch){
   }
   if(!upstream.ok){await upstream.body?.cancel();return error(502,'groq_upstream_failed');}
   let doc;
-  try{const raw=await upstream.text();if(raw.length>65536)throw Error();doc=JSON.parse(raw);}
+  try{doc=await readBoundedGroqResponse(upstream);}
   catch{return error(502,'groq_response_invalid');}
   const answer=doc?.choices?.[0]?.message?.content;
   if(doc?.model!==UPSTREAM_MODEL||typeof answer!=='string'||!answer.trim()||
