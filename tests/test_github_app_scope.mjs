@@ -40,11 +40,9 @@ for(const [name,repositories] of [
  ['unidentified repository',[{}]]
 ]){
  test('rejects '+name+' for write scope',async()=>{
-  const old=globalThis.crypto;globalThis.crypto=webcrypto;
-  try{
    await assert.rejects(mintGithubPatchToken(env,now,sender(response(patch,repositories),patch)),
     /github_installation_token_scope_invalid/);
-  });
+ });
 }
 test('rejects missing repository evidence for read scope too',async()=>{
   await assert.rejects(mintGithubReadToken(env,now,sender(response(read,undefined),read)),
