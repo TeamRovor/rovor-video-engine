@@ -169,3 +169,38 @@ test('writer catch-up refresh accepts truly empty POST streams but rejects paylo
  assert.equal((await denied.json()).error,'body_not_allowed');
  assert.equal(calls.length,8);
 });
+
+test('late STOP/expiry during catch-up GET cannot publish a ready D1 receipt',async()=>{
+ for(const mode of ['stopped','expired']){
+  const {env,sqlite}=setup();arm(sqlite);
+  const endpoint='https://hud.test/api/hud/workforce/repo-catchup/refresh';
+  const req=()=>new Request(endpoint,{method:'POST',headers:{Authorization:'Bearer '+W}});
+  const first=await handle(req(),env,NOW,upstream([]));
+  assert.equal(first.status,200);
+  assert.equal((await first.json()).state,'ready');
+  const before=sqlite.prepare('SELECT observed_at,snapshot FROM hud_native_repo_catchup WHERE id=1').get();
+  const later=NOW+3600001,calls=[];
+  const baseSend=upstream(calls,{expires_at:new Date(NOW+7200000).toISOString()});
+  let gateChanged=false;
+  const send=async(url,init)=>{
+   const reply=await baseSend(url,init);
+   if(url.endsWith('/commits/'+'a'.repeat(40)+'?per_page=30')&&!gateChanged){
+    gateChanged=true;
+    if(mode==='stopped')sqlite.exec('UPDATE hud_cloud_workforce_control SET enabled=0');
+    else sqlite.prepare('UPDATE hud_cloud_workforce_series SET expires_at=?').run(later-1);
+   }
+   return reply;
+  };
+  const response=await handle(req(),env,later,send);
+  assert.equal(response.status,409,mode);
+  assert.equal((await response.json()).state,'stopped',mode);
+  assert(gateChanged,'the GitHub read must have been in flight before the gate changed');
+  const after=sqlite.prepare('SELECT checked_at,observed_at,state,snapshot FROM hud_native_repo_catchup WHERE id=1').get();
+  assert.equal(after.checked_at,later);
+  assert.equal(after.state,'read_unavailable');
+  assert.equal(after.observed_at,before.observed_at,'last valid observation must survive');
+  assert.equal(after.snapshot,before.snapshot,'no post-STOP snapshot may replace the last good one');
+  assert.equal((await repoCatchupStatus(env,later)).state,'read_unavailable');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM hud_cloud_workforce_jobs').get().n,0);
+ }
+});
