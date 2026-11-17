@@ -6,7 +6,9 @@ import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-se
 
 const NOW=1794910000000;
 const IDS=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
+const SERVICE_URL='https://private-ledger.example.chatgpt.site/api/ghost/service';
 const env={
+  GHOST_SITE_SERVICE_URL:SERVICE_URL,
   GHOST_SITE_SERVICE_TOKEN:'s'.repeat(64),
   HUD_READER_TOKEN:'r'.repeat(64),
   HUD_WRITER_TOKEN:'w'.repeat(64)
@@ -36,7 +38,7 @@ test('only fixed signed status operation reads source and preserves real histori
   let called=false;
   const result=await readGhostStatus(env,mock(fixture(),(url,opts)=>{
     called=true;
-    assert.equal(url,'https://rovor-private-hud.mm98z652cq.chatgpt.site/api/ghost/service');
+    assert.equal(url,SERVICE_URL);
     assert.equal(opts.method,'POST');
     assert.deepEqual(JSON.parse(opts.body),{operation:'status'});
     assert.equal(opts.headers.Authorization,'Bearer '+env.GHOST_SITE_SERVICE_TOKEN);
@@ -98,9 +100,11 @@ test('existing protected deployment secret feeds readback without a second crede
   const payload=buildHudSecretPayload({
     ROVOR_HUD_READER_TOKEN:env.HUD_READER_TOKEN,
     ROVOR_HUD_WRITER_TOKEN:env.HUD_WRITER_TOKEN,
-    ROVOR_GHOST_SERVICE_TOKEN:env.GHOST_SITE_SERVICE_TOKEN
+    ROVOR_GHOST_SERVICE_TOKEN:env.GHOST_SITE_SERVICE_TOKEN,
+    ROVOR_GHOST_SITE_SERVICE_URL:env.GHOST_SITE_SERVICE_URL
   });
   assert.equal(payload.GHOST_SITE_SERVICE_TOKEN,env.GHOST_SITE_SERVICE_TOKEN);
+  assert.equal(payload.GHOST_SITE_SERVICE_URL,env.GHOST_SITE_SERVICE_URL);
   assert.equal(Object.hasOwn(payload,'HUD_GHOST_SERVICE_TOKEN'),false);
   const result=await readGhostStatus(payload,mock(fixture()),NOW);
   assert.equal(result.status,200);
@@ -200,4 +204,25 @@ test('HUD Worker protects readback behind existing authentication and disallows 
   assert(auth>=0 && gate>auth && dispatch>gate);
   assert.match(worker.slice(gate,dispatch),/request.method !== 'GET'/);
   assert.doesNotMatch(worker.slice(gate,dispatch),/workforceTick|GHOST_WRITER_TOKEN|cloudGeminiChat/);
+});
+
+
+test('private Site destination must be exact, owner-bound and non-redirectable',async()=>{
+ let calls=0;const fetcher=()=>{calls++;throw Error('unexpected');};
+ const bad=[
+  null,'','http://private-ledger.example.chatgpt.site/api/ghost/service',
+  'https://attacker.example/api/ghost/service',
+  'https://private-ledger.example.chatgpt.site.evil.com/api/ghost/service',
+  'https://private-ledger.example.chatgpt.site/api/ghost/service?next=1',
+  'https://private-ledger.example.chatgpt.site/api/ghost/service#fragment',
+  'https://user:pass@private-ledger.example.chatgpt.site/api/ghost/service',
+  'https://private-ledger.example.chatgpt.site:8443/api/ghost/service',
+  'https://private-ledger.example.chatgpt.site/api/ghost/service/../other'
+ ];
+ for(const url of bad){
+  const result=await readGhostStatus({...env,GHOST_SITE_SERVICE_URL:url},fetcher,NOW);
+  assert.equal(result.status,503);
+  assert.equal(result.body.error,'cloud_readback_not_configured');
+ }
+ assert.equal(calls,0);
 });
