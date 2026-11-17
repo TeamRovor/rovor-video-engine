@@ -37,10 +37,10 @@ test('all nine original provider reports stay present and accessible in collapsi
  assert.equal((html.match(/data-rvq-open-slot="/g)||[]).length,9);
  assert.equal((html.match(/role="img" aria-label="Provider quota unknown"/g)||[]).length,18);
  assert.match(html,/id="rvq-connections"/);
- assert.match(html,/id="rvq-review"/);
+ assert.doesNotMatch(html,/id="rvq-review"/);
  assert.match(html,/id="rvq-team"/);
  assert.match(html,/id="rvq-reports"/);
- assert.match(html,/OWNER PASS \/ FAIL REVIEWS/);
+ assert.doesNotMatch(html,/OWNER PASS \/ FAIL REVIEWS/);
  assert.match(html,/DATA SOURCES & VERIFICATION RULES/);
  assert.match(html,/NO FRESH REPORT|CLOUD LEDGER ONLY/);
 });
@@ -123,7 +123,7 @@ test('different model allowances are never conflated into one provider-wide ring
  const data={connections:[{provider:'groq',name:'groq',connection_count:1,enabled_count:1}],
    quota:{records:[a,{...a,model_id:'model-b',used:2,total:10,used_percent:20}]}};
  const html=render(data,true);
- const tile=html.slice(html.indexOf('class="rvq-overview-tile"'),html.indexOf('id="rvq-review"'));
+ const tile=html.slice(html.indexOf('class="rvq-overview-tile"'),html.indexOf('id="rvq-team"'));
  assert.match(tile,/MULTIPLE MODEL LIMITS/);
  assert.match(tile,/2 separate limits/);
  assert.doesNotMatch(tile,/role="progressbar"/);
@@ -136,28 +136,17 @@ test('different model allowances are never conflated into one provider-wide ring
  assert.match(html,/20\.0%/);
 });
 
-test('fresh private review receipts give a truthful sample, not a claimed queue total',()=>{
+test('historical cloud receipts remain visible without owner PASS/FAIL UI',()=>{
  const now=Date.now();
  const cloud={execution_source:'cloud_provider',observed_at:now,
   providers:providers.map(provider=>({provider,credentials_configured:true})),
-  attempts:[
-   {id:'r1',provider:'groq',status:'needs_review',human_review:'not_recorded',started_at:now-1000,employee:'Mike',title:'Audit draft'},
-   {id:'r1',provider:'groq',status:'needs_review',human_review:'not_recorded',started_at:now-1000,employee:'Mike',title:'Duplicated draft'},
-   {id:'r2',provider:'groq',status:'needs_review',human_review:'passed',started_at:now-2000,title:'Approved draft'},
-   {id:'r3',provider:'groq',status:'needs_review',human_review:'not_recorded',started_at:now-3000,job_id:'canary-test',title:'Canary draft'}
-  ]};
+  attempts:[{id:'r1',provider:'groq',status:'needs_review',human_review:'not_recorded',
+   started_at:now-1000,employee:'Mike',title:'Audit draft',tokens_input:4,tokens_output:7}]};
  const html=render(null,false,cloud);
- const review=html.slice(html.indexOf('id="rvq-review"'),html.indexOf('id="rvq-team"'));
- assert.match(html,/REVIEW · 1\+/);
- assert.match(review,/1 returned cloud receipt awaiting PASS \/ FAIL/);
- assert.match(review,/Audit draft/);
- assert.doesNotMatch(review,/Duplicated draft|Canary draft|Approved draft/);
- assert.match(review,/not the complete private owner queue/);
- const stale=render(null,false,{...cloud,observed_at:now-600000});
- assert.match(stale,/No fresh private cloud review sample/);
- const incomplete=render(null,false,{...cloud,attempts:undefined});
- assert.match(incomplete,/No fresh private cloud review sample/);
- assert.doesNotMatch(stale,/REVIEW · 1/);
+ assert.match(html,/Audit draft/);
+ assert.match(html,/Mike/);
+ assert.match(html,/DRAFT NOT VERIFIED/);
+ assert.doesNotMatch(html,/OWNER PASS \/ FAIL|PRIVATE OWNER REVIEW QUEUE|id="rvq-review"/);
 });
 
 test('cloud verification gates stay distinct from Mac and paid-route safety',()=>{
