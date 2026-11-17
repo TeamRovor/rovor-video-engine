@@ -53,7 +53,24 @@ async function readJSON(response){
 const result=(status,models=[],error_category=null)=>({
  source:'direct_provider',status,models,siteD1:false,error_category
 });
-export async function directProviderCatalog(env,provider,send=fetch){
+// GET /api/v1/key has a provider-authenticated daily free-model counter.
+// Only project three integers; never retain labels, account identifiers,
+// budget records, or key material. No reset timestamp or billing inference.
+export function parseOpenRouterFreeModelDaily(document,observedAt=Date.now()){
+ const q=document?.data?.free_model_daily_requests;
+ if(!Number.isSafeInteger(observedAt)||observedAt<=0||
+    !q||typeof q!=='object'||Array.isArray(q))return null;
+ const {limit,used,remaining}=q;
+ if(!Number.isSafeInteger(limit)||limit<1||limit>100000||
+    !Number.isSafeInteger(used)||used<0||used>limit||
+    !Number.isSafeInteger(remaining)||remaining<0||remaining>limit||
+    used+remaining!==limit)return null;
+ return {source:'authenticated_openrouter_current_key',
+  scope:'free_model_daily_requests',observed_at:observedAt,
+  unit:'requests',limit,used,remaining,resets_at:null};
+}
+
+export async function directProviderCatalog(env,provider,send=fetch,now=Date.now()){
  const setup=directCatalogSetupBlocker(env,provider);
  if(setup==='unknown_provider')return result('unavailable',[],'unknown_provider');
  if(setup)return result('unconfigured',[],setup);
@@ -65,6 +82,7 @@ export async function directProviderCatalog(env,provider,send=fetch){
  // key-scoped filtering. A 200 from /models alone cannot authenticate the
  // configured key. Verify the real API key through its documented read-only
  // endpoint first; this never grants free-tier billing or inference admission.
+ let freeDaily=null;
  if(provider==='openrouter'){
   let probe;
   try{
@@ -91,6 +109,7 @@ export async function directProviderCatalog(env,provider,send=fetch){
   if(!keyInfo?.data||typeof keyInfo.data!=='object'||
     Array.isArray(keyInfo.data))
    return result('invalid',[],'invalid_catalog_shape');
+  freeDaily=parseOpenRouterFreeModelDaily(keyInfo,now);
  }
  let response;
  try{
@@ -140,5 +159,7 @@ export async function directProviderCatalog(env,provider,send=fetch){
   seen.add(model);models.push(model);
   if(models.length===20)break;
  }
- return result('catalog_received',models);
+ const discovered=result('catalog_received',models);
+ if(freeDaily)discovered.free_model_daily_requests=freeDaily;
+ return discovered;
 }

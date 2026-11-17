@@ -99,7 +99,7 @@ export async function refreshCatalogBridge(env,now=Date.now(),send=fetch){
  // Prefer the exact provider's own read-only HTTPS catalog when its
  // credential already exists on this Worker. The Site is optional fallback,
  // not a prerequisite for Groq/Gemini or a reason to call completions.
- const direct=await directProviderCatalog(env,provider,send);
+ const direct=await directProviderCatalog(env,provider,send,now);
  // Track the missing direct key independently from a denied legacy Site relay.
  // This safe category carries no credential values and never enables inference.
  const directSetupBlocker=direct.status==='unconfigured'?
@@ -108,10 +108,13 @@ export async function refreshCatalogBridge(env,now=Date.now(),send=fetch){
   {...await inspect(env,provider,now,send),source:'original_site',error_category:null}:
   {status:direct.status==='catalog_received'?'catalog_received':'upstream_unavailable',
    source:'direct_provider',error_category:direct.error_category||null,
-   models:direct.models,siteD1:false};
+   models:direct.models,siteD1:false,
+   ...(direct.free_model_daily_requests?{free_model_daily_requests:direct.free_model_daily_requests}:{})};
  const modelsJSON=JSON.stringify({source:found.source,
   error_category:found.error_category,direct_setup_blocker:directSetupBlocker,
-  models:found.models});
+  models:found.models,
+  ...(found.source==='direct_provider'&&found.status==='catalog_received'&&
+    found.free_model_daily_requests?{free_model_daily_requests:found.free_model_daily_requests}:{})});
  const saved=await db.prepare(`INSERT INTO hud_site_catalog_rows
   (provider,checked_at,status,site_d1_verified,models_json)
   VALUES(?,?,?,?,?) ON CONFLICT(provider) DO UPDATE SET
@@ -139,7 +142,7 @@ export async function catalogBridgeStatus(env,now=Date.now()){
  const providers=CATALOG_PROVIDERS.map(provider=>{
   const row=known.get(provider);
   let models=[],catalogSource='original_site',directErrorCategory=null,
-   directSetupBlocker=null;
+   directSetupBlocker=null,freeDailyCandidate=null;
   if(row)try{
    const value=JSON.parse(row.models_json);
    const list=Array.isArray(value)?value:value?.models;
@@ -154,6 +157,7 @@ export async function catalogBridgeStatus(env,now=Date.now()){
      'provider_http_unavailable','invalid_catalog_body',
      'invalid_catalog_shape','missing_account','unknown_provider'];
     directErrorCategory=allowed.includes(value.error_category)?value.error_category:null;
+    freeDailyCandidate=value.free_model_daily_requests??null;
    }
   }catch{}
   // The live server setup gate is authoritative for CURRENT key presence.
@@ -161,6 +165,23 @@ export async function catalogBridgeStatus(env,now=Date.now()){
   // never promoted to authentication or inference when a key is newly added.
   directSetupBlocker=directCatalogSetupBlocker(env,provider);
   const checked=validTime(row?.checked_at)?row.checked_at:null;
+  const q=freeDailyCandidate;
+  // This D1 receipt is account-level free-model allowance ONLY. It lacks a
+  // verified reset and independent commercial-use/zero-spend attestation.
+  // Never convert it to fleet admission or the generic quota_verified flag.
+  const freeDaily=provider==='openrouter'&&catalogSource==='direct_provider'&&
+   row?.status==='catalog_received'&&directSetupBlocker===null&&checked!==null&&
+   checked<=now&&now-checked<=FRESH&&
+   q?.source==='authenticated_openrouter_current_key'&&
+   q.scope==='free_model_daily_requests'&&q.unit==='requests'&&
+   q.observed_at===checked&&q.resets_at===null&&
+   Number.isSafeInteger(q.limit)&&q.limit>0&&q.limit<=100000&&
+   Number.isSafeInteger(q.used)&&q.used>=0&&q.used<=q.limit&&
+   Number.isSafeInteger(q.remaining)&&q.remaining>=0&&
+   q.used+q.remaining===q.limit?{
+    source:q.source,scope:q.scope,unit:q.unit,observed_at:q.observed_at,
+    used:q.used,limit:q.limit,remaining:q.remaining,resets_at:null
+   }:null;
   return {provider,status:row?.status||'never_checked',
    catalog_source:catalogSource,direct_error_category:directErrorCategory,
    direct_setup_blocker:directSetupBlocker,
@@ -168,6 +189,7 @@ export async function catalogBridgeStatus(env,now=Date.now()){
    freshness:checked!==null&&checked<=now&&now-checked<=FRESH?'fresh':'stale_or_unavailable',
    model_count:models.length,models,
    site_d1_verified:row?.site_d1_verified===1,
+   ...(provider==='openrouter'?{free_model_daily_requests:freeDaily}:{}),
    // This endpoint is intentionally NOT an inference admission source.
    free_billing_verified:false,quota_verified:false,canary_verified:false,
    inference_online_verified:false};

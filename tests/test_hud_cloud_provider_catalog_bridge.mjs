@@ -7,7 +7,7 @@ import {catalogBridgeStatus,refreshCatalogBridge,CATALOG_PROVIDERS}
 import {handle} from '../integrations/hud-cloud/worker.mjs';
 import {verifyCatalogBridge} from '../integrations/hud-cloud/verify-cloud-provider-catalog-bridge.mjs';
 import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-secret-payload.mjs';
-import {directProviderCatalog,directCatalogSetupBlocker} from '../integrations/hud-cloud/direct-provider-catalog.mjs';
+import {directProviderCatalog,directCatalogSetupBlocker,parseOpenRouterFreeModelDaily} from '../integrations/hud-cloud/direct-provider-catalog.mjs';
 
 const R='r'.repeat(40),W='w'.repeat(40),S='s'.repeat(48);
 const T=Date.parse('2026-11-11T20:00:00.000Z');
@@ -321,4 +321,61 @@ test('live secret presence updates readback immediately without forging D1 catal
  assert.equal(removed.providers[0].status,'site_auth_denied');
  assert.equal(directCatalogSetupBlocker({...s.env,CLOUDFLARE_AI_API_KEY:'c'.repeat(40)},'cloudflare-ai'),'missing_account');
  assert.equal(directCatalogSetupBlocker({...s.env,CLOUDFLARE_AI_API_KEY:'c'.repeat(40),CLOUDFLARE_ACCOUNT_ID:'b'.repeat(32)},'cloudflare-ai'),null);
+});
+
+test('OpenRouter authenticated key reports sanitized free daily counter and exact Worker D1 readback',async()=>{
+ const s=setup(),key='o'.repeat(40),privateLabel='sk-or-private-should-not-appear';
+ s.env.OPENROUTER_API_KEY=key;
+ // Move the existing fixed nine-slot clock to OpenRouter without adding a
+ // second scheduler or invoking an API completion.
+ s.sql.prepare('INSERT INTO hud_site_catalog_clock(id,next_index,last_started_at) VALUES(1,6,?)').run(T-300001);
+ const calls=[];
+ const done=await refreshCatalogBridge(s.env,T,async(url,opts)=>{
+  calls.push(url);
+  assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');
+  assert.equal(opts.headers.Authorization,'Bearer '+key);
+  if(url==='https://openrouter.ai/api/v1/key')
+   return Response.json({data:{label:privateLabel,creator_user_id:'private-user',
+    free_model_daily_requests:{limit:50,used:12,remaining:38},
+    limit_remaining:999,usage:1}});
+  if(url==='https://openrouter.ai/api/v1/models')
+   return Response.json({data:[{id:'cohere/north-mini-code:free',
+    pricing:{prompt:'0',completion:'0'}}]});
+  throw Error('unexpected request');
+ });
+ assert.deepEqual(calls,['https://openrouter.ai/api/v1/key','https://openrouter.ai/api/v1/models']);
+ assert.equal(done.provider,'openrouter');assert.equal(done.worker_d1_verified,true);
+ const saved=s.sql.prepare("SELECT models_json FROM hud_site_catalog_rows WHERE provider='openrouter'").get();
+ assert(saved);
+ assert.deepEqual(JSON.parse(saved.models_json).free_model_daily_requests,{
+  source:'authenticated_openrouter_current_key',
+  scope:'free_model_daily_requests',observed_at:T,unit:'requests',
+  limit:50,used:12,remaining:38,resets_at:null
+ });
+ const provider=(await catalogBridgeStatus(s.env,T)).providers.find(p=>p.provider==='openrouter');
+ assert.deepEqual(provider.free_model_daily_requests,JSON.parse(saved.models_json).free_model_daily_requests);
+ assert.equal(provider.free_billing_verified,false);
+ assert.equal(provider.quota_verified,false,'no reset time and no spend attestation');
+ assert.equal(provider.inference_online_verified,false);
+ for(const secret of [privateLabel,'private-user',key]){
+  assert.equal(JSON.stringify(saved).includes(secret),false);
+  assert.equal(JSON.stringify(provider).includes(secret),false);
+ }
+ // Revoking the live key or expiring the D1 clock makes old quota unknown.
+ delete s.env.OPENROUTER_API_KEY;
+ assert.equal((await catalogBridgeStatus(s.env,T)).providers.find(p=>p.provider==='openrouter').free_model_daily_requests,null);
+ s.env.OPENROUTER_API_KEY=key;
+ assert.equal((await catalogBridgeStatus(s.env,T+3600001)).providers.find(p=>p.provider==='openrouter').free_model_daily_requests,null);
+});
+test('OpenRouter free counter parser rejects ungrounded or corrupted daily totals',()=>{
+ const wrap=q=>({data:{free_model_daily_requests:q}});
+ const positive={limit:50,used:12,remaining:38};
+ assert.deepEqual(parseOpenRouterFreeModelDaily(wrap(positive),T)?.remaining,38);
+ for(const bad of [null,[],{}, {limit:50,used:12,remaining:39},
+  {limit:50,used:12,remaining:-1},{limit:'50',used:12,remaining:38},
+  {limit:50,used:12.5,remaining:37.5},
+  {limit:0,used:0,remaining:0},{limit:100001,used:0,remaining:100001}]){
+  assert.equal(parseOpenRouterFreeModelDaily(wrap(bad),T),null);
+ }
+ assert.equal(parseOpenRouterFreeModelDaily(wrap(positive),-1),null);
 });
