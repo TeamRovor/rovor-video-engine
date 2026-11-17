@@ -102,9 +102,12 @@ export async function readGhostStatus(env, fetcher=fetch, now=Date.now()) {
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
       body:JSON.stringify({operation:'status'}),
-      redirect:'error',
+      // Cloudflare Workers supports manual redirects, not redirect:'error'.
+      // A returned 3xx is rejected below without following credential-bearing redirects.
+      redirect:'manual',
       signal:AbortSignal.timeout(7000)
     });
+    if(remote.status>=300&&remote.status<400)return error('cloud_readback_redirect_denied');
     if(!remote.ok)return error('cloud_readback_unavailable');
     const data=await boundedJson(remote);
     if(data?.execution_source!=='cloud_provider' ||
