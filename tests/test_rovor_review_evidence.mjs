@@ -12,7 +12,7 @@ const newer={...original,id:456,conclusion:'success',created_at:new Date(NOW-100
 function fake(calls,run=original,latest=[newer]){
  return async(url,init)=>{
   calls.push({url,method:init.method});assert.equal(init.redirect,'manual');
-  if(url.endsWith('/access_tokens'))return Response.json({token:TOKEN,expires_at:new Date(NOW+3600000).toISOString(),permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'}},{status:201});
+  if(url.endsWith('/access_tokens'))return Response.json({token:TOKEN,expires_at:new Date(NOW+3600000).toISOString(),permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'},repositories:[{full_name:'TeamRovor/rovor-video-engine'}]},{status:201});
   assert.equal(init.headers.Authorization,'Bearer '+TOKEN);assert.equal(init.method,'GET');
   if(url.endsWith('/actions/runs/123'))return Response.json(run);
   if(url.includes('/actions/workflows/99/runs?'))return Response.json({workflow_runs:latest});
