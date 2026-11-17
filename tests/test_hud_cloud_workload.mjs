@@ -54,10 +54,9 @@ test('unsafe private provider model strings are escaped in the cloud view',()=>{
   assert(!html.includes(dirty));
   assert.match(html,/&lt;img src=x onerror=alert\(1\)&gt;/);
   assert.match(html,/ELIGIBLE · RECEIPT REQUIRED/);
-  assert.match(html,/OWNER PASS \/ FAIL/);
-  assert.match(html,/OPEN PRIVATE OWNER REVIEW QUEUE/);
-  assert.match(html,/0 returned drafts awaiting review/);
-  assert.match(html,/This sample is not the complete private owner queue/);
+  assert.match(html,/CLOUD WORKFORCE/);
+  assert.doesNotMatch(html,/OWNER PASS \/ FAIL|PRIVATE OWNER REVIEW QUEUE|id="rvq-review"/);
+  assert.match(html,/ELIGIBLE · RECEIPT REQUIRED/);
 });
 test('invalid, stale or contradictory quota source never fills a ring',()=>{
   const now=Date.now();
