@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
+import {generateKeyPairSync} from 'node:crypto';
+import {refreshRepoCatchup} from '../integrations/hud-cloud/repo-catchup.mjs';
 import {selectPreflightJob} from '../integrations/hud-cloud/approved-workforce.mjs';
 
 const NOW=Date.parse('2026-11-11T02:05:00.000Z');
@@ -77,4 +79,57 @@ test('empty queue remains safely idle',async()=>{
  assert.equal(result.next,null);
  assert.equal(result.blocked.state,'idle_or_safety_limited');
  assert.equal(result.staleDiscarded,0);
+});
+
+test('in-flight repository catch-up cannot overwrite D1 proof after STOP or standing expiry',async()=>{
+ const sha='a'.repeat(40);
+ for(const mode of ['stopped','expired']){
+  const s=setup(),clock=Date.now();
+  s.sql.exec('UPDATE hud_cloud_workforce_control SET enabled=1');
+  s.sql.prepare('UPDATE hud_cloud_workforce_series SET active=1,expires_at=?')
+   .run(clock+7200000);
+  const {privateKey}=generateKeyPairSync('rsa',{modulusLength:2048});
+  const env={DB:s.DB,ROVOR_NATIVE_DISCOVERY_ENABLED:'true',ROVOR_GITHUB_APP_ID:'123',
+   ROVOR_GITHUB_INSTALLATION_ID:'456',
+   ROVOR_GITHUB_APP_PRIVATE_KEY:privateKey.export({type:'pkcs1',format:'pem'})};
+  let invalidate=false,changed=false;
+  const send=async(url,init)=>{
+   assert.equal(init.redirect,'manual');
+   if(url.endsWith('/app/installations/456/access_tokens'))
+    return Response.json({token:'mock-installation-token-123456',
+     expires_at:new Date(clock+3600000).toISOString(),
+     permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'},
+     repositories:[{full_name:'TeamRovor/rovor-video-engine'}]},{status:201});
+   assert.equal(init.method,'GET');
+   assert.equal(init.headers.Authorization,'Bearer mock-installation-token-123456');
+   if(url.includes('/actions/runs?'))return Response.json({workflow_runs:[]});
+   if(url.includes('/issues?')||url.includes('/pulls?'))return Response.json([]);
+   if(url.endsWith('/commits?sha=main&per_page=4'))return Response.json([{sha}]);
+   if(url.endsWith('/commits/'+sha+'?per_page=30')){
+    if(invalidate){
+     changed=true;
+     if(mode==='stopped')s.sql.exec('UPDATE hud_cloud_workforce_control SET enabled=0');
+     else s.sql.prepare('UPDATE hud_cloud_workforce_series SET expires_at=?').run(clock+900000);
+    }
+    return Response.json({sha,files:[]});
+   }
+   throw Error('unexpected GitHub endpoint');
+  };
+  const first=await refreshRepoCatchup(env,clock,send);
+  assert.equal(first.status,200);
+  assert.equal(first.body.state,'ready');
+  const before=s.sql.prepare('SELECT observed_at,snapshot FROM hud_native_repo_catchup WHERE id=1').get();
+  assert.equal(before.observed_at,clock);
+  invalidate=true;
+  const second=await refreshRepoCatchup(env,clock+900001,send);
+  assert(changed,'STOP/expiry must occur while a GitHub GET is in flight');
+  assert.equal(second.status,409,mode);
+  assert.equal(second.body.state,'stopped',mode);
+  const after=s.sql.prepare('SELECT checked_at,observed_at,state,snapshot FROM hud_native_repo_catchup WHERE id=1').get();
+  assert.equal(after.checked_at,clock+900001);
+  assert.equal(after.state,'read_unavailable');
+  assert.equal(after.observed_at,before.observed_at);
+  assert.equal(after.snapshot,before.snapshot,'retain last-good evidence, never publish late ready');
+  assert.equal(s.sql.prepare('SELECT COUNT(*) n FROM hud_cloud_workforce_jobs').get().n,0);
+ }
 });
