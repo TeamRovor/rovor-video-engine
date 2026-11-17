@@ -33,7 +33,7 @@ class LegacySchedulerPolicyTests(unittest.TestCase):
         self.assertTrue(policy.errors_for(VALID.replace("inputs.confirm_legacy_site_diagnostic == true", "true")))
 
     def test_external_trigger_rejected(self):
-        self.assertTrue(any("external triggers" in e for e in policy.errors_for(VALID.replace("  pull_request:", "  repository_dispatch:\n  pull_request:")))
+        self.assertTrue(any("external triggers" in e for e in policy.errors_for(VALID.replace("  pull_request:", "  repository_dispatch:\n  pull_request:"))))
 
     def test_missing_environment_rejected(self):
         self.assertTrue(policy.errors_for(VALID.replace("environment: rovor-hud-production", "")))
