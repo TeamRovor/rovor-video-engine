@@ -322,3 +322,81 @@ test('live secret presence updates readback immediately without forging D1 catal
  assert.equal(directCatalogSetupBlocker({...s.env,CLOUDFLARE_AI_API_KEY:'c'.repeat(40)},'cloudflare-ai'),'missing_account');
  assert.equal(directCatalogSetupBlocker({...s.env,CLOUDFLARE_AI_API_KEY:'c'.repeat(40),CLOUDFLARE_ACCOUNT_ID:'b'.repeat(32)},'cloudflare-ai'),null);
 });
+
+test('authenticated OpenRouter daily free requests persist through existing private D1 and expire',async()=>{
+ const s=setup(),key='o'.repeat(40);
+ s.env.OPENROUTER_API_KEY=key;
+ // The native provider rotation moves from index 6 to OpenRouter index 7.
+ s.sql.prepare('INSERT OR REPLACE INTO hud_site_catalog_clock(id,next_index,last_started_at) VALUES(1,6,?)').run(T-300001);
+ const calls=[];
+ const at=T+1200;
+ const done=await refreshCatalogBridge(s.env,at,async(url,opts)=>{
+  calls.push(url);
+  assert.equal(opts.method,'GET');
+  assert.equal(opts.redirect,'manual');
+  assert.equal(opts.headers.Authorization,'Bearer '+key);
+  if(url==='https://openrouter.ai/api/v1/key')return Response.json({
+   data:{is_free_tier:false,free_model_daily_requests:{used:7,limit:50,remaining:43},
+    private_key_label:'MUST_NOT_BE_PERSISTED'}});
+  assert.equal(url,'https://openrouter.ai/api/v1/models');
+  return Response.json({data:[
+   {id:'cohere/north-mini-code:free',pricing:{prompt:'0',completion:'0'}}
+  ]});
+ });
+ assert.deepEqual(calls,['https://openrouter.ai/api/v1/key',
+  'https://openrouter.ai/api/v1/models']);
+ assert.equal(done.provider,'openrouter');
+ assert.equal(done.worker_d1_verified,true);
+ assert.equal(done.site_d1_verified,false);
+ assert.equal(done.openrouter_free_requests_persisted,true);
+ assert.equal(done.inference_online_verified,false);
+ const row=s.sql.prepare('SELECT models_json FROM hud_site_catalog_rows WHERE provider=?')
+  .get('openrouter');
+ assert(row.models_json.includes('"remaining":43'));
+ assert(!row.models_json.includes(key));
+ assert(!row.models_json.includes('MUST_NOT_BE_PERSISTED'));
+ assert(!row.models_json.includes('is_free_tier'));
+ const status=await catalogBridgeStatus(s.env,at+1000);
+ const p=status.providers.find(x=>x.provider==='openrouter');
+ assert.equal(p.status,'catalog_received');
+ assert.equal(p.free_model_daily_requests.used,7);
+ assert.equal(p.free_model_daily_requests.limit,50);
+ assert.equal(p.free_model_daily_requests.remaining,43);
+ assert.equal(p.free_model_daily_requests.observed_at,at);
+ assert.equal(p.free_model_daily_requests.scope,'provider_account');
+ assert.equal(p.free_billing_verified,false);
+ assert.equal(p.quota_verified,false,'account request counter must not grant fleet quota admission');
+ assert.equal(p.inference_online_verified,false);
+ assert.equal((await catalogBridgeStatus(s.env,at+15*60000+1))
+  .providers.find(x=>x.provider==='openrouter').free_model_daily_requests,null);
+ const midnight=(Math.floor(at/86400000)+1)*86400000;
+ assert.equal((await catalogBridgeStatus(s.env,midnight))
+  .providers.find(x=>x.provider==='openrouter').free_model_daily_requests,null);
+});
+
+test('missing or impossible OpenRouter free request counts are not promoted to capacity',async()=>{
+ for(const counter of [null,{used:11,limit:10,remaining:-1},
+  {used:1,limit:5,remaining:5},{used:'1',limit:5,remaining:4},
+  {used:1,limit:5,remaining:4,secret:'injected'}]){
+  const s=setup();s.env.OPENROUTER_API_KEY='o'.repeat(40);
+  s.sql.prepare('INSERT OR REPLACE INTO hud_site_catalog_clock(id,next_index,last_started_at) VALUES(1,6,?)').run(T-300001);
+  const done=await refreshCatalogBridge(s.env,T,async url=>{
+   if(url==='https://openrouter.ai/api/v1/key')
+    return Response.json({data:{free_model_daily_requests:counter}});
+   if(url==='https://openrouter.ai/api/v1/models')
+    return Response.json({data:[{id:'vendor/preview:free',
+     pricing:{prompt:'0',completion:'0'}}]});
+   throw Error('unapproved_external_host');
+  });
+  assert.equal(done.status,'catalog_received');
+  const p=(await catalogBridgeStatus(s.env,T+1000))
+   .providers.find(x=>x.provider==='openrouter');
+  // Extra fields are dropped by the trusted parser rather than persisted.
+  if(counter?.secret){
+   assert.equal(p.free_model_daily_requests.remaining,4);
+   const row=s.sql.prepare('SELECT models_json FROM hud_site_catalog_rows WHERE provider=?').get('openrouter');
+   assert(!row.models_json.includes('injected'));
+  }else assert.equal(p.free_model_daily_requests,null);
+  assert.equal(p.inference_online_verified,false);
+ }
+});
