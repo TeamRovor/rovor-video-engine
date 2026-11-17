@@ -2,6 +2,7 @@
 const REPO='TeamRovor/rovor-video-engine';
 const HOUR=3600000,DAY=86400000;
 const safeInteger=n=>Number.isSafeInteger(n)&&n>=1;
+const exactSHA=s=>typeof s==='string'&&/^[a-f0-9]{40}$/.test(s);
 const within=(raw,now,maxAge)=>{
   const at=typeof raw==='string'?Date.parse(raw):NaN;
   return Number.isFinite(at)&&at<=now&&now-at>=0&&now-at<=maxAge;
@@ -22,8 +23,8 @@ function labelsOf(issue){
    .map(l=>typeof l==='string'?l:l?.name)
    .filter(l=>typeof l==='string').map(l=>l.toLowerCase());
 }
-export function discoverCandidates({runs=[],successes=[],issues=[],pulls=[]},now=Date.now()){
- if(!Array.isArray(runs)||!Array.isArray(successes)||!Array.isArray(issues)||!Array.isArray(pulls))
+export function discoverCandidates({runs=[],successes=[],prRuns=[],issues=[],pulls=[]},now=Date.now()){
+ if(!Array.isArray(runs)||!Array.isArray(successes)||!Array.isArray(prRuns)||!Array.isArray(issues)||!Array.isArray(pulls))
    throw Error('discovery_input_invalid');
  const choices=[];
  for(const r of runs.slice(0,50)){
@@ -42,6 +43,31 @@ export function discoverCandidates({runs=[],successes=[],issues=[],pulls=[]},now
      ' at https://github.com/'+REPO+'/actions/runs/'+r.id+
      '. Reproduce the failure, identify its root cause, and propose a minimal regression test and fix.'+
      ' Inspect task ownership before taking action. This is a proposal, not an approved job.'));
+ }
+ // PR-check failures were invisible when discovery only queried failed main runs.
+ // Match GitHub's PR association to a currently open exact head; never turn
+ // a stale merge-commit failure or an untrusted fork into an agent assignment.
+ const activePRs=new Map(pulls.slice(0,50)
+   .filter(p=>safeInteger(p?.number)&&p.state==='open'&&p.base?.ref==='main'&&
+     exactSHA(p.head?.sha)&&p.head?.repo?.full_name===REPO)
+   .map(p=>[p.number,p]));
+ const seenPRs=new Set();
+ for(const r of [...prRuns.slice(0,50)].sort((a,b)=>
+   Date.parse(b?.created_at||'')-Date.parse(a?.created_at||''))){
+   if(!safeInteger(r?.id)||r.event!=='pull_request'||r.conclusion!=='failure'||
+     r.head_repository?.full_name!==REPO||!within(r.created_at,now,36*HOUR)||
+     typeof r.name!=='string'||/autonomous work discovery/i.test(r.name)||
+     !Array.isArray(r.pull_requests))continue;
+   const linked=r.pull_requests.find(link=>safeInteger(link?.number)&&
+     link.base?.ref==='main'&&exactSHA(link.head?.sha)&&
+     activePRs.get(link.number)?.head.sha===link.head.sha);
+   if(!linked||seenPRs.has(linked.number))continue;
+   seenPRs.add(linked.number); // One review draft per PR per scan, not per failing workflow.
+   choices.push(candidate('run-'+r.id,91,
+     '[ROVOR-DISCOVERY:run-'+r.id+'] Investigate failed current-head PR #'+linked.number+
+     ' CI run #'+r.id+' at https://github.com/'+REPO+'/actions/runs/'+r.id+
+     '. Verify current checks, exact head and active file ownership before proposing a regression fix.'+
+     ' This is owner-review-only evidence; do not take over or merge the PR.'));
  }
  for(const issue of issues.slice(0,60)){
    if(!safeInteger(issue?.number)||issue?.pull_request||issue?.state!=='open'||

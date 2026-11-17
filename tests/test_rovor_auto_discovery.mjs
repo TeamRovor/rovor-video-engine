@@ -8,14 +8,14 @@ const recent=new Date(NOW-3600000).toISOString(),old=new Date(NOW-40*86400000).t
 const runs=[{id:987654,head_branch:'main',event:'push',conclusion:'failure',created_at:recent,name:'Private HUD CI'}];
 const issues=[{number:42,state:'open',labels:[{name:'security'}],updated_at:recent,assignees:[]},{number:43,state:'open',labels:[{name:'bug'}],updated_at:recent,assignees:[]}];
 const pulls=[{number:123,draft:false,state:'open',assignees:[],updated_at:old}];
-function fake({keys=[],today=0,runSet=runs,issueSet=issues,pullSet=pulls,duplicateFirst=false,duplicateAll=false}={}){
+function fake({keys=[],today=0,runSet=runs,prRunSet=[],issueSet=issues,pullSet=pulls,duplicateFirst=false,duplicateAll=false}={}){
  const posts=[],calls=[];
  const send=async(url,options)=>{
    calls.push({url,options});assert.equal(options.redirect,'manual');
    if(url.startsWith('https://api.github.com')){
      assert.equal(options.headers.Authorization,'Bearer '+env.GITHUB_TOKEN);
      assert.equal(options.method,'GET');
-     if(url.includes('/actions/runs'))return Response.json({workflow_runs:url.includes('status=success')?[]:runSet});
+     if(url.includes('/actions/runs'))return Response.json({workflow_runs:url.includes('event=pull_request')?prRunSet:url.includes('status=success')?[]:runSet});
      if(url.includes('/issues'))return Response.json(issueSet);
      if(url.includes('/pulls'))return Response.json(pullSet);
      throw Error('Unexpected GitHub request');
@@ -79,9 +79,60 @@ test('read-only GitHub evidence saves one owner-review-only D1 draft, not infere
  assert.deepEqual(r,{state:'owner_review_draft_queued',queued:true,kind:'run',priority:95,
    model_call_started:false,execution_authorized:false,mac_required:false});
  assert.equal(f.posts.length,1);assert.equal(f.posts[0].key,'run-987654');
- assert.equal(f.calls.filter(x=>x.url.startsWith('https://api.github.com')).length,4);
+ assert.equal(f.calls.filter(x=>x.url.startsWith('https://api.github.com')).length,5);
  assert.equal(f.calls.filter(x=>x.options.method==='POST').length,1);
  assert(f.calls.every(x=>!x.url.includes('/chat')&&!x.url.includes('/models')));
+});
+test('current-head PR CI failures reach owner review without taking over draft PRs',async()=>{
+ const sha='b'.repeat(40);
+ const pr={number:456,draft:true,state:'open',assignees:[],updated_at:recent,
+   base:{ref:'main'},head:{sha,repo:{full_name:'TeamRovor/rovor-video-engine'}}};
+ const fail={id:44065699697,event:'pull_request',conclusion:'failure',
+   name:'GitHub-owned PRIVATE ROVOR HUD (Cloudflare Worker)',
+   created_at:recent,head_repository:{full_name:'TeamRovor/rovor-video-engine'},
+   pull_requests:[{number:456,base:{ref:'main'},head:{sha}}]};
+ const f=fake({runSet:[],prRunSet:[fail],issueSet:[],pullSet:[pr]});
+ const result=await runDiscovery({env,send:f.send,now:NOW});
+ assert.deepEqual(result,{state:'owner_review_draft_queued',queued:true,kind:'run',priority:91,
+   model_call_started:false,execution_authorized:false,mac_required:false});
+ assert.equal(f.posts.length,1);
+ assert.equal(f.posts[0].key,'run-44065699697'); // Existing private D1 key allowlist.
+ assert.match(f.posts[0].text,/failed current-head PR #456/);
+ assert(!f.posts[0].text.includes('PRIVATE SECRET'));
+ const calls=f.calls.filter(c=>c.url.startsWith('https://api.github.com'));
+ assert.equal(calls.length,5);
+ assert(calls.some(c=>c.url.includes('event=pull_request&status=failure&per_page=8')));
+ assert(calls.some(c=>c.url.includes('/pulls?state=open&sort=updated&direction=desc&per_page=8')));
+ assert.equal(f.calls.filter(c=>c.options.method==='POST').length,1);
+});
+test('PR CI discovery rejects stale heads, forks, missing association and duplicate failures',()=>{
+ const sha='b'.repeat(40),prior='c'.repeat(40);
+ const pr={number:456,draft:true,state:'open',updated_at:recent,
+   base:{ref:'main'},head:{sha,repo:{full_name:'TeamRovor/rovor-video-engine'}}};
+ const f={id:44065699697,event:'pull_request',conclusion:'failure',name:'Private HUD CI',
+   created_at:recent,head_repository:{full_name:'TeamRovor/rovor-video-engine'},
+   pull_requests:[{number:456,base:{ref:'main'},head:{sha}}]};
+ const candidates=(prRuns,pulls=[pr])=>discoverCandidates({
+   runs:[],successes:[],prRuns,issues:[],pulls},NOW);
+ assert.deepEqual(candidates([f]).map(x=>x.key),['run-44065699697']);
+ const earlier={...f,id:44065699696,created_at:new Date(NOW-2*3600000).toISOString()};
+ assert.deepEqual(candidates([earlier,f]).map(x=>x.key),['run-44065699697']);
+ for(const bad of [
+   {...f,pull_requests:[{number:456,base:{ref:'main'},head:{sha:prior}}]},
+   {...f,pull_requests:[]},
+   {...f,head_repository:{full_name:'untrusted/fork'}},
+   {...f,event:'workflow_dispatch'},
+   {...f,pull_requests:[{number:456,base:{ref:'feature'},head:{sha}}]},
+   {...f,created_at:old},
+   {...f,name:'ROVOR autonomous work discovery'},
+ ])assert.deepEqual(candidates([bad]),[]);
+ for(const badPr of [
+   {...pr,state:'closed'},
+   {...pr,head:{...pr.head,sha:prior}},
+   {...pr,head:{...pr.head,repo:{full_name:'untrusted/fork'}}},
+   {...pr,base:{ref:'other'}},
+ ])assert.deepEqual(candidates([f],[badPr]),[]);
+ assert.deepEqual(candidates([f],[]),[]);
 });
 test('durable D1 metadata skips duplicates even if inbox pagination changes',async()=>{
  const f=fake({keys:['run-987654']});
@@ -112,6 +163,7 @@ test('never share private tokens with arbitrary origins, or process unverified i
 test('hourly production discovery and ephemeral PR verification use isolated concurrency',()=>{
  const workflow=readFileSync(new URL('../.github/workflows/rovor-autonomous-discovery.yml',import.meta.url),'utf8');
  assert.match(workflow,/group: rovor-autonomous-discovery-\$\{\{ github\.event_name == 'pull_request' && github\.head_ref \|\| 'main' \}\}/);
+ assert(workflow.includes("'integrations/hud-cloud/discovery-candidates.mjs'"));
  assert.match(workflow,/cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/);
  assert.match(workflow,/if: github\.ref == 'refs\/heads\/main' && \(github\.event_name == 'schedule'/);
  assert.match(workflow,/permissions:\s+contents: read\s+actions: read\s+issues: read\s+pull-requests: read/);
@@ -146,7 +198,7 @@ test('GitHub list requests remain below parser capacity even when real 40/50-ite
  const result=await runDiscovery({env,send,now:NOW});
  assert.equal(result.state,'owner_review_draft_queued');
  assert.equal(result.queued,true);
- assert.equal(f.calls.filter(v=>v.url.startsWith('https://api.github.com')).length,4);
+ assert.equal(f.calls.filter(v=>v.url.startsWith('https://api.github.com')).length,5);
  assert.equal(f.posts.length,1);
 });
 

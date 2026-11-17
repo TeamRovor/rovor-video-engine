@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/rovor-autonomous-discovery.yml'
       - 'tools/rovor_auto_discovery.mjs'
+      - 'integrations/hud-cloud/discovery-candidates.mjs'
       - 'tests/test_rovor_auto_discovery.mjs'
   schedule:
     - cron: '17 * * * *'
