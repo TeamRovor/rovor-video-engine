@@ -6219,6 +6219,25 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/43107107729"
         }
       ]
+    },
+    {
+      "id": "github-workflow-on-key-governance-20261117",
+      "title": "Fail closed on noncanonical GitHub Actions trigger keys to protect one cloud scheduler",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / ROVOR workflow-governance session 2026-11-17",
+      "branch": "fix/workflow-on-key-governance-20261117",
+      "scopes": [
+        "tools/check_workflow_schedule.py",
+        "tests/test_workflow_schedule.py"
+      ],
+      "depends_on": [],
+      "next_action": "Inspect existing schedule allowlist and reject quoted, spaced, indented and duplicate on keys that could hide a second scheduler; run offline regressions; submit a draft PR for owner review.",
+      "acceptance": "All ordinary existing workflows keep their reviewed schedule allowlist; quoted, spaced, indented and duplicate on headers fail closed in offline tests. No production schedule, auth, provider, STOP, D1 or deploy change.",
+      "links": [],
+      "updated_at": "2026-11-17T10:20:00Z",
+      "next_update": "After targeted offline tests and draft PR review",
+      "blocker": null
     }
   ]
 }
