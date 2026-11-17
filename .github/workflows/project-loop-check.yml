@@ -6,14 +6,20 @@ on:
       - 'coordination/**'
       - 'tools/project_loop.py'
       - 'tests/test_project_loop.py'
-      - '.github/workflows/project-loop-check.yml'
+      - 'tools/workflow_inventory.py'
+      - 'tests/test_workflow_inventory.py'
+      - 'docs/ROVOR_CLOUD_WORKFLOW_MAP.md'
+      - '.github/workflows/**'
   push:
     branches: [main]
     paths:
       - 'coordination/**'
       - 'tools/project_loop.py'
       - 'tests/test_project_loop.py'
-      - '.github/workflows/project-loop-check.yml'
+      - 'tools/workflow_inventory.py'
+      - 'tests/test_workflow_inventory.py'
+      - 'docs/ROVOR_CLOUD_WORKFLOW_MAP.md'
+      - '.github/workflows/**'
 
 permissions:
   contents: read
@@ -41,3 +47,26 @@ jobs:
         run: python tools/project_loop.py check
       - name: Check overlap detection, stale ownership and fetched state
         run: python -m unittest discover -s tests -p test_project_loop.py -v
+
+  workflow-inventory:
+    # Read-only Linux job. Do not multiply this audit across the OS matrix.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Regression-check workflow inspection and credential redaction
+        run: python -m unittest discover -s tests -p test_workflow_inventory.py -v
+      - name: Generate source-based workflow inventory without scheduling jobs
+        run: python tools/workflow_inventory.py --output workflow-inventory.json
+      - name: Save machine-readable inventory for owner audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: rovor-workflow-inventory
+          path: workflow-inventory.json
+          if-no-files-found: error
+          retention-days: 7
