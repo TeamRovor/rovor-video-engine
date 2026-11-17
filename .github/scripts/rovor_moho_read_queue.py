@@ -17,6 +17,7 @@ import urllib.request
 REPO = "TeamRovor/rovor-video-engine"
 ISSUE = 6
 ALLOWED = {"document_getInfo", "document_getLayers"}
+MAX_REQUEST_BYTES = 16 * 1024
 QUEUE_PATH = re.compile(r"^rovor-production/moho-queue/read-[A-Za-z0-9_-]+[.]json$")
 NODE = "/usr/local/bin/node"
 BRIDGE = pathlib.Path.home() / "Documents/Moho-Astra/MohoMCP-Enhanced/bridge/dist/index.js"
@@ -30,7 +31,11 @@ def load_plan():
     p = pathlib.Path(request_path)
     if not p.is_file() or p.is_symlink():
         raise RuntimeError("Whitelisted request file missing or linked")
-    plan = json.loads(p.read_text(encoding="utf-8"))
+    with p.open("rb") as request:
+        raw = request.read(MAX_REQUEST_BYTES + 1)
+    if len(raw) > MAX_REQUEST_BYTES:
+        raise RuntimeError("Read-only request exceeds byte limit")
+    plan = json.loads(raw.decode("utf-8"))
     if set(plan) != {"task_id", "commands"}:
         raise RuntimeError("Unexpected request fields")
     if not re.fullmatch(r"[A-Za-z0-9_-]{4,72}", plan["task_id"]):
