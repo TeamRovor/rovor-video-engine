@@ -1201,6 +1201,15 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "provider-catalog-contradictory-receipt-20261117": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
