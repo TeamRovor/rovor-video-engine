@@ -35,6 +35,20 @@ export function buildHudSecretPayload(env) {
       throw Error('invalid_private_secret_configuration');
     payload.GHOST_SITE_SERVICE_TOKEN=key;
   }
+  // Exact private Site destination is protected deployment configuration, not
+  // a hard-coded URL in the public source or an untrusted browser parameter.
+  if(env.ROVOR_GHOST_SITE_SERVICE_URL){
+    const url=env.ROVOR_GHOST_SITE_SERVICE_URL;
+    if(typeof url!=='string'||url.length>300||!/^https:\/\//.test(url))
+      throw Error('invalid_private_secret_configuration');
+    let parsed;
+    try{parsed=new URL(url);}catch{throw Error('invalid_private_secret_configuration');}
+    if(parsed.protocol!=='https:'||parsed.port||parsed.username||parsed.password||
+       parsed.search||parsed.hash||parsed.pathname!=='/api/ghost/service'||
+       !/^[a-z0-9-]+\.[a-z0-9-]+\.chatgpt\.site$/.test(parsed.hostname)||
+       parsed.href!==url)throw Error('invalid_private_secret_configuration');
+    payload.GHOST_SITE_SERVICE_URL=url;
+  }
   // Optional server-only direct catalog keys. Never reuse the Cloudflare
   // deployment API token as a model key, never print values, and do not write
   // blanks over existing Cloudflare secrets.
