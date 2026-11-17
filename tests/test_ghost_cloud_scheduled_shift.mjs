@@ -108,6 +108,25 @@ test('idle shift distinguishes all ineligible routes from blocked unattempted wo
     ['no_eligible_providers','unattempted_jobs_not_dispatched','approved_packets_already_attempted']);
 });
 
+test('all-denied idle reason requires the exact canonical provider identities',async()=>{
+  const canonical=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
+  const cases=[
+    [Object.fromEntries(canonical.map(p=>[p,'not_configured'])),'no_eligible_providers'],
+    [Object.fromEntries([...canonical.slice(0,8),'attacker'].map(p=>[p,'not_configured'])),'unattempted_jobs_not_dispatched'],
+    [Object.fromEntries(canonical.map(p=>[p,p==='groq'?'':'not_configured'])),'unattempted_jobs_not_dispatched'],
+  ];
+  for(const [denied,expected] of cases){
+    const s=setup();s.db.exec("INSERT INTO ghost_cloud_jobs(id) VALUES('ready')");
+    const result=await runScheduledShift(s.env,{
+      replenish:async()=>({queued:0,duplicates:0}),
+      tick:async()=>({enabled:true,dispatched:0,denied}),
+      clock:s.clock,newId:s.newId
+    });
+    assert.equal(result.reason,expected);
+    assert.equal(s.db.prepare('SELECT reason FROM ghost_cloud_shift_runs').get().reason,expected);
+  }
+});
+
 test('STOP after feeding prevents any tick',async()=>{
   const s=setup(),calls=[];
   const r=await runScheduledShift(s.env,{replenish:async()=>{calls.push('feed');s.db.exec('UPDATE ghost_cloud_control SET enabled=0 WHERE id=1');return {queued:1,duplicates:0};},
