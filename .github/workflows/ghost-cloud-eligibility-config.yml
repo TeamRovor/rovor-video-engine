@@ -1,0 +1,25 @@
+name: Ghost cloud eligibility configuration
+on:
+  push:
+    paths:
+      - 'integrations/ghost-cloud/eligibility-config.mjs'
+      - 'tests/test_ghost_cloud_eligibility_config.mjs'
+      - '.github/workflows/ghost-cloud-eligibility-config.yml'
+  pull_request:
+    paths:
+      - 'integrations/ghost-cloud/eligibility-config.mjs'
+      - 'tests/test_ghost_cloud_eligibility_config.mjs'
+      - '.github/workflows/ghost-cloud-eligibility-config.yml'
+permissions:
+  contents: read
+jobs:
+  eligibility-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/test_ghost_cloud_eligibility_config.mjs
+      - run: python3 tools/project_loop.py check
+      - run: python3 tools/task_routing_pair.py --check
