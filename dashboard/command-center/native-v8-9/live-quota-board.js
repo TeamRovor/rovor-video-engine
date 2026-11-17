@@ -168,8 +168,8 @@ function providerStateSnapshot(cloud,now=Date.now()){
     q.used>=0&&q.used<=q.limit&&
     (q.resets_at===null||q.resets_at===undefined||
      (Number.isSafeInteger(q.resets_at)&&q.resets_at>now));
-  const recent=p?.recent_inference_verified===true&&
-    attempts.some(a=>a?.provider===provider&&
+  const recent=typeof p?.configured_model==='string'&&p.configured_model.length>0&&
+    p.recent_inference_verified===true&&attempts.some(a=>a?.provider===provider&&
       a?.actual_model===p?.configured_model&&
       typeof a?.id==='string'&&a.id.length>0&&
       ['needs_review','complete','completed','approved'].includes(a.status)&&
