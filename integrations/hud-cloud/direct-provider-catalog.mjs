@@ -58,6 +58,7 @@ export async function directProviderCatalog(env,provider,send=fetch){
  if(setup==='unknown_provider')return result('unavailable',[],'unknown_provider');
  if(setup)return result('unconfigured',[],setup);
  const key=env[KEYS[provider]];
+ let freeModelDailyRequests=null;
  let url=ENDPOINTS[provider];
  if(provider==='cloudflare-ai')
   url='https://api.cloudflare.com/client/v4/accounts/'+env.CLOUDFLARE_ACCOUNT_ID+'/ai/models/search';
@@ -91,6 +92,17 @@ export async function directProviderCatalog(env,provider,send=fetch){
   if(!keyInfo?.data||typeof keyInfo.data!=='object'||
     Array.isArray(keyInfo.data))
    return result('invalid',[],'invalid_catalog_shape');
+  // The authenticated /key endpoint exposes the current UTC day's free-model
+  // account request counter. It does NOT prove commercial terms, paid billing,
+  // per-minute limits, or eligibility for any particular model.
+  const daily=keyInfo.data.free_model_daily_requests;
+  if(daily&&typeof daily==='object'&&!Array.isArray(daily)&&
+     Number.isSafeInteger(daily.used)&&Number.isSafeInteger(daily.limit)&&
+     Number.isSafeInteger(daily.remaining)&&daily.limit>0&&daily.limit<=10000000&&
+     daily.used>=0&&daily.remaining>=0&&
+     daily.used+daily.remaining===daily.limit)
+   freeModelDailyRequests={used:daily.used,limit:daily.limit,
+    remaining:daily.remaining};
  }
  let response;
  try{
@@ -140,5 +152,6 @@ export async function directProviderCatalog(env,provider,send=fetch){
   seen.add(model);models.push(model);
   if(models.length===20)break;
  }
- return result('catalog_received',models);
+ return {...result('catalog_received',models),
+  ...(freeModelDailyRequests?{free_model_daily_requests:freeModelDailyRequests}:{})};
 }
