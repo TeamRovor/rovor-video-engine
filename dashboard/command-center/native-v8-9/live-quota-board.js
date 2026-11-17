@@ -145,12 +145,15 @@ function unknownModel(m){
 function providerStateSnapshot(cloud,now=Date.now()){
  if(cloud?.execution_source!=='cloud_provider'||!Number.isSafeInteger(cloud.observed_at)||
     Math.abs(now-cloud.observed_at)>15000||!Array.isArray(cloud.providers)||
-    cloud.providers.length>20)return null;
+    cloud.providers.length!==MONITORED_PROVIDER_IDS.length)return null;
  const allowed=new Set(MONITORED_PROVIDER_IDS),byProvider=new Map();
  for(const p of cloud.providers){
   if(!p||!allowed.has(p.provider)||byProvider.has(p.provider))return null;
   byProvider.set(p.provider,p);
  }
+ // An incomplete ledger is not evidence that missing providers are offline.
+ // Keep all five aggregate counters unknown rather than displaying false 0/9.
+ if(byProvider.size!==MONITORED_PROVIDER_IDS.length)return null;
  const attempts=Array.isArray(cloud.attempts)&&cloud.attempts.length<=500?cloud.attempts:[];
  const counts={configured:0,catalog:0,admitted:0,quota:0,recent:0,blocked:0};
  const states=MONITORED_PROVIDER_IDS.map(provider=>{
