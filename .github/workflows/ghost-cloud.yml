@@ -1,14 +1,20 @@
 name: Nine-provider cloud runtime checks
 on:
+  # Run push validation on main only; PRs already validate feature-branch changes.
   push:
-    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud*.mjs', '.github/workflows/ghost-cloud.yml']
+    branches: [main]
+    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud*.mjs', 'tests/test_ghost_cloud_workflow_policy.py', '.github/workflows/ghost-cloud.yml']
   pull_request:
-    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud*.mjs', '.github/workflows/ghost-cloud.yml']
+    paths: ['integrations/ghost-cloud/**', 'tests/test_ghost_cloud*.mjs', 'tests/test_ghost_cloud_workflow_policy.py', '.github/workflows/ghost-cloud.yml']
 permissions:
   contents: read
+concurrency:
+  group: nine-provider-cloud-runtime-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -17,5 +23,6 @@ jobs:
         with:
           node-version: '24'
       - run: node --test tests/test_ghost_cloud.mjs tests/test_ghost_cloud_canary_preflight.mjs
+      - run: python3 -m unittest discover -s tests -p test_ghost_cloud_workflow_policy.py -v
       - run: python3 tools/project_loop.py check
       - run: python3 tools/task_routing_pair.py --check
