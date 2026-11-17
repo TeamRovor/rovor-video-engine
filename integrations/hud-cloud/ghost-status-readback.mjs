@@ -1,7 +1,18 @@
 // Read-only bridge for the *existing* owner-private Site workforce ledger.
 // No provider calls, dispatch, credential forwarding to browsers, or new clock.
-// Fixed origin prevents requester-controlled URLs from receiving service tokens.
-const SERVICE_URL = 'https://rovor-private-hud.mm98z652cq.chatgpt.site/api/ghost/service';
+// The owner-private destination is a protected deployment binding, never a public repo literal.
+// Validate before using the independent service credential; do not follow redirects.
+export function privateServiceUrl(value) {
+  if(typeof value!=='string'||value.length>300||!/^https:\/\//.test(value))return null;
+  try {
+    const url=new URL(value);
+    if(url.protocol!=='https:'||url.port||url.username||url.password||
+       url.search||url.hash||url.pathname!=='/api/ghost/service'||
+       !/^[a-z0-9-]+\.[a-z0-9-]+\.chatgpt\.site$/.test(url.hostname)||
+       url.href!==value)return null;
+    return value;
+  } catch {return null;}
+}
 const PROVIDERS = Object.freeze([
   'groq','gemini','cloudflare-ai','mistral','nvidia',
   'openrouter','sambanova','cohere','huggingface'
@@ -105,11 +116,12 @@ function attemptView(a) {
 
 export async function readGhostStatus(env, fetcher=fetch, now=Date.now()) {
   const token=env?.GHOST_SITE_SERVICE_TOKEN;
-  if(typeof token!=='string'||token.length<32 ||
+  const serviceUrl=privateServiceUrl(env?.GHOST_SITE_SERVICE_URL);
+  if(!serviceUrl||typeof token!=='string'||token.length<32 ||
      token===env?.HUD_READER_TOKEN||token===env?.HUD_WRITER_TOKEN)
     return error('cloud_readback_not_configured',503);
   try {
-    const remote=await fetcher(SERVICE_URL,{
+    const remote=await fetcher(serviceUrl,{
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
       body:JSON.stringify({operation:'status'}),
