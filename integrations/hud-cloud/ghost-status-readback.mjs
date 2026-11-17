@@ -57,7 +57,11 @@ function providerView(p, now) {
     quota.observed_at<=now+120000 && now-quota.observed_at<=900000 &&
     nonnegative(quota.used)!==null &&
     Number.isSafeInteger(quota.limit) && quota.limit>0 && quota.used<=quota.limit &&
-    (!quota.resets_at || timestamp(quota.resets_at)!==null);
+    // An internally inconsistent allowance must never be shown as verified.
+    (quota.remaining==null || (nonnegative(quota.remaining)!==null &&
+      quota.remaining===quota.limit-quota.used)) &&
+    (quota.resets_at==null || (timestamp(quota.resets_at)!==null &&
+      quota.resets_at>quota.observed_at && quota.resets_at>now));
   return {
     provider:p.provider,
     credentials_configured:p.credentials_configured===true,
