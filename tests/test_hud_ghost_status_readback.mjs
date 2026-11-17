@@ -123,7 +123,7 @@ test('Cloudflare-safe manual redirects cannot follow a credential-bearing Site r
   assert.equal(result.status,502);
   assert.equal(result.body.error,'cloud_readback_redirect_denied');
   assert(!JSON.stringify(result).includes('SECRET'));
-  assert(!JSON.stringify(result).includes(env.HUD_GHOST_SERVICE_TOKEN));
+  assert(!JSON.stringify(result).includes(env.GHOST_SITE_SERVICE_TOKEN));
 });
 
 test('no credential or reused HUD credentials fail closed, without contacting Site',async()=>{
