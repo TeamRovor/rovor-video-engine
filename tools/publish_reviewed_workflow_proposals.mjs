@@ -26,10 +26,10 @@ function ensureTrustedContext(env){
 function createProposalPr(git,branch,item){
  const link=git('gh',['pr','create','--repo',REPO,'--base','main','--head',branch,
   '--title','ROVOR: owner-reviewed workflow proposal '+item.id,
-  '--body','Validated read-only test-workflow proposal compiled from one private D1 Gemini draft.\\n\\n'+
-  'Owner review: PASS; SHA-256: '+item.receipt+'; actual model: gemini-3.5-flash-lite.\\n'+
-  'This file under coordination/workflow-proposals is NOT active GitHub Actions code.\\n'+
-  'Inspect the generated tests and cadence before installing it as .github/workflows/'+item.id+'.yml.\\n'+
+  '--body','Validated read-only test-workflow proposal compiled from one private D1 Gemini draft.\n\n'+
+  'Owner review: PASS; SHA-256: '+item.receipt+'; actual model: gemini-3.5-flash-lite.\n'+
+  'This file under coordination/workflow-proposals is NOT active GitHub Actions code.\n'+
+  'Inspect the generated tests and cadence before installing it as .github/workflows/'+item.id+'.yml.\n'+
   'No code ran from the model output, no paid route, no auto-merge or main edit.']);
  if(!/^https:\/\/github\.com\/TeamRovor\/rovor-video-engine\/pull\/[1-9][0-9]*$/.test(link))
   throw Error('proposal_pr_create_unconfirmed');
@@ -60,7 +60,8 @@ export async function publishReviewed({env=process.env,send=fetch,git=run,read=r
    // branch existence alone: a name collision must not approve other content.
    // Fetch bounded history so main...FETCH_HEAD resolves the common base even
    // when Actions checked out main with fetch-depth: 1.
-   git('git',['fetch','--no-tags','--depth=200','origin','main','refs/heads/'+branch]);
+   git('git',['fetch','--no-tags','--depth=200','origin','main']);
+   git('git',['fetch','--no-tags','--depth=200','origin','refs/heads/'+branch]);
    const changed=git('git',['diff','--name-only','main...FETCH_HEAD']);
    const remoteYaml=git('git',['show','FETCH_HEAD:'+rel]);
    if(changed!==rel||remoteYaml!==item.yaml.trim())
