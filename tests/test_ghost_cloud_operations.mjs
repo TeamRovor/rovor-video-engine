@@ -955,6 +955,7 @@ test('owner-only same-origin catalog button checks nine D1 rows without inferenc
   urls.push(url);assert.equal(options.method,'GET');
   assert.equal(options.redirect,'manual');
   assert.ok(!url.includes('/chat/completions'));
+  if(url==='https://openrouter.ai/api/v1/key')return Response.json({data:{is_free_tier:true}});
   return Response.json({data:[{id:'read-only-model'}]});
  });
  const anonymous=await ops.fetch(request('/api/ghost/catalog-refresh',
@@ -970,12 +971,12 @@ test('owner-only same-origin catalog button checks nine D1 rows without inferenc
  assert.equal(first.status,200);
  assert.deepEqual(await first.json(),{source:'site_native_catalog_refresh',
   checked:9,persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
- assert.equal(urls.length,9);
+ assert.equal(urls.length,10);
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
  const second=await ops.fetch(request('/api/ghost/catalog-refresh',{body:{},browser:true}),env);
  assert.deepEqual(await second.json(),{source:'site_native_catalog_refresh',
   checked:0,persisted:0,catalog_received:0,skipped_fresh:9,inference_attempts:0});
- assert.equal(urls.length,9,'fresh catalogs cannot cause duplicate upstream calls');
+ assert.equal(urls.length,10,'fresh catalogs cannot cause duplicate upstream calls');
  const page=await (await ops.fetch(request('/'),env)).text();
  assert.match(page,/REFRESH STALE CATALOGS/);
  assert.match(page,/FREE INFERENCE NOT VERIFIED/);
@@ -990,12 +991,13 @@ test('native cloud catalog refresh persists nine real GET observations without a
   assert.equal(options.method,'GET');
   assert.equal(options.redirect,'manual');
   assert.ok(!url.includes('/chat/completions'));
+  if(url==='https://openrouter.ai/api/v1/key')return Response.json({data:{is_free_tier:true}});
   return Response.json({data:[{id:'catalogued-model'}]});
  };
  const first=await ops.refreshCatalogs(env,fetcher);
  assert.deepEqual(first,{source:'site_native_catalog_refresh',checked:9,
   persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
- assert.equal(seen.length,9);
+ assert.equal(seen.length,10);
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
  const report=await ops.status(env);
  for(const item of report.providers){
@@ -1006,13 +1008,13 @@ test('native cloud catalog refresh persists nine real GET observations without a
  const second=await ops.refreshCatalogs(env,fetcher);
  assert.deepEqual(second,{source:'site_native_catalog_refresh',checked:0,
   persisted:0,catalog_received:0,skipped_fresh:9,inference_attempts:0});
- assert.equal(seen.length,9);
+ assert.equal(seen.length,10);
  db.prepare("UPDATE ghost_cloud_provider_checks SET observed_at=1 WHERE provider='nvidia'").run();
  const partial=await ops.refreshCatalogs(env,fetcher);
  assert.equal(partial.checked,1);
  assert.equal(partial.persisted,1);
  assert.equal(partial.catalog_received,1);
- assert.equal(seen.length,10);
+ assert.equal(seen.length,11);
 });
 test('private MCP owner refresh checks all nine catalogs and persists D1 without inference',async t=>{
  const {env,db,ops}=setup();
@@ -1022,6 +1024,7 @@ test('private MCP owner refresh checks all nine catalogs and persists D1 without
   assert.equal(options.method,'GET');
   assert.equal(options.redirect,'manual');
   assert.ok(!url.includes('/chat/completions'));
+  if(url==='https://openrouter.ai/api/v1/key')return Response.json({data:{is_free_tier:true}});
   return Response.json({data:[{id:'fixture/model:free',pricing:{prompt:'0',completion:'0'}}]});
  });
  const anonymous=await ops.fetch(request('/mcp',{identity:null,
@@ -1032,19 +1035,20 @@ test('private MCP owner refresh checks all nine catalogs and persists D1 without
  const first=await rpc(ops,env,'rovor_provider_catalog_refresh');
  assert.deepEqual(first,{source:'site_native_catalog_refresh',checked:9,
   persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
- assert.equal(seen.length,9);
+ assert.equal(seen.length,10);
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
  assert.ok((await ops.status(env)).providers.every(p=>p.last_check?.status==='catalog_received'));
  const second=await rpc(ops,env,'rovor_provider_catalog_refresh');
  assert.equal(second.checked,0);
  assert.equal(second.skipped_fresh,9);
- assert.equal(seen.length,9);
+ assert.equal(seen.length,10);
  assert.equal((await rpc(ops,env,'rovor_provider_catalog_refresh',{provider:'groq'})).isError,true);
 });
 test('native refresh distinguishes stored provider errors from successful catalogs',async()=>{
  const {env,ops}=setup();
  const first=await ops.refreshCatalogs(env,async(url,options)=>{
   assert.equal(options.method,'GET');
+  if(url==='https://openrouter.ai/api/v1/key')return Response.json({data:{is_free_tier:true}});
   return url.includes('api.groq.com')?new Response('private upstream data',{status:403}):
    Response.json({data:[{id:'available'}]});
  });
@@ -1067,7 +1071,8 @@ test('native cloud catalog refresh fails safely when private D1 checks table is 
 test('native catalog refresh refuses D1 readback with substituted error category',async()=>{
  const {env,ops,db}=setup();
  db.exec("CREATE TRIGGER corrupt_native_catalog AFTER INSERT ON ghost_cloud_provider_checks WHEN NEW.provider='groq' BEGIN UPDATE ghost_cloud_provider_checks SET error_category='substituted' WHERE provider=NEW.provider; END;");
- const result=await ops.refreshCatalogs(env,async()=>Response.json({data:[{id:'available'}]}));
+ const result=await ops.refreshCatalogs(env,async url=>url==='https://openrouter.ai/api/v1/key'?
+  Response.json({data:{is_free_tier:true}}):Response.json({data:[{id:'available'}]}));
  assert.equal(result.checked,9);
  assert.equal(result.persisted,8);
  assert.equal(result.catalog_received,8);
