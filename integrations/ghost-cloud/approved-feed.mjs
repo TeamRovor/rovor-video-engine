@@ -176,8 +176,14 @@ export async function replenishApprovedJobs(env,{fetcher=fetch,submit=submitToEx
    // A stalled provider cannot create an unlimited backlog of hourly work.
    // The current slot is idempotent, and an older unattempted slot blocks
    // newer slots for the SAME canonical task until it is attempted.
-   const prior=await env.DB.prepare('SELECT id FROM ghost_cloud_jobs WHERE id=?').bind(job.id).first();
-   if(prior){duplicates++;continue;}
+   const prior=await env.DB.prepare('SELECT * FROM ghost_cloud_jobs WHERE id=?').bind(job.id).first();
+   if(prior){
+    // Match the existing writer's immutable identity fields. Returning a
+    // duplicate for a revised approved packet would hide a job-ID conflict.
+    const identity=['employee','task_id','kind','title','prompt','source_commit'];
+    if(!identity.every(field=>prior[field]===job[field]))throw Error('job_id_conflict');
+    duplicates++;continue;
+   }
    const pending=await env.DB.prepare(
      "SELECT 1 AS pending FROM ghost_cloud_jobs j WHERE j.task_id=? AND j.id LIKE 'gc-rec-%' "+
      "AND NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts a WHERE a.job_id=j.id) LIMIT 1"
