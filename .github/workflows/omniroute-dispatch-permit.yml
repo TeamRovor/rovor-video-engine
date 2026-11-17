@@ -7,16 +7,12 @@ on:
       - 'tools/omniroute_reasoning_admission.py'
       - 'tests/test_omniroute_dispatch_permit.py'
       - '.github/workflows/omniroute-dispatch-permit.yml'
-      - 'coordination/tasks.json'
-      - 'coordination/work-routing.json'
   pull_request:
     paths:
       - 'tools/omniroute_dispatch_permit.py'
       - 'tools/omniroute_reasoning_admission.py'
       - 'tests/test_omniroute_dispatch_permit.py'
       - '.github/workflows/omniroute-dispatch-permit.yml'
-      - 'coordination/tasks.json'
-      - 'coordination/work-routing.json'
   workflow_dispatch:
 
 permissions:
