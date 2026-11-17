@@ -8,7 +8,8 @@ const env = Object.fromEntries(Object.entries(PROVIDERS).map(([p, [, k]]) => [k,
 env.CLOUDFLARE_ACCOUNT_ID = 'b'.repeat(32);
 const sample = (provider = 'groq') => {
   const model = provider === 'openrouter' ? 'vendor/model:free' :
-    provider === 'huggingface' ? 'vendor/model:upstream' : 'vendor/model';
+    provider === 'huggingface' ? 'vendor/model:upstream' :
+    provider === 'cloudflare-ai' ? '@cf/meta/llama-3.1-8b-instruct' : 'vendor/model';
   return {
     operator_approved: true, model, pool: provider + '-account',
     billing: { zero_cost: true, commercial_use: true, sha256: HEX, checked_at: NOW - 1000 },
