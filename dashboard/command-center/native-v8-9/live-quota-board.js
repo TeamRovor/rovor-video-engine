@@ -221,7 +221,7 @@ function jobReceipts(provider,attempts){
    const input=Number.isSafeInteger(a.tokens_input)&&a.tokens_input>=0?a.tokens_input:null;
    const output=Number.isSafeInteger(a.tokens_output)&&a.tokens_output>=0?a.tokens_output:null;
    const approved=a.human_review==='passed',rejected=a.human_review==='failed';
-   const review=approved?'PASS RECORDED':rejected?'FAIL RECORDED':'AWAITING HUMAN REVIEW';
+   const review=approved?'DRAFT VERIFIED':rejected?'DRAFT REJECTED':'DRAFT NOT VERIFIED';
    return '<li class="rvq-job"><div class="rvq-job-top"><span>'+short(a.employee||'Unassigned')+'</span><span>'+short(a.status.replaceAll('_',' '))+'</span></div>'+
      '<div class="rvq-job-title">'+short(a.title||a.task_id||'Untitled job')+'</div>'+
      '<div class="rvq-job-meta">'+short(a.actual_model||a.requested_model||'Model unreported')+' · '+short(date)+'</div>'+
@@ -232,37 +232,9 @@ function jobReceipts(provider,attempts){
     ' · actual job history, not proof of current execution</p>'+
     '<ol class="rvq-job-list" aria-label="Recent provider jobs">'+list+'</ol>'+
     (history.length>6?'<p>Showing six most recent of '+fmt(history.length)+'</p>':'')+
-    '<p>Account-slot attribution requires a separate receipt; human review controls are not connected here.</p></div>';
+    '<p>Account-slot attribution requires a separate receipt. This panel cannot authorize work.</p></div>';
 }
 
-// Only distinct, explicitly unreviewed inference receipts. This is a
-// returned sample, not an authoritative count of the private review queue.
-function reviewSample(attempts,fresh){
- if(!fresh)return {known:false,pending:[],received:0};
- const seen=new Set(),pending=[];
- for(const a of attempts){
-  if(!a||typeof a.id!=='string'||!a.id||seen.has(a.id))continue;
-  seen.add(a.id);
-  if(a.status!=='needs_review'||a.human_review!=='not_recorded')continue;
-  if(String(a.job_id||'').startsWith('canary-')||
-     String(a.title||'').startsWith('PROVIDER CANARY'))continue;
-  if(!Number.isSafeInteger(a.started_at)||a.started_at>Date.now()+300000||a.started_at<=0)continue;
-  pending.push(a);
- }
- pending.sort((a,b)=>b.started_at-a.started_at);
- return {known:true,pending,received:seen.size};
-}
-function reviewPulse(review){
- if(!review.known)return '<p class="rvq-review-status">No fresh private cloud review sample. Open the owner queue to check actual pending decisions.</p>';
- const count=review.pending.length;
- const latest=review.pending.slice(0,3).map(a=>
-  '<li><strong>'+esc(String(a.title||a.task_id||'Untitled').slice(0,90))+'</strong><span>'+
-  esc(String(a.employee||'Unassigned').slice(0,32))+' · '+esc(prettyTime(new Date(a.started_at).toISOString()))+'</span></li>').join('');
- return '<p class="rvq-review-status">'+fmt(count)+' returned cloud receipt'+(count===1?'':'s')+
-  ' awaiting PASS / FAIL'+(count?' · latest three below':'')+
-  '. This sample is not the complete private owner queue.</p>'+
-  (latest?'<ol class="rvq-review-sample">'+latest+'</ol>':'');
-}
 const CLOUD_ROSTER=['Walter','Mike','Jane','Jesse','Gale','Gus','Saul','Hank'];
 // Employee meters are shares of returned, receipt-attributed cloud attempts,
 // never percentages of provider quota or proof an employee is running now.
@@ -1022,7 +994,6 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
    Math.abs(Date.now()-cloud.observed_at)<=15000&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
  const cloudProviders=cloudFresh?new Map(cloud.providers.filter(p=>p&&typeof p.provider==='string').map(p=>[p.provider,p])):new Map();
  const cloudAttempts=cloudFresh&&Array.isArray(cloud.attempts)&&cloud.attempts.length<=500?cloud.attempts:[];
- const review=reviewSample(cloudAttempts,cloudFresh&&Array.isArray(cloud?.attempts)&&cloud.attempts.length<=500);
  // When the Mac is off, cloud provider credentials and past gateway inventory
  // remain distinguishable: this is NOT a live Mac connection.
  const connections=Array.isArray(data?.connections)?data.connections:
@@ -1091,12 +1062,9 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
      ' / '+(Number.isSafeInteger(groqCloud.last_completion_tokens)?fmt(groqCloud.last_completion_tokens):'—')+'</span>':
      '<span>Independent cloud Groq status unavailable. This does NOT mean the Mac must be online.</span>')+quotaInfo+'</section>';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':slots.length?'MAC REPORT STALE':'NO FRESH REPORT')+'</span></div>'+
- '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
+ '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
  cloudGroqPanel+cloudGeminiPanel()+summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
  workerBanner(data?.workforce,live)+ (slots.length?quotaGlance(slots,quota,live,cloudProviders)+(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
- '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
- '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
- '<a href="https://rovor-private-hud.mm98z652cq.chatgpt.site/" target="_blank" rel="noopener noreferrer">Open authenticated owner review queue</a></div>'+
  '<div id="rvq-team">'+cloudEmployeeUsage(cloudAttempts,cloudFresh)+localEmployeeSection(data?.workforce,live)+'</div>'+
  '<h4 class="rvq-details-heading">PROVIDER REPORTS · EXPAND ANY PROVIDER</h4>'+
  '<div id="rvq-reports" class="rvq-grid">'+(slots.length?slots.map((slot,i)=>card(slot.group,quota,live,i,slot,cloudProviders.get(slot.group.provider),cloudAttempts,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider),geminiProject,requestUsage)).join(''):'<p class="rvq-sub">No configured provider inventory received. Connect the existing private telemetry reporter; nine connections cannot be inferred from setup history.</p>')+'</div>'+
@@ -1165,7 +1133,6 @@ function renderCloudDashboard({cloud=null,geminiCatalog=null,geminiUsage=null,gr
   const providers=cloudFresh?new Map(cloud.providers.filter(p=>p&&CLOUD_ONLY_PROVIDERS.includes(p.provider))
     .map(p=>[p.provider,p])):new Map();
   const attempts=cloudFresh&&Array.isArray(cloud.attempts)&&cloud.attempts.length<=500?cloud.attempts:[];
-  const review=reviewSample(attempts,cloudFresh&&Array.isArray(cloud.attempts));
   const geminiOk=geminiCatalog?.source==='google_gemini_cloud_direct'&&
     Array.isArray(geminiCatalog.directly_listed_models)&&
     Array.isArray(geminiCatalog.model_evidence);
@@ -1253,11 +1220,9 @@ function renderCloudDashboard({cloud=null,geminiCatalog=null,geminiUsage=null,gr
       'Private D1 · direct HUD only']
   ].map(([label,value,info])=>'<div class="rvq-v2-metric"><span>'+esc(label)+'</span><strong>'+
     esc(value)+'</strong><small>'+esc(info)+'</small></div>').join('');
-  const reviewLink='<a href="'+CLOUD_SITE+'" target="_blank" rel="noopener noreferrer">OPEN PRIVATE OWNER REVIEW QUEUE</a>';
-  const count=review.known?fmt(review.pending.length)+' returned drafts awaiting review':'Pending review count not verified';
   return '<section class="wl-card rvq-board rvq-cloud-v2" data-rovor-cloud-dashboard="true">'+
     '<header class="rvq-v2-hero"><div><span class="rvq-eyebrow">ROVOR DIGITAL / LIVE OPERATIONS</span>'+
-    '<h3>Workload Distribution</h3><p>Cloud inference, provider eligibility, recorded model replies and review gates. '+
+    '<h3>Workload Distribution</h3><p>Cloud inference, provider eligibility and recorded model replies. '+
     'No assumed worker activity or invented quota percentages.</p></div>'+
     '<span class="rvq-v2-pill" data-state="'+(cloudFresh?'verified':'unknown')+'">'+title+'</span></header>'+
     '<div class="rvq-v2-metrics">'+summaries+'</div>'+
@@ -1269,15 +1234,12 @@ function renderCloudDashboard({cloud=null,geminiCatalog=null,geminiUsage=null,gr
     '<span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?
        'Showing '+attentionCount+' providers needing verification':'Showing all nine provider families')+'</span></div>'+
     '<div class="rvq-v2-grid">'+tiles+'</div>'+
-    '<div class="rvq-v2-secondary"><section class="rvq-v2-section" id="rvq-review"><div class="rvq-v2-section-head"><h4>OWNER PASS / FAIL</h4>'+
-    '<span class="rvq-v2-pill">'+esc(count)+'</span></div>'+reviewPulse(review)+
-    '<p>This viewer does not approve jobs. Human decisions stay in the original private Site.</p>'+reviewLink+
-    '</section><section class="rvq-v2-section"><div class="rvq-v2-section-head"><h4>CLOUD WORKFORCE</h4>'+
+    '<div class="rvq-v2-secondary"><section class="rvq-v2-section"><div class="rvq-v2-section-head"><h4>CLOUD WORKFORCE</h4>'+
     '<span class="rvq-v2-pill">'+(cloudFresh?'PRIVATE LEDGER READ':'SOURCE UNAVAILABLE')+'</span></div>'+
     '<p>Eight worker roles. Work is counted only when a private receipt names the employee and actual model.</p>'+
     '<p>'+esc(cloudFresh?'Fresh private Site report; queued and executing are separate states.':
       'Private cloud execution status cannot be confirmed from this HUD. No local machine is required for the cloud sources shown above.')+
-    '</p><p>Review activity and execution receipts in the '+reviewLink+'.</p></section></div>'+
+    '</p></section></div>'+
     cloudEmployeeUsage(attempts,cloudFresh&&Array.isArray(cloud?.attempts))+
     '<div class="rvq-v2-sources"><strong>INSTRUMENT RULES</strong> · The cyan circles fill only with an actual verified used/limit pair. '+
     'Gemini’s 12/day allowance is ROVOR’s own local reservation cap, not Google’s project quota. '+
