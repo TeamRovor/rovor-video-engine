@@ -2,11 +2,12 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {readGhostStatus} from '../integrations/hud-cloud/ghost-status-readback.mjs';
+import {buildHudSecretPayload} from '../integrations/hud-cloud/private-worker-secret-payload.mjs';
 
 const NOW=1794910000000;
 const IDS=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
 const env={
-  HUD_GHOST_SERVICE_TOKEN:'s'.repeat(64),
+  GHOST_SITE_SERVICE_TOKEN:'s'.repeat(64),
   HUD_READER_TOKEN:'r'.repeat(64),
   HUD_WRITER_TOKEN:'w'.repeat(64)
 };
@@ -38,7 +39,7 @@ test('only fixed signed status operation reads source and preserves real histori
     assert.equal(url,'https://rovor-private-hud.mm98z652cq.chatgpt.site/api/ghost/service');
     assert.equal(opts.method,'POST');
     assert.deepEqual(JSON.parse(opts.body),{operation:'status'});
-    assert.equal(opts.headers.Authorization,'Bearer '+env.HUD_GHOST_SERVICE_TOKEN);
+    assert.equal(opts.headers.Authorization,'Bearer '+env.GHOST_SITE_SERVICE_TOKEN);
     assert.equal(opts.redirect,'error');
   }),NOW);
   assert(called);
@@ -55,7 +56,7 @@ test('only fixed signed status operation reads source and preserves real histori
   assert.equal(result.body.attempts[0].started_at,NOW-86400000);
   const output=JSON.stringify(result.body);
   assert(!output.includes('SHOULD NEVER LEAK'));
-  assert(!output.includes(env.HUD_GHOST_SERVICE_TOKEN));
+  assert(!output.includes(env.GHOST_SITE_SERVICE_TOKEN));
 });
 
 test('fresh private catalog receipts survive the bridge without creating admission or inference evidence',async()=>{
@@ -93,10 +94,23 @@ test('stale or unsupported catalog check records never look authenticated',async
   assert.equal(result.body.providers[4].online_verified,false);
 });
 
+test('existing protected deployment secret feeds readback without a second credential',async()=>{
+  const payload=buildHudSecretPayload({
+    ROVOR_HUD_READER_TOKEN:env.HUD_READER_TOKEN,
+    ROVOR_HUD_WRITER_TOKEN:env.HUD_WRITER_TOKEN,
+    ROVOR_GHOST_SERVICE_TOKEN:env.GHOST_SITE_SERVICE_TOKEN
+  });
+  assert.equal(payload.GHOST_SITE_SERVICE_TOKEN,env.GHOST_SITE_SERVICE_TOKEN);
+  assert.equal(Object.hasOwn(payload,'HUD_GHOST_SERVICE_TOKEN'),false);
+  const result=await readGhostStatus(payload,mock(fixture()),NOW);
+  assert.equal(result.status,200);
+  assert.equal(result.body.providers.length,9);
+});
+
 test('no credential or reused HUD credentials fail closed, without contacting Site',async()=>{
   let calls=0;const fetcher=()=>{calls++;throw Error('unexpected');};
   for(const secret of [null,'short',env.HUD_READER_TOKEN,env.HUD_WRITER_TOKEN]){
-    const result=await readGhostStatus({...env,HUD_GHOST_SERVICE_TOKEN:secret},fetcher,NOW);
+    const result=await readGhostStatus({...env,GHOST_SITE_SERVICE_TOKEN:secret},fetcher,NOW);
     assert.equal(result.status,503);
     assert.equal(result.body.error,'cloud_readback_not_configured');
   }
