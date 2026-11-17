@@ -40,7 +40,7 @@ test('only fixed signed status operation reads source and preserves real histori
     assert.equal(opts.method,'POST');
     assert.deepEqual(JSON.parse(opts.body),{operation:'status'});
     assert.equal(opts.headers.Authorization,'Bearer '+env.GHOST_SITE_SERVICE_TOKEN);
-    assert.equal(opts.redirect,'error');
+    assert.equal(opts.redirect,'manual');
   }),NOW);
   assert(called);
   assert.equal(result.status,200);
@@ -105,6 +105,25 @@ test('existing protected deployment secret feeds readback without a second crede
   const result=await readGhostStatus(payload,mock(fixture()),NOW);
   assert.equal(result.status,200);
   assert.equal(result.body.providers.length,9);
+});
+
+
+test('Cloudflare-safe manual redirects cannot follow a credential-bearing Site redirect',async()=>{
+  let calls=0;
+  const result=await readGhostStatus(env,async(url,options)=>{
+    calls++;
+    assert.equal(options.redirect,'manual');
+    assert.equal(options.method,'POST');
+    assert.equal(url,'https://rovor-private-hud.mm98z652cq.chatgpt.site/api/ghost/service');
+    return new Response(null,{status:307,headers:{
+      Location:'https://untrusted.invalid/collector?credential=SECRET'
+    }});
+  },NOW);
+  assert.equal(calls,1,'a 3xx must not trigger a second fetch');
+  assert.equal(result.status,502);
+  assert.equal(result.body.error,'cloud_readback_redirect_denied');
+  assert(!JSON.stringify(result).includes('SECRET'));
+  assert(!JSON.stringify(result).includes(env.HUD_GHOST_SERVICE_TOKEN));
 });
 
 test('no credential or reused HUD credentials fail closed, without contacting Site',async()=>{
