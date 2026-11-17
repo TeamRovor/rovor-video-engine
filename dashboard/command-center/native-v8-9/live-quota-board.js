@@ -159,13 +159,12 @@ function providerStateSnapshot(cloud,now=Date.now()){
   // Some deployed private Site adapters expose only the persisted D1
   // last_check record, not catalog_connection. Count a recent successful
   // catalog RESULT, not account billing rights or an inference receipt.
-  const catalogSource=p?.catalog_connection?.state==='authenticated'
-    ?p.catalog_connection:p?.last_check?.status==='catalog_received'
-      ?p.last_check:null;
-  const catalogTime=catalogSource?.observed_at;
-  const catalog=!!catalogSource&&Number.isSafeInteger(catalogTime)&&
-    catalogTime<=now+60000&&now-catalogTime<=75*60000&&
-    now>=catalogTime-60000;
+  const recentCatalogTime=t=>Number.isSafeInteger(t)&&
+    t<=now+60000&&now-t<=75*60000&&now>=t-60000;
+  const catalog=(p?.catalog_connection?.state==='authenticated'&&
+    recentCatalogTime(p.catalog_connection.observed_at))||
+    (p?.last_check?.status==='catalog_received'&&
+    recentCatalogTime(p.last_check.observed_at))||false;
   const admitted=p?.admission==='eligible';
   const q=p?.quota,quotaTime=q?.observed_at;
   const quota=q?.status==='verified'&&typeof q.source==='string'&&q.source.length>0&&
