@@ -74,7 +74,7 @@ async function mintInstallationToken(env,permissions,now,send){
     Date.parse(data.expires_at)>now+3700000||
     !data.permissions||Object.entries(permissions).some(([k,v])=>data.permissions[k]!==v)||
     Object.entries(data.permissions).some(([k,v])=>k==='metadata'?v!=='read':permissions[k]!==v)||
-    (data.repositories!==undefined&&(!Array.isArray(data.repositories)||data.repositories.length!==1||data.repositories[0]?.full_name!==REPO)))
+    (!Array.isArray(data.repositories)||data.repositories.length!==1||data.repositories[0]?.full_name!==REPO))
   throw Error('github_installation_token_scope_invalid');
  return data.token;
 }
