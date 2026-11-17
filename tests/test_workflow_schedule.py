@@ -74,6 +74,38 @@ class ScheduleGuardTests(unittest.TestCase):
             errors = schedule.check_directory(root)[1]
             self.assertTrue(any("duplicate top-level on:" in e for e in errors))
 
+    def test_noncanonical_spaced_or_indented_on_header_rejected(self):
+        for header in ("on :", " on:", "\ton:", "on\t:"):
+            with self.subTest(header=header), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                (root / "danger.yml").write_text(
+                    header + "\n  schedule:\n    - cron: '*/5 * * * *'\n",
+                    encoding="utf-8")
+                errors = schedule.check_directory(root)[1]
+                self.assertTrue(
+                    any("unsupported noncanonical on: key" in e for e in errors),
+                    (header, errors))
+
+    def test_missing_event_header_does_not_skip_guard(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "empty.yml").write_text(
+                "name: Missing trigger\njobs:\n  test:\n    runs-on: ubuntu-latest\n",
+                encoding="utf-8")
+            errors = schedule.check_directory(root)[1]
+            self.assertTrue(
+                any("missing canonical on: trigger header" in e for e in errors),
+                errors)
+
+    def test_comment_mentions_of_on_are_ignored(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "manual.yml").write_text(
+                "# on: schedule\non: workflow_dispatch\n",
+                encoding="utf-8")
+            errors = schedule.check_directory(root)[1]
+            self.assertEqual(errors, [])
+
     def test_valid_inline_manual_trigger_is_not_rejected_by_surface_guard(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
