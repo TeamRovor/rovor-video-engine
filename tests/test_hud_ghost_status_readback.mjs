@@ -107,6 +107,38 @@ test('existing protected deployment secret feeds readback without a second crede
   assert.equal(result.body.providers.length,9);
 });
 
+test('readback preserves bounded catalog and inference evidence for nine-provider HUD counters',async()=>{
+  const source=fixture();
+  source.providers[0].catalog_connection={
+    state:'authenticated',observed_at:NOW-60000,private_catalog_key:'SHOULD NEVER LEAK'
+  };
+  source.providers[0].last_check={
+    status:'catalog_received',observed_at:NOW-60000,raw_response:'SHOULD NEVER LEAK'
+  };
+  source.providers[0].recent_inference_verified=true;
+  source.providers[1].catalog_connection={state:'authenticated',observed_at:NOW-80*60000};
+  source.providers[1].recent_inference_verified='true';
+  source.providers[2].catalog_connection={state:'unexpected-secret',observed_at:NOW+3600000};
+  const result=await readGhostStatus(env,mock(source),NOW);
+  assert.equal(result.status,200);
+  assert.deepEqual(result.body.providers[0].catalog_connection,{
+    state:'authenticated',observed_at:NOW-60000
+  });
+  assert.deepEqual(result.body.providers[0].last_check,{
+    status:'catalog_received',observed_at:NOW-60000
+  });
+  assert.equal(result.body.providers[0].recent_inference_verified,true);
+  // A stale catalog read does not count as a current catalog result in the HUD.
+  assert.deepEqual(result.body.providers[1].catalog_connection,{
+    state:'authenticated',observed_at:NOW-80*60000
+  });
+  assert.equal(result.body.providers[1].recent_inference_verified,false);
+  assert.deepEqual(result.body.providers[2].catalog_connection,{
+    state:'unknown',observed_at:null
+  });
+  assert.equal(JSON.stringify(result.body).includes('SHOULD NEVER LEAK'),false);
+});
+
 test('no credential or reused HUD credentials fail closed, without contacting Site',async()=>{
   let calls=0;const fetcher=()=>{calls++;throw Error('unexpected');};
   for(const secret of [null,'short',env.HUD_READER_TOKEN,env.HUD_WRITER_TOKEN]){
