@@ -1201,6 +1201,15 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "github-atomic-intake-redirect-safety-20261117": {
+      "lane": "coordination",
+      "requires": [
+        "github-read",
+        "github-write",
+        "local-exec"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }

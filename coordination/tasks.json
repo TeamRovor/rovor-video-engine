@@ -6219,6 +6219,25 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/43107107729"
         }
       ]
+    },
+    {
+      "id": "github-atomic-intake-redirect-safety-20261117",
+      "title": "Prevent GitHub atomic task intake bearer token forwarding on redirects",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / independent ROVOR secure-intake session 2026-11-17",
+      "branch": "fix/github-atomic-intake-no-redirect-20261117",
+      "scopes": [
+        "tools/github_atomic_task_intake.py",
+        "tests/test_github_atomic_task_intake.py"
+      ],
+      "depends_on": [],
+      "next_action": "Make the fixed GitHub REST client reject HTTP redirects without forwarding the bearer token; prove behavior with regression tests and inspect CI.",
+      "acceptance": "Redirect responses 301/302/307/308 never issue a second request bearing the token; normal authenticated intake and concurrent-head rejection remain unchanged.",
+      "links": [],
+      "updated_at": "2026-11-17T11:09:33.873Z",
+      "next_update": "After targeted CI and PR review",
+      "blocker": null
     }
   ]
 }
