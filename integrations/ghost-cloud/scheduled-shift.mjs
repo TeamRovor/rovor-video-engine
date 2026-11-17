@@ -50,6 +50,7 @@ export async function runScheduledShift(env, {replenish, tick, clock = Date.now,
             const pending=await statement(db,`SELECT COUNT(*) AS n FROM ghost_cloud_jobs j
               WHERE NOT EXISTS(SELECT 1 FROM ghost_cloud_attempts a WHERE a.job_id=j.id)`).first();
             if(!Number.isSafeInteger(pending?.n)||pending.n<0)throw Error('invalid_workload_state');
+            const safeProviders=new Set(['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface']);
             const denied=result.denied;
             const allDenied=denied&&typeof denied==='object'&&!Array.isArray(denied)&&
               Object.keys(denied).length===9&&
@@ -58,7 +59,6 @@ export async function runScheduledShift(env, {replenish, tick, clock = Date.now,
             // The private tick can supply a read-only gate from its actual
             // atomic claim checks. Persist only fixed, public-safe reason
             // codes, never raw config, quotas, prompts or exception strings.
-            const safeProviders=new Set(['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface']);
             const safeReasons=new Set(['no_matching_unattempted_job','global_daily_safety_cap',
               'account_request_cap','account_reserved_token_cap','account_inflight_claim',
               'account_minimum_interval','account_retry_after',
