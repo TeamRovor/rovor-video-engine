@@ -1296,7 +1296,17 @@ function startCloud(){
   const slot=()=>[...document.querySelectorAll('#rovor-workload-popup .wl-card')].find(
     n=>!n.hidden&&(n.classList.contains('rvq-cloud-v2')||isPlaceholder(n)));
   async function sync(){
-    if(busy||document.hidden||!slot())return;
+    if(busy||document.hidden)return;
+    // The compact home preview is always mounted. Refresh its authenticated
+    // cloud readback even when the full Workload drawer has never been opened.
+    // If a drawer opens during the poll cooldown, show the cached source
+    // immediately instead of leaving the drawer on a loading placeholder.
+    const waiting=slot();
+    if(waiting&&isPlaceholder(waiting)&&prev.checkedAt){
+      const state=captureState(waiting);
+      waiting.outerHTML=renderCloudDashboard(prev);
+      restoreState(slot(),state);
+    }
     if(Date.now()-updated<5000)return;
     busy=true;
     const read=async(url,valid)=>{
@@ -1344,7 +1354,10 @@ function startCloud(){
     });
   });
   observer.observe(document.body,{childList:true,subtree:true});
-  setInterval(()=>{if(slot())void sync();},10000);
+  // A compact home preview needs a steady pulse but not full-drawer 10s
+  // polling overhead: refresh the home source at most once per minute.
+  // The open Workload drawer still receives the existing 10s cadence.
+  setInterval(()=>{if(slot()||Date.now()-updated>=60000)void sync();},10000);
   void sync();
 }
 
