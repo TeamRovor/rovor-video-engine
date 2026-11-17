@@ -56,7 +56,7 @@ class ScheduleGuardTests(unittest.TestCase):
             with self.subTest(header=header), tempfile.TemporaryDirectory() as folder:
                 root = Path(folder)
                 (root / "shadow.yml").write_text(
-                    header + "\\n  schedule:\\n    - cron: '*/5 * * * *'\\n",
+                    header + "\n  schedule:\n    - cron: '*/5 * * * *'\n",
                     encoding="utf-8",
                 )
                 self.assertTrue(any(
@@ -68,7 +68,7 @@ class ScheduleGuardTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             (root / "shadow.yaml").write_text(
-                "on:\\n  pull_request:\\n'on':\\n  schedule:\\n    - cron: '*/5 * * * *'\\n",
+                "on:\n  pull_request:\n'on':\n  schedule:\n    - cron: '*/5 * * * *'\n",
                 encoding="utf-8",
             )
             self.assertTrue(any(
@@ -79,7 +79,7 @@ class ScheduleGuardTests(unittest.TestCase):
     def test_missing_trigger_header_rejected(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            (root / "shadow.yml").write_text("jobs:\\n  check:\\n    runs-on: ubuntu-latest\\n")
+            (root / "shadow.yml").write_text("jobs:\n  check:\n    runs-on: ubuntu-latest\n")
             self.assertTrue(any(
                 "missing canonical on: trigger header" in error
                 for error in schedule.check_directory(root)[1]
