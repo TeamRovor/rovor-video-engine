@@ -589,10 +589,18 @@ test('approved documentation receives one bounded Walter review and keeps human 
 test('owner preflight fails closed on catalog drift without inventing online inference',()=>{
  const listed={source:'google_gemini_cloud_direct',provider:'google',mac_required:false,
   online:true,directly_listed_models:[model,'gemini-3.1-flash-lite'],
-  model_evidence:[{model,verification:'verified_recent_reply'}]};
+  model_evidence:[{model,verification:'verified_recent_reply'}],
+  quota_state:'project_free_tier_owner_attested_remaining_quota_unknown',
+  requires_zero_cost_project:true};
  const inspect=c=>pinnedGeminiAdmission(c);
- assert.deepEqual(inspect(listed),{model,state:'ready'},
-  'only exact listed model plus actual recent reply receipt can pass');
+ assert.deepEqual(inspect(listed),{model,state:'free_allowance_unverified'},
+  'an exact model reply is not proof of remaining zero-cost project allowance');
+ for(const quota_state of ['billing_chargeable','quota_exhausted','verified_free']){
+  assert.equal(inspect({...listed,quota_state}).state,'free_allowance_unverified',
+   'catalog-controlled quota labels cannot replace independent account evidence');
+ }
+ assert.equal(inspect({...listed,requires_zero_cost_project:false}).state,
+  'free_allowance_unverified','missing zero-cost restriction cannot unlock dispatch');
  assert.equal(inspect({...listed,directly_listed_models:['gemini-3.1-flash-lite']}).state,
   'model_unlisted','a receipt alone cannot authorize a model missing from the catalog');
  assert.equal(inspect({...listed,directly_listed_models:['gemini-3.1-flash-lite'],
