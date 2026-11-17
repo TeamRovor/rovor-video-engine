@@ -200,5 +200,27 @@ class CatalogReadbackTests(unittest.TestCase):
                                                           "provider": "groq", "prompt": "attack"})
 
 
+    def test_malformed_provider_ids_fail_closed_at_both_status_boundaries(self):
+        for bad in (["groq"], {"untrusted": "id"}, None, 7):
+            for phase in ("preflight", "readback"):
+                client = FakeSite()
+                def malformed(origin, route, token, method, document):
+                    code, payload, error = client(origin, route, token, method, document)
+                    if document["operation"] == "status" and (
+                        phase == "preflight" or len(client.calls) == 11
+                    ):
+                        payload["providers"][0]["provider"] = bad
+                    return code, payload, error
+                report = check.audit_catalog_persistence(
+                    TOKEN, request=malformed, now_ms=NOW_MS
+                )
+                self.assertEqual(report["persisted"], 0)
+                self.assertEqual(
+                    report["state"],
+                    "site_service_contract_invalid" if phase == "preflight"
+                    else "status_unavailable",
+                )
+                self.assertEqual(len(client.calls), 1 if phase == "preflight" else 11)
+
 if __name__ == "__main__":
     unittest.main()
