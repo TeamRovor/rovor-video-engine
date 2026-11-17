@@ -315,6 +315,7 @@ test('standing plan requires separate owner PASS, then native ticks refill fresh
     if(url.endsWith('/access_tokens'))return Response.json({
      token:'test-scoped-installation-token-123456789',
      permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'},
+     repositories:[{full_name:'TeamRovor/rovor-video-engine'}],
      expires_at:new Date(now+1800000).toISOString()
     },{status:201});
     assert.equal(options.method,'GET');
@@ -517,7 +518,8 @@ test('stale GitHub issue is discarded before any Gemini tokens, remains consumed
   github++;
   if(url.endsWith('/access_tokens'))return Response.json({
    token:'mock-installation-token-safely-scoped',expires_at:new Date(now+3600000).toISOString(),
-   permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'}
+   permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'},
+   repositories:[{full_name:'TeamRovor/rovor-video-engine'}]
   },{status:201});
   assert(url.endsWith('/issues/2345'));
   assert.equal(options.method,'GET');

@@ -29,7 +29,7 @@ function upstream(calls,extra={}){
   assert(verify('RSA-SHA256',Buffer.from(h+'.'+p),pair.publicKey,Buffer.from(s,'base64url')));
   assert.equal(JSON.parse(Buffer.from(p,'base64url')).iss,'123');
   assert.deepEqual(JSON.parse(init.body),{repositories:['rovor-video-engine'],permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read'}});
-  return Response.json({token:'mock-installation-token-123456',expires_at:new Date(NOW+3600000).toISOString(),permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'},...extra},{status:201});
+  return Response.json({token:'mock-installation-token-123456',expires_at:new Date(NOW+3600000).toISOString(),permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'},repositories:[{full_name:'TeamRovor/rovor-video-engine'}],...extra},{status:201});
  }
  assert.equal(init.headers.Authorization,'Bearer mock-installation-token-123456');
  assert.equal(init.method,'GET');assert(url.startsWith('https://api.github.com/repos/TeamRovor/rovor-video-engine/'));
