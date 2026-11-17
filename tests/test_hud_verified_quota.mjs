@@ -235,7 +235,7 @@ test('cloud readiness separates keys, catalog, admission, quota and matching rec
   const html=window.ROVOR_QUOTA_BOARD.render(null,false,cloud);
   assert.match(html,/CLOUD PROVIDER READINESS/);
   assert.match(html,/KEYS CONFIGURED/);
-  assert.match(html,/CATALOG VERIFIED/);
+  assert.match(html,/CATALOG RESULT/);
   assert.match(html,/ROUTES ADMITTED/);
   assert.match(html,/QUOTA OBSERVED/);
   assert.match(html,/RECENT INFERENCE/);
@@ -261,6 +261,13 @@ test('cloud readiness fails closed on stale status, missing model ID, mismatched
   assert.equal(counts.admitted,0);
   assert.equal(counts.quota,0);
   assert.equal(counts.recent,0);
+  // The original private Site publishes a fresh last_check instead of the
+  // newer catalog_connection object. It is evidence of a recorded catalog
+  // result only, not a license to infer or proof of a current model call.
+  p.last_check={status:'catalog_received',observed_at:now-1000};
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.catalog,1);
+  p.last_check.observed_at=now-76*60000;
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.catalog,0);
   a.actual_model=undefined;p.configured_model=undefined;
   assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.recent,0);
   assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot({...cloud,observed_at:now-16000},now),null);
