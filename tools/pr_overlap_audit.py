@@ -47,7 +47,13 @@ def files_for(repo, number, token):
         rows = github_json(f"/repos/{repo}/pulls/{number}/files?per_page=100&page={page}", token)
         if not isinstance(rows, list):
             raise ValueError("Unexpected PR file response")
-        paths.extend(row["filename"] for row in rows if isinstance(row.get("filename"), str))
+        for row in rows:
+            if (not isinstance(row, dict) or
+                    not isinstance(row.get("filename"), str) or
+                    not row["filename"]):
+                # Invalid GitHub data must not make a partial audit look complete.
+                raise ValueError("Unexpected PR file entry")
+            paths.append(row["filename"])
         if len(rows) < 100:
             break
         if page == 3:
