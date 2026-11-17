@@ -52,7 +52,9 @@ export async function runScheduledShift(env, {replenish, tick, clock = Date.now,
             if(!Number.isSafeInteger(pending?.n)||pending.n<0)throw Error('invalid_workload_state');
             const denied=result.denied;
             const allDenied=denied&&typeof denied==='object'&&!Array.isArray(denied)&&
-              Object.keys(denied).length===9&&Object.values(denied).every(x=>typeof x==='string'&&x.length>0);
+              Object.keys(denied).length===9&&
+              [...safeProviders].every(provider=>Object.hasOwn(denied,provider)&&
+                typeof denied[provider]==='string'&&denied[provider].length>0);
             // The private tick can supply a read-only gate from its actual
             // atomic claim checks. Persist only fixed, public-safe reason
             // codes, never raw config, quotas, prompts or exception strings.
