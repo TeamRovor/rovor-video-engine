@@ -206,13 +206,22 @@ test('catalog D1 readback rejects substituted error category even with matching 
 
 test('fixed-endpoint GET inventory returns bounded public model metadata only',async()=>{
  const {env,ops}=setup();let calls=0;
- const result=await ops.inventory(env,'openrouter',async(url,opts)=>{calls++;assert.equal(url,'https://openrouter.ai/api/v1/models');assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');return Response.json({data:[{id:'known/free:free',pricing:{prompt:'0',completion:'0'}},{id:'paid/model',pricing:{prompt:'1',completion:'1'}},{id:'unknown:free',pricing:{prompt:null,completion:null}}],secret:'must not return'});});
- assert.equal(calls,1);assert.deepEqual(result.models.map(m=>m.id),['known/free:free']);assert.equal(result.billing_verified,false);assert.equal(result.quota_verified,false);assert.ok(!JSON.stringify(result).includes('must not return'));
+ const result=await ops.inventory(env,'openrouter',async(url,opts)=>{
+  calls++;assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');
+  assert.equal(opts.headers.Authorization,'Bearer '+env.OPENROUTER_API_KEY);
+  if(url==='https://openrouter.ai/api/v1/key')
+   return Response.json({data:{is_free_tier:true,label:'private-account-label'}});
+  assert.equal(url,'https://openrouter.ai/api/v1/models');
+  return Response.json({data:[{id:'known/free:free',pricing:{prompt:'0',completion:'0'}},
+   {id:'paid/model',pricing:{prompt:'1',completion:'1'}},
+   {id:'unknown:free',pricing:{prompt:null,completion:null}}],secret:'must not return'});
+ });
+ assert.equal(calls,2);assert.ok(!JSON.stringify(result).includes('private-account-label'));assert.deepEqual(result.models.map(m=>m.id),['known/free:free']);assert.equal(result.billing_verified,false);assert.equal(result.quota_verified,false);assert.ok(!JSON.stringify(result).includes('must not return'));
  await assert.rejects(ops.inventory(env,'https://attacker.invalid',async()=>{throw Error();}));
 });
 test('catalog does not treat empty OpenRouter prices as free and marks exact model candidates',async()=>{
  const {env,ops}=setup();
- const router=await ops.inventory(env,'openrouter',async()=>Response.json({data:[
+ const router=await ops.inventory(env,'openrouter',async url=>url==='https://openrouter.ai/api/v1/key'?Response.json({data:{is_free_tier:true}}):Response.json({data:[
   {id:'vendor/free:free',pricing:{prompt:'0',completion:'0.000'}},
   {id:'vendor/numeric:free',pricing:{prompt:0,completion:0}},
   {id:'vendor/blank:free',pricing:{prompt:'',completion:'0'}},
@@ -1008,4 +1017,38 @@ test('Gemini catalog limits after validation so invalid entries cannot hide elig
  ]}));
  assert.deepEqual(report.models.map(m=>m.id),['gemini-2.5-flash-lite']);
  assert.equal(report.billing_verified,false);
+});
+
+test('private OpenRouter inventory refuses public model catalog when key is invalid',async()=>{
+ const {env,ops}=setup();
+ for(const code of [401,403,429]){
+  const calls=[];
+  const result=await ops.inventory(env,'openrouter',async(url,opts)=>{
+   calls.push(url);
+   assert.equal(opts.headers.Authorization,'Bearer '+env.OPENROUTER_API_KEY);
+   assert.equal(url,'https://openrouter.ai/api/v1/key');
+   return new Response('sensitive upstream message',{status:code});
+  });
+  assert.equal(result.status,'http_'+code);
+  assert.deepEqual(calls,['https://openrouter.ai/api/v1/key']);
+  assert(!JSON.stringify(result).includes('sensitive upstream'));
+ }
+ let calls=0;
+ const malformed=await ops.inventory(env,'openrouter',async(url)=>{
+  calls++;assert.equal(url,'https://openrouter.ai/api/v1/key');
+  return Response.json({data:[],label:'private-key-metadata'});
+ });
+ assert.equal(calls,1);
+ assert.equal(malformed.status,'unrecognized_account_key');
+ assert(!JSON.stringify(malformed).includes('private-key-metadata'));
+ // A valid key may still have unknown commercial rights, quota and canary.
+ const valid=await ops.inventory(env,'openrouter',async(url)=>
+  url==='https://openrouter.ai/api/v1/key'?
+   Response.json({data:{is_free_tier:false,limit:100,usage:3}}):
+   Response.json({data:[{id:'vendor/model:free',pricing:{prompt:'0',completion:'0'}}]})
+ );
+ assert.equal(valid.status,'catalog_received');
+ assert.equal(valid.billing_verified,false);
+ assert.equal(valid.quota_verified,false);
+ assert.equal(valid.canary_verified,false);
 });
