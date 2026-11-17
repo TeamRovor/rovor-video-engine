@@ -1,3 +1,4 @@
+import './test_github_app_scope.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {generateKeyPairSync} from 'node:crypto';
@@ -14,7 +15,8 @@ test('credentials verification only mints scoped token and reads fixed repo, nev
   if(url.endsWith('/access_tokens')){
    assert.deepEqual(JSON.parse(init.body),{repositories:['rovor-video-engine'],permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read'}});
    return Response.json({token:'mock-installation-token-not-for-output',expires_at:new Date(NOW+3600000).toISOString(),
-    permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'}},{status:201});
+    permissions:{contents:'read',issues:'read',pull_requests:'read',actions:'read',metadata:'read'},
+     repositories:[{full_name:'TeamRovor/rovor-video-engine'}]},{status:201});
   }
   assert.equal(init.method,'GET');assert(url.startsWith('https://api.github.com/repos/TeamRovor/rovor-video-engine/'));
   return Response.json(url.includes('/actions/runs')?{workflow_runs:[]}:[{body:'never output private contents'}]);
