@@ -6,7 +6,7 @@ import {generateKeyPairSync} from 'node:crypto';
 import {intake,control,status,draft,review,tick} from '../integrations/hud-cloud/approved-workforce.mjs';
 import worker,{handle} from '../integrations/hud-cloud/worker.mjs';
 import {verifyWorkforce} from '../integrations/hud-cloud/verify-cloud-workforce.mjs';
-import {planOwnerSelectedPilot,checkOperatorContext} from '../tools/cloud_gemini_workforce_control.mjs';
+import {planOwnerSelectedPilot,checkOperatorContext,pinnedGeminiAdmission} from '../tools/cloud_gemini_workforce_control.mjs';
 
 const now=Date.parse('2026-11-11T02:05:00.000Z');
 const model='gemini-3.5-flash-lite';
@@ -584,4 +584,39 @@ test('approved documentation receives one bounded Walter review and keeps human 
  assert.equal(data.admission.pending_reviews,0);
  assert.equal(data.admission.rolling_day_attempts,2);
  assert.equal((await tick(s.env,now+121000,send)).body.dispatched,0);
+});
+
+test('owner preflight fails closed on catalog drift without inventing online inference',()=>{
+ const listed={source:'google_gemini_cloud_direct',provider:'google',mac_required:false,
+  online:true,directly_listed_models:[model,'gemini-3.1-flash-lite'],
+  model_evidence:[{model,verification:'verified_recent_reply'}],
+  quota_state:'project_free_tier_owner_attested_remaining_quota_unknown',
+  requires_zero_cost_project:true};
+ const inspect=c=>pinnedGeminiAdmission(c);
+ assert.deepEqual(inspect(listed),{model,state:'free_allowance_unverified'},
+  'an exact model reply is not proof of remaining zero-cost project allowance');
+ for(const quota_state of ['billing_chargeable','quota_exhausted','verified_free']){
+  assert.equal(inspect({...listed,quota_state}).state,'free_allowance_unverified',
+   'catalog-controlled quota labels cannot replace independent account evidence');
+ }
+ assert.equal(inspect({...listed,requires_zero_cost_project:false}).state,
+  'free_allowance_unverified','missing zero-cost restriction cannot unlock dispatch');
+ assert.equal(inspect({...listed,directly_listed_models:['gemini-3.1-flash-lite']}).state,
+  'model_unlisted','a receipt alone cannot authorize a model missing from the catalog');
+ assert.equal(inspect({...listed,directly_listed_models:['gemini-3.1-flash-lite'],
+  model_evidence:[{model,verification:'verified_recent_reply'}]}).state,'model_unlisted');
+ assert.equal(inspect({...listed,model_evidence:[]}).state,'receipt_unverified',
+  'a catalog match alone is never proof of inference');
+ assert.equal(inspect({...listed,model_evidence:[{model,verification:'provider_cooldown'}]}).state,
+  'receipt_unverified');
+ assert.equal(inspect({...listed,online:false}).state,'catalog_unavailable');
+ assert.equal(inspect({...listed,directly_listed_models:[model,model]}).state,'catalog_unknown',
+  'duplicate catalog identities fail closed');
+ assert.equal(inspect({...listed,source:'untrusted_source'}).state,'catalog_unknown');
+ assert.equal(inspect(null).state,'catalog_unknown');
+ // This is the live observed mismatch on 2026-11-17: the old native pin
+ // is absent, despite an authenticated key enumerating other Gemini models.
+ const actualLike={...listed,directly_listed_models:['gemini-2.5-flash','gemini-3.1-flash-lite'],
+  model_evidence:[{model:'gemini-3.1-flash-lite',verification:'listed_unverified'}]};
+ assert.equal(inspect(actualLike).state,'model_unlisted');
 });

@@ -17,6 +17,39 @@ const revision=process.env.ROVOR_WORKFORCE_REVISION||'';
 const confirm=process.env.ROVOR_OWNER_CONFIRMS_NEW_TASK==='true';
 const reporter=message=>console.log('ROVOR protected Gemini workforce: '+message);
 
+// The native worker pins one exact model. Do not confuse an authenticated
+// catalog listing with a recently completed model reply or free-tier quota.
+export function pinnedGeminiAdmission(catalog){
+ const state=value=>({model:MODEL,state:value});
+ if(!catalog||catalog.source!=='google_gemini_cloud_direct'||
+    catalog.provider!=='google'||catalog.mac_required!==false||
+    typeof catalog.online!=='boolean'||!Array.isArray(catalog.directly_listed_models)||
+    catalog.directly_listed_models.length>20||
+    catalog.directly_listed_models.some(x=>typeof x!=='string'||x.length>200)||
+    new Set(catalog.directly_listed_models).size!==catalog.directly_listed_models.length)
+   return state('catalog_unknown');
+ if(!catalog.online)return state('catalog_unavailable');
+ if(!catalog.directly_listed_models.includes(MODEL))return state('model_unlisted');
+ if(!Array.isArray(catalog.model_evidence)||catalog.model_evidence.length>20)
+   return state('receipt_unverified');
+ const exact=catalog.model_evidence.filter(x=>x?.model===MODEL);
+ if(exact.length!==1||exact[0]?.verification!=='verified_recent_reply')
+   return state('receipt_unverified');
+ // A verified reply proves model reachability, not a current $0 allowance.
+ // The existing private catalog explicitly reports provider quota as unknown.
+ // Never arm owner dispatch or standing cron on owner attestation alone.
+ return state('free_allowance_unverified');
+}
+function requirePinnedGeminiAdmission(admission){
+ const errors={catalog_unknown:'pinned_gemini_catalog_unknown',
+  catalog_unavailable:'pinned_gemini_catalog_unavailable',
+  model_unlisted:'pinned_gemini_model_not_listed',
+  receipt_unverified:'no_recent_pinned_gemini_model_receipt',
+  free_allowance_unverified:'pinned_gemini_free_allowance_unverified'};
+ if(admission.state!=='ready')
+  throw Error(errors[admission.state]||'pinned_gemini_catalog_unknown');
+}
+
 async function api(path,{method='GET',write=false,body=null}={}){
  const credential=write?writer:reader;
  if(!validToken(credential))throw Error('independent_production_credential_missing');
@@ -74,6 +107,11 @@ async function main(){
  if(operation==='status'){
   const data=await api('/api/hud/workforce/status');
   if(data.source!=='existing_cloudflare_hud_gemini_workforce')throw Error('wrong_private_ledger');
+  // Read-only status remains available even when Google's catalog is offline.
+  // Unknown is not reported as an absent model or as a verified reply.
+  const pinned_model_admission=await api('/api/hud/gemini/models')
+   .then(pinnedGeminiAdmission)
+   .catch(()=>({model:MODEL,state:'catalog_unknown'}));
   const canonical=JSON.parse(readFileSync('coordination/tasks.json','utf8'));
   const ownerCandidates=Array.isArray(canonical.tasks)?canonical.tasks.filter(t=>
    t?.status==='active'&&t.cloud_inference?.approved_for_cloud===false&&
@@ -84,7 +122,7 @@ async function main(){
   reporter(JSON.stringify({enabled:data.enabled,job_count:data.items.length,
    review_pending:data.items.filter(x=>x.state==='needs_review'&&x.human_review==='not_recorded').length,
    successful_owner_reviews:data.items.filter(x=>x.human_review==='passed').length,
-   available_unapproved_candidates:ownerCandidates}));
+   available_unapproved_candidates:ownerCandidates,pinned_model_admission}));
   return;
  }
  if(operation==='stop'){
@@ -98,6 +136,9 @@ async function main(){
   if(!confirm)throw Error('explicit_owner_approval_required');
   if(!before.items.some(x=>x.human_review==='passed'&&x.actual_model===MODEL))
    throw Error('first_reviewed_pilot_pass_required');
+  // A previous owner PASS cannot arm seven days of work against a model
+  // no longer present on the account, or with expired reply evidence.
+  requirePinnedGeminiAdmission(pinnedGeminiAdmission(await api('/api/hud/gemini/models')));
   if(before.items.some(x=>x.state==='uncertain'||x.state==='running'))
    throw Error('unresolved_provider_attempt_requires_review');
   if(!/^[a-f0-9]{40}$/.test(sha||''))throw Error('trusted_source_commit_required');
@@ -125,9 +166,7 @@ async function main(){
  if(before.items.some(x=>['queued','running','uncertain'].includes(x.state)))
   throw Error('resolve_existing_cloud_queue_before_pilot');
  const catalog=await api('/api/hud/gemini/models');
- if(catalog.source!=='google_gemini_cloud_direct'||
-    !catalog.model_evidence?.some(x=>x.model===MODEL&&x.verification==='verified_recent_reply'))
-  throw Error('no_recent_pinned_gemini_model_receipt');
+ requirePinnedGeminiAdmission(pinnedGeminiAdmission(catalog));
  const tasks=JSON.parse(readFileSync('coordination/tasks.json','utf8'));
  const routing=JSON.parse(readFileSync('coordination/work-routing.json','utf8'));
  const job=await planOwnerSelectedPilot(tasks,routing,sha,taskId,revision);
