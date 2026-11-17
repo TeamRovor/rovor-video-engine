@@ -254,7 +254,9 @@ test('cloud readiness fails closed on stale status, missing model ID, mismatched
     configured_model:'openai/gpt-oss-20b'};
   const a={id:'receipt',provider:'groq',status:'needs_review',actual_model:'other/model',
     tokens_input:10,tokens_output:10,finished_at:now-1000};
-  const cloud={execution_source:'cloud_provider',observed_at:now,providers:[p],attempts:[a]};
+  const ids=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
+  const providers=[p,...ids.slice(1).map(provider=>({provider}))];
+  const cloud={execution_source:'cloud_provider',observed_at:now,providers,attempts:[a]};
   let counts=window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts;
   assert.equal(counts.configured,1);
   assert.equal(counts.catalog,0);
@@ -271,6 +273,14 @@ test('cloud readiness fails closed on stale status, missing model ID, mismatched
   a.actual_model=undefined;p.configured_model=undefined;
   assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.recent,0);
   assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot({...cloud,observed_at:now-16000},now),null);
-  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot({...cloud,providers:[p,{...p}]},now),null);
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot({...cloud,providers:[...providers.slice(0,-1),{...p}]},now),null);
+  const missing={...cloud,providers:providers.slice(0,8)};
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(missing,now),null);
+  const extra={...cloud,providers:[...providers,{provider:'unknown-provider'}]};
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(extra,now),null);
+  const incompleteHtml=window.ROVOR_QUOTA_BOARD.render(null,false,missing);
+  assert.match(incompleteHtml,/CLOUD PROVIDER READINESS/);
+  assert.match(incompleteHtml,/— \/ 9/);
+  assert.doesNotMatch(incompleteHtml,/KEYS CONFIGURED<\/span><strong[^>]*>8 \/ 9/);
   assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(null,now),null);
 });
