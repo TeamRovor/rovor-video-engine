@@ -24,7 +24,7 @@ class NineProviderRuntimeCIContract(unittest.TestCase):
 
     def event_body(self, name):
         found = re.search(
-            rf"(?ms)^  {re.escape(name)}:\n(.*?)(?=^  [a-z_]+:|\\Z)",
+            rf"(?ms)^  {re.escape(name)}:\n(.*?)(?=^  [a-z_]+:|\Z)",
             self.events,
         )
         self.assertIsNotNone(found, f"missing {name} event")
