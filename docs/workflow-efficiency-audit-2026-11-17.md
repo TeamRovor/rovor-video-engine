@@ -42,3 +42,18 @@ Proposed: **one canonical cloud shift scheduler** → STOP/lease/idempotency che
 ## Non-negotiable
 
 No paid model routes or fallback; nine configured credentials are **not** nine verified inference providers. Unknown quotas remain unknown. No Mac dependency. Never disable a production schedule on the basis of this source audit alone. Protect STOP, secrets, D1 receipt integrity and human release approval.
+
+## Governance deduplication (follow-up)
+The `.github/workflows/workflow-governance.yml` job now owns all source-policy
+checks in one read-only, pull-request/push gated CI lane:
+approved auxiliary crons, known dispatcher inventory, and the retired legacy
+scheduler's main-only/manual/protected-environment requirements.
+
+The redundant `legacy-scheduler-policy.yml` CI entrypoint is retired **only
+after** its `tests/test_legacy_scheduler_policy.py` and
+`tools/check_legacy_scheduler_policy.py` assertions are invoked by the
+central workflow. The existing `ghost-cloud-github-scheduler.yml` retains
+its original offline hosted-shift tests and protected, explicitly confirmed
+manual diagnostic; only redundant inventory test steps and their extra
+triggers are removed. No production cron, provider dispatch, Site secret,
+approval, D1 table, or STOP gate is touched.
