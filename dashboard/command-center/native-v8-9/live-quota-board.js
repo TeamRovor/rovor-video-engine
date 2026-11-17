@@ -139,6 +139,73 @@ function unknownModel(m){
 // Public telemetry has only safe per-provider account ordinals; no keys or IDs.
 // Separate authenticated cloud-ledger evidence; do NOT mix with local OmniRoute cache.
 // Cloud provider admission/verification may be disabled even when the local gateway has a key.
+// A strictly read-only nine-provider status summary from the private cloud
+// ledger. Unknown evidence remains unknown; local OmniRoute slots do not
+// contribute to any cloud count. This never changes admission or dispatch.
+function providerStateSnapshot(cloud,now=Date.now()){
+ if(cloud?.execution_source!=='cloud_provider'||!Number.isSafeInteger(cloud.observed_at)||
+    Math.abs(now-cloud.observed_at)>15000||!Array.isArray(cloud.providers)||
+    cloud.providers.length>20)return null;
+ const allowed=new Set(MONITORED_PROVIDER_IDS),byProvider=new Map();
+ for(const p of cloud.providers){
+  if(!p||!allowed.has(p.provider)||byProvider.has(p.provider))return null;
+  byProvider.set(p.provider,p);
+ }
+ const attempts=Array.isArray(cloud.attempts)&&cloud.attempts.length<=500?cloud.attempts:[];
+ const counts={configured:0,catalog:0,admitted:0,quota:0,recent:0,blocked:0};
+ const states=MONITORED_PROVIDER_IDS.map(provider=>{
+  const p=byProvider.get(provider);
+  const configured=p?.credentials_configured===true;
+  const catalogTime=p?.catalog_connection?.observed_at;
+  const catalog=p?.catalog_connection?.state==='authenticated'&&
+    Number.isSafeInteger(catalogTime)&&catalogTime<=now+60000&&
+    now-catalogTime<=75*60000&&now>=catalogTime-60000;
+  const admitted=p?.admission==='eligible';
+  const q=p?.quota,quotaTime=q?.observed_at;
+  const quota=q?.status==='verified'&&typeof q.source==='string'&&q.source.length>0&&
+    Number.isSafeInteger(quotaTime)&&quotaTime<=now+60000&&now-quotaTime<=90*60000&&
+    Number.isSafeInteger(q.used)&&Number.isSafeInteger(q.limit)&&q.limit>0&&
+    q.used>=0&&q.used<=q.limit&&
+    (q.resets_at===null||q.resets_at===undefined||
+     (Number.isSafeInteger(q.resets_at)&&q.resets_at>now));
+  const recent=p?.recent_inference_verified===true&&
+    attempts.some(a=>a?.provider===provider&&
+      a?.actual_model===p?.configured_model&&
+      typeof a?.id==='string'&&a.id.length>0&&
+      ['needs_review','complete','completed','approved'].includes(a.status)&&
+      Number.isSafeInteger(a.finished_at)&&a.finished_at<=now+60000&&
+      now-a.finished_at<=60*60000&&
+      Number.isSafeInteger(a.tokens_input)&&a.tokens_input>=0&&
+      Number.isSafeInteger(a.tokens_output)&&a.tokens_output>=0&&
+      a.tokens_input+a.tokens_output>0);
+  const blocked=Boolean(p)&&!admitted;
+  if(configured)counts.configured++;
+  if(catalog)counts.catalog++;
+  if(admitted)counts.admitted++;
+  if(quota)counts.quota++;
+  if(recent)counts.recent++;
+  if(blocked)counts.blocked++;
+  return {provider,configured,catalog:!!catalog,admitted,quota:!!quota,recent,blocked};
+ });
+ return {source:'private_cloud_ledger',observed_at:cloud.observed_at,total:MONITORED_PROVIDER_IDS.length,
+  counts,states};
+}
+function readinessSummary(snapshot){
+ const items=[
+  ['KEYS CONFIGURED','configured','not inference proof'],
+  ['CATALOG VERIFIED','catalog','authenticated recent readback'],
+  ['ROUTES ADMITTED','admitted','verified free-only eligibility'],
+  ['QUOTA OBSERVED','quota','verified fresh scoped limit'],
+  ['RECENT INFERENCE','recent','actual matching model/token receipt']
+ ];
+ return '<section class="rvq-readiness" aria-label="Cloud provider readiness">'+
+  '<h4>CLOUD PROVIDER READINESS · DIFFERENT KINDS OF EVIDENCE</h4>'+
+  '<div class="rvq-stats rvq-cloud-stats">'+items.map(([label,key,help])=>
+   '<div class="rvq-stat"><span class="rvq-stat-label">'+label+'</span>'+
+   '<strong class="rvq-stat-value">'+(snapshot?fmt(snapshot.counts[key])+' / '+fmt(snapshot.total):'— / 9')+'</strong>'+
+   '<span class="rvq-stat-secondary">'+help+'</span></div>').join('')+'</div>'+
+  '<p class="rvq-sub">Missing, stale or mismatched receipts stay unverified. No model is marked running based on a saved key or model list.</p></section>';
+}
 function catalogConnectionLabel(p){
  switch(p?.catalog_connection?.state){
   case 'authenticated':return 'API CATALOG AUTHENTICATED · inference separate';
@@ -700,6 +767,9 @@ const css=`
 #rovor-workload-popup .rvq-sub{color:#a0c3d8;font:12px/1.5 system-ui;margin:0;max-width:560px}
 #rovor-workload-popup .rvq-status{flex:none;padding:8px 10px;border:1px solid rgba(105,189,236,.36);background:rgba(48,122,173,.13);border-radius:7px;color:#bcecff;font:700 10px system-ui;letter-spacing:.09em}
 #rovor-workload-popup .rvq-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 18px}
+#rovor-workload-popup .rvq-cloud-stats{grid-template-columns:repeat(auto-fit,minmax(128px,1fr))}
+#rovor-workload-popup .rvq-readiness{margin:12px 0 16px}
+#rovor-workload-popup .rvq-readiness h4{font:700 12px system-ui;letter-spacing:.07em;color:#bdefff;margin:0 0 9px}
 #rovor-workload-popup .rvq-stat{padding:12px 13px;background:rgba(10,46,75,.65);border:1px solid rgba(93,164,206,.25);border-radius:10px;min-width:0}
 #rovor-workload-popup .rvq-stat-label{display:block;color:#8fb9d1;font:700 10px system-ui;letter-spacing:.12em;margin-bottom:8px}
 #rovor-workload-popup .rvq-stat-value{display:block;color:#f2fbff;font:600 19px/1.3 system-ui;overflow-wrap:anywhere}
@@ -984,6 +1054,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
    Math.abs(Date.now()-cloud.observed_at)<=15000&&Array.isArray(cloud.providers)&&cloud.providers.length<=20;
  const cloudProviders=cloudFresh?new Map(cloud.providers.filter(p=>p&&typeof p.provider==='string').map(p=>[p.provider,p])):new Map();
  const cloudAttempts=cloudFresh&&Array.isArray(cloud.attempts)&&cloud.attempts.length<=500?cloud.attempts:[];
+ const readiness=providerStateSnapshot(cloud);
  const review=reviewSample(cloudAttempts,cloudFresh&&Array.isArray(cloud?.attempts)&&cloud.attempts.length<=500);
  // When the Mac is off, cloud provider credentials and past gateway inventory
  // remain distinguishable: this is NOT a live Mac connection.
@@ -1069,7 +1140,7 @@ function render(data,live,cloud=null,hourly=null,minute=null,geminiProject=null,
      '<span>Independent cloud Groq status unavailable. This does NOT mean the Mac must be online.</span>')+quotaInfo+'</section>';
  return '<section class="wl-card rvq-board"><div class="rvq-head"><div><span class="rvq-eyebrow">ROVOR DIGITAL / OMNIROUTE INTELLIGENCE</span><h3 class="rvq-heading">All configured AI connections</h3><p class="rvq-sub">Nine provider connections, exact recorded traffic, and verified quotas, kept separate. Tap a provider for the complete technical report.</p></div><span class="rvq-status">'+(live?'FRESH OMNIROUTE INVENTORY':cloudFresh?'CLOUD LEDGER ONLY':identityFallback?'NO FRESH REPORT · IDENTITIES ONLY':'MAC REPORT STALE')+'</span></div>'+
  '<nav class="rvq-jump-nav" aria-label="Workload dashboard sections"><a href="#rvq-connections">CONNECTIONS</a><a href="#rvq-review">REVIEW'+(review.known&&review.pending.length?' · '+fmt(review.pending.length)+'+':'')+'</a><a href="#rvq-team">WORKERS</a><a href="#rvq-reports">REPORTS</a></nav>'+
- cloudGroqPanel+cloudGeminiPanel()+summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
+ cloudGroqPanel+cloudGeminiPanel()+readinessSummary(readiness)+summary+macFreshness+macRecovery+'<p class="rvq-sub" style="margin:0 0 12px">Enabled according to gateway: '+(enabled===null?'Unknown':fmt(enabled)+' / '+fmt(slots.length))+checked+'. Gateway quota cache and verified cloud ledger limits are separate scopes; do not add their counters.</p>'+
  workerBanner(data?.workforce,live)+ (slots.length?quotaGlance(slots,quota,live,cloudProviders)+(attentionCount&&attentionCount<slots.length?'<div class="rvq-overview-controls" role="group" aria-label="Provider filter"><button type="button" data-rvq-filter="all" aria-pressed="'+(overviewFilter==='all')+'">ALL '+fmt(slots.length)+'</button><button type="button" data-rvq-filter="attention" aria-pressed="'+(overviewFilter==='attention')+'">SETUP / REVIEW '+fmt(attentionCount)+'</button><span class="rvq-filter-note" aria-live="polite">'+(overviewFilter==='attention'?'Showing '+fmt(attentionCount)+' connections with setup or human-review gates':'Showing all '+fmt(slots.length)+' configured connections')+'</span></div>':'')+'<div id="rvq-connections" class="rvq-overview" aria-label="Configured provider overview. Select any provider for its complete report">'+slots.map((slot,i)=>overviewSlot(slot,quota,live,cloudProviders.get(slot.group.provider),i,providerActivity(activity,slot.group.provider),providerActivity(hourActivity,slot.group.provider),providerActivity(minuteActivity,slot.group.provider))).join('')+'</div>':'')+
  '<div id="rvq-review" class="rvq-review-entry"><strong>OWNER PASS / FAIL REVIEWS</strong>'+reviewPulse(review)+
  '<p>This Cloudflare usage viewer is read-only and cannot save owner decisions. Open your existing owner-private Site to view drafts and record PASS or FAIL; controls appear after the draft loads.</p>'+
@@ -1308,6 +1379,6 @@ function start(){
  setInterval(()=>{if(drawerVisible()&&slot())void sync();},10000);
  void sync();
 }
-return {render,start,refresh:()=>requestImmediateRefresh?.(),captureState,restoreState,updateBoard};
+return {render,start,refresh:()=>requestImmediateRefresh?.(),captureState,restoreState,updateBoard,providerStateSnapshot};
 })();
 
