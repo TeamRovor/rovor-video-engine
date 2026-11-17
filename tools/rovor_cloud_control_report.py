@@ -46,6 +46,50 @@ PROVIDER_ADMISSIONS = frozenset({
 })
 CATALOG_FRESH_MS = 75 * 60 * 1000
 
+# A deterministic operator backlog, not a routing/authorization decision.
+# Every output is selected from this fixed vocabulary; no private Site error,
+# model ID, credential, prompt, or provider response is interpolated.
+ACTIVATION_STEPS = {
+    "renew_expired_free_use_evidence": (0, "Reverify zero-cost/commercial terms; renew private evidence"),
+    "verify_free_use_and_commercial_terms": (1, "Verify zero-cost/commercial terms and account-specific quota"),
+    "pin_exact_catalog_model": (2, "Choose an exact catalog model after free-use verification"),
+    "configure_private_credential": (3, "Repair the private provider credential"),
+    "refresh_authenticated_catalog": (4, "Refresh the authenticated catalog and D1 readback"),
+    "repair_private_provider_setup": (5, "Repair the provider/account configuration"),
+    "verify_account_limits": (6, "Verify real quota and pacing limits; never guess"),
+    "request_owner_approved_canary": (7, "Request one bounded, owner-approved zero-cost canary"),
+    "verify_fresh_inference_receipt": (8, "Verify a fresh actual-model inference receipt"),
+    "inspect_private_admission": (9, "Inspect the private admission gate without dispatch"),
+    "monitor_verified_route": (10, "Monitor quota, receipts, expiry and STOP"),
+}
+
+
+def next_activation_step(credentials: str, catalog: str, model: str,
+                         admission: str, online: str) -> str:
+    """One safe next operator action; NEVER grants provider eligibility."""
+    if credentials != "configured" or admission == "missing_secret":
+        return "configure_private_credential"
+    if catalog != "fresh_authenticated":
+        return "refresh_authenticated_catalog"
+    if model != "declared_pinned" or admission in {
+        "unpinned_model", "provider_model_id_mismatch",
+        "unpinned_upstream", "paid_route_denied",
+    }:
+        return "pin_exact_catalog_model"
+    if admission == "eligibility_expired":
+        return "renew_expired_free_use_evidence"
+    if admission in {"eligibility_unverified", "disabled_pending_verification"}:
+        return "verify_free_use_and_commercial_terms"
+    if admission == "not_configured" or admission == "missing_account":
+        return "repair_private_provider_setup"
+    if admission in {"invalid_limits", "invalid_routing_priority"}:
+        return "verify_account_limits"
+    if admission == "canary_unverified":
+        return "request_owner_approved_canary"
+    if admission == "eligible":
+        return "monitor_verified_route" if online == "verified" else "verify_fresh_inference_receipt"
+    return "inspect_private_admission"
+
 
 def provider_readiness(providers: list, now_ms: int | None = None) -> list[dict]:
     """Redacted private-Site admission summary, NEVER an authorization oracle."""
@@ -84,14 +128,18 @@ def provider_readiness(providers: list, now_ms: int | None = None) -> list[dict]
         raw_admission = item.get("admission")
         admission = (raw_admission if isinstance(raw_admission, str)
                      and raw_admission in PROVIDER_ADMISSIONS else "unclassified")
+        credentials = "configured" if item.get("credentials_configured") is True else "unverified"
+        pinned = "declared_pinned" if model_pinned else "not_pinned"
+        online = ("verified" if item.get("online_verified") is True
+                  and admission == "eligible" and model_pinned else "not_verified")
         rows.append({
             "provider": name,
-            "credentials": "configured" if item.get("credentials_configured") is True else "unverified",
+            "credentials": credentials,
             "catalog": catalog,
-            "model": "declared_pinned" if model_pinned else "not_pinned",
+            "model": pinned,
             "admission": admission,
-            "online": "verified" if item.get("online_verified") is True
-                      and admission == "eligible" and model_pinned else "not_verified",
+            "online": online,
+            "next_step": next_activation_step(credentials, catalog, pinned, admission, online),
         })
     return rows
 
@@ -387,14 +435,21 @@ def summary(report: dict) -> str:
             "### Nine-provider admission detail — original private Site only",
             "",
             "Catalog freshness, declared model IDs, and saved API keys are **not** cost, quota, canary or live inference proof.",
+            "Priority is advisory only: it cannot alter eligibility, enqueue jobs, run inference, or change STOP.",
             "",
-            "| Provider | Credentials | Catalog | Declared model | Admission gate | Online receipt |",
-            "|---|---|---|---|---|---|",
+            "| Provider | Credentials | Catalog | Declared model | Admission gate | Online receipt | Next safe action |",
+            "|---|---|---|---|---|---|---|",
         ])
-        for route in workers["provider_readiness"]:
+        routes = sorted(
+            workers["provider_readiness"],
+            key=lambda route: (ACTIVATION_STEPS.get(route.get("next_step"), (99, ""))[0],
+                               route["provider"]),
+        )
+        for route in routes:
+            action = ACTIVATION_STEPS.get(route.get("next_step"), (99, "Inspect private admission"))[1]
             lines.append(
                 f"| {route['provider']} | {route['credentials']} | {route['catalog']} | "
-                f"{route['model']} | {route['admission']} | {route['online']} |"
+                f"{route['model']} | {route['admission']} | {route['online']} | {action} |"
             )
     if report["mode"] == "deploy_and_test_gemini" and not report["owner_confirmed_free_tier"]:
         lines.append("- Owner confirmation required: this Google API key is for the Free-tier project.")
