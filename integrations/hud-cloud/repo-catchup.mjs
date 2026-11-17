@@ -52,19 +52,72 @@ export async function refreshRepoCatchup(env,now=Date.now(),send=fetch){
  }catch{return reply(503,'read_unavailable');}
 }
 
+// D1 is durable evidence storage, not a trusted API response schema. Never
+// echo arbitrary saved JSON, even to an authenticated private HUD reader.
+const COMMIT_SHA=/^[a-f0-9]{40}$/;
+const MAX_SNAPSHOT_CHARS=16000;
+const positiveId=value=>Number.isSafeInteger(value)&&value>0;
+const unique=values=>new Set(values).size===values.length;
+const validIds=values=>Array.isArray(values)&&values.length<=8&&
+ values.every(positiveId)&&unique(values);
+const validPath=value=>typeof value==='string'&&value.length>0&&value.length<=200&&
+ !/[\u0000-\u001f\u007f]/.test(value);
+
+// Explicit output projection: unknown source keys and nested metadata never
+// leave the private D1 boundary. Inconsistent receipts are unavailable, not
+// partial evidence that agents can mistake for a complete repository scan.
+export function projectRepoCatchupSnapshot(value){
+ if(!value||typeof value!=='object'||Array.isArray(value))return null;
+ const {head_sha,recent_commit_shas,scanned_commit_count,commit_file_counts,
+  changed_paths,changed_paths_truncated,failed_run_ids,recent_success_run_ids,
+  open_issue_numbers,open_pr_numbers}=value;
+ if(!Array.isArray(recent_commit_shas)||recent_commit_shas.length<1||
+    recent_commit_shas.length>4||recent_commit_shas.some(sha=>!COMMIT_SHA.test(sha))||
+    !unique(recent_commit_shas)||head_sha!==recent_commit_shas[0]||
+    scanned_commit_count!==recent_commit_shas.length||
+    !Array.isArray(commit_file_counts)||commit_file_counts.length!==scanned_commit_count||
+    commit_file_counts.some((entry,i)=>!entry||typeof entry!=='object'||Array.isArray(entry)||
+      entry.sha!==recent_commit_shas[i]||!Number.isSafeInteger(entry.files_observed)||
+      entry.files_observed<0||entry.files_observed>30||
+      typeof entry.paths_truncated!=='boolean')||
+    !Array.isArray(changed_paths)||changed_paths.length>24||
+    changed_paths.some(path=>!validPath(path))||!unique(changed_paths)||
+    typeof changed_paths_truncated!=='boolean'||
+    (commit_file_counts.some(entry=>entry.paths_truncated)&&!changed_paths_truncated)||
+    !validIds(failed_run_ids)||!validIds(recent_success_run_ids)||
+    !validIds(open_issue_numbers)||!validIds(open_pr_numbers))return null;
+ return {head_sha,recent_commit_shas:[...recent_commit_shas],scanned_commit_count,
+  commit_file_counts:commit_file_counts.map(entry=>({
+    sha:entry.sha,files_observed:entry.files_observed,paths_truncated:entry.paths_truncated})),
+  changed_paths:[...changed_paths],changed_paths_truncated,
+  failed_run_ids:[...failed_run_ids],recent_success_run_ids:[...recent_success_run_ids],
+  open_issue_numbers:[...open_issue_numbers],open_pr_numbers:[...open_pr_numbers]};
+}
 export async function repoCatchupStatus(env,now=Date.now()){
  try{
   const row=await env.DB.prepare('SELECT checked_at,observed_at,state,snapshot FROM hud_native_repo_catchup WHERE id=1').bind().first();
+  const stored=typeof row?.snapshot==='string'?row.snapshot:null;
   let snapshot=null;
-  if(typeof row?.snapshot==='string')snapshot=JSON.parse(row.snapshot);
-  const recorded=row?.observed_at;
-  const snapshot_freshness=!snapshot||!Number.isSafeInteger(recorded)||recorded>now?'unavailable':
+  if(stored!==null&&stored.length<=MAX_SNAPSHOT_CHARS){
+   try{snapshot=projectRepoCatchupSnapshot(JSON.parse(stored));}catch{}
+  }
+  const snapshotInvalid=stored!==null&&snapshot===null;
+  const checked=positiveId(row?.checked_at)?row.checked_at:null;
+  const recorded=!snapshotInvalid&&positiveId(row?.observed_at)?row.observed_at:null;
+  const snapshot_freshness=!snapshot||recorded===null||recorded>now?'unavailable':
     now-recorded<=7200000?'fresh':'stale';
-  return {source:'rovor_private_repo_catchup',state:row?.state??'not_checked',
-   checked_at:row?.checked_at??null,observed_at:row?.observed_at??null,
-   snapshot,snapshot_freshness,private_reader_required:true,model_called:false,repository_written:false,
+  const state=snapshotInvalid?'snapshot_invalid':
+    ['ready','read_unavailable'].includes(row?.state)?row.state:
+    row?'unavailable':'not_checked';
+  return {source:'rovor_private_repo_catchup',state,
+   checked_at:checked,observed_at:recorded,
+   snapshot,snapshot_freshness,
+   // The GitHub reader fetches at most eight IDs per resource family.
+   // These are bounded evidence samples, never an exhaustive PR inventory.
+   open_pr_count_is_total:false,private_reader_required:true,model_called:false,repository_written:false,
    mac_required:false,chatgpt_required:false};
  }catch{return {source:'rovor_private_repo_catchup',state:'storage_unavailable',
-   snapshot_freshness:'unavailable',private_reader_required:true,model_called:false,repository_written:false,
+   snapshot_freshness:'unavailable',open_pr_count_is_total:false,
+   private_reader_required:true,model_called:false,repository_written:false,
    mac_required:false,chatgpt_required:false};}
 }
