@@ -91,7 +91,8 @@ export function normalizeProviderCatalog(provider,payload) {
    context_length:Number.isSafeInteger(entry.context_length)&&entry.context_length>0?
     entry.context_length:null,
    catalog_zero_price:provider==='openrouter'?true:null,
-   pinned_model_candidate:!/(^|[/:._-])(auto|latest)([/:._-]|$)/i.test(id)
+   pinned_model_candidate:!/(^|[/:._-])(auto|latest)([/:._-]|$)/i.test(id)&&
+    (provider!=='huggingface'||/:[a-z0-9-]+$/.test(id))
   });
   if(models.length===20)break;
  }
