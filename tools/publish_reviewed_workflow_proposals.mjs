@@ -52,18 +52,20 @@ export async function publishReviewed({env=process.env,send=fetch,git=run,read=r
    git('git',['fetch','--no-tags','origin',branchRef]);
    const observed=git('git',['rev-parse','FETCH_HEAD']).trim();
    if(observed!==match[1])throw Error('existing_proposal_branch_unreviewable');
-   const base=git('git',['merge-base','HEAD','FETCH_HEAD']).trim();
-   if(!/^[a-f0-9]{40}$/.test(base)||
-      git('git',['diff','--name-only','--no-renames',base,'FETCH_HEAD']).trim()!==rel||
-      git('git',['show','FETCH_HEAD:'+rel])!==item.yaml)
+   // Checkout uses a shallow GitHub Actions clone. Trust GitHub's complete
+   // PR diff metadata for one-file scope, not a locally missing merge-base.
+   if(git('git',['show','FETCH_HEAD:'+rel])!==item.yaml)
     throw Error('existing_proposal_branch_unreviewable');
    const prs=JSON.parse(git('gh',['pr','list','--repo',REPO,'--head',branch,
      '--state','all','--json',
-     'number,url,state,baseRefName,headRefName,headRefOid','--limit','5']));
+     'number,url,state,baseRefName,headRefName,headRefOid,changedFiles,files',
+     '--limit','5']));
    if(!Array.isArray(prs)||prs.length!==1||
       !Number.isInteger(prs[0].number)||prs[0].number<1||
       prs[0].headRefOid!==observed||prs[0].baseRefName!=='main'||
       prs[0].headRefName!==branch||!['OPEN','MERGED'].includes(prs[0].state)||
+      prs[0].changedFiles!==1||!Array.isArray(prs[0].files)||
+      prs[0].files.length!==1||prs[0].files[0]?.path!==rel||
       typeof prs[0].url!=='string'||
       !prs[0].url.startsWith('https://github.com/'+REPO+'/pull/'))
     throw Error('existing_proposal_branch_unreviewable');
