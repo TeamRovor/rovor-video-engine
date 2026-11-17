@@ -42,18 +42,32 @@ def validate(report):
 def check_directory(root):
     report = inventory(root)
     errors = validate(report)
-    # The inventory parser intentionally supports ordinary on: blocks and
-    # on: [event, ...]. Do not let an unsupported inline YAML mapping hide a
-    # new schedule from the allowlist.
+    # The inventory scanner only understands unquoted top-level on: triggers.
+    # GitHub also accepts quoted keys and YAML aliases. Reject unsupported
+    # declarations instead of letting a concealed schedule evade the allowlist.
     for path in sorted([*root.glob("*.yml"), *root.glob("*.yaml")]):
         text = path.read_text(encoding="utf-8")
+        trigger_blocks = 0
         for line in text.splitlines():
-            match = re.match(r"^on:\s*(.*)$", line)
-            if match:
-                value = match.group(1).strip()
-                if value.startswith("{") or value == "schedule":
-                    errors.append(f"{path.name}: unsupported inline on: syntax")
-                break
+            if line.lstrip().startswith("#"):
+                continue
+            match = re.match(r"""^(on|'on'|"on"):\s*(.*)$""", line)
+            if not match:
+                continue
+            trigger_blocks += 1
+            key, value = match.groups()
+            value = value.split("#", 1)[0].strip()
+            if key != "on":
+                errors.append(f"{path.name}: unsupported quoted on: key")
+            elif value == "schedule":
+                errors.append(f"{path.name}: unsupported scalar on: schedule")
+            elif value and not (
+                re.fullmatch(r"[A-Za-z_][\w-]*", value)
+                or re.fullmatch(r"\[[\w\s,'\"-]*\]", value)
+            ):
+                errors.append(f"{path.name}: unsupported inline on: syntax")
+        if trigger_blocks > 1:
+            errors.append(f"{path.name}: duplicate top-level on: declarations")
     return report, errors
 
 
