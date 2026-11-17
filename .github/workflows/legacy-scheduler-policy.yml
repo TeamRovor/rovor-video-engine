@@ -1,0 +1,36 @@
+name: Legacy scheduler safety policy
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/ghost-cloud-github-scheduler.yml'
+      - '.github/workflows/legacy-scheduler-policy.yml'
+      - 'tools/check_legacy_scheduler_policy.py'
+      - 'tests/test_legacy_scheduler_policy.py'
+  push:
+    paths:
+      - '.github/workflows/ghost-cloud-github-scheduler.yml'
+      - '.github/workflows/legacy-scheduler-policy.yml'
+      - 'tools/check_legacy_scheduler_policy.py'
+      - 'tests/test_legacy_scheduler_policy.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: legacy-scheduler-policy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check retired scheduler cannot auto-execute
+        run: python3 tools/check_legacy_scheduler_policy.py
+      - name: Regression tests
+        run: python3 -m unittest discover -s tests -p test_legacy_scheduler_policy.py -v
