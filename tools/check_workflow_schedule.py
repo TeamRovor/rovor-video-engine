@@ -55,7 +55,7 @@ def check_directory(root):
             # The lightweight inventory parser only understands canonical
             # top-level 'on:' syntax. Reject all alternatives rather than
             # silently missing a GitHub cron and authorizing a dispatcher.
-            match = re.match(r"""^(\\s*)(?P<key>on|'on'|"on")\\s*:(?P<value>.*)$""", line)
+            match = re.match(r"""^(\s*)(?P<key>on|'on'|"on")\s*:(?P<value>.*)$""", line)
             if not match:
                 continue
             headers += 1
