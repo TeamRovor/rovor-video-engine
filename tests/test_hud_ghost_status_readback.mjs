@@ -99,6 +99,18 @@ test('transport failure, oversized payload, and missing quota denominator never 
   assert.equal(result.body.native_clock_verified,false);
 });
 
+test('quota verification requires fresh per-provider evidence, not merely a fresh overall status',async()=>{
+  const source=fixture();
+  source.providers[0].quota={status:'verified',used:2,limit:100,observed_at:NOW-900001};
+  source.providers[1].quota={status:'verified',used:2,limit:100,observed_at:NOW+120001};
+  source.providers[2].quota={status:'verified',used:2,limit:100,observed_at:NOW-900000};
+  const result=await readGhostStatus(env,mock(source),NOW);
+  assert.equal(result.status,200);
+  assert.equal(result.body.providers[0].quota,null);
+  assert.equal(result.body.providers[1].quota,null);
+  assert.equal(result.body.providers[2].quota?.status,'verified');
+});
+
 test('HUD Worker protects readback behind existing authentication and disallows mutation',()=>{
   const worker=readFileSync(new URL('../integrations/hud-cloud/worker.mjs',import.meta.url),'utf8');
   const auth=worker.indexOf('if (!await authorized(authRequest, ingest || chatWriter');
