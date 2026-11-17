@@ -32,6 +32,10 @@ def validate(config_root: Path = ROOT) -> dict[str, object]:
     example = config_root / "integrations" / "blender-mcp" / "mcp.json.example"
     project = tomllib.loads(path.read_text(encoding="utf-8"))
     desktop = json.loads(example.read_text(encoding="utf-8"))
+    if (not isinstance(project.get("mcp_servers"), dict)
+            or not isinstance(desktop, dict)
+            or not isinstance(desktop.get("mcpServers"), dict)):
+        raise ValueError("Blender MCP configuration needs object server sections")
     codex = project.get("mcp_servers", {}).get("blender")
     standard = desktop.get("mcpServers", {}).get("blender")
     if not isinstance(codex, dict) or not isinstance(standard, dict):
