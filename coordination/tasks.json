@@ -6249,6 +6249,23 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/44071680096"
         }
       ]
+    },
+    {
+      "id": "pr-overlap-audit-malformed-response-20261117",
+      "title": "Complete PR #467 fail-closed malformed GitHub file-response handling",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / PR467 malformed-response integration session 2026-11-17",
+      "branch": "feat/pr-scope-overlap-advisory-20261117",
+      "scopes": [
+        "tools/pr_overlap_audit.py",
+        "tests/test_pr_overlap_audit.py"
+      ],
+      "depends_on": [],
+      "updated_at": "2026-11-17T11:19:05.531Z",
+      "next_update": "After exact-head GitHub PR CI finishes",
+      "next_action": "Repair review-identified AttributeError in files_for; regression-test null/non-object/non-string filenames; preserve advisory unavailable/partial safety and update PR #467 without a new PR.",
+      "acceptance": "Malformed changed-files API lists cannot crash the overlap advisory; no invented overlap or complete result; existing tests and exact-head CI pass."
     }
   ]
 }

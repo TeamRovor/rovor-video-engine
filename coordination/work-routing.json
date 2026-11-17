@@ -1210,6 +1210,15 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "pr-overlap-audit-malformed-response-20261117": {
+      "lane": "coordination",
+      "requires": [
+        "github-read",
+        "github-write",
+        "hosted-ci"
+      ],
+      "objective": "reduce-repeat-work"
     }
   }
 }
