@@ -352,6 +352,24 @@ export function createCloudOperations(base, cloud) {
    `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/models/search`:endpoints[provider];
   if(!url)return {provider,status:'account_metadata_missing'};
   try{
+   // OpenRouter /models can return its public catalog for a bad API key.
+   // Authenticate the installed account key at the documented fixed
+   // /key endpoint FIRST; never equate a public price list with usable creds.
+   if(provider==='openrouter'){
+    const verification=await fetcher('https://openrouter.ai/api/v1/key',{
+     method:'GET',redirect:'manual',headers:{Authorization:'Bearer '+key},
+     signal:AbortSignal.timeout(15000)});
+    if(!verification.ok){
+     await verification.body?.cancel().catch(()=>{});
+     return {provider,status:'http_'+verification.status};
+    }
+    const metadata=await bounded(verification,32768);
+    if(!metadata?.data||typeof metadata.data!=='object'||
+       Array.isArray(metadata.data))
+     return {provider,status:'unrecognized_account_key'};
+    // Account metadata (identifier, billing budget, labels, tokens) is
+    // deliberately discarded. No free/paid admission or quota inferred.
+   }
    const response=await fetcher(url,{method:'GET',redirect:'manual',headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
    if(!response.ok){await response.body?.cancel();return {provider,status:'http_'+response.status};}
    // Read authenticated provider quota headers without inferring limits from catalog entries.
