@@ -1,0 +1,110 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {readGhostStatus} from '../integrations/hud-cloud/ghost-status-readback.mjs';
+
+const NOW=1794910000000;
+const IDS=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
+const env={
+  HUD_GHOST_SERVICE_TOKEN:'s'.repeat(64),
+  HUD_READER_TOKEN:'r'.repeat(64),
+  HUD_WRITER_TOKEN:'w'.repeat(64)
+};
+const fixture=()=>({
+  schema_version:1,execution_source:'cloud_provider',observed_at:NOW,
+  enabled:true,
+  providers:IDS.map(provider=>({provider,credentials_configured:true,
+    admission:provider==='groq'?'eligibility_expired':'disabled_pending_verification',
+    online_verified:false,quota:null,recorded_24h:null,
+    configured_model:provider==='groq'?'openai/gpt-oss-20b':null,
+    secret_internal_field:'SHOULD NEVER LEAK'})),
+  attempts:[{id:'receipt-1',job_id:'gc-test-1',provider:'groq',
+    started_at:NOW-86400000,finished_at:NOW-86399000,
+    status:'needs_review',requested_model:'openai/gpt-oss-20b',
+    actual_model:'openai/gpt-oss-20b',tokens_input:170,tokens_output:1637,
+    title:'Existing historical workflow receipt',employee:'Walter',
+    private_prompt:'SHOULD NEVER LEAK'}],
+  raw_provider_api_key:'SHOULD NEVER LEAK',queue_pending:0,native_clock_verified:false
+});
+const mock=(data,intercept=()=>{})=>async(url,options)=>{
+  intercept(url,options);
+  return Response.json(data);
+};
+
+test('only fixed signed status operation reads source and preserves real historical receipt',async()=>{
+  let called=false;
+  const result=await readGhostStatus(env,mock(fixture(),(url,opts)=>{
+    called=true;
+    assert.equal(url,'https://rovor-private-hud.mm98z652cq.chatgpt.site/api/ghost/service');
+    assert.equal(opts.method,'POST');
+    assert.deepEqual(JSON.parse(opts.body),{operation:'status'});
+    assert.equal(opts.headers.Authorization,'Bearer '+env.HUD_GHOST_SERVICE_TOKEN);
+    assert.equal(opts.redirect,'error');
+  }),NOW);
+  assert(called);
+  assert.equal(result.status,200);
+  assert.equal(result.body.providers.length,9);
+  assert.equal(result.body.providers.filter(p=>p.online_verified).length,0);
+  assert.equal(result.body.providers[0].admission,'eligibility_expired');
+  assert.equal(result.body.providers[0].quota,null);
+  assert.equal(result.body.providers[0].recorded_24h,null);
+  assert.equal(result.body.attempts.length,1);
+  assert.equal(result.body.attempts[0].tokens_input,170);
+  assert.equal(result.body.attempts[0].tokens_output,1637);
+  assert.equal(result.body.attempts[0].actual_model,'openai/gpt-oss-20b');
+  assert.equal(result.body.attempts[0].started_at,NOW-86400000);
+  const output=JSON.stringify(result.body);
+  assert(!output.includes('SHOULD NEVER LEAK'));
+  assert(!output.includes(env.HUD_GHOST_SERVICE_TOKEN));
+});
+
+test('no credential or reused HUD credentials fail closed, without contacting Site',async()=>{
+  let calls=0;const fetcher=()=>{calls++;throw Error('unexpected');};
+  for(const secret of [null,'short',env.HUD_READER_TOKEN,env.HUD_WRITER_TOKEN]){
+    const result=await readGhostStatus({...env,HUD_GHOST_SERVICE_TOKEN:secret},fetcher,NOW);
+    assert.equal(result.status,503);
+    assert.equal(result.body.error,'cloud_readback_not_configured');
+  }
+  assert.equal(calls,0);
+});
+
+test('malformed or stale private payloads and secret-rich upstream errors fail closed',async()=>{
+  const cases=[
+    {...fixture(),execution_source:'made_up'},
+    {...fixture(),observed_at:NOW-999999},
+    {...fixture(),providers:fixture().providers.slice(1)},
+    {...fixture(),providers:[...fixture().providers.slice(0,8),fixture().providers[0]]},
+    {...fixture(),attempts:Array.from({length:101},()=>fixture().attempts[0])}
+  ];
+  for(const payload of cases){
+    const result=await readGhostStatus(env,mock(payload),NOW);
+    assert.equal(result.status,502);
+    assert.deepEqual(Object.keys(result.body),['error']);
+  }
+  const upstreamError=await readGhostStatus(env,async()=>new Response('private session denied; KEY-LEAK',{status:403}),NOW);
+  assert.equal(upstreamError.status,502);
+  assert(!JSON.stringify(upstreamError).includes('KEY-LEAK'));
+});
+
+test('transport failure, oversized payload, and missing quota denominator never synthesize usage',async()=>{
+  const failure=await readGhostStatus(env,async()=>{throw Error('secret!');},NOW);
+  assert.equal(failure.status,502);
+  const huge=await readGhostStatus(env,async()=>new Response('x'.repeat(100000)),NOW);
+  assert.equal(huge.status,502);
+  const source=fixture();
+  source.providers[0].quota={status:'verified',used:5,limit:4,observed_at:NOW};
+  const result=await readGhostStatus(env,mock(source),NOW);
+  assert.equal(result.status,200);
+  assert.equal(result.body.providers[0].quota,null);
+  assert.equal(result.body.native_clock_verified,false);
+});
+
+test('HUD Worker protects readback behind existing authentication and disallows mutation',()=>{
+  const worker=readFileSync(new URL('../integrations/hud-cloud/worker.mjs',import.meta.url),'utf8');
+  const auth=worker.indexOf('if (!await authorized(authRequest, ingest || chatWriter');
+  const gate=worker.indexOf("if (url.pathname === '/api/ghost/status')");
+  const dispatch=worker.indexOf('const result = await readGhostStatus(env, fetcher, now)');
+  assert(auth>=0 && gate>auth && dispatch>gate);
+  assert.match(worker.slice(gate,dispatch),/request.method !== 'GET'/);
+  assert.doesNotMatch(worker.slice(gate,dispatch),/workforceTick|GHOST_WRITER_TOKEN|cloudGeminiChat/);
+});
