@@ -164,6 +164,61 @@ class ControlReportTests(unittest.TestCase):
         self.assertNotIn("Bearer PRIVATE", rendered)
         self.assertNotIn("gpt-oss-20b", rendered)
 
+    def test_activation_backlog_prioritizes_pinned_recovery_without_dispatch(self):
+        now = 1794911513000
+        rows = [{"provider": provider, "credentials_configured": True,
+                 "configured_model": None, "admission": "disabled_pending_verification",
+                 "online_verified": False,
+                 "last_check": {"provider": provider, "status": "catalog_received",
+                                "observed_at": now}}
+                for provider in sorted(ops.PROVIDERS)]
+        for row in rows:
+            if row["provider"] == "groq":
+                row.update({"configured_model": "openai/gpt-oss-20b",
+                            "admission": "eligibility_expired"})
+            if row["provider"] == "openrouter":
+                row.update({"configured_model": "cohere/north-mini-code:free"})
+        readiness = ops.provider_readiness(rows, now_ms=now)
+        actions = {row["provider"]: row["next_step"] for row in readiness}
+        self.assertEqual(actions["groq"], "renew_expired_free_use_evidence")
+        self.assertEqual(actions["openrouter"], "verify_free_use_and_commercial_terms")
+        self.assertEqual(sum(a == "pin_exact_catalog_model" for a in actions.values()), 7)
+        self.assertTrue(set(actions.values()).issubset(ops.ACTIVATION_STEPS))
+        self.assertEqual(ops.next_activation_step(
+            "configured", "fresh_authenticated", "declared_pinned",
+            "eligible", "not_verified"), "verify_fresh_inference_receipt")
+        self.assertEqual(ops.next_activation_step(
+            "configured", "fresh_authenticated", "declared_pinned",
+            "eligible", "verified"), "monitor_verified_route")
+        self.assertEqual(ops.next_activation_step(
+            "configured", "fresh_authenticated", "declared_pinned",
+            "paid_route_denied", "not_verified"), "pin_exact_catalog_model")
+        self.assertEqual(ops.next_activation_step(
+            "configured", "fresh_authenticated", "declared_pinned",
+            "canary_unverified", "not_verified"), "request_owner_approved_canary")
+
+        report = ops.build_report(env(), opener=HTTP(env()["ROVOR_GHOST_SERVICE_TOKEN"]))
+        report["workforce"]["provider_readiness"] = readiness
+        rendered = ops.summary(report)
+        table = rendered.split("| Provider | Credentials | Catalog |", 1)[1]
+        self.assertLess(table.find("| groq |"), table.find("| openrouter |"))
+        self.assertLess(table.find("| openrouter |"), table.find("| gemini |"))
+        self.assertIn("Priority is advisory only", rendered)
+        self.assertNotIn("gpt-oss-20b", rendered)
+        self.assertNotIn("north-mini-code", rendered)
+
+    def test_activation_backlog_handles_untrusted_fields_only_by_known_codes(self):
+        step = ops.next_activation_step(
+            "configured", "fresh_authenticated", "declared_pinned",
+            "private | BAD\\nBearer SECRET", "not_verified")
+        self.assertEqual(step, "inspect_private_admission")
+        self.assertEqual(ops.next_activation_step(
+            "unverified", "fresh_authenticated", "declared_pinned",
+            "eligible", "verified"), "configure_private_credential")
+        self.assertEqual(ops.next_activation_step(
+            "configured", "stale", "declared_pinned",
+            "eligible", "verified"), "refresh_authenticated_catalog")
+
     def test_malformed_provider_readiness_fails_closed_without_runtime_errors(self):
         valid = [{"provider": p, "admission": {"untrusted": "raw"}}
                  for p in sorted(ops.PROVIDERS)]
