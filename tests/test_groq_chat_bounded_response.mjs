@@ -13,7 +13,7 @@ function reply(chunks){
       else controller.close();
     },
     cancel(){cancelled=true;}
-  }));
+  },{highWaterMark:0}));
   return {response,get cancelled(){return cancelled;},get reads(){return reads;}};
 }
 
