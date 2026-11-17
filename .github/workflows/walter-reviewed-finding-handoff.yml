@@ -7,8 +7,6 @@ on:
       - 'tests/test_walter_reviewed_finding_handoff.py'
       - 'tools/walter_source_citation_gate.py'
       - '.github/workflows/walter-reviewed-finding-handoff.yml'
-      - 'coordination/tasks.json'
-      - 'coordination/work-routing.json'
   push:
     branches: [main]
     paths:
