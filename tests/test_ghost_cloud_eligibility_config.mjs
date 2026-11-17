@@ -94,3 +94,32 @@ test('verified external allowance larger than local cap is safely bounded', asyn
   assert.equal(config.groq.requests_per_day, 8);
   assert.equal(config.groq.tokens_per_day, 40000);
 });
+
+test('compiled lease expires at the earliest billing, quota or reset boundary', async () => {
+  const cases = [
+    {
+      name: 'older zero-cost billing proof',
+      mutate: a => { a.billing.checked_at = NOW - 86_400_000 + 30_000; },
+      expiry: NOW + 30_000,
+    },
+    {
+      name: 'older account quota proof',
+      mutate: a => { a.quota.checked_at = NOW - 86_400_000 + 45_000; },
+      expiry: NOW + 45_000,
+    },
+    {
+      name: 'quota reset before either evidence expires',
+      mutate: a => { a.quota.reset_at = NOW + 15_000; },
+      expiry: NOW + 15_000,
+    },
+  ];
+  for (const { name, mutate, expiry } of cases) {
+    const a = sample();
+    mutate(a);
+    const { config, states } = await compileFleetConfig({ groq: a }, env, NOW);
+    assert.equal(states.groq, 'operator_attested_eligible', name);
+    assert.equal(config.groq.valid_until, expiry, name);
+    assert.equal(eligibility('groq', config.groq, env, expiry - 1), null, name);
+    assert.equal(eligibility('groq', config.groq, env, expiry), 'eligibility_expired', name);
+  }
+});
