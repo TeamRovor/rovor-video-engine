@@ -1,13 +1,16 @@
 # Rovor AI — master plan
 
-Decision date: 2026-10-21. Current operating mode: **ChatGPT-first, human-directed sessions**.
-Future mode: selected workloads on Amar's own hardware, then verified unattended job types.
+## Current cloud-first execution authority (2026-11-17)
+
+**Binding current-state policy:** the authoritative live operating, STOP, free-only inference and no-duplicate-PR instructions are in [AGENTS.md](AGENTS.md). They supersede historical roadmap stages below. Do not turn old statements that Cloudflare is “proposed” or that Mac is required into present execution assumptions.
+
+Original decision date: 2026-10-21. **Operating mode updated 2026-11-17:** existing cloud-first Worker/D1 control plane plus human-directed engineering and review. Mac/PC workloads are optional specialist integrations, not a cloud prerequisite. Autonomous inference remains admission-gated and must be proven by current receipts.
 This is the canonical direction for both Amar's and Evan's sessions. It is a plan, not evidence that
 all listed capabilities, connections, local models or background workers are installed.
 
 ## Updated hybrid inference and always-available workforce direction (Oct 23, 2026)
 
-The owner has selected the Breaking Bad-named Walter-led roster with provider-specialized task routing: Gemini for planning/long context, Groq and NVIDIA NIM for fast repetitive tasks, Mistral for code/review, and checked free-only OpenRouter as fallback. Cloudflare Workers Cron + D1 is the **proposed** globally scheduled control/state plane while the existing Mac launchd/SQLite worker remains the only host executor for macOS apps and terminal. Read [architecture/HYBRID-24-7-GHOST-WORKFORCE.md](architecture/HYBRID-24-7-GHOST-WORKFORCE.md) and [coordination/ghost-provider-policy.json](coordination/ghost-provider-policy.json) for the source of truth. This updates provider preferences and cloud scheduling target **without claiming any provider key, cloud deployment, private Mac channel or unattended AI loop exists yet**. Default authorization is zero spend; on quotas/connection failure keep durable state and stop, not paid fallback or infinite retry.
+The owner has selected the Breaking Bad-named Walter-led roster with provider-specialized task routing: Gemini for planning/long context, Groq and NVIDIA NIM for fast repetitive tasks, Mistral for code/review, and checked free-only OpenRouter as fallback. The existing native Cloudflare Worker scheduled() trigger and private D1 ledger are the deployed global cloud control/state plane. The Mac launchd/SQLite worker is only an optional **local specialist executor** for macOS apps and terminal, never the cloud scheduler or a dependency. Read [architecture/HYBRID-24-7-GHOST-WORKFORCE.md](architecture/HYBRID-24-7-GHOST-WORKFORCE.md) and [coordination/ghost-provider-policy.json](coordination/ghost-provider-policy.json) for the source of truth. Provider credentials and cloud deployment exist, but that does not establish current verified free-model admission, a private Mac channel, or an unattended inference loop; require fresh private proof. Default authorization is zero spend; on quotas/connection failure keep durable state and stop, not paid fallback or infinite retry.
 
 ## Mission and current decision
 

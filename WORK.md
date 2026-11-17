@@ -1,11 +1,15 @@
 # When Amar or Evan says “work”
 
+## Current cloud-first execution authority (2026-11-17)
+
+**Binding current-state policy:** read the cloud-first execution and parallel-engineering rules at the top of [AGENTS.md](AGENTS.md) before acting. They supersede historical Mac-first or “Cloudflare is planned” descriptions below. The private Cloudflare Worker/D1 is deployed, but provider execution still requires fresh free-only admission and actual receipts; Mac execution is optional.
+
 Use GitHub as shared project memory. Start from **latest main**, even when your code branch is older.
-The goal is a multi-capability Rovor Digital AI, **ChatGPT-first now**, with selected local-PC execution and verified ghost employees later. Read [ROVOR-AI-PLAN.md](ROVOR-AI-PLAN.md) for the canonical architecture/build phases and `architecture/CHATGPT-WORKFLOWS.md` for present tool use. Video is one capability; business delivery, research, websites, design, documents and analysis also advance the mission.
+The goal is a multi-capability Rovor Digital AI, **cloud-first now**, with existing private Worker/D1 execution and optional Mac specialized tools; actual model inference requires current private receipts. Read [ROVOR-AI-PLAN.md](ROVOR-AI-PLAN.md) for the canonical architecture/build phases and `architecture/CHATGPT-WORKFLOWS.md` for present tool use. Video is one capability; business delivery, research, websites, design, documents and analysis also advance the mission.
 For video work, preserve approved source art and original narration. Final video previews target 1080p60 and at least 30 seconds;
 technical test success is separate from Amar's visual approval.
 
-**Hybrid workforce provider policy (owner direction, Oct 23, 2026):** Read [architecture/HYBRID-24-7-GHOST-WORKFORCE.md](architecture/HYBRID-24-7-GHOST-WORKFORCE.md) and [coordination/ghost-provider-policy.json](coordination/ghost-provider-policy.json) before choosing AI providers or claiming unattended work. Preserve Walter and the seven Breaking Bad employee names; Gemini plans, Groq/NVIDIA NIM handle fast tasks, Mistral specializes in code, OpenRouter is **verified-free-only fallback**, and Cloudflare Cron+D1 is the proposed cloud coordinator. This is **not deployed** and does not confer Mac access. Respect provider eligibility, $0 default spend, privacy limits, persistent STOP and existing task ownership; do not add a second Mac scheduler.
+**Hybrid workforce provider policy (owner direction, Oct 23, 2026):** Read [architecture/HYBRID-24-7-GHOST-WORKFORCE.md](architecture/HYBRID-24-7-GHOST-WORKFORCE.md) and [coordination/ghost-provider-policy.json](coordination/ghost-provider-policy.json) before choosing AI providers or claiming unattended work. Preserve Walter and the seven Breaking Bad employee names; Gemini plans, Groq/NVIDIA NIM handle fast tasks, Mistral specializes in code, OpenRouter is **verified-free-only fallback**, and The deployed private Cloudflare Worker/D1 is the cloud coordinator, with one native scheduled() production clock. This does not confer Mac access or establish current inference eligibility. Respect provider eligibility, $0 default spend, privacy limits, persistent STOP and existing task ownership; do not add a second Mac scheduler.
 
 ## OmniRoute operator loop — one snapshot, then implement (Oct 24, 2026)
 
