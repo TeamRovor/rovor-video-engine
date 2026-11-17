@@ -114,7 +114,7 @@ async function main(){
   assert.equal(detail.local,false,name+': local dependency displayed');
   assert(detail.gemini,name+': exact local reservation ring missing');
   assert(detail.unverified,name+': missing external quota must say unknown');
-  assert(detail.reviews,name+': owner review link missing');
+  assert(!detail.reviews,name+': owner review UI should not appear');
   await evalJS('document.querySelector(".rvq-v2-provider details summary").click();return true');
   assert(await evalJS('return !!document.querySelector(".rvq-v2-provider details[open]")'));
   await evalJS('document.querySelector("button[data-rvq-filter=attention]").click();return true');
@@ -126,7 +126,7 @@ async function main(){
  }
  assert.equal(localQueries,0,'active cloud workload must never fetch archived local endpoints');
  fs.writeFileSync(path.join(output,'results.json'),JSON.stringify(results,null,2));
- console.log('PASS cloud-only Workload browser QA: five viewports, nine provider cards, source-backed quota ring, owner reviews, no local polling.');
+ console.log('PASS cloud-only Workload browser QA: five viewports, nine provider cards, source-backed quota ring, no owner-review UI, no local polling.');
 }
 main().catch(e=>{console.error(e.stack||e);process.exitCode=1}).finally(()=>{
  try{socket?.close()}catch{};try{chrome?.kill()}catch{};try{server?.close()}catch{};
