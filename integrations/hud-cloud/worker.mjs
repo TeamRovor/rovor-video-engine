@@ -7,6 +7,7 @@ import {submitDiscovery,discoveryStatus} from './discovery-inbox.mjs';
 import {getRepoSource} from './repo-source.mjs';
 import {nativeDiscoveryTick,nativeDiscoveryStatus} from './native-github-discovery.mjs';
 import {runCloudScheduledLanes} from './scheduled-lanes.mjs';
+import {readGhostStatus} from './ghost-status-readback.mjs';
 import {repoCatchupStatus,refreshRepoCatchup} from './repo-catchup.mjs';
 import {reviewEvidence} from './review-evidence.mjs';
 import {queueGithubPatch,githubPatchStatus,githubPatchTick,previewGithubPatchSource,queueGithubPatchTask} from './github-patch-gateway.mjs';
@@ -443,6 +444,13 @@ export async function handle(request, env, now = Date.now(), fetcher = fetch) {
       return response(200, {accepted: results[0].meta.changes > 0, observed_at: doc.snapshot_at});
     }
     if (ingest) return response(405, {error: 'method_not_allowed'});
+    // Private authenticated, read-only Site ledger bridge. The browser never
+    // learns the Site service token; only the fixed status operation is allowed.
+    if (url.pathname === '/api/ghost/status') {
+      if (request.method !== 'GET') return response(405, {error:'method_not_allowed'});
+      const result = await readGhostStatus(env, fetcher, now);
+      return response(result.status, result.body);
+    }
     // Standalone Cloudflare host: map the original Site quota URL to the
     // *tracked* GitHub asset. The owner-private ChatGPT Site adapter still
     // owns this same URL separately, so neither hosting path breaks.
