@@ -147,6 +147,78 @@ test('owner approved spec creates review-only PR, not a workflow installation',a
  assert(!calls.some(([cmd,...args])=>cmd==='gh'&&args.includes('merge')));
 });
 
+
+const proposalRel='coordination/workflow-proposals/'+name+'.yml';
+const proposalBranch='rovor/workflow-proposal-'+id.slice(3,19);
+const existingHead='b'.repeat(40);
+const baseHead='c'.repeat(40);
+const approvedYaml=compileReviewedWorkflow(content,digest).yaml;
+const goodExistingPR={
+ number:999,
+ url:'https://github.com/TeamRovor/rovor-video-engine/pull/999',
+ state:'OPEN',baseRefName:'main',headRefName:proposalBranch,headRefOid:existingHead
+};
+function existingRemote({changed=proposalRel+'\n',yaml=approvedYaml,
+ pr=goodExistingPR,lsRemote=existingHead+'\trefs/heads/'+proposalBranch+'\n'}={}){
+ const calls=[];
+ function git(command,args){
+  calls.push([command,...args]);
+  if(command==='git'){
+   if(args[0]==='ls-remote')return lsRemote;
+   if(args[0]==='fetch')return '';
+   if(args[0]==='rev-parse')return existingHead+'\n';
+   if(args[0]==='merge-base')return baseHead+'\n';
+   if(args[0]==='diff')return changed;
+   if(args[0]==='show')return yaml;
+  }
+  if(command==='gh'&&args[0]==='pr'&&args[1]==='list')return JSON.stringify([pr]);
+  throw Error('unexpected_publisher_side_effect');
+ }
+ return {calls,git};
+}
+
+test('existing branch counts only after immutable content, scope and PR identity match',async()=>{
+ const mock=existingRemote();
+ const result=await publishReviewed({env,send:http().send,git:mock.git,
+  exists:()=>false,write(){throw Error('must_not_write');}});
+ assert.equal(result.created,0);
+ assert.equal(result.existing,1);
+ assert(mock.calls.some(([cmd,...args])=>cmd==='git'&&args[0]==='fetch'));
+ assert(mock.calls.some(([cmd,...args])=>cmd==='git'&&args[0]==='show'));
+ assert(!mock.calls.some(([cmd,...args])=>cmd==='git'&&
+  ['checkout','push','commit'].includes(args[0])));
+ assert(!mock.calls.some(([cmd,...args])=>cmd==='gh'&&args[1]==='create'));
+});
+
+test('altered existing branch content or unrelated files are never accepted',async()=>{
+ for(const mutation of [
+  {yaml:approvedYaml.replace('contents: read','contents: write')},
+  {changed:proposalRel+'\n.github/workflows/unsafe.yml\n'},
+  {changed:'.github/workflows/unsafe.yml\n'},
+  {lsRemote:'bad_sha\trefs/heads/'+proposalBranch+'\n'}
+ ]){
+  const mock=existingRemote(mutation);
+  await assert.rejects(()=>publishReviewed({env,send:http().send,
+   git:mock.git,exists:()=>false}),/existing_proposal_branch_unreviewable/);
+  assert(!mock.calls.some(([cmd,...args])=>cmd==='gh'&&args[1]==='create'));
+  assert(!mock.calls.some(([cmd,...args])=>cmd==='git'&&args[0]==='push'));
+ }
+});
+
+test('existing PR must name the fetched exact head, main base and open/merged state',async()=>{
+ for(const altered of [
+  {headRefOid:'d'.repeat(40)},
+  {baseRefName:'other'},
+  {headRefName:'rovor/workflow-proposal-someone-else'},
+  {state:'CLOSED'},
+  {url:'https://example.com/pull/999'}
+ ]){
+  const mock=existingRemote({pr:{...goodExistingPR,...altered}});
+  await assert.rejects(()=>publishReviewed({env,send:http().send,
+   git:mock.git,exists:()=>false}),/existing_proposal_branch_unreviewable/);
+ }
+});
+
 test('bridge runs continuously with no inference only on trusted main and production credentials',async()=>{
  const workflow=readFileSync(new URL('../.github/workflows/rovor-ai-workflow-factory.yml',import.meta.url),'utf8');
  assert.match(workflow,/cron: "11 \*\/2 \* \* \*"/);
