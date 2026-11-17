@@ -107,25 +107,31 @@ def validate(data, now=None):
                 errors.append(ident + ': unknown dependency ' + dep)
             elif task.get('status') in {'active', 'done'} and by_id[dep].get('status') != 'done':
                 errors.append(ident + ': dependency is not done: ' + dep)
+    # Iterative DFS: user-controlled task chains must not exhaust Python's
+    # recursion limit and bypass the normal error-reporting/CI path.
     visiting, visited = set(), set()
-
-    def visit(ident):
-        if ident in visiting:
-            errors.append(ident + ': dependency cycle')
-            return
-        if ident in visited:
-            return
-        visiting.add(ident)
-        deps = by_id[ident].get('depends_on', [])
-        if isinstance(deps, list):
-            for dep in deps:
-                if isinstance(dep, str) and dep in by_id:
-                    visit(dep)
-        visiting.remove(ident)
-        visited.add(ident)
-
     for ident in by_id:
-        visit(ident)
+        if ident in visited:
+            continue
+        stack = [(ident, False)]
+        while stack:
+            current, leaving = stack.pop()
+            if leaving:
+                visiting.remove(current)
+                visited.add(current)
+                continue
+            if current in visited:
+                continue
+            if current in visiting:
+                errors.append(current + ': dependency cycle')
+                continue
+            visiting.add(current)
+            stack.append((current, True))
+            deps = by_id[current].get('depends_on', [])
+            if isinstance(deps, list):
+                for dep in reversed(deps):
+                    if isinstance(dep, str) and dep in by_id:
+                        stack.append((dep, False))
     reserved = [t for t in valid if t.get('status') in RESERVED]
     for i, left in enumerate(reserved):
         for right in reserved[i + 1:]:
