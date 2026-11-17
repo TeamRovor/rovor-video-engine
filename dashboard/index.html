@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>ROVOR // Live Operations HUD</title>
+<style>
+:root{color-scheme:dark;--bg:#071018;--panel:#0b1a25;--line:#1e5363;--cyan:#65eaff;--amber:#ffc66d;--red:#ff667c;--green:#80f0c0;--muted:#92aebc;--text:#e6f6ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#102c3b 0,#071018 52%);color:var(--text);font:15px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}header{padding:24px clamp(16px,4vw,48px);border-bottom:1px solid var(--line);display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap}.eyebrow{color:var(--cyan);letter-spacing:.18em;font-size:.75rem}.brand{font-size:clamp(1.35rem,3vw,2.3rem);font-weight:800;letter-spacing:.08em;margin:.2rem 0}.sub{color:var(--muted);max-width:760px}.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button,a.btn{font:inherit;color:var(--cyan);background:#0b2633;border:1px solid var(--cyan);padding:9px 13px;border-radius:4px;cursor:pointer;text-decoration:none}button:hover,a.btn:hover{background:#123b4b}.wrap{padding:22px clamp(16px,4vw,48px);max-width:1500px;margin:auto}.statusbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}.panel,.metric{background:linear-gradient(145deg,#0d202c,#09151e);border:1px solid var(--line);border-radius:7px;padding:15px;min-width:0}.label{font-size:.72rem;color:var(--muted);letter-spacing:.13em;text-transform:uppercase}.value{font-size:1.25rem;font-weight:750;margin-top:6px;overflow-wrap:anywhere}.ok{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:16px}.panel h2{font-size:1rem;color:var(--cyan);letter-spacing:.1em;margin:0 0 14px;text-transform:uppercase}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}input,select{font:inherit;color:var(--text);background:#06111a;border:1px solid var(--line);padding:8px;border-radius:4px;max-width:100%}.tasks{display:grid;gap:9px}.task{border:1px solid #1a3e4b;border-left:3px solid var(--line);padding:12px;border-radius:4px;background:#08151e}.task.active{border-left-color:var(--amber)}.task.ready{border-left-color:var(--green)}.task.blocked{border-left-color:var(--red)}.taskhead{display:flex;gap:8px;justify-content:space-between;align-items:flex-start}.tasktitle{font-weight:700}.pill{font-size:.7rem;text-transform:uppercase;border:1px solid var(--line);border-radius:20px;padding:2px 7px;white-space:nowrap}.taskmeta{color:var(--muted);font-size:.78rem;margin-top:6px;overflow-wrap:anywhere}.tasknext{margin-top:9px}.routes{display:grid;gap:8px}.route{padding:10px;border:1px solid #1a3e4b;border-radius:4px}.route strong{color:var(--amber)}.prlist{display:grid;gap:8px}.pr{padding:9px 0;border-bottom:1px solid #183744}.pr a{color:var(--cyan);text-decoration:none}.pr a:hover{text-decoration:underline}.error{border-color:#8c3e4a;color:#ffdce1}.foot{color:var(--muted);font-size:.75rem;margin:18px 0 4px}.hide{display:none!important}@media(max-width:850px){.grid{grid-template-columns:1fr}}@media(prefers-reduced-motion:no-preference){.brand{ text-shadow:0 0 18px #65eaff33 }}:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+</style>
+</head>
+<body>
+<header>
+ <div><div class="eyebrow">ROVOR DIGITAL // SYSTEMS VIEW</div><div class="brand">LIVE OPERATIONS HUD</div><div class="sub">Public GitHub coordination snapshot. Live queue state is not proof that a worker or computer is online.</div></div>
+ <div class="actions"><button id="refresh" type="button">↻ Refresh now</button><a class="btn" href="https://github.com/TeamRovor/rovor-video-engine" target="_blank" rel="noreferrer">Repository ↗</a></div>
+</header>
+<main class="wrap">
+ <section class="statusbar" aria-label="System status">
+  <div class="metric"><div class="label">Data connection</div><div id="connection" class="value warn">Connecting…</div><div id="lastrefresh" class="taskmeta">No successful sync yet</div></div>
+  <div class="metric"><div class="label">Pinned main commit</div><div id="commit" class="value">—</div><div id="committime" class="taskmeta">Queue and routes load from one revision</div></div>
+  <div class="metric"><div class="label">Queue overview</div><div id="counts" class="value">—</div><div class="taskmeta">Task status from tasks.json</div></div>
+  <div class="metric"><div class="label">Host / desktop state</div><div class="value warn">NOT VERIFIED</div><div class="taskmeta">GitHub cannot establish local PC or Mac availability</div></div>
+ </section>
+ <div id="notice" class="panel hide" role="status" aria-live="polite"></div>
+ <section class="grid">
+  <div class="panel"><h2>Task queue</h2><div class="toolbar"><input id="search" type="search" placeholder="Filter tasks…" aria-label="Filter tasks"><select id="statusFilter" aria-label="Filter by status"><option value="all">All statuses</option><option>ready</option><option>active</option><option>blocked</option><option>done</option></select></div><div id="tasks" class="tasks"><p class="muted">Loading public queue…</p></div></div>
+  <aside class="panel"><h2>Capability routing</h2><div id="routes" class="routes"><p class="muted">Loading routing…</p></div><h2 style="margin-top:24px">Open pull requests</h2><div id="prs" class="prlist"><p class="muted">Loading pull requests…</p></div></aside>
+ </section>
+ <p class="foot">Auto-refresh: queue + routes every 3 minutes; pull requests every 15 minutes. Requests use GitHub's unauthenticated public API. Rate limits and network failures are shown rather than hidden. This page never contains a GitHub token and never claims to dispatch jobs.</p>
+</main>
+<script>
+(() => {
+ const owner='TeamRovor', repo='rovor-video-engine', api='https://api.github.com';
+ const $=id=>document.getElementById(id);
+ let latestTasks=[], latestRoutes={}, lastPrFetch=0, pinnedSha='', busy=false;
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const short=s=>s?String(s).slice(0,7):'—';
+ async function get(url){const r=await fetch(url,{headers:{Accept:'application/vnd.github+json'}});if(!r.ok){let msg='HTTP '+r.status;if(r.status===403)msg+=' — API rate limit or access restriction';throw new Error(msg)}return r.json()}
+ function setNotice(msg,bad=false){$('notice').textContent=msg;$('notice').classList.toggle('hide',!msg);$('notice').classList.toggle('error',bad)}
+ function renderTasks(){const term=$('search').value.toLowerCase(), status=$('statusFilter').value;const list=latestTasks.filter(t=>(status==='all'||t.status===status)&&JSON.stringify([t.id,t.title,t.owner,t.next_action,t.blocker]).toLowerCase().includes(term));$('tasks').innerHTML=list.length?list.map(t=>'<article class="task '+esc(t.status)+'"><div class="taskhead"><div class="tasktitle">'+esc(t.title||t.id)+'</div><span class="pill">'+esc(t.status||'unknown')+'</span></div><div class="taskmeta">ID: '+esc(t.id)+' · Priority: '+esc(t.priority??'—')+'<br>Owner: '+esc(t.owner||'Unclaimed')+'</div>'+(t.blocker?'<div class="tasknext bad">Blocker: '+esc(t.blocker)+'</div>':'')+(t.next_action?'<div class="tasknext">'+esc(t.next_action)+'</div>':'')+'</article>').join(''):'<p class="muted">No tasks match this filter.</p>'}
+ function renderRoutes(){const tasks=latestRoutes.tasks||{};const entries=Object.entries(tasks);$('routes').innerHTML=entries.length?entries.map(([id,r])=>'<div class="route"><strong>'+esc(id)+'</strong><div class="taskmeta">Lane: '+esc(r.lane||'unclassified')+' · Requires: '+esc((r.requires||[]).join(', ')||'none declared')+(r.objective?' · Objective: '+esc(r.objective):'')+'</div></div>').join(''):'<p class="muted">No route entries found.</p>'}
+ function renderCounts(){const c={ready:0,active:0,blocked:0,done:0,other:0};latestTasks.forEach(t=>c[c[t.status]!==undefined?t.status:'other']++);$('counts').textContent=latestTasks.length+' tasks · '+c.active+' active';$('counts').title=Object.entries(c).map(([k,v])=>k+': '+v).join(', ')}
+ async function sync(includePrs=false){if(busy)return;busy=true;$('refresh').disabled=true;try{
+  // Only the commit lookup consumes REST budget; both JSON reads use the same immutable SHA.
+  const commits=await get(api+'/repos/'+owner+'/'+repo+'/commits?sha=main&per_page=1');if(!commits.length)throw new Error('No main commit returned');
+  const sha=commits[0].sha;
+  const raw='https://raw.githubusercontent.com/'+owner+'/'+repo+'/'+sha+'/coordination/';
+  const [taskResponse,routeResponse]=await Promise.all([fetch(raw+'tasks.json'),fetch(raw+'work-routing.json')]);
+  if(!taskResponse.ok||!routeResponse.ok)throw new Error('Pinned raw data fetch failed (HTTP '+(!taskResponse.ok?taskResponse.status:routeResponse.status)+')');
+  const [taskData,routeData]=await Promise.all([taskResponse.json(),routeResponse.json()]);
+  if(!Array.isArray(taskData.tasks)||!routeData.tasks)throw new Error('Unexpected queue/routing schema');
+  latestTasks=taskData.tasks;latestRoutes=routeData;pinnedSha=sha;
+  $('commit').textContent=short(sha);$('commit').title=sha;$('commit').innerHTML='<a style="color:inherit" href="https://github.com/'+owner+'/'+repo+'/commit/'+sha+'" target="_blank" rel="noreferrer">'+esc(short(sha))+' ↗</a>';
+  $('committime').textContent='Both JSON files pinned to '+sha.slice(0,12);$('connection').textContent='ONLINE';$('connection').className='value ok';$('lastrefresh').textContent='Last successful sync: '+new Date().toLocaleTimeString();
+  renderCounts();renderTasks();renderRoutes();setNotice('');
+  if(includePrs||Date.now()-lastPrFetch>300000){const prs=await get(api+'/repos/'+owner+'/'+repo+'/pulls?state=open&per_page=50');$('prs').innerHTML=prs.length?prs.map(p=>'<div class="pr"><a href="'+esc(p.html_url)+'" target="_blank" rel="noreferrer">#'+esc(p.number)+' '+esc(p.title)+'</a><div class="taskmeta">'+esc(p.head.ref)+' → '+esc(p.base.ref)+(p.draft?' · draft':'')+'</div></div>').join(''):'<p class="muted">No open pull requests.</p>';lastPrFetch=Date.now()}
+ }catch(e){$('connection').textContent='STALE / ERROR';$('connection').className='value bad';setNotice('Sync failed: '+e.message+'. Displayed data, if any, may be stale. Retry manually or wait for the next poll.',true)}finally{busy=false;$('refresh').disabled=false}}
+ $('refresh').addEventListener('click',()=>sync(true));$('search').addEventListener('input',renderTasks);$('statusFilter').addEventListener('change',renderTasks);
+ sync(true);setInterval(()=>sync(false),180000);
+})();
+</script>
+</body>
+</html>
