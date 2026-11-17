@@ -69,6 +69,25 @@ class CoordinationTests(unittest.TestCase):
         self.assertTrue(any('unknown dependency' in e for e in self.check(task(depends_on=['absent']))[0]))
         self.assertTrue(any('dependency cycle' in e for e in self.check(task(depends_on=['two']), task('two', depends_on=['one']))[0]))
 
+    def test_long_dependency_chain_is_bounded_and_cycles_are_reported(self):
+        # Larger than Python's typical recursion limit; prior recursive walk
+        # raised RecursionError before returning a coordination verdict.
+        chain = [task('node-%04d' % index,
+                      scopes=['fixture/node-%04d.py' % index],
+                      depends_on=['node-%04d' % (index - 1)] if index else [])
+                 for index in range(1600)]
+        self.assertEqual(self.check(*chain), ([], []))
+        chain[0]['depends_on'] = ['node-1599']
+        errors, _ = self.check(*chain)
+        self.assertTrue(any('dependency cycle' in error for error in errors))
+
+    def test_shared_dependency_dag_is_not_a_false_cycle(self):
+        nodes = [task('root', scopes=['fixture/root']),
+                 task('left', scopes=['fixture/left'], depends_on=['root']),
+                 task('right', scopes=['fixture/right'], depends_on=['root']),
+                 task('join', scopes=['fixture/join'], depends_on=['left', 'right'])]
+        self.assertEqual(self.check(*nodes), ([], []))
+
     def test_blocked_dependency_is_not_suggested_or_startable(self):
         data = {'version': 1, 'tasks': [task(), task('two', depends_on=['one'], scopes=['tools'])]}
         self.assertEqual([t['id'] for t in loop.suggestions(data)], ['one'])
