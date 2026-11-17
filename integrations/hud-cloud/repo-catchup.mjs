@@ -16,10 +16,23 @@ export async function recordRepoCatchup(db,token,discovery,now=Date.now(),send=f
    open_pr_numbers:ids(discovery?.pulls,x=>x?.state==='open')};
   state='ready';
  }catch{}
+ // A GitHub GET may remain in flight while STOP is engaged. Enforce the
+ // standing/STOP gate inside the same D1 statement that records the result;
+ // an earlier check before the network request is not sufficient.
+ const proofNow=Math.max(now,Date.now());
+ const active="EXISTS (SELECT 1 FROM hud_cloud_workforce_control c JOIN hud_cloud_workforce_series s ON s.id=1 WHERE c.id=1 AND c.enabled=1 AND s.active=1 AND s.expires_at>?)";
  try{
-  const changed=await db.prepare("INSERT INTO hud_native_repo_catchup (id,checked_at,observed_at,state,snapshot) VALUES(1,?,?,?,?) ON CONFLICT(id) DO UPDATE SET checked_at=excluded.checked_at,state=excluded.state,observed_at=CASE WHEN excluded.state='ready' THEN excluded.observed_at ELSE hud_native_repo_catchup.observed_at END,snapshot=CASE WHEN excluded.state='ready' THEN excluded.snapshot ELSE hud_native_repo_catchup.snapshot END WHERE hud_native_repo_catchup.checked_at<=excluded.checked_at")
-   .bind(now,state==='ready'?now:null,state,body?JSON.stringify(body):null).run();
-  if(changed.meta?.changes!==1)throw Error('catchup_receipt_missing');
+  const changed=await db.prepare(`INSERT INTO hud_native_repo_catchup (id,checked_at,observed_at,state,snapshot)
+   SELECT 1,?,?,?,? WHERE ${active}
+   ON CONFLICT(id) DO UPDATE SET checked_at=excluded.checked_at,state=excluded.state,
+   observed_at=CASE WHEN excluded.state='ready' THEN excluded.observed_at ELSE hud_native_repo_catchup.observed_at END,
+   snapshot=CASE WHEN excluded.state='ready' THEN excluded.snapshot ELSE hud_native_repo_catchup.snapshot END
+   WHERE hud_native_repo_catchup.checked_at<=excluded.checked_at AND ${active}`)
+   .bind(now,state==='ready'?now:null,state,body?JSON.stringify(body):null,proofNow,proofNow).run();
+  if(changed.meta?.changes!==1){
+   if(!await standingReady(db,proofNow))return {state:'stopped',head_sha:null};
+   throw Error('catchup_receipt_missing');
+  }
  }catch{return {state:'storage_unavailable'};}
  return {state,head_sha:body?.head_sha??null};
 }
@@ -48,7 +61,7 @@ export async function refreshRepoCatchup(env,now=Date.now(),send=fetch){
   const discovery=await readGithubDiscovery(token,send);
   if(!await standingReady(env.DB,Math.max(now,Date.now())))return reply(409,'stopped');
   const result=await recordRepoCatchup(env.DB,token,discovery,now,send);
-  return reply(result.state==='storage_unavailable'?503:200,result.state);
+  return reply(result.state==='storage_unavailable'?503:result.state==='stopped'?409:200,result.state);
  }catch{return reply(503,'read_unavailable');}
 }
 
