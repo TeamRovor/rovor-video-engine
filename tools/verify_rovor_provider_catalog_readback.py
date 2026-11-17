@@ -22,6 +22,17 @@ ROUTE = control.GHOST_ROUTE
 PROVIDERS = tuple(sorted(control.PROVIDERS))
 
 
+def exact_provider_rows(rows) -> bool:
+    """Reject malformed provider IDs before constructing maps or sets."""
+    return (
+        isinstance(rows, list)
+        and len(rows) == len(PROVIDERS)
+        and all(isinstance(row, dict) and isinstance(row.get("provider"), str)
+                for row in rows)
+        and {row["provider"] for row in rows} == set(PROVIDERS)
+    )
+
+
 def audit_catalog_persistence(token: str, request=control.safe_request, now_ms=None) -> dict:
     # An exact D1 match to an old catalog check is not proof of a new check.
     # The bounded window also rejects fabricated future timestamps.
@@ -40,10 +51,7 @@ def audit_catalog_persistence(token: str, request=control.safe_request, now_ms=N
     safe_code = code if type(code) is int and 0 <= code <= 599 else 0
     if safe_code != 200 or not isinstance(preflight, dict) or (
         preflight.get("execution_source") != "cloud_provider"
-        or not isinstance(preflight.get("providers"), list)
-        or len(preflight["providers"]) != len(PROVIDERS)
-        or {p.get("provider") for p in preflight["providers"] if isinstance(p, dict)}
-        != set(PROVIDERS)
+        or not exact_provider_rows(preflight.get("providers"))
     ):
         if safe_code in (401, 403):
             state = "site_service_auth_denied"
@@ -101,10 +109,7 @@ def audit_catalog_persistence(token: str, request=control.safe_request, now_ms=N
     valid_status = (
         code == 200 and isinstance(status, dict)
         and status.get("execution_source") == "cloud_provider"
-        and isinstance(status.get("providers"), list)
-        and len(status["providers"]) == len(PROVIDERS)
-        and {item.get("provider") for item in status["providers"] if isinstance(item, dict)}
-        == set(PROVIDERS)
+        and exact_provider_rows(status.get("providers"))
     )
     stored = {
         item["provider"]: item for item in status["providers"]
