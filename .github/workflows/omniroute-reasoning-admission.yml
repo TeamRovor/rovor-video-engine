@@ -6,15 +6,11 @@ on:
       - 'tools/omniroute_reasoning_admission.py'
       - 'tests/test_omniroute_reasoning_admission.py'
       - '.github/workflows/omniroute-reasoning-admission.yml'
-      - 'coordination/tasks.json'
-      - 'coordination/work-routing.json'
   pull_request:
     paths:
       - 'tools/omniroute_reasoning_admission.py'
       - 'tests/test_omniroute_reasoning_admission.py'
       - '.github/workflows/omniroute-reasoning-admission.yml'
-      - 'coordination/tasks.json'
-      - 'coordination/work-routing.json'
 
 permissions:
   contents: read

@@ -6,8 +6,6 @@ on:
       - tests/test_walter_public_queue_admission.py
       - tools/walter_public_task_grounding.py
       - .github/workflows/walter-public-queue-admission.yml
-      - coordination/tasks.json
-      - coordination/work-routing.json
   push:
     branches: [main]
     paths:

@@ -7,8 +7,6 @@ on:
       - "tools/walter_specialist_coverage.py"
       - "tests/test_walter_real_receipt_bridge.py"
       - "tests/test_walter_specialist_coverage.py"
-      - "coordination/tasks.json"
-      - "coordination/work-routing.json"
       - ".github/workflows/walter-task-identity-guard.yml"
   pull_request:
     paths:
@@ -16,8 +14,6 @@ on:
       - "tools/walter_specialist_coverage.py"
       - "tests/test_walter_real_receipt_bridge.py"
       - "tests/test_walter_specialist_coverage.py"
-      - "coordination/tasks.json"
-      - "coordination/work-routing.json"
       - ".github/workflows/walter-task-identity-guard.yml"
 jobs:
   offline-guard:

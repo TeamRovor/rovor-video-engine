@@ -8,8 +8,6 @@ on:
       - tools/walter_real_receipt_bridge.py
       - tools/walter_specialist_coverage.py
       - .github/workflows/walter-grounded-coverage-pipeline.yml
-      - coordination/tasks.json
-      - coordination/work-routing.json
   push:
     branches: [main]
     paths:

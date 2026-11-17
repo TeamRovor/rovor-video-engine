@@ -5,8 +5,6 @@ on:
       - tools/walter_specialist_coverage.py
       - tests/test_walter_specialist_coverage.py
       - .github/workflows/walter-specialist-coverage.yml
-      - coordination/tasks.json
-      - coordination/work-routing.json
   push:
     branches: [main]
     paths:
