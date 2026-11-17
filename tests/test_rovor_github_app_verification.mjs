@@ -86,6 +86,32 @@ test('patch verifier distinguishes disabled, absent allowlist, rejected and unde
  await assert.rejects(()=>verifyGithubPatchPermissions({...enabled,ROVOR_GITHUB_APP_ID:''},no,NOW),/github_patch_app_credentials_missing/);
 });
 
+test('write-token admission rejects missing or expanded repository scope before patch activation',async()=>{
+ const requested={...env,ROVOR_GITHUB_PATCH_ENABLED:'true',
+  ROVOR_GITHUB_PATCH_PATHS:'["architecture/roadmap.md"]'};
+ const token={token:'mock-write-token-long-enough-for-scope-check',
+  expires_at:new Date(NOW+3600000).toISOString(),
+  permissions:{contents:'write',pull_requests:'write',metadata:'read'}};
+ for(const scope of [undefined,[],[{full_name:'TeamRovor/unrelated'}],
+  [{full_name:'TeamRovor/rovor-video-engine'},{full_name:'TeamRovor/other'}]]){
+  let called=0;
+  const send=async(url,init)=>{
+   called++;
+   assert.equal(url,'https://api.github.com/app/installations/456/access_tokens');
+   assert.equal(init.method,'POST');
+   const body=JSON.parse(init.body);
+   assert.deepEqual(body.repositories,['rovor-video-engine']);
+   return Response.json({...token,...(scope===undefined?{}:{repositories:scope})},{status:201});
+  };
+  await assert.rejects(()=>verifyGithubPatchPermissions(requested,send,NOW),
+   /github_patch_write_scope_invalid/);
+  assert.equal(called,1);
+  const effective=await resolveOptionalPatchDeployment(requested,send,NOW);
+  assert.equal(effective.effective_enabled,false);
+  assert.equal(effective.write_scope_verified,false);
+ }
+});
+
 test('informational GitHub patch capability probe proves write-token scope but cannot enable executor or edit repository',async()=>{
  const calls=[];
  const result=await inspectGithubPatchCapability(env,async(url,init)=>{
