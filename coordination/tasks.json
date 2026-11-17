@@ -6224,7 +6224,7 @@
       "id": "github-atomic-intake-redirect-safety-20261117",
       "title": "Prevent GitHub atomic task intake bearer token forwarding on redirects",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / independent ROVOR secure-intake session 2026-11-17",
       "branch": "fix/github-atomic-intake-no-redirect-20261117",
       "scopes": [
@@ -6232,12 +6232,23 @@
         "tests/test_github_atomic_task_intake.py"
       ],
       "depends_on": [],
-      "next_action": "Make the fixed GitHub REST client reject HTTP redirects without forwarding the bearer token; prove behavior with regression tests and inspect CI.",
+      "next_action": "Owner reviews PR #485 at ffa4363; merge only through protected review gates. CI succeeded on Python 3.9 and 3.11. No release or production inference is implied.",
       "acceptance": "Redirect responses 301/302/307/308 never issue a second request bearing the token; normal authenticated intake and concurrent-head rejection remain unchanged.",
-      "links": [],
-      "updated_at": "2026-11-17T11:09:33.873Z",
-      "next_update": "After targeted CI and PR review",
-      "blocker": null
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/485"
+      ],
+      "updated_at": "2026-11-17T11:12:06.765Z",
+      "next_update": "Upon owner review/merge of PR #485",
+      "blocker": null,
+      "evidence": [
+        {
+          "commit": "ffa4363d5e0c89a5f6edea483f0b68ae302a0a9d",
+          "platform": "GitHub Actions Ubuntu / Python 3.9 and 3.11",
+          "check": "Canonical task/route validation and atomic intake regression suite, including 2 new redirect-safety tests",
+          "result": "success on both versions; source PR open; no production/deployment change",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/44071680096"
+        }
+      ]
     }
   ]
 }
