@@ -6219,6 +6219,24 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/43107107729"
         }
       ]
+    },
+    {
+      "id": "rovor-master-schedule-guard-20261117",
+      "title": "Harden GitHub-only scheduler guard and codify recovered ROVOR cloud master plan",
+      "priority": 1,
+      "status": "active",
+      "owner": "ChatGPT / Amar connected GitHub master-plan session 2026-11-17",
+      "branch": "feature/rovor-master-schedule-guard-20261117",
+      "scopes": [
+        "tools/check_workflow_schedule.py",
+        "tests/test_workflow_schedule.py",
+        "architecture/ROVOR-MASTER-EXECUTION-20261117.md"
+      ],
+      "depends_on": [],
+      "next_action": "Add fail-closed parsing checks for unsupported GitHub Actions event declarations and regressions; publish the recovered multi-capability ROVOR roadmap with evidence gates in a reviewable PR.",
+      "acceptance": "No new cloud scheduler or production deploy; quoted/aliased/inline map schedule trigger declarations cannot bypass CI guard; focused offline tests and hosted CI results recorded; canonical cloud Worker, STOP and free-only controls unchanged.",
+      "updated_at": "2026-11-17T10:21:04.154Z",
+      "next_update": "After a bounded branch PR, hosted CI checks and read-only review; do not auto-merge or deploy."
     }
   ]
 }

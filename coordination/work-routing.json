@@ -1201,6 +1201,13 @@
         "local-exec"
       ],
       "objective": "reduce-repeat-work"
+    },
+    "rovor-master-schedule-guard-20261117": {
+      "lane": "operations",
+      "requires": [
+        "github-read",
+        "github-write"
+      ]
     }
   }
 }
