@@ -151,14 +151,14 @@ test('owner approved spec creates review-only PR, not a workflow installation',a
 const proposalRel='coordination/workflow-proposals/'+name+'.yml';
 const proposalBranch='rovor/workflow-proposal-'+id.slice(3,19);
 const existingHead='b'.repeat(40);
-const baseHead='c'.repeat(40);
 const approvedYaml=compileReviewedWorkflow(content,digest).yaml;
 const goodExistingPR={
  number:999,
  url:'https://github.com/TeamRovor/rovor-video-engine/pull/999',
- state:'OPEN',baseRefName:'main',headRefName:proposalBranch,headRefOid:existingHead
+ state:'OPEN',baseRefName:'main',headRefName:proposalBranch,headRefOid:existingHead,
+ changedFiles:1,files:[{path:proposalRel}]
 };
-function existingRemote({changed=proposalRel+'\n',yaml=approvedYaml,
+function existingRemote({yaml=approvedYaml,
  pr=goodExistingPR,lsRemote=existingHead+'\trefs/heads/'+proposalBranch+'\n'}={}){
  const calls=[];
  function git(command,args){
@@ -167,8 +167,6 @@ function existingRemote({changed=proposalRel+'\n',yaml=approvedYaml,
    if(args[0]==='ls-remote')return lsRemote;
    if(args[0]==='fetch')return '';
    if(args[0]==='rev-parse')return existingHead+'\n';
-   if(args[0]==='merge-base')return baseHead+'\n';
-   if(args[0]==='diff')return changed;
    if(args[0]==='show')return yaml;
   }
   if(command==='gh'&&args[0]==='pr'&&args[1]==='list')return JSON.stringify([pr]);
@@ -193,8 +191,10 @@ test('existing branch counts only after immutable content, scope and PR identity
 test('altered existing branch content or unrelated files are never accepted',async()=>{
  for(const mutation of [
   {yaml:approvedYaml.replace('contents: read','contents: write')},
-  {changed:proposalRel+'\n.github/workflows/unsafe.yml\n'},
-  {changed:'.github/workflows/unsafe.yml\n'},
+  {pr:{...goodExistingPR,changedFiles:2,
+   files:[{path:proposalRel},{path:'.github/workflows/unsafe.yml'}]}},
+  {pr:{...goodExistingPR,files:[{path:'.github/workflows/unsafe.yml'}]}},
+  {pr:{...goodExistingPR,changedFiles:2,files:[{path:proposalRel}]}},
   {lsRemote:'bad_sha\trefs/heads/'+proposalBranch+'\n'}
  ]){
   const mock=existingRemote(mutation);
