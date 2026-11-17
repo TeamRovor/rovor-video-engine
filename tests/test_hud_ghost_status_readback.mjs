@@ -58,6 +58,41 @@ test('only fixed signed status operation reads source and preserves real histori
   assert(!output.includes(env.HUD_GHOST_SERVICE_TOKEN));
 });
 
+test('fresh private catalog receipts survive the bridge without creating admission or inference evidence',async()=>{
+  const source=fixture();
+  for(const p of source.providers) {
+    p.last_check={provider:p.provider,status:'catalog_received',
+      observed_at:NOW-60000,private_detail:'SHOULD NEVER LEAK'};
+    p.recent_inference_verified=false;
+  }
+  const result=await readGhostStatus(env,mock(source),NOW);
+  assert.equal(result.status,200);
+  assert.equal(result.body.providers.filter(p=>p.last_check?.status==='catalog_received').length,9);
+  assert(result.body.providers.every(p=>p.last_check.observed_at===NOW-60000));
+  assert(result.body.providers.every(p=>p.recent_inference_verified===false));
+  assert(result.body.providers.every(p=>p.admission!=='eligible'&&p.online_verified===false));
+  assert(!JSON.stringify(result.body).includes('SHOULD NEVER LEAK'));
+});
+
+test('stale or unsupported catalog check records never look authenticated',async()=>{
+  const source=fixture();
+  source.providers[0].last_check={status:'catalog_received',observed_at:NOW-75*60000-1};
+  source.providers[1].last_check={status:'catalog_received',observed_at:NOW+60001};
+  source.providers[2].last_check={status:'catalog_failed',observed_at:NOW-1000};
+  source.providers[3].last_check={status:'catalog_received',observed_at:NOW-75*60000};
+  source.providers[4].recent_inference_verified=true;
+  const result=await readGhostStatus(env,mock(source),NOW);
+  assert.equal(result.status,200);
+  assert.equal(result.body.providers[0].last_check,null);
+  assert.equal(result.body.providers[1].last_check,null);
+  assert.equal(result.body.providers[2].last_check,null);
+  assert.deepEqual(result.body.providers[3].last_check,{
+    status:'catalog_received',observed_at:NOW-75*60000
+  });
+  assert.equal(result.body.providers[4].recent_inference_verified,true);
+  assert.equal(result.body.providers[4].online_verified,false);
+});
+
 test('no credential or reused HUD credentials fail closed, without contacting Site',async()=>{
   let calls=0;const fetcher=()=>{calls++;throw Error('unexpected');};
   for(const secret of [null,'short',env.HUD_READER_TOKEN,env.HUD_WRITER_TOKEN]){
