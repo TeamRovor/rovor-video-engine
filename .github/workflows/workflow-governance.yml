@@ -1,0 +1,40 @@
+name: ROVOR workflow schedule governance
+
+# Read-only safety gate: GitHub must not acquire a second provider-execution
+# cron. The existing Cloudflare Worker native clock remains authoritative.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'tools/workflow_inventory.py'
+      - 'tools/check_workflow_schedule.py'
+      - 'tests/test_workflow_inventory.py'
+      - 'tests/test_workflow_schedule.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+      - 'tools/workflow_inventory.py'
+      - 'tools/check_workflow_schedule.py'
+      - 'tests/test_workflow_inventory.py'
+      - 'tests/test_workflow_schedule.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workflow-governance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run offline inventory and schedule-guard regressions
+        run: python3 -m unittest discover -s tests -p 'test_workflow_inventory.py' -v && python3 -m unittest discover -s tests -p 'test_workflow_schedule.py' -v
+      - name: Require reviewed auxiliary GitHub clocks only
+        run: python3 tools/check_workflow_schedule.py

@@ -17,11 +17,17 @@ on:
       - '.github/workflows/ghost-cloud-github-scheduler.yml'
       - 'tools/ghost_cloud_hosted_shift.py'
       - 'tests/test_ghost_cloud_hosted_shift.py'
+      - 'tools/workflow_inventory.py'
+      - 'tests/test_workflow_inventory.py'
+      - 'docs/workflow-efficiency-audit-2026-11-17.md'
   push:
     paths:
       - '.github/workflows/ghost-cloud-github-scheduler.yml'
       - 'tools/ghost_cloud_hosted_shift.py'
       - 'tests/test_ghost_cloud_hosted_shift.py'
+      - 'tools/workflow_inventory.py'
+      - 'tests/test_workflow_inventory.py'
+      - 'docs/workflow-efficiency-audit-2026-11-17.md'
 
 permissions:
   contents: read
@@ -43,6 +49,10 @@ jobs:
           persist-credentials: false
       - name: Offline scheduler safety tests
         run: python3 -m unittest discover -s tests -p test_ghost_cloud_hosted_shift.py -v
+      - name: Offline workflow responsibility audit and duplicate-cron guard
+        run: |
+          python3 -m unittest discover -s tests -p test_workflow_inventory.py -v
+          python3 tools/workflow_inventory.py --output /tmp/rovor-workflows.json --fail-on-dispatch-cron
 
 
 
