@@ -22,6 +22,19 @@ function ensureTrustedContext(env){
     typeof env.ROVOR_HUD_READER_TOKEN!=='string'||env.ROVOR_HUD_READER_TOKEN.length<32)
   throw Error('trusted_main_credentials_required');
 }
+// Reuse the same human-review disclosure for fresh and safely recovered PRs.
+function createProposalPr(git,branch,item){
+ const link=git('gh',['pr','create','--repo',REPO,'--base','main','--head',branch,
+  '--title','ROVOR: owner-reviewed workflow proposal '+item.id,
+  '--body','Validated read-only test-workflow proposal compiled from one private D1 Gemini draft.\n\n'+
+  'Owner review: PASS; SHA-256: '+item.receipt+'; actual model: gemini-3.5-flash-lite.\n'+
+  'This file under coordination/workflow-proposals is NOT active GitHub Actions code.\n'+
+  'Inspect the generated tests and cadence before installing it as .github/workflows/'+item.id+'.yml.\n'+
+  'No code ran from the model output, no paid route, no auto-merge or main edit.']);
+ if(!/^https:\/\/github\.com\/TeamRovor\/rovor-video-engine\/pull\/[1-9][0-9]*$/.test(link))
+  throw Error('proposal_pr_create_unconfirmed');
+}
+
 export async function publishReviewed({env=process.env,send=fetch,git=run,read=readFileSync,
  write=writeFileSync,mkdir=mkdirSync,exists=existsSync}={}){
  ensureTrustedContext(env);
@@ -43,9 +56,32 @@ export async function publishReviewed({env=process.env,send=fetch,git=run,read=r
   // Deterministic branch gives at-most-once proposal creation per receipt.
   const remote=git('git',['ls-remote','--heads','origin','refs/heads/'+branch]);
   if(remote){
-   const prs=JSON.parse(git('gh',['pr','list','--repo',REPO,'--head',branch,'--state','all','--json','number,url','--limit','5']));
-   if(!Array.isArray(prs)||prs.length!==1)throw Error('existing_proposal_branch_unreviewable');
-   existing++;
+   // A previous push can succeed even when PR creation fails. Never trust
+   // branch existence alone: a name collision must not approve other content.
+   // Fetch bounded history so main...FETCH_HEAD resolves the common base even
+   // when Actions checked out main with fetch-depth: 1.
+   git('git',['fetch','--no-tags','--depth=200','origin','main']);
+   git('git',['fetch','--no-tags','--depth=200','origin','refs/heads/'+branch]);
+   const changed=git('git',['diff','--name-only','main...FETCH_HEAD']);
+   const remoteYaml=git('git',['show','FETCH_HEAD:'+rel]);
+   if(changed!==rel||remoteYaml!==item.yaml.trim())
+    throw Error('existing_proposal_branch_conflict');
+   const prs=JSON.parse(git('gh',['pr','list','--repo',REPO,'--head',branch,'--state','all',
+    '--json','number,url,state,baseRefName,headRefName','--limit','5']));
+   if(!Array.isArray(prs)||prs.length>1)throw Error('existing_proposal_branch_unreviewable');
+   if(prs.length===1){
+    const pr=prs[0];
+    if(pr.state!=='OPEN'||pr.baseRefName!=='main'||pr.headRefName!==branch||
+       !Number.isSafeInteger(pr.number)||pr.number<1||
+       pr.url!=='https://github.com/'+REPO+'/pull/'+pr.number)
+     throw Error('existing_proposal_pr_unreviewable');
+    existing++;
+    continue;
+   }
+   // Idempotent recovery only: the reviewed YAML is already the sole diff.
+   // No branch mutation, model call, workflow install, merge, or main write.
+   createProposalPr(git,branch,item);
+   created++;
    continue;
   }
   const clean=git('git',['status','--porcelain']);
@@ -60,13 +96,7 @@ export async function publishReviewed({env=process.env,send=fetch,git=run,read=r
      '-c','user.email=rovor-workflow-bot@users.noreply.github.com',
      'commit','-m','Propose validated owner-reviewed workflow '+item.id]);
    git('git',['push','--set-upstream','origin',branch]);
-   git('gh',['pr','create','--repo',REPO,'--base','main','--head',branch,
-     '--title','ROVOR: owner-reviewed workflow proposal '+item.id,
-     '--body','Validated read-only test-workflow proposal compiled from one private D1 Gemini draft.\\n\\n'+
-     'Owner review: PASS; SHA-256: '+item.receipt+'; actual model: gemini-3.5-flash-lite.\\n'+
-     'This file under coordination/workflow-proposals is NOT active GitHub Actions code.\\n'+
-     'Inspect the generated tests and cadence before installing it as .github/workflows/'+item.id+'.yml.\\n'+
-     'No code ran from the model output, no paid route, no auto-merge or main edit.']);
+   createProposalPr(git,branch,item);
    created++;
   }finally{
    git('git',['checkout','--force','main']);
