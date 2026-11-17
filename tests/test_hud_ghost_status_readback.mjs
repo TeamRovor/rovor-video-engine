@@ -196,6 +196,20 @@ test('quota verification requires fresh per-provider evidence, not merely a fres
   assert.equal(result.body.providers[2].quota?.status,'verified');
 });
 
+test('quota readback rejects mismatched remaining counts and expired reset clocks',async()=>{
+  const source=fixture();
+  source.providers[0].quota={status:'verified',used:2,limit:100,remaining:99,observed_at:NOW,resets_at:NOW+60000};
+  source.providers[1].quota={status:'verified',used:2,limit:100,remaining:98,observed_at:NOW,resets_at:NOW-1};
+  source.providers[2].quota={status:'verified',used:2,limit:100,remaining:98,observed_at:NOW-1000,resets_at:NOW+60000};
+  const result=await readGhostStatus(env,mock(source),NOW);
+  assert.equal(result.status,200);
+  assert.equal(result.body.providers[0].quota,null);
+  assert.equal(result.body.providers[1].quota,null);
+  assert.equal(result.body.providers[2].quota?.status,'verified');
+  assert.equal(result.body.providers[2].quota.used,2);
+  assert.equal(result.body.providers[2].quota.limit,100);
+});
+
 test('HUD Worker protects readback behind existing authentication and disallows mutation',()=>{
   const worker=readFileSync(new URL('../integrations/hud-cloud/worker.mjs',import.meta.url),'utf8');
   const auth=worker.indexOf('if (!await authorized(authRequest, ingest || chatWriter');
