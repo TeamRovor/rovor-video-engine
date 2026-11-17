@@ -73,6 +73,44 @@ class AtomicGithubIntakeTests(unittest.TestCase):
     def setUp(self):
         self.api = FakeAPI()
 
+
+    def test_redirect_handler_does_not_copy_bearer_token_across_hosts(self):
+        # Python's default handler would carry Authorization to a new host.
+        # Construct this request only; the test makes no external request.
+        token = 'SYNTHETIC_TEST_TOKEN_ONLY'
+        request = atomic.urllib.request.Request(
+            atomic.BASE_URL + '/git/ref/heads/main',
+            headers={'Authorization': 'Bearer ' + token},
+        )
+        target = 'https://example.invalid/redirect-capture'
+        default = atomic.urllib.request.HTTPRedirectHandler()
+        copied = default.redirect_request(request, None, 302, 'Found', {}, target)
+        self.assertEqual(copied.get_header('Authorization'), 'Bearer ' + token)
+        protected = atomic.NoRedirect()
+        for code in (301, 302, 303, 307, 308):
+            with self.subTest(code=code):
+                self.assertIsNone(
+                    protected.redirect_request(request, None, code, 'Redirect', {}, target))
+        client = atomic.GitHubAPI(token)
+        self.assertTrue(any(isinstance(h, atomic.NoRedirect)
+                            for h in client.opener.handlers))
+
+    def test_redirect_response_fails_closed_with_one_request_and_safe_error(self):
+        token = 'SYNTHETIC_TEST_TOKEN_ONLY'
+        client = atomic.GitHubAPI(token)
+        forbidden_target = 'https://example.invalid/redirect-capture'
+        error = atomic.urllib.error.HTTPError(
+            forbidden_target, 302, 'Found', {}, None)
+        with mock.patch.object(client.opener, 'open', side_effect=error) as opened:
+            with self.assertRaisesRegex(atomic.IntakeError, 'redirect refused') as ctx:
+                client.request('GET', '/git/ref/heads/main')
+        self.assertEqual(opened.call_count, 1)
+        sent = opened.call_args.args[0]
+        self.assertEqual(sent.full_url, atomic.BASE_URL + '/git/ref/heads/main')
+        self.assertEqual(sent.get_header('Authorization'), 'Bearer ' + token)
+        self.assertNotIn(token, str(ctx.exception))
+        self.assertNotIn(forbidden_target, str(ctx.exception))
+
     def ready(self, data=None, requirements=None):
         return atomic.prepare(self.api, data or proposal(), 'coordination',
                               requirements or ['hosted-ci'])
