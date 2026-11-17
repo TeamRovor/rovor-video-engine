@@ -6254,7 +6254,7 @@
       "id": "pr-overlap-audit-malformed-response-20261117",
       "title": "Complete PR #467 fail-closed malformed GitHub file-response handling",
       "priority": 1,
-      "status": "active",
+      "status": "done",
       "owner": "ChatGPT / PR467 malformed-response integration session 2026-11-17",
       "branch": "feat/pr-scope-overlap-advisory-20261117",
       "scopes": [
@@ -6262,10 +6262,30 @@
         "tests/test_pr_overlap_audit.py"
       ],
       "depends_on": [],
-      "updated_at": "2026-11-17T11:19:05.531Z",
-      "next_update": "After exact-head GitHub PR CI finishes",
-      "next_action": "Repair review-identified AttributeError in files_for; regression-test null/non-object/non-string filenames; preserve advisory unavailable/partial safety and update PR #467 without a new PR.",
-      "acceptance": "Malformed changed-files API lists cannot crash the overlap advisory; no invented overlap or complete result; existing tests and exact-head CI pass."
+      "updated_at": "2026-11-17T11:21:23.949Z",
+      "next_update": "Owner-reviewed merge decision for PR #467",
+      "next_action": "Owner reviews PR #467 head f11dd1c7; merge only through existing review process, then verify advisory on a real pull_request event. No production release inferred.",
+      "acceptance": "Malformed changed-files API lists cannot crash the overlap advisory; no invented overlap or complete result; existing tests and exact-head CI pass.",
+      "blocker": null,
+      "links": [
+        "https://github.com/TeamRovor/rovor-video-engine/pull/467"
+      ],
+      "evidence": [
+        {
+          "commit": "f11dd1c72bad912c0359737684cee34e3310ba92",
+          "platform": "GitHub Actions PR head / Python unittest under Ubuntu",
+          "check": "workflow governance, including tests/test_pr_overlap_audit.py; malformed changed-files handling and normal path",
+          "result": "success (PR only; no merge/deploy)",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/44073139795"
+        },
+        {
+          "commit": "f11dd1c72bad912c0359737684cee34e3310ba92",
+          "platform": "GitHub Actions PR head",
+          "check": "workflow topology and duplicate-scheduler guard",
+          "result": "success",
+          "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/44073139786"
+        }
+      ]
     }
   ]
 }
