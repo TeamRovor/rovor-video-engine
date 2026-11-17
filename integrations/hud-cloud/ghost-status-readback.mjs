@@ -46,6 +46,17 @@ function providerView(p, now) {
     configured_model:string(p.configured_model,200),
     admission:string(p.admission,70)||'unverified',
     online_verified:p.online_verified===true,
+    // The existing private Site publishes a last_check D1 record, rather than
+    // catalog_connection. Preserve only fresh successful catalog evidence so
+    // the HUD can distinguish 9/9 catalog responses from 0/9 admitted models.
+    last_check:p.last_check?.status==='catalog_received' &&
+      timestamp(p.last_check.observed_at)!==null &&
+      p.last_check.observed_at<=now+60000 &&
+      now-p.last_check.observed_at<=75*60000
+      ? {status:'catalog_received',observed_at:p.last_check.observed_at} : null,
+    // Forward a private verified flag only; never infer it from a configured key
+    // or historical attempt. HUD additionally requires a fresh model receipt.
+    recent_inference_verified:p.recent_inference_verified===true,
     last_inference_at:timestamp(p.last_inference_at),
     setup_blocker:string(p.setup_blocker,80),
     dispatch_gate:p.dispatch_gate && typeof p.dispatch_gate==='object'
