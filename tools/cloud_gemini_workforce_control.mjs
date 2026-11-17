@@ -35,13 +35,17 @@ export function pinnedGeminiAdmission(catalog){
  const exact=catalog.model_evidence.filter(x=>x?.model===MODEL);
  if(exact.length!==1||exact[0]?.verification!=='verified_recent_reply')
    return state('receipt_unverified');
- return state('ready');
+ // A verified reply proves model reachability, not a current $0 allowance.
+ // The existing private catalog explicitly reports provider quota as unknown.
+ // Never arm owner dispatch or standing cron on owner attestation alone.
+ return state('free_allowance_unverified');
 }
 function requirePinnedGeminiAdmission(admission){
  const errors={catalog_unknown:'pinned_gemini_catalog_unknown',
   catalog_unavailable:'pinned_gemini_catalog_unavailable',
   model_unlisted:'pinned_gemini_model_not_listed',
-  receipt_unverified:'no_recent_pinned_gemini_model_receipt'};
+  receipt_unverified:'no_recent_pinned_gemini_model_receipt',
+  free_allowance_unverified:'pinned_gemini_free_allowance_unverified'};
  if(admission.state!=='ready')
   throw Error(errors[admission.state]||'pinned_gemini_catalog_unknown');
 }
