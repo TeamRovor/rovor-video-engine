@@ -65,6 +65,21 @@ export function catalogRequestEndpoint(provider,cloudflareAccountId=null) {
   'https://api.cloudflare.com/client/v4/accounts/'+cloudflareAccountId+'/ai/models/search':null;
  return PROVIDER_CATALOG_ENDPOINTS[provider];
 }
+// A verified OpenRouter key can report free-model daily request allowance.
+// This is NOT a token budget, billing/commercial authorization or canary pass.
+export function readOpenRouterFreeRequests(document,observedAt=Date.now()) {
+ const daily=document?.data?.free_model_daily_requests;
+ if(!daily||typeof daily!=='object'||Array.isArray(daily)||
+    !Number.isSafeInteger(observedAt)||observedAt<=0)return null;
+ const {limit,used,remaining}=daily;
+ if(!Number.isSafeInteger(limit)||limit<1||limit>1000000||
+    !Number.isSafeInteger(used)||used<0||used>limit||
+    !Number.isSafeInteger(remaining)||remaining<0||
+    used+remaining!==limit)return null;
+ return {unit:'requests_per_day',used,limit,remaining,resets_at:null,
+  observed_at:observedAt,source:'authenticated_openrouter_key_free_model_daily_requests',
+  scope:'authenticated_key_free_models'};
+}
 export function normalizeProviderCatalog(provider,payload) {
  if(!Object.hasOwn(PROVIDER_CATALOG_ENDPOINTS,provider))throw Error('unknown_provider');
  if(!payload||typeof payload!=='object'||Array.isArray(payload)||payload.success===false)return null;
@@ -91,7 +106,8 @@ export function normalizeProviderCatalog(provider,payload) {
    context_length:Number.isSafeInteger(entry.context_length)&&entry.context_length>0?
     entry.context_length:null,
    catalog_zero_price:provider==='openrouter'?true:null,
-   pinned_model_candidate:!/(^|[/:._-])(auto|latest)([/:._-]|$)/i.test(id)
+   pinned_model_candidate:!/(^|[/:._-])(auto|latest)([/:._-]|$)/i.test(id)&&
+    (provider!=='huggingface'||/:[a-z0-9-]+$/.test(id))
   });
   if(models.length===20)break;
  }
@@ -406,10 +422,33 @@ export function createCloudOperations(base, cloud) {
   const url=catalogRequestEndpoint(provider,env.CLOUDFLARE_ACCOUNT_ID);
   if(!url)return {provider,status:'account_metadata_missing'};
   try{
+   let keyQuota=null;
+   if(provider==='openrouter'){
+    // /models is public: establish that this saved key actually authenticates.
+    // Fixed destination, bounded response, no redirects, and no model inference.
+    let keyReply;
+    try{
+     keyReply=await fetcher('https://openrouter.ai/api/v1/key',{
+      method:'GET',redirect:'manual',headers:{Authorization:'Bearer '+key},
+      signal:AbortSignal.timeout(15000)});
+    }catch(error){
+     return {provider,status:'key_check_unavailable',...classifyCatalogReadFailure(error)};
+    }
+    if(!keyReply.ok){await keyReply.body?.cancel().catch(()=>{});
+     return {provider,status:'key_http_'+keyReply.status};}
+    let keyData;
+    try{keyData=await bounded(keyReply,32768);}
+    catch{return {provider,status:'invalid_key_metadata'};}
+    if(!keyData?.data||typeof keyData.data!=='object'||
+       Array.isArray(keyData.data)||typeof keyData.data.is_free_tier!=='boolean')
+     return {provider,status:'invalid_key_metadata'};
+    keyQuota=readOpenRouterFreeRequests(keyData,Date.now());
+   }
    const response=await fetcher(url,{method:'GET',redirect:'manual',headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(15000)});
    if(!response.ok){await response.body?.cancel();return {provider,status:'http_'+response.status};}
-   // Read authenticated provider quota headers without inferring limits from catalog entries.
-   const quotaObservation=provider==='groq'?readGroqRpd(response.headers,Date.now()):null;
+   // Key metadata supplies free *request* allowance only; Groq's headers
+   // separately supply RPD evidence. Neither authorizes a model invocation.
+   const quotaObservation=provider==='groq'?readGroqRpd(response.headers,Date.now()):keyQuota;
    const models=normalizeProviderCatalog(provider,await bounded(response,4194304));
    if(models===null)return {provider,status:'unrecognized_catalog'};
    return {provider,status:'catalog_received',observed_at:Date.now(),models,

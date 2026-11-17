@@ -8,7 +8,7 @@ import path from 'node:path';
 import * as runtime from '../integrations/ghost-cloud/runtime.mjs';
 import worker from '../integrations/ghost-cloud/worker.mjs';
 import {runCanary} from '../integrations/ghost-cloud/canary-preflight.mjs';
-import {createCloudOperations,PROVIDER_CATALOG_ENDPOINTS,catalogRequestEndpoint,normalizeProviderCatalog,classifyCatalogReadFailure} from '../integrations/ghost-cloud/site-operations.mjs';
+import {createCloudOperations,PROVIDER_CATALOG_ENDPOINTS,catalogRequestEndpoint,normalizeProviderCatalog,classifyCatalogReadFailure,readOpenRouterFreeRequests} from '../integrations/ghost-cloud/site-operations.mjs';
 import {compileOperations,composeOperations} from '../integrations/ghost-cloud/compose-operations.mjs';
 import {stageOwnerCloudChatMigration} from '../integrations/ghost-cloud/stage-owner-cloud-chat-migration.mjs';
 
@@ -204,11 +204,103 @@ test('catalog D1 readback rejects substituted error category even with matching 
  assert.notEqual(row.error_category,'wrong_error');
 });
 
-test('fixed-endpoint GET inventory returns bounded public model metadata only',async()=>{
- const {env,ops}=setup();let calls=0;
- const result=await ops.inventory(env,'openrouter',async(url,opts)=>{calls++;assert.equal(url,'https://openrouter.ai/api/v1/models');assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');return Response.json({data:[{id:'known/free:free',pricing:{prompt:'0',completion:'0'}},{id:'paid/model',pricing:{prompt:'1',completion:'1'}},{id:'unknown:free',pricing:{prompt:null,completion:null}}],secret:'must not return'});});
- assert.equal(calls,1);assert.deepEqual(result.models.map(m=>m.id),['known/free:free']);assert.equal(result.billing_verified,false);assert.equal(result.quota_verified,false);assert.ok(!JSON.stringify(result).includes('must not return'));
+test('OpenRouter inventory verifies key before public catalog and exposes exact free request allowance',async()=>{
+ const {env,ops}=setup();const calls=[];
+ const result=await ops.inventory(env,'openrouter',async(url,opts)=>{
+  calls.push(url);assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');
+  assert.equal(opts.headers.Authorization,'Bearer '+env.OPENROUTER_API_KEY);
+  if(url==='https://openrouter.ai/api/v1/key')
+   return Response.json({data:{is_free_tier:true,free_model_daily_requests:{limit:50,used:12,remaining:38},label:'private-label'}});
+  assert.equal(url,'https://openrouter.ai/api/v1/models');
+  return Response.json({data:[
+   {id:'known/free:free',pricing:{prompt:'0',completion:'0'}},
+   {id:'paid/model',pricing:{prompt:'1',completion:'1'}},
+   {id:'unknown:free',pricing:{prompt:null,completion:null}}
+  ],secret:'must not return'});
+ });
+ assert.deepEqual(calls,['https://openrouter.ai/api/v1/key','https://openrouter.ai/api/v1/models']);
+ assert.deepEqual(result.models.map(m=>m.id),['known/free:free']);
+ assert.equal(result.billing_verified,false);
+ assert.equal(result.canary_verified,false);
+ assert.equal(result.quota_verified,true);
+ assert.equal(result.quota_observation.used,12);
+ assert.equal(result.quota_observation.limit,50);
+ assert.equal(result.quota_observation.remaining,38);
+ assert.equal(result.quota_observation.resets_at,null,'no invented reset');
+ assert.equal(result.quota_observation.scope,'authenticated_key_free_models');
+ assert.equal(result.quota_observation.source,'authenticated_openrouter_key_free_model_daily_requests');
+ for(const leak of ['private-label','must not return',env.OPENROUTER_API_KEY])
+  assert.equal(JSON.stringify(result).includes(leak),false);
  await assert.rejects(ops.inventory(env,'https://attacker.invalid',async()=>{throw Error();}));
+});
+
+test('OpenRouter invalid key fails closed before public catalog and records D1 failure',async t=>{
+ const {env,ops,db}=setup();let calls=0;
+ t.mock.method(globalThis,'fetch',async(url,opts)=>{
+  calls++;assert.equal(url,'https://openrouter.ai/api/v1/key');
+  assert.equal(opts.redirect,'manual');
+  return new Response('Authorization: Bearer private-key',{status:401});
+ });
+ const report=await rpc(ops,env,'rovor_provider_inventory',{provider:'openrouter'});
+ assert.equal(calls,1);
+ assert.equal(report.status,'key_http_401');assert.equal(report.d1_persisted,true);
+ assert.equal(db.prepare('SELECT status FROM ghost_cloud_provider_checks WHERE provider=?').get('openrouter').status,'key_http_401');
+ const p=(await ops.status(env)).providers.find(p=>p.provider==='openrouter');
+ assert.equal(p.catalog_connection.state,'failed');
+ assert.equal(p.online_verified,false);
+ assert.equal(p.quota,null);
+ assert(!JSON.stringify(report).includes('private-key'));
+});
+
+test('OpenRouter key checking rejects redirects, bad JSON, malformed quota, and transport errors',async()=>{
+ const {env,ops}=setup();
+ for(const code of [302,403,429,500]){
+  let calls=0;const r=await ops.inventory(env,'openrouter',async url=>{
+   calls++;assert.equal(url,'https://openrouter.ai/api/v1/key');
+   return new Response('secret',{status:code});
+  });
+  assert.equal(calls,1);assert.deepEqual(r,{provider:'openrouter',status:'key_http_'+code});
+ }
+ for(const metadata of [null,{data:{}},{data:{is_free_tier:'true'}},{data:[]}]){
+  let calls=0;const r=await ops.inventory(env,'openrouter',async url=>{
+   calls++;assert.equal(url,'https://openrouter.ai/api/v1/key');
+   return Response.json(metadata);
+  });
+  assert.equal(calls,1);assert.equal(r.status,'invalid_key_metadata');
+ }
+ const fail=await ops.inventory(env,'openrouter',async()=>{
+  throw new TypeError('Authorization: Bearer confidential');
+ });
+ assert.equal(fail.status,'key_check_unavailable');
+ assert.equal(fail.error_category,'transport_or_runtime');
+ assert(!JSON.stringify(fail).includes('confidential'));
+ const visits=[];
+ const unverified=await ops.inventory(env,'openrouter',async url=>{
+  visits.push(url);return url.endsWith('/key')?
+   Response.json({data:{is_free_tier:false,free_model_daily_requests:{limit:50,used:50,remaining:1}}}):
+   Response.json({data:[{id:'ok/free:free',pricing:{prompt:'0',completion:'0'}}]});
+ });
+ assert.equal(visits.length,2);
+ assert.equal(unverified.status,'catalog_received');
+ assert.equal(unverified.quota_verified,false);
+ assert.equal(unverified.quota_observation,undefined);
+ assert.equal(unverified.billing_verified,false);
+});
+
+test('OpenRouter free daily request quota is never fabricated or coerced',()=>{
+ const now=1794920000000;
+ const good={data:{free_model_daily_requests:{limit:50,used:49,remaining:1}}};
+ const q=readOpenRouterFreeRequests(good,now);
+ assert.equal(q.remaining,1);assert.equal(q.observed_at,now);assert.equal(q.resets_at,null);
+ for(const sample of [null,[],{},'not-data',
+  {limit:0,used:0,remaining:0},{limit:50,used:1,remaining:50},
+  {limit:50,used:49,remaining:2},{limit:50,used:-1,remaining:51},
+  {limit:'50',used:1,remaining:49},{limit:50,used:'1',remaining:49},
+  {limit:1.5,used:0,remaining:1.5},{limit:1000001,used:0,remaining:1000001}
+ ]){
+  assert.equal(readOpenRouterFreeRequests({data:{free_model_daily_requests:sample}},now),null);
+ }
+ assert.equal(readOpenRouterFreeRequests(good,-1),null);
 });
 test('inventory errors do not leak key or vendor body',async()=>{
  const {env,ops}=setup();const result=await ops.inventory(env,'groq',async()=>new Response('sensitive upstream',{status:403}));
@@ -245,7 +337,7 @@ test('one API catalog parser handles nine provider schemas without transmitting 
   const normalized=normalizeProviderCatalog(provider,reply);
   assert.equal(normalized.length,1,provider);
   assert.equal(normalized[0].catalog_zero_price,provider==='openrouter'?true:null);
-  assert.equal(normalized[0].pinned_model_candidate,true);
+  assert.equal(normalized[0].pinned_model_candidate,provider!=='huggingface');
   assert(!JSON.stringify(normalized).includes('private-uuid'));
   assert(!JSON.stringify(normalized).includes('NEVER_ECHO_SECRET'));
  }
@@ -863,6 +955,7 @@ test('owner-only same-origin catalog button checks nine D1 rows without inferenc
   urls.push(url);assert.equal(options.method,'GET');
   assert.equal(options.redirect,'manual');
   assert.ok(!url.includes('/chat/completions'));
+  if(url==='https://openrouter.ai/api/v1/key')return Response.json({data:{is_free_tier:true}});
   return Response.json({data:[{id:'read-only-model'}]});
  });
  const anonymous=await ops.fetch(request('/api/ghost/catalog-refresh',
@@ -878,12 +971,12 @@ test('owner-only same-origin catalog button checks nine D1 rows without inferenc
  assert.equal(first.status,200);
  assert.deepEqual(await first.json(),{source:'site_native_catalog_refresh',
   checked:9,persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
- assert.equal(urls.length,9);
+ assert.equal(urls.length,10);
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
  const second=await ops.fetch(request('/api/ghost/catalog-refresh',{body:{},browser:true}),env);
  assert.deepEqual(await second.json(),{source:'site_native_catalog_refresh',
   checked:0,persisted:0,catalog_received:0,skipped_fresh:9,inference_attempts:0});
- assert.equal(urls.length,9,'fresh catalogs cannot cause duplicate upstream calls');
+ assert.equal(urls.length,10,'fresh catalogs cannot cause duplicate upstream calls');
  const page=await (await ops.fetch(request('/'),env)).text();
  assert.match(page,/REFRESH STALE CATALOGS/);
  assert.match(page,/FREE INFERENCE NOT VERIFIED/);
@@ -898,12 +991,13 @@ test('native cloud catalog refresh persists nine real GET observations without a
   assert.equal(options.method,'GET');
   assert.equal(options.redirect,'manual');
   assert.ok(!url.includes('/chat/completions'));
+  if(url==='https://openrouter.ai/api/v1/key')return Response.json({data:{is_free_tier:true}});
   return Response.json({data:[{id:'catalogued-model'}]});
  };
  const first=await ops.refreshCatalogs(env,fetcher);
  assert.deepEqual(first,{source:'site_native_catalog_refresh',checked:9,
   persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
- assert.equal(seen.length,9);
+ assert.equal(seen.length,10);
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
  const report=await ops.status(env);
  for(const item of report.providers){
@@ -914,13 +1008,13 @@ test('native cloud catalog refresh persists nine real GET observations without a
  const second=await ops.refreshCatalogs(env,fetcher);
  assert.deepEqual(second,{source:'site_native_catalog_refresh',checked:0,
   persisted:0,catalog_received:0,skipped_fresh:9,inference_attempts:0});
- assert.equal(seen.length,9);
+ assert.equal(seen.length,10);
  db.prepare("UPDATE ghost_cloud_provider_checks SET observed_at=1 WHERE provider='nvidia'").run();
  const partial=await ops.refreshCatalogs(env,fetcher);
  assert.equal(partial.checked,1);
  assert.equal(partial.persisted,1);
  assert.equal(partial.catalog_received,1);
- assert.equal(seen.length,10);
+ assert.equal(seen.length,11);
 });
 test('private MCP owner refresh checks all nine catalogs and persists D1 without inference',async t=>{
  const {env,db,ops}=setup();
@@ -930,6 +1024,7 @@ test('private MCP owner refresh checks all nine catalogs and persists D1 without
   assert.equal(options.method,'GET');
   assert.equal(options.redirect,'manual');
   assert.ok(!url.includes('/chat/completions'));
+  if(url==='https://openrouter.ai/api/v1/key')return Response.json({data:{is_free_tier:true}});
   return Response.json({data:[{id:'fixture/model:free',pricing:{prompt:'0',completion:'0'}}]});
  });
  const anonymous=await ops.fetch(request('/mcp',{identity:null,
@@ -940,19 +1035,20 @@ test('private MCP owner refresh checks all nine catalogs and persists D1 without
  const first=await rpc(ops,env,'rovor_provider_catalog_refresh');
  assert.deepEqual(first,{source:'site_native_catalog_refresh',checked:9,
   persisted:9,catalog_received:9,skipped_fresh:0,inference_attempts:0});
- assert.equal(seen.length,9);
+ assert.equal(seen.length,10);
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ghost_cloud_provider_checks').get().n,9);
  assert.ok((await ops.status(env)).providers.every(p=>p.last_check?.status==='catalog_received'));
  const second=await rpc(ops,env,'rovor_provider_catalog_refresh');
  assert.equal(second.checked,0);
  assert.equal(second.skipped_fresh,9);
- assert.equal(seen.length,9);
+ assert.equal(seen.length,10);
  assert.equal((await rpc(ops,env,'rovor_provider_catalog_refresh',{provider:'groq'})).isError,true);
 });
 test('native refresh distinguishes stored provider errors from successful catalogs',async()=>{
  const {env,ops}=setup();
  const first=await ops.refreshCatalogs(env,async(url,options)=>{
   assert.equal(options.method,'GET');
+  if(url==='https://openrouter.ai/api/v1/key')return Response.json({data:{is_free_tier:true}});
   return url.includes('api.groq.com')?new Response('private upstream data',{status:403}):
    Response.json({data:[{id:'available'}]});
  });
@@ -975,7 +1071,8 @@ test('native cloud catalog refresh fails safely when private D1 checks table is 
 test('native catalog refresh refuses D1 readback with substituted error category',async()=>{
  const {env,ops,db}=setup();
  db.exec("CREATE TRIGGER corrupt_native_catalog AFTER INSERT ON ghost_cloud_provider_checks WHEN NEW.provider='groq' BEGIN UPDATE ghost_cloud_provider_checks SET error_category='substituted' WHERE provider=NEW.provider; END;");
- const result=await ops.refreshCatalogs(env,async()=>Response.json({data:[{id:'available'}]}));
+ const result=await ops.refreshCatalogs(env,async url=>url==='https://openrouter.ai/api/v1/key'?
+  Response.json({data:{is_free_tier:true}}):Response.json({data:[{id:'available'}]}));
  assert.equal(result.checked,9);
  assert.equal(result.persisted,8);
  assert.equal(result.catalog_received,8);
