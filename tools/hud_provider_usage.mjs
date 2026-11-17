@@ -101,7 +101,8 @@ export function reduceCallLogs(connections, events, {now = Date.now(), freshness
     const total = blankCounters(), unique = new Set();
     for (const raw of rows) {
       const event = typeof raw?.timestamp === 'number' ? raw : projectCallLog(raw);
-      if (!event || event.provider !== provider || event.timestamp < start || event.timestamp > now || unique.has(event.id)) continue;
+      // Rolling limits span Pacific midnight even when the day counter resets.
+      if (!event || event.provider !== provider || event.timestamp < Math.min(start, hourStart) || event.timestamp > now || unique.has(event.id)) continue;
       unique.add(event.id);
       const daily = event.timestamp >= start;
       const periods = [
@@ -142,7 +143,9 @@ export function createCallLogCollector(read, {clock = Date.now, pageSize = 200, 
     if (pending) { try { await pending; } catch {} }
     if (!lastSuccessAt || now - fetchedAt >= cacheMs || day.start !== dayStart) {
       pending = (async () => {
-        const since = day.start !== dayStart || !lastSuccessAt ? day.start : Math.max(day.start, fetchedAt - 300000);
+        // Keep enough history for the rolling hour across a Pacific-day rollover.
+        const lookbackStart = Math.min(day.start, now - 3600000);
+        const since = day.start !== dayStart || !lastSuccessAt ? lookbackStart : Math.max(lookbackStart, fetchedAt - 300000);
         const next = day.start === dayStart ? events : new Map();
         let nextCoverage = 'complete', offset = 0;
         for (let page = 0; page < maxPages; page++) {
@@ -151,13 +154,13 @@ export function createCallLogCollector(read, {clock = Date.now, pageSize = 200, 
           for (const raw of rows) {
             const event = projectCallLog(raw);
             if (!event) { nextCoverage = 'partial'; continue; }
-            if (event.timestamp >= day.start && event.timestamp <= now) next.set(event.id, event);
+            if (event.timestamp >= lookbackStart && event.timestamp <= now) next.set(event.id, event);
           }
           offset += rows.length;
           if (rows.length < pageSize) break;
           if (page === maxPages - 1) nextCoverage = 'partial';
         }
-        for (const [id, event] of next) if (event.timestamp < day.start) next.delete(id);
+        for (const [id, event] of next) if (event.timestamp < lookbackStart) next.delete(id);
         events = next; coverage = nextCoverage; dayStart = day.start; fetchedAt = clock(); lastSuccessAt = fetchedAt;
       })();
       try { await pending; } catch { if (!lastSuccessAt) coverage = 'unavailable'; }
