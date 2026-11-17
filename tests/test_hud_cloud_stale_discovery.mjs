@@ -86,8 +86,8 @@ test('in-flight repository catch-up cannot overwrite D1 proof after STOP or stan
  for(const mode of ['stopped','expired']){
   const s=setup(),clock=Date.now();
   s.sql.exec('UPDATE hud_cloud_workforce_control SET enabled=1');
-  s.sql.prepare('UPDATE hud_cloud_workforce_series SET active=1,expires_at=?')
-   .run(clock+7200000);
+  s.sql.prepare('UPDATE hud_cloud_workforce_series SET active=1,source_commit=?,approved_at=?,expires_at=?')
+   .run(sha,clock-1000,clock+7200000);
   const {privateKey}=generateKeyPairSync('rsa',{modulusLength:2048});
   const env={DB:s.DB,ROVOR_NATIVE_DISCOVERY_ENABLED:'true',ROVOR_GITHUB_APP_ID:'123',
    ROVOR_GITHUB_INSTALLATION_ID:'456',
