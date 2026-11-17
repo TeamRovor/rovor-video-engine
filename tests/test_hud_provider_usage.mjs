@@ -28,12 +28,13 @@ test('rolling minute and Pacific-day counts deduplicate durable reports by call-
   assert.equal(gemini.rate_limit_errors_rolling_minute, 1);
   assert.equal(gemini.failures_rolling_minute, 1);
   assert.equal(gemini.output_tokens_recorded_rolling_minute, 8);
-  assert.equal(gemini.attempts_rolling_hour, 3);
+  assert.equal(gemini.attempts_rolling_hour, 4);
+  assert.equal(gemini.successes_rolling_hour, 2);
   assert.equal(gemini.failures_rolling_hour, 2);
   assert.equal(gemini.attempts_pacific_day, 3);
   assert.equal(gemini.successes_pacific_day, 1);
   assert.equal(gemini.failures_pacific_day, 2);
-  assert.equal(gemini.input_tokens_recorded_rolling_hour, 43);
+  assert.equal(gemini.input_tokens_recorded_rolling_hour, 57);
   assert.equal(gemini.input_tokens_recorded_pacific_day, 43);
   assert.equal(gemini.output_tokens_recorded_pacific_day, 8);
   assert.equal(gemini.models.length, 2);
@@ -58,7 +59,7 @@ test('collector rebuilds from durable logs after restart, deduplicates overlap, 
   const read=async path=>{
     assert.match(path,/^\/api\/usage\/call-logs\?/);
     const query=new URLSearchParams(path.split('?')[1]);
-    assert.equal(query.get('since'),'2026-10-28T07:00:00.000Z');
+    assert.equal(query.get('since'),'2026-10-28T06:53:00.000Z');
     calls++;
     if(fails)throw Error('offline');
     return {logs:[log]};
@@ -74,6 +75,42 @@ test('collector rebuilds from durable logs after restart, deduplicates overlap, 
   assert.equal(stale.freshness,'stale');
   assert.equal(stale.coverage,'stale');
   assert.equal(stale.providers.find(p=>p.provider==='groq').attempts_pacific_day,1);
+});
+
+test('collector keeps rolling-hour rate limits across Pacific midnight but resets daily counts', async () => {
+  let now = Date.parse('2026-10-28T06:59:00Z'); // 23:59 PDT
+  const events = [
+    {id:'before-midnight',timestamp:'2026-10-28T06:55:00Z',
+      provider:'groq',model:'free-model',status:429,tokensIn:3,tokensOut:0},
+    {id:'after-midnight',timestamp:'2026-10-28T07:02:00Z',
+      provider:'groq',model:'free-model',status:200,tokensIn:5,tokensOut:2},
+  ];
+  const sinceTimes = [];
+  const read = async path => {
+    const since = Date.parse(new URLSearchParams(path.split('?')[1]).get('since'));
+    sinceTimes.push(since);
+    return {logs:events.filter(e => Date.parse(e.timestamp) >= since)};
+  };
+  const collect = createCallLogCollector(read,{clock:()=>now,cacheMs:1});
+  const groq = snapshot => snapshot.providers.find(p=>p.provider==='groq');
+
+  const before = groq(await collect(connections));
+  assert.equal(before.attempts_rolling_hour,1);
+  assert.equal(before.attempts_pacific_day,1);
+  now = Date.parse('2026-10-28T07:05:00Z'); // 00:05 PDT
+  const after = groq(await collect(connections));
+  assert.equal(after.attempts_rolling_hour,2);
+  assert.equal(after.attempts_pacific_day,1);
+  assert.equal(after.rate_limit_errors_rolling_hour,1);
+  assert.equal(after.rate_limit_errors_pacific_day,0);
+  assert.equal(after.input_tokens_recorded_rolling_hour,8);
+  assert.equal(after.input_tokens_recorded_pacific_day,5);
+  assert.equal(sinceTimes[1],Date.parse('2026-10-28T06:05:00Z'));
+
+  now = Date.parse('2026-10-28T08:05:00Z'); // Old attempts age out of rolling hour
+  const later = groq(await collect(connections));
+  assert.equal(later.attempts_rolling_hour,0);
+  assert.equal(later.attempts_pacific_day,1);
 });
 
 test('429s are counted without inventing Retry-After or account-wide remaining', () => {
