@@ -32,10 +32,12 @@ async function boundedJson(response) {
   return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
 }
 
-function providerView(p) {
+function providerView(p, now) {
   const quota=p.quota;
   const validQuota=quota?.status==='verified' &&
-    timestamp(quota.observed_at)!==null && nonnegative(quota.used)!==null &&
+    timestamp(quota.observed_at)!==null &&
+    quota.observed_at<=now+120000 && now-quota.observed_at<=900000 &&
+    nonnegative(quota.used)!==null &&
     Number.isSafeInteger(quota.limit) && quota.limit>0 && quota.used<=quota.limit &&
     (!quota.resets_at || timestamp(quota.resets_at)!==null);
   return {
@@ -113,7 +115,7 @@ export async function readGhostStatus(env, fetcher=fetch, now=Date.now()) {
       execution_source:'cloud_provider',
       observed_at:data.observed_at,
       enabled:data.enabled===true,
-      providers:data.providers.map(providerView),
+      providers:data.providers.map(p=>providerView(p,now)),
       attempts:data.attempts.map(attemptView).filter(Boolean).slice(0,50),
       queue_pending:nonnegative(data.queue_pending),
       native_clock_verified:data.native_clock_verified===true
