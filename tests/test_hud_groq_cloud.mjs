@@ -177,3 +177,6 @@ test('authorized Groq responses persist real allowance headers without additiona
  assert.equal(s.completion_quota.requests_per_day,null);
  assert.equal(calls,2);
 });
+
+// Run bounded-stream regressions in the existing protected HUD Groq CI lane.
+import './test_groq_chat_bounded_response.mjs';
