@@ -6219,6 +6219,23 @@
           "reference": "https://github.com/TeamRovor/rovor-video-engine/actions/runs/43107107729"
         }
       ]
+    },
+    {
+      "id": "project-loop-deep-dependency-validation-20261117",
+      "title": "Prevent deep dependency graphs from crashing canonical coordination validation",
+      "priority": 2,
+      "status": "active",
+      "owner": "ChatGPT / GitHub coordination-hardening session 2026-11-17",
+      "branch": "fix/project-loop-iterative-deps-20261117",
+      "scopes": [
+        "tools/project_loop.py",
+        "tests/test_project_loop.py"
+      ],
+      "depends_on": [],
+      "next_action": "Implement iterative cycle validation and test >1500 task chains",
+      "acceptance": "Existing project-loop tests and deep acyclic/cyclic regressions pass; hosted CI reviewed",
+      "updated_at": "2026-11-17T11:01:00Z",
+      "next_update": "When exact-head CI finishes; do not auto-merge"
     }
   ]
 }
