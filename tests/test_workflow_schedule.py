@@ -49,5 +49,42 @@ class ScheduleGuardTests(unittest.TestCase):
             self.assertTrue(any("unsupported inline" in e for e in schedule.check_directory(root)[1]))
 
 
+    def test_noncanonical_yaml_on_keys_fail_closed(self):
+        # All these are accepted by YAML but invisible to the simple
+        # inventory parser, so they cannot be allowed to hide new crons.
+        for header in ("'on':", '"on":', "on :", " on:"):
+            with self.subTest(header=header), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                (root / "shadow.yml").write_text(
+                    header + "\\n  schedule:\\n    - cron: '*/5 * * * *'\\n",
+                    encoding="utf-8",
+                )
+                self.assertTrue(any(
+                    "noncanonical on: header" in error
+                    for error in schedule.check_directory(root)[1]
+                ))
+
+    def test_duplicate_on_header_cannot_override_reviewed_clock(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "shadow.yaml").write_text(
+                "on:\\n  pull_request:\\n'on':\\n  schedule:\\n    - cron: '*/5 * * * *'\\n",
+                encoding="utf-8",
+            )
+            self.assertTrue(any(
+                "duplicate on: trigger header" in error
+                for error in schedule.check_directory(root)[1]
+            ))
+
+    def test_missing_trigger_header_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "shadow.yml").write_text("jobs:\\n  check:\\n    runs-on: ubuntu-latest\\n")
+            self.assertTrue(any(
+                "missing canonical on: trigger header" in error
+                for error in schedule.check_directory(root)[1]
+            ))
+
+
 if __name__ == "__main__":
     unittest.main()
