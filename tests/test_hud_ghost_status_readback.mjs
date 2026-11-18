@@ -94,7 +94,7 @@ test('stale or unsupported catalog check records never look authenticated',async
   source.providers[0].last_check={status:'catalog_received',observed_at:NOW-75*60000-1};
   source.providers[1].last_check={status:'catalog_received',observed_at:NOW+60001};
   source.providers[2].last_check={status:'catalog_failed',observed_at:NOW-1000};
-  source.providers[3].last_check={status:'catalog_received',observed_at:NOW-75*60000};
+  source.providers[3].last_check={provider:source.providers[3].provider,status:'catalog_received',observed_at:NOW-75*60000};
   source.providers[4].recent_inference_verified=true;
   const result=await readGhostStatus(env,mock(source),NOW);
   assert.equal(result.status,200);
@@ -129,6 +129,7 @@ test('readback preserves bounded catalog and inference evidence for nine-provide
     state:'authenticated',observed_at:NOW-60000,private_catalog_key:'SHOULD NEVER LEAK'
   };
   source.providers[0].last_check={
+    provider:source.providers[0].provider,
     status:'catalog_received',observed_at:NOW-60000,raw_response:'SHOULD NEVER LEAK'
   };
   source.providers[0].recent_inference_verified=true;
