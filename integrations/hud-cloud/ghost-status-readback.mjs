@@ -75,7 +75,8 @@ function providerView(p, now) {
     // The existing private Site publishes a last_check D1 record, rather than
     // catalog_connection. Preserve only fresh successful catalog evidence so
     // the HUD can distinguish 9/9 catalog responses from 0/9 admitted models.
-    last_check:p.last_check?.status==='catalog_received' &&
+    last_check:p.last_check?.provider===p.provider &&
+      p.last_check?.status==='catalog_received' &&
       timestamp(p.last_check.observed_at)!==null &&
       p.last_check.observed_at<=now+60000 &&
       now-p.last_check.observed_at<=75*60000
