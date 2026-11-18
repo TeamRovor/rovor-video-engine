@@ -174,6 +174,9 @@ function providerStateSnapshot(cloud,now=Date.now()){
     Number.isSafeInteger(quotaTime)&&quotaTime<=now+60000&&now-quotaTime<=90*60000&&
     Number.isSafeInteger(q.used)&&Number.isSafeInteger(q.limit)&&q.limit>0&&
     q.used>=0&&q.used<=q.limit&&
+    // A reported remaining balance must agree with the observed limit and use.
+    (q.remaining===null||q.remaining===undefined||
+     (Number.isSafeInteger(q.remaining)&&q.remaining===q.limit-q.used))&&
     (q.resets_at===null||q.resets_at===undefined||
      (Number.isSafeInteger(q.resets_at)&&q.resets_at>now));
   const recent=typeof p?.configured_model==='string'&&p.configured_model.length>0&&
