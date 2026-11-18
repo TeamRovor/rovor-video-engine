@@ -263,6 +263,15 @@ test('cloud readiness fails closed on stale status, missing model ID, mismatched
   assert.equal(counts.admitted,0);
   assert.equal(counts.quota,0);
   assert.equal(counts.recent,0);
+  // Even fresh authenticated quota metadata is unverified when its remaining
+  // balance contradicts used/limit. A consistent balance restores the count.
+  p.quota={status:'verified',source:'authenticated_provider_headers',
+    observed_at:now-1000,used:9,limit:10,remaining:5,resets_at:now+3600000};
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.quota,0);
+  p.quota.remaining=1;
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.quota,1);
+  p.quota.remaining=-1;
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.quota,0);
   // The original private Site publishes a fresh last_check instead of the
   // newer catalog_connection object. It is evidence of a recorded catalog
   // result only, not a license to infer or proof of a current model call.
