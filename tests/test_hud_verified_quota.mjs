@@ -211,3 +211,85 @@ test('stale local quota cache cannot masquerade as fresh gateway usage',()=>{
  assert.match(missing,/QUOTA UNKNOWN/);
  assert.doesNotMatch(missing,/30\.0%/);
 });
+
+
+test('cloud readiness separates keys, catalog, admission, quota and matching recent inference receipts',()=>{
+  const window={},document={getElementById:()=>({})};
+  const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
+  vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map,Set});
+  const now=Date.now();
+  const ids=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
+  const providers=ids.map(provider=>({provider,credentials_configured:true,admission:'disabled_pending_verification',
+    online_verified:false,recent_inference_verified:false,catalog_connection:{state:'unknown',observed_at:null},
+    quota:null,configured_model:null}));
+  providers[0]={...providers[0],admission:'eligible',online_verified:true,recent_inference_verified:true,
+    configured_model:'openai/gpt-oss-20b',
+    catalog_connection:{state:'authenticated',observed_at:now-60000},
+    quota:{status:'verified',source:'authenticated_groq_rpd_response_headers',
+      observed_at:now-60000,used:2,limit:100,resets_at:now+3600000}};
+  const attempts=[{id:'actual-receipt',provider:'groq',status:'needs_review',actual_model:'openai/gpt-oss-20b',
+    tokens_input:100,tokens_output:200,finished_at:now-30000}];
+  const cloud={execution_source:'cloud_provider',observed_at:now,providers,attempts};
+  const counts=window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts;
+  assert.deepEqual(JSON.parse(JSON.stringify(counts)),{configured:9,catalog:1,admitted:1,quota:1,recent:1,blocked:8});
+  const html=window.ROVOR_QUOTA_BOARD.render(null,false,cloud);
+  assert.match(html,/CLOUD PROVIDER READINESS/);
+  assert.match(html,/KEYS CONFIGURED/);
+  assert.match(html,/CATALOG RESULT/);
+  assert.match(html,/ROUTES ADMITTED/);
+  assert.match(html,/QUOTA OBSERVED/);
+  assert.match(html,/RECENT INFERENCE/);
+  assert.match(html,/9 \/ 9/);
+  assert.match(html,/1 \/ 9/);
+});
+
+test('cloud readiness fails closed on stale status, missing model ID, mismatched receipt, and bogus quota',()=>{
+  const window={},document={getElementById:()=>({})};
+  const source=readFileSync(new URL('../dashboard/command-center/native-v8-9/live-quota-board.js',import.meta.url),'utf8');
+  vm.runInNewContext(source,{window,document,Date,Math,Number,String,Array,Map,Set});
+  const now=Date.now();
+  const p={provider:'groq',credentials_configured:true,admission:'disabled_pending_verification',
+    online_verified:false,recent_inference_verified:true,catalog_connection:{state:'authenticated',observed_at:now-76*60000},
+    quota:{status:'verified',source:'unscoped_demo',observed_at:now-91*60000,used:9,limit:10,resets_at:now-1},
+    configured_model:'openai/gpt-oss-20b'};
+  const a={id:'receipt',provider:'groq',status:'needs_review',actual_model:'other/model',
+    tokens_input:10,tokens_output:10,finished_at:now-1000};
+  const ids=['groq','gemini','cloudflare-ai','mistral','nvidia','openrouter','sambanova','cohere','huggingface'];
+  const providers=[p,...ids.slice(1).map(provider=>({provider}))];
+  const cloud={execution_source:'cloud_provider',observed_at:now,providers,attempts:[a]};
+  let counts=window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts;
+  assert.equal(counts.configured,1);
+  assert.equal(counts.catalog,0);
+  assert.equal(counts.admitted,0);
+  assert.equal(counts.quota,0);
+  assert.equal(counts.recent,0);
+  // Even fresh authenticated quota metadata is unverified when its remaining
+  // balance contradicts used/limit. A consistent balance restores the count.
+  p.quota={status:'verified',source:'authenticated_provider_headers',
+    observed_at:now-1000,used:9,limit:10,remaining:5,resets_at:now+3600000};
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.quota,0);
+  p.quota.remaining=1;
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.quota,1);
+  p.quota.remaining=-1;
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.quota,0);
+  // The original private Site publishes a fresh last_check instead of the
+  // newer catalog_connection object. It is evidence of a recorded catalog
+  // result only, not a license to infer or proof of a current model call.
+  p.last_check={status:'catalog_received',observed_at:now-1000};
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.catalog,1);
+  p.last_check.observed_at=now-76*60000;
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.catalog,0);
+  a.actual_model=undefined;p.configured_model=undefined;
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(cloud,now).counts.recent,0);
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot({...cloud,observed_at:now-16000},now),null);
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot({...cloud,providers:[...providers.slice(0,-1),{...p}]},now),null);
+  const missing={...cloud,providers:providers.slice(0,8)};
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(missing,now),null);
+  const extra={...cloud,providers:[...providers,{provider:'unknown-provider'}]};
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(extra,now),null);
+  const incompleteHtml=window.ROVOR_QUOTA_BOARD.render(null,false,missing);
+  assert.match(incompleteHtml,/CLOUD PROVIDER READINESS/);
+  assert.match(incompleteHtml,/— \/ 9/);
+  assert.doesNotMatch(incompleteHtml,/KEYS CONFIGURED<\/span><strong[^>]*>8 \/ 9/);
+  assert.equal(window.ROVOR_QUOTA_BOARD.providerStateSnapshot(null,now),null);
+});

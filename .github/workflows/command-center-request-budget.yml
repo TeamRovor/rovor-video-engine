@@ -17,8 +17,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify source Earth texture downloads
-        run: bash dashboard/command-center/tools/prepare-earth-textures.sh
+      # Browser-budget tests run against mocked HUD data and need no live image download.
+      # The production Pages deployment continues to fetch and verify NASA assets.
+      - name: Check Earth texture installer syntax without network access
+        run: bash -n dashboard/command-center/tools/prepare-earth-textures.sh
       - name: Validate exact HUD verified-data overlays
         run: |
           node --check dashboard/command-center/exact/live-panels.js
