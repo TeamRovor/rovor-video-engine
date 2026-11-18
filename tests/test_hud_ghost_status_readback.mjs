@@ -42,7 +42,7 @@ test('only fixed signed status operation reads source and preserves real histori
     assert.equal(opts.method,'POST');
     assert.deepEqual(JSON.parse(opts.body),{operation:'status'});
     assert.equal(opts.headers.Authorization,'Bearer '+env.GHOST_SITE_SERVICE_TOKEN);
-    assert.equal(opts.redirect,'error');
+    assert.equal(opts.redirect,'manual');
   }),NOW);
   assert(called);
   assert.equal(result.status,200);
@@ -141,6 +141,25 @@ test('readback preserves bounded catalog and inference evidence for nine-provide
     state:'unknown',observed_at:null
   });
   assert.equal(JSON.stringify(result.body).includes('SHOULD NEVER LEAK'),false);
+});
+
+test('manual Site redirects fail closed without following credential-bearing responses',async()=>{
+  let calls=0;
+  const result=await readGhostStatus(env,async(url,options)=>{
+    calls++;
+    assert.equal(url,SERVICE_URL);
+    assert.equal(options.method,'POST');
+    assert.equal(options.redirect,'manual');
+    assert.equal(options.headers.Authorization,'Bearer '+env.GHOST_SITE_SERVICE_TOKEN);
+    return new Response(null,{status:307,headers:{
+      Location:'https://untrusted.invalid/collect?token=PRIVATE-MARKER'
+    }});
+  },NOW);
+  assert.equal(calls,1);
+  assert.equal(result.status,502);
+  assert.equal(result.body.error,'cloud_readback_redirect_denied');
+  assert(!JSON.stringify(result).includes('PRIVATE-MARKER'));
+  assert(!JSON.stringify(result).includes(env.GHOST_SITE_SERVICE_TOKEN));
 });
 
 test('no credential or reused HUD credentials fail closed, without contacting Site',async()=>{
