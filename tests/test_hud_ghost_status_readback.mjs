@@ -77,6 +77,18 @@ test('fresh private catalog receipts survive the bridge without creating admissi
   assert(!JSON.stringify(result.body).includes('SHOULD NEVER LEAK'));
 });
 
+test('catalog receipt cannot authenticate a different provider row',async()=>{
+  const source=fixture();
+  source.providers[0].last_check={provider:'gemini',status:'catalog_received',observed_at:NOW-1000};
+  source.providers[1].last_check={provider:'gemini',status:'catalog_received',observed_at:NOW-1000};
+  const result=await readGhostStatus(env,async()=>Response.json(source),NOW);
+  assert.equal(result.status,200);
+  assert.equal(result.body.providers[0].last_check,null);
+  assert.deepEqual(result.body.providers[1].last_check,{status:'catalog_received',observed_at:NOW-1000});
+  assert.equal(result.body.providers.filter(p=>p.last_check?.status==='catalog_received').length,1);
+  assert.equal(result.body.providers.filter(p=>p.online_verified).length,0);
+});
+
 test('stale or unsupported catalog check records never look authenticated',async()=>{
   const source=fixture();
   source.providers[0].last_check={status:'catalog_received',observed_at:NOW-75*60000-1};
